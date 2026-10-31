@@ -58,3 +58,25 @@ def test_tipo_de_segmento_invalido_e_rejeitado(session):
     session.add(ativ)
     with pytest.raises(IntegrityError):
         session.commit()
+
+
+def test_segmento_intensidade_e_versao_opcionais(session):
+    atleta = Atleta(nome="Atleta Teste")
+    ativ = _atividade(atleta)
+    ativ.segmentos = [
+        Segmento(ordem=1, tipo="tiro", duracao_s=240, intensidade="active", versao_deteccao="tiros_1km@1"),
+        Segmento(ordem=2, tipo="volta", duracao_s=600),
+    ]
+    session.add(ativ)
+    session.commit()
+    a, b = session.scalars(select(Segmento).order_by(Segmento.ordem)).all()
+    assert (a.intensidade, a.versao_deteccao) == ("active", "tiros_1km@1")
+    assert (b.intensidade, b.versao_deteccao) == (None, None)
+
+
+def test_segmento_intensidade_invalida_e_rejeitada(session):
+    ativ = _atividade(Atleta(nome="Atleta Teste"))
+    ativ.segmentos = [Segmento(ordem=1, tipo="tiro", duracao_s=240, intensidade="Active")]
+    session.add(ativ)
+    with pytest.raises(IntegrityError):
+        session.commit()
