@@ -1,4 +1,4 @@
-"""Detecção dos tiros de 1 km numa corrida (issue #11).
+"""Tiros de 1 km: detecção (issue #11) e agregação por sessão (issue #12).
 
 Funções puras: sem banco, sem IA. A regra completa e os limites estão em
 docs/metricas/tiros-1km.md. Qualquer mudança de regra ou de constante exige
@@ -13,6 +13,7 @@ minoria das voltas.
 from __future__ import annotations
 
 from dataclasses import dataclass
+from datetime import date
 from statistics import median
 
 VERSAO = "tiros_1km@1"
@@ -116,3 +117,88 @@ def detectar_tiros(
         recuperacoes=recuperacoes,
         eh_intervalado=len(ordens_tiros) >= MIN_TIROS_INTERVALADO,
     )
+
+
+# ---------------------------------------------------------------------------
+# Agregação por sessão (issue #12)
+# ---------------------------------------------------------------------------
+
+
+@dataclass(frozen=True)
+class SessaoTiros:
+    """Uma atividade já classificada: os tiros (voltas) e se é intervalado."""
+
+    atividade_id: int | str
+    data: date  # data local do início da atividade
+    eh_intervalado: bool
+    tiros: tuple[VoltaEntrada, ...]
+
+
+@dataclass(frozen=True)
+class PontoSessao:
+    """Um ponto da série: valores sem arredondar (ver ``para_apresentacao``)."""
+
+    atividade_id: int | str
+    data: date
+    n_tiros: int
+    pace_s_km: float
+    fc_media: float | None
+
+
+def sessao_de_voltas(
+    atividade_id: int | str,
+    data: date,
+    voltas: list[VoltaEntrada],
+    modalidade: str = MODALIDADE_CORRIDA,
+) -> SessaoTiros:
+    """Detecta os tiros (#11) e monta a sessão pronta para agregar."""
+    resultado = detectar_tiros(voltas, modalidade)
+    ordens = set(resultado.tiros)
+    tiros = tuple(v for v in sorted(voltas, key=lambda v: v.ordem) if v.ordem in ordens)
+    return SessaoTiros(atividade_id, data, resultado.eh_intervalado, tiros)
+
+
+def agregar_sessao(
+    atividade_id: int | str, data: date, tiros: list[VoltaEntrada] | tuple[VoltaEntrada, ...]
+) -> PontoSessao:
+    """Pace e FC médios dos tiros de uma sessão.
+
+    pace (s/km) = soma das durações / soma das distâncias x 1000. É a média
+    ponderada pela distância dos paces, e não a média simples deles (que
+    erraria quando os tiros têm distâncias diferentes: 1000 m e 990 m).
+
+    FC (bpm) = soma(FC x duração) / soma(duração), só sobre tiros com FC.
+    Sem nenhuma FC, ``None``. Fonte: média ponderada simples (definição
+    combinada na issue #12); sem arredondamento aqui.
+    """
+    if not tiros:
+        raise ValueError("sessão sem tiros não tem agregação")
+    dur_total = sum(t.duracao_s for t in tiros)
+    dist_total = sum(t.distancia_m for t in tiros)
+    if dist_total <= 0:
+        raise ValueError("soma das distâncias dos tiros deve ser positiva")
+    pace = dur_total / dist_total * 1000.0
+
+    com_fc = [t for t in tiros if t.fc_media is not None]
+    dur_fc = sum(t.duracao_s for t in com_fc)
+    fc = (
+        sum(t.fc_media * t.duracao_s for t in com_fc) / dur_fc  # type: ignore[operator]
+        if com_fc and dur_fc > 0
+        else None
+    )
+    return PontoSessao(atividade_id, data, len(tiros), pace, fc)
+
+
+def serie_por_sessao(sessoes: list[SessaoTiros]) -> list[PontoSessao]:
+    """Um ponto por sessão intervalada, ordenado por data (e id, no empate)."""
+    pontos = [
+        agregar_sessao(s.atividade_id, s.data, s.tiros)
+        for s in sessoes
+        if s.eh_intervalado and s.tiros
+    ]
+    return sorted(pontos, key=lambda p: (p.data, str(p.atividade_id)))
+
+
+def para_apresentacao(valor: float | None) -> float | None:
+    """Arredonda para 1 casa decimal. Só para mostrar; nunca usar no cálculo."""
+    return None if valor is None else round(valor, 1)

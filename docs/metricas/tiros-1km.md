@@ -34,6 +34,20 @@ parada em semáforo); 8% fica com folga acima desse ruído. Um tiro de verdade c
 rápido que o ritmo de rodagem, então 8% não perde tiros. O valor é decisão do projeto, não vem de artigo, e
 deve ser revisto com dados reais (#19).
 
+## Agregação por sessão (issue #12)
+Um ponto por atividade com `eh_intervalado` verdadeiro; série ordenada por data (empate: id da atividade).
+Rodagem leve e natação não entram.
+
+- **Pace da sessão (s/km)** = soma das durações dos tiros / soma das distâncias dos tiros x 1000. É a média
+  ponderada pela distância, não a média simples dos paces.
+- **FC da sessão (bpm)** = soma(FC x duração) / soma(duração), média ponderada pela duração. Tiros sem FC ficam
+  fora (inclusive do peso); se nenhum tem FC, `None`.
+- Também saem `n_tiros`, `data` (data local do início) e `atividade_id`.
+- Arredondamento só na apresentação, 1 casa decimal (`para_apresentacao`); o cálculo usa o valor cheio.
+
+Exemplo à mão: tiros 1000 m/240 s/160 bpm, 1000 m/236 s/165 bpm, 990 m/238 s sem FC:
+pace = 714 / 2990 x 1000 = 238,8 s/km; FC = (160x240 + 165x236) / 476 = 162,5 bpm.
+
 ## Dados de entrada
 Por volta: `ordem`, `distancia_m`, `duracao_s`, `fc_media` (opcional) e `intensidade` (opcional; campo
 `segmento.intensidade` proposto na ADR da issue #9). Mais a modalidade da atividade.
@@ -43,8 +57,9 @@ Regra própria do projeto; não há artigo. A mediana como referência de ritmo-
 usual: poucos tiros rápidos não a puxam.
 
 ## Código e teste
-- Código: `services/api/app/metricas/tiros_1km.py` (`detectar_tiros`)
-- Teste: `services/api/tests/metricas/test_tiros_1km.py` (valor esperado calculado à mão em cada caso, ex.:
+- Código: `services/api/app/metricas/tiros_1km.py` (`detectar_tiros`, `agregar_sessao`, `serie_por_sessao`)
+- Testes: `services/api/tests/metricas/test_agregacao_sessao.py` (exemplo acima) e
+  `services/api/tests/metricas/test_tiros_1km.py` (valor esperado calculado à mão em cada caso, ex.:
   6 x 1 km com recuperação de 400 m: 13 voltas, mediana = 360 s/km, limite = 331,2 s/km, tiros a 240 s/km).
 
 ## Limitações e quando não usar
