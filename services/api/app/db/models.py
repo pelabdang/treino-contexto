@@ -30,6 +30,9 @@ TIPOS_SEGMENTO = ("volta", "tiro", "recuperacao")
 INTENSIDADES = ("active", "rest", "warmup", "cooldown", "recovery", "interval", "other")
 
 
+FUSO_MIN_MIN, FUSO_MIN_MAX = -720, 840  # minutos: UTC-12 a UTC+14
+
+
 def _in(col: str, values: tuple[str, ...]) -> str:
     opts = ", ".join(f"'{v}'" for v in values)
     return f"{col} IN ({opts})"
@@ -78,6 +81,8 @@ class Atividade(Base):
         CheckConstraint(_in("modalidade", MODALIDADES), name="modalidade"),
         CheckConstraint(f"tipo_treino IS NULL OR {_in('tipo_treino', TIPOS_TREINO)}", name="tipo_treino"),
         CheckConstraint(f"tipo_origem IS NULL OR {_in('tipo_origem', ORIGENS_TIPO)}", name="tipo_origem"),
+        # Fusos reais vao de UTC-12 a UTC+14 (ADR 0003).
+        CheckConstraint(f"fuso_min IS NULL OR fuso_min BETWEEN {FUSO_MIN_MIN} AND {FUSO_MIN_MAX}", name="fuso_min"),
     )
 
     id: Mapped[int] = mapped_column(primary_key=True)
@@ -87,6 +92,8 @@ class Atividade(Base):
     modalidade: Mapped[str] = mapped_column(String(20))
     subtipo: Mapped[str | None] = mapped_column(String(60))  # ex.: esteira, pista (como vem da fonte)
     inicio: Mapped[datetime] = mapped_column(DateTime(timezone=True), index=True)
+    # deslocamento do fuso em minutos (startTimeLocal - startTimeGmt); NULL se desconhecido; ADR 0003
+    fuso_min: Mapped[int | None] = mapped_column(Integer)
     duracao_s: Mapped[float] = mapped_column(Float)
     distancia_m: Mapped[float | None] = mapped_column(Float)
     fc_media: Mapped[float | None] = mapped_column(Float)

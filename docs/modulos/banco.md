@@ -3,7 +3,7 @@ tipo: modulo
 status: em-uso
 dono: theo
 atualizado: 2026-10-31
-links: [[decisoes/0001-modelo-de-dados-minimo]], [[decisoes/0002-segmento-intensidade-e-versao]], [[modulos/api]], [[modulos/infra]]
+links: [[decisoes/0001-modelo-de-dados-minimo]], [[decisoes/0002-segmento-intensidade-e-versao]], [[decisoes/0003-fuso-da-atividade]], [[modulos/api]], [[modulos/infra]]
 ---
 # Módulo: banco
 
@@ -15,6 +15,7 @@ Motivos da escolha em [[decisoes/0001-modelo-de-dados-minimo]].
 - Tabelas: `assessoria`, `professor`, `atleta`, `vinculo_professor_atleta`, `atividade`, `segmento`.
 - `atividade` é única por `(atleta_id, fonte, fonte_id)`: reimportar não duplica.
 - `segmento` tem `intensidade` (valor do FIT, com `CHECK`) e `versao_deteccao` (ex.: `tiros_1km@1`), ambos anuláveis. Ver [[decisoes/0002-segmento-intensidade-e-versao]].
+- `atividade.fuso_min` (int, anulável, `CHECK` de -720 a 840): deslocamento do fuso em minutos; a data local da sessão é a de `inicio + fuso_min`, ou `America/Sao_Paulo` se for `NULL`. Ver [[decisoes/0003-fuso-da-atividade]].
 - `arquivo_bruto` guarda o caminho do original (princípio "guardar o dado bruto").
 - Domínios fixos (modalidade, tipo de treino, origem do tipo, tipo de segmento) são texto com `CHECK`.
 
@@ -22,6 +23,7 @@ Motivos da escolha em [[decisoes/0001-modelo-de-dados-minimo]].
 - `services/api/app/db/models.py`: modelos SQLAlchemy. Mudança só com aprovação do Theo.
 - `services/api/alembic/versions/0001_modelo_de_dados_minimo.py`: migração inicial.
 - `services/api/alembic/versions/0002_segmento_intensidade_e_versao.py`: colunas `intensidade` e `versao_deteccao`.
+- `services/api/alembic/versions/0003_atividade_fuso_min.py`: coluna `fuso_min` e seu `CHECK`.
 - `services/api/tests/test_migracoes.py`: garante que a migração gera o esquema dos modelos.
 
 ## Depende de
