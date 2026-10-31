@@ -34,7 +34,7 @@ Lista com um objeto `summarizedActivitiesExport`, que é a lista de atividades.
 | `activityType` | texto (`running`, `track_running`, `treadmill_running`, `lap_swimming`...) | modalidade e `subtipo` |
 | `sportType` | texto (`RUNNING`, `SWIMMING`...) | apoio à modalidade |
 | `startTimeGmt` | **milissegundos** desde 1970, UTC | `inicio` |
-| `startTimeLocal` | ms; hora de parede local contada como se fosse UTC (**opcional**, não está nas fixtures) | `inicio_local` |
+| `startTimeLocal` | ms; hora de parede local contada como se fosse UTC (**opcional**; nas fixtures só A e B, em UTC-3) | `inicio_local` |
 | `duration` | **milissegundos** | `duracao_s` |
 | `distance` | **centímetros** | `distancia_m` |
 | `avgHr` | bpm | `fc_media` |
@@ -60,7 +60,7 @@ Os leitores de FIT costumam devolver as unidades já convertidas (s e m). A conv
 ### Fixtures sintéticas
 `tests/fixtures/garmin/exportacao_minima.zip`, gerada por `tests/fixtures/garmin/gerar_fixtures.py`
 (saída determinística; um teste falha se o zip versionado estiver desatualizado). Sem GPS, nome, e-mail ou id real.
-A tabela com os valores de cada volta está no topo do script. Resumo:
+A tabela com os valores de cada volta está no topo do script. Só as atividades A e B trazem `startTimeLocal` (UTC-3). Resumo:
 
 | activityId | Atividade | Tem FIT | Voltas |
 |---|---|---|---|
@@ -92,7 +92,7 @@ em memória, até 3 níveis. Na pasta e no zip só entram `*summarizedActivities
 - **`fonte_id`:** `activityId` do JSON quando existe. FIT sem JSON usa `fit-<serial_number>-<time_created em epoch>`
   do `file_id`; sem esses campos, `fit-` + 16 primeiros caracteres do SHA-1 do arquivo. O id é estável entre
   leituras (a importação idempotente, #13, depende disso).
-- **`inicio_local`:** mesmo instante de `inicio`, com o fuso do atleta (deslocamento = `startTimeLocal` - `startTimeGmt`, em minutos). `None` quando o JSON não traz `startTimeLocal` (FIT sem JSON, fixtures atuais) ou o deslocamento passa de 15 h; nesse caso quem consome (#14) assume `America/Sao_Paulo`.
+- **`inicio_local`:** hora de parede (datetime sem fuso) de `startTimeLocal`; `None` quando o JSON não traz o campo (FIT sem JSON, atividades C, D e E das fixtures). O parser não inventa fuso: o fallback `America/Sao_Paulo` fica na #14.
 - **Dados da atividade:** com JSON, duração/distância/FC vêm do JSON; só FIT, vêm da `session` (ou da soma das voltas).
 - **`arquivo_bruto`:** caminho lógico dentro da exportação, com `!/` para zips aninhados
   (ex.: `exportacao.zip!/DI_CONNECT/.../UploadedFiles_0-_Part1.zip!/x.fit`). Sem FIT, é o caminho do JSON.

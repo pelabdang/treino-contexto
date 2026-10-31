@@ -183,21 +183,15 @@ def test_unidades():
     assert unidades.para_utc(datetime(2025, 1, 1)).tzinfo is timezone.utc
 
 
-def test_inicio_local_do_json(tmp_path):
-    json_, _ = _extrair(tmp_path)
-    gmt = 1741078800000  # 2025-03-04 09:00 UTC
-    json_.write_text(json_.read_text().replace(
-        f'"startTimeGmt": {gmt},', f'"startTimeGmt": {gmt},\n "startTimeLocal": {gmt - 3 * 3600_000},'))
-    a = _por_id(ler_exportacao(tmp_path))["1000000001"]
-    assert a.inicio_local.isoformat() == "2025-03-04T06:00:00-03:00"
-    assert a.inicio_local == a.inicio  # mesmo instante
-    assert a.inicio_local.date().isoformat() == "2025-03-04"
+def test_inicio_local_das_fixtures():
+    por_id = _por_id(ler_exportacao(ZIP))
+    # A e B (UTC-3): hora de parede, naive
+    assert por_id["1000000001"].inicio_local == datetime(2025, 3, 4, 6, 0)
+    assert por_id["1000000002"].inicio_local == datetime(2025, 3, 11, 6, 5)
+    assert por_id["1000000001"].inicio_local.tzinfo is None
+    # as demais nao tem startTimeLocal: None (nada de fuso inventado)
+    assert all(por_id[i].inicio_local is None for i in ("1000000003", "1000000004", "1000000005"))
 
 
-def test_inicio_local_ausente_na_fixture():
-    assert all(a.inicio_local is None for a in ler_exportacao(ZIP))
-
-
-def test_unidades_inicio_local():
-    d = unidades.inicio_local(1741078800000, 1741078800000 - 3 * 3600_000)
-    assert d.utcoffset().total_seconds() == -3 * 3600
+def test_hora_de_parede():
+    assert unidades.hora_de_parede(1741078800000 - 3 * 3600_000) == datetime(2025, 3, 4, 6, 0)
