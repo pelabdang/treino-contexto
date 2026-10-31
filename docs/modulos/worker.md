@@ -18,6 +18,7 @@ da importação e do cálculo de métricas, fora da [[modulos/api]].
 ## Arquivos principais
 - `services/worker/worker/main.py`
 - `services/worker/worker/garmin/` (parser: `leitor.py`, `fit.py`, `tipos.py`, `unidades.py`, `modelos.py`)
+- `services/worker/worker/importar_garmin.py` (importação no banco, CLI `python -m worker.importar_garmin`)
 - `services/worker/tests/test_health.py`
 - `services/worker/tests/test_garmin_parser.py`
 

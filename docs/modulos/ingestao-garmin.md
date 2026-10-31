@@ -109,13 +109,35 @@ enums para texto (`intensity="active"`) e de datas para `datetime`, que é o que
 que usamos. Se algum relógio real trouxer mensagens que o `fitdecode` não entenda, reavaliar (#19).
 `fit-tool` segue só como dependência de desenvolvimento (gera FIT nas fixtures).
 
+## Importação no banco (`worker/importar_garmin.py`)
+```
+uv run python -m worker.importar_garmin <caminho> --atleta "<nome>"
+```
+Usa `DATABASE_URL` (Postgres do docker compose; rode `alembic upgrade head` antes). Imprime
+`inseridas`, `atualizadas`, `ignoradas` e os avisos (inclui os do parser). Função: `importar(session, caminho, atleta_nome)`.
+
+- **Atleta:** busca pelo nome; cria se não existir (sem assessoria).
+- **Chave:** `(atleta_id, fonte, fonte_id)`. Reimportar não duplica atividades nem segmentos e não muda o `id`.
+- **Atividade já gravada:** se os dados são iguais, é *ignorada* (segmentos e classificações da #14 ficam intactos;
+  o `arquivo_bruto` não conta como diferença). Se algo mudou, é *atualizada* e, quando as voltas mudaram,
+  os segmentos são substituídos. Leitura sem voltas (JSON sem FIT) nunca apaga voltas já gravadas; vira aviso.
+- **Segmentos:** cada volta vira `segmento` com `tipo = "volta"`, `pace_s_km = duracao_s / distancia_m * 1000`
+  (`NULL` se a distância é 0), `versao_deteccao` vazio (a #14 preenche).
+- **`intensidade`:** minúsculas e sem espaços; valor fora da lista do `CHECK` (ADR 0002) vira `other`, nunca erro;
+  sem valor fica `NULL`.
+- **`inicio_local` não é gravado:** a tabela `atividade` não tem a coluna (mudaria o modelo; exige ADR e aprovação do Theo).
+  A #14 usa `America/Sao_Paulo` a partir do `inicio` em UTC enquanto isso.
+- Atividade sem duração (nem soma de voltas) é ignorada com aviso, porque `duracao_s` é obrigatório.
+- Testes: `services/worker/tests/test_importar_garmin.py` (SQLite local; Postgres via `TEST_DATABASE_URL`).
+
 ## Arquivos principais
 - `services/worker/worker/garmin/` e `services/worker/tests/test_garmin_parser.py`
+- `services/worker/worker/importar_garmin.py` e `services/worker/tests/test_importar_garmin.py`
 - `tests/fixtures/garmin/gerar_fixtures.py` e `tests/fixtures/garmin/exportacao_minima.zip`
 - `tests/test_fixtures_garmin.py`
 
 ## Depende de
-- [[modulos/worker]] (onde fica o parser) e [[modulos/banco]] (destino, #13).
+- [[modulos/worker]] (onde fica o parser) e [[modulos/banco]] (destino).
 
 ## Como testar
 `uv run pytest -q` na raiz.
