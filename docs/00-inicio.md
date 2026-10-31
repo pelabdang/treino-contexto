@@ -17,7 +17,7 @@ App de análise de treinos com contexto (corrida, natação, ciclismo) para atle
 - [[produto/roadmap]]: metas em ordem (mantido pelo Paulo)
 
 ## Como o sistema funciona
-- Módulos: [[modulos/api]], [[modulos/banco]], [[modulos/worker]], [[modulos/mobile]], [[modulos/infra]] (índice em [[modulos]])
+- Módulos: [[modulos/api]], [[modulos/banco]], [[modulos/worker]], [[modulos/mobile]], [[modulos/infra]], [[modulos/grafico-tiros]] (índice em [[modulos]])
 - Métricas: pasta [[metricas/]]
 - Decisões de arquitetura: pasta [[decisoes/]]
   - [[decisoes/0001-modelo-de-dados-minimo]]: modelo de dados mínimo e monorepo
