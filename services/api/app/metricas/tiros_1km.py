@@ -12,6 +12,7 @@ minoria das voltas.
 
 from __future__ import annotations
 
+import math
 from dataclasses import dataclass
 from datetime import date
 from statistics import median
@@ -207,3 +208,15 @@ def serie_por_sessao(sessoes: list[SessaoTiros]) -> list[PontoSessao]:
 def para_apresentacao(valor: float | None) -> float | None:
     """Arredonda para 1 casa decimal. Só para mostrar; nunca usar no cálculo."""
     return None if valor is None else round(valor, 1)
+
+
+def formatar_pace(s_km: float) -> str:
+    """Pace em ``m:ss``: arredonda ao segundo, com meio para cima.
+
+    Regra única de ``m:ss`` do projeto (eixo do gráfico, CSV e JSON). Não usa
+    ``round()``, que arredonda 0,5 para o par (239,5 -> 240 mas 238,5 -> 238).
+    Arredonda os segundos totais antes de separar minutos, então nunca sai "3:60".
+    """
+    total = math.floor(s_km + 0.5)
+    minutos, segundos = divmod(total, 60)
+    return f"{minutos}:{segundos:02d}"
