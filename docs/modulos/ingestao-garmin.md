@@ -123,7 +123,7 @@ Usa `DATABASE_URL` (Postgres do docker compose; rode `alembic upgrade head` ante
   os segmentos são substituídos. Leitura sem voltas (JSON sem FIT) nunca apaga voltas já gravadas; vira aviso.
 - **Segmentos:** cada volta vira `segmento` com `tipo = "volta"`, `pace_s_km = duracao_s / distancia_m * 1000`
   (`NULL` se a distância é 0), `versao_deteccao` vazio (a #14 preenche).
-- **`intensidade`:** minúsculas e sem espaços; valor fora da lista do `CHECK` (ADR 0002) vira `other`, nunca erro;
+- **`intensidade`:** minúsculas e sem espaços; valor fora da lista do `CHECK` ([[decisoes/0002-segmento-intensidade-e-versao]]) vira `other`, nunca erro;
   sem valor fica `NULL`.
 - **`inicio_local` não é gravado:** a tabela `atividade` não tem a coluna (mudaria o modelo; exige ADR e aprovação do Theo).
   A #14 usa `America/Sao_Paulo` a partir do `inicio` em UTC enquanto isso.
@@ -150,3 +150,4 @@ A confirmar com o dado real (#19):
 - valores reais de `activityType` para esteira, pista e natação em águas abertas;
 - se os `.fit` vêm todos no zip interno e se o `activityId` aparece no nome deles;
 - se `intensity` vem preenchido em todos os relógios (intervalados sem treino estruturado podem trazer só `active`).
+- `inicio_local` não é gravado no banco (a tabela `atividade` não tem a coluna). Se a #14 ou o app precisarem da data local exata do atleta, abrir ADR e pedir aprovação do Theo para uma coluna nova; até lá vale `America/Sao_Paulo` sobre o `inicio` em UTC.

@@ -3,17 +3,18 @@ tipo: modulo
 status: em-uso
 dono: theo
 atualizado: 2026-10-31
-links: [[modulos/api]], [[modulos/infra]], [[modulos/ingestao-garmin]]
+links: [[modulos/api]], [[modulos/infra]], [[modulos/ingestao-garmin]], [[modulos/banco]]
 ---
 # Módulo: worker
 
 ## Para que serve
-Serviço de processamento em segundo plano (FastAPI). Hoje tem `/health` e o parser da exportação Garmin (`worker/garmin/`, sem banco). Vai rodar tarefas pesadas
+Serviço de processamento em segundo plano (FastAPI). Hoje tem `/health` e o parser da exportação Garmin (`worker/garmin/`, sem banco) e a importação dele no banco (`worker/importar_garmin.py`). Vai rodar tarefas pesadas
 da importação e do cálculo de métricas, fora da [[modulos/api]].
 
 ## Entradas e saídas
 - Saída: `GET /health` devolve `{"status": "ok"}`.
 - Parser: `worker.garmin.ler_exportacao(caminho)` lê zip, pasta, `summarizedActivities.json` ou `.fit` e devolve atividades com voltas. Detalhes em [[modulos/ingestao-garmin]].
+- Importação: `uv run python -m worker.importar_garmin <caminho> --atleta "<nome>"` grava atividades e voltas no banco ([[modulos/banco]]), de forma idempotente.
 
 ## Arquivos principais
 - `services/worker/worker/main.py`
