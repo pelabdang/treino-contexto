@@ -71,6 +71,7 @@ class Atividade:
     json_total: tuple[float, float, int] | None = None  # (distancia_m, duracao_s, fc) se sem voltas
     deslocamento_fit_s: int = 0  # FIT comeca um pouco depois do JSON (testa tolerancia)
     fc_max: int = 0
+    fuso_h: int | None = None  # se definido, o JSON traz startTimeLocal = startTimeGmt + fuso_h
     extra: dict = field(default_factory=dict)
 
     def totais(self) -> tuple[float, float, int]:
@@ -88,9 +89,9 @@ def _utc(*a) -> datetime:
 
 ATIVIDADES = [
     Atividade(1000000001, "Intervalado 6x1km", "running", "RUNNING", Sport.RUNNING, SubSport.GENERIC,
-              _utc(2025, 3, 4, 9, 0, 0), VOLTAS_A),
+              _utc(2025, 3, 4, 9, 0, 0), VOLTAS_A, fuso_h=-3),
     Atividade(1000000002, "Intervalado 5x1km pista", "track_running", "RUNNING", Sport.RUNNING,
-              SubSport.TRACK, _utc(2025, 3, 11, 9, 5, 0), VOLTAS_B, deslocamento_fit_s=2),
+              SubSport.TRACK, _utc(2025, 3, 11, 9, 5, 0), VOLTAS_B, deslocamento_fit_s=2, fuso_h=-3),
     Atividade(1000000003, "Corrida leve 8km", "running", "RUNNING", Sport.RUNNING, SubSport.GENERIC,
               _utc(2025, 3, 6, 8, 30, 0), VOLTAS_C),
     Atividade(1000000004, "Natacao 400m", "lap_swimming", "SWIMMING", Sport.SWIMMING,
@@ -159,12 +160,14 @@ def montar_json() -> bytes:
     itens = []
     for a in ATIVIDADES:
         dist, dur, fc = a.totais()
+        local = {} if a.fuso_h is None else {"startTimeLocal": _ms(a.inicio) + a.fuso_h * 3_600_000}
         itens.append({
             "activityId": a.id,
             "name": a.nome,
             "activityType": a.activity_type,
             "sportType": a.sport_type,
             "startTimeGmt": _ms(a.inicio),
+            **local,
             "beginTimestamp": _ms(a.inicio),
             "duration": dur * 1000,  # ms
             "elapsedDuration": dur * 1000,  # ms

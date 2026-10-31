@@ -20,3 +20,5 @@ atualizado: 2026-10-31
 - **SWOLF**: tempo + braçadas num comprimento de piscina (eficiência na natação).
 - **Linha de base**: o normal do próprio atleta para uma métrica e um tipo de treino.
 - **Tipo de treino**: leve, moderado, longo, intervalado, fartlek (definido pelo professor).
+- **Intensidade da volta**: campo `intensity` do lap no FIT (`active`, `rest`, `warmup`, `cooldown`, `recovery`, `interval`, `other`). Guardada em `segmento.intensidade`. Ver [[decisoes/0002-segmento-intensidade-e-versao]].
+- **Versão da detecção**: identificador `<regra>@<n>` (ex.: `tiros_1km@1`) da regra que classificou o segmento. Guardada em `segmento.versao_deteccao`. Ver [[decisoes/0002-segmento-intensidade-e-versao]].
