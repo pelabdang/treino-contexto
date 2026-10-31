@@ -51,6 +51,17 @@ Rodagem leve e natação não entram.
 Exemplo à mão: tiros 1000 m/240 s/160 bpm, 1000 m/236 s/165 bpm, 990 m/238 s sem FC:
 pace = 714 / 2990 x 1000 = 238,8 s/km; FC = (160x240 + 165x236) / 476 = 162,5 bpm.
 
+### Valores esperados das fixtures (oráculo, issue #30)
+Calculados à mão a partir de `tests/fixtures/garmin/gerar_fixtures.py`; o teste
+`services/api/tests/metricas/test_oraculo_fixtures.py` os guarda em `ESPERADO` para a #14 e a #18 reutilizarem.
+
+| Atividade | Tiros | Pace (s/km) | FC (bpm) | Conta |
+|---|---|---|---|---|
+| 1000000001 (6 x 1 km) | 6 | 250,83 (4:10,8) | 170,30 | 1505 s / 6000 m; 256309 / 1505 |
+| 1000000002 (5 x 1 km) | 5 | 237,0 (3:57,0) | 171,77 | 1185 s / 5000 m; 203546 / 1185 |
+
+Ficam fora da série: 1000000003 (corrida leve, sem tiros), 1000000004 (natação) e 1000000005 (sem FIT).
+
 ## Dados de entrada
 Por volta: `ordem`, `distancia_m`, `duracao_s`, `fc_media` (opcional) e `intensidade` (opcional; campo
 `segmento.intensidade` proposto na ADR da issue #9). Mais a modalidade da atividade.
