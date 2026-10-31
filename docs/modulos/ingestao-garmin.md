@@ -92,7 +92,7 @@ em memória, até 3 níveis. Na pasta e no zip só entram `*summarizedActivities
 - **`fonte_id`:** `activityId` do JSON quando existe. FIT sem JSON usa `fit-<serial_number>-<time_created em epoch>`
   do `file_id`; sem esses campos, `fit-` + 16 primeiros caracteres do SHA-1 do arquivo. O id é estável entre
   leituras (a importação idempotente, #13, depende disso).
-- **`inicio_local`:** mesmo instante de `inicio`, com o fuso do atleta (deslocamento = `startTimeLocal` - `startTimeGmt`, em minutos), então `.date()` dá a data local. `None` quando o JSON não traz o campo (FIT sem JSON, atividades C, D e E das fixtures) ou o deslocamento passa de 15 h. O parser não inventa fuso: o fallback `America/Sao_Paulo` fica na #14.
+- **`inicio_local`:** mesmo instante de `inicio`, com o fuso do atleta (deslocamento = `startTimeLocal` - `startTimeGmt`, em minutos), então `.date()` dá a data local. `None` quando o JSON não traz o campo (FIT sem JSON, atividades C, D e E das fixtures) ou o deslocamento sai de UTC-12 a UTC+14. O parser não inventa fuso: o fallback `America/Sao_Paulo` fica na série ([[modulos/api]]).
 - **Dados da atividade:** com JSON, duração/distância/FC vêm do JSON; só FIT, vêm da `session` (ou da soma das voltas).
 - **`arquivo_bruto`:** caminho lógico dentro da exportação, com `!/` para zips aninhados
   (ex.: `exportacao.zip!/DI_CONNECT/.../UploadedFiles_0-_Part1.zip!/x.fit`). Sem FIT, é o caminho do JSON.
@@ -122,11 +122,17 @@ Usa `DATABASE_URL` (Postgres do docker compose; rode `alembic upgrade head` ante
   o `arquivo_bruto` não conta como diferença). Se algo mudou, é *atualizada* e, quando as voltas mudaram,
   os segmentos são substituídos. Leitura sem voltas (JSON sem FIT) nunca apaga voltas já gravadas; vira aviso.
 - **Segmentos:** cada volta vira `segmento` com `tipo = "volta"`, `pace_s_km = duracao_s / distancia_m * 1000`
-  (`NULL` se a distância é 0), `versao_deteccao` vazio (a #14 preenche).
+  (`NULL` se a distância é 0), `versao_deteccao` vazio até a classificação (abaixo).
 - **`intensidade`:** minúsculas e sem espaços; valor fora da lista do `CHECK` ([[decisoes/0002-segmento-intensidade-e-versao]]) vira `other`, nunca erro;
   sem valor fica `NULL`.
-- **`inicio_local` não é gravado:** a tabela `atividade` não tem a coluna (mudaria o modelo; exige ADR e aprovação do Theo).
-  A #14 usa `America/Sao_Paulo` a partir do `inicio` em UTC enquanto isso.
+- **`fuso_min`:** a importação grava em `atividade.fuso_min` o deslocamento do fuso em minutos
+  (`inicio_local` - `inicio`, ex.: `-180`), conforme [[decisoes/0003-fuso-da-atividade]]. Sem horário local na fonte
+  fica `NULL`, e uma reimportação sem esse horário **não apaga** um `fuso_min` já gravado. `fuso_min` conta na
+  comparação "mudou": reimportar a exportação preenche as atividades gravadas antes da migração 0003.
+- **Classificação no fim:** depois de gravar, chama `classificar_atividades` ([[modulos/api]]): marca os segmentos
+  das corridas como `tiro`/`recuperacao`/`volta`, grava `versao_deteccao` e sugere `tipo_treino = intervalado`
+  (sem sobrescrever professor/TrainingPeaks/confirmado). É idempotente e refaz a classificação quando as voltas
+  foram substituídas. A comparação "mudou" das voltas considera segmentos de todos os tipos.
 - Atividade sem duração (nem soma de voltas) é ignorada com aviso, porque `duracao_s` é obrigatório.
 - Testes: `services/worker/tests/test_importar_garmin.py` (SQLite local; Postgres via `TEST_DATABASE_URL`).
 
@@ -150,4 +156,3 @@ A confirmar com o dado real (#19):
 - valores reais de `activityType` para esteira, pista e natação em águas abertas;
 - se os `.fit` vêm todos no zip interno e se o `activityId` aparece no nome deles;
 - se `intensity` vem preenchido em todos os relógios (intervalados sem treino estruturado podem trazer só `active`).
-- `inicio_local` não é gravado no banco (a tabela `atividade` não tem a coluna). Se a #14 ou o app precisarem da data local exata do atleta, abrir ADR e pedir aprovação do Theo para uma coluna nova; até lá vale `America/Sao_Paulo` sobre o `inicio` em UTC.

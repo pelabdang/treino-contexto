@@ -24,7 +24,7 @@ da importação e do cálculo de métricas, fora da [[modulos/api]].
 - `services/worker/tests/test_garmin_parser.py`
 
 ## Depende de
-- Mesmo workspace uv da [[modulos/api]]. Banco em [[modulos/banco]] quando houver tarefas.
+- Mesmo workspace uv da [[modulos/api]]; a importação chama `classificar_atividades` de `app.servicos` (ver "Série de tiros no banco" em [[modulos/api]]). Banco em [[modulos/banco]] quando houver tarefas.
 
 ## Como testar
 `uv run pytest -q` na raiz.

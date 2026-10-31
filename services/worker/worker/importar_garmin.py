@@ -14,6 +14,7 @@ from dataclasses import dataclass, field
 from pathlib import Path
 
 from app.db.models import INTENSIDADES, Atividade, Atleta, Segmento
+from app.servicos.evolucao_tiros import classificar_atividades
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
@@ -67,12 +68,23 @@ def _voltas_novas(voltas: list[VoltaImportada]) -> list[tuple]:
 
 def _voltas_no_banco(ativ: Atividade) -> list[tuple]:
     return [_chave_volta(s.ordem, s.inicio_offset_s, s.duracao_s, s.distancia_m, s.fc_media, s.intensidade)
-            for s in ativ.segmentos if s.tipo == "volta"]
+            for s in ativ.segmentos]  # todos os tipos: a classificacao (#14) troca volta por tiro/recuperacao
 
 
 def _campos(a: AtividadeImportada, duracao_s: float) -> dict:
-    return dict(modalidade=a.modalidade, subtipo=a.subtipo, inicio=para_utc(a.inicio), duracao_s=duracao_s,
-                distancia_m=a.distancia_m, fc_media=a.fc_media, arquivo_bruto=a.arquivo_bruto)
+    campos = dict(modalidade=a.modalidade, subtipo=a.subtipo, inicio=para_utc(a.inicio), duracao_s=duracao_s,
+                  distancia_m=a.distancia_m, fc_media=a.fc_media, arquivo_bruto=a.arquivo_bruto)
+    fuso = fuso_min(a)
+    if fuso is not None:  # sem horario local na fonte nao apaga um fuso ja gravado (ADR 0003)
+        campos["fuso_min"] = fuso
+    return campos
+
+
+def fuso_min(a: AtividadeImportada) -> int | None:
+    """Deslocamento do fuso em minutos (inicio_local - inicio); None se a fonte nao traz o horario local."""
+    if a.inicio_local is None or a.inicio_local.utcoffset() is None:
+        return None
+    return round(a.inicio_local.utcoffset().total_seconds() / 60)
 
 
 def _segmentos(voltas: list[VoltaImportada]) -> list[Segmento]:
@@ -95,7 +107,7 @@ def importar(session: Session, caminho: str | Path, atleta_nome: str) -> Relator
 
     Atividade ja existente: se nada mudou, e ignorada (segmentos e classificacoes da #14 ficam intactos);
     se mudou, os campos sao atualizados e, se as voltas mudaram, os segmentos sao substituidos
-    (o `id` da atividade nao muda). Uma leitura sem voltas nunca apaga as voltas ja gravadas.
+    (o `id` da atividade nao muda). No fim, classifica as corridas do atleta. Uma leitura sem voltas nunca apaga as voltas ja gravadas.
     """
     rel = RelatorioImportacao()
     coleta = _ColetaAvisos(rel.avisos)
@@ -145,6 +157,7 @@ def importar(session: Session, caminho: str | Path, atleta_nome: str) -> Relator
         rel.atualizadas += 1
 
     session.commit()
+    classificar_atividades(session, atleta.id)  # tiros/recuperacoes e tipo do treino (#14); idempotente
     return rel
 
 
