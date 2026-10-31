@@ -185,13 +185,15 @@ def test_unidades():
 
 def test_inicio_local_das_fixtures():
     por_id = _por_id(ler_exportacao(ZIP))
-    # A e B (UTC-3): hora de parede, naive
-    assert por_id["1000000001"].inicio_local == datetime(2025, 3, 4, 6, 0)
-    assert por_id["1000000002"].inicio_local == datetime(2025, 3, 11, 6, 5)
-    assert por_id["1000000001"].inicio_local.tzinfo is None
-    # as demais nao tem startTimeLocal: None (nada de fuso inventado)
+    a, b = por_id["1000000001"], por_id["1000000002"]  # A e B em UTC-3
+    assert a.inicio_local.isoformat() == "2025-03-04T06:00:00-03:00"
+    assert b.inicio_local.isoformat() == "2025-03-11T06:05:00-03:00"
+    assert a.inicio_local == a.inicio  # mesmo instante
+    assert a.inicio_local.date().isoformat() == "2025-03-04"
+    # as demais nao tem startTimeLocal: None (a #14 aplica o fallback)
     assert all(por_id[i].inicio_local is None for i in ("1000000003", "1000000004", "1000000005"))
 
 
-def test_hora_de_parede():
-    assert unidades.hora_de_parede(1741078800000 - 3 * 3600_000) == datetime(2025, 3, 4, 6, 0)
+def test_unidades_inicio_local():
+    d = unidades.inicio_local(1741078800000, 1741078800000 - 3 * 3600_000)
+    assert d.utcoffset().total_seconds() == -3 * 3600

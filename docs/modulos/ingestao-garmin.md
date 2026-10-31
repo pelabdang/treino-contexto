@@ -92,7 +92,7 @@ em memória, até 3 níveis. Na pasta e no zip só entram `*summarizedActivities
 - **`fonte_id`:** `activityId` do JSON quando existe. FIT sem JSON usa `fit-<serial_number>-<time_created em epoch>`
   do `file_id`; sem esses campos, `fit-` + 16 primeiros caracteres do SHA-1 do arquivo. O id é estável entre
   leituras (a importação idempotente, #13, depende disso).
-- **`inicio_local`:** hora de parede (datetime sem fuso) de `startTimeLocal`; `None` quando o JSON não traz o campo (FIT sem JSON, atividades C, D e E das fixtures). O parser não inventa fuso: o fallback `America/Sao_Paulo` fica na #14.
+- **`inicio_local`:** mesmo instante de `inicio`, com o fuso do atleta (deslocamento = `startTimeLocal` - `startTimeGmt`, em minutos), então `.date()` dá a data local. `None` quando o JSON não traz o campo (FIT sem JSON, atividades C, D e E das fixtures) ou o deslocamento passa de 15 h. O parser não inventa fuso: o fallback `America/Sao_Paulo` fica na #14.
 - **Dados da atividade:** com JSON, duração/distância/FC vêm do JSON; só FIT, vêm da `session` (ou da soma das voltas).
 - **`arquivo_bruto`:** caminho lógico dentro da exportação, com `!/` para zips aninhados
   (ex.: `exportacao.zip!/DI_CONNECT/.../UploadedFiles_0-_Part1.zip!/x.fit`). Sem FIT, é o caminho do JSON.

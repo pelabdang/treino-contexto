@@ -28,6 +28,6 @@ class AtividadeImportada:
     fc_media: int | None
     arquivo_bruto: str | None  # caminho do original dentro da exportacao
     fonte: str = "garmin_export"
-    inicio_local: datetime | None = None  # hora de parede (naive) de startTimeLocal; None se faltar. Sem fuso inventado aqui
+    inicio_local: datetime | None = None  # mesmo instante com o fuso do atleta (startTimeLocal - startTimeGmt); None se faltar
     subtipo: str | None = None  # esteira, pista, trilha, piscina, aguas_abertas
     voltas: list[VoltaImportada] = field(default_factory=list)
