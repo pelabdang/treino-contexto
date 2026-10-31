@@ -1,0 +1,15 @@
+{
+    "permissions": {
+        "defaultMode": "auto"
+    },
+    "teammateMode": "auto",
+    "hooks": {
+        "TaskCompleted": [
+            { "hooks": [ { "type": "command", "command":
+"$CLAUDE_PROJECT_DIR/.claude/hooks/testes.sh" } ] }
+        ]
+    }
+ 
+    
+}
+
