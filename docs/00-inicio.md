@@ -21,6 +21,7 @@ App de análise de treinos com contexto (corrida, natação, ciclismo) para atle
 - Métricas: pasta [[metricas/]]
 - Decisões de arquitetura: pasta [[decisoes/]]
   - [[decisoes/0001-modelo-de-dados-minimo]]: modelo de dados mínimo e monorepo
+  - [[decisoes/0002-segmento-intensidade-e-versao]]: intensidade da volta e versão da detecção no segmento
 
 ## Ciência e especialistas
 - Artigos: pasta [[ciencia/artigos/]]
