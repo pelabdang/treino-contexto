@@ -19,6 +19,7 @@ dev = [
     "httpx>=0.27",
     "treino-api",
     "treino-worker",
+    "fit-tool>=0.9.17",
 ]
 
 [tool.pytest.ini_options]

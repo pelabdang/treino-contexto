@@ -65,6 +65,10 @@ usual: poucos tiros rápidos não a puxam.
 ## Limitações e quando não usar
 - Sem intensidade e com tiros que são a maioria das voltas (ex.: 8 x 1 km com pausa parada, sem volta de
   recuperação), a mediana vira o ritmo do tiro e nenhum tiro é detectado. Com intensidade isso não ocorre.
+- Sem intensidade, uma rodagem progressiva com auto-lap de 1 km pode ter 3 ou mais voltas finais pelo menos 8%
+  mais rápidas que a mediana. A regra as marca como tiros e a atividade vira `eh_intervalado`. Limitação
+  conhecida (apontada pelo Theo). A mitigação fica na #14: cruzar com o tipo da atividade ou exigir
+  alternância entre tiro e recuperação.
 - Só detecta tiros de 1 km; 400 m, 2 km e outras distâncias ficam fora da Meta 1.
 - Voltas de 1 km de uma prova ou de um longo progressivo, com intensidade `active`, podem passar na regra
   de pace se houver mudança de ritmo clara; é o comportamento esperado da regra, não um erro.
