@@ -5,12 +5,40 @@ on:
     branches: [main]
 jobs:
   testes:
-      runs-on: ubuntu-latest
-      steps:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: treino
+          POSTGRES_PASSWORD: treino
+          POSTGRES_DB: treino
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U treino -d treino"
+          --health-interval 5s --health-timeout 3s --health-retries 10
+    env:
+      DATABASE_URL: postgresql+psycopg://treino:treino@localhost:5432/treino
+      TEST_DATABASE_URL: postgresql+psycopg://treino:treino@localhost:5432/treino
+    steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
+      - uses: astral-sh/setup-uv@v6
         with:
           python-version: "3.12"
-      - run: pip install pytest
-      - run: if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
-      - run: pytest -q || [ $? -eq 5 ]
+      - name: Instalar dependências do backend
+        run: uv sync --locked
+      - name: Migrações no Postgres
+        working-directory: services/api
+        run: uv run alembic upgrade head && uv run alembic downgrade base
+      - name: pytest
+        run: uv run pytest -q
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+          cache-dependency-path: apps/mobile/package-lock.json
+      - name: Testes do app
+        if: hashFiles('apps/mobile/package.json') != ''
+        working-directory: apps/mobile
+        run: npm ci && npm test -- --watchAll=false
