@@ -2,3 +2,5 @@ dados-teste/
 .env
 __pycache__/
 .venv/
+# Gerado pelo Graphify (local)
+graphify-out/
