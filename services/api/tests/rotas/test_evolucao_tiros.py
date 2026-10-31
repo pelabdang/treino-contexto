@@ -102,3 +102,41 @@ def test_inicio_utc_de_treino_noturno(client, importar_fixtures, session):
     session.commit()
     s = client.get(_url(importar_fixtures)).json()["sessoes"][0]
     assert (s["data"], s["inicio"]) == ("2025-03-04", "2025-03-05T01:30:00Z")
+
+
+PNG_ASSINATURA = b"\x89PNG\r\n\x1a\n"
+
+
+def _png(client, atleta, q=""):
+    return client.get(f"/atletas/{atleta.id}/evolucao/tiros-1km.png{q}")
+
+
+def test_png(client, importar_fixtures):
+    r = _png(client, importar_fixtures)
+    assert r.status_code == 200 and r.headers["content-type"] == "image/png"
+    assert r.content.startswith(PNG_ASSINATURA)
+    import struct
+    assert struct.unpack(">II", r.content[16:24]) == (1600, 1000)
+
+
+def test_png_e_o_mesmo_do_render_png(client, importar_fixtures, session):
+    from app.graficos.tiros_1km import render_png
+    from app.servicos.evolucao_tiros import serie_tiros_1km
+    esperado = render_png(serie_tiros_1km(session, importar_fixtures.id), importar_fixtures.nome)
+    assert _png(client, importar_fixtures).content == esperado
+
+
+def test_png_com_filtro_e_vazio(client, importar_fixtures):
+    r = _png(client, importar_fixtures, "?inicio=2030-01-01")  # sem sessoes: gera o PNG com o aviso
+    assert r.status_code == 200 and r.content.startswith(PNG_ASSINATURA)
+    assert r.content != _png(client, importar_fixtures).content
+
+
+def test_png_404_e_422(client, importar_fixtures):
+    assert client.get("/atletas/9999/evolucao/tiros-1km.png").status_code == 404
+    assert _png(client, importar_fixtures, "?fim=xx").status_code == 422
+
+
+def test_png_no_openapi(client):
+    j = client.get("/openapi.json").json()
+    assert "image/png" in j["paths"]["/atletas/{atleta_id}/evolucao/tiros-1km.png"]["get"]["responses"]["200"]["content"]

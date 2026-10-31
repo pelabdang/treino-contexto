@@ -61,6 +61,12 @@ curl "http://localhost:8000/atletas/1/evolucao/tiros-1km?inicio=2025-03-01"
 - `sessoes` por `data` crescente; `fc_media` pode ser `null`; valores com 1 casa; `pace_medio` vem de `formatar_pace` ([[metricas/tiros-1km]]).
 - `periodo` é `null` sem filtro; com algum filtro, os dois campos, `null` no que não veio.
 - Atleta inexistente: `404` `{"detail": "atleta não encontrado"}`. Sem sessões: `200` com `"sessoes": []`. Data inválida: `422`.
+- **PNG:** `GET /atletas/{atleta_id}/evolucao/tiros-1km.png`, mesmos filtros; `200` com `Content-Type: image/png` (1600 x 1000),
+  o mesmo desenho de `render_png` ([[modulos/grafico-tiros]]) que o comando de `entregas/` usa. Sem sessões gera o PNG com o aviso;
+  atleta inexistente `404`; data inválida `422`.
+  ```
+  curl -o tiros.png "http://localhost:8000/atletas/1/evolucao/tiros-1km.png"
+  ```
 - Testes: `services/api/tests/rotas/test_evolucao_tiros.py` (banco com as fixtures importadas).
 
 ## Depende de
@@ -70,5 +76,5 @@ curl "http://localhost:8000/atletas/1/evolucao/tiros-1km?inicio=2025-03-01"
 `uv run pytest -q` na raiz. Roda em SQLite local e em Postgres no CI.
 
 ## Pendências
-- O endpoint `.png` da série entra depois do gráfico (#39/#40). Ver [[produto/roadmap]].
+- Cliente TypeScript a partir do OpenAPI (Meta 2). Ver [[produto/roadmap]].
 - Cada métrica nova ganha nota em [[metricas/]].

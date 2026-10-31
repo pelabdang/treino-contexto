@@ -4,11 +4,12 @@ from __future__ import annotations
 
 from datetime import date, datetime
 
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Response
 from pydantic import BaseModel
 from sqlalchemy.orm import Session
 
 from app.db.models import Atleta
+from app.graficos.tiros_1km import render_png
 from app.db.session import get_session
 from app.metricas.tiros_1km import VERSAO, formatar_pace
 from app.servicos.evolucao_tiros import SessaoSerie, sessoes_tiros_1km
@@ -83,9 +84,11 @@ def _sessao_out(s: SessaoSerie) -> SessaoOut:
     )
 
 
-def _atleta_ou_404(session: Session, atleta_id: int) -> None:
-    if session.get(Atleta, atleta_id) is None:
+def _atleta_ou_404(session: Session, atleta_id: int) -> Atleta:
+    atleta = session.get(Atleta, atleta_id)
+    if atleta is None:
         raise HTTPException(status_code=404, detail="atleta não encontrado")
+    return atleta
 
 
 @router.get("/tiros-1km", response_model=EvolucaoTiros1km)
@@ -106,3 +109,20 @@ def evolucao_tiros_1km(
         periodo=Periodo(inicio=inicio, fim=fim) if (inicio or fim) else None,
         sessoes=[_sessao_out(s) for s in sessoes],
     )
+
+
+@router.get(
+    "/tiros-1km.png",
+    response_class=Response,
+    responses={200: {"content": {"image/png": {}}, "description": "Gráfico PNG (1600 x 1000)"}},
+)
+def evolucao_tiros_1km_png(
+    atleta_id: int,
+    inicio: date | None = None,
+    fim: date | None = None,
+    session: Session = Depends(get_session),
+) -> Response:
+    """O mesmo gráfico do comando de `entregas/`, com os mesmos filtros do JSON."""
+    atleta = _atleta_ou_404(session, atleta_id)
+    serie = [s.ponto for s in sessoes_tiros_1km(session, atleta_id, inicio, fim)]
+    return Response(content=render_png(serie, atleta.nome), media_type="image/png")
