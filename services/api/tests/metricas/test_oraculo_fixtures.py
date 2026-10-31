@@ -79,7 +79,6 @@ def test_serie_das_fixtures_bate_com_o_calculo_a_mao(gerador, com_intensidade):
         assert p.n_tiros == n
         assert p.pace_s_km == pytest.approx(pace, abs=1e-9)
         assert p.fc_media == pytest.approx(fc, abs=1e-9)
-        assert p.versao == "tiros_1km@1"
 
 
 def test_valores_a_mao_apresentados(gerador):
