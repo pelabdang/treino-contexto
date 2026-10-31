@@ -26,6 +26,8 @@ MODALIDADES = ("corrida", "natacao", "ciclismo", "outra")
 TIPOS_TREINO = ("leve", "moderado", "longo", "intervalado", "fartlek")
 ORIGENS_TIPO = ("sugestao", "professor", "trainingpeaks")
 TIPOS_SEGMENTO = ("volta", "tiro", "recuperacao")
+# Valores do campo `intensity` do lap no FIT, normalizados em minúsculas (ADR 0002).
+INTENSIDADES = ("active", "rest", "warmup", "cooldown", "recovery", "interval", "other")
 
 
 def _in(col: str, values: tuple[str, ...]) -> str:
@@ -105,6 +107,7 @@ class Segmento(Base):
     __table_args__ = (
         UniqueConstraint("atividade_id", "ordem", name="uq_segmento_ordem"),
         CheckConstraint(_in("tipo", TIPOS_SEGMENTO), name="tipo"),
+        CheckConstraint(f"intensidade IS NULL OR {_in('intensidade', INTENSIDADES)}", name="intensidade"),
     )
 
     id: Mapped[int] = mapped_column(primary_key=True)
@@ -118,5 +121,7 @@ class Segmento(Base):
     pace_s_km: Mapped[float | None] = mapped_column(Float)
     zona: Mapped[str | None] = mapped_column(String(20))
     equipamento: Mapped[str | None] = mapped_column(String(40))
+    intensidade: Mapped[str | None] = mapped_column(String(20))  # do FIT; ADR 0002
+    versao_deteccao: Mapped[str | None] = mapped_column(String(40))  # ex.: tiros_1km@1; ADR 0002
 
     atividade: Mapped[Atividade] = relationship(back_populates="segmentos")
