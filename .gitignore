@@ -1,4 +1,9 @@
 dados-teste/
+entregas/
 .env
 __pycache__/
 .venv/
+.pytest_cache/
+node_modules/
+*.db
+.DS_Store

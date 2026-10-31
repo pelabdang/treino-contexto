@@ -1,0 +1,24 @@
+# Banco local do treino-contexto.
+# Subir:   docker compose -f infra/docker-compose.yml up -d
+# Migrar:  cd services/api && uv run alembic upgrade head
+name: treino-contexto
+
+services:
+  postgres:
+    image: postgres:16
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-treino}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-treino}
+      POSTGRES_DB: ${POSTGRES_DB:-treino}
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-treino} -d ${POSTGRES_DB:-treino}"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+volumes:
+  pgdata:

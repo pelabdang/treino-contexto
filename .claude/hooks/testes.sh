@@ -1,7 +1,7 @@
 #!/bin/bash
 # Impede que uma tarefa seja concluída com testes falhando
 cd "$CLAUDE_PROJECT_DIR" || exit 0
-pytest -q > /tmp/pytest.log 2>&1; rc=$?
+uv run pytest -q > /tmp/pytest.log 2>&1; rc=$?
 if [ $rc -ne 0 ] && [ $rc -ne 5 ]; then # 5 = nenhum teste encontrado
     echo "Testes do backend falhando. Corrija antes de concluir:" >&2
     tail -30 /tmp/pytest.log >&2
