@@ -56,14 +56,14 @@ mostrar a evolução dos tiros de 1 km dos intervalados de corrida (pace e FC m�
 | # | Issue | Dono | Depende de | Situação |
 |---|---|---|---|---|
 | #8 | Formato da exportação Garmin e fixtures sintéticas | duda-dados | (#1, feita) | feita |
-| #9 | ADR 0002: intensidade da volta e versão do cálculo no `segmento` | duda-dados (aprovação do Theo) | (#1, feita) | em revisão (PR #26) |
-| #10 | Parser da exportação Garmin (JSON e FIT) | duda-dados | #8 | em andamento |
+| #9 | ADR 0002: intensidade da volta e versão do cálculo no `segmento` | duda-dados (aprovação do Theo) | (#1, feita) | feita |
+| #10 | Parser da exportação Garmin (JSON e FIT) | duda-dados | #8 | feita |
 | #11 | Detecção dos tiros de 1 km numa corrida | caio-ciencia | (#1, feita) | feita |
 | #12 | Agregação por sessão (pace e FC médios) | caio-ciencia | #11 | feita |
-| #29 | `versao_deteccao` (`tiros_1km@1`) em `SessaoTiros`/`PontoSessao` | caio-ciencia | (#12, feita) | a fazer |
-| #30 | Oráculo das fixtures: pace e FC por sessão calculados à mão | caio-ciencia | (#8, #12, feitas) | a fazer |
-| #13 | Importar no banco (idempotente) | duda-dados | #9, #10 | a fazer |
-| #14 | Classificar tiros no banco e montar a série (data local da sessão, ADR do fuso) | duda-dados | #12, #13, #29 (referência: #30) | a fazer |
+| #29 | `versao_deteccao` (`tiros_1km@1`) em `SessaoTiros`/`PontoSessao` | caio-ciencia | (#12, feita) | feita |
+| #30 | Oráculo das fixtures: pace e FC por sessão calculados à mão | caio-ciencia | (#8, #12, feitas) | feita |
+| #13 | Importar no banco (idempotente) | duda-dados | #9, #10 | feita |
+| #14 | Classificar tiros no banco e montar a série (data local da sessão, ADR do fuso) | duda-dados | #12, #13, #29 (referência: #30) | em andamento (ADR 0003, fuso) |
 | #15 | Gráfico em `entregas/` | duda-dados | #14 | a fazer |
 | #16 | Endpoint da API (JSON e PNG) | duda-dados | #14, #15 | a fazer |
 | #17 | Documentação da Meta 1 e diário do ciclo | nina-docs | #16 | a fazer |
@@ -72,7 +72,7 @@ mostrar a evolução dos tiros de 1 km dos intervalados de corrida (pace e FC m�
 
 Caminhos paralelos: a Duda começa por #8 e #9; o Caio faz #11 e #12 ao mesmo tempo, com voltas montadas à mão.
 Os dois se encontram em #14. Depois de #12, o Caio faz #29 e #30, que servem de referência para #14 e #18.
-Manutenção do roteiro: #27 (paulo-planejador).
+Manutenção do roteiro (paulo-planejador): #27 (feita), #36.
 
 ### Quem participa
 - **duda-dados:** ingestão, banco, gráfico e API.
