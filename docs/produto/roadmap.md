@@ -60,16 +60,18 @@ mostrar a evolução dos tiros de 1 km dos intervalados de corrida (pace e FC m�
 | #10 | Parser da exportação Garmin (JSON e FIT) | duda-dados | #8 | em andamento |
 | #11 | Detecção dos tiros de 1 km numa corrida | caio-ciencia | (#1, feita) | feita |
 | #12 | Agregação por sessão (pace e FC médios) | caio-ciencia | #11 | feita |
+| #29 | `versao_deteccao` (`tiros_1km@1`) em `SessaoTiros`/`PontoSessao` | caio-ciencia | #12 | a fazer |
+| #30 | Oráculo das fixtures: pace e FC por sessão calculados à mão | caio-ciencia | #8, #12 | a fazer |
 | #13 | Importar no banco (idempotente) | duda-dados | #9, #10 | a fazer |
-| #14 | Classificar tiros no banco e montar a série | duda-dados | #12, #13 | a fazer |
+| #14 | Classificar tiros no banco e montar a série (data local da sessão) | duda-dados | #12, #13 (usa #29, #30) | a fazer |
 | #15 | Gráfico em `entregas/` | duda-dados | #14 | a fazer |
 | #16 | Endpoint da API (JSON e PNG) | duda-dados | #14, #15 | a fazer |
 | #17 | Documentação da Meta 1 e diário do ciclo | nina-docs | #16 | a fazer |
-| #18 | QA de ponta a ponta com fixtures | bia-qa | #16, #17 | a fazer |
+| #18 | QA de ponta a ponta com fixtures | bia-qa | #16, #17 (oráculo #30) | a fazer |
 | #19 | Validar com a exportação real e o Postgres local | duda-dados (com bia-qa) | #18 e itens do Angelo | bloqueada (itens do Angelo) |
 
 Caminhos paralelos: a Duda começa por #8 e #9; o Caio faz #11 e #12 ao mesmo tempo, com voltas montadas à mão.
-Os dois se encontram em #14.
+Os dois se encontram em #14. Depois de #12, o Caio faz #29 e #30, que servem de referência para #14 e #18.
 Manutenção do roteiro: #27 (paulo-planejador).
 
 ### Quem participa
