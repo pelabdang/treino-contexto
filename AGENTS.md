@@ -30,7 +30,8 @@ Plano completo: docs/produto/plano-mvp-execucao.md
 - Só se trabalha em issues da meta atual.
 
 ## Documentação
-- Antes de procurar arquivos, leia graphify-out/GRAPH_REPORT.md. Para relações entre partes do
+- Antes de procurar arquivos, leia graphify-out/GRAPH_REPORT.md. Se graphify-out/ não existir (fica fora do git),
+  rode `/graphify . --update` primeiro. Para relações entre partes do
   código use /graphify query "<tema>" ou /graphify explain "<item>".
 - Toda mudança de comportamento atualiza a nota do módulo ou da métrica em docs/.
 - Métrica nova = nota nova em docs/metricas/ usando o template.
