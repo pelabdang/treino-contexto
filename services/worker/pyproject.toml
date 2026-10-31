@@ -7,6 +7,7 @@ dependencies = [
     "fastapi>=0.115",
     "uvicorn[standard]>=0.30",
     "treino-api",
+    "fitdecode>=0.11.0",
 ]
 
 [tool.uv.sources]

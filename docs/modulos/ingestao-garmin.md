@@ -1,6 +1,6 @@
 ---
 tipo: modulo
-status: rascunho
+status: em-uso
 dono: duda
 atualizado: 2026-10-31
 links: [[modulos/worker]], [[modulos/banco]], [[produto/roadmap]]
@@ -41,7 +41,7 @@ Lista com um objeto `summarizedActivitiesExport`, que é a lista de atividades.
 O JSON **não traz as voltas**.
 
 ### FIT original
-Mensagens usadas (formato binário da Garmin, lido com a biblioteca definida no parser, #10):
+Mensagens usadas (formato binário da Garmin, lido com `fitdecode`, ver "Parser" abaixo):
 
 | Mensagem | Campo | Unidade no arquivo | Observação |
 |---|---|---|---|
@@ -54,7 +54,7 @@ Mensagens usadas (formato binário da Garmin, lido com a biblioteca definida no 
 | `file_id` | `serial_number`, `time_created` | | base do id quando não há JSON |
 
 Os leitores de FIT costumam devolver as unidades já convertidas (s e m). A conversão de unidades fica num
-único lugar do código (#10) e tem teste.
+único lugar do código (`worker/garmin/unidades.py`) e tem teste.
 
 ### Fixtures sintéticas
 `tests/fixtures/garmin/exportacao_minima.zip`, gerada por `tests/fixtures/garmin/gerar_fixtures.py`
@@ -72,12 +72,48 @@ A tabela com os valores de cada volta está no topo do script. Resumo:
 Regerar: `uv run python tests/fixtures/garmin/gerar_fixtures.py`. A biblioteca `fit-tool` é só dependência de
 desenvolvimento (escreve FIT nos testes).
 
+## Parser (`services/worker/worker/garmin/`)
+`ler_exportacao(caminho) -> list[AtividadeImportada]`, sem banco. Aceita o zip completo, a pasta descompactada,
+um `summarizedActivities.json` solto ou um `.fit` solto. Zips aninhados (o `UploadedFiles_*.zip`) são abertos
+em memória, até 3 níveis. Na pasta e no zip só entram `*summarizedActivities.json` e `*.fit`.
+
+| Módulo | Papel |
+|---|---|
+| `modelos.py` | `AtividadeImportada` e `VoltaImportada` (dataclasses) |
+| `leitor.py` | entrada (4 formatos), leitura do JSON e casamento JSON x FIT |
+| `fit.py` | leitura de um FIT (`file_id`, `session`, `lap`) |
+| `tipos.py` | tipo Garmin para `modalidade` (corrida/natacao/ciclismo/outra) e `subtipo` (esteira, pista, trilha, piscina, aguas_abertas) |
+| `unidades.py` | ms para s, cm para m, epoch ms para datetime UTC |
+
+### Regras
+- **Casamento JSON x FIT:** pelo horário de início, tolerância de 60 s (vale o FIT mais próximo, cada FIT casa
+  uma vez). O `inicio` da atividade é o do JSON; `inicio_offset_s` das voltas é relativo ao início da sessão no FIT.
+- **`fonte_id`:** `activityId` do JSON quando existe. FIT sem JSON usa `fit-<serial_number>-<time_created em epoch>`
+  do `file_id`; sem esses campos, `fit-` + 16 primeiros caracteres do SHA-1 do arquivo. O id é estável entre
+  leituras (a importação idempotente, #13, depende disso).
+- **Dados da atividade:** com JSON, duração/distância/FC vêm do JSON; só FIT, vêm da `session` (ou da soma das voltas).
+- **`arquivo_bruto`:** caminho lógico dentro da exportação, com `!/` para zips aninhados
+  (ex.: `exportacao.zip!/DI_CONNECT/.../UploadedFiles_0-_Part1.zip!/x.fit`). Sem FIT, é o caminho do JSON.
+- **`duracao_s` da volta** é `total_timer_time`; `intensidade` é o texto do enum FIT, `None` se ausente.
+- **Falhas não derrubam a leitura:** FIT corrompido/truncado, JSON inválido, zip quebrado, FIT repetido e atividade
+  sem FIT geram `logging.warning`; a atividade do JSON entra sem voltas. Item de JSON sem `activityId` ou
+  `startTimeGmt` é ignorado com aviso. Caminho inexistente levanta `FileNotFoundError`.
+- Um FIT corrompido não pode ser casado (não se sabe o horário), então a atividade do JSON fica sem voltas.
+
+### Biblioteca de FIT: `fitdecode`
+Escolhida por ser pura Python (sem compilar nada), leve, MIT, com leitura em fluxo e conversão de escala e de
+enums para texto (`intensity="active"`) e de datas para `datetime`, que é o que o modelo precisa. O
+`garmin-fit-sdk` oficial também serve, mas devolve enums e unidades de outro jeito e traz mais código para o pouco
+que usamos. Se algum relógio real trouxer mensagens que o `fitdecode` não entenda, reavaliar (#19).
+`fit-tool` segue só como dependência de desenvolvimento (gera FIT nas fixtures).
+
 ## Arquivos principais
+- `services/worker/worker/garmin/` e `services/worker/tests/test_garmin_parser.py`
 - `tests/fixtures/garmin/gerar_fixtures.py` e `tests/fixtures/garmin/exportacao_minima.zip`
 - `tests/test_fixtures_garmin.py`
 
 ## Depende de
-- [[modulos/worker]] (onde ficará o parser, #10) e [[modulos/banco]] (destino, #13).
+- [[modulos/worker]] (onde fica o parser) e [[modulos/banco]] (destino, #13).
 
 ## Como testar
 `uv run pytest -q` na raiz.
