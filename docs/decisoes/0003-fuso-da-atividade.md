@@ -1,6 +1,6 @@
 ---
 tipo: decisao
-status: rascunho
+status: em-uso
 dono: theo
 atualizado: 2026-10-31
 links: [[decisoes/0001-modelo-de-dados-minimo]], [[decisoes/0002-segmento-intensidade-e-versao]], [[modulos/banco]], [[modulos/ingestao-garmin]], [[produto/roadmap]]
@@ -16,14 +16,16 @@ calcula `inicio_local` com fuso, mas a tabela não tem onde guardar esse dado.
 ## Decisão
 - Em `atividade`, uma coluna nova, anulável (migração Alembic `0003`, sem editar as anteriores):
   `fuso_min` (inteiro): deslocamento do fuso em minutos, `startTimeLocal` - `startTimeGmt` (ex.: `-180` para UTC-3).
-  `NULL` quando a fonte não traz o horário local (FIT sem JSON, atividades antigas).
+  `NULL` quando a fonte não traz o horário local (FIT sem JSON, atividades antigas). `CHECK`:
+  `fuso_min IS NULL OR fuso_min BETWEEN -720 AND 840` (fusos reais vão de UTC-12 a UTC+14).
 - A importação (#13) preenche `fuso_min` a partir de `inicio_local` do parser. Como a reimportação já atualiza
   atividades que mudaram, reimportar a exportação preenche a coluna nas atividades antigas. `fuso_min` entra na
   comparação "mudou ou não" da importação.
 - **Data local da sessão** = data de `inicio + fuso_min minutos`. Se `fuso_min` é `NULL`, usa `America/Sao_Paulo`
   (zoneinfo, respeita o horário de verão histórico) aplicado ao `inicio` em UTC.
 - O cálculo fica numa função única (`data_local(inicio, fuso_min)`) usada pela série e pelo filtro `inicio`/`fim`.
-- O parser continua sem inventar fuso: `inicio_local` é `None` quando o campo falta.
+- O parser continua sem inventar fuso: `inicio_local` é `None` quando o campo falta ou o deslocamento sai de
+  UTC-12 a UTC+14 (mesmo intervalo do `CHECK`).
 
 ## Alternativas consideradas
 - Guardar `inicio_local` como timestamp sem fuso: duplica o instante e dá duas fontes de verdade; o deslocamento
@@ -39,4 +41,4 @@ calcula `inicio_local` com fuso, mas a tabela não tem onde guardar esse dado.
 - O teste de migração continua garantindo que a `0003` gera o esquema dos modelos.
 
 ## Data e quem decidiu
-2026-10-31. Proposta da Duda; direção do Theo na issue #14. Aprovação final no PR.
+2026-10-31. Proposta da Duda; direção do Theo na issue #14. Aprovada por Theo (com o `CHECK` de faixa) na issue #14.

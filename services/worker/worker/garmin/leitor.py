@@ -91,7 +91,7 @@ def _de_json(item: dict, caminho_json: str) -> AtividadeImportada | None:
     local = item.get("startTimeLocal")
     gmt = item["startTimeGmt"]
     inicio_local = (unidades.inicio_local(gmt, local)
-                    if isinstance(local, (int, float)) and abs(local - gmt) <= 15 * 3600_000 else None)
+                    if isinstance(local, (int, float)) and -12 * 3600_000 <= local - gmt <= 14 * 3600_000 else None)
     return AtividadeImportada(
         fonte_id=fonte_id, modalidade=modalidade, subtipo=subtipo, inicio=inicio,
         inicio_local=inicio_local, duracao_s=conv("duration", unidades.ms_para_s), distancia_m=conv("distance", unidades.cm_para_m),

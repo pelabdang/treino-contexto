@@ -1,6 +1,7 @@
 """Parser da exportacao Garmin (issue #10), com as fixtures sinteticas da #8."""
 
 import io
+import json
 import logging
 import shutil
 import zipfile
@@ -197,3 +198,17 @@ def test_inicio_local_das_fixtures():
 def test_unidades_inicio_local():
     d = unidades.inicio_local(1741078800000, 1741078800000 - 3 * 3600_000)
     assert d.utcoffset().total_seconds() == -3 * 3600
+
+
+def test_inicio_local_fora_de_utc_menos_12_a_mais_14_vira_none(tmp_path):
+    json_, _ = _extrair(tmp_path)
+    gmt = 1741078800000
+    for horas, esperado_none in ((14, False), (15, True), (-12, False), (-13, True)):
+        dados = json.loads(json_.read_text())
+        item = dados[0]["summarizedActivitiesExport"][0]  # atividade A, que ja tem startTimeLocal
+        item["startTimeLocal"] = gmt + horas * 3600_000
+        novo = json.dumps(dados)
+        alvo = tmp_path / f"j{horas}.json"
+        alvo.write_text(novo)
+        a = _por_id(ler_exportacao(alvo))["1000000001"]
+        assert (a.inicio_local is None) == esperado_none
