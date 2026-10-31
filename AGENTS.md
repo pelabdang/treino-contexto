@@ -13,7 +13,7 @@ Plano completo: docs/produto/plano-mvp-execucao.md
 - Nunca faça commit de dados pessoais. A pasta dados-teste/ fica fora do git.
 - Nunca use force push, nunca apague branches de outros, nunca mexa em .github/ sem o Theo.
 - Ao terminar uma tarefa: PR aberto com "Closes #N", label em-revisao e aviso ao Theo.
-- Documentação: siga a seção "Documentação" (padrão Obsidian + Graphify). O Theo só faz merge com CI verde e "docs ok" da Nina.
+- Documentação: siga a seção "Documentação" (padrão Obsidian + Graphify). O Theo só faz merge com CI verde (checks testes e docs) e o label docs-ok da Nina.
 
 ## Stack
 - App: React Native com Expo (TypeScript, Expo Router), rodando em iOS, Android e web. Pasta apps/mobile/.
@@ -36,5 +36,6 @@ Plano completo: docs/produto/plano-mvp-execucao.md
 - Toda mudança de comportamento atualiza a nota do módulo ou da métrica em docs/.
 - Métrica nova = nota nova em docs/metricas/ usando o template.
 - Decisão que afeta mais de um módulo = ADR em docs/decisoes/.
-- A Nina comenta "docs ok" no PR. O Theo só faz merge com CI verde e "docs ok".
+- A Nina adiciona o label docs-ok no PR (gh pr edit <n> --add-label docs-ok). Commit novo remove o label.
+  O Theo só faz merge com os checks testes e docs verdes.
 - Nunca edite docs/_grafo/ nem graphify-out/: são gerados.

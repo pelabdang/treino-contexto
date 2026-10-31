@@ -1,0 +1,21 @@
+
+name: docs
+on:
+  pull_request:
+    types: [opened, reopened, synchronize, labeled, unlabeled]
+permissions:
+  pull-requests: write
+jobs:
+  docs:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Commit novo invalida o docs ok
+        if: github.event.action == 'synchronize' && contains(github.event.pull_request.labels.*.name, 'docs-ok')
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh pr edit ${{ github.event.pull_request.number }} --repo ${{ github.repository }} --remove-label docs-ok
+          echo "Commit novo: a Nina precisa revisar de novo." && exit 1
+      - name: Exigir docs-ok da Nina
+        if: "!contains(github.event.pull_request.labels.*.name, 'docs-ok')"
+        run: echo "Falta o docs ok da Nina (label docs-ok)." && exit 1
