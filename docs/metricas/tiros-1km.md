@@ -3,7 +3,7 @@ tipo: metrica
 status: rascunho
 dono: caio
 atualizado: 2026-10-31
-links: [[produto/roadmap]], [[decisoes/0001-modelo-de-dados-minimo]], [[decisoes/0002-segmento-intensidade-e-versao]], [[glossario]]
+links: [[modulos/grafico-tiros]], [[produto/roadmap]], [[decisoes/0001-modelo-de-dados-minimo]], [[decisoes/0002-segmento-intensidade-e-versao]], [[glossario]]
 ---
 # Tiros de 1 km
 
@@ -50,6 +50,20 @@ Rodagem leve e natação não entram.
 
 Exemplo à mão: tiros 1000 m/240 s/160 bpm, 1000 m/236 s/165 bpm, 990 m/238 s sem FC:
 pace = 714 / 2990 x 1000 = 238,8 s/km; FC = (160x240 + 165x236) / 476 = 162,5 bpm.
+
+### Formato do pace em `m:ss` (issue #39)
+`formatar_pace(s_km)` arredonda ao segundo **com meio para cima** (piso de `s_km + 0,5`) e só depois separa
+minutos e segundos; por isso nunca sai "3:60". Não usa `round()` do Python (arredonda para o par). É a regra única
+do eixo do gráfico, do CSV e do JSON ([[modulos/grafico-tiros]]).
+
+| Pace (s/km) | `m:ss` |
+|---|---|
+| 238,8 | 3:59 |
+| 239,5 | 4:00 |
+| 238,49 | 3:58 |
+| 250,83 | 4:11 |
+| 237,0 | 3:57 |
+| 59,5 | 1:00 |
 
 ### Valores esperados das fixtures (oráculo, issue #30)
 Calculados à mão a partir de `tests/fixtures/garmin/gerar_fixtures.py`; o teste
