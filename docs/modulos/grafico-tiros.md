@@ -32,7 +32,7 @@ a série e chamam estas funções, então o PNG é o mesmo nos dois lugares.
 matplotlib (backend `Agg`, sem display) e de [[metricas/tiros-1km]].
 
 ## Como testar
-Exemplo gerado com os pontos abaixo: ![[_anexos/tiros-1km-fixtures.png]]
+Exemplo gerado com os 2 pontos do oráculo (#30): ![[_anexos/tiros-1km-fixtures.png]]
 
 `uv run pytest -q services/api/tests/metricas/test_grafico_tiros_1km.py`. Os testes usam os 2 pontos do oráculo
 da #30 (250,83 s/km e 170,30 bpm; 237,0 s/km e 171,77 bpm).
