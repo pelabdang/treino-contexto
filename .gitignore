@@ -1,0 +1,4 @@
+dados-teste/
+.env
+__pycache__/
+.venv/
