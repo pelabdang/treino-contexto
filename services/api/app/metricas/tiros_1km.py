@@ -132,6 +132,7 @@ class SessaoTiros:
     data: date  # data local do início da atividade
     eh_intervalado: bool
     tiros: tuple[VoltaEntrada, ...]
+    versao: str = VERSAO
 
 
 @dataclass(frozen=True)
@@ -143,6 +144,7 @@ class PontoSessao:
     n_tiros: int
     pace_s_km: float
     fc_media: float | None
+    versao: str = VERSAO
 
 
 def sessao_de_voltas(
@@ -155,11 +157,14 @@ def sessao_de_voltas(
     resultado = detectar_tiros(voltas, modalidade)
     ordens = set(resultado.tiros)
     tiros = tuple(v for v in sorted(voltas, key=lambda v: v.ordem) if v.ordem in ordens)
-    return SessaoTiros(atividade_id, data, resultado.eh_intervalado, tiros)
+    return SessaoTiros(atividade_id, data, resultado.eh_intervalado, tiros, resultado.versao)
 
 
 def agregar_sessao(
-    atividade_id: int | str, data: date, tiros: list[VoltaEntrada] | tuple[VoltaEntrada, ...]
+    atividade_id: int | str,
+    data: date,
+    tiros: list[VoltaEntrada] | tuple[VoltaEntrada, ...],
+    versao: str = VERSAO,
 ) -> PontoSessao:
     """Pace e FC médios dos tiros de uma sessão.
 
@@ -186,13 +191,13 @@ def agregar_sessao(
         if com_fc and dur_fc > 0
         else None
     )
-    return PontoSessao(atividade_id, data, len(tiros), pace, fc)
+    return PontoSessao(atividade_id, data, len(tiros), pace, fc, versao)
 
 
 def serie_por_sessao(sessoes: list[SessaoTiros]) -> list[PontoSessao]:
     """Um ponto por sessão intervalada, ordenado por data (e id, no empate)."""
     pontos = [
-        agregar_sessao(s.atividade_id, s.data, s.tiros)
+        agregar_sessao(s.atividade_id, s.data, s.tiros, s.versao)
         for s in sessoes
         if s.eh_intervalado and s.tiros
     ]

@@ -43,6 +43,9 @@ Rodagem leve e natação não entram.
 - **FC da sessão (bpm)** = soma(FC x duração) / soma(duração), média ponderada pela duração. Tiros sem FC ficam
   fora (inclusive do peso); se nenhum tem FC, `None`.
 - Também saem `n_tiros`, `data` (data local do início) e `atividade_id`.
+- `versao`: versão da regra de detecção (`tiros_1km@1`), vinda da detecção e levada até o ponto da série
+  (`SessaoTiros.versao`, `PontoSessao.versao`). É o valor a gravar em `segmento.versao_deteccao` (ADR 0002).
+  Mudou regra ou constante: sobe `VERSAO`.
 - Arredondamento só na apresentação, 1 casa decimal (`para_apresentacao`); o cálculo usa o valor cheio.
 
 Exemplo à mão: tiros 1000 m/240 s/160 bpm, 1000 m/236 s/165 bpm, 990 m/238 s sem FC:
