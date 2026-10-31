@@ -6,7 +6,7 @@ ja chega em segundos e metros (fitdecode aplica a escala do perfil FIT).
 
 from __future__ import annotations
 
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 
 
 def ms_para_s(ms: float) -> float:
@@ -27,3 +27,13 @@ def para_utc(dt: datetime) -> datetime:
     if dt.tzinfo is None:
         return dt.replace(tzinfo=timezone.utc)
     return dt.astimezone(timezone.utc)
+
+
+def inicio_local(gmt_ms: float, local_ms: float) -> datetime:
+    """Mesmo instante de `startTimeGmt`, com o fuso do atleta.
+
+    A Garmin grava `startTimeLocal` como a hora de parede local contada como se fosse UTC;
+    a diferenca para `startTimeGmt` e o deslocamento do fuso (arredondado a minutos).
+    """
+    minutos = round((local_ms - gmt_ms) / 60000)
+    return epoch_ms_para_datetime(gmt_ms).astimezone(timezone(timedelta(minutes=minutos)))

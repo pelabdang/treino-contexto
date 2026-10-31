@@ -34,6 +34,7 @@ Lista com um objeto `summarizedActivitiesExport`, que é a lista de atividades.
 | `activityType` | texto (`running`, `track_running`, `treadmill_running`, `lap_swimming`...) | modalidade e `subtipo` |
 | `sportType` | texto (`RUNNING`, `SWIMMING`...) | apoio à modalidade |
 | `startTimeGmt` | **milissegundos** desde 1970, UTC | `inicio` |
+| `startTimeLocal` | ms; hora de parede local contada como se fosse UTC (**opcional**, não está nas fixtures) | `inicio_local` |
 | `duration` | **milissegundos** | `duracao_s` |
 | `distance` | **centímetros** | `distancia_m` |
 | `avgHr` | bpm | `fc_media` |
@@ -91,6 +92,7 @@ em memória, até 3 níveis. Na pasta e no zip só entram `*summarizedActivities
 - **`fonte_id`:** `activityId` do JSON quando existe. FIT sem JSON usa `fit-<serial_number>-<time_created em epoch>`
   do `file_id`; sem esses campos, `fit-` + 16 primeiros caracteres do SHA-1 do arquivo. O id é estável entre
   leituras (a importação idempotente, #13, depende disso).
+- **`inicio_local`:** mesmo instante de `inicio`, com o fuso do atleta (deslocamento = `startTimeLocal` - `startTimeGmt`, em minutos). `None` quando o JSON não traz `startTimeLocal` (FIT sem JSON, fixtures atuais) ou o deslocamento passa de 15 h; nesse caso quem consome (#14) assume `America/Sao_Paulo`.
 - **Dados da atividade:** com JSON, duração/distância/FC vêm do JSON; só FIT, vêm da `session` (ou da soma das voltas).
 - **`arquivo_bruto`:** caminho lógico dentro da exportação, com `!/` para zips aninhados
   (ex.: `exportacao.zip!/DI_CONNECT/.../UploadedFiles_0-_Part1.zip!/x.fit`). Sem FIT, é o caminho do JSON.
@@ -122,6 +124,7 @@ que usamos. Se algum relógio real trouxer mensagens que o `fitdecode` não ente
 A confirmar com o dado real (#19):
 - nomes exatos das pastas e dos arquivos, e se há mais de um `summarizedActivities.json`;
 - unidades de `duration` (ms) e `distance` (cm) e o fuso de `startTimeGmt`;
+- se `startTimeLocal` existe com esse nome e semântica na exportação real;
 - valores reais de `activityType` para esteira, pista e natação em águas abertas;
 - se os `.fit` vêm todos no zip interno e se o `activityId` aparece no nome deles;
 - se `intensity` vem preenchido em todos os relógios (intervalados sem treino estruturado podem trazer só `active`).
