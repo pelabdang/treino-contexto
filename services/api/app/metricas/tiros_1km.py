@@ -105,10 +105,11 @@ def _bloco_principal_e_1km(voltas: list[VoltaEntrada], tiros: list[VoltaEntrada]
     """O bloco principal do treino são os tiros de 1 km?
 
     Compara o volume (distância) dos tiros de 1 km com o das voltas curtas (150 a
-    700 m) que não são tiro de 1 km nem rest/recovery/warmup/cooldown: tiros de outra
-    distância. Os tiros de 1 km valem se o volume deles for maior ou igual ao dos
-    curtos. Uma recuperação de 400 m sem rótulo pesa no máximo 70% de um tiro de
-    1 km, então nunca derruba um treino só de 1 km.
+    700 m) que não são tiro de 1 km e não estão rotuladas rest/recovery/warmup/
+    cooldown: tiros curtos e também recuperações sem rótulo. Os tiros de 1 km valem
+    se o volume deles for maior ou igual ao das voltas curtas. Cada recuperação sem
+    rótulo pesa no máximo 70% de um tiro de 1 km, então num treino de 1 km elas somam
+    bem menos que os tiros.
     """
     ordens = {t.ordem for t in tiros}
     curtas = sum(

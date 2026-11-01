@@ -32,10 +32,11 @@ Versão do cálculo: `tiros_1km@2` (a `@1` foi substituída, ver "Histórico" ab
    estrutura esforço-pausa decidem sempre, com ou sem intensidade.
 5. **Recuperações**: voltas que não são tiro entre o primeiro e o último tiro.
 6. **Bloco principal**: se há 3 ou mais tiros, a atividade só vale se o **volume** (soma das distâncias) dos tiros
-   de 1 km for **maior ou igual** ao das voltas curtas (de 150 a 700 m) que não são tiro de 1 km nem
-   `rest`/`recovery`/`warmup`/`cooldown`, isto é, tiros de outra distância. Num treino misto em que os tiros
-   curtos pesam mais, a atividade fica fora: tiros e recuperações saem vazios. Uma recuperação de 400 m sem
-   rótulo pesa no máximo 70% de um tiro de 1 km, então nunca derruba um treino só de 1 km.
+   de 1 km for **maior ou igual** ao das voltas curtas (de 150 a 700 m) que não são tiro de 1 km e não estão
+   rotuladas `rest`/`recovery`/`warmup`/`cooldown` (tiros curtos e também recuperações sem rótulo). Num treino misto
+   em que os tiros curtos pesam mais, a atividade fica fora: tiros e recuperações saem vazios. As recuperações sem
+   rótulo entram na soma, mas somam bem menos que os tiros num treino de 1 km: cada uma pesa no máximo 70% de um
+   tiro.
 7. `eh_intervalado` = **pelo menos 3 tiros** (depois do item 6).
 
 ### Por que a estrutura e não a intensidade
@@ -53,11 +54,11 @@ recuperação, então 8% não perde tiros. O valor é decisão do projeto, não 
 Um treino de tiros de 1 km é um treino em que o que importa são as repetições de 1 km, com pausa ou trote entre elas.
 A regra procura isso em três passos: acha as voltas de 1 km que estão cercadas por recuperação (e não coladas a outras
 voltas de 1 km no mesmo ritmo, que é rodagem); exige pelo menos 3; e confere que elas são a parte principal do treino,
-isto é, que somam pelo menos tanta distância quanto os tiros de outra distância (por exemplo, 400 m) do mesmo treino.
+isto é, que somam pelo menos tanta distância quanto as voltas curtas (por exemplo, de 400 m) do mesmo treino.
 Se os tiros curtos pesam mais, o treino é de tiros curtos e não entra na série de 1 km.
 
 ### Exemplos à mão
-- 6 x 1000 m com recuperação de 400 m: 6000 m de tiros, nenhuma volta curta rápida: dentro.
+- 6 x 1000 m com 5 recuperações de 400 m sem rótulo: 6000 m de tiros contra 2000 m de voltas curtas: dentro.
 - 3 x 1000 m e 8 x 400 m a 225 s/km: 3000 m de tiros contra 3200 m de curtos: 3000 < 3200, o bloco principal são
   os tiros curtos, fora. Com 2 x 1000 m e 8 x 400 m, fora já pelo mínimo de 3 tiros.
 - 3 x 1000 m e 10 x 300 m: 3000 m contra 3000 m. A regra é "maior ou igual": dentro. Com mais 150 m de curtos, fora.
