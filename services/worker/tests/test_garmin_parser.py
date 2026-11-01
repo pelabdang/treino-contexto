@@ -212,3 +212,58 @@ def test_inicio_local_fora_de_utc_menos_12_a_mais_14_vira_none(tmp_path):
         alvo.write_text(novo)
         a = _por_id(ler_exportacao(alvo))["1000000001"]
         assert (a.inicio_local is None) == esperado_none
+
+
+def _fit_nao_atividade() -> bytes:
+    from fit_tool.fit_file_builder import FitFileBuilder
+    from fit_tool.profile.messages.file_id_message import FileIdMessage
+    from fit_tool.profile.profile_type import FileType, Manufacturer
+
+    b = FitFileBuilder(auto_define=True, min_string_size=50)
+    fid = FileIdMessage()
+    fid.type = FileType.MONITORING_B
+    fid.manufacturer = Manufacturer.GARMIN.value
+    fid.product = 1
+    fid.serial_number = 1
+    fid.time_created = 1741078800000
+    b.add(fid)
+    return b.build().to_bytes()
+
+
+def test_fit_que_nao_e_atividade_e_ignorado_sem_aviso(tmp_path, caplog):
+    _, fits = _extrair(tmp_path)
+    (fits / "monitoramento.fit").write_bytes(_fit_nao_atividade())
+    with caplog.at_level(logging.WARNING):
+        ativs = ler_exportacao(tmp_path)
+    assert len(ativs) == 5  # nada de atividade nova
+    assert "monitoramento" not in caplog.text and "FIT ignorado" not in caplog.text
+
+
+def test_copias_do_mesmo_fit_sao_lidas_uma_vez(tmp_path):
+    """A exportacao real traz a mesma arvore em varias copias (pasta, DI_CONNECT/, Arquivo.zip)."""
+    _, fits = _extrair(tmp_path)
+    copia = tmp_path / "copia"
+    shutil.copytree(fits, copia)
+    ativs = ler_exportacao(tmp_path)
+    assert len(ativs) == 5 and len(_por_id(ativs)["1000000001"].voltas) == 13
+
+
+def test_ignora_lixo_do_finder_e_arquivos_irrelevantes(tmp_path):
+    json_, fits = _extrair(tmp_path)
+    (tmp_path / "__MACOSX").mkdir()
+    (tmp_path / "__MACOSX" / "._x.fit").write_bytes(b"lixo")
+    (tmp_path / "._atleta_1.fit").write_bytes(b"lixo")
+    (tmp_path / "foto.png").write_bytes(b"png")
+    (tmp_path / "outro_gear.json").write_text("[]")
+    assert len(ler_exportacao(tmp_path)) == 5
+
+
+def test_json_paginado(tmp_path):
+    """A exportacao real divide o resumo em varios arquivos (_1_, _301_...)."""
+    json_, _ = _extrair(tmp_path)
+    dados = json.loads(json_.read_text())
+    itens = dados[0]["summarizedActivitiesExport"]
+    json_.write_text(json.dumps([{"summarizedActivitiesExport": itens[:2]}]))
+    (json_.parent / "x_301_summarizedActivities.json").write_text(
+        json.dumps([{"summarizedActivitiesExport": itens[2:]}]))
+    assert len(ler_exportacao(tmp_path)) == 5
