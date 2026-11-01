@@ -1,14 +1,14 @@
 ---
 tipo: meta
-status: rascunho
+status: em-uso
 dono: paulo
 atualizado: 2026-10-31
 links: [[produto/roadmap]], [[metricas/tiros-1km]], [[modulos/ingestao-garmin]], [[modulos/worker]], [[modulos/api]], [[modulos/grafico-tiros]], [[decisoes/0002-segmento-intensidade-e-versao]], [[decisoes/0003-fuso-da-atividade]]
 ---
 # Meta 1: tiros de 1 km a partir da exportação Garmin
 
-> **Rascunho.** O resultado do critério de pronto entra com o relatório da Bia na #18. A meta continua
-> **atual** até a #19 (dado real) ou até o Angelo decidir fechá-la sem o dado real.
+> **Situação:** todos os itens do critério de pronto passaram com as fixtures (relatório da Bia, #18 / PR #45).
+> Falta só o dado real (#19). A meta continua **atual** até o Angelo decidir sobre a #19.
 
 ## Objetivo
 Provar o caminho completo do dado: exportação da Garmin, banco, métrica determinística, gráfico e API.
@@ -24,17 +24,17 @@ corrida (pace e FC médios por sessão).
 - `entregas/` e `dados-teste/` ficam fora do git.
 
 ## Critério de pronto
-Resultado de cada item conforme o relatório da #18 (Bia). Os itens marcados "a confirmar" são preenchidos com
-a evidência dela (comando e saída).
+Resultado de cada item conforme o relatório da Bia na #18 (PR #45). Ela rodou num clone limpo, em SQLite,
+seguindo só `docs/produto/meta-1-como-reproduzir.md` (#17).
 
 | Item | Onde foi feito | Resultado |
 |---|---|---|
-| Fixtures, clone limpo, só pela documentação: importar, gerar PNG e CSV, chamar os dois endpoints | #18 | a confirmar (#18) |
-| Pace e FC de cada sessão batem com a conta à mão (6 x 1 km: 250,8 s/km "4:11", 170,3 bpm; 5 x 1 km: 237,0 s/km "3:57", 171,8 bpm) | oráculo #30, testes de #14, #15 e #16 | a confirmar (#18) |
-| Reimportar não duplica atividades nem segmentos | #13 | a confirmar (#18) |
-| Rodagem leve com auto-lap, natação e intervalado sem FIT fora da série | #11, #14, #30 | a confirmar (#18) |
-| Check `testes` verde e "docs ok" (label `docs-ok` a partir do #35) em todos os PRs | todos | a confirmar (#18) |
-| Notas: ingestão Garmin, métrica tiros-1km, ADR 0002 e passo a passo de reprodução | #8, #9, #17 | a confirmar (#17, #18) |
+| Fixtures, clone limpo, só pela documentação: importar, gerar PNG e CSV, chamar os dois endpoints | #18 | **ok**. Passos 1 a 7 sem ajuste; importação `inseridas=5`; JSON 200; PNG 200 `image/png` 1600 x 1000; 404 e 422 conferidos; filtro `inicio` traz só a sessão de 11/03 |
+| Pace e FC de cada sessão batem com a conta à mão (6 x 1 km: 250,8 s/km "4:11", 170,3 bpm; 5 x 1 km: 237,0 s/km "3:57", 171,8 bpm) | oráculo #30, testes de #14, #15 e #16 | **ok**. Recalculado das tabelas do banco: 250,83 s/km e 170,305 bpm; 237,0 s/km e 171,769 bpm. JSON e CSV trazem 250.8 "4:11" 170.3 e 237.0 "3:57" 171.8 |
+| Reimportar não duplica atividades nem segmentos | #13 | **ok**. Reimportação `inseridas=0 atualizadas=0 ignoradas=5`; continuam 5 atividades, 36 segmentos e 1 atleta |
+| Rodagem leve com auto-lap, natação e intervalado sem FIT fora da série | #11, #14, #30 | **ok**. Série e CSV só com 1000000001 e 1000000002; as outras três estão no banco sem `tipo_treino` e sem segmento `tiro` |
+| Check `testes` verde e "docs ok" (label `docs-ok` a partir do #35) em todos os PRs | todos | **ok** no local (`uv run pytest -q`: 123 passed); CI e label `docs-ok` conferidos pelo Theo em cada merge |
+| Notas: ingestão Garmin, métrica tiros-1km, ADR 0002 e passo a passo de reprodução | #8, #9, #17 | **ok**. Nenhuma divergência entre a documentação e o comportamento |
 | **Com dado real:** exportação do Angelo no Postgres local, PNG conferido com 2 ou 3 treinos | #19 | bloqueado: ver "PRECISA DO ANGELO" |
 
 ## O que foi entregue
@@ -52,8 +52,8 @@ a evidência dela (comando e saída).
 | #39 | Desenho do gráfico, CSV e `formatar_pace` (regra única de `m:ss`) | #40 |
 | #16 | Endpoint JSON e PNG, com o serviço `sessoes_tiros_1km` | #41 |
 | #15 | Comando que grava o gráfico e o CSV em `entregas/meta-1/` | #42 |
-| #17 | Documentação da meta e diário do ciclo | a confirmar |
-| #18 | QA de ponta a ponta com fixtures | a confirmar |
+| #17 | Documentação da meta, passo a passo de reprodução e diário do ciclo | #44 (em revisão) |
+| #18 | QA de ponta a ponta, com o teste automatizado `tests/test_e2e_meta1.py` | #45 (em revisão) |
 
 Fora do plano original e acrescentado no caminho: #29, #30 e #39 (Caio, em paralelo), a ADR 0003 (fuso), o check
 `docs` com a label `docs-ok` (#35) e a manutenção do roteiro (#27, #36, #43).
@@ -76,6 +76,10 @@ Pendente da própria meta: a validação com o dado real (#19), bloqueada pelos 
 - **Formatação também é regra.** `m:ss` aparecia em dois lugares sem regra de arredondamento; virou uma função
   única (meio para cima, não o `round()` do Python).
 - **Fuso é decisão de modelo.** A data local da sessão precisou de coluna e ADR (0003). Vale para toda métrica por dia.
+- **Escala do eixo da FC (ponto de atenção para a Meta 2).** No PNG, o eixo da FC se ajusta à faixa dos dados
+  (170,3 a 171,8 bpm), e 1,5 bpm parece uma subida grande (observação da Bia na #18; não é bug). Na tela do app,
+  definir uma escala mínima no eixo (por exemplo, uma faixa fixa de alguns bpm) para não exagerar variações
+  pequenas. Vale também para o pace.
 - **Processo:** a revisão de docs passou de comentário para label (`docs-ok`, check `docs`). Um commit novo remove
   a label, então PRs de roteiro devem sair de uma vez, não em pedaços.
 
@@ -91,4 +95,13 @@ Bloqueiam só a #19; o resto da meta foi feito com fixtures.
    chegar, ou manter a Meta 1 aberta até a #19.
 
 ## Resultado
-_Preencher com o relatório da #18 (e, se houver, da #19)._
+**Com as fixtures: critério de pronto cumprido.** Todos os itens passaram no QA da Bia (#18, PR #45), sem
+divergência com a documentação e sem bug aberto. O PNG da API é idêntico byte a byte ao do comando.
+
+Observações do QA, nenhuma delas bug:
+- o eixo da FC exagera variações pequenas (ver "O que se aprendeu");
+- o `atividade_id` do CSV e do JSON é o id do banco (1 e 4), como a documentação avisa;
+- o passo a passo foi testado só em SQLite; o Postgres local fica para a #19.
+
+**Com dado real: pendente (#19).** A meta fica **atual** até o Angelo decidir: trazer a exportação e o Docker
+para fazer a #19, ou fechar a Meta 1 só com fixtures e seguir para a Meta 2 com a #19 em aberto.
