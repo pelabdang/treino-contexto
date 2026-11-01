@@ -49,10 +49,18 @@ Numa rodagem leve com auto-lap, as voltas variam cerca de 3% a 4% de uma para a 
 em semáforo); 8% fica com folga acima desse ruído. Um tiro de verdade costuma ser 15% a 30% mais rápido que a
 recuperação, então 8% não perde tiros. O valor é decisão do projeto, não vem de artigo.
 
+### Em linguagem simples
+Um treino de tiros de 1 km é um treino em que o que importa são as repetições de 1 km, com pausa ou trote entre elas.
+A regra procura isso em três passos: acha as voltas de 1 km que estão cercadas por recuperação (e não coladas a outras
+voltas de 1 km no mesmo ritmo, que é rodagem); exige pelo menos 3; e confere que elas são a parte principal do treino,
+isto é, que somam pelo menos tanta distância quanto os tiros de outra distância (por exemplo, 400 m) do mesmo treino.
+Se os tiros curtos pesam mais, o treino é de tiros curtos e não entra na série de 1 km.
+
 ### Exemplos à mão
 - 6 x 1000 m com recuperação de 400 m: 6000 m de tiros, nenhuma volta curta rápida: dentro.
 - 3 x 1000 m e 8 x 400 m a 225 s/km: 3000 m de tiros contra 3200 m de curtos: 3000 < 3200, o bloco principal são
   os tiros curtos, fora. Com 2 x 1000 m e 8 x 400 m, fora já pelo mínimo de 3 tiros.
+- 3 x 1000 m e 10 x 300 m: 3000 m contra 3000 m. A regra é "maior ou igual": dentro. Com mais 150 m de curtos, fora.
 - 6 x 1000 m e 4 x 400 m: 6000 m contra 1600 m: dentro.
 - 6 x 1000 m a 240 s/km com recuperação de 400 m a 450 s/km: `240 <= 450 x 0,92 = 414`, os 6 são tiros.
 - 8 voltas de 1000 m (328 a 340 s) e uma parcial de 350 m: a razão mais baixa entre voltas vizinhas é

@@ -344,3 +344,21 @@ def test_trote_de_400_m_nao_conta_como_tiro_curto():
         voltas += [volta(o, 1000, 250), volta(o + 1, 400, 180)]
         o += 2
     assert detectar_tiros(voltas).eh_intervalado is True
+
+
+def test_fronteira_volume_igual_dos_curtos_fica_dentro():
+    # 3 x 1000 m = 3000 m de tiros de 1 km; 10 x 300 m = 3000 m de tiros curtos.
+    # A regra é "maior ou igual" (3000 >= 3000): a sessão fica dentro.
+    voltas, o = [volta(1, 2000, 720, "warmup")], 2
+    for _ in range(3):
+        voltas += [volta(o, 1000, 250, "active"), volta(o + 1, 400, 180, "rest")]
+        o += 2
+    for _ in range(10):
+        voltas += [volta(o, 300, 69, "active"), volta(o + 1, 100, 60, "rest")]
+        o += 2
+    r = detectar_tiros(voltas)
+    assert len(r.tiros) == 3
+    assert r.eh_intervalado is True
+    # Um metro a mais nas voltas curtas (10 x 300 m + 1 volta de 150 m = 3150 m) vira fora.
+    voltas += [volta(o, 150, 35, "active"), volta(o + 1, 100, 60, "rest")]
+    assert detectar_tiros(voltas).eh_intervalado is False
