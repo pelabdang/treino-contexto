@@ -41,14 +41,15 @@ mostrar a evolução dos tiros de 1 km dos intervalados de corrida (pace e FC m�
 - `entregas/` e `dados-teste/` ficam fora do git: o gráfico com dado real é dado pessoal.
 
 ### Critério de pronto
-- [ ] Com as fixtures sintéticas (`tests/fixtures/garmin/`), num clone limpo e seguindo só a documentação:
+Com fixtures, cumprido (QA da Bia, #18 / PR #45). Resultado completo em [[produto/metas/meta-1-tiros-1km]].
+- [x] Com as fixtures sintéticas (`tests/fixtures/garmin/`), num clone limpo e seguindo só a documentação:
       importar, gerar o PNG e o CSV e chamar os dois endpoints (Bia, #18).
-- [ ] Pace e FC de cada sessão batem com o cálculo à mão a partir da tabela das fixtures.
+- [x] Pace e FC de cada sessão batem com o cálculo à mão a partir da tabela das fixtures.
       Pace da sessão = soma das durações dos tiros / soma das distâncias x 1000; FC = média ponderada pela duração.
-- [ ] Reimportar a mesma exportação não duplica atividades nem segmentos.
-- [ ] Rodagem leve com auto-lap de 1 km, natação e intervalado sem arquivo FIT ficam fora da série.
-- [ ] Check `testes` verde (SQLite local e Postgres no CI) e "docs ok" da Nina em todos os PRs.
-- [ ] Notas: [[modulos/ingestao-garmin]], [[metricas/tiros-1km]], ADR 0002 e o passo a passo de reprodução.
+- [x] Reimportar a mesma exportação não duplica atividades nem segmentos.
+- [x] Rodagem leve com auto-lap de 1 km, natação e intervalado sem arquivo FIT ficam fora da série.
+- [x] Check `testes` verde (SQLite local e Postgres no CI) e "docs ok" da Nina em todos os PRs.
+- [x] Notas: [[modulos/ingestao-garmin]], [[metricas/tiros-1km]], ADR 0002 e o passo a passo de reprodução.
 - [ ] **Com dado real (quando o Angelo desbloquear, #19):** a exportação do Angelo importada no Postgres local,
       PNG gerado e conferido com 2 ou 3 treinos de que ele se lembra.
 
@@ -63,19 +64,21 @@ mostrar a evolução dos tiros de 1 km dos intervalados de corrida (pace e FC m�
 | #29 | `versao_deteccao` (`tiros_1km@1`) em `SessaoTiros`/`PontoSessao` | caio-ciencia | (#12, feita) | feita |
 | #30 | Oráculo das fixtures: pace e FC por sessão calculados à mão | caio-ciencia | (#8, #12, feitas) | feita |
 | #13 | Importar no banco (idempotente) | duda-dados | #9, #10 | feita |
-| #14 | Classificar tiros no banco e montar a série (data local da sessão, ADR do fuso) | duda-dados | #12, #13, #29 (referência: #30) | em andamento (ADR 0003, fuso) |
-| #39 | Desenho do gráfico com dados fixos (`render_png`, `linhas_csv`, `formatar_pace`) | caio-ciencia | (#29, #30, feitas) | a fazer |
-| #15 | Comando que grava o gráfico e o CSV em `entregas/` | duda-dados | #14, #39 | a fazer |
-| #16 | Endpoint da API (JSON e PNG), com o serviço `sessoes_tiros_1km` | duda-dados | #14, #39 | a fazer |
-| #17 | Documentação da Meta 1 e diário do ciclo | nina-docs | #16 | a fazer |
-| #18 | QA de ponta a ponta com fixtures | bia-qa | #16, #17 (oráculo #30) | a fazer |
+| #14 | Classificar tiros no banco e montar a série (data local da sessão, ADR do fuso) | duda-dados | #12, #13, #29 (referência: #30) | feita (ADR 0003) |
+| #39 | Desenho do gráfico com dados fixos (`render_png`, `linhas_csv`, `formatar_pace`) | caio-ciencia | (#29, #30, feitas) | feita |
+| #15 | Comando que grava o gráfico e o CSV em `entregas/` | caio-ciencia (antes duda-dados) | #14, #39 | feita |
+| #16 | Endpoint da API (JSON e PNG), com o serviço `sessoes_tiros_1km` | duda-dados | #14, #39 | feita |
+| #17 | Documentação da Meta 1 e diário do ciclo | nina-docs | #16 | em revisão (PR #44) |
+| #18 | QA de ponta a ponta com fixtures | bia-qa | #16, #17 (oráculo #30) | em revisão (PR #45): critério de pronto ok com fixtures |
+| #43 | Resultado da meta em `docs/produto/metas/` e roteiro | paulo-planejador | #18 | esta |
 | #19 | Validar com a exportação real e o Postgres local | duda-dados (com bia-qa) | #18 e itens do Angelo | bloqueada (itens do Angelo) |
 
 Caminhos paralelos: a Duda começa por #8 e #9; o Caio faz #11 e #12 ao mesmo tempo, com voltas montadas à mão.
 Os dois se encontram em #14. Depois de #12, o Caio faz #29 e #30, que servem de referência para #14 e #18.
 Enquanto a Duda faz a #14, o Caio desenha o gráfico com dados fixos (#39). `formatar_pace` é a regra única de `m:ss`
 (ao segundo, meio para cima) para o CSV da #15 e o JSON da #16.
-Manutenção do roteiro (paulo-planejador): #27 (feita), #36.
+Manutenção do roteiro (paulo-planejador): #27 e #36 (feitas), #43.
+Resultado da meta: [[produto/metas/meta-1-tiros-1km]].
 
 ### Quem participa
 - **duda-dados:** ingestão, banco, gráfico e API.
@@ -102,6 +105,9 @@ Revisadas ao fim de cada meta com o que se aprendeu. Ordem tirada da "Fundação
 - **Entrega visível:** tela "Evolução dos tiros de 1 km" no Expo, com dados do endpoint da Meta 1.
 - **Critério de pronto:** cliente TypeScript gerado do OpenAPI em `packages/api-client/`; tela com estado
   vazio, carregando e erro; `npm test` cobrindo os três estados.
+- **Aprendido na Meta 1:** escala mínima nos eixos de FC e pace, para 1 a 2 bpm não parecerem uma subida grande
+  (observação da Bia, #18); conferir o contrato do endpoint contra o que o serviço devolve antes de abrir as issues;
+  `m:ss` sempre pela regra única (`formatar_pace`).
 - **Quem:** rafa-app, duda-dados (cliente gerado), bia-qa.
 - **Fora:** login, outras métricas, edição de dados.
 
