@@ -95,7 +95,7 @@ Ficam fora da série: 1000000003 (corrida leve, sem tiros), 1000000004 (nataçã
 
 ## Dados de entrada
 Por volta: `ordem`, `distancia_m`, `duracao_s`, `fc_media` (opcional) e `intensidade` (opcional; campo
-`segmento.intensidade` ver [[decisoes/0002-segmento-intensidade-e-versao]]). Mais a modalidade da atividade.
+`segmento.intensidade`, ver [[decisoes/0002-segmento-intensidade-e-versao]]). Mais a modalidade da atividade.
 
 ## Referência
 Regra própria do projeto; não há artigo.
