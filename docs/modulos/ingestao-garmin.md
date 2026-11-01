@@ -9,8 +9,8 @@ links: [[modulos/worker]], [[modulos/banco]], [[produto/roadmap]]
 
 ## Para que serve
 Ler a exportação "Exportar seus dados" do Garmin Connect e transformar em atividades e voltas, para a Meta 1
-(tiros de 1 km). O formato abaixo vem do que se conhece da exportação; **foi conferido com uma exportação real na #19**
-(conferido depois com uma exportação real, ver "Conferência com a exportação real"). Os testes usam fixtures sintéticas.
+(tiros de 1 km). O formato abaixo foi conferido com uma exportação real na #19 (ver "Conferência com a exportação real").
+Os testes usam fixtures sintéticas.
 
 ## Entradas e saídas
 ### Estrutura esperada da exportação (zip)
@@ -156,14 +156,14 @@ Confirmado, igual ao esperado:
 - `startTimeGmt`, `duration` (ms) e `distance` (cm): duração, distância e pace das corridas saem plausíveis, e
   `startTimeGmt` bate com o início do FIT, então o casamento por horário funciona.
 - `startTimeLocal` existe em todas as atividades, com a semântica descrita acima. Há também `timeZoneId` (não usado).
-- `activityType`: `running`, `treadmill_running`, `trail_running`, `cycling`, `indoor_cycling`, `virtual_ride`,
-  `lap_swimming` e `open_water_swimming` mapeiam como esperado; `strength_training`, `pilates`, `elliptical`,
-  `multi_sport` e `transition_v2` viram `outra`. Não apareceu `track_running` (pista) nesses dados.
+- `activityType`: os valores de corrida, ciclismo e natação (`running`, `treadmill_running`, `trail_running`,
+  `cycling`, `indoor_cycling`, `virtual_ride`, `lap_swimming`, `open_water_swimming`) mapeiam como esperado, e
+  qualquer outro tipo vira `outra`. `track_running` (pista) não apareceu nesses dados.
 - As voltas vêm dos `lap` do FIT. `intensity` aparece nos relógios usados, mas não em todas as atividades
   (ciclismo e natação costumam vir sem).
 
 Divergências em relação às fixtures:
-- **Resumo paginado:** vários `<usuario>_<n>_summarizedActivities.json` (`_1_`, `_301_`, `_601_`...), cada um com
+- **Resumo paginado:** vários `<usuario>_<n>_summarizedActivities.json` (com um número de página no nome), cada um com
   uma página da lista. O parser lê todos; um teste cobre.
 - **A árvore tem cópias:** a pasta descompactada, `DI_CONNECT/` e `Arquivo.zip` repetem os mesmos `.fit`. O parser
   lê cada arquivo uma vez (hash do conteúdo).
@@ -171,9 +171,9 @@ Divergências em relação às fixtures:
   de `activity`. O parser descarta esses sem decodificar o resto e sem aviso. Isso, mais o hash e não abrir arquivos
   irrelevantes, reduziu a leitura de vários minutos para poucos.
 - **O número no nome do `.fit` não é o `activityId`** (nome `<usuario>_<número>.fit`), então o casamento é só por
-  horário (já era a regra). Há nomes de outros apps (`zwift-activity`) e um `.gpx` no zip interno, ignorado.
+  horário (já era a regra). Há nomes de outros apps e um `.gpx` no zip interno, ignorado.
 - **Lixo do macOS:** `__MACOSX/` e `._*` aparecem nos zips; são ignorados.
-- **Arquivos sem relação** (aviação, golfe, saúde...) estão na raiz; só `*summarizedActivities.json`, `.fit` e `.zip`
+- **Arquivos sem relação** com treino estão na raiz; só `*summarizedActivities.json`, `.fit` e `.zip`
   são lidos, e os outros nem são abertos.
 - **Atividades sem FIT:** parte das atividades do resumo não tem `.fit` (musculação e semelhantes, e algumas
   corridas); entram sem voltas, com aviso.
@@ -193,6 +193,6 @@ Se a porta 5432 já estiver ocupada por um Postgres nativo, o container não é 
 inexistente): suba o container em outra porta e ajuste `DATABASE_URL`. A importação completa leva alguns minutos.
 
 ## Pendências
-- Corrigir a regra de tiros em rodagens com intensidade mista (issue aberta).
+- Corrigir a regra de tiros em rodagens com intensidade mista (#48).
 - `track_running` (pista) ainda sem exemplo real; a fixture B continua cobrindo.
 - Atividades do resumo sem FIT: confirmar com o dono se faltam arquivos ou se são atividades sem voltas.
