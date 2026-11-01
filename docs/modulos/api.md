@@ -62,7 +62,7 @@ curl "http://localhost:8000/atletas/1/evolucao/tiros-1km?inicio=2025-03-01"
 - `periodo` é `null` sem filtro; com algum filtro, os dois campos, `null` no que não veio.
 - Atleta inexistente: `404` `{"detail": "atleta não encontrado"}`. Sem sessões: `200` com `"sessoes": []`. Data inválida: `422`.
 - **PNG:** `GET /atletas/{atleta_id}/evolucao/tiros-1km.png`, mesmos filtros; `200` com `Content-Type: image/png` (1600 x 1000),
-  o mesmo desenho de `render_png` ([[modulos/grafico-tiros]]) que o comando da #15 (`entregas/`) vai usar. Sem sessões gera o PNG com o aviso;
+  o mesmo desenho de `render_png` ([[modulos/grafico-tiros]]) que o comando `worker.grafico_tiros_1km` (`entregas/`, ver [[modulos/worker]]) usa. Sem sessões gera o PNG com o aviso;
   atleta inexistente `404`; data inválida `422`.
   ```
   curl -o tiros.png "http://localhost:8000/atletas/1/evolucao/tiros-1km.png"
@@ -77,4 +77,5 @@ curl "http://localhost:8000/atletas/1/evolucao/tiros-1km?inicio=2025-03-01"
 
 ## Pendências
 - Cliente TypeScript a partir do OpenAPI (Meta 2). Ver [[produto/roadmap]].
+- Passo a passo para reproduzir a Meta 1: [[produto/meta-1-como-reproduzir]].
 - Cada métrica nova ganha nota em [[metricas/]].

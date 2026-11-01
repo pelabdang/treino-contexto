@@ -1,9 +1,9 @@
 ---
 tipo: modulo
-status: rascunho
+status: em-uso
 dono: caio
 atualizado: 2026-10-31
-links: [[metricas/tiros-1km]], [[modulos/api]], [[produto/roadmap]]
+links: [[metricas/tiros-1km]], [[modulos/api]], [[modulos/worker]], [[produto/roadmap]]
 ---
 # Módulo: gráfico dos tiros de 1 km
 
@@ -38,4 +38,5 @@ Exemplo gerado com os 2 pontos do oráculo (#30): ![[_anexos/tiros-1km-fixtures.
 da #30 (250,83 s/km e 170,30 bpm; 237,0 s/km e 171,77 bpm).
 
 ## Pendências
-- #15 (comando e gravação em `entregas/`) e #16 (endpoint) usam estas funções.
+- Usadas pelo comando `worker.grafico_tiros_1km` ([[modulos/worker]], #15) e pelo endpoint PNG ([[modulos/api]], #16).
+- Revisar o desenho com o dado real (#19).

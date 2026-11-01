@@ -24,3 +24,8 @@ atualizado: 2026-10-31
 - **Versão da detecção**: identificador `<regra>@<n>` (ex.: `tiros_1km@1`) da regra que classificou o segmento. Guardada em `segmento.versao_deteccao`. Ver [[decisoes/0002-segmento-intensidade-e-versao]].
 - **Fuso da atividade (`fuso_min`)**: deslocamento do fuso em minutos (`startTimeLocal` - `startTimeGmt`, ex.: `-180`). Ver [[decisoes/0003-fuso-da-atividade]].
 - **Data local da sessão**: data de `inicio + fuso_min`; sem `fuso_min`, usa `America/Sao_Paulo`. É o eixo X da série de tiros. Ver [[decisoes/0003-fuso-da-atividade]].
+- **Tiro (1 km)**: volta de corrida de 950 a 1050 m com intensidade `active` ou `interval`; sem intensidade, a que é pelo menos 8% mais rápida que a mediana da atividade. Ver [[metricas/tiros-1km]].
+- **Recuperação**: volta que não é tiro entre o primeiro e o último tiro. Ver [[metricas/tiros-1km]].
+- **Treino intervalado (detecção)**: corrida com 3 ou mais tiros de 1 km. Vira sugestão de tipo `intervalado`, nunca sobrescreve o professor. Ver [[modulos/api]].
+- **Pace médio ponderado**: pace da sessão = soma das durações dos tiros / soma das distâncias x 1000 (ponderado pela distância, não a média simples). A FC da sessão pondera pela duração. Ver [[metricas/tiros-1km]].
+- **Oráculo (das fixtures)**: valores de pace e FC por sessão calculados à mão, usados como referência nos testes. Ver [[metricas/tiros-1km]].
