@@ -359,6 +359,6 @@ def test_fronteira_volume_igual_dos_curtos_fica_dentro():
     r = detectar_tiros(voltas)
     assert len(r.tiros) == 3
     assert r.eh_intervalado is True
-    # Um metro a mais nas voltas curtas (10 x 300 m + 1 volta de 150 m = 3150 m) vira fora.
+    # 150 m a mais nas voltas curtas (10 x 300 m + 1 volta de 150 m = 3150 m contra 3000 m) vira fora.
     voltas += [volta(o, 150, 35, "active"), volta(o + 1, 100, 60, "rest")]
     assert detectar_tiros(voltas).eh_intervalado is False
