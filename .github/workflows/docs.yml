@@ -1,21 +1,37 @@
-
 name: docs
+# Publica um status único "docs" no commit (o último substitui os anteriores).
+# Sem o label docs-ok: pendente. Com o label: sucesso. Commit novo remove o label.
 on:
   pull_request:
     types: [opened, reopened, synchronize, labeled, unlabeled]
 permissions:
   pull-requests: write
+  statuses: write
+concurrency:
+  group: docs-${{ github.event.pull_request.number }}
 jobs:
-  docs:
+  verificar-docs-ok:
     runs-on: ubuntu-latest
     steps:
-      - name: Commit novo invalida o docs ok
-        if: github.event.action == 'synchronize' && contains(github.event.pull_request.labels.*.name, 'docs-ok')
+      - name: Atualizar status docs
         env:
           GH_TOKEN: ${{ github.token }}
+          REPO: ${{ github.repository }}
+          PR: ${{ github.event.pull_request.number }}
+          SHA: ${{ github.event.pull_request.head.sha }}
+          ACAO: ${{ github.event.action }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
         run: |
-          gh pr edit ${{ github.event.pull_request.number }} --repo ${{ github.repository }} --remove-label docs-ok
-          echo "Commit novo: a Nina precisa revisar de novo." && exit 1
-      - name: Exigir docs-ok da Nina
-        if: "!contains(github.event.pull_request.labels.*.name, 'docs-ok')"
-        run: echo "Falta o docs ok da Nina (label docs-ok)." && exit 1
+          if [ "$ACAO" = "synchronize" ]; then
+            gh pr edit "$PR" --repo "$REPO" --remove-label docs-ok >/dev/null 2>&1 || true
+          fi
+          if gh pr view "$PR" --repo "$REPO" --json labels --jq '.labels[].name' | grep -qx docs-ok; then
+            estado=success; texto="docs ok da Nina"
+          elif [ "$ACAO" = "synchronize" ]; then
+            estado=pending; texto="Commit novo: a Nina precisa revisar de novo"
+          else
+            estado=pending; texto="Aguardando o label docs-ok da Nina"
+          fi
+          gh api "repos/$REPO/statuses/$SHA" -f state="$estado" -f context=docs \
+            -f description="$texto" -f target_url="$RUN_URL" >/dev/null
+          echo "docs: $estado ($texto)"
