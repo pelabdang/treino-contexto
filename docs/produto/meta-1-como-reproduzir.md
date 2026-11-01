@@ -92,6 +92,10 @@ com o Postgres local e com a exportação real isso fica para a #19.
 ## Testes
 `uv run pytest -q` na raiz.
 
+O teste de ponta a ponta é `tests/test_e2e_meta1.py` (#18). Ele refaz este roteiro num SQLite temporário
+(migrações, importação, gráfico e CSV, API em JSON e PNG, reimportação) e confere o resultado com o oráculo
+da #30 ([[metricas/tiros-1km]]). Para rodar só ele: `uv run pytest -q tests/test_e2e_meta1.py`.
+
 ## Notas da Meta 1
 - Formato da exportação, parser e importação: [[modulos/ingestao-garmin]].
 - Regra dos tiros e agregação por sessão: [[metricas/tiros-1km]].
