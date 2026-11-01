@@ -101,3 +101,5 @@ usual: poucos tiros rápidos não a puxam.
 - Voltas de 1 km de uma prova ou de um longo progressivo, com intensidade `active`, podem passar na regra
   de pace se houver mudança de ritmo clara; é o comportamento esperado da regra, não um erro.
 - Esteira sem GPS: a distância vem do sensor do aparelho e pode se afastar da faixa de ± 50 m.
+- **Esteira fica fora da série** (decisão do Angelo, #51): a detecção classifica uma esteira como qualquer corrida,
+  mas `serie_tiros_1km`/`sessoes_tiros_1km` descartam `subtipo = "esteira"`. A atividade segue guardada.
