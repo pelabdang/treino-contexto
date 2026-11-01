@@ -1,9 +1,9 @@
 ---
 tipo: metrica
-status: rascunho
+status: em-uso
 dono: caio
 atualizado: 2026-10-31
-links: [[modulos/grafico-tiros]], [[produto/roadmap]], [[decisoes/0001-modelo-de-dados-minimo]], [[decisoes/0002-segmento-intensidade-e-versao]], [[glossario]]
+links: [[modulos/grafico-tiros]], [[produto/meta-1-como-reproduzir]], [[produto/roadmap]], [[decisoes/0001-modelo-de-dados-minimo]], [[decisoes/0002-segmento-intensidade-e-versao]], [[glossario]]
 ---
 # Tiros de 1 km
 
