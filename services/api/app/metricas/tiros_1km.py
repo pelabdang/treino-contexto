@@ -27,6 +27,9 @@ GANHO_MINIMO_PACE = 0.08
 PAUSA_MAX_M = 200.0
 # Atividade é intervalado com pelo menos 3 tiros.
 MIN_TIROS_INTERVALADO = 3
+# Volta "curta" (tiro de outra distância): de 150 a 700 m.
+CURTA_MIN_M = 150.0
+CURTA_MAX_M = 700.0
 
 MODALIDADE_CORRIDA = "corrida"
 
@@ -98,6 +101,26 @@ def _separa(tiro: VoltaEntrada, vizinha: VoltaEntrada | None) -> bool:
     return _pace_s_km(tiro) <= pace_vizinha * (1.0 - GANHO_MINIMO_PACE)
 
 
+def _bloco_principal_e_1km(voltas: list[VoltaEntrada], tiros: list[VoltaEntrada]) -> bool:
+    """O bloco principal do treino são os tiros de 1 km?
+
+    Compara o volume (distância) dos tiros de 1 km com o das voltas curtas (150 a
+    700 m) que não são tiro de 1 km nem rest/recovery/warmup/cooldown: tiros de outra
+    distância. Os tiros de 1 km valem se o volume deles for maior ou igual ao dos
+    curtos. Uma recuperação de 400 m sem rótulo pesa no máximo 70% de um tiro de
+    1 km, então nunca derruba um treino só de 1 km.
+    """
+    ordens = {t.ordem for t in tiros}
+    curtas = sum(
+        v.distancia_m
+        for v in voltas
+        if v.ordem not in ordens
+        and CURTA_MIN_M <= v.distancia_m <= CURTA_MAX_M
+        and _intensidade(v) not in INTENSIDADES_NUNCA_TIRO
+    )
+    return sum(t.distancia_m for t in tiros) >= curtas
+
+
 def detectar_tiros(
     voltas: list[VoltaEntrada], modalidade: str = MODALIDADE_CORRIDA
 ) -> ResultadoTiros:
@@ -120,6 +143,9 @@ def detectar_tiros(
         seguinte = voltas[i + 1] if i + 1 < len(voltas) else None
         if _separa(volta, anterior) and _separa(volta, seguinte):
             tiros.append(volta)
+
+    if len(tiros) >= MIN_TIROS_INTERVALADO and not _bloco_principal_e_1km(voltas, tiros):
+        tiros = []  # treino misto em que os tiros curtos pesam mais: não é de 1 km
 
     ordens_tiros = tuple(v.ordem for v in tiros)
     recuperacoes: tuple[int, ...] = ()

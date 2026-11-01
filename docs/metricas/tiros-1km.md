@@ -31,7 +31,12 @@ Versão do cálculo: `tiros_1km@2` (a `@1` foi substituída, ver "Histórico" ab
 4. A **intensidade só veta e marca fronteira**: nunca basta para dizer que uma volta é tiro. O pace e a
    estrutura esforço-pausa decidem sempre, com ou sem intensidade.
 5. **Recuperações**: voltas que não são tiro entre o primeiro e o último tiro.
-6. `eh_intervalado` = **pelo menos 3 tiros**.
+6. **Bloco principal**: se há 3 ou mais tiros, a atividade só vale se o **volume** (soma das distâncias) dos tiros
+   de 1 km for **maior ou igual** ao das voltas curtas (de 150 a 700 m) que não são tiro de 1 km nem
+   `rest`/`recovery`/`warmup`/`cooldown`, isto é, tiros de outra distância. Num treino misto em que os tiros
+   curtos pesam mais, a atividade fica fora: tiros e recuperações saem vazios. Uma recuperação de 400 m sem
+   rótulo pesa no máximo 70% de um tiro de 1 km, então nunca derruba um treino só de 1 km.
+7. `eh_intervalado` = **pelo menos 3 tiros** (depois do item 6).
 
 ### Por que a estrutura e não a intensidade
 Um treino de tiros é uma alternância de esforço e pausa; uma rodagem com auto-lap de 1 km é uma sequência de
@@ -45,6 +50,10 @@ em semáforo); 8% fica com folga acima desse ruído. Um tiro de verdade costuma 
 recuperação, então 8% não perde tiros. O valor é decisão do projeto, não vem de artigo.
 
 ### Exemplos à mão
+- 6 x 1000 m com recuperação de 400 m: 6000 m de tiros, nenhuma volta curta rápida: dentro.
+- 3 x 1000 m e 8 x 400 m a 225 s/km: 3000 m de tiros contra 3200 m de curtos: 3000 < 3200, o bloco principal são
+  os tiros curtos, fora. Com 2 x 1000 m e 8 x 400 m, fora já pelo mínimo de 3 tiros.
+- 6 x 1000 m e 4 x 400 m: 6000 m contra 1600 m: dentro.
 - 6 x 1000 m a 240 s/km com recuperação de 400 m a 450 s/km: `240 <= 450 x 0,92 = 414`, os 6 são tiros.
 - 8 voltas de 1000 m (328 a 340 s) e uma parcial de 350 m: a razão mais baixa entre voltas vizinhas é
   `328 / 340 = 0,965`, acima de 0,92: nenhuma é tiro, mesmo que a parcial seja `rest`.
@@ -103,7 +112,7 @@ Regra própria do projeto; não há artigo.
 ## Histórico
 - `tiros_1km@1` (#11): tiro por intensidade quando havia 2 ou mais valores diferentes; senão, pace 8% abaixo da
   mediana. Em dado real marcava rodagens leves como intervalado (a volta final parcial criava o "contraste").
-- `tiros_1km@2` (#48): a regra acima. Os segmentos já gravados com `@1` precisam ser reclassificados: reimportar a exportação ou chamar `classificar_atividades` (`app.servicos.evolucao_tiros`) para o atleta, que regrava `tipo` e `versao_deteccao`.
+- `tiros_1km@2` (#48): a regra acima, com o bloco principal. Os segmentos já gravados com `@1` precisam ser reclassificados: reimportar a exportação ou chamar `classificar_atividades` (`app.servicos.evolucao_tiros`) para o atleta, que regrava `tipo` e `versao_deteccao`.
 
 ## Código e teste
 - Código: `services/api/app/metricas/tiros_1km.py` (`detectar_tiros`, `agregar_sessao`, `serie_por_sessao`)
@@ -112,8 +121,8 @@ Regra própria do projeto; não há artigo.
   6 x 1 km com recuperação de 400 m: tiros a 240 s/km contra 450 s/km, limite 414 s/km).
 
 ## Limitações e quando não usar
-- Só detecta tiros de 1 km; 400 m, 2 km e outras distâncias ficam fora da Meta 1. Num treino misto (tiros de
-  1 km e curtos), só os de 1 km entram na série.
+- Só detecta tiros de 1 km; 400 m, 2 km e outras distâncias ficam fora da Meta 1. Num treino misto, só entra
+  se o volume dos tiros de 1 km for pelo menos o dos curtos (item 6); aí só os de 1 km vão para a série.
 - Tiros de 1 km seguidos, sem volta de recuperação entre eles (o relógio não marcou a pausa), não são detectados:
   a regra não distingue esse caso de um bloco contínuo de vários km. É o preço de não marcar rodagens.
 - Um tiro precisa ter volta de recuperação (ou pausa) dos dois lados, ou ser a primeira/última volta. Treino com

@@ -288,3 +288,59 @@ def test_tiros_curtos_e_de_1km_misturados_so_contam_os_de_1km():
         voltas += [volta(o, 300, 69, "active"), volta(o + 1, 100, 60, "rest")]
         o += 2
     assert detectar_tiros(voltas).tiros == (3, 5, 7)
+
+
+# ---------------------------------------------------------------------------
+# Bloco principal (issue #48): treino misto com tiros curtos pesando mais.
+# ---------------------------------------------------------------------------
+
+
+def _misto(n_1km, n_curtos):
+    # aquec. 2000 m; n_1km x (1000 m a 250 s/km + 400 m de trote a 450 s/km);
+    # n_curtos x (400 m a 225 s/km + 100 m parado a 60 s). Desaq. 1500 m.
+    voltas, o = [volta(1, 2000, 720, "warmup")], 2
+    for _ in range(n_1km):
+        voltas += [volta(o, 1000, 250, "active"), volta(o + 1, 400, 180, "rest")]
+        o += 2
+    for _ in range(n_curtos):
+        voltas += [volta(o, 400, 90, "active"), volta(o + 1, 100, 60, "rest")]
+        o += 2
+    voltas.append(volta(o, 1500, 570, "cooldown"))
+    return voltas
+
+
+def test_6x1km_puro_e_de_1km():
+    r = detectar_tiros(_misto(6, 0))
+    assert len(r.tiros) == 6
+    assert r.eh_intervalado is True
+
+
+def test_misto_3x1km_e_8x400m_fica_fora():
+    # Volume dos tiros de 1 km: 3 x 1000 = 3000 m. Voltas curtas active (400 m, a
+    # 225 s/km): 8 x 400 = 3200 m. 3000 < 3200: o bloco principal são os tiros
+    # curtos, então a sessão não é de tiros de 1 km.
+    r = detectar_tiros(_misto(3, 8))
+    assert r.tiros == () and r.recuperacoes == ()
+    assert r.eh_intervalado is False
+
+
+def test_misto_2x1km_e_8x400m_fica_fora():
+    # Só 2 tiros de 1 km (< 3): fora, como pedido pela definição do treino.
+    assert detectar_tiros(_misto(2, 8)).eh_intervalado is False
+
+
+def test_misto_6x1km_e_4x400m_fica_dentro():
+    # 6 x 1000 = 6000 m contra 4 x 400 = 1600 m: o bloco principal são os de 1 km.
+    r = detectar_tiros(_misto(6, 4))
+    assert len(r.tiros) == 6
+    assert r.eh_intervalado is True
+
+
+def test_trote_de_400_m_nao_conta_como_tiro_curto():
+    # Sem intensidade, 5 trotes de 400 m pesam 2000 m contra 5000 m de tiros de 1 km:
+    # 5 x 1 km sem aquecimento com trote de 400 m seguem de 1 km.
+    voltas, o = [], 1
+    for _ in range(5):
+        voltas += [volta(o, 1000, 250), volta(o + 1, 400, 180)]
+        o += 2
+    assert detectar_tiros(voltas).eh_intervalado is True
