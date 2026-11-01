@@ -140,3 +140,23 @@ def test_png_404_e_422(client, importar_fixtures):
 def test_png_no_openapi(client):
     j = client.get("/openapi.json").json()
     assert "image/png" in j["paths"]["/atletas/{atleta_id}/evolucao/tiros-1km.png"]["get"]["responses"]["200"]["content"]
+
+
+def test_esteira_sintetica_fora_do_json_e_do_png(client, importar_fixtures, session):
+    from datetime import datetime, timezone
+
+    from app.db.models import Segmento
+    from app.servicos.evolucao_tiros import classificar_atividades
+    ativ = Atividade(atleta_id=importar_fixtures.id, fonte="garmin_export", fonte_id="esteira-sintetica",
+                     modalidade="corrida", subtipo="esteira", fuso_min=-180,
+                     inicio=datetime(2025, 3, 8, 12, 0, tzinfo=timezone.utc), duracao_s=2000, distancia_m=7000)
+    voltas = [("warmup", 1000, 360)] + [("active", 1000, 230), ("rest", 200, 90)] * 5
+    for i, (intens, d, du) in enumerate(voltas):
+        ativ.segmentos.append(Segmento(ordem=i, tipo="volta", duracao_s=du, distancia_m=d, intensidade=intens))
+    session.add(ativ)
+    session.commit()
+    classificar_atividades(session, importar_fixtures.id)
+    j = client.get(_url(importar_fixtures)).json()
+    assert [s["data"] for s in j["sessoes"]] == ["2025-03-04", "2025-03-11"]
+    assert ativ.id not in [s["atividade_id"] for s in j["sessoes"]]
+    assert _png(client, importar_fixtures).status_code == 200

@@ -40,6 +40,7 @@ Futuramente recebe a importação Garmin e serve métricas ao [[modulos/mobile]]
   (3 ou mais tiros), por data crescente. Lê os segmentos já classificados (precisa de `classificar_atividades`
   antes). Uma sessão do professor marcada com outro tipo continua na série se tiver 3 ou mais tiros: a série
   segue a detecção, não o rótulo.
+- **O que entra na série:** corridas com 3 ou mais tiros. Atividades de `subtipo = "esteira"` ficam **de fora** da série, do JSON, do PNG e do CSV (decisão do Angelo, issue #51), mas continuam no banco e são classificadas normalmente. A regra está em `SUBTIPOS_FORA_DA_SERIE`, usada por `sessoes_tiros_1km` e `serie_tiros_1km`.
 - **Data da sessão:** a data local do início (`inicio + fuso_min`, ou `America/Sao_Paulo` se `fuso_min` é `NULL`).
   `inicio` e `fim` do filtro também são datas locais, inclusivas.
 - Testes: `services/api/tests/servicos/test_evolucao_tiros.py` (com as tabelas das fixtures e o oráculo da #30).

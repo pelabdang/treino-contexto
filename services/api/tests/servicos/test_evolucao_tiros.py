@@ -11,7 +11,7 @@ from sqlalchemy.exc import IntegrityError
 
 from app.db.models import Atividade, Atleta, Segmento
 from app.metricas.tiros_1km import para_apresentacao
-from app.servicos.evolucao_tiros import classificar_atividades, serie_tiros_1km
+from app.servicos.evolucao_tiros import classificar_atividades, serie_tiros_1km, sessoes_tiros_1km
 from app.servicos.fuso import data_local
 
 GERADOR = Path(__file__).parents[4] / "tests" / "fixtures" / "garmin" / "gerar_fixtures.py"
@@ -163,3 +163,39 @@ def test_check_do_fuso(session, atleta):
         with pytest.raises(IntegrityError):
             session.commit()
         session.rollback()
+
+
+def _esteira_sintetica(session, atleta, subtipo="esteira"):
+    """Corrida sintética de esteira com 5 tiros de 1 km (active) e recuperações (rest), tudo inventado."""
+    ativ = Atividade(atleta_id=atleta.id, fonte="garmin_export", fonte_id=f"sintetica-{subtipo}", modalidade="corrida",
+                     subtipo=subtipo, inicio=datetime(2025, 3, 8, 12, 0, tzinfo=timezone.utc), fuso_min=-180,
+                     duracao_s=2000, distancia_m=7000)
+    voltas = [("warmup", 1000, 360, 130)]
+    for _ in range(5):
+        voltas += [("active", 1000, 230, 170), ("rest", 200, 90, 140)]
+    for i, (intens, d, du, hr) in enumerate(voltas):
+        ativ.segmentos.append(Segmento(ordem=i, tipo="volta", duracao_s=du, distancia_m=d, fc_media=hr,
+                                       pace_s_km=du / d * 1000, intensidade=intens))
+    session.add(ativ)
+    session.commit()
+    return ativ
+
+
+def test_esteira_com_tiros_fica_fora_da_serie_mas_e_classificada(session, atleta):
+    esteira = _esteira_sintetica(session, atleta)
+    classificar_atividades(session, atleta.id)
+    session.refresh(esteira)
+    assert sum(s.tipo == "tiro" for s in esteira.segmentos) == 5  # classificada normalmente
+    assert esteira.subtipo == "esteira" and esteira.tipo_treino == "intervalado"  # e continua guardada
+    serie = serie_tiros_1km(session, atleta.id)
+    assert esteira.id not in [p.atividade_id for p in serie]
+    assert len(serie) == 2  # as 2 sessões do oráculo continuam
+    assert [p.n_tiros for p in serie] == [6, 5]
+    assert esteira.id not in [s.ponto.atividade_id for s in sessoes_tiros_1km(session, atleta.id)]
+
+
+def test_mesma_corrida_sem_subtipo_entra_na_serie(session, atleta):
+    """Controle: o filtro é só por subtipo esteira (NULL e outros subtipos entram)."""
+    plana = _esteira_sintetica(session, atleta, subtipo=None)
+    classificar_atividades(session, atleta.id)
+    assert plana.id in [p.atividade_id for p in serie_tiros_1km(session, atleta.id)]
