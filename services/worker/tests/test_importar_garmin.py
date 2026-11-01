@@ -51,7 +51,7 @@ def test_banco_vazio(session):
     primeiro_tiro = ativ.segmentos[1]
     assert (primeiro_tiro.tipo, primeiro_tiro.intensidade, primeiro_tiro.duracao_s) == ("tiro", "active", 255)
     assert primeiro_tiro.pace_s_km == 255.0 and primeiro_tiro.fc_media == 165
-    assert primeiro_tiro.versao_deteccao == "tiros_1km@1"  # a importacao classifica no fim (#14)
+    assert primeiro_tiro.versao_deteccao == "tiros_1km@2"  # a importacao classifica no fim (#14)
     assert (ativ.tipo_treino, ativ.tipo_origem) == ("intervalado", "sugestao")
     esteira = session.scalars(select(Atividade).where(Atividade.fonte_id == "1000000005")).one()
     assert esteira.subtipo == "esteira" and esteira.segmentos == []

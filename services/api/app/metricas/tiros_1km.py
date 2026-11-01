@@ -1,13 +1,13 @@
-"""Tiros de 1 km: detecção (issue #11) e agregação por sessão (issue #12).
+"""Tiros de 1 km: detecção (issues #11 e #48) e agregação por sessão (issue #12).
 
 Funções puras: sem banco, sem IA. A regra completa e os limites estão em
 docs/metricas/tiros-1km.md. Qualquer mudança de regra ou de constante exige
 subir ``VERSAO`` (a versão é gravada junto do resultado).
 
-Fonte: regra própria do projeto (não há artigo). O uso da mediana como
-referência de pace é a estatística robusta padrão para separar esforços de um
-ritmo-base: ela não é puxada pelos poucos tiros rápidos quando eles são
-minoria das voltas.
+Fonte: regra própria do projeto (não há artigo). Um tiro de 1 km é uma volta
+de ~1 km mais rápida que as voltas vizinhas e separada delas por recuperação,
+isto é, a estrutura "esforço, pausa, esforço" de um treino intervalado. O
+limiar de 8% de pace é decisão do projeto.
 """
 
 from __future__ import annotations
@@ -15,24 +15,28 @@ from __future__ import annotations
 import math
 from dataclasses import dataclass
 from datetime import date
-from statistics import median
 
-VERSAO = "tiros_1km@1"
+VERSAO = "tiros_1km@2"
 
 DISTANCIA_ALVO_M = 1000.0
 # Tolerância de GPS/auto-lap: volta de 950 a 1050 m (inclusive) é candidata.
 TOLERANCIA_M = 50.0
-# Sem intensidade: tiro precisa ser pelo menos 8% mais rápido que a mediana
-# do pace das voltas da atividade (ver nota da métrica para a justificativa).
+# Um tiro precisa ser pelo menos 8% mais rápido que a volta vizinha de recuperação.
 GANHO_MINIMO_PACE = 0.08
+# Volta vizinha mais curta que isto é pausa (parado/andando): sem comparação de pace.
+PAUSA_MAX_M = 200.0
 # Atividade é intervalado com pelo menos 3 tiros.
 MIN_TIROS_INTERVALADO = 3
+# Volta "curta" (tiro de outra distância): de 150 a 700 m.
+CURTA_MIN_M = 150.0
+CURTA_MAX_M = 700.0
 
 MODALIDADE_CORRIDA = "corrida"
 
-INTENSIDADES_TIRO = frozenset({"active", "interval"})
+# Intensidades do FIT que nunca são tiro (e valem como fronteira do treino).
 INTENSIDADES_NUNCA_TIRO = frozenset({"rest", "recovery", "warmup", "cooldown"})
-INTENSIDADES_CONHECIDAS = INTENSIDADES_TIRO | INTENSIDADES_NUNCA_TIRO
+INTENSIDADES_FRONTEIRA = frozenset({"warmup", "cooldown"})
+INTENSIDADES_CONHECIDAS = INTENSIDADES_NUNCA_TIRO | {"active", "interval"}
 
 
 @dataclass(frozen=True)
@@ -70,39 +74,79 @@ def _intensidade(volta: VoltaEntrada) -> str | None:
     return valor if valor in INTENSIDADES_CONHECIDAS else None
 
 
-def _intensidade_informativa(voltas: list[VoltaEntrada]) -> bool:
-    """Intensidade só ajuda se houver contraste entre voltas.
+def _pode_ser_tiro(volta: VoltaEntrada) -> bool:
+    return (
+        eh_candidata(volta)
+        and _intensidade(volta) not in INTENSIDADES_NUNCA_TIRO
+        and _pace_s_km(volta) is not None
+    )
 
-    O auto-lap de 1 km de uma rodagem leve costuma vir todo como ``active``;
-    nesse caso a intensidade não distingue nada e usamos a regra por pace.
+
+def _separa(tiro: VoltaEntrada, vizinha: VoltaEntrada | None) -> bool:
+    """A volta vizinha separa o tiro do resto do treino?
+
+    Separa: não existir vizinha (início ou fim da atividade); ser warmup/cooldown
+    (fronteira do treino); ser uma pausa (< 200 m); ou ser uma recuperação, isto é,
+    uma volta que não pode ser tiro (outra distância, rest/recovery) ou que é pelo menos
+    8% mais lenta que o tiro. Uma vizinha de 1 km no mesmo ritmo (auto-lap de
+    rodagem ou de bloco contínuo) não separa.
     """
-    valores = {_intensidade(v) for v in voltas}
-    valores.discard(None)
-    return len(valores) >= 2
+    if vizinha is None or _intensidade(vizinha) in INTENSIDADES_FRONTEIRA:
+        return True
+    if vizinha.distancia_m < PAUSA_MAX_M:
+        return True
+    pace_vizinha = _pace_s_km(vizinha)
+    if pace_vizinha is None:
+        return True
+    return _pace_s_km(tiro) <= pace_vizinha * (1.0 - GANHO_MINIMO_PACE)
+
+
+def _bloco_principal_e_1km(voltas: list[VoltaEntrada], tiros: list[VoltaEntrada]) -> bool:
+    """O bloco principal do treino são os tiros de 1 km?
+
+    Compara o volume (distância) dos tiros de 1 km com o das voltas curtas (150 a
+    700 m) que não são tiro de 1 km e não estão rotuladas rest/recovery/warmup/
+    cooldown: tiros curtos e também recuperações sem rótulo. Os tiros de 1 km valem
+    se o volume deles for maior ou igual ao das voltas curtas. Cada recuperação sem
+    rótulo pesa no máximo 70% de um tiro de 1 km, então num treino de 1 km elas somam
+    bem menos que os tiros.
+    """
+    ordens = {t.ordem for t in tiros}
+    curtas = sum(
+        v.distancia_m
+        for v in voltas
+        if v.ordem not in ordens
+        and CURTA_MIN_M <= v.distancia_m <= CURTA_MAX_M
+        and _intensidade(v) not in INTENSIDADES_NUNCA_TIRO
+    )
+    return sum(t.distancia_m for t in tiros) >= curtas
 
 
 def detectar_tiros(
     voltas: list[VoltaEntrada], modalidade: str = MODALIDADE_CORRIDA
 ) -> ResultadoTiros:
-    """Classifica as voltas de uma atividade em tiros e recuperações."""
+    """Classifica as voltas de uma atividade em tiros e recuperações.
+
+    Tiro = volta de 950 a 1050 m, que não seja rest/recovery/warmup/cooldown, com as
+    duas vizinhas separando-a (ver ``_separa``). A intensidade só veta e marca
+    fronteira: nunca basta para dizer que uma volta é tiro, o pace e a estrutura
+    esforço-pausa decidem sempre.
+    """
     if modalidade != MODALIDADE_CORRIDA or not voltas:
         return ResultadoTiros((), (), False)
 
     voltas = sorted(voltas, key=lambda v: v.ordem)
-    candidatas = [v for v in voltas if eh_candidata(v)]
+    tiros = []
+    for i, volta in enumerate(voltas):
+        if not _pode_ser_tiro(volta):
+            continue
+        anterior = voltas[i - 1] if i > 0 else None
+        seguinte = voltas[i + 1] if i + 1 < len(voltas) else None
+        if _separa(volta, anterior) and _separa(volta, seguinte):
+            tiros.append(volta)
 
-    if _intensidade_informativa(voltas):
-        tiros = [v for v in candidatas if _intensidade(v) in INTENSIDADES_TIRO]
-    else:
-        paces = [p for p in (_pace_s_km(v) for v in voltas) if p is not None]
-        if not paces:
-            return ResultadoTiros((), (), False)
-        limite = median(paces) * (1.0 - GANHO_MINIMO_PACE)
-        tiros = []
-        for v in candidatas:
-            pace = _pace_s_km(v)
-            if pace is not None and pace <= limite:
-                tiros.append(v)
+    if len(tiros) >= MIN_TIROS_INTERVALADO and not _bloco_principal_e_1km(voltas, tiros):
+        tiros = []  # treino misto em que os tiros curtos pesam mais: não é de 1 km
 
     ordens_tiros = tuple(v.ordem for v in tiros)
     recuperacoes: tuple[int, ...] = ()
