@@ -132,6 +132,12 @@ Regra própria do projeto; não há artigo.
 ## Limitações e quando não usar
 - Só detecta tiros de 1 km; 400 m, 2 km e outras distâncias ficam fora da Meta 1. Num treino misto, só entra
   se o volume dos tiros de 1 km for pelo menos o dos curtos (item 6); aí só os de 1 km vão para a série.
+- Uma volta solta de ~1 km, sem rótulo, no fim do treino (por exemplo, um desaquecimento de 1 km) fica separada
+  por uma pausa e vale como tiro, mesmo bem mais lenta que os outros tiros. Num treino de tiros curtos, com só
+  dois tiros de 1 km de verdade, essa volta pode ser o terceiro e a atividade passar a valer como de 1 km. A regra
+  não compara o ritmo dos tiros entre si: um limite do tipo "no máximo 20% mais lento que a mediana dos tiros"
+  tiraria esse caso, mas também faria um treino de 1 km real cair no critério do bloco principal por perder um tiro.
+  Fica como limitação conhecida, sem ajuste para um caso só.
 - Tiros de 1 km seguidos, sem volta de recuperação entre eles (o relógio não marcou a pausa), não são detectados:
   a regra não distingue esse caso de um bloco contínuo de vários km. É o preço de não marcar rodagens.
 - Um tiro precisa ter volta de recuperação (ou pausa) dos dois lados, ou ser a primeira/última volta. Treino com
