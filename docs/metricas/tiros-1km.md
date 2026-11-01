@@ -95,7 +95,7 @@ Ficam fora da série: 1000000003 (corrida leve, sem tiros), 1000000004 (nataçã
 
 ## Dados de entrada
 Por volta: `ordem`, `distancia_m`, `duracao_s`, `fc_media` (opcional) e `intensidade` (opcional; campo
-`segmento.intensidade` proposto na ADR da issue #9). Mais a modalidade da atividade.
+`segmento.intensidade` ver [[decisoes/0002-segmento-intensidade-e-versao]]). Mais a modalidade da atividade.
 
 ## Referência
 Regra própria do projeto; não há artigo.
@@ -103,7 +103,7 @@ Regra própria do projeto; não há artigo.
 ## Histórico
 - `tiros_1km@1` (#11): tiro por intensidade quando havia 2 ou mais valores diferentes; senão, pace 8% abaixo da
   mediana. Em dado real marcava rodagens leves como intervalado (a volta final parcial criava o "contraste").
-- `tiros_1km@2` (#48): a regra acima. Os segmentos já gravados com `@1` precisam ser reclassificados.
+- `tiros_1km@2` (#48): a regra acima. Os segmentos já gravados com `@1` precisam ser reclassificados: reimportar a exportação ou chamar `classificar_atividades` (`app.servicos.evolucao_tiros`) para o atleta, que regrava `tipo` e `versao_deteccao`.
 
 ## Código e teste
 - Código: `services/api/app/metricas/tiros_1km.py` (`detectar_tiros`, `agregar_sessao`, `serie_por_sessao`)
