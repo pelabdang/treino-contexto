@@ -3,7 +3,7 @@ tipo: meta
 status: em-uso
 dono: paulo
 atualizado: 2026-10-31
-links: [[produto/roadmap]], [[metricas/tiros-1km]], [[modulos/ingestao-garmin]], [[modulos/worker]], [[modulos/api]], [[modulos/grafico-tiros]], [[decisoes/0002-segmento-intensidade-e-versao]], [[decisoes/0003-fuso-da-atividade]]
+links: [[produto/roadmap]], [[produto/meta-1-como-reproduzir]], [[diario/2026-10-31]], [[metricas/tiros-1km]], [[modulos/ingestao-garmin]], [[modulos/worker]], [[modulos/api]], [[modulos/grafico-tiros]], [[decisoes/0002-segmento-intensidade-e-versao]], [[decisoes/0003-fuso-da-atividade]]
 ---
 # Meta 1: tiros de 1 km a partir da exportação Garmin
 
@@ -25,7 +25,7 @@ corrida (pace e FC médios por sessão).
 
 ## Critério de pronto
 Resultado de cada item conforme o relatório da Bia na #18 (PR #45). Ela rodou num clone limpo, em SQLite,
-seguindo só `docs/produto/meta-1-como-reproduzir.md` (#17).
+seguindo só [[produto/meta-1-como-reproduzir]] (#17).
 
 | Item | Onde foi feito | Resultado |
 |---|---|---|
