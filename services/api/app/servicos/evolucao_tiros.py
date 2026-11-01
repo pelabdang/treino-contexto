@@ -5,7 +5,8 @@ Liga as funções puras de `app.metricas.tiros_1km` ao banco. Regra e limites em
 
 from __future__ import annotations
 
-from datetime import date
+from dataclasses import dataclass
+from datetime import date, datetime, timezone
 
 from sqlalchemy import select
 from sqlalchemy.orm import Session, selectinload
@@ -67,24 +68,57 @@ def classificar_atividades(session: Session, atleta_id: int) -> int:
     return len(ativs)
 
 
-def serie_tiros_1km(
-    session: Session, atleta_id: int, inicio: date | None = None, fim: date | None = None
-) -> list[PontoSessao]:
-    """Um ponto por sessão intervalada (pace e FC médios dos tiros), por data local crescente.
+@dataclass(frozen=True)
+class TiroSessao:
+    ordem: int
+    distancia_m: float
+    duracao_s: float
+    fc_media: float | None
 
-    `inicio` e `fim` são datas locais, inclusivas. Lê os segmentos já classificados.
+
+@dataclass(frozen=True)
+class SessaoSerie:
+    """Um ponto da série com o que a API precisa para detalhar a sessão."""
+
+    ponto: PontoSessao
+    inicio: datetime  # horário UTC (com fuso) da atividade
+    tiros: tuple[TiroSessao, ...]
+
+
+def sessoes_tiros_1km(
+    session: Session, atleta_id: int, inicio: date | None = None, fim: date | None = None
+) -> list[SessaoSerie]:
+    """Uma sessão por treino intervalado, por data local crescente, com o ponto da série e os tiros.
+
+    `inicio` e `fim` são datas locais (ADR 0003), inclusivas. Lê os segmentos já classificados.
     """
     ativs = session.scalars(
         select(Atividade)
         .where(Atividade.atleta_id == atleta_id, Atividade.modalidade == "corrida")
         .options(selectinload(Atividade.segmentos))
     ).all()
-    sessoes = []
+    sessoes, por_id = [], {}
     for a in ativs:
         dia = data_local(a.inicio, a.fuso_min)
         if (inicio and dia < inicio) or (fim and dia > fim):
             continue
-        tiros = tuple(_volta(s) for s in a.segmentos if s.tipo == "tiro")
-        versao = next((s.versao_deteccao for s in a.segmentos if s.tipo == "tiro" and s.versao_deteccao), VERSAO)
+        segs = sorted((s for s in a.segmentos if s.tipo == "tiro"), key=lambda s: s.ordem)
+        tiros = tuple(_volta(s) for s in segs)
+        versao = next((s.versao_deteccao for s in segs if s.versao_deteccao), VERSAO)
         sessoes.append(SessaoTiros(a.id, dia, len(tiros) >= MIN_TIROS_INTERVALADO, tiros, versao))
-    return serie_por_sessao(sessoes)
+        por_id[a.id] = (a, segs)
+    resultado = []
+    for ponto in serie_por_sessao(sessoes):
+        a, segs = por_id[ponto.atividade_id]
+        inicio_utc = a.inicio if a.inicio.tzinfo else a.inicio.replace(tzinfo=timezone.utc)
+        resultado.append(SessaoSerie(
+            ponto, inicio_utc.astimezone(timezone.utc),
+            tuple(TiroSessao(s.ordem, s.distancia_m or 0.0, s.duracao_s, s.fc_media) for s in segs)))
+    return resultado
+
+
+def serie_tiros_1km(
+    session: Session, atleta_id: int, inicio: date | None = None, fim: date | None = None
+) -> list[PontoSessao]:
+    """Um ponto por sessão intervalada (pace e FC médios dos tiros), por data local crescente."""
+    return [s.ponto for s in sessoes_tiros_1km(session, atleta_id, inicio, fim)]
