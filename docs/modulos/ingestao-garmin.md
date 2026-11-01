@@ -9,8 +9,8 @@ links: [[modulos/worker]], [[modulos/banco]], [[produto/roadmap]]
 
 ## Para que serve
 Ler a exportação "Exportar seus dados" do Garmin Connect e transformar em atividades e voltas, para a Meta 1
-(tiros de 1 km). O formato abaixo vem do que se conhece da exportação; **ainda não foi confirmado com dado real**
-(a exportação do Angelo não está em `dados-teste/garmin/`). Tudo é testado com fixtures sintéticas.
+(tiros de 1 km). O formato abaixo vem do que se conhece da exportação; **foi conferido com uma exportação real na #19**
+(conferido depois com uma exportação real, ver "Conferência com a exportação real"). Os testes usam fixtures sintéticas.
 
 ## Entradas e saídas
 ### Estrutura esperada da exportação (zip)
@@ -148,11 +148,51 @@ Usa `DATABASE_URL` (Postgres do docker compose; rode `alembic upgrade head` ante
 ## Como testar
 `uv run pytest -q` na raiz.
 
+## Conferência com a exportação real (#19)
+Feita em 2026-11-01 com uma exportação real (fica em `dados-teste/`, fora do git). Aqui só o **formato**:
+nenhum valor, contagem, data ou nome de atividade vem do dado pessoal.
+
+Confirmado, igual ao esperado:
+- `startTimeGmt`, `duration` (ms) e `distance` (cm): duração, distância e pace das corridas saem plausíveis, e
+  `startTimeGmt` bate com o início do FIT, então o casamento por horário funciona.
+- `startTimeLocal` existe em todas as atividades, com a semântica descrita acima. Há também `timeZoneId` (não usado).
+- `activityType`: `running`, `treadmill_running`, `trail_running`, `cycling`, `indoor_cycling`, `virtual_ride`,
+  `lap_swimming` e `open_water_swimming` mapeiam como esperado; `strength_training`, `pilates`, `elliptical`,
+  `multi_sport` e `transition_v2` viram `outra`. Não apareceu `track_running` (pista) nesses dados.
+- As voltas vêm dos `lap` do FIT. `intensity` aparece nos relógios usados, mas não em todas as atividades
+  (ciclismo e natação costumam vir sem).
+
+Divergências em relação às fixtures:
+- **Resumo paginado:** vários `<usuario>_<n>_summarizedActivities.json` (`_1_`, `_301_`, `_601_`...), cada um com
+  uma página da lista. O parser lê todos; um teste cobre.
+- **A árvore tem cópias:** a pasta descompactada, `DI_CONNECT/` e `Arquivo.zip` repetem os mesmos `.fit`. O parser
+  lê cada arquivo uma vez (hash do conteúdo).
+- **Nem todo `.fit` é atividade:** a maioria dos arquivos (monitoramento diário e outros) tem `file_id.type` diferente
+  de `activity`. O parser descarta esses sem decodificar o resto e sem aviso. Isso, mais o hash e não abrir arquivos
+  irrelevantes, reduziu a leitura de vários minutos para poucos.
+- **O número no nome do `.fit` não é o `activityId`** (nome `<usuario>_<número>.fit`), então o casamento é só por
+  horário (já era a regra). Há nomes de outros apps (`zwift-activity`) e um `.gpx` no zip interno, ignorado.
+- **Lixo do macOS:** `__MACOSX/` e `._*` aparecem nos zips; são ignorados.
+- **Arquivos sem relação** (aviação, golfe, saúde...) estão na raiz; só `*summarizedActivities.json`, `.fit` e `.zip`
+  são lidos, e os outros nem são abertos.
+- **Atividades sem FIT:** parte das atividades do resumo não tem `.fit` (musculação e semelhantes, e algumas
+  corridas); entram sem voltas, com aviso.
+- **Regra dos tiros em dado real:** a intensidade de uma rodagem leve real não vem toda igual (a última volta,
+  parcial, vem `rest`/`recovery`/`cooldown`), então a regra "intensidade informativa" de [[metricas/tiros-1km]]
+  marca falsos intervalados. Registrado em issue própria (regra do Caio).
+
+## Como importar a exportação real
+Aponte para a pasta descompactada (ou o zip):
+```
+docker compose -f infra/docker-compose.yml up -d
+cd services/api && uv run alembic upgrade head && cd ../..
+uv run python -m worker.importar_garmin dados-teste/garmin --atleta "<nome>"
+uv run python -m worker.grafico_tiros_1km --atleta-id <id>
+```
+Se a porta 5432 já estiver ocupada por um Postgres nativo, o container não é alcançado (erro de papel `treino`
+inexistente): suba o container em outra porta e ajuste `DATABASE_URL`. A importação completa leva alguns minutos.
+
 ## Pendências
-A confirmar com o dado real (#19):
-- nomes exatos das pastas e dos arquivos, e se há mais de um `summarizedActivities.json`;
-- unidades de `duration` (ms) e `distance` (cm) e o fuso de `startTimeGmt`;
-- se `startTimeLocal` existe com esse nome e semântica na exportação real;
-- valores reais de `activityType` para esteira, pista e natação em águas abertas;
-- se os `.fit` vêm todos no zip interno e se o `activityId` aparece no nome deles;
-- se `intensity` vem preenchido em todos os relógios (intervalados sem treino estruturado podem trazer só `active`).
+- Corrigir a regra de tiros em rodagens com intensidade mista (issue aberta).
+- `track_running` (pista) ainda sem exemplo real; a fixture B continua cobrindo.
+- Atividades do resumo sem FIT: confirmar com o dono se faltam arquivos ou se são atividades sem voltas.
