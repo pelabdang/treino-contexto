@@ -9,9 +9,9 @@ atualizado: 2026-10-31
 App de análise de treinos com contexto (corrida, natação, ciclismo) para atletas e assessorias.
 
 ## Onde estamos
-- Meta atual: Meta 1, tiros de 1 km a partir da exportação Garmin (ver [[produto/roadmap]]). Código e docs prontos; faltam QA (#18) e dado real (#19)
+- Meta atual: Meta 1, tiros de 1 km a partir da exportação Garmin (ver [[produto/roadmap]]). Fixtures e dado real conferidos; falta só fechar a #19 com as respostas do Angelo
 - Como reproduzir: [[produto/meta-1-como-reproduzir]]
-- Último diário: [[diario/2026-10-31]]
+- Último diário: [[diario/2026-11-01]]
 
 ## Produto
 - [[produto/plano-mvp-execucao]]: plano completo do MVP
