@@ -8,7 +8,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from datetime import date, datetime, timezone
 
-from sqlalchemy import select
+from sqlalchemy import or_, select
 from sqlalchemy.orm import Session, selectinload
 
 from app.db.models import Atividade, Segmento
@@ -24,6 +24,8 @@ from app.metricas.tiros_1km import (
 from app.servicos.fuso import data_local
 
 ORIGENS_PROTEGIDAS = ("professor", "trainingpeaks")
+# Fora da série (continuam guardadas e classificadas): decisão do Angelo, issue #51.
+SUBTIPOS_FORA_DA_SERIE = ("esteira",)
 
 
 def _volta(s: Segmento) -> VoltaEntrada:
@@ -91,10 +93,15 @@ def sessoes_tiros_1km(
     """Uma sessão por treino intervalado, por data local crescente, com o ponto da série e os tiros.
 
     `inicio` e `fim` são datas locais (ADR 0003), inclusivas. Lê os segmentos já classificados.
+    Atividades de esteira (`SUBTIPOS_FORA_DA_SERIE`) ficam de fora da série, mas seguem no banco.
     """
     ativs = session.scalars(
         select(Atividade)
-        .where(Atividade.atleta_id == atleta_id, Atividade.modalidade == "corrida")
+        .where(
+            Atividade.atleta_id == atleta_id,
+            Atividade.modalidade == "corrida",
+            or_(Atividade.subtipo.is_(None), Atividade.subtipo.not_in(SUBTIPOS_FORA_DA_SERIE)),
+        )
         .options(selectinload(Atividade.segmentos))
     ).all()
     sessoes, por_id = [], {}
