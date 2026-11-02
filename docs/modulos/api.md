@@ -29,7 +29,7 @@ Futuramente recebe a importação Garmin e serve métricas ao [[modulos/mobile]]
 
 ## Série de tiros no banco (`servicos/evolucao_tiros.py`)
 - `classificar_atividades(session, atleta_id)`: para cada corrida roda a detecção ([[metricas/tiros-1km]]) e marca
-  os segmentos como `tiro`, `recuperacao` ou `volta`, gravando `versao_deteccao` (ex.: `tiros_1km@1`) em todos os
+  os segmentos como `tiro`, `recuperacao` ou `volta`, gravando `versao_deteccao` (ex.: `tiros_1km@2`) em todos os
   segmentos da corrida. Idempotente. A importação ([[modulos/ingestao-garmin]]) chama no fim.
 - **Tipo do treino:** se a corrida é intervalada, grava `tipo_treino = "intervalado"` e `tipo_origem = "sugestao"`.
   Nunca sobrescreve `tipo_origem` `professor` ou `trainingpeaks`, nem tipo com `tipo_confirmado`. Se uma sugestão
@@ -51,7 +51,7 @@ Usa só `sessoes_tiros_1km` (serviço acima). Exemplo (ids e valores das fixture
 curl "http://localhost:8000/atletas/1/evolucao/tiros-1km?inicio=2025-03-01"
 ```
 ```json
-{"atleta_id": 1, "metrica": "tiros_1km", "versao_calculo": "tiros_1km@1",
+{"atleta_id": 1, "metrica": "tiros_1km", "versao_calculo": "tiros_1km@2",
  "unidades": {"pace": "s/km", "fc": "bpm", "distancia": "m", "duracao": "s"},
  "periodo": {"inicio": "2025-03-01", "fim": null},
  "sessoes": [{"atividade_id": 1, "data": "2025-03-04", "inicio": "2025-03-04T09:00:00Z", "n_tiros": 6,

@@ -36,7 +36,7 @@ def test_json_com_os_valores_do_oraculo(client, importar_fixtures):
     j = r.json()
     assert set(j) == {"atleta_id", "metrica", "versao_calculo", "unidades", "periodo", "sessoes"}
     assert j["atleta_id"] == importar_fixtures.id and j["metrica"] == "tiros_1km"
-    assert j["versao_calculo"] == "tiros_1km@1"
+    assert j["versao_calculo"] == "tiros_1km@2"
     assert j["unidades"] == {"pace": "s/km", "fc": "bpm", "distancia": "m", "duracao": "s"}
     assert j["periodo"] is None
     a, b = j["sessoes"]
@@ -74,7 +74,7 @@ def test_atleta_sem_sessoes_200_lista_vazia(client, session):
     session.commit()
     r = client.get(_url(atleta))
     assert r.status_code == 200
-    assert r.json()["sessoes"] == [] and r.json()["versao_calculo"] == "tiros_1km@1"
+    assert r.json()["sessoes"] == [] and r.json()["versao_calculo"] == "tiros_1km@2"
 
 
 @pytest.mark.parametrize("q", ["?inicio=ontem", "?fim=2025-13-40", "?inicio=2025-3"])
