@@ -12,7 +12,7 @@ Quais voltas de uma corrida são tiros de 1 km e se a atividade é um treino int
 "pace e FC médios dos tiros por sessão" da Meta 1. Cálculo determinístico, em código, sem banco e sem IA.
 
 ## Fórmula
-Versão do cálculo: `tiros_1km@2` (a `@1` foi substituída, ver "Histórico" abaixo). Constantes em
+Versão do cálculo: `tiros_1km@3` (as anteriores foram substituídas, ver "Histórico" abaixo). Constantes em
 `services/api/app/metricas/tiros_1km.py`.
 
 1. Só `modalidade == "corrida"`. Qualquer outra modalidade devolve 0 tiros e `eh_intervalado = falso`.
@@ -69,6 +69,29 @@ Se os tiros curtos pesam mais, o treino é de tiros curtos e não entra na séri
 - 4 blocos de 3 x 1000 m a 280 s/km com parada de 7 m: as voltas do meio têm vizinha de 1 km no mesmo ritmo,
   e as das pontas, de um dos lados: nenhuma tiro.
 
+### Ritmo habitual do atleta (`@3`, issue #53)
+A estrutura (itens 1 a 7) diz se o treino tem repetições de 1 km separadas por recuperação. Falta saber se elas são
+**treino de ritmo** e não rodagem: numa rodagem lenta com paradas curtas (sinal, pausa manual) ou com o ritmo
+oscilando de uma volta para a outra, as voltas de 1 km também ficam "separadas" e passam. O que as separa de um
+treino de tiros é o ritmo: os tiros precisam ser mais rápidos que o ritmo de rodagem **do próprio atleta**.
+
+- **Ritmo habitual** (`pace_habitual`, função pura em `app/metricas/`): mediana do pace (s/km) das corridas do atleta
+  com **mais de 3 km**, **sem esteira**, com data **anterior** à da sessão, nas **12 semanas (84 dias)** antes dela.
+  Com **menos de 10 corridas** nessa janela, usa **todo o histórico anterior**; sem nenhuma corrida anterior, não há
+  ritmo habitual (`None`) e a sessão não é filtrada. É a mediana, e não a média, para não ser puxada pelas poucas
+  sessões de tiros nem por uma corrida atípica. A janela é móvel para acompanhar o atleta que evolui.
+- **Filtro** (`mais_rapido_que_o_habitual`, aplicado na série em `serie_tiros_1km`/`sessoes_tiros_1km`, num lugar
+  só): a sessão entra se `pace médio dos tiros <= ritmo habitual x 0,95`, sem arredondar; o limite exato entra.
+- **Por que 5%.** O 8% da regra vale **por volta**: um tiro contra a volta ao lado, no mesmo dia, em que o ruído de
+  uma volta para outra (relevo, vento) é pequeno. Contra o ritmo habitual, que mistura dias e condições, a
+  comparação é mais ruidosa, então pede-se menos (5%) e a margem entre treino de ritmo e rodagem fica no meio:
+  tiros de verdade ficam bem abaixo do ritmo de rodagem, e rodagens com paradas ficam em volta dele.
+- A comparação é entre o pace dos tiros **da sessão** e o histórico do atleta, por isso o filtro mora na série
+  (precisa do histórico), e não em `detectar_tiros`, que olha uma atividade só.
+
+Exemplo à mão: histórico com mediana de 330 s/km (5:30). Limite = 330 x 0,95 = 313,5 s/km (5:13,5). Tiros a 270 s/km:
+entram. "Tiros" a 330 s/km (rodagem com paradas): 330 > 313,5, ficam fora. Tiros a 313,5: entram (o limite entra).
+
 ## Agregação por sessão (issue #12)
 Um ponto por atividade com `eh_intervalado` verdadeiro; série ordenada por data (empate: id da atividade).
 Rodagem leve e natação não entram.
@@ -78,7 +101,7 @@ Rodagem leve e natação não entram.
 - **FC da sessão (bpm)** = soma(FC x duração) / soma(duração), média ponderada pela duração. Tiros sem FC ficam
   fora (inclusive do peso); se nenhum tem FC, `None`.
 - Também saem `n_tiros`, `data` (data local do início) e `atividade_id`.
-- `versao`: versão da regra de detecção (`tiros_1km@2`), vinda da detecção e levada até o ponto da série
+- `versao`: versão da regra de detecção (`tiros_1km@3`), vinda da detecção e levada até o ponto da série
   (`SessaoTiros.versao`, `PontoSessao.versao`). É o valor a gravar em `segmento.versao_deteccao` ([[decisoes/0002-segmento-intensidade-e-versao]]).
   Mudou regra ou constante: sobe `VERSAO`.
 - Arredondamento só na apresentação, 1 casa decimal (`para_apresentacao`); o cálculo usa o valor cheio.
@@ -122,6 +145,8 @@ Regra própria do projeto; não há artigo.
 - `tiros_1km@1` (#11): tiro por intensidade quando havia 2 ou mais valores diferentes; senão, pace 8% abaixo da
   mediana. Em dado real marcava rodagens leves como intervalado (a volta final parcial criava o "contraste").
 - `tiros_1km@2` (#48): a regra acima, com o bloco principal. Os segmentos já gravados com `@1` precisam ser reclassificados: reimportar a exportação ou chamar `classificar_atividades` (`app.servicos.evolucao_tiros`) para o atleta, que regrava `tipo` e `versao_deteccao`.
+- `tiros_1km@3` (#53): o filtro do ritmo habitual acima, na série. A detecção por atividade (`detectar_tiros`) não muda
+  em relação à `@2`; mudam a versão e a série. Reclassificar (como acima) regrava a versão nos segmentos.
 
 ## Código e teste
 - Código: `services/api/app/metricas/tiros_1km.py` (`detectar_tiros`, `agregar_sessao`, `serie_por_sessao`)
@@ -130,6 +155,10 @@ Regra própria do projeto; não há artigo.
   6 x 1 km com recuperação de 400 m: tiros a 240 s/km contra 450 s/km, limite 414 s/km).
 
 ## Limitações e quando não usar
+- O filtro do ritmo habitual foi validado com **um atleta**; o 5% e a janela de 12 semanas não foram testados em
+  outros perfis. Atleta novo, sem corridas anteriores, não é filtrado (e com menos de 10 corridas na janela o
+  histórico todo é a referência, que é menos preciso). Um treino de tiros leve, mais lento que 5% abaixo do ritmo
+  habitual (por exemplo, volta à corrida depois de lesão), não entra na série de tiros.
 - Só detecta tiros de 1 km; 400 m, 2 km e outras distâncias ficam fora da Meta 1. Num treino misto, só entra
   se o volume dos tiros de 1 km for pelo menos o dos curtos (item 6); aí só os de 1 km vão para a série.
 - Uma volta solta de ~1 km, sem rótulo, no fim do treino (por exemplo, um desaquecimento de 1 km) fica separada

@@ -14,9 +14,11 @@ from __future__ import annotations
 
 import math
 from dataclasses import dataclass
-from datetime import date
+from collections.abc import Iterable
+from datetime import date, timedelta
+from statistics import median
 
-VERSAO = "tiros_1km@2"
+VERSAO = "tiros_1km@3"
 
 DISTANCIA_ALVO_M = 1000.0
 # Tolerância de GPS/auto-lap: volta de 950 a 1050 m (inclusive) é candidata.
@@ -32,6 +34,14 @@ CURTA_MIN_M = 150.0
 CURTA_MAX_M = 700.0
 
 MODALIDADE_CORRIDA = "corrida"
+
+# Ritmo habitual do atleta (@3): mediana do pace das corridas de mais de 3 km (sem esteira),
+# anteriores à sessão, nas últimas 12 semanas; com menos de 10 na janela, todo o histórico.
+HABITUAL_DISTANCIA_MIN_M = 3000.0
+HABITUAL_JANELA_DIAS = 84
+HABITUAL_MIN_CORRIDAS_JANELA = 10
+# Os tiros da sessão precisam ter pace médio pelo menos 5% mais rápido que o ritmo habitual.
+HABITUAL_GANHO_MINIMO = 0.05
 
 # Intensidades do FIT que nunca são tiro (e valem como fronteira do treino).
 INTENSIDADES_NUNCA_TIRO = frozenset({"rest", "recovery", "warmup", "cooldown"})
@@ -264,3 +274,61 @@ def formatar_pace(s_km: float) -> str:
     total = math.floor(s_km + 0.5)
     minutos, segundos = divmod(total, 60)
     return f"{minutos}:{segundos:02d}"
+
+
+# ---------------------------------------------------------------------------
+# Ritmo habitual do atleta (issue #53, tiros_1km@3)
+# ---------------------------------------------------------------------------
+
+
+@dataclass(frozen=True)
+class CorridaHistorico:
+    """Uma corrida do atleta, só com o que o ritmo habitual usa."""
+
+    data: date  # data local do início
+    distancia_m: float
+    duracao_s: float
+    esteira: bool = False
+
+
+def pace_habitual(historico: Iterable[CorridaHistorico], data_sessao: date) -> float | None:
+    """Ritmo habitual do atleta (s/km) antes de ``data_sessao``, ou ``None`` sem histórico.
+
+    Mediana do pace (duração / distância x 1000) das corridas de mais de 3 km, sem esteira,
+    com data anterior à da sessão, nos 84 dias (12 semanas) antes dela. Com menos de 10
+    corridas nessa janela, usa todo o histórico anterior. Mediana porque não é puxada pelas
+    poucas sessões de tiros nem por uma corrida atípica. Sem nenhuma corrida anterior, devolve
+    ``None`` e quem chama não filtra.
+    """
+    anteriores = [
+        c.duracao_s / c.distancia_m * 1000.0
+        for c in historico
+        if c.data < data_sessao
+        and not c.esteira
+        and c.distancia_m > HABITUAL_DISTANCIA_MIN_M
+        and c.duracao_s > 0
+    ]
+    if not anteriores:
+        return None
+    inicio_janela = data_sessao - timedelta(days=HABITUAL_JANELA_DIAS)
+    na_janela = [
+        c.duracao_s / c.distancia_m * 1000.0
+        for c in historico
+        if inicio_janela <= c.data < data_sessao
+        and not c.esteira
+        and c.distancia_m > HABITUAL_DISTANCIA_MIN_M
+        and c.duracao_s > 0
+    ]
+    base = na_janela if len(na_janela) >= HABITUAL_MIN_CORRIDAS_JANELA else anteriores
+    return median(base)
+
+
+def mais_rapido_que_o_habitual(pace_tiros_s_km: float, habitual_s_km: float | None) -> bool:
+    """Os tiros são pelo menos 5% mais rápidos que o ritmo habitual?
+
+    ``pace_tiros <= habitual x 0,95``, sem arredondar; o limite exato entra. Sem ritmo
+    habitual (``None``) não há filtro: devolve verdadeiro.
+    """
+    if habitual_s_km is None:
+        return True
+    return pace_tiros_s_km <= habitual_s_km * (1.0 - HABITUAL_GANHO_MINIMO)
