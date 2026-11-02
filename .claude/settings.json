@@ -1,8 +1,8 @@
 {
     "permissions": {
         "defaultMode": "auto",
-        "ask": [
-            "Bash(gh pr merge:*)"
+        "allow": [
+            "Bash(gh pr merge * --squash)"
         ]
     },
     "teammateMode": "tmux",
