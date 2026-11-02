@@ -174,3 +174,5 @@ Regra própria do projeto; não há artigo.
 - Corrida de prova ou longão com variação grande de ritmo e voltas de 1 km alternadas com pausas pode passar na
   regra; é o comportamento esperado, não um erro.
 - Esteira sem GPS: a distância vem do sensor do aparelho e pode se afastar da faixa de ± 50 m.
+- **Esteira fica fora da série** (decisão do Angelo, #51): a detecção classifica uma esteira como qualquer corrida,
+  mas `serie_tiros_1km`/`sessoes_tiros_1km` descartam `subtipo = "esteira"`. A atividade segue guardada.
