@@ -15,10 +15,13 @@ from app.db.models import Atividade, Segmento
 from app.metricas.tiros_1km import (
     MIN_TIROS_INTERVALADO,
     VERSAO,
+    CorridaHistorico,
     PontoSessao,
     SessaoTiros,
     VoltaEntrada,
     detectar_tiros,
+    mais_rapido_que_o_habitual,
+    pace_habitual,
     serie_por_sessao,
 )
 from app.servicos.fuso import data_local
@@ -94,6 +97,9 @@ def sessoes_tiros_1km(
 
     `inicio` e `fim` são datas locais (ADR 0003), inclusivas. Lê os segmentos já classificados.
     Atividades de esteira (`SUBTIPOS_FORA_DA_SERIE`) ficam de fora da série, mas seguem no banco.
+    Só entram as sessões cujo pace médio dos tiros é pelo menos 5% mais rápido que o ritmo habitual
+    do atleta (tiros_1km@3); o histórico usa todas as corridas do atleta (fora a esteira), mesmo fora de
+    `inicio`/`fim`.
     """
     ativs = session.scalars(
         select(Atividade)
@@ -104,6 +110,10 @@ def sessoes_tiros_1km(
         )
         .options(selectinload(Atividade.segmentos))
     ).all()
+    historico = [
+        CorridaHistorico(data_local(a.inicio, a.fuso_min), a.distancia_m or 0.0, a.duracao_s, a.subtipo in SUBTIPOS_FORA_DA_SERIE)
+        for a in ativs
+    ]
     sessoes, por_id = [], {}
     for a in ativs:
         dia = data_local(a.inicio, a.fuso_min)
@@ -116,6 +126,8 @@ def sessoes_tiros_1km(
         por_id[a.id] = (a, segs)
     resultado = []
     for ponto in serie_por_sessao(sessoes):
+        if not mais_rapido_que_o_habitual(ponto.pace_s_km, pace_habitual(historico, ponto.data)):
+            continue
         a, segs = por_id[ponto.atividade_id]
         inicio_utc = a.inicio if a.inicio.tzinfo else a.inicio.replace(tzinfo=timezone.utc)
         resultado.append(SessaoSerie(

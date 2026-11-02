@@ -1,7 +1,7 @@
 """Testes da detecção de tiros de 1 km. Todos os valores esperados foram
 calculados à mão (o cálculo está no comentário de cada caso).
 
-Regra tiros_1km@2 (docs/metricas/tiros-1km.md): corrida; candidata = 950 a 1050 m
+Regra tiros_1km@3 (docs/metricas/tiros-1km.md): corrida; candidata = 950 a 1050 m
 que não seja rest/recovery/warmup/cooldown; é tiro se as DUAS voltas vizinhas a
 separam: não existir vizinha, ser warmup/cooldown, ser pausa (< 200 m), ou ser
 uma volta de recuperação (não candidata) ou pelo menos 8% mais lenta que o
@@ -40,7 +40,7 @@ def test_seis_tiros_com_intensidade():
     assert r.tiros == (2, 4, 6, 8, 10, 12)
     assert r.recuperacoes == (3, 5, 7, 9, 11)
     assert r.eh_intervalado is True
-    assert r.versao == VERSAO == "tiros_1km@2"
+    assert r.versao == VERSAO == "tiros_1km@3"
 
 
 def test_seis_tiros_sem_intensidade_por_pace():
@@ -195,7 +195,7 @@ def test_ordem_de_entrada_nao_importa():
 
 
 # ---------------------------------------------------------------------------
-# tiros_1km@2 (issue #48): falsos positivos da @1. Voltas montadas à mão.
+# tiros_1km@3 (issue #48): falsos positivos da @1. Voltas montadas à mão.
 # ---------------------------------------------------------------------------
 
 DURACOES_LEVE = [330, 335, 328, 340, 332, 336, 331, 334]  # 1000 m cada
