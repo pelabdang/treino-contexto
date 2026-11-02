@@ -72,7 +72,7 @@ def test_serie_bate_com_o_oraculo(session, atleta):
         assert ponto.n_tiros == n
         assert ponto.pace_s_km == pytest.approx(pace, abs=0.01)
         assert ponto.fc_media == pytest.approx(fc, abs=0.01)
-        assert ponto.versao == "tiros_1km@1"
+        assert ponto.versao == "tiros_1km@2"
     assert [p.data for p in serie] == [date(2025, 3, 4), date(2025, 3, 11)]
     assert para_apresentacao(serie[0].pace_s_km) == 250.8 and para_apresentacao(serie[0].fc_media) == 170.3
 
@@ -82,7 +82,7 @@ def test_marca_segmentos_e_tipo_do_treino(session, atleta):
     a = _ativ(session, "1000000001")
     assert [s.tipo for s in a.segmentos] == (
         ["volta"] + ["tiro", "recuperacao"] * 5 + ["tiro", "volta"])
-    assert {s.versao_deteccao for s in a.segmentos} == {"tiros_1km@1"}
+    assert {s.versao_deteccao for s in a.segmentos} == {"tiros_1km@2"}
     assert (a.tipo_treino, a.tipo_origem) == ("intervalado", "sugestao")
     leve = _ativ(session, "1000000003")
     assert {s.tipo for s in leve.segmentos} == {"volta"} and leve.tipo_treino is None

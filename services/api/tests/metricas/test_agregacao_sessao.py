@@ -115,7 +115,7 @@ def test_serie_vazia():
 
 def test_versao_da_deteccao_chega_ao_ponto_da_serie():
     # 3 tiros de 1000 m com contraste de intensidade: a sessão é intervalada e
-    # a versão da regra (tiros_1km@1) viaja da detecção até o ponto agregado.
+    # a versão da regra (tiros_1km@2) viaja da detecção até o ponto agregado.
     voltas = [
         VoltaEntrada(0, 1000, 250, 160, "active"),
         VoltaEntrada(1, 400, 150, 140, "rest"),
@@ -124,7 +124,7 @@ def test_versao_da_deteccao_chega_ao_ponto_da_serie():
         VoltaEntrada(4, 1000, 250, 164, "active"),
     ]
     sessao = sessao_de_voltas("a1", date(2025, 3, 4), voltas)
-    assert sessao.versao == "tiros_1km@1"
+    assert sessao.versao == "tiros_1km@2"
     (ponto,) = serie_por_sessao([sessao])
-    assert ponto.versao == "tiros_1km@1"
-    assert agregar_sessao("a1", date(2025, 3, 4), sessao.tiros).versao == "tiros_1km@1"
+    assert ponto.versao == "tiros_1km@2"
+    assert agregar_sessao("a1", date(2025, 3, 4), sessao.tiros).versao == "tiros_1km@2"

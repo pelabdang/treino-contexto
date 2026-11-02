@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import hashlib
 import io
 import json
 import logging
@@ -11,7 +12,7 @@ from dataclasses import dataclass
 from pathlib import Path
 
 from . import tipos, unidades
-from .fit import FitLido, ler_fit
+from .fit import FitLido, FitSemAtividade, ler_fit
 from .modelos import AtividadeImportada
 
 log = logging.getLogger(__name__)
@@ -32,11 +33,20 @@ def _arquivos(caminho: Path) -> Iterator[tuple[str, bytes]]:
     """Gera (caminho logico, bytes) de todo arquivo relevante, abrindo zips aninhados."""
     if caminho.is_dir():
         for f in sorted(p for p in caminho.rglob("*") if p.is_file()):
-            yield from _conteudo(f.relative_to(caminho).as_posix(), f.read_bytes(), 0)
+            nome = f.relative_to(caminho).as_posix()
+            if _relevante(nome):  # nao le os outros arquivos (a exportacao real tem centenas de MB)
+                yield from _conteudo(nome, f.read_bytes(), 0)
     elif caminho.is_file():
         yield from _conteudo(caminho.name, caminho.read_bytes(), 0, solto=True)
     else:
         raise FileNotFoundError(f"Exportacao nao encontrada: {caminho}")
+
+
+def _relevante(nome: str) -> bool:
+    baixo = nome.lower()
+    if "__macosx/" in baixo or baixo.rsplit("/", 1)[-1].startswith("._"):  # lixo do Finder ao zipar no macOS
+        return False
+    return baixo.endswith((".zip", ".fit")) or baixo.endswith(SUFIXO_JSON)
 
 
 def _conteudo(nome: str, dados: bytes, nivel: int, solto: bool = False) -> Iterator[tuple[str, bytes]]:
@@ -48,7 +58,7 @@ def _conteudo(nome: str, dados: bytes, nivel: int, solto: bool = False) -> Itera
         try:
             with zipfile.ZipFile(io.BytesIO(dados)) as z:
                 for membro in sorted(z.namelist()):
-                    if not membro.endswith("/"):
+                    if not membro.endswith("/") and _relevante(membro):
                         yield from _conteudo(f"{nome}!/{membro}", z.read(membro), nivel + 1)
         except zipfile.BadZipFile:
             log.warning("zip corrompido, ignorado: %s", nome)
@@ -115,14 +125,23 @@ def ler_exportacao(caminho: str | Path) -> list[AtividadeImportada]:
     """
     jsons: dict[str, AtividadeImportada] = {}
     fits: list[_Fit] = []
+    vistos: set[bytes] = set()
+    repetidos = nao_atividade = 0
     for nome, dados in _arquivos(Path(caminho)):
         if nome.lower().endswith(".fit"):
+            digest = hashlib.sha1(dados).digest()
+            if digest in vistos:  # mesmo arquivo em outra copia da exportacao (ex.: Arquivo.zip + pasta extraida)
+                repetidos += 1
+                continue
+            vistos.add(digest)
             try:
                 lido = ler_fit(dados)
                 if any(f.lido.id_derivado == lido.id_derivado for f in fits):
                     log.warning("FIT repetido na exportacao, ignorado: %s", nome)
                     continue
                 fits.append(_Fit(nome, lido))
+            except FitSemAtividade:
+                nao_atividade += 1
             except ValueError as e:
                 log.warning("FIT ignorado (%s): %s", nome, e)
         else:
@@ -131,6 +150,7 @@ def ler_exportacao(caminho: str | Path) -> list[AtividadeImportada]:
                 if ativ and ativ.fonte_id not in jsons:
                     jsons[ativ.fonte_id] = ativ
 
+    log.info("FIT: %d lidos, %d repetidos, %d que nao sao atividade", len(fits), repetidos, nao_atividade)
     for ativ in sorted(jsons.values(), key=lambda a: (a.inicio, a.fonte_id)):
         candidatos = [f for f in fits if not f.usado
                       and abs((f.lido.inicio - ativ.inicio).total_seconds()) <= TOLERANCIA_S]

@@ -37,6 +37,10 @@ def _txt(v) -> str | None:
     return str(v) if v is not None else None
 
 
+class FitSemAtividade(ValueError):
+    """FIT valido, mas que nao e uma atividade (monitoramento diario, sono, configuracao...)."""
+
+
 def ler_fit(conteudo: bytes) -> FitLido:
     """Le um FIT. Levanta ValueError se estiver corrompido ou sem dados de atividade."""
     file_id: dict = {}
@@ -50,10 +54,16 @@ def ler_fit(conteudo: bytes) -> FitLido:
                 dados = {c.name: c.value for c in quadro.fields}
                 if quadro.name == "file_id":
                     file_id = dados
+                    tipo = dados.get("type")
+                    if tipo is not None and str(tipo) != "activity":
+                        # file_id e a 1a mensagem: nao decodifica o resto de um arquivo que nao e atividade
+                        raise FitSemAtividade(f"FIT do tipo {tipo}, nao e atividade")
                 elif quadro.name == "session" and not session:
                     session = dados
                 elif quadro.name == "lap":
                     laps.append(dados)
+    except FitSemAtividade:
+        raise
     except Exception as e:  # fitdecode levanta varios tipos (CRC, truncado...)
         raise ValueError(f"FIT invalido: {e}") from e
 
