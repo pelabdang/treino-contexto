@@ -1,3 +1,5 @@
+from pathlib import Path
+
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -7,6 +9,8 @@ class Settings(BaseSettings):
     database_url: str = "postgresql+psycopg://treino:treino@localhost:5432/treino"
     # Origens do app web liberadas no CORS, separadas por vírgula (ADR 0004, item 7). Vazio libera nenhuma.
     cors_origens: str = "http://localhost:8081"
+    # Pasta dos FIT enviados por upload (ADR 0006). Relativo = a partir da raiz do repositório. Fora do git.
+    fit_dir: str = "dados-upload/fit"
 
 
 def lista_origens(texto: str) -> list[str]:
@@ -18,3 +22,11 @@ def lista_origens(texto: str) -> list[str]:
 
 
 settings = Settings()
+
+RAIZ_REPOSITORIO = Path(__file__).resolve().parents[3]
+
+
+def pasta_fit(valor: str | Path | None = None) -> Path:
+    """Pasta dos FIT guardados: `valor` ou `FIT_DIR`. Caminho relativo conta a partir da raiz do repositório."""
+    caminho = Path(settings.fit_dir if valor is None else valor)
+    return caminho if caminho.is_absolute() else RAIZ_REPOSITORIO / caminho
