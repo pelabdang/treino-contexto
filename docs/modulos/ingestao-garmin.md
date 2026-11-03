@@ -175,7 +175,9 @@ a função é `importar_fit(session, atleta_id, conteudo)` em `services/api/app/
   temporário com renomeação (permissão só do usuário); o nome enviado pelo cliente nunca é usado. Reenvio do mesmo conteúdo é
   `ignorada` e não regrava; se o arquivo sumiu, regrava e conta `atualizada`. FIT diferente que casa troca o `arquivo_bruto` e
   **apaga o antigo** se nenhuma outra atividade o referencia (falha ao apagar vira aviso). A exportação não troca um
-  `arquivo_bruto` que já aponta para `FIT_DIR`.
+  `arquivo_bruto` que já aponta para `FIT_DIR`. O FIT guardado é **dado pessoal de saúde** (FC, horários e voltas do
+  atleta): fica fora do git (`dados-upload/` ignorado, com teste) e nunca vai para issue, PR, teste ou nota. Para
+  apagar: `uv run python -m worker.apagar_fit --atleta-id <id>`.
 - **Ordem:** valida e lê o FIT, grava a atividade na sessão, grava o arquivo, `commit`, apaga o antigo órfão, classifica as corridas
   do atleta. Se o `commit` falha, o arquivo criado é removido. Violação da chave única (envios simultâneos): lê de novo uma vez.
 - **Erros (exceções):** `AtletaInexistente`, `FitGrande` (mais de 10 MB), `FitNaoEAtividade` (FIT que não é atividade) e
