@@ -31,8 +31,9 @@ manda tudo pronto.
 3. **`versao_calculo` é sempre a constante `VERSAO`** da regra. Novo campo booleano `reclassificacao_pendente`:
    `true` quando algum segmento da série foi gravado com `versao_deteccao` diferente de `VERSAO` (#64).
    - A API **não reclassifica na leitura** e não escreve no banco num `GET`.
-   - Reclassificar é um comando do operador: reimportar a exportação ou rodar `classificar_atividades` para o atleta
-     (a #64 escreve o passo a passo em [[modulos/api]], seção "Reclassificar"). Depois disso, `reclassificacao_pendente` volta a `false`.
+   - Reclassificar é um comando do operador: `python -m worker.reclassificar --atleta-id N`, criado na #64, que
+     também escreve o passo a passo em [[modulos/api]] (seção "Reclassificar"). Reimportar a exportação continua
+     como alternativa. Depois disso, `reclassificacao_pendente` volta a `false`.
    - O app só mostra a versão (rodapé "cálculo: ...") e nunca a compara com um texto fixo.
 4. **Erros.** `404` declarado no OpenAPI, nos dois endpoints, com o modelo `Erro {detail: string}`. `inicio > fim`
    vira `422` (hoje devolve `200` vazio). `operationId` legível: `evolucaoTiros1km` e `evolucaoTiros1kmPng` (#64).
@@ -53,12 +54,12 @@ manda tudo pronto.
 |---|---|---|---|---|
 | D1 | Cliente TypeScript | `packages/` não existe; não há script de geração | `packages/api-client/` com `openapi.json`, tipos gerados, função `buscarEvolucaoTiros1km` e teste de "desatualizado" | #68 |
 | D2 | Erro 404 | OpenAPI declara só `200` e `422`; o código devolve `404 {"detail": "atleta não encontrado"}` | `404` declarado com `Erro {detail: string}` nos dois endpoints | #64 |
-| D3 | `versao_calculo` | Lida do `versao_deteccao` da primeira sessão (ou `VERSAO` sem sessões); versões misturadas ficam escondidas | Sempre `VERSAO`, mais `reclassificacao_pendente` | #64 |
+| D3 | `versao_calculo` | Vem do primeiro `versao_deteccao` não nulo de cada sessão, e o JSON usa a da primeira sessão (`sessoes[0]`); sem sessões, `VERSAO`. O filtro do ritmo habitual (`@4`, 10%) roda na hora com a regra atual, então o JSON pode dizer uma versão e aplicar outra; versões misturadas ficam escondidas | Sempre `VERSAO`, mais `reclassificacao_pendente` | #64 |
 | D4 | `Unidades` | Campos com `default`, sem `required` no schema (tipos opcionais no cliente) | Todos obrigatórios no schema | #64 |
 | D5 | Arredondamento | Sessão: pace e FC com 1 casa. Tiro: só `pace_s_km`; `fc_media`, `distancia_m` e `duracao_s` saem crus | Todo decimal com 1 casa | #64 |
 | D6 | `pace_medio` x `pace_medio_s_km` | `pace_medio` vem do valor cru e `pace_medio_s_km` do arredondado; formatar o segundo erra (239,46 s/km: API diz `3:59`, formatar 239,5 dá `4:00`) | Regra mantida e escrita: o texto é da API, o app nunca formata | #64, #70 |
 | D7 | Pace do tiro em `m:ss` | `TiroOut` só tem `pace_s_km` | Novo campo `pace` (`m:ss`; `null` se `pace_s_km` é `null`) | #64 |
-| D8 | Distância que falta | Segmento sem distância vira `distancia_m: 0.0` (e `pace_s_km: null`) | `distancia_m: null` e `pace: null` | #64 |
+| D8 | Distância que falta | A origem é o serviço (`s.distancia_m or 0.0` em `servicos/evolucao_tiros.py`): segmento sem distância vira `distancia_m: 0.0` (e a rota põe `pace_s_km: null`) | `distancia_m: null` e `pace: null` | #64 |
 | D9 | `inicio` > `fim` | `200` com `sessoes: []` | `422` | #64 |
 | D10 | `operationId` | `evolucao_tiros_1km_atletas__atleta_id__evolucao_tiros_1km_get` | `evolucaoTiros1km` e `evolucaoTiros1kmPng` | #64 |
 | D11 | `metrica` | `string` livre | `Literal["tiros_1km"]` | #64 |
