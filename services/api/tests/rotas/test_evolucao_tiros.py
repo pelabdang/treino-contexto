@@ -35,7 +35,7 @@ def test_json_com_os_valores_do_oraculo(client, importar_fixtures):
     r = client.get(_url(importar_fixtures))
     assert r.status_code == 200
     j = r.json()
-    assert set(j) == {"atleta_id", "metrica", "versao_calculo", "reclassificacao_pendente", "unidades", "periodo", "sessoes"}
+    assert set(j) == {"atleta_id", "metrica", "versao_calculo", "reclassificacao_pendente", "unidades", "periodo", "eixos", "sessoes"}
     assert j["atleta_id"] == importar_fixtures.id and j["metrica"] == "tiros_1km"
     assert j["versao_calculo"] == VERSAO and j["reclassificacao_pendente"] is False
     assert j["unidades"] == {"pace": "s/km", "fc": "bpm", "distancia": "m", "duracao": "s"}
@@ -236,3 +236,65 @@ def test_contrato_no_openapi(client):
     assert esq["EvolucaoTiros1km"]["properties"]["metrica"]["const"] == "tiros_1km"
     assert "reclassificacao_pendente" in esq["EvolucaoTiros1km"]["required"]
     assert "pace" in esq["TiroOut"]["required"]
+
+
+def _escalas_da_serie(session, atleta):
+    from app.graficos.escala import escala_fc, escala_pace
+    from app.servicos.evolucao_tiros import serie_tiros_1km
+    serie = serie_tiros_1km(session, atleta.id)
+    return escala_pace([p.pace_s_km for p in serie]), escala_fc([p.fc_media for p in serie])
+
+
+def test_eixos_iguais_a_escala_eixo_e_ao_png(client, importar_fixtures, session, monkeypatch):
+    """Fixtures: pace 237,0 e 250,83 (faixa 13,8 < 30) e FC 170,3 e 171,8 (faixa 1,5 < 5): escala mínima."""
+    import app.graficos.tiros_1km as g
+    usadas = []
+    original = g._aplicar_escala
+    monkeypatch.setattr(g, "_aplicar_escala", lambda ax, e: (usadas.append(e), original(ax, e))[1])
+    esc_pace, esc_fc = _escalas_da_serie(session, importar_fixtures)
+    eixos = client.get(_url(importar_fixtures)).json()["eixos"]
+    assert set(eixos) == {"pace", "fc"}
+    p, f = eixos["pace"], eixos["fc"]
+    assert (p["min_s_km"], p["max_s_km"], p["invertido"]) == (round(esc_pace.min, 1), round(esc_pace.max, 1), True)
+    assert [(m["valor_s_km"], m["rotulo"]) for m in p["marcas"]] == [(round(m.valor, 1), m.rotulo) for m in esc_pace.marcas]
+    assert (f["min_bpm"], f["max_bpm"]) == (round(esc_fc.min, 1), round(esc_fc.max, 1))
+    assert [(m["valor_bpm"], m["rotulo"]) for m in f["marcas"]] == [(round(m.valor, 1), m.rotulo) for m in esc_fc.marcas]
+    assert p["max_s_km"] - p["min_s_km"] == pytest.approx(30.0, abs=0.11)
+    assert f["max_bpm"] - f["min_bpm"] == pytest.approx(5.0, abs=0.11)
+    # o PNG do mesmo filtro usa exatamente as mesmas escalas
+    assert _png(client, importar_fixtures).status_code == 200
+    assert usadas == [esc_pace, esc_fc]
+
+
+def test_rotulo_de_pace_e_formatar_pace_do_valor(client, importar_fixtures):
+    from app.metricas.tiros_1km import formatar_pace
+    marcas = client.get(_url(importar_fixtures)).json()["eixos"]["pace"]["marcas"]
+    assert marcas
+    for m in marcas:
+        assert m["rotulo"] == formatar_pace(m["valor_s_km"])
+
+
+def test_eixos_null_sem_sessoes(client, session):
+    atleta = Atleta(nome="Sem treinos")
+    session.add(atleta)
+    session.commit()
+    assert client.get(_url(atleta)).json()["eixos"] is None
+
+
+def test_eixos_fc_null_sem_fc(client, importar_fixtures, session):
+    from app.db.models import Segmento
+    for seg in session.query(Segmento):
+        seg.fc_media = None
+    session.commit()
+    j = client.get(_url(importar_fixtures)).json()
+    assert j["sessoes"] and all(x["fc_media"] is None for x in j["sessoes"])
+    assert j["eixos"]["fc"] is None and j["eixos"]["pace"] is not None
+
+
+def test_eixos_no_openapi(client):
+    esq = client.get("/openapi.json").json()["components"]["schemas"]
+    assert {"Eixos", "EixoPace", "EixoFc", "MarcaPace", "MarcaFc"} <= set(esq)
+    assert "eixos" in esq["EvolucaoTiros1km"]["required"]
+    assert set(esq["EixoPace"]["required"]) == {"min_s_km", "max_s_km", "invertido", "marcas"}
+    assert set(esq["EixoFc"]["required"]) == {"min_bpm", "max_bpm", "marcas"}
+    assert set(esq["MarcaPace"]["required"]) == {"valor_s_km", "rotulo"}

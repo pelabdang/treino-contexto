@@ -69,6 +69,10 @@ curl "http://localhost:8000/atletas/1/evolucao/tiros-1km?inicio=2025-03-01"
 {"atleta_id": 1, "metrica": "tiros_1km", "versao_calculo": "tiros_1km@4", "reclassificacao_pendente": false,
  "unidades": {"pace": "s/km", "fc": "bpm", "distancia": "m", "duracao": "s"},
  "periodo": {"inicio": "2025-03-01", "fim": null},
+ "eixos": {"pace": {"min_s_km": 228.9, "max_s_km": 258.9, "invertido": true,
+                    "marcas": [{"valor_s_km": 240.0, "rotulo": "4:00"}, {"valor_s_km": 255.0, "rotulo": "4:15"}]},
+           "fc": {"min_bpm": 168.5, "max_bpm": 173.5,
+                  "marcas": [{"valor_bpm": 169.0, "rotulo": "169"}, {"valor_bpm": 170.0, "rotulo": "170"}, {"valor_bpm": 171.0, "rotulo": "171"}, {"valor_bpm": 172.0, "rotulo": "172"}, {"valor_bpm": 173.0, "rotulo": "173"}]}},
  "sessoes": [{"atividade_id": 1, "data": "2025-03-04", "inicio": "2025-03-04T09:00:00Z", "n_tiros": 6,
               "pace_medio_s_km": 250.8, "pace_medio": "4:11", "fc_media": 170.3,
               "tiros": [{"ordem": 1, "distancia_m": 1000.0, "duracao_s": 255.0, "pace_s_km": 255.0, "pace": "4:15", "fc_media": 165.0}]}]}
@@ -77,6 +81,7 @@ curl "http://localhost:8000/atletas/1/evolucao/tiros-1km?inicio=2025-03-01"
 - `metrica` é sempre `"tiros_1km"` (`Literal` no OpenAPI). Todos os campos de `unidades` são obrigatórios no schema.
 - Todo decimal sai com 1 casa, inclusive os do tiro. `distancia_m` do tiro é `null` (e `pace_s_km` e `pace` também) quando o segmento não tem distância, nunca `0`.
 - O texto de pace (`pace_medio` da sessão, `pace` do tiro) é feito por `formatar_pace` a partir do valor **sem arredondar**; formatar o número de 1 casa pode dar outro resultado (239,46 s/km: texto `3:59`, número `239.5`). O app não formata pace.
+- `eixos` (#66): faixa e marcas prontas para o app desenhar, calculadas por `escala_pace` e `escala_fc` (`app/graficos/escala.py`, #63), a **mesma regra e a mesma faixa** do PNG para o mesmo filtro, sobre os valores sem arredondar da série (1 casa só na saída). Escala mínima de 30 s/km no pace e 5 bpm na FC. `rotulo` do pace é `formatar_pace(valor_s_km)`; o da FC é o inteiro em texto. `invertido: true` no pace (mais rápido no alto). `eixos` é `null` sem sessões; `eixos.fc` é `null` se nenhuma sessão tem FC. O app não escolhe escala nem formata pace. O exemplo acima usa as fixtures (as duas sessões).
 - `sessoes` por `data` crescente; `fc_media` pode ser `null`; valores com 1 casa; `pace_medio` vem de `formatar_pace` ([[metricas/tiros-1km]]).
 - `periodo` é `null` sem filtro; com algum filtro, os dois campos, `null` no que não veio.
 - Atleta inexistente: `404` `{"detail": "atleta não encontrado"}`, declarado no OpenAPI com o modelo `Erro` nos dois endpoints. Sem sessões: `200` com `"sessoes": []`. Data inválida ou `inicio` depois de `fim`: `422` (formato do FastAPI, `detail` é lista).
@@ -104,7 +109,7 @@ em stderr e saída 1). É idempotente: rodar de novo dá o mesmo resultado. Depo
 O contrato que o app consome está em [[decisoes/0004-contrato-tela-evolucao]], com a lista "antes e depois".
 Já valem aqui (#64): D2 a D11 (erro `404` declarado, `versao_calculo` fixa mais `reclassificacao_pendente`, `Unidades`
 obrigatória, 1 casa decimal, `pace` do tiro, distância `null`, `inicio` > `fim` com `422`, `operationId`, `metrica`
-literal). Faltam o bloco `eixos` (#63 e #66) e o cliente gerado (#68).
+literal). Falta o cliente gerado (#68).
 
 ## Depende de
 - [[modulos/banco]] (Postgres 16 via [[modulos/infra]]).
