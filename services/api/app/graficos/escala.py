@@ -19,7 +19,7 @@ from app.metricas.tiros_1km import formatar_pace
 AMPLITUDE_MIN_FC_BPM = 5.0  # decisão do Angelo; não muda sem ele
 AMPLITUDE_MIN_PACE_S_KM = 30.0  # valor inicial (Caio e Bia podem ajustar, na nota)
 PASSO_FC_BPM = 1.0  # 1 bpm dá 5 ou 6 marcas numa faixa de 5 bpm (passo 2 podia dar só 2)
-PASSO_PACE_S_KM = 15.0
+PASSO_PACE_S_KM = 10.0  # faixa de 30 s/km tem 3 ou 4 marcas (com 15 tinha só 2; issue #87)
 MAX_MARCAS = 8  # acima disso o passo sobe pelos fatores de _FATORES_PASSO
 _FATORES_PASSO = (1, 2, 5, 10, 20, 50, 100, 200, 500, 1000)
 _EPS = 1e-9
@@ -79,7 +79,7 @@ def escala_eixo(
 
 
 def escala_pace(valores: Sequence[float | None]) -> Escala | None:
-    """Eixo de pace (s/km): mínimo 30 s/km, marcas de 15 em 15, rótulo ``formatar_pace``."""
+    """Eixo de pace (s/km): mínimo 30 s/km, marcas de 10 em 10, rótulo ``formatar_pace``."""
     return escala_eixo(valores, AMPLITUDE_MIN_PACE_S_KM, PASSO_PACE_S_KM, formatar_pace)
 
 
