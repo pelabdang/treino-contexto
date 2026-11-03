@@ -7,7 +7,7 @@ links: [[modulos/ingestao-garmin]], [[modulos/api]], [[modulos/worker]], [[modul
 ---
 # ADR: 0006 Upload de arquivo FIT (Meta 3)
 
-**Status: proposta**, vira aceita com a aprovação do Theo neste PR. Só documentação: nenhum código muda aqui. As
+**Status: aceita (Theo, 03/11).** Só documentação: nenhum código muda aqui. As
 issues da Meta 3 (leitor, `importar_fit`, endpoint, app) seguem esta ADR.
 
 ## Contexto
@@ -99,11 +99,14 @@ Casou: **atualiza** a atividade existente (mesmo `id`), nunca insere outra. Não
 - **Reenvio do mesmo conteúdo:** o arquivo já existe com o mesmo hash, então não é gravado de novo e a atividade
   fica `ignorada`. Se o arquivo sumiu do disco, o reenvio o grava de novo e conta como `atualizada`.
 - **FIT diferente que casa** com uma atividade existente (regra de 60 s ou mesma chave): grava o arquivo novo e
-  troca o `arquivo_bruto`. O arquivo antigo **continua na pasta** (não é apagado sozinho). Quando o upload casa com
+  troca o `arquivo_bruto`. O arquivo antigo é **apagado da pasta se nenhuma outra atividade o referencia** (é dado
+  pessoal órfão); se outra atividade ainda aponta para ele, fica. A conferência é por `arquivo_bruto` igual ao caminho
+  antigo, e a remoção só acontece **depois do `commit`** (falha ao apagar vira aviso, não erro). Quando o upload casa com
   uma atividade da exportação, o `arquivo_bruto` deixa de apontar para o original dentro do zip; o zip da
   exportação segue onde está.
 - **Ordem das operações:** valida e lê o FIT; mexe no banco na sessão; grava o arquivo num temporário e renomeia;
-  só então faz `commit`. Se o `commit` falha, apaga o arquivo que esta chamada criou. FIT inválido ou recusado
+  só então faz `commit`; depois do `commit`, apaga o arquivo antigo órfão, se houver. Se o `commit` falha, apaga o
+  arquivo que esta chamada criou. FIT inválido ou recusado
   **nunca** chega ao disco nem ao banco.
 - **Como apagar:** comando `uv run python -m worker.apagar_fit --atleta-id N` apaga os arquivos do atleta em
   `FIT_DIR/<N>/` e põe `arquivo_bruto = NULL` nas atividades dele que apontavam para eles (formato acima). **As
@@ -164,8 +167,9 @@ importar exportação (JSON com início a 2 s do FIT)
   conteúdo dá reenvio idempotente de graça.
 - **Casar só pela chave** (sem os 60 s): duplica o treino quando ele chega por upload e por exportação.
 - **Casar só no upload** (não no `importar`): deixa a ordem upload e depois exportação duplicar.
-- **Apagar o arquivo antigo quando um FIT novo casa:** ao apagar, perde-se o original sem o atleta pedir; fica a
-  pasta maior e o comando `apagar_fit`.
+- **Deixar o arquivo antigo na pasta quando um FIT novo casa** (primeira proposta): sobraria dado pessoal de saúde
+  órfão, sem atividade que o referencie e fora do alcance do `arquivo_bruto`. Por isso o antigo é apagado quando
+  ninguém mais o usa.
 - **Limite só pelo `Content-Length`:** o cabeçalho pode mentir ou faltar.
 
 ## Consequências
@@ -180,6 +184,8 @@ importar exportação (JSON com início a 2 s do FIT)
 - `classificar_atividades` roda sobre todas as corridas do atleta a cada upload (idempotente, barato localmente).
   Também regrava `versao_deteccao`, então um upload pode zerar `reclassificacao_pendente` ([[modulos/api]]).
 - O `arquivo_bruto` de uma atividade da exportação pode passar a apontar para o upload.
+- Teste previsto na issue do `importar_fit` (#94): FIT diferente que casa troca o `arquivo_bruto` e apaga o antigo da
+  pasta; se uma segunda atividade ainda aponta para o antigo, ele fica; erro ao apagar não derruba o envio.
 - Ordem das issues: ADR (esta), leitor movido e FIT sintéticos (em paralelo), `importar_fit` com o comando de
   apagar, endpoint com cliente regerado, botão no app, documentação, QA e resultado.
 
@@ -187,4 +193,5 @@ importar exportação (JSON com início a 2 s do FIT)
 2026-11-03. Guardar o FIT localmente, sem login e só local, 10 MB e qualquer modalidade com só corrida na série:
 Angelo. Regra dos 60 s, leitor compartilhado sem ciclo e `python-multipart`: Theo. Empate (início mais próximo,
 depois menor `id`, com aviso), lugar do leitor, nome do arquivo, ordem das operações, apagar e erros: proposta da
-Duda, a aprovar pelo Theo no PR desta ADR. Se algo aqui mudar o que é guardado dos alunos, volta para o Angelo.
+Duda, aprovadas pelo Theo em 03/11. O Theo também decidiu que o FIT substituído é apagado quando nenhuma outra
+atividade o referencia. Se algo aqui mudar o que é guardado dos alunos, volta para o Angelo.
