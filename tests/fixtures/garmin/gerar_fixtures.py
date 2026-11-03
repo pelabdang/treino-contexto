@@ -7,6 +7,9 @@ Tudo aqui e inventado: sem GPS, sem nome, e-mail ou id real. Rode:
 A saida e deterministica (mesmos bytes a cada execucao). A TABELA abaixo e a
 fonte da verdade dos valores de cada volta, para conferir a mao.
 Cada volta: (intensidade, distancia_m, duracao_s, fc_media).
+
+Tambem gera, em ``fit/``, os FIT avulsos do upload de arquivo (Meta 3, issue #93; ADR 0006). Os valores
+esperados e a conta a mao de cada um estao em ``tests/test_fixtures_fit_upload.py``.
 """
 
 from __future__ import annotations
@@ -58,6 +61,38 @@ VOLTAS_C = [(TIRO, 1000, d, hr) for d, hr in
 VOLTAS_D = [(TIRO, 100, d, hr) for d, hr in [(110, 120), (112, 124), (115, 126), (118, 128)]]
 
 
+# --------------------------------------------------------------------------
+# FIT AVULSOS DO UPLOAD (Meta 3, #93). Datas de abril/2025: nenhuma colide com a exportacao (marco/2025),
+# exceto a "mesma atividade", que repete de proposito a 1000000001.
+# --------------------------------------------------------------------------
+# (f) 5 x 1 km, recuperacao de 400 m -> entra na serie
+VOLTAS_F = [
+    (AQUEC, 2000, 720, 130),
+    (TIRO, 1000, 250, 166), (RECUP, 400, 150, 150),
+    (TIRO, 1000, 248, 169), (RECUP, 400, 150, 152),
+    (TIRO, 1000, 246, 171), (RECUP, 400, 150, 153),
+    (TIRO, 1000, 244, 173), (RECUP, 400, 150, 154),
+    (TIRO, 1000, 242, 176),
+    (DESAQ, 1500, 585, 135),
+]
+# (g) rodagem de 6 km, auto-lap de 1 km, sem tiros
+VOLTAS_G = [(TIRO, 1000, d, hr) for d, hr in
+            [(355, 140), (352, 142), (350, 143), (351, 144), (349, 145), (348, 146)]]
+# (h) corrida simples de 3 km em 3 voltas de 1 km (candidatas do empate e chegadas)
+VOLTAS_H = [(TIRO, 1000, d, hr) for d, hr in [(360, 140), (358, 142), (356, 144)]]
+# (i) 4 x 1 km na esteira
+VOLTAS_I = [
+    (AQUEC, 1500, 560, 128),
+    (TIRO, 1000, 260, 160), (RECUP, 400, 160, 145),
+    (TIRO, 1000, 258, 163), (RECUP, 400, 160, 147),
+    (TIRO, 1000, 256, 165), (RECUP, 400, 160, 148),
+    (TIRO, 1000, 254, 167),
+    (DESAQ, 1000, 400, 135),
+]
+# (j) natacao em piscina, 4 x 100 m
+VOLTAS_J = [(TIRO, 100, d, hr) for d, hr in [(108, 118), (110, 122), (113, 125), (116, 127)]]
+
+
 @dataclass
 class Atividade:
     id: int
@@ -100,6 +135,37 @@ ATIVIDADES = [
     Atividade(1000000005, "Intervalado esteira 4x1km", "treadmill_running", "RUNNING", Sport.RUNNING,
               SubSport.TREADMILL, _utc(2025, 3, 13, 18, 0, 0), None, json_total=(7000.0, 2400.0, 158)),
 ]
+
+_RUN = ("running", "RUNNING", Sport.RUNNING, SubSport.GENERIC)
+_INICIO_EMPATE = _utc(2025, 4, 8, 9, 0, 0)
+
+# nome do arquivo em fit/ -> atividade. Os ids sao so para o serial do file_id (id % 1_000_000).
+ATIVIDADES_UPLOAD = {
+    "upload_intervalado_5x1km.fit": Atividade(
+        2000000001, "Intervalado 5x1km", *_RUN, _utc(2025, 4, 1, 9, 0, 0), VOLTAS_F),
+    "upload_rodagem_6km.fit": Atividade(
+        2000000002, "Rodagem 6km", *_RUN, _utc(2025, 4, 2, 8, 0, 0), VOLTAS_G),
+    # mesma atividade da exportacao (1000000001, inicio 09:00:00), FIT comecando 30 s depois
+    "upload_mesma_atividade_1000000001.fit": Atividade(
+        1000000001, "Intervalado 6x1km", *_RUN, _utc(2025, 3, 4, 9, 0, 0), VOLTAS_A,
+        deslocamento_fit_s=30),
+    "upload_esteira_4x1km.fit": Atividade(
+        2000000003, "Esteira 4x1km", "treadmill_running", "RUNNING", Sport.RUNNING,
+        SubSport.TREADMILL, _utc(2025, 4, 3, 18, 0, 0), VOLTAS_I),
+    "upload_natacao_400m.fit": Atividade(
+        2000000004, "Natacao 400m", "lap_swimming", "SWIMMING", Sport.SWIMMING,
+        SubSport.LAP_SWIMMING, _utc(2025, 4, 4, 7, 0, 0), VOLTAS_J),
+    # empate: duas candidatas a 40 s uma da outra e duas chegadas
+    "empate_candidata_a.fit": Atividade(
+        2000000011, "Candidata A", *_RUN, _INICIO_EMPATE, VOLTAS_H),
+    "empate_candidata_b.fit": Atividade(
+        2000000012, "Candidata B", *_RUN, _INICIO_EMPATE, VOLTAS_H, deslocamento_fit_s=40),
+    "empate_chegada_equidistante.fit": Atividade(  # 20 s de cada candidata
+        2000000013, "Chegada equidistante", *_RUN, _INICIO_EMPATE, VOLTAS_H, deslocamento_fit_s=20),
+    "empate_chegada_mais_perto_de_b.fit": Atividade(  # 30 s de A, 10 s de B
+        2000000014, "Chegada perto de B", *_RUN, _INICIO_EMPATE, VOLTAS_H, deslocamento_fit_s=30),
+}
+FRACAO_TRUNCADO = 0.6  # o FIT truncado guarda os primeiros 60% dos bytes de upload_intervalado_5x1km.fit
 
 RAIZ_ZIP = "DI_CONNECT"
 CAMINHO_JSON = f"{RAIZ_ZIP}/DI-Connect-Fitness/atleta-ficticio_0_summarizedActivities.json"
@@ -197,10 +263,36 @@ def montar_exportacao() -> bytes:
     return _zip({CAMINHO_JSON: montar_json(), CAMINHO_UPLOADS: uploads})
 
 
+def montar_fit_nao_atividade() -> bytes:
+    """FIT valido cujo file_id.type e SETTINGS (nao e atividade)."""
+    b = FitFileBuilder(auto_define=True, min_string_size=50)
+    fid = FileIdMessage()
+    fid.type = FileType.SETTINGS
+    fid.manufacturer = Manufacturer.GARMIN.value
+    fid.product = 1
+    fid.serial_number = 2000000021 % 1_000_000
+    fid.time_created = _ms(_utc(2025, 4, 5, 10, 0, 0))
+    b.add(fid)
+    return b.build().to_bytes()
+
+
+def montar_fits_upload() -> dict[str, bytes]:
+    """Todos os FIT avulsos do upload, por nome de arquivo (deterministico)."""
+    fits = {nome: montar_fit(a) for nome, a in ATIVIDADES_UPLOAD.items()}
+    inteiro = fits["upload_intervalado_5x1km.fit"]
+    fits["upload_truncado.fit"] = inteiro[: int(len(inteiro) * FRACAO_TRUNCADO)]
+    fits["upload_nao_atividade.fit"] = montar_fit_nao_atividade()
+    return fits
+
+
 def main(destino: Path) -> None:
     destino.mkdir(parents=True, exist_ok=True)
     (destino / "exportacao_minima.zip").write_bytes(montar_exportacao())
     print(f"gerado: {destino / 'exportacao_minima.zip'}")
+    (destino / "fit").mkdir(exist_ok=True)
+    for nome, conteudo in montar_fits_upload().items():
+        (destino / "fit" / nome).write_bytes(conteudo)
+    print(f"gerados: {len(montar_fits_upload())} FIT em {destino / 'fit'}")
 
 
 if __name__ == "__main__":

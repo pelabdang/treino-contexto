@@ -137,6 +137,23 @@ Usa `DATABASE_URL` (Postgres do docker compose; rode `alembic upgrade head` ante
 - Atividade sem duração (nem soma de voltas) é ignorada com aviso, porque `duracao_s` é obrigatório.
 - Testes: `services/worker/tests/test_importar_garmin.py` (SQLite local; Postgres via `TEST_DATABASE_URL`).
 
+### FIT avulsos do upload (Meta 3, #93)
+O mesmo gerador escreve 11 `.fit` em `tests/fixtures/garmin/fit/` (abril/2025, sintéticos, sem GPS). Valores
+esperados e contas à mão em `tests/test_fixtures_fit_upload.py`.
+
+| Arquivo | O que representa | Esperado |
+|---|---|---|
+| `upload_intervalado_5x1km.fit` | 5 x 1 km, recuperação de 400 m | entra na série: pace 1230 / 5 = 246,0 s/km, FC 210282 / 1230 = 170,96 |
+| `upload_rodagem_6km.fit` | 6 km em 6 voltas de 1 km | não é intervalado, fora da série |
+| `upload_mesma_atividade_1000000001.fit` | a 1000000001 da exportação com início 30 s depois | casa pela regra dos 60 s |
+| `empate_candidata_a.fit`, `empate_candidata_b.fit` | duas corridas a 40 s uma da outra (inserir direto no banco) | candidatas do empate |
+| `empate_chegada_equidistante.fit` | 20 s de A e 20 s de B | empate: menor `id` |
+| `empate_chegada_mais_perto_de_b.fit` | 30 s de A e 10 s de B | vale B |
+| `upload_truncado.fit` | 60% dos bytes do intervalado | `ValueError` |
+| `upload_nao_atividade.fit` | `file_id.type` = settings | `FitSemAtividade` |
+| `upload_esteira_4x1km.fit` | 4 x 1 km em esteira | subtipo `esteira`, fora da série |
+| `upload_natacao_400m.fit` | natação em piscina, 4 x 100 m | modalidade `natacao`, no banco e fora da série |
+
 ## Upload de FIT (Meta 3, ainda não implementado)
 A [[decisoes/0006-upload-de-fit]] decide o plano B enquanto a API da Garmin não é aprovada: o atleta envia um `.fit`
 pelo app. Em resumo: o parser e a gravação passam do worker para a API (`app/ingestao/`), sem ciclo; a mesma atividade
@@ -150,6 +167,7 @@ Meta 3 forem feitas. Já feito: o parser foi para a API (#92); a gravação (`im
 - `services/worker/worker/importar_garmin.py` e `services/worker/tests/test_importar_garmin.py`
 - `tests/fixtures/garmin/gerar_fixtures.py` e `tests/fixtures/garmin/exportacao_minima.zip`
 - `tests/test_fixtures_garmin.py`
+- `tests/fixtures/garmin/fit/` e `tests/test_fixtures_fit_upload.py` (FIT do upload)
 
 ## Depende de
 - [[modulos/api]] (onde fica o parser, `app/ingestao/`), [[modulos/worker]] (importação no banco e CLI) e [[modulos/banco]] (destino).
