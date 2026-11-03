@@ -8,6 +8,10 @@ export type EvolucaoTiros1km = components["schemas"]["EvolucaoTiros1km"];
 export type SessaoTiros = components["schemas"]["SessaoOut"];
 export type TiroSessao = components["schemas"]["TiroOut"];
 export type RespostaUploadFit = components["schemas"]["UploadFitOut"];
+export type Atividade = components["schemas"]["AtividadeOut"];
+/** Clima da atividade: `estado` e, só em `ok`, `temperatura_c`, `sensacao_c`, `umidade_pct` e `vento_kmh` (ADR 0007). */
+export type ClimaAtividade = components["schemas"]["ClimaOut"];
+export type EstadoClima = ClimaAtividade["estado"];
 export type Eixos = components["schemas"]["Eixos"];
 export type ErroNaoEncontrado = components["schemas"]["Erro"];
 export type ErroValidacao = components["schemas"]["HTTPValidationError"];

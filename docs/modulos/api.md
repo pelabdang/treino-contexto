@@ -8,7 +8,7 @@ links: [[decisoes/0001-modelo-de-dados-minimo]], [[decisoes/0003-fuso-da-ativida
 # Módulo: api
 
 ## Para que serve
-API HTTP do produto (FastAPI). Hoje expõe `/health`, a evolução dos tiros de 1 km e o upload de FIT. É a dona do modelo de dados e das migrações.
+API HTTP do produto (FastAPI). Hoje expõe `/health`, a evolução dos tiros de 1 km, o upload de FIT e a atividade com o clima. É a dona do modelo de dados e das migrações.
 Futuramente recebe a importação Garmin e serve métricas ao [[modulos/mobile]].
 
 ## Entradas e saídas
@@ -17,11 +17,12 @@ Futuramente recebe a importação Garmin e serve métricas ao [[modulos/mobile]]
 - Saída: `GET /health` devolve `{"status": "ok"}`.
 - Saída: `GET /atletas/{atleta_id}/evolucao/tiros-1km` (ver "Endpoint" abaixo).
 - Entrada e saída: `POST /atletas/{atleta_id}/atividades/fit` (ver "Upload de FIT" abaixo).
+- Saída: `GET /atletas/{atleta_id}/atividades/{atividade_id}` (ver "Atividade e clima" abaixo).
 
 ## Arquivos principais
 - `services/api/app/main.py`: app FastAPI.
 - `services/api/app/rotas/evolucao.py`: roteador e modelos Pydantic da evolução dos tiros (aparecem em `/openapi.json`).
-- `services/api/app/rotas/atividades.py`: roteador e modelo `UploadFitOut` do upload de FIT (ver "Upload de FIT").
+- `services/api/app/rotas/atividades.py`: roteador do upload de FIT (`UploadFitOut`) e da atividade com clima (`AtividadeOut`, `ClimaOut`).
 - `services/api/app/config.py`: configuração via pydantic-settings.
 - `services/api/app/db/`: modelos, sessão e base. Veja [[modulos/banco]].
 - `services/api/app/metricas/`: funções puras das métricas (tiros de 1 km, [[metricas/tiros-1km]]).
@@ -121,6 +122,24 @@ curl -F "arquivo=@treino.fit" http://localhost:8000/atletas/1/atividades/fit
 - A pasta vem de `FIT_DIR`; a dependência `get_fit_dir` existe para os testes apontarem para um diretório temporário.
 - Sem login: só para uso local (ADR 0006, item 6). `python-multipart` é dependência do `treino-api`.
 - Testes: `services/api/tests/rotas/test_upload_fit.py` (um por resposta, o `413` com arquivo sintético gerado no teste, e o OpenAPI).
+
+## Atividade e clima: `GET /atletas/{atleta_id}/atividades/{atividade_id}`
+Item 5 da [[decisoes/0007-clima-da-atividade]]. Devolve a atividade (`atividade_id`, `modalidade`, `subtipo`, `inicio` em UTC,
+`duracao_s`, `distancia_m`, `fc_media`) com o objeto `clima`, calculado por `clima_da_atividade` (`app/servicos/clima.py`).
+`operationId`: `buscarAtividade`.
+```json
+{"estado": "ok", "temperatura_c": 24.3, "sensacao_c": 25.1, "umidade_pct": 61, "vento_kmh": 8.2}
+{"estado": "indoor"}
+```
+- `estado` é `ok`, `indoor`, `sem_posicao`, `pendente` ou `falha`. Os quatro valores só aparecem em `ok`; nos outros estados
+  a chave nem vem. O texto do erro da consulta (`erro` da tabela) nunca sai.
+- `clima` é campo opcional no schema. A posição de início (`inicio_lat/lon`) nunca está na resposta nem no OpenAPI.
+- `404` com `Erro {detail}`: atleta inexistente (`atleta não encontrado`) ou atividade inexistente ou de outro atleta
+  (`atividade não encontrada`).
+- Por que aqui: é o lugar mais simples para "o clima de cada atividade". O contrato da evolução de tiros
+  ([[decisoes/0004-contrato-tela-evolucao]]) não mudou, então o app e o exemplo de contrato continuam iguais.
+  Se a tela precisar do clima por sessão, basta acrescentar um `clima` opcional em `SessaoOut`.
+- Testes: `services/api/tests/rotas/test_atividade_clima.py` (um por estado, os `404`, a posição fora da resposta e o OpenAPI).
 
 ## Rodar localmente com as fixtures
 Passo a passo de ponta a ponta (Postgres, migrações, fixtures, API com `CORS_ORIGENS` e app web) em [[produto/meta-2-como-rodar]]; o do upload de FIT, com como forçar cada status, em [[produto/meta-3-como-rodar]]. Resumo: a API demora alguns segundos para subir; `docker compose` sem `-p` reusa o volume `treino-contexto_pgdata`.
