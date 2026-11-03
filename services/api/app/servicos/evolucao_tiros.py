@@ -97,8 +97,8 @@ def sessoes_tiros_1km(
 
     `inicio` e `fim` são datas locais (ADR 0003), inclusivas. Lê os segmentos já classificados.
     Atividades de esteira (`SUBTIPOS_FORA_DA_SERIE`) ficam de fora da série, mas seguem no banco.
-    Só entram as sessões cujo pace médio dos tiros é pelo menos 5% mais rápido que o ritmo habitual
-    do atleta (tiros_1km@3); o histórico usa todas as corridas do atleta (fora a esteira), mesmo fora de
+    Só entram as sessões cujo pace médio dos tiros é pelo menos 10% mais rápido que o ritmo habitual
+    do atleta (tiros_1km@4); o histórico usa todas as corridas do atleta (fora a esteira), mesmo fora de
     `inicio`/`fim`.
     """
     ativs = session.scalars(

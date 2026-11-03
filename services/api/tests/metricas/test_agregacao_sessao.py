@@ -124,7 +124,7 @@ def test_versao_da_deteccao_chega_ao_ponto_da_serie():
         VoltaEntrada(4, 1000, 250, 164, "active"),
     ]
     sessao = sessao_de_voltas("a1", date(2025, 3, 4), voltas)
-    assert sessao.versao == "tiros_1km@3"
+    assert sessao.versao == "tiros_1km@4"
     (ponto,) = serie_por_sessao([sessao])
-    assert ponto.versao == "tiros_1km@3"
-    assert agregar_sessao("a1", date(2025, 3, 4), sessao.tiros).versao == "tiros_1km@3"
+    assert ponto.versao == "tiros_1km@4"
+    assert agregar_sessao("a1", date(2025, 3, 4), sessao.tiros).versao == "tiros_1km@4"

@@ -29,7 +29,7 @@ Futuramente recebe a importação Garmin e serve métricas ao [[modulos/mobile]]
 
 ## Série de tiros no banco (`servicos/evolucao_tiros.py`)
 - `classificar_atividades(session, atleta_id)`: para cada corrida roda a detecção ([[metricas/tiros-1km]]) e marca
-  os segmentos como `tiro`, `recuperacao` ou `volta`, gravando `versao_deteccao` (ex.: `tiros_1km@3`) em todos os
+  os segmentos como `tiro`, `recuperacao` ou `volta`, gravando `versao_deteccao` (ex.: `tiros_1km@4`) em todos os
   segmentos da corrida. Idempotente. A importação ([[modulos/ingestao-garmin]]) chama no fim.
 - **Tipo do treino:** se a corrida é intervalada, grava `tipo_treino = "intervalado"` e `tipo_origem = "sugestao"`.
   Nunca sobrescreve `tipo_origem` `professor` ou `trainingpeaks`, nem tipo com `tipo_confirmado`. Se uma sugestão
@@ -40,9 +40,9 @@ Futuramente recebe a importação Garmin e serve métricas ao [[modulos/mobile]]
   (3 ou mais tiros), por data crescente. Lê os segmentos já classificados (precisa de `classificar_atividades`
   antes). Uma sessão do professor marcada com outro tipo continua na série se tiver 3 ou mais tiros: a série
   segue a detecção, não o rótulo.
-  Desde a `tiros_1km@3`, a série só aceita a sessão cujo pace médio dos tiros é pelo menos 5% mais rápido que o ritmo
+  Desde a `tiros_1km@3`, a série só aceita a sessão cujo pace médio dos tiros é pelo menos 10% (desde a `@4`; era 5% na `@3`) mais rápido que o ritmo
   habitual do atleta (mediana das corridas de mais de 3 km, sem esteira, das 12 semanas anteriores; ver [[metricas/tiros-1km]]).
-  O histórico usa todas as corridas do atleta, mesmo fora de `inicio`/`fim`.
+  O histórico usa todas as corridas do atleta, mesmo fora de `inicio`/`fim`. A `@4` mudou a detecção: é preciso rodar `classificar_atividades` para regravar `tipo` e `versao_deteccao` dos segmentos já gravados.
 - **O que entra na série:** corridas com 3 ou mais tiros. Atividades de `subtipo = "esteira"` ficam **de fora** da série, do JSON, do PNG e do CSV (decisão do Angelo, issue #51), mas continuam no banco e são classificadas normalmente. A regra está em `SUBTIPOS_FORA_DA_SERIE`, usada por `sessoes_tiros_1km` e `serie_tiros_1km`.
 - **Data da sessão:** a data local do início (`inicio + fuso_min`, ou `America/Sao_Paulo` se `fuso_min` é `NULL`).
   `inicio` e `fim` do filtro também são datas locais, inclusivas.
@@ -55,7 +55,7 @@ Usa só `sessoes_tiros_1km` (serviço acima). Exemplo (ids e valores das fixture
 curl "http://localhost:8000/atletas/1/evolucao/tiros-1km?inicio=2025-03-01"
 ```
 ```json
-{"atleta_id": 1, "metrica": "tiros_1km", "versao_calculo": "tiros_1km@3",
+{"atleta_id": 1, "metrica": "tiros_1km", "versao_calculo": "tiros_1km@4",
  "unidades": {"pace": "s/km", "fc": "bpm", "distancia": "m", "duracao": "s"},
  "periodo": {"inicio": "2025-03-01", "fim": null},
  "sessoes": [{"atividade_id": 1, "data": "2025-03-04", "inicio": "2025-03-04T09:00:00Z", "n_tiros": 6,

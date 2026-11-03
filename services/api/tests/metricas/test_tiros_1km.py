@@ -1,7 +1,7 @@
 """Testes da detecção de tiros de 1 km. Todos os valores esperados foram
 calculados à mão (o cálculo está no comentário de cada caso).
 
-Regra tiros_1km@3 (docs/metricas/tiros-1km.md): corrida; candidata = 950 a 1050 m
+Regra tiros_1km@4 (docs/metricas/tiros-1km.md): corrida; candidata = 950 a 1050 m
 que não seja rest/recovery/warmup/cooldown; é tiro se as DUAS voltas vizinhas a
 separam: não existir vizinha, ser warmup/cooldown, ser pausa (< 200 m), ou ser
 uma volta de recuperação (não candidata) ou pelo menos 8% mais lenta que o
@@ -40,7 +40,7 @@ def test_seis_tiros_com_intensidade():
     assert r.tiros == (2, 4, 6, 8, 10, 12)
     assert r.recuperacoes == (3, 5, 7, 9, 11)
     assert r.eh_intervalado is True
-    assert r.versao == VERSAO == "tiros_1km@3"
+    assert r.versao == VERSAO == "tiros_1km@4"
 
 
 def test_seis_tiros_sem_intensidade_por_pace():
@@ -362,3 +362,102 @@ def test_fronteira_volume_igual_dos_curtos_fica_dentro():
     # 150 m a mais nas voltas curtas (10 x 300 m + 1 volta de 150 m = 3150 m contra 3000 m) vira fora.
     voltas += [volta(o, 150, 35, "active"), volta(o + 1, 100, 60, "rest")]
     assert detectar_tiros(voltas).eh_intervalado is False
+
+
+# ---------------------------------------------------------------------------
+# tiros_1km@4 (issue #58): progressivo, fartlek e desaquecimento de 1 km não são tiros.
+# Voltas sintéticas, contas à mão.
+# ---------------------------------------------------------------------------
+
+
+def _fartlek_1km(duracao_trote):
+    # aquec. 2000 m/720 s (360 s/km); 4 x [1000 m a 240 s/km, 1000 m de trote em duracao_trote s];
+    # desaq. 1000 m/370 s. Ordens: 1; tiros candidatos 2,4,6,8; trotes 3,5,7,9; 10.
+    voltas = [volta(1, 2000, 720)]
+    o = 2
+    for _ in range(4):
+        voltas += [volta(o, 1000, 240), volta(o + 1, 1000, duracao_trote)]
+        o += 2
+    voltas.append(volta(o, 1000, 370))
+    return voltas
+
+
+def test_fartlek_de_1km_forte_e_1km_moderado_nao_e_tiro():
+    # Trote a 270 s/km: pela @3 separa (240 <= 270 x 0,92 = 248,4), mas o trote é de ~1 km e
+    # 240 > 270 x 0,85 = 229,5: menos de 15% mais rápido. Bloco contínuo, nenhum tiro.
+    r = detectar_tiros(_fartlek_1km(270))
+    assert r.tiros == () and r.eh_intervalado is False
+
+
+def test_trote_de_1km_bem_mais_lento_continua_sendo_recuperacao():
+    # Trote a 330 s/km: 240 <= 330 x 0,85 = 280,5. Os 4 seguem tiros.
+    r = detectar_tiros(_fartlek_1km(330))
+    assert r.tiros == (2, 4, 6, 8)
+    assert r.eh_intervalado is True
+
+
+def test_limite_do_bloco_continuo_15_por_cento():
+    # Tiro a 240 s/km. Trote a 282: 282 x 0,85 = 239,7 < 240, bloco contínuo, fora.
+    # Trote a 283: 283 x 0,85 = 240,55 >= 240, o tiro fica.
+    assert detectar_tiros(_fartlek_1km(282)).tiros == ()
+    assert detectar_tiros(_fartlek_1km(283)).tiros == (2, 4, 6, 8)
+
+
+def _blocos_com_parada(pace_ritmo):
+    # 3 x [1000 m a pace_ritmo + 1000 m a pace_ritmo - 10, parada de 20 m, 1000 m a 275,
+    # parada de 20 m]. A volta de 275 s/km fica entre paradas (tiro pela @3); o km moderado
+    # fica do outro lado da parada. As duas voltas moderadas seguidas não separam uma da outra.
+    voltas, o = [], 1
+    for _ in range(3):
+        voltas += [volta(o, 1000, pace_ritmo), volta(o + 1, 1000, pace_ritmo - 10),
+                   volta(o + 2, 20, 90), volta(o + 3, 1000, 275), volta(o + 4, 20, 90)]
+        o += 5
+    return voltas
+
+
+def test_progressivo_com_paradas_nao_e_tiro():
+    # Km moderados a 310/300 s/km: 275 > 300 x 0,85 = 255 (olhando por cima da parada). Fora.
+    assert detectar_tiros(_blocos_com_parada(310)).tiros == ()
+
+
+def test_km_forte_depois_de_rodagem_lenta_com_parada_e_tiro():
+    # Km a 340/330: 275 <= 330 x 0,85 = 280,5 (e 275 <= 340 x 0,85 = 289 do outro lado). Os 3 ficam.
+    r = detectar_tiros(_blocos_com_parada(340))
+    assert r.tiros == (4, 9, 14)
+    assert r.eh_intervalado is True
+
+
+def _tiros_e_volta_final(duracao_final):
+    # aquec. 2000 m/720 s; 3 x [1000 m a 240 s/km + parada de 50 m/30 s]; volta final de
+    # 1000 m em duracao_final s e uma sobra de 10 m. Ordens: 1; tiros 2,4,6; paradas 3,5,7;
+    # volta final 8; sobra 9.
+    voltas = [volta(1, 2000, 720)]
+    o = 2
+    for _ in range(3):
+        voltas += [volta(o, 1000, 240), volta(o + 1, 50, 30)]
+        o += 2
+    voltas += [volta(o, 1000, duracao_final), volta(o + 1, 10, 5)]
+    return voltas
+
+
+def test_desaquecimento_de_1km_lento_nao_conta_como_tiro():
+    # Mediana dos 4 "tiros" (240, 240, 240, 290) = 240; limite 240 x 1,20 = 288 s/km.
+    # 290 > 288: sai. Sobram 3 tiros de 240.
+    r = detectar_tiros(_tiros_e_volta_final(290))
+    assert r.tiros == (2, 4, 6)
+    assert r.eh_intervalado is True
+
+
+def test_volta_no_limite_do_ritmo_parecido_fica():
+    # 288 <= 240 x 1,20 = 288 (o limite entra): a volta final é o 4o tiro.
+    assert detectar_tiros(_tiros_e_volta_final(288)).tiros == (2, 4, 6, 8)
+
+
+def test_dois_tiros_e_um_desaquecimento_nao_e_intervalado():
+    # Só 2 x 1000 m a 240 s/km e a volta final a 300 s/km. Mediana (240, 240, 300) = 240,
+    # limite 288: a de 300 sai e sobram 2 tiros, abaixo do mínimo de 3.
+    voltas = [volta(1, 2000, 720), volta(2, 1000, 240), volta(3, 50, 30), volta(4, 1000, 240),
+              volta(5, 50, 30), volta(6, 1000, 300), volta(7, 10, 5)]
+    r = detectar_tiros(voltas)
+    assert r.eh_intervalado is False
+    assert r.tiros == (2, 4)

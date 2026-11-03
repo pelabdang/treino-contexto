@@ -1,8 +1,8 @@
-"""Filtro do ritmo habitual na série de tiros (issue #53, tiros_1km@3). Dados sintéticos, contas à mão.
+"""Filtro do ritmo habitual na série de tiros (issue #53, tiros_1km@4). Dados sintéticos, contas à mão.
 
 Ritmo habitual: mediana do pace das corridas de mais de 3 km (sem esteira) anteriores à sessão, 84 dias;
-< 10 na janela usa todo o histórico; sem histórico não filtra. Os tiros valem se pace <= habitual x 0,95.
-Com o histórico a 330 s/km: limite = 330 x 0,95 = 313,5 s/km.
+< 10 na janela usa todo o histórico; sem histórico não filtra. Os tiros valem se pace <= habitual x 0,90.
+Com o histórico a 330 s/km: limite = 330 x 0,90 = 297 s/km.
 """
 
 import itertools
@@ -66,16 +66,16 @@ def _serie(session, atleta):
 
 def test_tiros_reais_ficam_dentro(session, atleta):
     _historico_facil(session, atleta)
-    _corrida(session, atleta, dias=40, pace=0, voltas=_tiros(270))  # 270 <= 313,5
+    _corrida(session, atleta, dias=40, pace=0, voltas=_tiros(270))  # 270 <= 297
     serie = _serie(session, atleta)
     assert len(serie) == 1
     assert serie[0].pace_s_km == pytest.approx(270.0)
-    assert serie[0].versao == "tiros_1km@3"
+    assert serie[0].versao == "tiros_1km@4"
 
 
 def test_rodagem_com_voltas_separadas_por_paradas_fica_fora(session, atleta):
     # "tiros" a 330 s/km (o ritmo habitual): o detector os acha (voltas separadas por recuperações),
-    # mas 330 > 313,5: o filtro do ritmo habitual os tira da série.
+    # mas 330 > 297: o filtro do ritmo habitual os tira da série.
     _historico_facil(session, atleta)
     a = _corrida(session, atleta, dias=40, pace=0, voltas=_tiros(330))
     classificar_atividades(session, atleta.id)
@@ -85,13 +85,13 @@ def test_rodagem_com_voltas_separadas_por_paradas_fica_fora(session, atleta):
 
 def test_limite_exato_entra_na_serie(session, atleta):
     _historico_facil(session, atleta)
-    _corrida(session, atleta, dias=40, pace=0, voltas=_tiros(313.5))  # 330 x 0,95 = 313,5
+    _corrida(session, atleta, dias=40, pace=0, voltas=_tiros(297.0))  # 330 x 0,90 = 297
     assert len(_serie(session, atleta)) == 1
 
 
 def test_logo_acima_do_limite_fica_fora(session, atleta):
     _historico_facil(session, atleta)
-    _corrida(session, atleta, dias=40, pace=0, voltas=_tiros(313.6))
+    _corrida(session, atleta, dias=40, pace=0, voltas=_tiros(297.1))
     assert _serie(session, atleta) == []
 
 
@@ -104,7 +104,7 @@ def test_sem_historico_nao_filtra(session, atleta):
 def _historico_antigo(session, atleta):
     # 4 corridas antigas a 300 e 3 a 330, todas a mais de 84 dias da sessão em dias=200.
     # Na janela de 84 dias só ficam 3 (a 330): < 10, então usa as 7: ordenadas 300 x4, 330 x3,
-    # mediana = 4a = 300; limite = 300 x 0,95 = 285.
+    # mediana = 4a = 300; limite = 300 x 0,90 = 270.
     for d in (0, 5, 10, 15):
         _corrida(session, atleta, dias=d, pace=300)
     for d in (190, 192, 194):
@@ -113,20 +113,20 @@ def _historico_antigo(session, atleta):
 
 def test_menos_de_10_corridas_na_janela_usa_o_historico_todo(session, atleta):
     _historico_antigo(session, atleta)
-    _corrida(session, atleta, dias=200, pace=0, voltas=_tiros(290))  # 290 > 285: fora
+    _corrida(session, atleta, dias=200, pace=0, voltas=_tiros(290))  # 290 > 270: fora
     assert _serie(session, atleta) == []
 
 
 def test_menos_de_10_na_janela_e_tiros_abaixo_do_limite_entram(session, atleta):
     _historico_antigo(session, atleta)
-    _corrida(session, atleta, dias=200, pace=0, voltas=_tiros(280))  # 280 <= 285: dentro
+    _corrida(session, atleta, dias=200, pace=0, voltas=_tiros(265))  # 265 <= 270: dentro
     assert len(_serie(session, atleta)) == 1
 
 
 def test_esteira_e_corridas_curtas_nao_entram_no_habitual(session, atleta):
-    # 10 corridas válidas a 330 s/km (habitual 330, limite 313,5) e 15 de esteira e 15 de 3 km, todas
+    # 10 corridas válidas a 330 s/km (habitual 330, limite 297) e 15 de esteira e 15 de 3 km, todas
     # a 500 s/km. Se entrassem, a mediana iria a 500 (limite 475) e uns "tiros" a 400 passariam.
-    # Sem elas, 400 > 313,5: fora.
+    # Sem elas, 400 > 297: fora.
     _historico_facil(session, atleta)
     for i in range(15):
         _corrida(session, atleta, dias=i, pace=500, subtipo="esteira")
