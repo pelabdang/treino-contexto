@@ -173,6 +173,11 @@ Calculados à mão a partir de `tests/fixtures/garmin/gerar_fixtures.py`; o test
 
 Ficam fora da série: 1000000003 (corrida leve, sem tiros), 1000000004 (natação) e 1000000005 (sem FIT).
 
+### Escala dos eixos do gráfico (issue #63)
+O pace e a FC médios por sessão são desenhados com escala mínima: faixa de 30 s/km no pace e de 5 bpm na FC (regra e
+conta à mão em [[modulos/grafico-tiros]]). Os rótulos das marcas de pace vêm de `formatar_pace`. A escala não altera
+nenhum valor da métrica, só o desenho, e não muda `tiros_1km@4`.
+
 ## Dados de entrada
 Por volta: `ordem`, `distancia_m`, `duracao_s`, `fc_media` (opcional) e `intensidade` (opcional; campo
 `segmento.intensidade`, ver [[decisoes/0002-segmento-intensidade-e-versao]]). Mais a modalidade da atividade.
@@ -190,7 +195,7 @@ Regra própria do projeto; não há artigo.
   série. Mudou a detecção: é preciso **reclassificar** (`classificar_atividades`) para regravar `tipo` e `versao_deteccao`.
 
 ## Código e teste
-- Código: `services/api/app/metricas/tiros_1km.py` (`detectar_tiros`, `agregar_sessao`, `serie_por_sessao`)
+- Código: `services/api/app/metricas/tiros_1km.py` (`detectar_tiros`, `agregar_sessao`, `serie_por_sessao`); escala dos eixos em `services/api/app/graficos/escala.py`
 - Testes: `services/api/tests/metricas/test_agregacao_sessao.py` (exemplo acima) e
   `services/api/tests/metricas/test_tiros_1km.py` (valor esperado calculado à mão em cada caso, ex.:
   6 x 1 km com recuperação de 400 m: tiros a 240 s/km contra 450 s/km, limite 414 s/km).
