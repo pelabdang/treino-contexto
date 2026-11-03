@@ -2,7 +2,7 @@
 tipo: modulo
 status: em-uso
 dono: theo
-atualizado: 2026-10-31
+atualizado: 2026-11-03
 links: [[modulos/api]], [[modulos/grafico-tiros]], [[modulos/infra]], [[modulos/ingestao-garmin]], [[modulos/banco]]
 ---
 # Módulo: worker
@@ -20,11 +20,17 @@ da importação e do cálculo de métricas, fora da [[modulos/api]].
   git). Atleta inexistente: mensagem em stderr e código de saída 1. Formato em [[modulos/grafico-tiros]].
   Exemplo com as fixtures: ![[_anexos/tiros-1km-atleta-fixtures.png]]
 
+- Reclassificação: `uv run python -m worker.reclassificar --atleta-id <id>` roda `classificar_atividades` e mostra
+  quantas corridas processou. Idempotente. Use quando a API devolve `reclassificacao_pendente: true`
+  (passo a passo em "Reclassificar" de [[modulos/api]]). Atleta inexistente: stderr e saída 1.
+
 ## Arquivos principais
 - `services/worker/worker/main.py`
 - `services/worker/worker/garmin/` (parser: `leitor.py`, `fit.py`, `tipos.py`, `unidades.py`, `modelos.py`)
 - `services/worker/worker/importar_garmin.py` (importação no banco, CLI `python -m worker.importar_garmin`)
 - `services/worker/worker/grafico_tiros_1km.py` (gráfico e CSV, CLI `python -m worker.grafico_tiros_1km`)
+- `services/worker/worker/reclassificar.py` (CLI `python -m worker.reclassificar`)
+- `services/worker/tests/test_reclassificar.py`
 - `services/worker/tests/test_grafico_tiros_1km.py`
 - `services/worker/tests/test_health.py`
 - `services/worker/tests/test_garmin_parser.py`
