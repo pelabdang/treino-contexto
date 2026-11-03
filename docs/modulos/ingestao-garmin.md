@@ -3,7 +3,7 @@ tipo: modulo
 status: em-uso
 dono: duda
 atualizado: 2026-11-03
-links: [[modulos/worker]], [[modulos/banco]], [[produto/roadmap]], [[diario/2026-11-03]]
+links: [[modulos/worker]], [[modulos/banco]], [[decisoes/0006-upload-de-fit]], [[produto/roadmap]], [[diario/2026-11-03]]
 ---
 # Módulo: ingestão Garmin
 
@@ -135,6 +135,14 @@ Usa `DATABASE_URL` (Postgres do docker compose; rode `alembic upgrade head` ante
   foram substituídas. A comparação "mudou" das voltas considera segmentos de todos os tipos.
 - Atividade sem duração (nem soma de voltas) é ignorada com aviso, porque `duracao_s` é obrigatório.
 - Testes: `services/worker/tests/test_importar_garmin.py` (SQLite local; Postgres via `TEST_DATABASE_URL`).
+
+## Upload de FIT (Meta 3, ainda não implementado)
+A [[decisoes/0006-upload-de-fit]] decide o plano B enquanto a API da Garmin não é aprovada: o atleta envia um `.fit`
+pelo app. Em resumo: o parser e a gravação passam do worker para a API (`app/ingestao/`), sem ciclo; a mesma atividade
+por upload e por exportação casa por atleta, modalidade e início a até 60 s (empate: início mais próximo, depois menor
+`id`); o FIT fica em `FIT_DIR` como `<atleta_id>/<sha256>.fit` (fora do git, caminho em `arquivo_bruto`); limite de
+10 MB; qualquer modalidade entra, só corrida na série. Esta nota passa a descrever o upload quando as issues da
+Meta 3 forem feitas.
 
 ## Arquivos principais
 - `services/worker/worker/garmin/` e `services/worker/tests/test_garmin_parser.py`
