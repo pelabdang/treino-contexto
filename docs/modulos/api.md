@@ -3,7 +3,7 @@ tipo: modulo
 status: em-uso
 dono: theo
 atualizado: 2026-11-03
-links: [[decisoes/0001-modelo-de-dados-minimo]], [[decisoes/0003-fuso-da-atividade]], [[decisoes/0004-contrato-tela-evolucao]], [[metricas/tiros-1km]], [[modulos/grafico-tiros]], [[modulos/banco]], [[modulos/worker]], [[modulos/infra]], [[modulos/api-client]]
+links: [[decisoes/0001-modelo-de-dados-minimo]], [[decisoes/0003-fuso-da-atividade]], [[decisoes/0004-contrato-tela-evolucao]], [[metricas/tiros-1km]], [[modulos/grafico-tiros]], [[modulos/banco]], [[modulos/worker]], [[modulos/infra]], [[modulos/api-client]], [[produto/meta-2-como-rodar]]
 ---
 # Módulo: api
 
@@ -93,6 +93,9 @@ curl "http://localhost:8000/atletas/1/evolucao/tiros-1km?inicio=2025-03-01"
   curl -o tiros.png "http://localhost:8000/atletas/1/evolucao/tiros-1km.png"
   ```
 - Testes: `services/api/tests/rotas/test_evolucao_tiros.py` (banco com as fixtures importadas).
+
+## Rodar localmente com as fixtures
+Passo a passo de ponta a ponta (Postgres, migrações, fixtures, API com `CORS_ORIGENS` e app web) em [[produto/meta-2-como-rodar]]. Resumo: a API demora alguns segundos para subir; `docker compose` sem `-p` reusa o volume `treino-contexto_pgdata`.
 
 ## Reclassificar
 Quando uma regra nova de detecção sobe a `VERSAO` ([[metricas/tiros-1km]]), os segmentos já gravados ficam com a

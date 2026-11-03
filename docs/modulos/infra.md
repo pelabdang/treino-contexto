@@ -3,7 +3,7 @@ tipo: modulo
 status: em-uso
 dono: theo
 atualizado: 2026-11-03
-links: [[modulos/banco]], [[modulos/api]], [[decisoes/0004-contrato-tela-evolucao]]
+links: [[modulos/banco]], [[modulos/api]], [[decisoes/0004-contrato-tela-evolucao]], [[produto/meta-2-como-rodar]]
 ---
 # Módulo: infra
 
@@ -17,6 +17,8 @@ Ambiente local e CI. Postgres 16 em Docker Compose. Produção futura: DigitalOc
 - `CORS_ORIGENS`: origens do app web liberadas na API, separadas por vírgula. Padrão `http://localhost:8081`
   (`npx expo start --web`). Nunca `*` (a API recusa subir). Vazia não libera nenhuma. iOS e Android não precisam de CORS.
   Ver [[modulos/api]] e [[decisoes/0004-contrato-tela-evolucao]].
+
+- Cuidado: o compose tem `name: treino-contexto`; sem `-p` ele reusa o volume `treino-contexto_pgdata`. Com porta 5432 ocupada, veja [[produto/meta-2-como-rodar]].
 
 ## Arquivos principais
 - `infra/docker-compose.yml`
