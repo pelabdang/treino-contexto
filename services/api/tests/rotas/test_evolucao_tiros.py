@@ -8,6 +8,7 @@ from fastapi.testclient import TestClient
 from app.db.models import Atividade, Atleta
 from app.db.session import get_session
 from app.main import app
+from app.metricas.tiros_1km import VERSAO
 
 ZIP = Path(__file__).parents[4] / "tests" / "fixtures" / "garmin" / "exportacao_minima.zip"
 
@@ -36,7 +37,7 @@ def test_json_com_os_valores_do_oraculo(client, importar_fixtures):
     j = r.json()
     assert set(j) == {"atleta_id", "metrica", "versao_calculo", "reclassificacao_pendente", "unidades", "periodo", "sessoes"}
     assert j["atleta_id"] == importar_fixtures.id and j["metrica"] == "tiros_1km"
-    assert j["versao_calculo"] == "tiros_1km@4" and j["reclassificacao_pendente"] is False
+    assert j["versao_calculo"] == VERSAO and j["reclassificacao_pendente"] is False
     assert j["unidades"] == {"pace": "s/km", "fc": "bpm", "distancia": "m", "duracao": "s"}
     assert j["periodo"] is None
     a, b = j["sessoes"]
@@ -74,7 +75,7 @@ def test_atleta_sem_sessoes_200_lista_vazia(client, session):
     session.commit()
     r = client.get(_url(atleta))
     assert r.status_code == 200
-    assert r.json()["sessoes"] == [] and r.json()["versao_calculo"] == "tiros_1km@4"
+    assert r.json()["sessoes"] == [] and r.json()["versao_calculo"] == VERSAO
 
 
 @pytest.mark.parametrize("q", ["?inicio=ontem", "?fim=2025-13-40", "?inicio=2025-3"])
@@ -185,20 +186,26 @@ def test_segmento_sem_distancia_vira_null_nunca_zero(client, importar_fixtures, 
     assert t[1]["distancia_m"] == 1000.0
 
 
-def test_reclassificacao_pendente_com_versao_velha_e_sem_escrever(client, importar_fixtures, session):
+def test_reclassificacao_pendente_com_versao_velha_sem_escrever_e_comando_limpa(client, importar_fixtures, session):
     from app.db.models import Segmento
+    from worker.reclassificar import reclassificar
     a = session.query(Atividade).filter_by(fonte_id="1000000002").one()
-    a.segmentos[0].versao_deteccao = "tiros_1km@3"
+    a.segmentos[0].versao_deteccao = "tiros_1km@1"
     session.commit()
+    antes = sorted((s.id, s.tipo, s.versao_deteccao) for s in session.query(Segmento))
     j = client.get(_url(importar_fixtures)).json()
     assert j["reclassificacao_pendente"] is True
-    assert j["versao_calculo"] == "tiros_1km@4"  # sempre a regra atual, nunca a gravada
-    # o GET não escreveu nada: continua pendente na segunda leitura e a versão gravada segue a velha
+    assert j["versao_calculo"] == VERSAO  # sempre a regra atual, nunca a gravada
+    # o GET não escreveu nada: nenhum segmento mudou e continua pendente na segunda leitura
     session.expire_all()
-    assert session.query(Segmento).filter_by(versao_deteccao="tiros_1km@3").count() == 1
+    assert sorted((s.id, s.tipo, s.versao_deteccao) for s in session.query(Segmento)) == antes
     assert client.get(_url(importar_fixtures)).json()["reclassificacao_pendente"] is True
     # o período olha só as corridas do filtro: a velha é de 2025-03-11
     assert client.get(_url(importar_fixtures, "?fim=2025-03-05")).json()["reclassificacao_pendente"] is False
+    # depois do comando de reclassificação, volta a false
+    reclassificar(session, importar_fixtures.id)
+    j = client.get(_url(importar_fixtures)).json()
+    assert j["reclassificacao_pendente"] is False and j["versao_calculo"] == VERSAO
 
 
 def test_sem_sessoes_nao_esta_pendente(client, session):
