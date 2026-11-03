@@ -26,7 +26,8 @@ App de análise de treinos com contexto (corrida, natação, ciclismo) para atle
   - [[decisoes/0001-modelo-de-dados-minimo]]: modelo de dados mínimo e monorepo
   - [[decisoes/0002-segmento-intensidade-e-versao]]: intensidade da volta e versão da detecção no segmento
   - [[decisoes/0003-fuso-da-atividade]]: fuso da atividade (`fuso_min`) e data local da sessão
-  - [[decisoes/0005-serie-de-tiros-o-que-entra]]: o que entra na série de tiros e como a regra muda (0004 reservada ao contrato da Meta 2)
+  - [[decisoes/0004-contrato-tela-evolucao]]: contrato da tela de evolução dos tiros (Meta 2): pace só pela API, eixos, versão, erros e cliente gerado
+  - [[decisoes/0005-serie-de-tiros-o-que-entra]]: o que entra na série de tiros e como a regra muda
 
 ## Ciência e especialistas
 - Artigos: pasta [[ciencia/artigos/]]

@@ -2,8 +2,8 @@
 tipo: modulo
 status: em-uso
 dono: theo
-atualizado: 2026-10-31
-links: [[decisoes/0001-modelo-de-dados-minimo]], [[decisoes/0003-fuso-da-atividade]], [[metricas/tiros-1km]], [[modulos/grafico-tiros]], [[modulos/banco]], [[modulos/worker]], [[modulos/infra]]
+atualizado: 2026-11-03
+links: [[decisoes/0001-modelo-de-dados-minimo]], [[decisoes/0003-fuso-da-atividade]], [[decisoes/0004-contrato-tela-evolucao]], [[metricas/tiros-1km]], [[modulos/grafico-tiros]], [[modulos/banco]], [[modulos/worker]], [[modulos/infra]]
 ---
 # Módulo: api
 
@@ -73,6 +73,11 @@ curl "http://localhost:8000/atletas/1/evolucao/tiros-1km?inicio=2025-03-01"
   ```
 - Testes: `services/api/tests/rotas/test_evolucao_tiros.py` (banco com as fixtures importadas).
 
+## Contrato da tela de evolução (Meta 2)
+O contrato que o app consome (pace só pela API, bloco `eixos`, `reclassificacao_pendente`, erros, arredondamento,
+cliente gerado e CORS) está decidido em [[decisoes/0004-contrato-tela-evolucao]], com a lista "antes e depois".
+O texto acima descreve o endpoint **de hoje**; cada mudança entra aqui quando a issue dela (#63 a #68) for feita.
+
 ## Depende de
 - [[modulos/banco]] (Postgres 16 via [[modulos/infra]]).
 
@@ -80,6 +85,6 @@ curl "http://localhost:8000/atletas/1/evolucao/tiros-1km?inicio=2025-03-01"
 `uv run pytest -q` na raiz. Roda em SQLite local e em Postgres no CI.
 
 ## Pendências
-- Cliente TypeScript a partir do OpenAPI (Meta 2). Ver [[produto/roadmap]].
+- Cliente TypeScript a partir do OpenAPI (Meta 2, #68; contrato em [[decisoes/0004-contrato-tela-evolucao]]). Ver [[produto/roadmap]].
 - Passo a passo para reproduzir a Meta 1: [[produto/meta-1-como-reproduzir]].
 - Cada métrica nova ganha nota em [[metricas/]].
