@@ -43,9 +43,10 @@ de referência, escrita à mão, está em [[metricas/clima-oraculo]].
 
 ## Falhas e tentativas
 - Timeout de 10 s por chamada.
-- Erro de rede, timeout, 5xx e 429: 1 chamada e até 3 repetições, com espera de 1, 2 e 4 s. Com `Retry-After` (segundos),
-  vale esse valor no lugar da espera padrão, no máximo 60 s; valor inválido ou data HTTP volta à espera padrão.
-  (Leitura do ADR: "3 tentativas com espera de 1, 2 e 4 s" = 3 esperas, então até 4 chamadas.)
+- Erro de rede, timeout, 5xx e 429: **valem 1 chamada mais até 3 repetições**, com espera de 1, 2 e 4 s. Até 4 chamadas
+  no total. Com `Retry-After` (segundos), vale esse valor no lugar da espera padrão, no máximo 60 s; valor inválido ou
+  data HTTP volta à espera padrão.
+  (Decisão do Theo, 03/11, sobre o texto "3 tentativas" da ADR 0007, item 6: são 3 repetições, não 3 chamadas.)
 - Log: só o código HTTP e o número de espera. Nunca coordenada, URL completa nem corpo. O `httpx` registra a URL completa
   em INFO; o módulo sobe o nível dos loggers `httpx` e `httpcore` para WARNING, e um teste confere o log (falha se isso
   for removido).
