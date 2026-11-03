@@ -3,7 +3,7 @@ tipo: decisao
 status: em-uso
 dono: theo
 atualizado: 2026-11-03
-links: [[modulos/api]], [[modulos/grafico-tiros]], [[modulos/mobile]], [[modulos/worker]], [[metricas/tiros-1km]], [[decisoes/0002-segmento-intensidade-e-versao]], [[decisoes/0003-fuso-da-atividade]], [[decisoes/0005-serie-de-tiros-o-que-entra]], [[produto/roadmap]]
+links: [[modulos/api]], [[modulos/grafico-tiros]], [[modulos/mobile]], [[modulos/worker]], [[metricas/tiros-1km]], [[decisoes/0002-segmento-intensidade-e-versao]], [[decisoes/0003-fuso-da-atividade]], [[decisoes/0005-serie-de-tiros-o-que-entra]], [[decisoes/0006-upload-de-fit]], [[produto/roadmap]]
 ---
 # ADR: 0004 Contrato da tela de evolução dos tiros (Meta 2)
 
@@ -43,7 +43,8 @@ manda tudo pronto.
    `app.openapi()`, sem subir servidor), mais um exemplo de contrato sintético. Um teste do pytest falha quando o
    `openapi.json` ou o exemplo estão desatualizados e diz o comando para regerar (#68).
 7. **CORS por variável de ambiente** `CORS_ORIGENS` (lista separada por vírgula). Padrão local
-   `http://localhost:8081`, só `GET`, nunca `*`; variável vazia não libera nenhuma origem (#65).
+   `http://localhost:8081`, só `GET`, nunca `*`; variável vazia não libera nenhuma origem (#65). Ampliada pela [[decisoes/0006-upload-de-fit]]: libera também
+   `POST` para o upload de FIT; continua sem `*`.
 8. **Atleta por configuração.** Não há login nem lista de atletas nesta meta: o app lê `EXPO_PUBLIC_ATLETA_ID`
    (padrão `1`) e `EXPO_PUBLIC_API_URL` (#67).
 
