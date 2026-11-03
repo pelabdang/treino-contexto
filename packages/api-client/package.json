@@ -1,0 +1,14 @@
+{
+  "name": "@treino/api-client",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Cliente TypeScript da API treino-contexto, gerado do OpenAPI (ver docs/modulos/api-client.md)",
+  "main": "src/index.ts",
+  "types": "src/index.ts",
+  "scripts": {
+    "gerar": "openapi-typescript openapi.json -o src/schema.d.ts && node scripts/carimbar.mjs"
+  },
+  "devDependencies": {
+    "openapi-typescript": "^7.0.0"
+  }
+}

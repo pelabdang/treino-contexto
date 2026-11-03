@@ -1,0 +1,168 @@
+{
+  "atleta_id": 1,
+  "metrica": "tiros_1km",
+  "versao_calculo": "tiros_1km@4",
+  "reclassificacao_pendente": false,
+  "unidades": {
+    "pace": "s/km",
+    "fc": "bpm",
+    "distancia": "m",
+    "duracao": "s"
+  },
+  "periodo": null,
+  "eixos": {
+    "pace": {
+      "min_s_km": 228.9,
+      "max_s_km": 258.9,
+      "invertido": true,
+      "marcas": [
+        {
+          "valor_s_km": 240.0,
+          "rotulo": "4:00"
+        },
+        {
+          "valor_s_km": 255.0,
+          "rotulo": "4:15"
+        }
+      ]
+    },
+    "fc": {
+      "min_bpm": 168.5,
+      "max_bpm": 173.5,
+      "marcas": [
+        {
+          "valor_bpm": 169.0,
+          "rotulo": "169"
+        },
+        {
+          "valor_bpm": 170.0,
+          "rotulo": "170"
+        },
+        {
+          "valor_bpm": 171.0,
+          "rotulo": "171"
+        },
+        {
+          "valor_bpm": 172.0,
+          "rotulo": "172"
+        },
+        {
+          "valor_bpm": 173.0,
+          "rotulo": "173"
+        }
+      ]
+    }
+  },
+  "sessoes": [
+    {
+      "atividade_id": 1,
+      "data": "2025-03-04",
+      "inicio": "2025-03-04T09:00:00Z",
+      "n_tiros": 6,
+      "pace_medio_s_km": 250.8,
+      "pace_medio": "4:11",
+      "fc_media": 170.3,
+      "tiros": [
+        {
+          "ordem": 1,
+          "distancia_m": 1000.0,
+          "duracao_s": 255.0,
+          "pace_s_km": 255.0,
+          "pace": "4:15",
+          "fc_media": 165.0
+        },
+        {
+          "ordem": 3,
+          "distancia_m": 1000.0,
+          "duracao_s": 252.0,
+          "pace_s_km": 252.0,
+          "pace": "4:12",
+          "fc_media": 168.0
+        },
+        {
+          "ordem": 5,
+          "distancia_m": 1000.0,
+          "duracao_s": 250.0,
+          "pace_s_km": 250.0,
+          "pace": "4:10",
+          "fc_media": 170.0
+        },
+        {
+          "ordem": 7,
+          "distancia_m": 1000.0,
+          "duracao_s": 251.0,
+          "pace_s_km": 251.0,
+          "pace": "4:11",
+          "fc_media": 171.0
+        },
+        {
+          "ordem": 9,
+          "distancia_m": 1000.0,
+          "duracao_s": 249.0,
+          "pace_s_km": 249.0,
+          "pace": "4:09",
+          "fc_media": 173.0
+        },
+        {
+          "ordem": 11,
+          "distancia_m": 1000.0,
+          "duracao_s": 248.0,
+          "pace_s_km": 248.0,
+          "pace": "4:08",
+          "fc_media": 175.0
+        }
+      ]
+    },
+    {
+      "atividade_id": 4,
+      "data": "2025-03-11",
+      "inicio": "2025-03-11T09:05:00Z",
+      "n_tiros": 5,
+      "pace_medio_s_km": 237.0,
+      "pace_medio": "3:57",
+      "fc_media": 171.8,
+      "tiros": [
+        {
+          "ordem": 1,
+          "distancia_m": 1000.0,
+          "duracao_s": 240.0,
+          "pace_s_km": 240.0,
+          "pace": "4:00",
+          "fc_media": 166.0
+        },
+        {
+          "ordem": 3,
+          "distancia_m": 1000.0,
+          "duracao_s": 238.0,
+          "pace_s_km": 238.0,
+          "pace": "3:58",
+          "fc_media": 170.0
+        },
+        {
+          "ordem": 5,
+          "distancia_m": 1000.0,
+          "duracao_s": 237.0,
+          "pace_s_km": 237.0,
+          "pace": "3:57",
+          "fc_media": 172.0
+        },
+        {
+          "ordem": 7,
+          "distancia_m": 1000.0,
+          "duracao_s": 236.0,
+          "pace_s_km": 236.0,
+          "pace": "3:56",
+          "fc_media": 174.0
+        },
+        {
+          "ordem": 9,
+          "distancia_m": 1000.0,
+          "duracao_s": 234.0,
+          "pace_s_km": 234.0,
+          "pace": "3:54",
+          "fc_media": 177.0
+        }
+      ]
+    }
+  ]
+}

@@ -3,7 +3,7 @@ tipo: modulo
 status: em-uso
 dono: rafa
 atualizado: 2026-11-03
-links: [[modulos/api]], [[produto/roadmap]], [[decisoes/0004-contrato-tela-evolucao]]
+links: [[modulos/api]], [[modulos/api-client]], [[produto/roadmap]], [[decisoes/0004-contrato-tela-evolucao]]
 ---
 # Módulo: mobile
 
@@ -14,7 +14,8 @@ O app não calcula pace: todo `m:ss` virá da [[modulos/api]].
 
 ## Entradas e saídas
 - Entrada: variáveis `EXPO_PUBLIC_API_URL` (padrão `http://localhost:8000`) e `EXPO_PUBLIC_ATLETA_ID` (padrão `1`, o atleta das fixtures), lidas só em `src/config.ts`. Modelo em `apps/mobile/.env.example`; copie para `.env.local` (ignorado pelo git).
-- Futuro: consome a [[modulos/api]] por cliente TypeScript gerado do OpenAPI (`packages/api-client/`).
+- Consome a [[modulos/api]] pelo pacote `@treino/api-client` (`packages/api-client/`, tipos gerados do OpenAPI; ver [[modulos/api-client]]), dependência local `"@treino/api-client": "file:../../packages/api-client"`. Uso: `buscarEvolucaoTiros1km(config.atletaId, {inicio, fim}, {baseUrl: config.apiUrl})`. Ainda nenhuma tela chama (#69).
+- Jest: `package.json` tem `moduleDirectories` com `<rootDir>/node_modules`, para o pacote (fora de `apps/mobile`) achar os helpers do Babel.
 
 ## Rotas
 | Arquivo | Rota | O que mostra |
@@ -25,11 +26,11 @@ O app não calcula pace: todo `m:ss` virá da [[modulos/api]].
 ## Arquivos principais
 - `apps/mobile/src/app/` (rotas do Expo Router; código que não é rota fica fora)
 - `apps/mobile/src/config.ts` (`lerConfig` e `config`)
-- `apps/mobile/__tests__/index.test.tsx` e `config.test.ts`
+- `apps/mobile/__tests__/index.test.tsx`, `config.test.ts` e `api-client.test.ts` (cliente com `fetch` falso)
 - `apps/mobile/package.json` (Jest via `jest-expo`, Testing Library), `app.json`, `eslint.config.js`, `.env.example`
 
 ## Depende de
-- [[modulos/api]] (ainda sem chamadas).
+- [[modulos/api]] (ainda sem chamadas) e [[modulos/api-client]] (tipos e função de leitura).
 
 ## Como testar
 ```
