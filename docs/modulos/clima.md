@@ -11,8 +11,8 @@ Weather data by Open-Meteo.com (licença CC BY 4.0, <https://open-meteo.com/>).
 
 ## Para que serve
 Busca o clima da atividade (temperatura, sensação térmica, umidade e vento) na hora e no local do treino, para a Meta 4
-([[decisoes/0007-clima-da-atividade]]). Hoje existe só o **cliente**; o comando que preenche o banco e a tabela
-`clima_atividade` vêm nas issues seguintes da Meta 4.
+([[decisoes/0007-clima-da-atividade]]). Tem o **cliente** (#112) e o **serviço que guarda e preenche o clima** (#113): tabela `clima_atividade`, estados e o
+comando `worker.preencher_clima`. O clima na API vem na issue seguinte.
 
 ## Entradas e saídas
 - Código: `services/api/app/clima/cliente.py`. Interface `ClienteClima.buscar(lat, lon, inicio, duracao_s)`; a
@@ -64,19 +64,53 @@ atleta. A resposta **não** foi gravada como fixture.
 - Esse ponto inventado cai no mar (elevação 0), o que não muda nada para o cliente.
 - Não houve erro, 429 nem `Retry-After` para ver; esses caminhos estão só nos testes com transporte falso.
 
+## Tabela, estados e leitura (#113)
+- Tabela `clima_atividade` (migração 0005; colunas em [[modulos/banco]]). `entrada` = SHA-256 de `inicio` (UTC, segundos),
+  `duracao_s` (inteiro) e a posição (2 casas).
+- `app.servicos.clima.clima_da_atividade(session, atividade_id)` devolve `ClimaDaAtividade(estado, temperatura_c,
+  sensacao_c, umidade_pct, vento_kmh)`; `estado_clima(atividade, linha)` é a versão sem consulta, para listas. É o que a API
+  (#114) deve usar. `indoor` (subtipo `esteira`, `piscina`, `virtual`) e `sem_posicao` são **calculados**, sem linha.
+  Ao ar livre com posição: sem linha, ou linha de outra `entrada`, é `pendente`; senão vale o estado da linha. Valores só em `ok`.
+- Posição e horário são tudo que vai ao Open-Meteo. Nenhum log ou relatório mostra coordenada.
+
+## O comando `worker.preencher_clima`
+Uso e opções em [[modulos/worker]]. Regras (ADR 0007, itens 6 a 8):
+- **Entram** as atividades ao ar livre, com posição, com fim (`inicio + duração`) a mais de 7 dias e sem linha `ok` de mesma
+  `entrada`. Dentro dos 7 dias: continuam `pendente`, sem chamada, sem linha e sem contar rodada.
+- `ok` com `entrada` igual nunca é consultada de novo (rodar duas vezes não chama a API). `entrada` diferente refaz e
+  zera `tentativas`.
+- `pendente` (rede, timeout, 5xx, 429 ou `null` na janela) soma 1 em `tentativas` por rodada; ao chegar a 5 vira `falha`
+  (`erro` guarda o motivo). `falha` do cliente (HTTP 400, resposta fora do esperado) vira `falha` na hora.
+  `falha` só é refeita com `--refazer-falhas` (que zera `tentativas`), ou se a `entrada` mudou (nesse caso é refeita sem a flag).
+  O 429 persistente, que para a rodada, também conta como uma tentativa da atividade em curso.
+- Chamadas sequenciais, pausa de 0,25 s (injetável), teto de 500 por rodada (`--limite`), um `commit` por atividade.
+  Com `parar_rodada` (429 persistente), a rodada para depois de gravar a atividade atual.
+- **Posição do passado:** vem **primeiro da exportação** (`--exportacao`; o JSON vale mais que o FIT) e, se ela não tiver,
+  do FIT guardado em `FIT_DIR` (`arquivo_bruto` no formato `<n>/<64 hex>.fit`). Só preenche `NULL`, nunca sobrescreve; indoor não recebe posição.
+- **No fim de `importar` (linha de comando):** clima só das atividades que entraram ou mudaram (`RelatorioImportacao.ids_alterados`).
+  `importar` e o endpoint de upload em si não usam a rede; erro de clima na linha de comando é aviso.
+
+## Decisões do Theo (03/11)
+Aprovadas na revisão da #113, sobre o que a [[decisoes/0007-clima-da-atividade]] deixou em aberto:
+1. A guarda de socket dos testes do comando libera só loopback (`localhost`, `127.0.0.1`, `::1`) e `AF_UNIX`, para o Postgres local do CI. Qualquer outro destino falha.
+2. Uma `falha` cuja `entrada` mudou é refeita sem a flag. `--refazer-falhas` zera `tentativas`.
+3. `pendente` soma 1 por rodada e vira `falha` em 5. O 429 que para a rodada conta como tentativa.
+4. A posição relida vem primeiro da exportação e depois do FIT em `FIT_DIR`.
+
 ## Arquivos principais
 - `services/api/app/clima/cliente.py` e `services/api/app/clima/__init__.py`
-- `services/api/tests/clima/test_cliente_open_meteo.py`
+- `services/api/app/servicos/clima.py` (tabela, estados, preenchimento) e `services/worker/worker/preencher_clima.py` (comando)
+- `services/api/tests/clima/test_cliente_open_meteo.py` e `services/worker/tests/test_preencher_clima.py`
 - Fixtures: `tests/fixtures/clima/` (resposta sintética, versão com `null`, `oraculo_clima.json`)
 
 ## Depende de
-`httpx` (agora dependência de runtime da API, já estava no lock). Não toca o banco nem o leitor.
+`httpx` (agora dependência de runtime da API, já estava no lock). O serviço usa o banco ([[modulos/banco]]) e o leitor ([[modulos/ingestao-garmin]]); o cliente em si não.
 
 ## Como testar
-`uv run pytest services/api/tests/clima`. Nenhum teste abre conexão: um teste automático troca `socket.connect`,
+`uv run pytest services/api/tests/clima services/worker/tests/test_preencher_clima.py`. Nenhum teste abre conexão externa: um teste automático troca `socket.connect`,
 `create_connection` e `getaddrinfo` por uma falha, e outro teste confere que a guarda pega o cliente com transporte
-padrão. As esperas são falsas (nada dorme). Os valores batem com `oraculo_clima.json` (tolerância do oráculo).
+padrão. Nos testes do comando, a guarda deixa passar só loopback e `AF_UNIX` (decisão 1 acima). As esperas são falsas (nada dorme). Os valores batem com `oraculo_clima.json` (tolerância do oráculo).
 
 ## Pendências
-- Tabela `clima_atividade`, comando `worker.preencher_clima` e clima na API: issues seguintes da Meta 4.
+- Clima na API e no cliente TypeScript: issue seguinte da Meta 4.
 - Atribuição "Weather data by Open-Meteo.com" na tela, se o clima aparecer um dia no app.
