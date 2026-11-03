@@ -149,7 +149,7 @@ def test_intensidade_normalizada():
 
 def test_intensidade_estranha_vai_para_other_sem_erro(session, monkeypatch):
     from worker import importar_garmin
-    from worker.garmin import ler_exportacao
+    from app.ingestao.garmin import ler_exportacao
     originais = ler_exportacao(ZIP)
     originais[0].voltas[1] = originais[0].voltas[1].__class__(
         **{**originais[0].voltas[1].__dict__, "intensidade": " Active "})
@@ -232,7 +232,7 @@ def test_importacao_classifica_e_respeita_professor(session):
 def test_fuso_min_do_parser():
     from datetime import datetime, timedelta, timezone
 
-    from worker.garmin import AtividadeImportada
+    from app.ingestao.garmin import AtividadeImportada
     from worker.importar_garmin import fuso_min
     inicio = datetime(2025, 3, 5, 1, 30, tzinfo=timezone.utc)
 

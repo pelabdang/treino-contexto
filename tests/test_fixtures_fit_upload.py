@@ -10,14 +10,9 @@ from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
 import pytest
+from app.ingestao.garmin.fit import FitSemAtividade, ler_fit
+from app.ingestao.garmin.tipos import de_fit
 from app.metricas.tiros_1km import VoltaEntrada, agregar_sessao, detectar_tiros
-
-try:  # o leitor esta mudando para a API (#92); aceita os dois lugares
-    from app.ingestao.garmin.fit import FitSemAtividade, ler_fit
-    from app.ingestao.garmin.tipos import de_fit
-except ImportError:  # pragma: no cover
-    from worker.garmin.fit import FitSemAtividade, ler_fit
-    from worker.garmin.tipos import de_fit
 
 PASTA = Path(__file__).parent / "fixtures" / "garmin"
 FITS = PASTA / "fit"
