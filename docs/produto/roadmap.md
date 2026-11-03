@@ -243,8 +243,8 @@ Revisadas ao fim de cada meta com o que se aprendeu. Ordem tirada da "Fundação
   fim da importação, e reimportar o histórico real mandaria as posições na hora (proposta: `--sem-clima` ou, melhor,
   inverter o padrão); um FIT avulso importado depois do JSON duplica a atividade, porque a exclusão "exportação não casa
   com exportação" vale também para `fonte_id` `fit-…` (proposta: a exclusão só quando os dois lados têm `activityId`); a
-  investigação da série de tiros deixou recomendações (R1, melhor tiro junto da média; R2, `tiros_1km@5` com treinos
-  mistos) que esperam o Angelo; clima na tela do app fica como candidata a meta futura. Detalhes em
+  investigação da série de tiros deixou recomendações (R1, melhor tiro junto da média; R2, `tiros_1km@5`, que amplia
+  o que entra) que esperam o Angelo; clima na tela do app fica como candidata a meta futura. Detalhes em
   [[produto/metas/meta-4-clima-atividade]].
 - **Aprendido na Meta 4:** ADR com fontes e uma lista "a confirmar" deixou para a chamada real só a conferência; efeito
   colateral de rede que manda dado do atleta tem de ser pedido explícito; toda exceção à regra de identidade precisa de
@@ -371,7 +371,7 @@ Em aberto:
    ok, uma rodada de clima com `--limite` baixo. Números só em `entregas/`. Ver [[produto/metas/meta-4-clima-atividade]].
 2. **Série de tiros:** as perguntas do relatório da #118 (em `entregas/`, fora do git) sobre o que o atleta quer ver
    na série. Delas dependem a R1 (melhor tiro junto da média; muda o contrato e o gráfico, não a regra) e a R2
-   (`tiros_1km@5` com treinos mistos que têm tiros de 1 km limpos; muda a série do atleta).
+   (`tiros_1km@5`, que amplia o que entra; muda a série do atleta).
 3. **Meta 5, antes das issues (dado de aluno):**
    - **de onde vem o limiar** (pace e FC de limiar), que é dado fisiológico, sensível pela LGPD. Proposta do time:
      estimado pelo código a partir do histórico, guardado só no banco local, com a origem marcada e mostrado como
