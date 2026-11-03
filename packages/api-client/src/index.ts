@@ -7,6 +7,7 @@ export type { components, operations } from "./schema";
 export type EvolucaoTiros1km = components["schemas"]["EvolucaoTiros1km"];
 export type SessaoTiros = components["schemas"]["SessaoOut"];
 export type TiroSessao = components["schemas"]["TiroOut"];
+export type RespostaUploadFit = components["schemas"]["UploadFitOut"];
 export type Eixos = components["schemas"]["Eixos"];
 export type ErroNaoEncontrado = components["schemas"]["Erro"];
 export type ErroValidacao = components["schemas"]["HTTPValidationError"];

@@ -1,6 +1,21 @@
 {
   "components": {
     "schemas": {
+      "Body_enviarAtividadeFit": {
+        "properties": {
+          "arquivo": {
+            "contentMediaType": "application/octet-stream",
+            "description": "Arquivo .fit de uma atividade (até 10 MB)",
+            "title": "Arquivo",
+            "type": "string"
+          }
+        },
+        "required": [
+          "arquivo"
+        ],
+        "title": "Body_enviarAtividadeFit",
+        "type": "object"
+      },
       "EixoFc": {
         "properties": {
           "marcas": {
@@ -401,6 +416,37 @@
         "title": "Unidades",
         "type": "object"
       },
+      "UploadFitOut": {
+        "properties": {
+          "atividade_id": {
+            "title": "Atividade Id",
+            "type": "integer"
+          },
+          "avisos": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Avisos",
+            "type": "array"
+          },
+          "resultado": {
+            "enum": [
+              "inserida",
+              "atualizada",
+              "ignorada"
+            ],
+            "title": "Resultado",
+            "type": "string"
+          }
+        },
+        "required": [
+          "resultado",
+          "atividade_id",
+          "avisos"
+        ],
+        "title": "UploadFitOut",
+        "type": "object"
+      },
       "ValidationError": {
         "properties": {
           "ctx": {
@@ -449,6 +495,99 @@
   },
   "openapi": "3.1.0",
   "paths": {
+    "/atletas/{atleta_id}/atividades/fit": {
+      "post": {
+        "description": "Envia um FIT (campo multipart `arquivo`). `201` se a atividade é nova; `200` se já existia.",
+        "operationId": "enviarAtividadeFit",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "atleta_id",
+            "required": true,
+            "schema": {
+              "title": "Atleta Id",
+              "type": "integer"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "$ref": "#/components/schemas/Body_enviarAtividadeFit"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UploadFitOut"
+                }
+              }
+            },
+            "description": "Atividade que já existia (atualizada ou ignorada)"
+          },
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UploadFitOut"
+                }
+              }
+            },
+            "description": "Atividade inserida"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Erro"
+                }
+              }
+            },
+            "description": "FIT inválido ou que não é uma atividade, ou extensão diferente de .fit"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Erro"
+                }
+              }
+            },
+            "description": "Atleta não encontrado"
+          },
+          "413": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Erro"
+                }
+              }
+            },
+            "description": "Arquivo acima de 10 MB"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Enviar Atividade Fit",
+        "tags": [
+          "atividades"
+        ]
+      }
+    },
     "/atletas/{atleta_id}/evolucao/tiros-1km": {
       "get": {
         "description": "Pace e FC médios dos tiros de 1 km por sessão. `inicio` e `fim` (AAAA-MM-DD) são datas locais, inclusivas.",
