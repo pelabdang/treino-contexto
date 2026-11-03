@@ -1,9 +1,9 @@
-"""Ritmo habitual do atleta e filtro da série (issue #53, tiros_1km@3). Valores à mão.
+"""Ritmo habitual do atleta e filtro da série (issue #53, tiros_1km@4). Valores à mão.
 
 Regra (docs/metricas/tiros-1km.md): ritmo habitual = mediana do pace (duração / distância x 1000)
 das corridas de mais de 3 km, sem esteira, com data anterior à da sessão, nos 84 dias antes dela;
 com menos de 10 na janela, todo o histórico anterior; sem histórico, None (não filtra).
-Os tiros valem se pace_tiros <= habitual x 0,95.
+Os tiros valem se pace_tiros <= habitual x 0,90.
 Fonte: regra própria do projeto (não há artigo); a mediana é a estatística robusta usual.
 """
 
@@ -77,14 +77,14 @@ def test_filtro_sem_habitual_nao_filtra():
 
 
 def test_limite_exato_entra():
-    # habitual 300 s/km: limite = 300 x 0,95 = 285. 285 entra (<=); 285,01 não.
-    assert mais_rapido_que_o_habitual(285.0, 300.0) is True
-    assert mais_rapido_que_o_habitual(285.01, 300.0) is False
+    # habitual 300 s/km: limite = 300 x 0,90 = 270. 270 entra (<=); 270,01 não.
+    assert mais_rapido_que_o_habitual(270.0, 300.0) is True
+    assert mais_rapido_que_o_habitual(270.01, 300.0) is False
 
 
 def test_rodagem_com_paradas_curtas_fica_fora_e_tiros_reais_ficam_dentro():
-    # habitual 330 s/km (5:30). Limite = 313,5.
-    # Rodagem com paradas: "tiros" a 335 s/km (> 313,5): fora.
+    # habitual 330 s/km (5:30). Limite = 297.
+    # Rodagem com paradas: "tiros" a 335 s/km (> 297): fora.
     assert mais_rapido_que_o_habitual(335.0, 330.0) is False
     # Tiros de verdade a 270 s/km: dentro.
     assert mais_rapido_que_o_habitual(270.0, 330.0) is True

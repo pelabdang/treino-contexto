@@ -18,7 +18,7 @@ from collections.abc import Iterable
 from datetime import date, timedelta
 from statistics import median
 
-VERSAO = "tiros_1km@3"
+VERSAO = "tiros_1km@4"
 
 DISTANCIA_ALVO_M = 1000.0
 # Tolerância de GPS/auto-lap: volta de 950 a 1050 m (inclusive) é candidata.
@@ -40,8 +40,16 @@ MODALIDADE_CORRIDA = "corrida"
 HABITUAL_DISTANCIA_MIN_M = 3000.0
 HABITUAL_JANELA_DIAS = 84
 HABITUAL_MIN_CORRIDAS_JANELA = 10
-# Os tiros da sessão precisam ter pace médio pelo menos 5% mais rápido que o ritmo habitual.
-HABITUAL_GANHO_MINIMO = 0.05
+# Os tiros da sessão precisam ter pace médio pelo menos 10% mais rápido que o ritmo habitual
+# (@4; era 5% na @3).
+HABITUAL_GANHO_MINIMO = 0.10
+
+# @4, ritmo parecido: com 3 ou mais tiros, um tiro mais de 20% mais lento que a mediana dos
+# tiros da sessão não é tiro (desaquecimento de 1 km que o relógio marcou como volta).
+RITMO_PARECIDO_TOLERANCIA = 0.20
+# @4, bloco contínuo: uma volta de ~1 km de corrida ao lado do tiro (olhando por cima das
+# pausas) que seja menos de 15% mais lenta que ele indica progressivo ou fartlek, não tiro.
+BLOCO_CONTINUO_GANHO_MINIMO = 0.15
 
 # Intensidades do FIT que nunca são tiro (e valem como fronteira do treino).
 INTENSIDADES_NUNCA_TIRO = frozenset({"rest", "recovery", "warmup", "cooldown"})
@@ -111,6 +119,34 @@ def _separa(tiro: VoltaEntrada, vizinha: VoltaEntrada | None) -> bool:
     return _pace_s_km(tiro) <= pace_vizinha * (1.0 - GANHO_MINIMO_PACE)
 
 
+def _vizinha_de_corrida(voltas: list[VoltaEntrada], i: int, passo: int) -> VoltaEntrada | None:
+    """Primeira volta de corrida ao lado de ``voltas[i]``, pulando as pausas (< 200 m)."""
+    j = i + passo
+    while 0 <= j < len(voltas) and voltas[j].distancia_m < PAUSA_MAX_M:
+        j += passo
+    return voltas[j] if 0 <= j < len(voltas) else None
+
+
+def _em_bloco_continuo(voltas: list[VoltaEntrada], i: int, ordens_tiros: set[int]) -> bool:
+    """O tiro ``voltas[i]`` está colado, por cima de uma pausa, a um km de corrida quase tão rápido?
+
+    Olha a primeira volta de corrida de cada lado (pulando pausas). Se for uma volta de ~1 km
+    que não é tiro nem aquecimento/desaquecimento e o tiro for menos de 15% mais rápido que
+    ela (``pace do tiro > pace da vizinha x 0,85``), o tiro é parte de um bloco contínuo.
+    """
+    tiro = voltas[i]
+    for passo in (-1, 1):
+        viz = _vizinha_de_corrida(voltas, i, passo)
+        if viz is None or viz.ordem in ordens_tiros or not eh_candidata(viz):
+            continue
+        if _intensidade(viz) in INTENSIDADES_FRONTEIRA:
+            continue
+        pace_viz = _pace_s_km(viz)
+        if pace_viz is not None and _pace_s_km(tiro) > pace_viz * (1.0 - BLOCO_CONTINUO_GANHO_MINIMO):
+            return True
+    return False
+
+
 def _bloco_principal_e_1km(voltas: list[VoltaEntrada], tiros: list[VoltaEntrada]) -> bool:
     """O bloco principal do treino são os tiros de 1 km?
 
@@ -138,7 +174,8 @@ def detectar_tiros(
     """Classifica as voltas de uma atividade em tiros e recuperações.
 
     Tiro = volta de 950 a 1050 m, que não seja rest/recovery/warmup/cooldown, com as
-    duas vizinhas separando-a (ver ``_separa``). A intensidade só veta e marca
+    duas vizinhas separando-a (ver ``_separa``); com 3 ou mais, tira os de ritmo muito
+    diferente e os colados a um bloco contínuo (@4). A intensidade só veta e marca
     fronteira: nunca basta para dizer que uma volta é tiro, o pace e a estrutura
     esforço-pausa decidem sempre.
     """
@@ -157,6 +194,15 @@ def detectar_tiros(
 
     if len(tiros) >= MIN_TIROS_INTERVALADO and not _bloco_principal_e_1km(voltas, tiros):
         tiros = []  # treino misto em que os tiros curtos pesam mais: não é de 1 km
+
+    if len(tiros) >= MIN_TIROS_INTERVALADO:
+        # Ritmo parecido (@4): tira o tiro bem mais lento que os outros (desaquecimento).
+        mediana = median(_pace_s_km(t) for t in tiros)
+        tiros = [t for t in tiros if _pace_s_km(t) <= mediana * (1.0 + RITMO_PARECIDO_TOLERANCIA)]
+        # Bloco contínuo (@4): tiro colado a um km de corrida quase tão rápido.
+        ordens = {t.ordem for t in tiros}
+        posicao = {v.ordem: i for i, v in enumerate(voltas)}
+        tiros = [t for t in tiros if not _em_bloco_continuo(voltas, posicao[t.ordem], ordens)]
 
     ordens_tiros = tuple(v.ordem for v in tiros)
     recuperacoes: tuple[int, ...] = ()
@@ -324,9 +370,9 @@ def pace_habitual(historico: Iterable[CorridaHistorico], data_sessao: date) -> f
 
 
 def mais_rapido_que_o_habitual(pace_tiros_s_km: float, habitual_s_km: float | None) -> bool:
-    """Os tiros são pelo menos 5% mais rápidos que o ritmo habitual?
+    """Os tiros são pelo menos 10% mais rápidos que o ritmo habitual?
 
-    ``pace_tiros <= habitual x 0,95``, sem arredondar; o limite exato entra. Sem ritmo
+    ``pace_tiros <= habitual x 0,90``, sem arredondar; o limite exato entra. Sem ritmo
     habitual (``None``) não há filtro: devolve verdadeiro.
     """
     if habitual_s_km is None:

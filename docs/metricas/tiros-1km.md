@@ -2,7 +2,7 @@
 tipo: metrica
 status: em-uso
 dono: caio
-atualizado: 2026-11-01
+atualizado: 2026-11-03
 links: [[modulos/grafico-tiros]], [[produto/meta-1-como-reproduzir]], [[produto/roadmap]], [[decisoes/0001-modelo-de-dados-minimo]], [[decisoes/0002-segmento-intensidade-e-versao]], [[glossario]]
 ---
 # Tiros de 1 km
@@ -12,7 +12,7 @@ Quais voltas de uma corrida são tiros de 1 km e se a atividade é um treino int
 "pace e FC médios dos tiros por sessão" da Meta 1. Cálculo determinístico, em código, sem banco e sem IA.
 
 ## Fórmula
-Versão do cálculo: `tiros_1km@3` (as anteriores foram substituídas, ver "Histórico" abaixo). Constantes em
+Versão do cálculo: `tiros_1km@4` (as anteriores foram substituídas, ver "Histórico" abaixo). Constantes em
 `services/api/app/metricas/tiros_1km.py`.
 
 1. Só `modalidade == "corrida"`. Qualquer outra modalidade devolve 0 tiros e `eh_intervalado = falso`.
@@ -37,7 +37,14 @@ Versão do cálculo: `tiros_1km@3` (as anteriores foram substituídas, ver "Hist
    em que os tiros curtos pesam mais, a atividade fica fora: tiros e recuperações saem vazios. As recuperações sem
    rótulo entram na soma, mas somam bem menos que os tiros num treino de 1 km: cada uma pesa no máximo 70% de um
    tiro.
-7. `eh_intervalado` = **pelo menos 3 tiros** (depois do item 6).
+7. **Ritmo parecido** (`@4`): com 3 ou mais tiros, sai o tiro **mais de 20% mais lento** que a **mediana** dos
+   tiros da atividade (`pace > mediana x 1,20`; o limite entra). É o desaquecimento de 1 km que o relógio marcou como
+   volta, separado do resto por uma pausa.
+8. **Bloco contínuo** (`@4`): sai o tiro cuja **primeira volta de corrida** de qualquer lado (**pulando as pausas**,
+   isto é, voltas de menos de 200 m) é uma volta de ~1 km (950 a 1050 m), que não é tiro nem `warmup`/`cooldown`, e
+   da qual o tiro é **menos de 15% mais rápido** (`pace do tiro > pace da vizinha x 0,85`). É o 1 km forte de um
+   progressivo ou de um fartlek (1 km forte, 1 km moderado), em que o "descanso" é outro km de corrida.
+9. `eh_intervalado` = **pelo menos 3 tiros** (depois dos itens 6, 7 e 8).
 
 ### Por que a estrutura e não a intensidade
 Um treino de tiros é uma alternância de esforço e pausa; uma rodagem com auto-lap de 1 km é uma sequência de
@@ -49,6 +56,34 @@ não distingue: numa rodagem real quase todas as voltas vêm `active` e a últim
 Numa rodagem leve com auto-lap, as voltas variam cerca de 3% a 4% de uma para a outra (relevo, vento, parada
 em semáforo); 8% fica com folga acima desse ruído. Um tiro de verdade costuma ser 15% a 30% mais rápido que a
 recuperação, então 8% não perde tiros. O valor é decisão do projeto, não vem de artigo.
+
+### Progressivo e fartlek não são tiros (`@4`, issue #58)
+A `@3` aceitava qualquer volta de 1 km cercada por pausas ou por voltas mais lentas em 8%. Isso inclui treinos com
+outra intenção: **progressivo** (km a km cada vez mais rápido, com paradas), **fartlek** (1 km forte, 1 km moderado) e
+**séries de 1 km em ritmo moderado**. Como o relógio tem volta automática de 1 km, esses blocos parecem tiros: volta de
+1 km, parada curta, volta de 1 km. O que os separa de um treino de tiros é que o "descanso" é **corrida em ritmo
+moderado**, não trote ou parada: o km forte é só um pouco mais rápido (menos de 15%) que o km ao lado, mesmo que haja
+uma pausa de segundos no meio. Os itens 7 e 8 acima cobrem isso. Os 8% da `@3` continuam valendo para o resto; os 15% valem
+só para vizinha de ~1 km, porque aí é a mesma distância e a comparação é direta.
+
+- **Por que 15%.** Um trote de recuperação entre tiros costuma ser 20% ou mais mais lento que o tiro; um km moderado de
+  fartlek ou de progressivo fica entre 5% e 14%. 15% separa os dois grupos. Decisão do projeto, não vem de artigo.
+- **Por que 20% no ritmo parecido.** Tiros de uma série variam poucos por cento entre si (fadiga, relevo); uma volta
+  mais de 20% mais lenta que a mediana não é repetição, é rodagem. A mediana não é puxada pela volta lenta.
+- **Ritmo habitual (`@4`)**: o limite subiu de 5% para **10%** (`pace dos tiros <= habitual x 0,90`). Séries de 1 km
+  em ritmo moderado ficam perto do ritmo habitual; tiros de verdade ficam bem abaixo dele.
+
+Exemplo à mão (fartlek): 4 x [1000 m a 240 s/km + 1000 m de trote a 270 s/km]. Pela `@3`: `240 <= 270 x 0,92 = 248,4`,
+os 4 eram tiros. Pela `@4`: `240 > 270 x 0,85 = 229,5`, o trote é moderado demais: nenhum é tiro. Com trote a 330 s/km:
+`240 <= 330 x 0,85 = 280,5`, os 4 seguem tiros. No limite: trote a 282, `282 x 0,85 = 239,7 < 240`, fora; a 283,
+`283 x 0,85 = 240,55 >= 240`, dentro.
+
+Exemplo à mão (por cima da parada): 3 x [1000 m a 310, 1000 m a 300, parada de 20 m, 1000 m a 275, parada de 20 m]. O km de
+275 está entre paradas, mas a volta de corrida do outro lado da parada é 300: `275 > 300 x 0,85 = 255`, fora. Com 340 e 330:
+`275 <= 330 x 0,85 = 280,5`, dentro.
+
+Exemplo à mão (ritmo parecido): 3 x 1000 m a 240 s/km e um 4o km a 290 s/km no fim. Mediana = 240; limite = 240 x 1,20 = 288.
+`290 > 288`: sai, sobram os 3 tiros. A 288 o limite entra.
 
 ### Em linguagem simples
 Um treino de tiros de 1 km é um treino em que o que importa são as repetições de 1 km, com pausa ou trote entre elas.
@@ -101,7 +136,7 @@ Rodagem leve e natação não entram.
 - **FC da sessão (bpm)** = soma(FC x duração) / soma(duração), média ponderada pela duração. Tiros sem FC ficam
   fora (inclusive do peso); se nenhum tem FC, `None`.
 - Também saem `n_tiros`, `data` (data local do início) e `atividade_id`.
-- `versao`: versão da regra de detecção (`tiros_1km@3`), vinda da detecção e levada até o ponto da série
+- `versao`: versão da regra de detecção (`tiros_1km@4`), vinda da detecção e levada até o ponto da série
   (`SessaoTiros.versao`, `PontoSessao.versao`). É o valor a gravar em `segmento.versao_deteccao` ([[decisoes/0002-segmento-intensidade-e-versao]]).
   Mudou regra ou constante: sobe `VERSAO`.
 - Arredondamento só na apresentação, 1 casa decimal (`para_apresentacao`); o cálculo usa o valor cheio.
@@ -147,6 +182,8 @@ Regra própria do projeto; não há artigo.
 - `tiros_1km@2` (#48): a regra acima, com o bloco principal. Os segmentos já gravados com `@1` precisam ser reclassificados: reimportar a exportação ou chamar `classificar_atividades` (`app.servicos.evolucao_tiros`) para o atleta, que regrava `tipo` e `versao_deteccao`.
 - `tiros_1km@3` (#53): o filtro do ritmo habitual acima, na série. A detecção por atividade (`detectar_tiros`) não muda
   em relação à `@2`; mudam a versão e a série. Reclassificar (como acima) regrava a versão nos segmentos.
+- `tiros_1km@4` (#58): itens 7 (ritmo parecido) e 8 (bloco contínuo) na detecção e ritmo habitual de 5% para 10% na
+  série. Mudou a detecção: é preciso **reclassificar** (`classificar_atividades`) para regravar `tipo` e `versao_deteccao`.
 
 ## Código e teste
 - Código: `services/api/app/metricas/tiros_1km.py` (`detectar_tiros`, `agregar_sessao`, `serie_por_sessao`)
@@ -155,18 +192,23 @@ Regra própria do projeto; não há artigo.
   6 x 1 km com recuperação de 400 m: tiros a 240 s/km contra 450 s/km, limite 414 s/km).
 
 ## Limitações e quando não usar
-- O filtro do ritmo habitual foi validado com **um atleta**; o 5% e a janela de 12 semanas não foram testados em
-  outros perfis. Atleta novo, sem corridas anteriores, não é filtrado (e com menos de 10 corridas na janela o
+- **Validado com um atleta.** Os limites da `@4` (15% de bloco contínuo, 20% de ritmo parecido, 10% do ritmo habitual)
+  foram escolhidos conferindo a série de um único atleta contra o que ele mesmo apontou; não foram testados em outros
+  perfis. Atleta que faz progressivo com km final bem mais rápido que os anteriores (mais de 15%) ou que treina tiros
+  em ritmo próximo ao de rodagem pode ser classificado diferente do que espera.
+- Ficam como limitação, sem critério geral encontrado: (a) progressivo ou série moderada em que o km forte é mais de
+  15% mais rápido que o km vizinho e há recuperação curta (parece tiro de verdade); (b) fartlek de 1 km forte e 500 m
+  moderados, que não se distingue estruturalmente de tiros com trote de 500 m; (c) séries de 1 km em ritmo moderado com
+  paradas de cerca de 1 min, que têm a mesma estrutura de tiros. A regra não usa dia da semana nem nada específico do atleta.
+- Efeito colateral aceito da `@4`: uma série de 3 tiros em que um é desaquecimento lento perde o terceiro e deixa de
+  valer; e uma sessão com um km de aquecimento mais rápido que 85% do tiro, colado por pausa curta, perde esse tiro.
+- O filtro do ritmo habitual (agora 10%) e a janela de 12 semanas também só foram vistos com **um atleta**. Atleta novo, sem corridas anteriores, não é filtrado (e com menos de 10 corridas na janela o
   histórico todo é a referência, que é menos preciso). Um treino de tiros leve, mais lento que 5% abaixo do ritmo
   habitual (por exemplo, volta à corrida depois de lesão), não entra na série de tiros.
 - Só detecta tiros de 1 km; 400 m, 2 km e outras distâncias ficam fora da Meta 1. Num treino misto, só entra
   se o volume dos tiros de 1 km for pelo menos o dos curtos (item 6); aí só os de 1 km vão para a série.
-- Uma volta solta de ~1 km, sem rótulo, no fim do treino (por exemplo, um desaquecimento de 1 km) fica separada
-  por uma pausa e vale como tiro, mesmo bem mais lenta que os outros tiros. Num treino de tiros curtos, com só
-  dois tiros de 1 km de verdade, essa volta pode ser o terceiro e a atividade passar a valer como de 1 km. A regra
-  não compara o ritmo dos tiros entre si: um limite do tipo "no máximo 20% mais lento que a mediana dos tiros"
-  tiraria esse caso, mas também faria um treino de 1 km real cair no critério do bloco principal por perder um tiro.
-  Fica como limitação conhecida, sem ajuste para um caso só.
+- Uma volta solta de ~1 km, sem rótulo, no fim do treino (por exemplo, um desaquecimento de 1 km) vale como tiro se
+  for até 20% mais lenta que a mediana dos tiros (item 7 da `@4`); mais lenta que isso, sai.
 - Tiros de 1 km seguidos, sem volta de recuperação entre eles (o relógio não marcou a pausa), não são detectados:
   a regra não distingue esse caso de um bloco contínuo de vários km. É o preço de não marcar rodagens.
 - Um tiro precisa ter volta de recuperação (ou pausa) dos dois lados, ou ser a primeira/última volta. Treino com
