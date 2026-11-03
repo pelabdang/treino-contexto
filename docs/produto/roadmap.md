@@ -3,7 +3,7 @@ tipo: roteiro
 status: em-uso
 dono: paulo
 atualizado: 2026-11-03
-links: [[produto/plano-mvp-execucao]], [[decisoes/0001-modelo-de-dados-minimo]], [[decisoes/0005-serie-de-tiros-o-que-entra]], [[produto/metas/meta-1-tiros-1km]], [[diario/2026-11-03]], [[00-inicio]]
+links: [[produto/plano-mvp-execucao]], [[decisoes/0001-modelo-de-dados-minimo]], [[decisoes/0005-serie-de-tiros-o-que-entra]], [[produto/metas/meta-1-tiros-1km]], [[produto/metas/meta-2-evolucao-tiros-app]], [[decisoes/0004-contrato-tela-evolucao]], [[diario/2026-11-03]], [[00-inicio]]
 ---
 # Roteiro de metas
 
@@ -14,8 +14,8 @@ Ao fechar uma meta, o Paulo registra o resultado em `docs/produto/metas/` e revi
 |---|---|---|
 | 0 | Fundação: monorepo, modelo mínimo, CI, base de docs | feita (#1, #3) |
 | 1 | Tiros de 1 km a partir da exportação Garmin | feita (fixtures e dado real; [[produto/metas/meta-1-tiros-1km]]) |
-| **2** | **Evolução dos tiros no app** | **próxima** (issues abertas pelo Theo) |
-| 3 | Upload de arquivo FIT | esboço |
+| 2 | Evolução dos tiros no app | feita (web com fixtures; [[produto/metas/meta-2-evolucao-tiros-app]]) |
+| **3** | **Upload de arquivo FIT** | **próxima** (issues propostas, aguardando aprovação) |
 | 4 | Clima de cada atividade | esboço |
 | 5 | Carga e linha de base pessoal | esboço |
 | 6 | Check-in pós-treino | esboço |
@@ -109,7 +109,7 @@ automática); séries por segundo em Parquet; webhook da Garmin; login e várias
 Revisadas ao fim de cada meta com o que se aprendeu. Ordem tirada da "Fundação de dados" do
 [[produto/plano-mvp-execucao]] (seção 9), começando pelo que já dá para mostrar.
 
-### Meta 2: evolução dos tiros no app (próxima)
+### Meta 2: evolução dos tiros no app (feita)
 - **Objetivo:** o atleta vê no app (web, iOS e Android) a evolução dos tiros de 1 km da Meta 1, sem o app formatar
   pace nem escolher a escala dos eixos por conta própria.
 - **Entrega visível:** tela "Evolução dos tiros de 1 km" no Expo, com os dados do endpoint da Meta 1, rodando local
@@ -126,30 +126,63 @@ Revisadas ao fim de cada meta com o que se aprendeu. Ordem tirada da "Fundação
   Expo; a API devolve todo pace em `m:ss`; `versao_calculo` é a versão da regra, com o campo
   `reclassificacao_pendente` (a API não reclassifica na leitura). O contrato é formalizado na ADR 0004, aprovada
   no PR dela. Ver [[diario/2026-11-03]].
-- **Ordem e donos** (as issues saem com o número quando o Theo abrir):
-  1. ADR 0004, contrato da tela (duda-dados, aprovação do Theo).
-  2. Em paralelo: escala mínima dos eixos numa regra única, também no PNG (caio-ciencia); endpoint de acordo com o
-     contrato (duda-dados); CORS para o app web (duda-dados); Expo Router e tela vazia (rafa-app).
-  3. Bloco `eixos` no JSON (duda-dados).
-  4. Cliente gerado do OpenAPI e JSON de exemplo das fixtures (duda-dados).
-  5. Gráfico de dois painéis (rafa-app).
-  6. Tela ligada à API com os estados carregando, vazio e erro (rafa-app).
-  7. Documentação e passo a passo de API e app (nina-docs).
-  8. QA de ponta a ponta com fixtures (bia-qa).
-  9. Resultado da meta e roteiro (paulo-planejador).
-- **Aprendido na Meta 1:** escala mínima nos eixos (observação da Bia, #18); conferir o contrato do endpoint contra o
-  que o serviço devolve antes de abrir as issues (feito: as divergências viram a issue do endpoint); `m:ss` sempre
-  pela regra única.
+- **Resultado:** feita. Na web, com as fixtures, a tela mostra a evolução com os valores da API (QA da Bia, #72 /
+  PR #85). Não verificados: iOS e Android (sem simulador) e os estados carregando e vazio na tela (só pelo
+  `npm test`). Resultado completo em [[produto/metas/meta-2-evolucao-tiros-app]].
+- **Issues e ordem:**
+
+  | # | Issue | Dono | Situação |
+  |---|---|---|---|
+  | #62 | ADR 0004, contrato da tela | duda-dados (aprovação do Theo) | feita |
+  | #63 | Escala mínima dos eixos, regra única também no PNG | caio-ciencia | feita |
+  | #64 | Endpoint de acordo com o contrato e `worker.reclassificar` | duda-dados | feita |
+  | #65 | CORS por `CORS_ORIGENS` | duda-dados | feita |
+  | #66 | Bloco `eixos` no JSON | duda-dados | feita |
+  | #67 | Expo Router, tela vazia e configuração | rafa-app | feita |
+  | #68 | Cliente gerado do OpenAPI e exemplo de contrato | duda-dados | feita |
+  | #69 | Gráfico de dois painéis | rafa-app | feita |
+  | #70 | Tela ligada à API com os estados | rafa-app | feita |
+  | #71 | Documentação e passo a passo de API e app | nina-docs | feita |
+  | #72 | QA de ponta a ponta com fixtures | bia-qa | feita |
+  | #73 | Resultado da meta e roteiro | paulo-planejador | esta |
+
+- **Melhorias abertas depois da meta** (fora do critério de pronto, não são pendências): #86 (aviso do
+  `react-native-svg` na web, só em desenvolvimento) e #87 (eixo de pace com poucas marcas).
+- **Aprendido na Meta 2:** contrato antes do código (ADR 0004) evitou retrabalho; o teste com texto trocado (`9:99`)
+  prova que o app não recalcula; ver a tela é uma etapa própria do QA; estados difíceis de provocar à mão precisam
+  de um jeito documentado de forçar.
 - **Quem:** rafa-app, duda-dados, caio-ciencia, nina-docs, bia-qa.
 - **Fora:** login e lista de atletas; outras métricas; edição de dados; filtro de período na tela; deploy, EAS,
   lojas e conta Expo; dado real em prints, testes ou PRs.
 
-### Meta 3: upload de arquivo FIT
-- **Objetivo:** plano B enquanto a API da Garmin não é aprovada: o atleta envia um `.fit`.
-- **Entrega visível:** `POST` de upload na API e botão no app; a atividade aparece na série.
-- **Critério de pronto:** reaproveita o parser da Meta 1; envio repetido não duplica; arquivo inválido dá erro claro.
-- **Quem:** duda-dados, rafa-app, bia-qa.
-- **Fora:** GPX/TCX, webhook da Garmin, storage em nuvem.
+### Meta 3: upload de arquivo FIT (próxima)
+- **Objetivo:** plano B enquanto a API da Garmin não é aprovada: o atleta envia um `.fit` pelo app, e a atividade
+  entra no banco e, se for um treino de tiros, na série da Meta 2.
+- **Entrega visível:** `POST /atletas/{atleta_id}/atividades/fit` na API e o botão "Enviar arquivo FIT" no app; a
+  atividade aparece na série.
+- **Critério de pronto:**
+  - reaproveita o leitor FIT da Meta 1;
+  - reenviar o mesmo arquivo não duplica, e a mesma atividade vinda do upload e da exportação também não;
+  - arquivo inválido, que não é atividade ou grande demais dá erro claro, declarado no OpenAPI;
+  - cliente regerado e botão com os estados enviando, sucesso e erro no `npm test`;
+  - QA na web com FIT sintéticos, com um jeito documentado de forçar cada estado.
+- **Conferido no código antes das issues:** o leitor FIT está no worker, que depende da API (a API não pode importar
+  o worker); um FIT sozinho tem `fonte_id` diferente do da exportação, então a mesma atividade entraria duas vezes;
+  a API ainda não aceita arquivo (falta `python-multipart`).
+- **Ordem e donos** (proposta; as issues saem quando o Theo e o Angelo aprovarem):
+  1. ADR 0006, upload de FIT: onde fica o leitor, identidade da atividade, arquivo bruto, limites (duda-dados,
+     aprovação do Theo).
+  2. Em paralelo: leitor FIT num lugar que a API e o worker usam (duda-dados); FIT sintéticos para o upload
+     (caio-ciencia).
+  3. `importar_fit`, idempotente e sem duplicar a atividade da exportação (duda-dados).
+  4. Endpoint de upload e cliente regerado (duda-dados).
+  5. Botão "Enviar arquivo FIT" no app (rafa-app).
+  6. Documentação e diário (nina-docs).
+  7. QA de ponta a ponta com FIT sintéticos (bia-qa).
+  8. Resultado da meta e roteiro (paulo-planejador).
+- **Quem:** duda-dados, caio-ciencia, rafa-app, nina-docs, bia-qa.
+- **Fora:** GPX/TCX, webhook e API da Garmin, storage em nuvem, vários arquivos de uma vez, login, deploy, edição ou
+  exclusão de atividade.
 
 ### Meta 4: clima de cada atividade
 - **Objetivo:** cada atividade ao ar livre ganha temperatura, umidade, vento e sensação térmica.
@@ -205,5 +238,8 @@ stack Expo). A chave do provedor de LLM foi entregue e está no `.env` (fora do 
 - **Open-Meteo:** o Angelo indicou a API gratuita para o desenvolvimento; o plano comercial continua em aberto para produção (Meta 4).
 
 Em aberto:
-1. **Próximas metas, sem pressa:** CNPJ e pedido da API da Garmin; pedido da API do TrainingPeaks com a assessoria;
+1. **Meta 3, antes das issues:** guardar ou não o arquivo FIT enviado (dado pessoal do aluno; proposta do time: não
+   guardar nesta meta); confirmar o upload sem login, só local; tamanho máximo (proposta: 10 MB); aceitar qualquer
+   modalidade ou só corrida (proposta: qualquer uma, fora da série quando não é corrida).
+2. **Próximas metas, sem pressa:** CNPJ e pedido da API da Garmin; pedido da API do TrainingPeaks com a assessoria;
    plano comercial do Open-Meteo para produção (Meta 4).

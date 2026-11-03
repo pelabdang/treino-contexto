@@ -10,7 +10,8 @@ App de análise de treinos com contexto (corrida, natação, ciclismo) para atle
 
 ## Onde estamos
 - Meta 1 feita: tiros de 1 km a partir da exportação Garmin, com fixtures e dado real ([[produto/metas/meta-1-tiros-1km]])
-- Meta 2 (evolução dos tiros no app): código entregue (#62 a #70), falta o QA da #72 ([[produto/metas/meta-2-evolucao-tiros-app]]; roteiro em [[produto/roadmap]])
+- Meta 2 feita: evolução dos tiros no app, vista na web com as fixtures ([[produto/metas/meta-2-evolucao-tiros-app]])
+- Próxima: Meta 3, upload de arquivo FIT (ver [[produto/roadmap]])
 - Como reproduzir: [[produto/meta-1-como-reproduzir]] (Meta 1) e [[produto/meta-2-como-rodar]] (API e app)
 - Último diário: [[diario/2026-11-03]]
 
