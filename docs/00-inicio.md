@@ -12,7 +12,7 @@ App de análise de treinos com contexto (corrida, natação, ciclismo) para atle
 - Meta 1 feita: tiros de 1 km a partir da exportação Garmin, com fixtures e dado real ([[produto/metas/meta-1-tiros-1km]])
 - Meta 2 feita: evolução dos tiros no app, vista na web com as fixtures ([[produto/metas/meta-2-evolucao-tiros-app]])
 - Meta 3 feita: upload de arquivo FIT pelo botão no app, vista na web com FIT sintéticos ([[produto/metas/meta-3-upload-fit]]). 
-- Meta 4 em andamento: o clima de cada atividade está completo no código (#109 a #114: posição, fixtures e oráculo, cliente Open-Meteo, `clima_atividade` e `preencher_clima`, clima na API). Faltam o QA (#116) e o resultado da meta (#117). Ver [[produto/roadmap]]
+- Meta 4 feita: clima de cada atividade na API, visto com fixtures e a resposta gravada, sem rede ([[produto/metas/meta-4-clima-atividade]]). Próxima: Meta 5, carga de treino, esperando as decisões do Angelo. Ver [[produto/roadmap]]
 - Como reproduzir: [[produto/meta-1-como-reproduzir]] (Meta 1) e [[produto/meta-2-como-rodar]] (API e app), [[produto/meta-3-como-rodar]] (upload de FIT), [[produto/meta-4-como-rodar]] (clima)
 - Último diário: [[diario/2026-11-03]]
 
@@ -25,6 +25,7 @@ App de análise de treinos com contexto (corrida, natação, ciclismo) para atle
 - [[produto/meta-4-como-rodar]]: clima da atividade com a resposta gravada, sem rede, e como forçar cada estado (ok, indoor, sem_posicao, pendente, falha)
 - [[produto/metas/meta-2-evolucao-tiros-app]]: nota da Meta 2
 - [[produto/metas/meta-3-upload-fit]]: nota da Meta 3 (upload de FIT): resultado, não verificados, achados e propostas
+- [[produto/metas/meta-4-clima-atividade]]: nota da Meta 4 (clima da atividade): resultado, não verificados, conclusão genérica da série de tiros, achados e propostas
 
 ## Como o sistema funciona
 - Módulos: [[modulos/api]], [[modulos/api-client]], [[modulos/banco]], [[modulos/worker]], [[modulos/mobile]], [[modulos/infra]], [[modulos/grafico-tiros]], [[modulos/ingestao-garmin]] (índice em [[modulos]])
