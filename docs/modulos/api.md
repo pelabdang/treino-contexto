@@ -94,6 +94,9 @@ curl "http://localhost:8000/atletas/1/evolucao/tiros-1km?inicio=2025-03-01"
   ```
 - Testes: `services/api/tests/rotas/test_evolucao_tiros.py` (banco com as fixtures importadas).
 
+## Rodar localmente com as fixtures
+Passo a passo de ponta a ponta (Postgres, migrações, fixtures, API com `CORS_ORIGENS` e app web) em [[produto/meta-2-como-rodar]]. Resumo: a API demora alguns segundos para subir; `docker compose` sem `-p` reusa o volume `treino-contexto_pgdata`.
+
 ## Reclassificar
 Quando uma regra nova de detecção sobe a `VERSAO` ([[metricas/tiros-1km]]), os segmentos já gravados ficam com a
 versão velha e o JSON traz `reclassificacao_pendente: true` ([[decisoes/0004-contrato-tela-evolucao]]). A API não

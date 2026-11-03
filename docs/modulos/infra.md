@@ -18,6 +18,8 @@ Ambiente local e CI. Postgres 16 em Docker Compose. Produção futura: DigitalOc
   (`npx expo start --web`). Nunca `*` (a API recusa subir). Vazia não libera nenhuma. iOS e Android não precisam de CORS.
   Ver [[modulos/api]] e [[decisoes/0004-contrato-tela-evolucao]].
 
+- Cuidado: o compose tem `name: treino-contexto`; sem `-p` ele reusa o volume `treino-contexto_pgdata`. Com porta 5432 ocupada, veja [[produto/meta-2-como-rodar]].
+
 ## Arquivos principais
 - `infra/docker-compose.yml`
 - `.github/workflows/testes.yml`: CI `testes` (Postgres de serviço, `alembic upgrade head` e `downgrade base`, pytest, `npm test`).

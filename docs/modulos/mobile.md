@@ -31,7 +31,7 @@ O app não calcula pace: todo `m:ss` virá da [[modulos/api]].
 - sucesso: `GraficoTiros`, lista das sessões (data, `pace_medio`, `fc_media` ou "sem FC", `n_tiros`) e rodapé "cálculo: <versao_calculo>" como texto, mais "cálculo em atualização" quando `reclassificacao_pendente` é `true`. O app nunca compara a versão com um valor fixo.
 Testes em `__tests__/index.test.tsx` com `fetch` falso (todos os estados, "9:99" e rótulo de eixo trocados, versão `tiros_1km@9`, aviso de reclassificação). O componente aceita `fetchFn` só para teste.
 
-Rodar com dado sintético: suba a API com as fixtures ([[modulos/api]], `CORS_ORIGENS` com `http://localhost:8081`) e `npx expo start --web --port 8081`.
+Rodar com dado sintético: passo a passo em [[produto/meta-2-como-rodar]] (API com fixtures, `CORS_ORIGENS` com `http://localhost:8081` e `npx expo start --web --port 8081`). O `expo start` reescreve `apps/mobile/tsconfig.json`: não commitar.
 
 ## Componente GraficoTiros
 `src/componentes/GraficoTiros.tsx` recebe `dados: EvolucaoTiros1km` (tipo de `@treino/api-client`) e desenha dois painéis com o mesmo eixo X (data `dd/mm/aa`, posição proporcional ao tempo): "Pace médio dos tiros (min/km)" em cima e "FC média dos tiros (bpm)" embaixo, um ponto por sessão. Usa `react-native-svg` (gratuito, incluído no Expo Go) para linhas e pontos; rótulos são `Text` nativo.
