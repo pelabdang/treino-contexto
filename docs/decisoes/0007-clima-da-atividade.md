@@ -10,6 +10,10 @@ links: [[modulos/ingestao-garmin]], [[modulos/api]], [[modulos/worker]], [[modul
 **Status: aceita (Theo, 03/11).** Só documentação: nenhum código muda aqui. As issues da Meta 4
 (posição no leitor, cliente Open-Meteo, comando, API) seguem esta ADR a partir daqui.
 
+**Status atual: implementada nas #110 a #114** (posição no leitor, fixtures e oráculo, cliente Open-Meteo,
+`clima_atividade` com `preencher_clima`, clima na API), no `main` em 03/11. A decisão abaixo não mudou; só o
+esclarecimento sobre as tentativas (antes de "Alternativas consideradas"). Como rodar: [[produto/meta-4-como-rodar]].
+
 ## Contexto
 Cada atividade ao ar livre deve ganhar temperatura, umidade, vento e sensação térmica na hora e no local do treino
 (tabela `clima_atividade` do [[produto/plano-mvp-execucao]]). Isso exige guardar um dado novo e pessoal (onde o atleta
@@ -196,6 +200,13 @@ Clima:   0,8 * valor(09h) + 0,2 * valor(10h)
 Rodar de novo: entrada igual -> nenhuma chamada
 Esteira fictícia com coordenada no arquivo: subtipo esteira -> estado "indoor", posição não gravada
 ```
+
+## Esclarecimento: o que são "3 tentativas" (Theo, 03/11, na #112)
+O item 6 diz "até 3 tentativas" por consulta. Valem **1 chamada mais até 3 repetições**, com espera de 1, 2 e 4 s: no
+máximo **4 chamadas** por consulta, não 3. Vale para erro de rede, timeout, 5xx e 429. Não muda o resto do item 6 nem o
+limite de 600 por minuto (o ritmo sequencial de uma atividade por vez, com pausa de 0,25 s, continua abaixo dele). Detalhes
+e a espera com `Retry-After` em [[modulos/clima]], seção "Falhas e tentativas". Não confundir com as **5 rodadas** (coluna
+`tentativas`), que contam por rodada do comando, não por chamada.
 
 ## Alternativas consideradas
 - **Forecast API com `past_days` (até 92 dias):** só cobre cerca de 3 meses para trás, então não preenche a exportação

@@ -2,7 +2,7 @@
 tipo: glossario
 status: em-uso
 dono: nina
-atualizado: 2026-10-31
+atualizado: 2026-11-03
 ---
 # Glossário
 
@@ -29,3 +29,7 @@ atualizado: 2026-10-31
 - **Treino intervalado (detecção)**: corrida com 3 ou mais tiros de 1 km. Vira sugestão de tipo `intervalado`, nunca sobrescreve o professor. Ver [[modulos/api]].
 - **Pace médio ponderado**: pace da sessão = soma das durações dos tiros / soma das distâncias x 1000 (ponderado pela distância, não a média simples). A FC da sessão pondera pela duração. Ver [[metricas/tiros-1km]].
 - **Oráculo (das fixtures)**: valores de pace e FC por sessão calculados à mão, usados como referência nos testes. Ver [[metricas/tiros-1km]].
+- **Estado do clima**: `ok` (valores), `indoor` (esteira, piscina, virtual: sem clima), `sem_posicao` (ao ar livre sem coordenada válida), `pendente` (ainda não buscado, dentro dos 7 dias, ou sem sucesso) e `falha` (HTTP 400, resposta fora do esperado ou 5 rodadas sem sucesso). `indoor` e `sem_posicao` são calculados, sem linha na tabela. Ver [[modulos/clima]] e [[decisoes/0007-clima-da-atividade]].
+- **Posição de início (arredondada)**: latitude e longitude do começo da atividade, com 2 casas (~1 km), sem trajeto. É o único dado de lugar que o produto guarda. Ver [[decisoes/0007-clima-da-atividade]] e [[modulos/ingestao-garmin]].
+- **`entrada` (do clima)**: SHA-256 de início, duração e posição. Se muda, o clima é buscado de novo; se é igual e o estado é `ok`, a atividade não é consultada outra vez. Ver [[modulos/clima]].
+- **Rodada (do clima)**: uma execução de `worker.preencher_clima`. `pendente` conta 1 por rodada e vira `falha` na quinta. Não confundir com as repetições dentro de uma consulta (1 chamada mais até 3). Ver [[produto/meta-4-como-rodar]].

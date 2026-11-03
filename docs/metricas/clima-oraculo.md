@@ -3,15 +3,15 @@ tipo: metrica
 status: rascunho
 dono: caio
 atualizado: 2026-11-03
-links: [[decisoes/0007-clima-da-atividade]], [[modulos/ingestao-garmin]], [[modulos/worker]], [[produto/roadmap]]
+links: [[decisoes/0007-clima-da-atividade]], [[modulos/clima]], [[modulos/ingestao-garmin]], [[modulos/worker]], [[produto/meta-4-como-rodar]], [[produto/roadmap]]
 ---
 # Clima da atividade: fixtures e oráculo
 
 ## O que mede
 O clima esperado de uma atividade ao ar livre (temperatura, sensação térmica, umidade e vento) na hora e no
 local do treino, calculado a partir de uma resposta gravada do Open-Meteo. Esta nota descreve o **oráculo**: os
-valores certos, feitos à mão, que os testes do leitor de posição (#112) e do cliente e comando do Open-Meteo (#113)
-usam para conferir o código. Nenhum número vem de IA nem da rede. A regra é a da
+valores certos, feitos à mão, que os testes do leitor de posição (#110), do cliente do Open-Meteo (#112) e do comando
+(#113) usam para conferir o código. Nenhum número vem de IA nem da rede. A regra é a da
 [[decisoes/0007-clima-da-atividade]], item 4.
 
 ## Fórmula
@@ -37,7 +37,7 @@ parcial). Indoor (esteira, piscina, virtual) e sem posição não consultam nada
 | `fit/esteira_com_posicao.fit` | esteira **com** coordenada no arquivo | 17:50, 40 min | indoor, sem posição gravada |
 | `fit/corrida_posicao_zero.fit` | posição `(0, 0)` | 12:30, 60 min | sem_posicao |
 | `fit/corrida_posicao_invalida.fit` | `0x7FFFFFFF` (inválido do FIT; o `fitdecode` devolve `None`) | 06:40, 40 min | sem_posicao |
-| `exportacao_clima.json` | JSON mínimo com `startLatitude`/`startLongitude`: corrida (id 3000000101), esteira com coordenada (…102), ponto zero (…103), pedal virtual com coordenada (…104) e corrida sem coordenada (…105) | mesmos horários | ok, indoor, sem_posicao, indoor, sem_posicao |
+| `exportacao_clima.json` | JSON mínimo com `startLatitude`/`startLongitude`, 5 atividades: corrida (id 3000000101, 09:20, 50 min), esteira com coordenada (…102, 17:50, 40 min), ponto zero (…103, 12:30, 60 min), pedal virtual com coordenada (…104, **15:30**, 60 min; **só existe no JSON**, não há FIT dele) e corrida sem coordenada (…105, 06:40, 40 min) | os horários da coluna ao lado | ok, indoor, sem_posicao, indoor, sem_posicao |
 
   Nos FIT, a posição é guardada em semicírculos: `12.3456 * 2^31 / 180 = 147 288 745` e
   `-45.6789 * 2^31 / 180 = -544 970 504`. As fixtures antigas (`tests/fixtures/garmin/`) seguem sem posição, e um
@@ -95,12 +95,12 @@ Valores da resposta usados nas contas (hora UTC: temperatura, sensação, umidad
 - Teste: `tests/test_fixtures_clima.py` (valor esperado calculado à mão: as contas acima). Confere a posição nas
   fixtures novas e a ausência nas antigas, o `(0,0)` e o inválido, o formato da resposta gravada, e que o oráculo
   bate com a resposta pela conta dos pesos feita de forma independente (frações exatas).
-- Quem usa: testes da #112 (leitor lê `inicio_lat/lon` e o estado `indoor`/`sem_posicao`) e da #113 (cliente e
-  comando: valores e `pendente`).
+- Quem usa: testes da #110 (leitor lê `inicio_lat/lon` e o estado `indoor`/`sem_posicao`), da #112 (cliente: valores e
+  `pendente`) e da #113 (comando e serviço). Como rodar com esta resposta gravada: [[produto/meta-4-como-rodar]].
 
 ## Limitações e quando não usar
 - A resposta é sintética: não prova que a API real devolve `apparent_temperature` preenchida nem o formato exato de
-  todos os campos; a #113 confere isso com a resposta real.
+  todos os campos. A #112 conferiu isso com uma chamada real (a sensação vem preenchida; veja [[modulos/clima]]).
 - A conta cobre um único dia UTC (`start_date = end_date`). Atividade que cruza a meia-noite UTC pede duas datas ou
   um intervalo na chamada, e ainda não tem caso no oráculo.
 - Duração zero ou ausente (usa a hora do início) não tem caso aqui.

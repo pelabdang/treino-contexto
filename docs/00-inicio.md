@@ -11,8 +11,9 @@ App de análise de treinos com contexto (corrida, natação, ciclismo) para atle
 ## Onde estamos
 - Meta 1 feita: tiros de 1 km a partir da exportação Garmin, com fixtures e dado real ([[produto/metas/meta-1-tiros-1km]])
 - Meta 2 feita: evolução dos tiros no app, vista na web com as fixtures ([[produto/metas/meta-2-evolucao-tiros-app]])
-- Meta 3 feita: upload de arquivo FIT pelo botão no app, vista na web com FIT sintéticos ([[produto/metas/meta-3-upload-fit]]). Próxima: Meta 4, clima de cada atividade, esperando decisões do Angelo (ver [[produto/roadmap]])
-- Como reproduzir: [[produto/meta-1-como-reproduzir]] (Meta 1) e [[produto/meta-2-como-rodar]] (API e app), [[produto/meta-3-como-rodar]] (upload de FIT)
+- Meta 3 feita: upload de arquivo FIT pelo botão no app, vista na web com FIT sintéticos ([[produto/metas/meta-3-upload-fit]]). 
+- Meta 4 em andamento: o clima de cada atividade está completo no código (#109 a #114: posição, fixtures e oráculo, cliente Open-Meteo, `clima_atividade` e `preencher_clima`, clima na API). Faltam o QA (#116) e o resultado da meta (#117). Ver [[produto/roadmap]]
+- Como reproduzir: [[produto/meta-1-como-reproduzir]] (Meta 1) e [[produto/meta-2-como-rodar]] (API e app), [[produto/meta-3-como-rodar]] (upload de FIT), [[produto/meta-4-como-rodar]] (clima)
 - Último diário: [[diario/2026-11-03]]
 
 ## Produto
@@ -21,6 +22,7 @@ App de análise de treinos com contexto (corrida, natação, ciclismo) para atle
 - [[produto/meta-1-como-reproduzir]]: passo a passo da Meta 1 com as fixtures
 - [[produto/meta-2-como-rodar]]: passo a passo de ponta a ponta da API e do app web com as fixtures
 - [[produto/meta-3-como-rodar]]: upload de FIT com os FIT sintéticos, como forçar cada status (201, 200, 400, 404, 413, rede) e apagar os FIT
+- [[produto/meta-4-como-rodar]]: clima da atividade com a resposta gravada, sem rede, e como forçar cada estado (ok, indoor, sem_posicao, pendente, falha)
 - [[produto/metas/meta-2-evolucao-tiros-app]]: nota da Meta 2
 - [[produto/metas/meta-3-upload-fit]]: nota da Meta 3 (upload de FIT): resultado, não verificados, achados e propostas
 
