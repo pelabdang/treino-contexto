@@ -19,7 +19,7 @@ O passo 7 (ver a tela com as sessões) **não foi verificado nesta issue; a conf
 
 ## Atenção com o banco (leia antes do passo 1)
 - O `infra/docker-compose.yml` tem `name: treino-contexto`. Rodar `docker compose` **sem `-p`** usa o volume
-  `treino-contexto_pgdata`. Se você já tem um banco local do projeto (por exemplo com dado real), o `up` reusa esse
+  `treino-contexto_pgdata`. Se você já tem um banco local do projeto (por exemplo, com outros dados), o `up` reusa esse
   volume e a importação das fixtures cai **dentro dele**.
 - Por isso, para o roteiro com fixtures, use sempre um projeto próprio: `-p treino-meta2`. O volume vira
   `treino-meta2_pgdata`, separado.
