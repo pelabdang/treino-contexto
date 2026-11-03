@@ -109,7 +109,7 @@ em stderr e saída 1). É idempotente: rodar de novo dá o mesmo resultado. Depo
 O contrato que o app consome está em [[decisoes/0004-contrato-tela-evolucao]], com a lista "antes e depois".
 Já valem aqui (#64): D2 a D11 (erro `404` declarado, `versao_calculo` fixa mais `reclassificacao_pendente`, `Unidades`
 obrigatória, 1 casa decimal, `pace` do tiro, distância `null`, `inicio` > `fim` com `422`, `operationId`, `metrica`
-literal). Faltam o bloco `eixos` (#63 e #66) e o cliente gerado (#68).
+literal). Falta o cliente gerado (#68).
 
 ## Depende de
 - [[modulos/banco]] (Postgres 16 via [[modulos/infra]]).
