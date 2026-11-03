@@ -23,17 +23,20 @@ describe("GraficoTiros", () => {
 
   it("mostra os rótulos das marcas como vieram da API", async () => {
     await render(<GraficoTiros dados={base} />);
-    for (const r of ["4:00", "4:15", "169", "170", "171", "172", "173"]) {
+    const rotulos = [...base.eixos!.pace!.marcas, ...base.eixos!.fc!.marcas].map((m) => m.rotulo);
+    expect(rotulos.length).toBeGreaterThan(0);
+    for (const r of rotulos) {
       expect(screen.getByText(r)).toBeTruthy();
     }
   });
 
   it("mostra exatamente o rótulo trocado de propósito (o app não formata pace)", async () => {
     const d = copia();
+    const original = d.eixos!.pace!.marcas[0].rotulo;
     d.eixos!.pace!.marcas[0].rotulo = "9:99";
     await render(<GraficoTiros dados={d} />);
     expect(screen.getByText("9:99")).toBeTruthy();
-    expect(screen.queryByText("4:00")).toBeNull();
+    expect(screen.queryByText(original)).toBeNull();
   });
 
   it("inverte o pace: a sessão mais rápida fica mais alta (cy menor)", async () => {
