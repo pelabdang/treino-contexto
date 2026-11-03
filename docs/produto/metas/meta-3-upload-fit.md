@@ -70,8 +70,8 @@ criada, porque isso depende do "pode criar" do Angelo.
   aplicado junto com o próprio commit da Nina, antes de o CI daquele commit rodar, e o merge ficou parado no
   check pendente. Causa provável: o workflow `docs` (`.github/workflows/docs.yml`) tira o label a cada commit novo
   (`synchronize`) e marca o status como pendente; se o label entra antes desse run, ele é apagado em seguida.
-- **Série de tiros de 1 km com o histórico real.** Ao olhar a série com o próprio histórico, o Angelo achou que há
-  resultados melhores do que os mostrados. Pode ser a classificação dos tiros ou as regras do que entra na série
+- **Série de tiros com o histórico real.** Surgiu a suspeita de que a série, com o dado real, esteja incompleta.
+  Pode ser a classificação dos tiros ou as regras do que entra na série
   ([[decisoes/0005-serie-de-tiros-o-que-entra]], [[metricas/tiros-1km]]). Ainda não foi investigado. Os detalhes
   ficam só fora do repositório.
 
@@ -82,10 +82,10 @@ criada, porque isso depende do "pode criar" do Angelo.
    preciso desligar a tradução.
 2. **Limite de tamanho no proxy** (não é issue agora). Fica como item obrigatório da futura meta de deploy: o proxy
    recusa corpo acima de 10 MB antes de chegar à API. Registrado no roteiro.
-3. **Regra do docs-ok** (processo, decisão do Theo). Depois de um commit dela, a Nina aplica o label só quando o CI
-   daquele commit terminar. Se aprovada, entra em AGENTS.md, na seção "Documentação".
+3. **Regra do docs-ok** (processo). **Decidida pelo Theo em 03/11:** depois de um commit dela, a Nina aplica o label
+   só quando o CI daquele commit terminar. Falta o Theo registrá-la em AGENTS.md, na seção "Documentação".
 4. **Investigação da série de tiros com o dado real** (caio-ciencia, com duda-dados; até 1 dia, e o que sair dela
-   vira issue própria). Rodar a série sobre o histórico real, listar as sessões que o atleta esperava ver melhores e dizer, para cada uma, se é
+   vira issue própria). Rodar a série sobre o histórico real, listar as sessões que o atleta esperava ver na série e dizer, para cada uma, se é
    classificação dos tiros, regra da série ou dado de origem. **Os dados reais, a lista e os números ficam só em
    `entregas/`**, fora do git; no repositório entram só a conclusão genérica e, se for o caso, uma nova versão da
    regra com teste sintético. Candidata a vir antes da Meta 4 ou junto com ela: ver "PRECISA DO ANGELO".
@@ -99,9 +99,10 @@ criada, porque isso depende do "pode criar" do Angelo.
   fallback de [[decisoes/0003-fuso-da-atividade]]) e o leitor não guarda posição. Isso pesa na Meta 4 (clima).
 - **O navegador também é parte do QA.** O tradutor do Chrome mudou o texto da tela, e o seletor de arquivo nativo
   não é acessível à automação (a Bia montou o `File` em JavaScript). Prever isso no QA das próximas telas.
-- **Estados difíceis de provocar na tela continuam só nos testes** (`404`, rede fora). Mesma lição da Meta 2: falta
-  um jeito simples de forçá-los na tela, por exemplo um atleta inexistente na configuração e a API desligada.
-- **Label aplicado antes do CI trava o merge.** Ver a proposta 3.
+- **Estados difíceis de provocar na tela continuam só nos testes** (`404`, rede fora). O guia [[produto/meta-3-como-rodar]]
+  documenta como forçá-los (atleta inexistente na configuração, API desligada), mas a #98 não os rodou na tela. Mesma
+  lição da Meta 2.
+- **Label aplicado antes do CI trava o merge.** Ver a proposta 3 (regra já decidida).
 
 ## PRECISA DO ANGELO
 - **Ordem da investigação da série de tiros:** antes da Meta 4 (uma meta curta só para isso) ou junto com ela

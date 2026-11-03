@@ -11,7 +11,7 @@ App de análise de treinos com contexto (corrida, natação, ciclismo) para atle
 ## Onde estamos
 - Meta 1 feita: tiros de 1 km a partir da exportação Garmin, com fixtures e dado real ([[produto/metas/meta-1-tiros-1km]])
 - Meta 2 feita: evolução dos tiros no app, vista na web com as fixtures ([[produto/metas/meta-2-evolucao-tiros-app]])
-- Meta 3 (upload de arquivo FIT): leitor, `importar_fit`, endpoint e botão no app entregues (#92 a #96); falta fechar a documentação e o QA (ver [[produto/roadmap]])
+- Meta 3 feita: upload de arquivo FIT pelo botão no app, vista na web com FIT sintéticos ([[produto/metas/meta-3-upload-fit]]). Próxima: Meta 4, clima de cada atividade, esperando decisões do Angelo (ver [[produto/roadmap]])
 - Como reproduzir: [[produto/meta-1-como-reproduzir]] (Meta 1) e [[produto/meta-2-como-rodar]] (API e app), [[produto/meta-3-como-rodar]] (upload de FIT)
 - Último diário: [[diario/2026-11-03]]
 
@@ -22,6 +22,7 @@ App de análise de treinos com contexto (corrida, natação, ciclismo) para atle
 - [[produto/meta-2-como-rodar]]: passo a passo de ponta a ponta da API e do app web com as fixtures
 - [[produto/meta-3-como-rodar]]: upload de FIT com os FIT sintéticos, como forçar cada status (201, 200, 400, 404, 413, rede) e apagar os FIT
 - [[produto/metas/meta-2-evolucao-tiros-app]]: nota da Meta 2
+- [[produto/metas/meta-3-upload-fit]]: nota da Meta 3 (upload de FIT): resultado, não verificados, achados e propostas
 
 ## Como o sistema funciona
 - Módulos: [[modulos/api]], [[modulos/api-client]], [[modulos/banco]], [[modulos/worker]], [[modulos/mobile]], [[modulos/infra]], [[modulos/grafico-tiros]], [[modulos/ingestao-garmin]] (índice em [[modulos]])

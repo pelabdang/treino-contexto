@@ -190,8 +190,7 @@ Revisadas ao fim de cada meta com o que se aprendeu. Ordem tirada da "Fundação
 - **Achados depois da meta (propostas, sem issue criada):** app web declara `lang="en"` e o Chrome traduz as
   mensagens (proposta: `pt-BR`, issue pequena do Rafa); o servidor grava o upload inteiro num temporário antes do
   limite de 10 MB (aceito local; limitar no proxy na meta de deploy); docs-ok aplicado antes do CI travou dois PRs
-  (proposta de regra ao Theo); a série de tiros com o histórico real pode estar deixando de fora resultados
-  melhores (proposta de investigação, ordem com o Angelo). Detalhes em [[produto/metas/meta-3-upload-fit]].
+  (regra decidida pelo Theo em 03/11); a série de tiros com o histórico real pode estar incompleta (proposta de investigação, ordem com o Angelo). Detalhes em [[produto/metas/meta-3-upload-fit]].
 - **Aprendido na Meta 3:** conferir o código antes da ADR achou o ciclo API-worker e a duplicação entre fontes; a
   identidade da atividade é regra única para toda fonte nova; o FIT do upload não traz horário local nem posição
   guardada; o navegador (tradutor, seletor de arquivo) também é parte do QA.
