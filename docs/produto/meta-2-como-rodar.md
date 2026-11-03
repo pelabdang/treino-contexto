@@ -96,8 +96,8 @@ O passo 7 (ver a tela) foi verificado na web pela Bia (#72).
    (169 a 173) vindos do JSON, o clique no ponto abre o detalhe e o rodapé diz `cálculo: tiros_1km@4`.
    Com a API desligada aparece "Não foi possível falar com o servidor" e "Tentar de novo" recupera ao religar; com
    `EXPO_PUBLIC_ATLETA_ID=99` aparece "Atleta não encontrado". No modo dev o Expo mostra um aviso vermelho
-   (`Unknown event handler property onResponderTerminate`, do `react-native-svg` na web); some no build de produção
-   e não afeta a tela. O `npm test` do app cobre os estados com `fetch` falso ([[modulos/mobile]]).
+   (`Unknown event handler property onResponderTerminate`, do `react-native-svg` na web); provavelmente some no build de produção (não conferido)
+   e não afetou a tela. O `npm test` do app cobre os estados com `fetch` falso ([[modulos/mobile]]).
    Prints sintéticos em `docs/_anexos/meta-2-qa-*.jpg`.
 
 ## Encerrar e limpar
