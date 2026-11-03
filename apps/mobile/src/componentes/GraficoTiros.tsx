@@ -1,6 +1,6 @@
 import type { EvolucaoTiros1km, SessaoTiros } from "@treino/api-client";
 import { useState } from "react";
-import { StyleSheet, Text, View } from "react-native";
+import { Pressable, StyleSheet, Text, View } from "react-native";
 import Svg, { Circle, G, Line, Polyline } from "react-native-svg";
 
 // Desenha os dois painéis (pace e FC). Faixa, marcas e rótulos vêm do bloco
@@ -11,6 +11,7 @@ const LARGURA_PADRAO = 320;
 const ALTURA_PAINEL = 160;
 const MARGEM = { esq: 44, dir: 16, topo: 12, base: 12 };
 const ALTURA_TITULO = 28;
+const ALVO_TOQUE = 32;
 const COR_PACE = "#1b6ca8";
 const COR_FC = "#c0392b";
 
@@ -81,10 +82,24 @@ function Painel(props: {
             cy={p.y}
             r={p.sessao.atividade_id === selecionada ? 7 : 5}
             fill={cor}
-            onPress={() => aoTocar(p.sessao)}
           />
         ))}
       </Svg>
+      {/* O toque fica num Pressable por cima: onPress no Circle faz o react-native-svg
+          repassar props de responder ao DOM na web ("Unknown event handler property"). */}
+      {pontos.map((p) => (
+        <Pressable
+          key={`toque-${p.sessao.atividade_id}`}
+          testID={`toque-${nome}-${p.sessao.atividade_id}`}
+          accessibilityRole="button"
+          accessibilityLabel={`Sessão de ${dataCurta(p.sessao.data)}`}
+          onPress={() => aoTocar(p.sessao)}
+          style={[
+            styles.alvo,
+            { left: p.x - ALVO_TOQUE / 2, top: ALTURA_TITULO + p.y - ALVO_TOQUE / 2 },
+          ]}
+        />
+      ))}
       {eixo.marcas.map((m) => (
         <Text
           key={`r-${m.valor}-${m.rotulo}`}
@@ -182,6 +197,7 @@ export function GraficoTiros({ dados }: Props) {
 
 const styles = StyleSheet.create({
   painel: { position: "relative" },
+  alvo: { position: "absolute", width: ALVO_TOQUE, height: ALVO_TOQUE, borderRadius: ALVO_TOQUE / 2 },
   rotulo: { position: "absolute", left: 0, width: MARGEM.esq - 6, textAlign: "right", fontSize: 11, color: "#444" },
   data: { position: "absolute", top: 4, width: 60, textAlign: "center", fontSize: 11, color: "#444" },
   tituloPainel: { fontSize: 14, fontWeight: "600", height: ALTURA_TITULO, paddingTop: 8, color: "#111" },
