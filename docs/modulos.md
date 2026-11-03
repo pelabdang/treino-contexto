@@ -13,6 +13,7 @@ Uma nota por módulo em `docs/modulos/`. Mapa geral em [[00-inicio]].
 - [[modulos/banco]]: atleta, atividades e segmentos (modelo mínimo da Meta 1) e migrações.
 - [[modulos/worker]]: importação da exportação Garmin, gráfico dos tiros e reclassificação.
 - [[modulos/ingestao-garmin]]: leitura da exportação do Garmin Connect (JSON e FIT) em atividades e voltas.
+- [[modulos/clima]]: cliente Open-Meteo (clima da atividade, Meta 4), testado com resposta sintética, sem rede.
 - [[modulos/grafico-tiros]]: PNG e CSV da evolução dos tiros de 1 km.
 - [[modulos/mobile]]: app React Native com Expo (iOS, Android e web).
 - [[modulos/infra]]: Docker Compose, variáveis de ambiente e CI.
