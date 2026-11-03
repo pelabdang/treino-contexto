@@ -27,9 +27,14 @@ O app não calcula pace: todo `m:ss` virá da [[modulos/api]].
 `src/componentes/GraficoTiros.tsx` recebe `dados: EvolucaoTiros1km` (tipo de `@treino/api-client`) e desenha dois painéis com o mesmo eixo X (data `dd/mm/aa`, posição proporcional ao tempo): "Pace médio dos tiros (min/km)" em cima e "FC média dos tiros (bpm)" embaixo, um ponto por sessão. Usa `react-native-svg` (gratuito, incluído no Expo Go) para linhas e pontos; rótulos são `Text` nativo.
 - Faixa, marcas e rótulos vêm só de `eixos` da API. O app só converte valor em posição na tela; não formata pace nem escolhe escala (ver [[decisoes/0004-contrato-tela-evolucao]]).
 - Pace invertido (`eixos.pace.invertido`): pace menor fica no alto.
-- Sessão sem `fc_media`: sem ponto no painel de FC, com ponto no de pace. Com `eixos.fc` `null`, o painel de FC vira um aviso.
-- Tocar num ponto mostra data, `pace_medio` e `fc_media` como vieram da API.
-- Sem `eixos` ou sem sessões: mensagem "Sem sessões de tiros no período.". Carregamento, erro e ligação com a API ficam na #70.
+- A única formatação no app é a data (dd/mm/aa); pace, FC e rótulos vêm prontos da API.
+- Sessão sem `fc_media`: sem ponto no painel de FC, com ponto no de pace.
+- Tocar num ponto mostra data, `pace_medio` e `fc_media` como vieram da API; sem FC na sessão, mostra "FC média: sem FC".
+- Mensagens de "sem dados":
+  - "Sem sessões de tiros no período." (`eixos` null ou nenhuma sessão);
+  - "Sem pace para mostrar." (`eixos.pace` null);
+  - "Nenhuma sessão deste período tem frequência cardíaca." (painel de FC quando `eixos.fc` é null).
+- Carregamento, erro e ligação com a API ficam na #70.
 
 ## Arquivos principais
 - `apps/mobile/src/componentes/GraficoTiros.tsx` e `apps/mobile/__tests__/GraficoTiros.test.tsx` (usa o exemplo de `packages/api-client/exemplos/`)

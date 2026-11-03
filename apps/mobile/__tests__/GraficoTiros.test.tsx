@@ -90,6 +90,23 @@ describe("GraficoTiros", () => {
     expect(screen.getByText("FC média: 170.3 bpm")).toBeTruthy();
   });
 
+  it("mostra aviso quando eixos.pace é null, e o painel de FC continua", async () => {
+    const d = copia();
+    d.eixos!.pace = null;
+    await render(<GraficoTiros dados={d} />);
+    expect(screen.getByText("Sem pace para mostrar.")).toBeTruthy();
+    expect(screen.queryByTestId("painel-pace")).toBeNull();
+    expect(screen.getByTestId("painel-fc")).toBeTruthy();
+  });
+
+  it("toque em sessão sem FC mostra 'sem FC'", async () => {
+    const d = copia();
+    d.sessoes[0].fc_media = null;
+    await render(<GraficoTiros dados={d} />);
+    await fireEvent.press(screen.getByTestId("ponto-pace-1"));
+    expect(screen.getByText("FC média: sem FC")).toBeTruthy();
+  });
+
   it("sem eixos ou sem sessões, mostra mensagem", async () => {
     const d = copia();
     d.eixos = null;
