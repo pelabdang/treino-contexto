@@ -39,6 +39,7 @@ Rodar com dado sintético: passo a passo em [[produto/meta-2-como-rodar]] (API c
 - Pace invertido (`eixos.pace.invertido`): pace menor fica no alto.
 - A única formatação no app é a data (dd/mm/aa); pace, FC e rótulos vêm prontos da API.
 - Sessão sem `fc_media`: sem ponto no painel de FC, com ponto no de pace.
+- O toque fica num `Pressable` transparente (32 px) por cima de cada ponto, com o `testID` `toque-<painel>-<atividade_id>`; o `Circle` do SVG não leva `onPress`. Com `onPress` no `Circle`, o `react-native-svg` repassava props de responder (`onResponderTerminate` e outras) ao DOM na web e o React avisava "Unknown event handler property" no modo dev.
 - Tocar num ponto mostra data, `pace_medio` e `fc_media` como vieram da API; sem FC na sessão, mostra "FC média: sem FC".
 - Mensagens de "sem dados":
   - "Sem sessões de tiros no período." (`eixos` null ou nenhuma sessão);

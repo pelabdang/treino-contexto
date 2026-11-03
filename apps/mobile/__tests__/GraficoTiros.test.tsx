@@ -84,7 +84,7 @@ describe("GraficoTiros", () => {
     d.sessoes[0].pace_medio = "9:99";
     await render(<GraficoTiros dados={d} />);
     expect(screen.queryByTestId("detalhe-sessao")).toBeNull();
-    await fireEvent.press(screen.getByTestId("ponto-pace-1"));
+    await fireEvent.press(screen.getByTestId("toque-pace-1"));
     expect(within(screen.getByTestId("detalhe-sessao")).getByText("04/03/25")).toBeTruthy();
     expect(screen.getByText("Pace médio: 9:99 min/km")).toBeTruthy();
     expect(screen.getByText("FC média: 170.3 bpm")).toBeTruthy();
@@ -103,8 +103,23 @@ describe("GraficoTiros", () => {
     const d = copia();
     d.sessoes[0].fc_media = null;
     await render(<GraficoTiros dados={d} />);
-    await fireEvent.press(screen.getByTestId("ponto-pace-1"));
+    await fireEvent.press(screen.getByTestId("toque-pace-1"));
     expect(screen.getByText("FC média: sem FC")).toBeTruthy();
+  });
+
+  it("o círculo do SVG não leva props de toque (causa do aviso onResponderTerminate na web)", async () => {
+    await render(<GraficoTiros dados={base} />);
+    const props = screen.getByTestId("ponto-pace-1").props;
+    expect(props.onPress).toBeUndefined();
+    expect(props.onResponderTerminate).toBeUndefined();
+    expect(props.onResponderGrant).toBeUndefined();
+  });
+
+  it("toque no ponto do painel de FC também mostra o detalhe", async () => {
+    await render(<GraficoTiros dados={base} />);
+    await fireEvent.press(screen.getByTestId("toque-fc-4"));
+    expect(screen.getByText("Pace médio: 3:57 min/km")).toBeTruthy();
+    expect(screen.getByText("FC média: 171.8 bpm")).toBeTruthy();
   });
 
   it("sem eixos ou sem sessões, mostra mensagem", async () => {
