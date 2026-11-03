@@ -8,7 +8,7 @@ def _por_texto(t: str) -> tuple[str, str | None]:
     if "swim" in t:
         return "natacao", ("aguas_abertas" if "open_water" in t else "piscina" if "lap" in t else None)
     if "cycling" in t or "biking" in t or "bike" in t or t in ("virtual_ride", "e_bike_fitness"):
-        return "ciclismo", ("esteira" if "indoor" in t else None)
+        return "ciclismo", ("esteira" if "indoor" in t else "virtual" if "virtual" in t else None)
     if "run" in t:
         sub = "esteira" if "treadmill" in t else "pista" if "track" in t else "trilha" if "trail" in t else None
         return "corrida", sub
@@ -26,7 +26,8 @@ def de_json(activity_type: str | None, sport_type: str | None) -> tuple[str, str
 
 
 _SUB_FIT = {"treadmill": "esteira", "track": "pista", "trail": "trilha",
-            "lap_swimming": "piscina", "open_water": "aguas_abertas", "indoor_cycling": "esteira"}
+            "lap_swimming": "piscina", "open_water": "aguas_abertas", "indoor_cycling": "esteira",
+            "virtual_activity": "virtual"}
 
 
 def de_fit(sport: str | None, sub_sport: str | None) -> tuple[str, str | None]:

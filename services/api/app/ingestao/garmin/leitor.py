@@ -14,6 +14,7 @@ from pathlib import Path
 from . import tipos, unidades
 from .fit import FitLido, FitSemAtividade, ler_fit
 from .modelos import AtividadeImportada
+from .posicao import arredondar_posicao, e_indoor
 
 log = logging.getLogger(__name__)
 
@@ -102,11 +103,20 @@ def _de_json(item: dict, caminho_json: str) -> AtividadeImportada | None:
     gmt = item["startTimeGmt"]
     inicio_local = (unidades.inicio_local(gmt, local)
                     if isinstance(local, (int, float)) and -12 * 3600_000 <= local - gmt <= 14 * 3600_000 else None)
+    posicao = None if e_indoor(subtipo) else arredondar_posicao(item.get("startLatitude"), item.get("startLongitude"))
+    lat, lon = posicao if posicao else (None, None)
     return AtividadeImportada(
-        fonte_id=fonte_id, modalidade=modalidade, subtipo=subtipo, inicio=inicio,
+        fonte_id=fonte_id, modalidade=modalidade, subtipo=subtipo, inicio=inicio, inicio_lat=lat, inicio_lon=lon,
         inicio_local=inicio_local, duracao_s=conv("duration", unidades.ms_para_s), distancia_m=conv("distance", unidades.cm_para_m),
         fc_media=round(hr) if isinstance(hr, (int, float)) else None, arquivo_bruto=caminho_json,
     )
+
+
+def _posicao_fit(lido: FitLido, subtipo: str | None) -> dict:
+    """Posicao do FIT para a atividade; indoor nao guarda (ADR 0007, item 2)."""
+    if e_indoor(subtipo):
+        return {}
+    return {"inicio_lat": lido.inicio_lat, "inicio_lon": lido.inicio_lon}
 
 
 def _de_fit(f: _Fit) -> AtividadeImportada:
@@ -114,7 +124,7 @@ def _de_fit(f: _Fit) -> AtividadeImportada:
     return AtividadeImportada(
         fonte_id=f.lido.id_derivado, modalidade=modalidade, subtipo=subtipo, inicio=f.lido.inicio,
         duracao_s=f.lido.duracao_s, distancia_m=f.lido.distancia_m, fc_media=f.lido.fc_media,
-        arquivo_bruto=f.caminho, voltas=list(f.lido.voltas),
+        arquivo_bruto=f.caminho, voltas=list(f.lido.voltas), **_posicao_fit(f.lido, subtipo),
     )
 
 
@@ -128,7 +138,7 @@ def ler_atividade_fit(conteudo: bytes, fonte: str = "garmin_export") -> Atividad
     return AtividadeImportada(
         fonte_id=lido.id_derivado, modalidade=modalidade, subtipo=subtipo, inicio=lido.inicio,
         duracao_s=lido.duracao_s, distancia_m=lido.distancia_m, fc_media=lido.fc_media,
-        arquivo_bruto=None, fonte=fonte, voltas=list(lido.voltas),
+        arquivo_bruto=None, fonte=fonte, voltas=list(lido.voltas), **_posicao_fit(lido, subtipo),
     )
 
 
@@ -175,6 +185,8 @@ def ler_exportacao(caminho: str | Path) -> list[AtividadeImportada]:
         f.usado = True
         ativ.voltas = list(f.lido.voltas)
         ativ.arquivo_bruto = f.caminho
+        if ativ.inicio_lat is None and not e_indoor(ativ.subtipo):  # o JSON vale; sem posicao nele, a do FIT
+            ativ.inicio_lat, ativ.inicio_lon = f.lido.inicio_lat, f.lido.inicio_lon
 
     resultado = list(jsons.values()) + [_de_fit(f) for f in fits if not f.usado]
     return sorted(resultado, key=lambda a: (a.inicio, a.fonte_id))

@@ -83,6 +83,10 @@ class Atividade(Base):
         CheckConstraint(f"tipo_origem IS NULL OR {_in('tipo_origem', ORIGENS_TIPO)}", name="tipo_origem"),
         # Fusos reais vao de UTC-12 a UTC+14 (ADR 0003).
         CheckConstraint(f"fuso_min IS NULL OR fuso_min BETWEEN {FUSO_MIN_MIN} AND {FUSO_MIN_MAX}", name="fuso_min"),
+        # Posicao de inicio arredondada (ADR 0007): faixa valida e as duas nulas ou as duas preenchidas.
+        CheckConstraint("inicio_lat IS NULL OR inicio_lat BETWEEN -90 AND 90", name="inicio_lat"),
+        CheckConstraint("inicio_lon IS NULL OR inicio_lon BETWEEN -180 AND 180", name="inicio_lon"),
+        CheckConstraint("(inicio_lat IS NULL) = (inicio_lon IS NULL)", name="inicio_par"),
     )
 
     id: Mapped[int] = mapped_column(primary_key=True)
@@ -97,6 +101,9 @@ class Atividade(Base):
     duracao_s: Mapped[float] = mapped_column(Float)
     distancia_m: Mapped[float | None] = mapped_column(Float)
     fc_media: Mapped[float | None] = mapped_column(Float)
+    # posicao de inicio em graus, arredondada a 2 casas (~1 km) no leitor; NULL se indoor/sem GPS; nunca sai pela API
+    inicio_lat: Mapped[float | None] = mapped_column(Float)
+    inicio_lon: Mapped[float | None] = mapped_column(Float)
     tipo_treino: Mapped[str | None] = mapped_column(String(20))
     tipo_origem: Mapped[str | None] = mapped_column(String(20))
     tipo_confirmado: Mapped[bool] = mapped_column(Boolean, default=False, server_default="false")
