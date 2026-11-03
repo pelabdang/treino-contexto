@@ -39,13 +39,17 @@ Agora `escala_eixo` devolve `min`, `max` e as marcas (`valor` e `rotulo`):
 | Eixo | Constante | Valor | Passo | Rótulo |
 |---|---|---|---|---|
 | FC | `AMPLITUDE_MIN_FC_BPM` | 5 bpm (decisão do Angelo, não muda sem ele) | 1 bpm | inteiro |
-| Pace | `AMPLITUDE_MIN_PACE_S_KM` | 30 s/km (valor inicial; Caio e Bia podem ajustar, registrando aqui) | 15 s | `formatar_pace` |
+| Pace | `AMPLITUDE_MIN_PACE_S_KM` | 30 s/km (valor inicial; Caio e Bia podem ajustar, registrando aqui) | 10 s | `formatar_pace` |
 
 Passo da FC: 1 bpm, porque 2 bpm pode dar só 2 marcas numa faixa de 5 (centro 171: 168,5 a 173,5 tem 170 e 172).
 Com 1 bpm uma faixa de 5 sempre tem 5 ou 6 marcas.
 
+Passo do pace: 10 s/km desde a #87 (era 15, que dava só 2 marcas na faixa mínima: centro 241, faixa 226 a 256, marcas
+240 e 255). Uma faixa de 30 s/km contém sempre 3 marcas (ou 4 quando as pontas são múltiplos de 10), então a regra
+"pelo menos 3 marcas na faixa mínima" vale para qualquer centro.
+
 Exemplos à mão: FC 170 e 171 (faixa 1): centro 170,5, faixa 168 a 173, marcas 168 a 173. Pace 240 e 242:
-centro 241, faixa 226 a 256, marcas 240 ("4:00") e 255 ("4:15"). FC de 150 a 180 (faixa 30): os dados; passo 1 dá 31
+centro 241, faixa 226 a 256, marcas 230 ("3:50"), 240 ("4:00") e 250 ("4:10"). FC de 150 a 180 (faixa 30): os dados; passo 1 dá 31
 marcas, x2 dá 16, x5 dá 7 (150, 155, ..., 180). Mudar uma constante muda o contrato: ver
 [[decisoes/0004-contrato-tela-evolucao]].
 

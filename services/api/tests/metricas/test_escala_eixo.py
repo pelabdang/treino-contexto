@@ -46,23 +46,36 @@ def test_fc_faixa_exatamente_5_nao_amplia():
 
 
 def test_pace_240_e_242_vira_faixa_de_30():
-    # centro = 241; 241 -+ 15 = 226 a 256; múltiplos de 15 dentro: 240 e 255
+    # centro = 241; 241 -+ 15 = 226 a 256; múltiplos de 10 dentro: 230, 240, 250 (3 marcas)
     e = escala_pace([240, 242])
     assert (e.min, e.max) == (226.0, 256.0)
-    assert _valores(e) == [240, 255]
-    assert [m.rotulo for m in e.marcas] == ["4:00", "4:15"]
+    assert _valores(e) == [230, 240, 250]
+    assert [m.rotulo for m in e.marcas] == ["3:50", "4:00", "4:10"]
+
+
+def test_pace_faixa_minima_tem_4_marcas_quando_alinha():
+    # centro 245; 230 a 260; múltiplos de 10: 230, 240, 250, 260 (4 marcas)
+    e = escala_pace([245])
+    assert (e.min, e.max) == (230.0, 260.0)
+    assert _valores(e) == [230, 240, 250, 260]
+
+
+@pytest.mark.parametrize("centro", [200 + 0.5 * i for i in range(200)])
+def test_pace_faixa_minima_sempre_tem_ao_menos_3_marcas(centro):
+    # faixa de 30 s/km e passo de 10: cabem 3 múltiplos (ou 4 se as pontas alinham)
+    assert len(escala_pace([centro]).marcas) >= 3
 
 
 def test_pace_rotulo_igual_a_formatar_pace():
     e = escala_pace([240, 300])
-    assert _valores(e) == [240, 255, 270, 285, 300]  # faixa 60 >= 30: os dados
+    assert _valores(e) == [240, 250, 260, 270, 280, 290, 300]  # faixa 60 >= 30: os dados, 7 marcas
     assert all(m.rotulo == formatar_pace(m.valor) for m in e.marcas)
 
 
 def test_pace_faixa_larga_sobe_o_passo():
-    # 190 a 320: passo 15 dá 195..315 = 9 marcas (> 8); x2 = 30: 210, 240, 270, 300
+    # 190 a 320: passo 10 dá 14 marcas (> 8); x2 = 20: 200, 220, ..., 320 (7 marcas)
     e = escala_pace([190, 320])
-    assert _valores(e) == [210, 240, 270, 300]
+    assert _valores(e) == [200, 220, 240, 260, 280, 300, 320]
 
 
 def test_uma_sessao_so():

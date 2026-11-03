@@ -70,7 +70,7 @@ curl "http://localhost:8000/atletas/1/evolucao/tiros-1km?inicio=2025-03-01"
  "unidades": {"pace": "s/km", "fc": "bpm", "distancia": "m", "duracao": "s"},
  "periodo": {"inicio": "2025-03-01", "fim": null},
  "eixos": {"pace": {"min_s_km": 228.9, "max_s_km": 258.9, "invertido": true,
-                    "marcas": [{"valor_s_km": 240.0, "rotulo": "4:00"}, {"valor_s_km": 255.0, "rotulo": "4:15"}]},
+                    "marcas": [{"valor_s_km": 230.0, "rotulo": "3:50"}, {"valor_s_km": 240.0, "rotulo": "4:00"}, {"valor_s_km": 250.0, "rotulo": "4:10"}]},
            "fc": {"min_bpm": 168.5, "max_bpm": 173.5,
                   "marcas": [{"valor_bpm": 169.0, "rotulo": "169"}, {"valor_bpm": 170.0, "rotulo": "170"}, {"valor_bpm": 171.0, "rotulo": "171"}, {"valor_bpm": 172.0, "rotulo": "172"}, {"valor_bpm": 173.0, "rotulo": "173"}]}},
  "sessoes": [{"atividade_id": 1, "data": "2025-03-04", "inicio": "2025-03-04T09:00:00Z", "n_tiros": 6,
