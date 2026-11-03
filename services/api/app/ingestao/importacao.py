@@ -53,6 +53,7 @@ class RelatorioImportacao:
     atualizadas: int = 0
     ignoradas: int = 0  # ja estavam iguais no banco
     avisos: list[str] = field(default_factory=list)
+    ids_alterados: list[int] = field(default_factory=list)  # atividades que entraram ou mudaram (para o clima)
 
 
 @dataclass
@@ -253,7 +254,9 @@ def importar(session: Session, caminho: str | Path, atleta_nome: str) -> Relator
         if duracao is None:
             rel.avisos.append(f"atividade {a.fonte_id} sem duracao, ignorada")
             continue
-        resultado, _, _ = gravar_atividade(session, atleta.id, a, duracao, rel.avisos)
+        resultado, ativ, _ = gravar_atividade(session, atleta.id, a, duracao, rel.avisos)
+        if resultado != "ignorada":
+            rel.ids_alterados.append(ativ.id)
         if resultado == "inserida":
             rel.inseridas += 1
         elif resultado == "atualizada":

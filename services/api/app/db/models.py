@@ -30,6 +30,8 @@ TIPOS_SEGMENTO = ("volta", "tiro", "recuperacao")
 INTENSIDADES = ("active", "rest", "warmup", "cooldown", "recovery", "interval", "other")
 
 
+ESTADOS_CLIMA = ("ok", "pendente", "falha")  # indoor e sem_posicao sao calculados na leitura (ADR 0007)
+
 FUSO_MIN_MIN, FUSO_MIN_MAX = -720, 840  # minutos: UTC-12 a UTC+14
 
 
@@ -139,3 +141,23 @@ class Segmento(Base):
     versao_deteccao: Mapped[str | None] = mapped_column(String(40))  # ex.: tiros_1km@1; ADR 0002
 
     atividade: Mapped[Atividade] = relationship(back_populates="segmentos")
+
+
+class ClimaAtividade(Base):
+    """Clima de uma atividade que foi consultada (ADR 0007, item 3). Sem linha para indoor nem sem posicao."""
+
+    __tablename__ = "clima_atividade"
+    __table_args__ = (CheckConstraint(_in("estado", ESTADOS_CLIMA), name="estado"),)
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    atividade_id: Mapped[int] = mapped_column(ForeignKey("atividade.id", ondelete="CASCADE"), unique=True)
+    estado: Mapped[str] = mapped_column(String(20))
+    temperatura_c: Mapped[float | None] = mapped_column(Float)
+    sensacao_c: Mapped[float | None] = mapped_column(Float)
+    umidade_pct: Mapped[float | None] = mapped_column(Float)
+    vento_kmh: Mapped[float | None] = mapped_column(Float)
+    fonte: Mapped[str | None] = mapped_column(String(40))
+    entrada: Mapped[str] = mapped_column(String(64))  # SHA-256 de inicio, duracao_s e posicao
+    tentativas: Mapped[int] = mapped_column(Integer, default=0, server_default="0")
+    erro: Mapped[str | None] = mapped_column(String(200))
+    consultado_em: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))

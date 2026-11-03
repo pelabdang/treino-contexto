@@ -24,6 +24,22 @@ from app.ingestao.importacao import (  # noqa: F401
 __all__ = ["RelatorioImportacao", "fuso_min", "importar", "main", "normalizar_intensidade", "pace_s_km"]
 
 
+def clima_do_que_mudou(rel: RelatorioImportacao, cliente=None, session_factory=None) -> None:
+    """Clima so das atividades que entraram ou mudaram (ADR 0007, item 7). Erro aqui nunca derruba a importacao."""
+    if not rel.ids_alterados:
+        return
+    try:
+        from app.clima import ClienteOpenMeteo
+        from app.db.session import SessionLocal
+        from app.servicos.clima import preencher_clima
+
+        with (session_factory or SessionLocal)() as session:
+            r = preencher_clima(session, cliente or ClienteOpenMeteo(), atividade_ids=rel.ids_alterados)
+        print(f"clima: chamadas={r.chamadas}" + (" (rodada parada)" if r.parou else ""))
+    except Exception as e:  # noqa: BLE001
+        print(f"aviso: clima nao preenchido ({e.__class__.__name__}); rode worker.preencher_clima", file=sys.stderr)
+
+
 def main(argv: list[str] | None = None) -> int:
     p = argparse.ArgumentParser(prog="python -m worker.importar_garmin",
                                 description="Importa a exportacao Garmin (zip, pasta, JSON ou FIT) no banco.")
@@ -40,6 +56,7 @@ def main(argv: list[str] | None = None) -> int:
           f"avisos={len(rel.avisos)}")
     for aviso in rel.avisos:
         print(f"  aviso: {aviso}")
+    clima_do_que_mudou(rel)
     return 0
 
 

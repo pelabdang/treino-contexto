@@ -3,7 +3,7 @@ tipo: modulo
 status: em-uso
 dono: theo
 atualizado: 2026-11-03
-links: [[decisoes/0006-upload-de-fit]], [[modulos/api]], [[modulos/grafico-tiros]], [[modulos/infra]], [[modulos/ingestao-garmin]], [[modulos/banco]]
+links: [[decisoes/0006-upload-de-fit]], [[modulos/api]], [[modulos/grafico-tiros]], [[modulos/infra]], [[modulos/ingestao-garmin]], [[modulos/banco]], [[modulos/clima]], [[decisoes/0007-clima-da-atividade]]
 ---
 # Módulo: worker
 
@@ -24,6 +24,13 @@ da importação e do cálculo de métricas, fora da [[modulos/api]].
 - Reclassificação: `uv run python -m worker.reclassificar --atleta-id <id>` roda `classificar_atividades` e mostra
   quantas corridas processou. Idempotente. Use quando a API devolve `reclassificacao_pendente: true`
   (passo a passo em "Reclassificar" de [[modulos/api]]). Atleta inexistente: stderr e saída 1.
+- Clima: `uv run python -m worker.preencher_clima [--atleta-id N] [--exportacao CAMINHO] [--limite N] [--refazer-falhas] [--so-posicao]`.
+  Primeiro relê o FIT de `FIT_DIR` (e a exportação, se dada) para preencher `inicio_lat/lon` onde está `NULL`; depois busca
+  o clima das atividades ao ar livre, com posição, sem `ok` válido e com fim a mais de 7 dias. Sequencial, pausa de 0,25 s,
+  teto de 500 chamadas por rodada, um `commit` por atividade, para se o Open-Meteo limitar (429). Imprime posições
+  preenchidas e atividades por estado. `--so-posicao` não usa a rede. Regras e estados em [[modulos/clima]].
+- No fim de `worker.importar_garmin`, o clima é buscado só das atividades que entraram ou mudaram; erro de clima vira aviso
+  e nunca derruba a importação. O upload de FIT (endpoint) não chama a rede: o clima fica `pendente` até a próxima rodada.
 
 ## Arquivos principais
 - `services/worker/worker/main.py`
@@ -32,6 +39,8 @@ da importação e do cálculo de métricas, fora da [[modulos/api]].
 - `services/worker/worker/grafico_tiros_1km.py` (gráfico e CSV, CLI `python -m worker.grafico_tiros_1km`)
 - `services/worker/worker/apagar_fit.py` (CLI `python -m worker.apagar_fit`)
 - `services/worker/worker/reclassificar.py` (CLI `python -m worker.reclassificar`)
+- `services/worker/worker/preencher_clima.py` (CLI `python -m worker.preencher_clima`); a lógica está em `services/api/app/servicos/clima.py`
+- `services/worker/tests/test_preencher_clima.py`
 - `services/worker/tests/test_reclassificar.py`
 - `services/worker/tests/test_grafico_tiros_1km.py`
 - `services/worker/tests/test_health.py`
