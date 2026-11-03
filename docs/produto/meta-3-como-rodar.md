@@ -19,7 +19,7 @@ fixtures, API com `FIT_DIR` temporária, app na web e envio pelo botão. Só dad
 
 **Verificado na #98 (Bia, 03/11):** o clique no botão foi rodado no Chrome, com banco `treino-qa98` (Postgres 5441), API com `FIT_DIR` temporária e app na web, só com FIT sintético. Resultados na tela: `201` "Atividade adicionada" (série de 2 para 3 sessões, a nova em 01/04/25, 4:06 min/km), `200` "Essa atividade já estava aqui" no reenvio e na mesma atividade da exportação (sem duplicar: 6 atividades no banco), `400` "FIT inválido ou corrompido", `400` "o arquivo é um FIT, mas não é uma atividade", `400` "o arquivo precisa ter extensão .fit" e `413` "arquivo acima de 10 MB". O seletor nativo do Chrome não é acessível à automação: o `File` foi montado em JavaScript com os bytes do FIT sintético e o evento `change` foi disparado no input que o botão cria (como na #96). Em `FIT_DIR` ficaram só `<atleta_id>/<sha256>.fit`, e `git status` não mostrou a pasta (`dados-upload/` está no `.gitignore`). O `404` na tela, a rede fora do ar e iOS/Android (sem aparelho) **não foram verificados** na #98. O teste automatizado é `tests/test_e2e_meta3.py`. Print do `201`, com a série em 3 sessões: ![[_anexos/meta-3-qa-201-serie.jpg]]
 
-**Tradutor do Chrome:** o `index.html` do Expo sai com `lang="en"`, então o Chrome traduz a página mesmo com o texto em português. Foi preciso um proxy local que injeta `translate="no"` para ler as mensagens corretas.
+**Tradutor do Chrome:** o app declara `lang="pt-BR"` no HTML da web (`apps/mobile/src/app/+html.tsx`, com `web.output: "static"` no `app.json`), então o Chrome não oferece tradução e não é mais preciso desligá-la nem usar proxy. Antes (#96, #98) o `index.html` saía com `lang="en"` e o tradutor mudava as mensagens.
 
 ## Antes de começar
 - `git`, `uv`, Docker (Compose 2.24 ou mais novo), Node e `curl`.
@@ -95,8 +95,8 @@ fixtures, API com `FIT_DIR` temporária, app na web e envio pelo botão. Só dad
    - **Rede**: derrube a API (`Ctrl+C` no terminal 1) e envie. Aparece "Não foi possível falar com o servidor. Verifique a conexão e tente de novo." Religue a API e envie de novo.
    - Para voltar ao estado `201`, apague os FIT e as atividades do envio: veja o passo 7 e "Encerrar e limpar".
 
-   **Atenção com o Chrome:** o tradutor automático do Chrome altera o texto das mensagens (na #96 aparecia só
-   "Atividade"). Desligue a tradução da página ao conferir os textos. Com a tradução ligada, o estado fica certo, mas a frase não.
+   **Chrome:** não é mais preciso desligar a tradução. O HTML da web sai com `lang="pt-BR"` (#119) e o Chrome não
+   oferece tradutor; as mensagens aparecem como escritas.
    **Não commite o `apps/mobile/tsconfig.json`:** o `expo start` o reescreve; descarte com `git checkout apps/mobile/tsconfig.json`.
 7. **Apagar os FIT guardados** (rodado: apagou 4 arquivos e limpou `arquivo_bruto` em 4 atividades; as atividades e a série ficam):
    ```

@@ -40,7 +40,7 @@ Rodar com dado sintético: passo a passo em [[produto/meta-2-como-rodar]] (API c
 - erro: o `detail` da API (`400`, `413`, `404`); falha de rede: "Não foi possível falar com o servidor. Verifique a conexão e tente de novo."; outro erro, mensagem genérica;
 - seletor cancelado: nada acontece.
 Regras do arquivo (só `.fit`, 10 MB, FIT sintético ou do atleta) são da API ([[decisoes/0006-upload-de-fit]]); o app não valida. Testes em `__tests__/BotaoEnviarFit.test.tsx` (seletor e `fetch` falsos: 201, 200, 400, 413, rede, cancelar).
-Verificado na web (#96) com API e Postgres locais, FIT sintético `upload_intervalado_5x1km.fit`: o `POST` devolveu `201` e a tela passou de 2 para 3 sessões (01/04/2025). Como forçar cada estado na tela: [[produto/meta-3-como-rodar]]. Obs.: o tradutor automático do Chrome mexe no texto das mensagens (aparecia só "Atividade"); desligue a tradução ao conferir.
+Verificado na web (#96) com API e Postgres locais, FIT sintético `upload_intervalado_5x1km.fit`: o `POST` devolveu `201` e a tela passou de 2 para 3 sessões (01/04/2025). Como forçar cada estado na tela: [[produto/meta-3-como-rodar]]. O HTML da web declara `lang="pt-BR"` (`src/app/+html.tsx`, #119), então o Chrome não oferece tradução e não é mais preciso desligá-la (antes o tradutor mexia nas mensagens, aparecia só "Atividade").
 
 ## Componente GraficoTiros
 `src/componentes/GraficoTiros.tsx` recebe `dados: EvolucaoTiros1km` (tipo de `@treino/api-client`) e desenha dois painéis com o mesmo eixo X (data `dd/mm/aa`, posição proporcional ao tempo): "Pace médio dos tiros (min/km)" em cima e "FC média dos tiros (bpm)" embaixo, um ponto por sessão. Usa `react-native-svg` (gratuito, incluído no Expo Go) para linhas e pontos; rótulos são `Text` nativo.
