@@ -2,8 +2,8 @@
 tipo: modulo
 status: em-uso
 dono: theo
-atualizado: 2026-10-31
-links: [[modulos/banco]], [[modulos/api]]
+atualizado: 2026-11-03
+links: [[modulos/banco]], [[modulos/api]], [[decisoes/0004-contrato-tela-evolucao]]
 ---
 # Módulo: infra
 
@@ -13,7 +13,10 @@ Ambiente local e CI. Postgres 16 em Docker Compose. Produção futura: DigitalOc
 ## Entradas e saídas
 - Subir: `docker compose -f infra/docker-compose.yml up -d`.
 - Variáveis `POSTGRES_USER`, `POSTGRES_PASSWORD`, `POSTGRES_DB` (padrão `treino`). Porta 5432, volume `pgdata`.
-- `.env.example` lista `DATABASE_URL`, `LLM_PROVIDER` e `LLM_MODEL` (IA sempre por camada trocável).
+- `.env.example` lista `DATABASE_URL`, `CORS_ORIGENS`, `LLM_PROVIDER` e `LLM_MODEL` (IA sempre por camada trocável).
+- `CORS_ORIGENS`: origens do app web liberadas na API, separadas por vírgula. Padrão `http://localhost:8081`
+  (`npx expo start --web`). Nunca `*` (a API recusa subir). Vazia não libera nenhuma. iOS e Android não precisam de CORS.
+  Ver [[modulos/api]] e [[decisoes/0004-contrato-tela-evolucao]].
 
 ## Arquivos principais
 - `infra/docker-compose.yml`

@@ -13,6 +13,7 @@ Futuramente recebe a importação Garmin e serve métricas ao [[modulos/mobile]]
 
 ## Entradas e saídas
 - Entrada: variável `DATABASE_URL` (ver `.env.example`).
+- Entrada: variável `CORS_ORIGENS` (ver "CORS" abaixo).
 - Saída: `GET /health` devolve `{"status": "ok"}`.
 - Saída: `GET /atletas/{atleta_id}/evolucao/tiros-1km` (ver "Endpoint" abaixo).
 
@@ -26,6 +27,15 @@ Futuramente recebe a importação Garmin e serve métricas ao [[modulos/mobile]]
 - `services/api/app/servicos/fuso.py`: `data_local(inicio, fuso_min)`, a data local da sessão ([[decisoes/0003-fuso-da-atividade]]).
 - `services/api/app/servicos/evolucao_tiros.py`: liga as métricas ao banco (ver abaixo).
 - `services/api/app/explicacao/`: pacote reservado.
+
+## CORS
+O app web roda em outra porta (`http://localhost:8081`), então a API libera as origens de `CORS_ORIGENS` (lista
+separada por vírgula, lida em `app/config.py`; middleware em `criar_app` de `app/main.py`).
+- Padrão local: `http://localhost:8081`. Só `GET` (e o preflight dele); sem cookies nem cabeçalhos extras.
+- Nunca `*`: com `*` na lista a API não sobe (`ValueError`). Variável vazia não libera nenhuma origem.
+- Origem fora da lista recebe a resposta normal, sem `Access-Control-Allow-Origin` (o navegador bloqueia).
+- Exemplo para mais de uma origem: `CORS_ORIGENS=http://localhost:8081,https://app.exemplo.com`.
+- Testes: `services/api/tests/test_cors.py`. Variável em [[modulos/infra]].
 
 ## Série de tiros no banco (`servicos/evolucao_tiros.py`)
 - `classificar_atividades(session, atleta_id)`: para cada corrida roda a detecção ([[metricas/tiros-1km]]) e marca
@@ -94,7 +104,7 @@ em stderr e saída 1). É idempotente: rodar de novo dá o mesmo resultado. Depo
 O contrato que o app consome está em [[decisoes/0004-contrato-tela-evolucao]], com a lista "antes e depois".
 Já valem aqui (#64): D2 a D11 (erro `404` declarado, `versao_calculo` fixa mais `reclassificacao_pendente`, `Unidades`
 obrigatória, 1 casa decimal, `pace` do tiro, distância `null`, `inicio` > `fim` com `422`, `operationId`, `metrica`
-literal). Faltam o bloco `eixos` (#63 e #66), o CORS (#65) e o cliente gerado (#68).
+literal). Faltam o bloco `eixos` (#63 e #66) e o cliente gerado (#68).
 
 ## Depende de
 - [[modulos/banco]] (Postgres 16 via [[modulos/infra]]).
