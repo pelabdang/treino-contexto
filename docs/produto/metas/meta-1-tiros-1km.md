@@ -100,8 +100,8 @@ Nada pendente da própria meta. Ficam como limitação documentada (sem critéri
 
 ## PRECISA DO ANGELO
 Nada em aberto da Meta 1. Os bloqueios da #19 foram resolvidos (exportação, Docker e conferência do resultado).
-Também resolvidos em 03/11: o histórico público (o repositório continua público, o comentário de revisão no PR #49
-foi apagado e o commit antigo fica) e as atividades do resumo sem arquivo FIT (não faltam arquivos). Os itens das
+Também resolvidos em 03/11: **Histórico público:** resolvido (Angelo, 03/11). Atividades do resumo sem arquivo FIT:
+não faltam arquivos. Os itens das
 próximas metas estão em [[produto/roadmap]].
 
 ## Resultado

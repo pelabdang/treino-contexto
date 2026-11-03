@@ -200,7 +200,7 @@ Bloqueios e decisões que o time não toma sozinho. O time segue planejando em v
 Resolvidos na Meta 1: exportação da Garmin em `dados-teste/garmin/`, Docker instalado, conferência do resultado
 real, esteira fora do gráfico (#51) e as decisões da Meta 2 (sem deploy, atleta fixo por configuração, 5 bpm na FC,
 stack Expo). A chave do provedor de LLM foi entregue e está no `.env` (fora do git).
-- **Histórico público: resolvido (Angelo, 03/11).** O repositório continua público, o comentário de revisão no PR #49 foi apagado e o commit antigo fica.
+- **Histórico público:** resolvido (Angelo, 03/11).
 - **Atividades do resumo sem arquivo FIT: resolvido (Angelo, 03/11).** Não faltam arquivos. Ver [[modulos/ingestao-garmin]].
 - **Open-Meteo:** o Angelo indicou a API gratuita para o desenvolvimento; o plano comercial continua em aberto para produção (Meta 4).
 
