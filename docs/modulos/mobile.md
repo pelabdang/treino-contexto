@@ -3,7 +3,7 @@ tipo: modulo
 status: em-uso
 dono: rafa
 atualizado: 2026-11-03
-links: [[modulos/api]], [[modulos/api-client]], [[produto/roadmap]], [[decisoes/0004-contrato-tela-evolucao]]
+links: [[modulos/api]], [[modulos/api-client]], [[produto/roadmap]], [[decisoes/0004-contrato-tela-evolucao]], [[produto/meta-2-como-rodar]]
 ---
 # Módulo: mobile
 
