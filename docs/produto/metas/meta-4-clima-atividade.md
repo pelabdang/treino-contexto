@@ -77,8 +77,8 @@ clima na tela do app; trajeto completo, fim e nome do lugar; plano comercial do 
 O relatório, com a lista de sessões e os números, fica só em `entregas/`, fora do git. Aqui vai só o que pode ser público:
 parte do que o atleta esperava ver não está na série por causa da **regra** do que entra
 ([[decisoes/0005-serie-de-tiros-o-que-entra]]): treinos mistos com tiros de 1 km limpos ficam de fora. Outra parte tem a ver
-com **como a sessão é resumida**: a série mostra a média dos tiros, e a média esconde o melhor tiro. O Caio deixou duas
-recomendações, e as duas esperam as respostas do Angelo a quatro perguntas sobre o que ele quer ver na série:
+com **como a sessão é resumida**: a série mostra a média dos tiros, e a média esconde o melhor tiro. O Caio deixou
+recomendações, e ambas esperam as respostas do Angelo a perguntas sobre o que ele quer ver na série:
 - **R1:** mostrar o melhor tiro da sessão junto da média. Muda o contrato da API e o gráfico, não a regra
   ([[metricas/tiros-1km]], [[decisoes/0004-contrato-tela-evolucao]]).
 - **R2:** uma regra `tiros_1km@5` que inclui treinos mistos com tiros de 1 km limpos. Muda a série do atleta; entra com teste
@@ -135,7 +135,7 @@ isso depende do "pode criar" do Angelo.
   máquina (ADR 0007, "Consequências"). Proposta do time: primeiro a proposta 1 (`importar_garmin` sem rede por padrão),
   depois `--so-posicao` (local) e, com o ok do Angelo, uma rodada de clima com `--limite` baixo. Os números ficam só em
   `entregas/`.
-- **Série de tiros:** as quatro perguntas do relatório da #118 (em `entregas/`, fora do git) sobre o que o atleta quer ver
+- **Série de tiros:** as perguntas do relatório da #118 (em `entregas/`, fora do git) sobre o que o atleta quer ver
   na série. Delas dependem a R1 (melhor tiro junto da média) e a R2 (`tiros_1km@5` com treinos mistos). A R2 muda a série
   do atleta.
 - **"Pode criar"** para as propostas 1, 2 e 4 e, depois das respostas acima, a 3.
