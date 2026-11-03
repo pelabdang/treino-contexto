@@ -54,7 +54,7 @@ Resultado de cada item conforme o relatório da Bia na #72 (PR #85), na web, com
 Não estão no critério de pronto, então não são pendências da Meta 2. Ficam abertas e entram quando couberem:
 - **#86:** aviso "Unknown event handler property `onResponderTerminate`" do `react-native-svg` na web, só no modo de
   desenvolvimento. Não afeta a tela.
-- **#87:** o eixo de pace mostra poucas marcas (passo de 15 s/km). A tela fica legível, mas o eixo é curto.
+- **#87 (feita no PR #89):** o eixo de pace mostrava poucas marcas (passo de 15 s/km). O passo agora é de 10 s/km, com pelo menos 3 marcas na faixa mínima.
 
 ## O que ficou de fora
 Como planejado: login, lista de atletas, filtro de período na tela, deploy (EAS, lojas, conta Expo), upload de FIT
@@ -82,6 +82,6 @@ estão em [[produto/roadmap]].
 ## Resultado
 **Meta 2 feita.** Na web, com as fixtures, a tela mostra a evolução dos tiros com os valores da API, sem nenhuma
 formatação de pace no app e com a mesma escala do PNG. Não verificados: iOS e Android, e os estados carregando e
-vazio na tela (cobertos pelo `npm test`). Melhorias abertas: #86 e #87.
+vazio na tela (cobertos pelo `npm test`). Melhoria aberta: #86 (a #87 foi feita no PR #89).
 
 Próxima: Meta 3, upload de arquivo FIT ([[produto/roadmap]]).
