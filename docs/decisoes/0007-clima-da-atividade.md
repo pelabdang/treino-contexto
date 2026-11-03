@@ -25,13 +25,14 @@ do atleta, na API gratuita do desenvolvimento; o passado é preenchido relendo o
 - **O leitor FIT não lê posição.** `ler_fit` (`services/api/app/ingestao/garmin/fit.py`) guarda só `file_id`, a primeira
   `session` e as `lap`; `FitLido` não tem posição. As fixtures sintéticas existentes conferem que `position_lat/long`
   são vazios (`tests/test_fixtures_garmin.py`, `tests/test_fixtures_fit_upload.py`).
-- **O JSON da exportação traz a posição de início**, em graus decimais (float): `startLatitude` e `startLongitude`
-  (formato da exportação da Garmin). Só as atividades com GPS têm essas chaves. O JSON também traz `endLatitude/endLongitude`, `min/maxLatitude/Longitude` e `locationName`,
-  que **não serão lidos** (fim, caixa do trajeto e nome do lugar são mais dado pessoal do que o clima precisa).
+- **O repositório não tem o nome das chaves de posição do JSON.** `startLatitude` e `startLongitude` são o nome esperado
+  (formato da exportação da Garmin), mas nenhum código, fixture ou nota do `main` os usa ainda. A issue do leitor confirma
+  o nome com uma fixture sintética. Fim do trajeto, caixa do trajeto e nome do lugar **não serão lidos**: são mais dado
+  pessoal do que o clima precisa.
 - **Quem tem posição não é só ao ar livre.** Tipos virtuais, como `virtual_ride`, podem trazer posição de um mundo
   virtual, que não é o lugar do atleta. `tipos._por_texto` só marca `esteira` para ciclismo se o texto tem `indoor`,
   então `virtual_ride` sai com `subtipo = NULL`. Sem tratar isso, o clima dessas atividades seria inventado.
-  Atividades indoor costumam vir sem posição; o código não depende disso.
+  O código não depende de atividade indoor vir sem posição.
 - **Indoor já tem base:** `subtipo` `esteira` (JSON `treadmill_running`; FIT `sub_sport = treadmill`; ciclismo indoor, que
   hoje também vira `esteira`) e `piscina` (`lap_swim`/`lap_swimming`). `aguas_abertas`, `pista` e `trilha` são ao ar livre.
 - **O FIT do upload não traz horário local** (ADR 0003): para o clima basta o `inicio` em UTC.
@@ -237,7 +238,7 @@ Esteira fictícia com coordenada no arquivo: subtipo esteira -> estado "indoor",
 - **Theo:** aprovou o modelo (tabela e colunas, subtipo `virtual`, janela de 7 dias, 5 rodadas, teto de 500) em 03/11.
 - **Angelo (só se discordar, já alinhado):** (1) ciclismo virtual é indoor, sem clima; (2) o clima da semana corrente fica
   pendente em vez de usar previsão.
-- **A confirmar na implementação:** que o `fitdecode` devolve semicírculos; o `models` do archive para ter sensação
+- **A confirmar na implementação:** os nomes das chaves de posição do JSON; que o `fitdecode` devolve semicírculos; o `models` do archive para ter sensação
   térmica; o custo de uma chamada nos limites.
 
 ## Data e quem decidiu
