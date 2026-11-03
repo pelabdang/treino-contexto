@@ -3,12 +3,12 @@ tipo: modulo
 status: em-uso
 dono: rafa
 atualizado: 2026-11-03
-links: [[modulos/api]], [[modulos/api-client]], [[produto/roadmap]], [[decisoes/0004-contrato-tela-evolucao]], [[produto/meta-2-como-rodar]]
+links: [[modulos/api]], [[modulos/api-client]], [[produto/roadmap]], [[decisoes/0004-contrato-tela-evolucao]], [[produto/meta-2-como-rodar]], [[decisoes/0006-upload-de-fit]]
 ---
 # Módulo: mobile
 
 ## Para que serve
-App em React Native com Expo (TypeScript, Expo Router) para iOS, Android e web. Hoje tem a tela "Evolução dos tiros de 1 km" ligada à API (gráfico de dois painéis, lista das sessões e rodapé) e a leitura da configuração. Sem login e sem deploy: roda local, na web e no Expo Go.
+App em React Native com Expo (TypeScript, Expo Router) para iOS, Android e web. Hoje tem a tela "Evolução dos tiros de 1 km" ligada à API (botão "Enviar arquivo FIT", gráfico de dois painéis, lista das sessões e rodapé) e a leitura da configuração. Sem login e sem deploy: roda local, na web e no Expo Go.
 
 O app não calcula pace: todo `m:ss` virá da [[modulos/api]].
 
@@ -33,6 +33,15 @@ Testes em `__tests__/index.test.tsx` com `fetch` falso (todos os estados, "9:99"
 
 Rodar com dado sintético: passo a passo em [[produto/meta-2-como-rodar]] (API com fixtures, `CORS_ORIGENS` com `http://localhost:8081` e `npx expo start --web --port 8081`). O `expo start` reescreve `apps/mobile/tsconfig.json`: não commitar.
 
+## Botão "Enviar arquivo FIT" (`BotaoEnviarFit`)
+`src/componentes/BotaoEnviarFit.tsx`, no alto da `TelaEvolucao`, usa o mesmo `apiUrl` e `atletaId` da tela. Toque abre o seletor do `expo-document-picker` (`getDocumentAsync`, `type: "*/*"`); na web entrega o `File`, no celular o `uri`. Envia com `enviarAtividadeFit` ([[modulos/api-client]]) e mostra um estado por vez:
+- enviando: "Enviando..." e botão desligado;
+- `201`: "Atividade adicionada"; `200`: "Essa atividade já estava aqui". Nos dois casos a tela busca a evolução de novo (o gráfico antigo fica visível até a resposta chegar);
+- erro: o `detail` da API (`400`, `413`, `404`); falha de rede: "Não foi possível falar com o servidor. Verifique a conexão e tente de novo."; outro erro, mensagem genérica;
+- seletor cancelado: nada acontece.
+Regras do arquivo (só `.fit`, 10 MB, FIT sintético ou do atleta) são da API ([[decisoes/0006-upload-de-fit]]); o app não valida. Testes em `__tests__/BotaoEnviarFit.test.tsx` (seletor e `fetch` falsos: 201, 200, 400, 413, rede, cancelar).
+Verificado na web (#96) com API e Postgres locais, FIT sintético `upload_intervalado_5x1km.fit`: o `POST` devolveu `201` e a tela passou de 2 para 3 sessões (01/04/2025). Obs.: o tradutor automático do Chrome mexe no texto das mensagens (aparecia só "Atividade"); desligue a tradução ao conferir.
+
 ## Componente GraficoTiros
 `src/componentes/GraficoTiros.tsx` recebe `dados: EvolucaoTiros1km` (tipo de `@treino/api-client`) e desenha dois painéis com o mesmo eixo X (data `dd/mm/aa`, posição proporcional ao tempo): "Pace médio dos tiros (min/km)" em cima e "FC média dos tiros (bpm)" embaixo, um ponto por sessão. Usa `react-native-svg` (gratuito, incluído no Expo Go) para linhas e pontos; rótulos são `Text` nativo.
 - Faixa, marcas e rótulos vêm só de `eixos` da API. O app só converte valor em posição na tela; não formata pace nem escolhe escala (ver [[decisoes/0004-contrato-tela-evolucao]]).
@@ -49,14 +58,15 @@ Rodar com dado sintético: passo a passo em [[produto/meta-2-como-rodar]] (API c
 
 ## Arquivos principais
 - `apps/mobile/src/componentes/TelaEvolucao.tsx`
+- `apps/mobile/src/componentes/BotaoEnviarFit.tsx`
 - `apps/mobile/src/componentes/GraficoTiros.tsx` e `apps/mobile/__tests__/GraficoTiros.test.tsx` (usa o exemplo de `packages/api-client/exemplos/`)
 - `apps/mobile/src/app/` (rotas do Expo Router; código que não é rota fica fora)
 - `apps/mobile/src/config.ts` (`lerConfig` e `config`)
-- `apps/mobile/__tests__/index.test.tsx`, `config.test.ts` e `api-client.test.ts` (cliente com `fetch` falso)
+- `apps/mobile/__tests__/index.test.tsx`, `BotaoEnviarFit.test.tsx`, `config.test.ts` e `api-client.test.ts` (cliente com `fetch` falso)
 - `apps/mobile/package.json` (Jest via `jest-expo`, Testing Library), `app.json`, `eslint.config.js`, `.env.example`
 
 ## Depende de
-- [[modulos/api]] (ainda sem chamadas) e [[modulos/api-client]] (tipos e função de leitura).
+- [[modulos/api]] (via o cliente: leitura da evolução e upload de FIT) e [[modulos/api-client]] (tipos e funções `buscarEvolucaoTiros1km` e `enviarAtividadeFit`). Pacote `expo-document-picker` para escolher o arquivo.
 
 ## Como testar
 ```

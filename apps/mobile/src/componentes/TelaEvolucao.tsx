@@ -2,6 +2,7 @@ import { buscarEvolucaoTiros1km, type ErroApi, type EvolucaoTiros1km } from "@tr
 import { useCallback, useEffect, useState } from "react";
 import { ActivityIndicator, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 
+import { BotaoEnviarFit } from "./BotaoEnviarFit";
 import { dataCurta, GraficoTiros } from "./GraficoTiros";
 
 type Props = {
@@ -46,11 +47,15 @@ export function TelaEvolucao({ apiUrl, atletaId, fetchFn }: Props) {
     setTentativa((n) => n + 1);
   }, []);
 
+  // Depois de um envio com sucesso, busca a evolução de novo (sem esconder o que já está na tela).
+  const recarregar = useCallback(() => setTentativa((n) => n + 1), []);
+
   return (
     <ScrollView contentContainerStyle={styles.container}>
       <Text accessibilityRole="header" style={styles.titulo}>
         Evolução dos tiros de 1 km
       </Text>
+      <BotaoEnviarFit apiUrl={apiUrl} atletaId={atletaId} fetchFn={fetchFn} aoEnviar={recarregar} />
       {estado.tipo === "carregando" && (
         <View style={styles.centro}>
           <ActivityIndicator />
