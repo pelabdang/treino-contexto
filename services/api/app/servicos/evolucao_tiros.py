@@ -76,7 +76,7 @@ def classificar_atividades(session: Session, atleta_id: int) -> int:
 @dataclass(frozen=True)
 class TiroSessao:
     ordem: int
-    distancia_m: float
+    distancia_m: float | None  # None quando o segmento não tem distância (nunca 0)
     duracao_s: float
     fc_media: float | None
 
@@ -132,8 +132,35 @@ def sessoes_tiros_1km(
         inicio_utc = a.inicio if a.inicio.tzinfo else a.inicio.replace(tzinfo=timezone.utc)
         resultado.append(SessaoSerie(
             ponto, inicio_utc.astimezone(timezone.utc),
-            tuple(TiroSessao(s.ordem, s.distancia_m or 0.0, s.duracao_s, s.fc_media) for s in segs)))
+            tuple(TiroSessao(s.ordem, s.distancia_m, s.duracao_s, s.fc_media) for s in segs)))
     return resultado
+
+
+def reclassificacao_pendente(
+    session: Session, atleta_id: int, inicio: date | None = None, fim: date | None = None
+) -> bool:
+    """Algum segmento da série foi gravado com `versao_deteccao` diferente de `VERSAO` (ADR 0004, item 3)?
+
+    Olha os segmentos das corridas do atleta que a série considera (corridas fora da esteira, com data local
+    entre `inicio` e `fim`), tenham virado tiro ou não: uma regra nova pode mudar qual volta é tiro.
+    Segmento sem `versao_deteccao` (nunca classificado) também conta como pendente. Só lê; não escreve.
+    """
+    ativs = session.scalars(
+        select(Atividade)
+        .where(
+            Atividade.atleta_id == atleta_id,
+            Atividade.modalidade == "corrida",
+            or_(Atividade.subtipo.is_(None), Atividade.subtipo.not_in(SUBTIPOS_FORA_DA_SERIE)),
+        )
+        .options(selectinload(Atividade.segmentos))
+    ).all()
+    for a in ativs:
+        dia = data_local(a.inicio, a.fuso_min)
+        if (inicio and dia < inicio) or (fim and dia > fim):
+            continue
+        if any(s.versao_deteccao != VERSAO for s in a.segmentos):
+            return True
+    return False
 
 
 def serie_tiros_1km(

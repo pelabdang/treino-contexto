@@ -34,9 +34,9 @@ def test_json_com_os_valores_do_oraculo(client, importar_fixtures):
     r = client.get(_url(importar_fixtures))
     assert r.status_code == 200
     j = r.json()
-    assert set(j) == {"atleta_id", "metrica", "versao_calculo", "unidades", "periodo", "sessoes"}
+    assert set(j) == {"atleta_id", "metrica", "versao_calculo", "reclassificacao_pendente", "unidades", "periodo", "sessoes"}
     assert j["atleta_id"] == importar_fixtures.id and j["metrica"] == "tiros_1km"
-    assert j["versao_calculo"] == "tiros_1km@4"
+    assert j["versao_calculo"] == "tiros_1km@4" and j["reclassificacao_pendente"] is False
     assert j["unidades"] == {"pace": "s/km", "fc": "bpm", "distancia": "m", "duracao": "s"}
     assert j["periodo"] is None
     a, b = j["sessoes"]
@@ -48,7 +48,7 @@ def test_json_com_os_valores_do_oraculo(client, importar_fixtures):
     assert (b["pace_medio_s_km"], b["pace_medio"], b["fc_media"]) == (237.0, "3:57", 171.8)
     assert len(a["tiros"]) == 6 and len(b["tiros"]) == 5
     assert a["tiros"][0] == {"ordem": 1, "distancia_m": 1000.0, "duracao_s": 255.0, "pace_s_km": 255.0,
-                             "fc_media": 165.0}
+                             "pace": "4:15", "fc_media": 165.0}
     assert [t["ordem"] for t in a["tiros"]] == [1, 3, 5, 7, 9, 11]
 
 
@@ -160,3 +160,72 @@ def test_esteira_sintetica_fora_do_json_e_do_png(client, importar_fixtures, sess
     assert [s["data"] for s in j["sessoes"]] == ["2025-03-04", "2025-03-11"]
     assert ativ.id not in [s["atividade_id"] for s in j["sessoes"]]
     assert _png(client, importar_fixtures).status_code == 200
+
+
+def test_tiro_com_tudo_em_uma_casa_e_pace_do_valor_cru(client, importar_fixtures, session):
+    """239,46 s/km: texto `3:59` (do valor cru), número 239,5 (1 casa). Formatar o número daria 4:00."""
+    from app.db.models import Segmento
+    a = session.query(Atividade).filter_by(fonte_id="1000000001").one()
+    seg = next(s for s in a.segmentos if s.ordem == 1)
+    seg.distancia_m, seg.duracao_s, seg.fc_media = 1000.04, 239.46 * 1.00004, 165.46
+    session.commit()
+    t = client.get(_url(importar_fixtures)).json()["sessoes"][0]["tiros"][0]
+    assert (t["pace_s_km"], t["pace"]) == (239.5, "3:59")
+    assert (t["distancia_m"], t["fc_media"]) == (1000.0, 165.5)
+    assert t["duracao_s"] == round(239.46 * 1.00004, 1)
+
+
+def test_segmento_sem_distancia_vira_null_nunca_zero(client, importar_fixtures, session):
+    a = session.query(Atividade).filter_by(fonte_id="1000000001").one()
+    seg = next(s for s in a.segmentos if s.ordem == 1)
+    seg.distancia_m = None
+    session.commit()
+    t = client.get(_url(importar_fixtures)).json()["sessoes"][0]["tiros"]
+    assert t[0]["distancia_m"] is None and t[0]["pace_s_km"] is None and t[0]["pace"] is None
+    assert t[1]["distancia_m"] == 1000.0
+
+
+def test_reclassificacao_pendente_com_versao_velha_e_sem_escrever(client, importar_fixtures, session):
+    from app.db.models import Segmento
+    a = session.query(Atividade).filter_by(fonte_id="1000000002").one()
+    a.segmentos[0].versao_deteccao = "tiros_1km@3"
+    session.commit()
+    j = client.get(_url(importar_fixtures)).json()
+    assert j["reclassificacao_pendente"] is True
+    assert j["versao_calculo"] == "tiros_1km@4"  # sempre a regra atual, nunca a gravada
+    # o GET não escreveu nada: continua pendente na segunda leitura e a versão gravada segue a velha
+    session.expire_all()
+    assert session.query(Segmento).filter_by(versao_deteccao="tiros_1km@3").count() == 1
+    assert client.get(_url(importar_fixtures)).json()["reclassificacao_pendente"] is True
+    # o período olha só as corridas do filtro: a velha é de 2025-03-11
+    assert client.get(_url(importar_fixtures, "?fim=2025-03-05")).json()["reclassificacao_pendente"] is False
+
+
+def test_sem_sessoes_nao_esta_pendente(client, session):
+    atleta = Atleta(nome="Sem treinos")
+    session.add(atleta)
+    session.commit()
+    assert client.get(_url(atleta)).json()["reclassificacao_pendente"] is False
+
+
+def test_inicio_depois_de_fim_422(client, importar_fixtures):
+    r = client.get(_url(importar_fixtures, "?inicio=2025-03-11&fim=2025-03-04"))
+    assert r.status_code == 422 and isinstance(r.json()["detail"], list)
+    assert client.get(_url(importar_fixtures, "?inicio=2025-03-04&fim=2025-03-04")).status_code == 200
+    r = client.get(f"/atletas/{importar_fixtures.id}/evolucao/tiros-1km.png?inicio=2025-03-11&fim=2025-03-04")
+    assert r.status_code == 422
+
+
+def test_contrato_no_openapi(client):
+    j = client.get("/openapi.json").json()
+    get_json = j["paths"]["/atletas/{atleta_id}/evolucao/tiros-1km"]["get"]
+    get_png = j["paths"]["/atletas/{atleta_id}/evolucao/tiros-1km.png"]["get"]
+    assert get_json["operationId"] == "evolucaoTiros1km" and get_png["operationId"] == "evolucaoTiros1kmPng"
+    for op in (get_json, get_png):
+        assert op["responses"]["404"]["content"]["application/json"]["schema"] == {"$ref": "#/components/schemas/Erro"}
+    esq = j["components"]["schemas"]
+    assert esq["Erro"]["required"] == ["detail"]
+    assert set(esq["Unidades"]["required"]) == {"pace", "fc", "distancia", "duracao"}
+    assert esq["EvolucaoTiros1km"]["properties"]["metrica"]["const"] == "tiros_1km"
+    assert "reclassificacao_pendente" in esq["EvolucaoTiros1km"]["required"]
+    assert "pace" in esq["TiroOut"]["required"]
