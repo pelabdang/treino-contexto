@@ -12,6 +12,7 @@ from pydantic import BaseModel
 from sqlalchemy.orm import Session
 
 from app.db.models import Atleta
+from app.graficos.escala import Escala, escala_fc, escala_pace
 from app.graficos.tiros_1km import render_png
 from app.db.session import get_session
 from app.metricas.tiros_1km import VERSAO, formatar_pace
@@ -56,6 +57,34 @@ class SessaoOut(BaseModel):
     tiros: list[TiroOut]
 
 
+class MarcaPace(BaseModel):
+    valor_s_km: float
+    rotulo: str  # m:ss, de formatar_pace
+
+
+class EixoPace(BaseModel):
+    min_s_km: float
+    max_s_km: float
+    invertido: bool  # pace menor (mais rápido) fica no alto
+    marcas: list[MarcaPace]
+
+
+class MarcaFc(BaseModel):
+    valor_bpm: float
+    rotulo: str
+
+
+class EixoFc(BaseModel):
+    min_bpm: float
+    max_bpm: float
+    marcas: list[MarcaFc]
+
+
+class Eixos(BaseModel):
+    pace: EixoPace | None  # null se não há pace (nunca ocorre com sessões)
+    fc: EixoFc | None  # null se nenhuma sessão tem FC
+
+
 class EvolucaoTiros1km(BaseModel):
     atleta_id: int
     metrica: Literal["tiros_1km"]
@@ -63,11 +92,28 @@ class EvolucaoTiros1km(BaseModel):
     reclassificacao_pendente: bool  # há segmento gravado com outra versao_deteccao
     unidades: Unidades
     periodo: Periodo | None
+    eixos: Eixos | None  # null sem sessões; mesma escala do PNG (escala_eixo, #63)
     sessoes: list[SessaoOut]
 
 
 def _um_decimal(v: float | None) -> float | None:
     return None if v is None else round(v, 1)
+
+
+def _eixos(sessoes: list[SessaoSerie]) -> Eixos | None:
+    """Eixos pela mesma regra do PNG, sobre os valores sem arredondar da série (1 casa só na saída)."""
+    if not sessoes:
+        return None
+    pace: Escala | None = escala_pace([s.ponto.pace_s_km for s in sessoes])
+    fc: Escala | None = escala_fc([s.ponto.fc_media for s in sessoes])
+    return Eixos(
+        pace=None if pace is None else EixoPace(
+            min_s_km=round(pace.min, 1), max_s_km=round(pace.max, 1), invertido=True,
+            marcas=[MarcaPace(valor_s_km=round(m.valor, 1), rotulo=m.rotulo) for m in pace.marcas]),
+        fc=None if fc is None else EixoFc(
+            min_bpm=round(fc.min, 1), max_bpm=round(fc.max, 1),
+            marcas=[MarcaFc(valor_bpm=round(m.valor, 1), rotulo=m.rotulo) for m in fc.marcas]),
+    )
 
 
 def _tiro_out(t) -> TiroOut:
@@ -135,6 +181,7 @@ def evolucao_tiros_1km(
         reclassificacao_pendente=reclassificacao_pendente(session, atleta_id, inicio, fim),
         unidades=Unidades(pace="s/km", fc="bpm", distancia="m", duracao="s"),
         periodo=Periodo(inicio=inicio, fim=fim) if (inicio or fim) else None,
+        eixos=_eixos(sessoes),
         sessoes=[_sessao_out(s) for s in sessoes],
     )
 
