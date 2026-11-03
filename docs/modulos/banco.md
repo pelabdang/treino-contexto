@@ -3,7 +3,7 @@ tipo: modulo
 status: em-uso
 dono: theo
 atualizado: 2026-11-03
-links: [[decisoes/0001-modelo-de-dados-minimo]], [[decisoes/0002-segmento-intensidade-e-versao]], [[decisoes/0003-fuso-da-atividade]], [[decisoes/0007-clima-da-atividade]], [[modulos/api]], [[modulos/infra]]
+links: [[decisoes/0001-modelo-de-dados-minimo]], [[decisoes/0002-segmento-intensidade-e-versao]], [[decisoes/0003-fuso-da-atividade]], [[decisoes/0007-clima-da-atividade]], [[modulos/api]], [[modulos/infra]], [[produto/meta-4-como-rodar]]
 ---
 # Módulo: banco
 
@@ -34,7 +34,7 @@ Motivos da escolha em [[decisoes/0001-modelo-de-dados-minimo]].
 - Postgres 16 em [[modulos/infra]]. Usado pela [[modulos/api]].
 
 ## Como testar
-`uv run pytest -q`. Para Postgres: defina `TEST_DATABASE_URL`. Migrar: `cd services/api && uv run alembic upgrade head`.
+Migrar até a 0005 num banco próprio, passo a passo: [[produto/meta-4-como-rodar]]. `uv run pytest -q`. Para Postgres: defina `TEST_DATABASE_URL`. Migrar: `cd services/api && uv run alembic upgrade head`.
 
 ## Pendências
 - Check-in, bem-estar, métricas derivadas e linha de base entram em migrações futuras, cada uma com ADR.

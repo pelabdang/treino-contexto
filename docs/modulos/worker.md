@@ -3,7 +3,7 @@ tipo: modulo
 status: em-uso
 dono: theo
 atualizado: 2026-11-03
-links: [[decisoes/0006-upload-de-fit]], [[modulos/api]], [[modulos/grafico-tiros]], [[modulos/infra]], [[modulos/ingestao-garmin]], [[modulos/banco]], [[modulos/clima]], [[decisoes/0007-clima-da-atividade]]
+links: [[decisoes/0006-upload-de-fit]], [[modulos/api]], [[modulos/grafico-tiros]], [[modulos/infra]], [[modulos/ingestao-garmin]], [[modulos/banco]], [[modulos/clima]], [[decisoes/0007-clima-da-atividade]], [[produto/meta-4-como-rodar]]
 ---
 # Módulo: worker
 
@@ -28,7 +28,8 @@ da importação e do cálculo de métricas, fora da [[modulos/api]].
   Primeiro relê a posição, da exportação (se dada) e, na falta dela, do FIT de `FIT_DIR`, para preencher `inicio_lat/lon` onde está `NULL`; depois busca
   o clima das atividades ao ar livre, com posição, sem `ok` válido e com fim a mais de 7 dias. Sequencial, pausa de 0,25 s,
   teto de 500 chamadas por rodada, um `commit` por atividade, para se o Open-Meteo limitar (429). Imprime posições
-  preenchidas e atividades por estado. `--so-posicao` não usa a rede. Regras e estados em [[modulos/clima]].
+  preenchidas e atividades por estado. `--so-posicao` não usa a rede. Regras e estados em [[modulos/clima]]; passo a passo rodado em [[produto/meta-4-como-rodar]].
+- **Atenção:** no fim de `worker.importar_garmin` o clima é buscado **com a rede de verdade** (ver [[produto/meta-4-como-rodar]] para importar fixtures de clima sem rede).
 - No fim de `worker.importar_garmin`, o clima é buscado só das atividades que entraram ou mudaram; erro de clima vira aviso
   e nunca derruba a importação. O upload de FIT (endpoint) não chama a rede: o clima fica `pendente` até a próxima rodada.
 

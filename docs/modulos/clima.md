@@ -3,7 +3,7 @@ tipo: modulo
 status: em-uso
 dono: duda
 atualizado: 2026-11-03
-links: [[decisoes/0007-clima-da-atividade]], [[modulos/ingestao-garmin]], [[modulos/banco]], [[modulos/worker]], [[modulos/api]], [[modulos/api-client]], [[metricas/clima-oraculo]], [[produto/roadmap]]
+links: [[decisoes/0007-clima-da-atividade]], [[modulos/ingestao-garmin]], [[modulos/banco]], [[modulos/worker]], [[modulos/api]], [[modulos/api-client]], [[metricas/clima-oraculo]], [[produto/roadmap]], [[produto/meta-4-como-rodar]]
 ---
 # Módulo: clima
 
@@ -107,6 +107,7 @@ Aprovadas na revisão da #113, sobre o que a [[decisoes/0007-clima-da-atividade]
 `httpx` (agora dependência de runtime da API, já estava no lock). O serviço usa o banco ([[modulos/banco]]) e o leitor ([[modulos/ingestao-garmin]]); o cliente em si não.
 
 ## Como testar
+Passo a passo rodado, com a resposta gravada e todos os estados: [[produto/meta-4-como-rodar]].
 `uv run pytest services/api/tests/clima services/worker/tests/test_preencher_clima.py`. Nenhum teste abre conexão externa: um teste automático troca `socket.connect`,
 `create_connection` e `getaddrinfo` por uma falha, e outro teste confere que a guarda pega o cliente com transporte
 padrão. Nos testes do comando, a guarda deixa passar só loopback e `AF_UNIX` (decisão 1 acima). As esperas são falsas (nada dorme). Os valores batem com `oraculo_clima.json` (tolerância do oráculo).

@@ -3,7 +3,7 @@ tipo: modulo
 status: em-uso
 dono: duda
 atualizado: 2026-11-03
-links: [[produto/meta-3-como-rodar]], [[modulos/api]], [[modulos/mobile]], [[decisoes/0004-contrato-tela-evolucao]], [[decisoes/0006-upload-de-fit]], [[decisoes/0007-clima-da-atividade]]
+links: [[produto/meta-3-como-rodar]], [[modulos/api]], [[modulos/mobile]], [[decisoes/0004-contrato-tela-evolucao]], [[decisoes/0006-upload-de-fit]], [[decisoes/0007-clima-da-atividade]], [[produto/meta-4-como-rodar]]
 ---
 # Módulo: api-client
 
@@ -55,7 +55,7 @@ quatro arquivos. O `npm install` só é preciso na primeira vez (o `node_modules
 - `cd apps/mobile && npm test`: `__tests__/api-client.test.ts` cobre o cliente com `fetch` falso (`200`, `404`, `422`, rede, outros erros) e o upload (`201`, `200`, `400`, `404`, `413`, `422`, rede).
 
 ## Pendências
-- A atividade com clima só tem tipos; a função de busca nasce quando o app precisar (Meta 4).
+- A atividade com clima só tem tipos; a função de busca nasce quando o app precisar (Meta 4). Para ver o JSON, veja o `curl` em [[produto/meta-4-como-rodar]].
 - Só o endpoint JSON da evolução dos tiros tem função (o PNG não é chamado pelo app).
 - A tela que usa o cliente é a #69/#70 ([[modulos/mobile]]).
 - `npm audit` aponta um aviso moderado de `minimatch` dentro do `openapi-typescript`, só na geração (ferramenta de desenvolvimento, não vai para o app).
