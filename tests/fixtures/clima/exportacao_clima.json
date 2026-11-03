@@ -1,0 +1,74 @@
+[
+ {
+  "summarizedActivitiesExport": [
+   {
+    "activityId": 3000000101,
+    "name": "Corrida no Parque do Exemplo",
+    "activityType": "running",
+    "sportType": "RUNNING",
+    "startTimeGmt": 1778404800000,
+    "beginTimestamp": 1778404800000,
+    "duration": 3000000,
+    "elapsedDuration": 3000000,
+    "distance": 900000.0,
+    "avgHr": 140,
+    "startLatitude": 12.3456,
+    "startLongitude": -45.6789
+   },
+   {
+    "activityId": 3000000102,
+    "name": "Esteira com coordenada",
+    "activityType": "treadmill_running",
+    "sportType": "RUNNING",
+    "startTimeGmt": 1778435400000,
+    "beginTimestamp": 1778435400000,
+    "duration": 2400000,
+    "elapsedDuration": 2400000,
+    "distance": 720000.0,
+    "avgHr": 140,
+    "startLatitude": 12.3456,
+    "startLongitude": -45.6789
+   },
+   {
+    "activityId": 3000000103,
+    "name": "Corrida com ponto zero",
+    "activityType": "running",
+    "sportType": "RUNNING",
+    "startTimeGmt": 1778416200000,
+    "beginTimestamp": 1778416200000,
+    "duration": 3600000,
+    "elapsedDuration": 3600000,
+    "distance": 1080000.0,
+    "avgHr": 140,
+    "startLatitude": 0.0,
+    "startLongitude": 0.0
+   },
+   {
+    "activityId": 3000000104,
+    "name": "Pedal virtual com coordenada",
+    "activityType": "virtual_ride",
+    "sportType": "CYCLING",
+    "startTimeGmt": 1778427000000,
+    "beginTimestamp": 1778427000000,
+    "duration": 3600000,
+    "elapsedDuration": 3600000,
+    "distance": 1080000.0,
+    "avgHr": 140,
+    "startLatitude": 12.3456,
+    "startLongitude": -45.6789
+   },
+   {
+    "activityId": 3000000105,
+    "name": "Corrida sem coordenada",
+    "activityType": "running",
+    "sportType": "RUNNING",
+    "startTimeGmt": 1778395200000,
+    "beginTimestamp": 1778395200000,
+    "duration": 2400000,
+    "elapsedDuration": 2400000,
+    "distance": 720000.0,
+    "avgHr": 140
+   }
+  ]
+ }
+]

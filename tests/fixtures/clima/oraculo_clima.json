@@ -1,0 +1,158 @@
+{
+  "_nota": "Oraculo do clima da atividade (Meta 4, issue #111; ADR 0007). ESCRITO A MAO, com a conta em docs/metricas/clima-oraculo.md. Tudo inventado (Parque do Exemplo). Media ponderada pelo tempo de sobreposicao das horas cheias UTC com [inicio, inicio + duracao_s]. Vento: media das velocidades (km/h), nao vetorial. Uma hora da janela com null em qualquer variavel -> estado pendente, sem valores.",
+  "posicao_arquivo_inventada": {"lat": 12.3456, "lon": -45.6789},
+  "posicao_guardada_esperada": {"lat": 12.35, "lon": -45.68},
+  "respostas": {
+    "normal": "open_meteo_archive_2026-05-10.json",
+    "com_null": "open_meteo_archive_2026-05-10_com_null.json"
+  },
+  "tolerancia_abs": 1e-9,
+  "casos": [
+    {
+      "id": "fit_corrida_ar_livre",
+      "arquivo": "fit/corrida_ar_livre.fit",
+      "inicio_utc": "2026-05-10T09:20:00Z",
+      "duracao_s": 3000,
+      "onde_esta_a_posicao": "session",
+      "posicao_guardada": {"lat": 12.35, "lon": -45.68},
+      "estado": "ok",
+      "janela": [
+        {"hora_utc": "2026-05-10T09:00", "segundos": 2400, "peso": "4/5"},
+        {"hora_utc": "2026-05-10T10:00", "segundos": 600, "peso": "1/5"}
+      ],
+      "clima": {"temperatura_c": 27.02, "sensacao_c": 30.4, "umidade_pct": 70.2, "vento_kmh": 9.84},
+      "estado_com_resposta_null": "pendente"
+    },
+    {
+      "id": "json_corrida_ar_livre",
+      "arquivo": "exportacao_clima.json#3000000101",
+      "inicio_utc": "2026-05-10T09:20:00Z",
+      "duracao_s": 3000,
+      "onde_esta_a_posicao": "startLatitude/startLongitude",
+      "posicao_guardada": {"lat": 12.35, "lon": -45.68},
+      "estado": "ok",
+      "janela": [
+        {"hora_utc": "2026-05-10T09:00", "segundos": 2400, "peso": "4/5"},
+        {"hora_utc": "2026-05-10T10:00", "segundos": 600, "peso": "1/5"}
+      ],
+      "clima": {"temperatura_c": 27.02, "sensacao_c": 30.4, "umidade_pct": 70.2, "vento_kmh": 9.84},
+      "estado_com_resposta_null": "pendente"
+    },
+    {
+      "id": "fit_posicao_na_lap",
+      "arquivo": "fit/corrida_posicao_na_lap.fit",
+      "inicio_utc": "2026-05-10T10:45:00Z",
+      "duracao_s": 1800,
+      "onde_esta_a_posicao": "primeira lap (session sem posicao)",
+      "posicao_guardada": {"lat": 12.35, "lon": -45.68},
+      "estado": "ok",
+      "janela": [
+        {"hora_utc": "2026-05-10T10:00", "segundos": 900, "peso": "1/2"},
+        {"hora_utc": "2026-05-10T11:00", "segundos": 900, "peso": "1/2"}
+      ],
+      "clima": {"temperatura_c": 28.3, "sensacao_c": 32.2, "umidade_pct": 65.0, "vento_kmh": 11.15},
+      "estado_com_resposta_null": "pendente"
+    },
+    {
+      "id": "fit_corrida_longa_4_horas",
+      "arquivo": "fit/corrida_longa_4_horas.fit",
+      "inicio_utc": "2026-05-10T13:40:00Z",
+      "duracao_s": 9000,
+      "onde_esta_a_posicao": "session",
+      "posicao_guardada": {"lat": 12.35, "lon": -45.68},
+      "estado": "ok",
+      "janela": [
+        {"hora_utc": "2026-05-10T13:00", "segundos": 1200, "peso": "2/15"},
+        {"hora_utc": "2026-05-10T14:00", "segundos": 3600, "peso": "6/15"},
+        {"hora_utc": "2026-05-10T15:00", "segundos": 3600, "peso": "6/15"},
+        {"hora_utc": "2026-05-10T16:00", "segundos": 600, "peso": "1/15"}
+      ],
+      "clima": {"temperatura_c": 29.893333333333, "sensacao_c": 34.62, "umidade_pct": 57.8, "vento_kmh": 12.78},
+      "estado_com_resposta_null": "ok"
+    },
+    {
+      "id": "fit_esteira_com_posicao",
+      "arquivo": "fit/esteira_com_posicao.fit",
+      "inicio_utc": "2026-05-10T17:50:00Z",
+      "duracao_s": 2400,
+      "onde_esta_a_posicao": "session (deve ser ignorada: esteira)",
+      "posicao_guardada": null,
+      "estado": "indoor",
+      "janela": [],
+      "clima": null,
+      "estado_com_resposta_null": "indoor"
+    },
+    {
+      "id": "json_esteira_com_posicao",
+      "arquivo": "exportacao_clima.json#3000000102",
+      "inicio_utc": "2026-05-10T17:50:00Z",
+      "duracao_s": 2400,
+      "onde_esta_a_posicao": "startLatitude/startLongitude (deve ser ignorada: esteira)",
+      "posicao_guardada": null,
+      "estado": "indoor",
+      "janela": [],
+      "clima": null,
+      "estado_com_resposta_null": "indoor"
+    },
+    {
+      "id": "json_pedal_virtual_com_posicao",
+      "arquivo": "exportacao_clima.json#3000000104",
+      "inicio_utc": "2026-05-10T15:30:00Z",
+      "duracao_s": 3600,
+      "onde_esta_a_posicao": "startLatitude/startLongitude (deve ser ignorada: virtual)",
+      "posicao_guardada": null,
+      "estado": "indoor",
+      "janela": [],
+      "clima": null,
+      "estado_com_resposta_null": "indoor"
+    },
+    {
+      "id": "fit_posicao_zero",
+      "arquivo": "fit/corrida_posicao_zero.fit",
+      "inicio_utc": "2026-05-10T12:30:00Z",
+      "duracao_s": 3600,
+      "onde_esta_a_posicao": "session com (0, 0): descartada",
+      "posicao_guardada": null,
+      "estado": "sem_posicao",
+      "janela": [],
+      "clima": null,
+      "estado_com_resposta_null": "sem_posicao"
+    },
+    {
+      "id": "json_posicao_zero",
+      "arquivo": "exportacao_clima.json#3000000103",
+      "inicio_utc": "2026-05-10T12:30:00Z",
+      "duracao_s": 3600,
+      "onde_esta_a_posicao": "startLatitude/startLongitude com (0, 0): descartada",
+      "posicao_guardada": null,
+      "estado": "sem_posicao",
+      "janela": [],
+      "clima": null,
+      "estado_com_resposta_null": "sem_posicao"
+    },
+    {
+      "id": "fit_posicao_invalida",
+      "arquivo": "fit/corrida_posicao_invalida.fit",
+      "inicio_utc": "2026-05-10T06:40:00Z",
+      "duracao_s": 2400,
+      "onde_esta_a_posicao": "session com 0x7FFFFFFF (invalido do FIT): descartada",
+      "posicao_guardada": null,
+      "estado": "sem_posicao",
+      "janela": [],
+      "clima": null,
+      "estado_com_resposta_null": "sem_posicao"
+    },
+    {
+      "id": "json_sem_coordenada",
+      "arquivo": "exportacao_clima.json#3000000105",
+      "inicio_utc": "2026-05-10T06:40:00Z",
+      "duracao_s": 2400,
+      "onde_esta_a_posicao": "sem startLatitude/startLongitude",
+      "posicao_guardada": null,
+      "estado": "sem_posicao",
+      "janela": [],
+      "clima": null,
+      "estado_com_resposta_null": "sem_posicao"
+    }
+  ]
+}
