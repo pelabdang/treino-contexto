@@ -3,7 +3,7 @@ tipo: modulo
 status: em-uso
 dono: rafa
 atualizado: 2026-11-03
-links: [[modulos/api]], [[modulos/api-client]], [[produto/roadmap]], [[decisoes/0004-contrato-tela-evolucao]], [[produto/meta-2-como-rodar]]
+links: [[modulos/api]], [[modulos/api-client]], [[produto/roadmap]], [[decisoes/0004-contrato-tela-evolucao]], [[produto/meta-2-como-rodar]], [[decisoes/0006-upload-de-fit]]
 ---
 # Módulo: mobile
 
@@ -66,7 +66,7 @@ Verificado na web (#96) com API e Postgres locais, FIT sintético `upload_interv
 - `apps/mobile/package.json` (Jest via `jest-expo`, Testing Library), `app.json`, `eslint.config.js`, `.env.example`
 
 ## Depende de
-- [[modulos/api]] (ainda sem chamadas) e [[modulos/api-client]] (tipos e função de leitura).
+- [[modulos/api]] (via o cliente: leitura da evolução e upload de FIT) e [[modulos/api-client]] (tipos e funções `buscarEvolucaoTiros1km` e `enviarAtividadeFit`). Pacote `expo-document-picker` para escolher o arquivo.
 
 ## Como testar
 ```

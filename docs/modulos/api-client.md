@@ -30,7 +30,7 @@ mão. Contrato e decisões em [[decisoes/0004-contrato-tela-evolucao]] (item 6).
 - `packages/api-client/openapi.json`: o OpenAPI de `app.main`, versionado (gerado, não edite).
 - `packages/api-client/src/schema.d.ts`: tipos gerados pelo [openapi-typescript](https://github.com/openapi-ts/openapi-typescript)
   (MIT, gratuito). A primeira linha leva o `openapi-sha256` do `openapi.json` de onde saiu.
-- `packages/api-client/src/index.ts`: a função e os tipos de erro (escritos à mão).
+- `packages/api-client/src/index.ts`: as funções e os tipos de erro e de upload (escritos à mão).
 - `packages/api-client/exemplos/evolucao-tiros-1km.json`: resposta real do endpoint com as fixtures sintéticas (atleta 1), gerada por script.
 - `packages/api-client/scripts/carimbar.mjs`: grava o carimbo no `schema.d.ts`.
 - `services/api/scripts/exportar_openapi.py`: exporta `openapi.json` (`app.openapi()`, sem servidor) e o exemplo (`TestClient`, SQLite em memória).
