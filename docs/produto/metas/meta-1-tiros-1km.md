@@ -2,13 +2,13 @@
 tipo: meta
 status: em-uso
 dono: paulo
-atualizado: 2026-10-31
-links: [[produto/roadmap]], [[produto/meta-1-como-reproduzir]], [[diario/2026-10-31]], [[metricas/tiros-1km]], [[modulos/ingestao-garmin]], [[modulos/worker]], [[modulos/api]], [[modulos/grafico-tiros]], [[decisoes/0002-segmento-intensidade-e-versao]], [[decisoes/0003-fuso-da-atividade]]
+atualizado: 2026-11-03
+links: [[produto/roadmap]], [[diario/2026-11-03]], [[decisoes/0005-serie-de-tiros-o-que-entra]], [[produto/meta-1-como-reproduzir]], [[diario/2026-10-31]], [[metricas/tiros-1km]], [[modulos/ingestao-garmin]], [[modulos/worker]], [[modulos/api]], [[modulos/grafico-tiros]], [[decisoes/0002-segmento-intensidade-e-versao]], [[decisoes/0003-fuso-da-atividade]]
 ---
 # Meta 1: tiros de 1 km a partir da exportação Garmin
 
-> **Situação:** todos os itens do critério de pronto passaram com as fixtures (relatório da Bia, #18 / PR #45).
-> Falta só o dado real (#19). A meta continua **atual** até o Angelo decidir sobre a #19.
+> **Situação: feita.** Todos os itens do critério de pronto passaram com as fixtures (relatório da Bia, #18 / PR #45)
+> e com o dado real (#19), depois da evolução da regra até a `tiros_1km@4`. Fechamento: #60.
 
 ## Objetivo
 Provar o caminho completo do dado: exportação da Garmin, banco, métrica determinística, gráfico e API.
@@ -35,7 +35,7 @@ seguindo só [[produto/meta-1-como-reproduzir]] (#17).
 | Rodagem leve com auto-lap, natação e intervalado sem FIT fora da série | #11, #14, #30 | **ok**. Série e CSV só com 1000000001 e 1000000002; as outras três estão no banco sem `tipo_treino` e sem segmento `tiro` |
 | Check `testes` verde e "docs ok" (label `docs-ok` a partir do #35) em todos os PRs | todos | **ok** no local (`uv run pytest -q`: 123 passed); CI e label `docs-ok` conferidos pelo Theo em cada merge |
 | Notas: ingestão Garmin, métrica tiros-1km, ADR 0002 e passo a passo de reprodução | #8, #9, #17 | **ok**. Nenhuma divergência entre a documentação e o comportamento |
-| **Com dado real:** exportação do Angelo no Postgres local, PNG conferido com 2 ou 3 treinos | #19 | bloqueado: ver "PRECISA DO ANGELO" |
+| **Com dado real:** exportação do Angelo no Postgres local, série conferida pelo atleta | #19, com #48, #51, #53 e #58 | **ok**. A série ficou de acordo com a conferência do atleta, com as limitações conhecidas em [[metricas/tiros-1km]]. Detalhes só no relatório privado em `entregas/meta-1/` |
 
 ## O que foi entregue
 | Issue | Entrega | PR |
@@ -52,8 +52,15 @@ seguindo só [[produto/meta-1-como-reproduzir]] (#17).
 | #39 | Desenho do gráfico, CSV e `formatar_pace` (regra única de `m:ss`) | #40 |
 | #16 | Endpoint JSON e PNG, com o serviço `sessoes_tiros_1km` | #41 |
 | #15 | Comando que grava o gráfico e o CSV em `entregas/meta-1/` | #42 |
-| #17 | Documentação da meta, passo a passo de reprodução e diário do ciclo | #44 (em revisão) |
-| #18 | QA de ponta a ponta, com o teste automatizado `tests/test_e2e_meta1.py` | #45 (em revisão) |
+| #17 | Documentação da meta, passo a passo de reprodução e diário do ciclo | #44 |
+| #18 | QA de ponta a ponta, com o teste automatizado `tests/test_e2e_meta1.py` | #45 |
+| #43 | Resultado da meta com as fixtures e roteiro | #46 |
+| #19 | Validação com a exportação real e o Postgres local (parser ajustado ao dado real) | #49 |
+| #48 | Regra `tiros_1km@2`: separação por recuperação e bloco principal de 1 km | #50 |
+| #51 | Esteira fora da série (JSON, PNG e CSV) | #52 |
+| #53 | Regra `tiros_1km@3`: tiros mais rápidos que o ritmo habitual do atleta | #54 |
+| #58 | Regra `tiros_1km@4`: progressivo e fartlek de 1 km não são tiros | #59 |
+| #60 | Resultado com o dado real, roteiro e meta feita | este |
 
 Fora do plano original e acrescentado no caminho: #29, #30 e #39 (Caio, em paralelo), a ADR 0003 (fuso), o check
 `docs` com a label `docs-ok` (#35) e a manutenção do roteiro (#27, #36, #43).
@@ -63,7 +70,8 @@ Como planejado: tela no app (Meta 2), upload de FIT pela API (Meta 3), outras di
 modalidades, clima, sono, check-in, tipo de treino confirmado pelo professor (só a sugestão `intervalado`),
 séries por segundo em Parquet, webhook da Garmin, login e várias assessorias.
 
-Pendente da própria meta: a validação com o dado real (#19), bloqueada pelos itens do Angelo.
+Nada pendente da própria meta. Ficam como limitação documentada (sem critério geral) os casos listados em
+[[metricas/tiros-1km]], seção "Limitações e quando não usar".
 
 ## O que se aprendeu
 - **Oráculo cedo paga.** A tabela de valores esperados (#30), tirada das fixtures antes do banco, virou a
@@ -83,25 +91,30 @@ Pendente da própria meta: a validação com o dado real (#19), bloqueada pelos 
 - **Processo:** a revisão de docs passou de comentário para label (`docs-ok`, check `docs`). Um commit novo remove
   a label, então PRs de roteiro devem sair de uma vez, não em pedaços.
 
-## PRECISA DO ANGELO
-Bloqueiam só a #19; o resto da meta foi feito com fixtures.
+- **O dado real ensina o que a fixture não ensina.** Com fixtures, a regra `@1` passava; com a exportação real, a
+  regra precisou de quatro versões (`@1` a `@4`) para separar os tiros de outros treinos com voltas de 1 km. Nas próximas metas com regra nova, prever uma rodada de conferência com o atleta antes de fechar.
+- **Regra geral, nunca do atleta.** Nenhuma versão usa dia da semana ou algo específico de um atleta; o que não teve
+  critério geral virou limitação documentada ([[decisoes/0005-serie-de-tiros-o-que-entra]]).
+- **Conferência sem vazar dado.** O gabarito do atleta ficou só no relatório privado em `entregas/meta-1/`; issues,
+  PRs e notas falam só de casos sintéticos.
 
-1. **Exportação da Garmin em `dados-teste/garmin/`** (fora do git). O time não leu nem copiou nada de
-   `~/Documents/Projects/garmin`. Se for a exportação, o Angelo copia o zip para `dados-teste/garmin/`.
-2. **Docker (ou Postgres 16) instalado** para subir o Postgres local.
-3. **Conferência do resultado:** 2 ou 3 treinos de 1 km de que se lembra (data e mais ou menos o pace), e se
-   esteira e pista entram no mesmo gráfico (padrão até lá: entram todos, com o `subtipo` guardado).
-4. **Decisão:** fechar a Meta 1 só com fixtures e seguir para a Meta 2, deixando a #19 para quando o dado real
-   chegar, ou manter a Meta 1 aberta até a #19.
+## PRECISA DO ANGELO
+Nada em aberto da Meta 1. Os bloqueios da #19 foram resolvidos (exportação, Docker e conferência do resultado).
+Também resolvidos em 03/11: **Histórico público:** resolvido (Angelo, 03/11). Atividades do resumo sem arquivo FIT:
+não faltam arquivos. Os itens das
+próximas metas estão em [[produto/roadmap]].
 
 ## Resultado
-**Com as fixtures: critério de pronto cumprido.** Todos os itens passaram no QA da Bia (#18, PR #45), sem
-divergência com a documentação e sem bug aberto. O PNG da API é idêntico byte a byte ao do comando.
+**Meta 1 feita.** Com as fixtures, o critério de pronto foi cumprido no QA da Bia (#18, PR #45), sem divergência
+com a documentação e sem bug aberto; o PNG da API é idêntico byte a byte ao do comando.
 
-Observações do QA, nenhuma delas bug:
-- o eixo da FC exagera variações pequenas (ver "O que se aprendeu");
-- o `atividade_id` do CSV e do JSON é o id do banco (1 e 4), como a documentação avisa;
-- o passo a passo foi testado só em SQLite; o Postgres local fica para a #19.
+**Com o dado real (#19):** a exportação foi importada no Postgres local e a série foi conferida pelo atleta. Ela
+ficou de acordo com a conferência depois da evolução da regra de `tiros_1km@1` até `tiros_1km@4` (#48, #51, #53,
+#58), com as limitações conhecidas documentadas em [[metricas/tiros-1km]]. Nenhum número do dado real está no
+repositório: o detalhe fica no relatório privado em `entregas/meta-1/`.
 
-**Com dado real: pendente (#19).** A meta fica **atual** até o Angelo decidir: trazer a exportação e o Docker
-para fazer a #19, ou fechar a Meta 1 só com fixtures e seguir para a Meta 2 com a #19 em aberto.
+Observações do QA com fixtures, nenhuma delas bug:
+- o eixo da FC exagera variações pequenas (entra na Meta 2 como escala mínima);
+- o `atividade_id` do CSV e do JSON é o id do banco (1 e 4), como a documentação avisa.
+
+Próxima: Meta 2, evolução dos tiros no app ([[produto/roadmap]]).
