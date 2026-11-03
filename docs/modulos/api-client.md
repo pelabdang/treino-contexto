@@ -9,7 +9,7 @@ links: [[modulos/api]], [[modulos/mobile]], [[decisoes/0004-contrato-tela-evoluc
 
 ## Para que serve
 Pacote TypeScript `@treino/api-client` (`packages/api-client/`) com os tipos gerados do OpenAPI da [[modulos/api]] e
-a função `buscarEvolucaoTiros1km`. O [[modulos/mobile]] usa o pacote para ler o JSON dos tiros sem escrever tipo à
+as funções `buscarEvolucaoTiros1km` e `enviarAtividadeFit`. O [[modulos/mobile]] usa o pacote para ler o JSON dos tiros sem escrever tipo à
 mão. Contrato e decisões em [[decisoes/0004-contrato-tela-evolucao]] (item 6).
 
 ## Entradas e saídas
@@ -20,6 +20,10 @@ mão. Contrato e decisões em [[decisoes/0004-contrato-tela-evolucao]] (item 6).
 - `baseUrl` padrão `http://localhost:8000`; `fetch` padrão é o global (troque nos testes). O app passa `config.apiUrl`.
 - Também exporta os tipos `EvolucaoTiros1km`, `SessaoTiros`, `TiroSessao`, `Eixos`, `ErroApi` e `RespostaUploadFit` (alias de `UploadFitOut`, a resposta do `POST /atletas/{atleta_id}/atividades/fit` da [[modulos/api]], [[decisoes/0006-upload-de-fit]]), além de `components` e
   `operations` do `schema.d.ts`.
+- `enviarAtividadeFit(atletaId, arquivo, {baseUrl?, fetch?, nome?})` faz o `POST /atletas/{id}/atividades/fit` (multipart, campo `arquivo`; ver [[modulos/api]], "Upload de FIT") e nunca lança. `arquivo` é `ArquivoFit`: `Blob`/`File` (web; `nome` dá o nome do arquivo) ou `{uri, name, type}` (React Native).
+  - `{ok: true, dados: {criada, resposta}}`: `criada` é `true` no `201` e `false` no `200`; `resposta` é `RespostaUploadFit`.
+  - `{ok: false, erro}`: `404` vira `nao_encontrado`, `422` vira `validacao`; os demais status (`400`, `413`...) viram `http` com `status` e `detail?` (o `detail` string do corpo `Erro`, quando houver); falha do `fetch` vira `rede`.
+  - Também exporta `ArquivoFit` e `SucessoUploadFit`.
 - O pacote não formata pace nem escolhe escala: tudo vem pronto da API.
 
 ## Arquivos principais
@@ -48,10 +52,9 @@ quatro arquivos. O `npm install` só é preciso na primeira vez (o `node_modules
 ## Como testar
 - `uv run pytest -q`: `test_contrato_cliente.py` falha com a mensagem "desatualizado... Regere com: <comando>" se
   `openapi.json`, o exemplo ou o carimbo do `schema.d.ts` não batem com o `app.main`.
-- `cd apps/mobile && npm test`: `__tests__/api-client.test.ts` cobre o cliente com `fetch` falso (`200`, `404`, `422`, rede, outros erros).
+- `cd apps/mobile && npm test`: `__tests__/api-client.test.ts` cobre o cliente com `fetch` falso (`200`, `404`, `422`, rede, outros erros) e o upload (`201`, `200`, `400`, `404`, `413`, `422`, rede).
 
 ## Pendências
-- O upload de FIT tem só o tipo `RespostaUploadFit`; ainda não há função no cliente (virá com a tela de upload do [[modulos/mobile]]).
 - Só o endpoint JSON da evolução dos tiros tem função (o PNG não é chamado pelo app).
 - A tela que usa o cliente é a #69/#70 ([[modulos/mobile]]).
 - `npm audit` aponta um aviso moderado de `minimatch` dentro do `openapi-typescript`, só na geração (ferramenta de desenvolvimento, não vai para o app).

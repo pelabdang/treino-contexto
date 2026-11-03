@@ -29,7 +29,7 @@ export type OpcoesCliente = {
 export type ErroApi =
   | { tipo: "nao_encontrado"; status: 404; detalhe: ErroNaoEncontrado }
   | { tipo: "validacao"; status: 422; detalhe: ErroValidacao }
-  | { tipo: "http"; status: number }
+  | { tipo: "http"; status: number; /** `detail` da API (400, 413...), quando vier no corpo. */ detail?: string }
   | { tipo: "rede"; mensagem: string };
 
 export type Resultado<T> = { ok: true; dados: T } | { ok: false; erro: ErroApi };
@@ -74,4 +74,59 @@ export async function buscarEvolucaoTiros1km(
     }
   }
   return { ok: false, erro: { tipo: "http", status: resposta.status } };
+}
+
+/** Arquivo para o upload: `File`/`Blob` (web) ou `{uri, name, type}` (React Native). */
+export type ArquivoFit = Blob | { uri: string; name: string; type?: string };
+
+export type SucessoUploadFit = {
+  /** `true` no `201` (atividade nova); `false` no `200` (já existia). */
+  criada: boolean;
+  resposta: RespostaUploadFit;
+};
+
+/** `POST /atletas/{atletaId}/atividades/fit` (multipart, campo `arquivo`). Nunca lança. */
+export async function enviarAtividadeFit(
+  atletaId: number,
+  arquivo: ArquivoFit,
+  opcoes: OpcoesCliente & { nome?: string } = {},
+): Promise<Resultado<SucessoUploadFit>> {
+  const base = (opcoes.baseUrl ?? BASE_URL_PADRAO).replace(/\/+$/, "");
+  const url = `${base}/atletas/${encodeURIComponent(String(atletaId))}/atividades/fit`;
+  const form = new FormData();
+  if (typeof Blob !== "undefined" && arquivo instanceof Blob) {
+    form.append("arquivo", arquivo, opcoes.nome ?? (arquivo as File).name ?? "atividade.fit");
+  } else {
+    // React Native aceita {uri, name, type} no FormData.
+    form.append("arquivo", arquivo as unknown as Blob);
+  }
+
+  let resposta: Response;
+  try {
+    resposta = await (opcoes.fetch ?? fetch)(url, { method: "POST", body: form, headers: { Accept: "application/json" } });
+  } catch (e) {
+    return { ok: false, erro: { tipo: "rede", mensagem: e instanceof Error ? e.message : String(e) } };
+  }
+
+  let corpo: unknown;
+  try {
+    corpo = await resposta.json();
+  } catch {
+    corpo = undefined;
+  }
+  if (resposta.status === 200 || resposta.status === 201) {
+    if (corpo === undefined) return { ok: false, erro: { tipo: "http", status: resposta.status } };
+    return { ok: true, dados: { criada: resposta.status === 201, resposta: corpo as RespostaUploadFit } };
+  }
+  if (resposta.status === 422 && corpo !== undefined) {
+    return { ok: false, erro: { tipo: "validacao", status: 422, detalhe: corpo as ErroValidacao } };
+  }
+  if (resposta.status === 404 && corpo !== undefined) {
+    return { ok: false, erro: { tipo: "nao_encontrado", status: 404, detalhe: corpo as ErroNaoEncontrado } };
+  }
+  const detail = (corpo as { detail?: unknown } | undefined)?.detail;
+  return {
+    ok: false,
+    erro: typeof detail === "string" ? { tipo: "http", status: resposta.status, detail } : { tipo: "http", status: resposta.status },
+  };
 }

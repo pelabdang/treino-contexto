@@ -1,4 +1,4 @@
-import { buscarEvolucaoTiros1km, type EvolucaoTiros1km } from "@treino/api-client";
+import { buscarEvolucaoTiros1km, enviarAtividadeFit, type EvolucaoTiros1km } from "@treino/api-client";
 
 // Exemplo gerado pelo TestClient com as fixtures sintéticas (services/api/scripts/exportar_openapi.py).
 import exemplo from "../../../packages/api-client/exemplos/evolucao-tiros-1km.json";
@@ -66,5 +66,71 @@ describe("buscarEvolucaoTiros1km", () => {
     expect(await buscarEvolucaoTiros1km(1, {}, { fetch: f500 })).toEqual({ ok: false, erro: { tipo: "http", status: 500 } });
     const f404 = jest.fn().mockResolvedValue(new Response("<html>", { status: 404 }));
     expect(await buscarEvolucaoTiros1km(1, {}, { fetch: f404 })).toEqual({ ok: false, erro: { tipo: "http", status: 404 } });
+  });
+});
+
+describe("enviarAtividadeFit", () => {
+  const arquivo = { uri: "file:///tmp/a.fit", name: "a.fit", type: "application/octet-stream" };
+  const ok = { resultado: "inserida", atividade_id: 7, avisos: [] };
+
+  it("201: criada, URL e campo `arquivo` no multipart", async () => {
+    const falso = jest.fn().mockResolvedValue(respostaJson(ok, 201));
+    const r = await enviarAtividadeFit(3, arquivo, { baseUrl: "http://api.local:8000/", fetch: falso });
+    expect(falso.mock.calls[0][0]).toBe("http://api.local:8000/atletas/3/atividades/fit");
+    const init = falso.mock.calls[0][1];
+    expect(init.method).toBe("POST");
+    expect(init.body).toBeInstanceOf(FormData);
+    expect(init.body.has("arquivo")).toBe(true);
+    expect(r).toEqual({ ok: true, dados: { criada: true, resposta: ok } });
+  });
+
+  it("201 com Blob (web): usa o nome informado", async () => {
+    const falso = jest.fn().mockResolvedValue(respostaJson(ok, 201));
+    const r = await enviarAtividadeFit(1, new Blob([new Uint8Array([1, 2])]), { fetch: falso, nome: "treino.fit" });
+    expect(r.ok).toBe(true);
+    expect(falso.mock.calls[0][1].body.get("arquivo").name).toBe("treino.fit");
+  });
+
+  it("200: atividade que já existia", async () => {
+    const falso = jest.fn().mockResolvedValue(respostaJson({ ...ok, resultado: "ignorada" }, 200));
+    const r = await enviarAtividadeFit(1, arquivo, { fetch: falso });
+    expect(r.ok && r.dados.criada).toBe(false);
+  });
+
+  it.each([
+    [400, "FIT inválido"],
+    [413, "Arquivo grande demais"],
+  ])("%i: erro http com o detail da API", async (status, detail) => {
+    const falso = jest.fn().mockResolvedValue(respostaJson({ detail }, status));
+    const r = await enviarAtividadeFit(1, arquivo, { fetch: falso });
+    expect(r).toEqual({ ok: false, erro: { tipo: "http", status, detail } });
+  });
+
+  it("404: atleta não encontrado", async () => {
+    const falso = jest.fn().mockResolvedValue(respostaJson({ detail: "Atleta não encontrado" }, 404));
+    const r = await enviarAtividadeFit(99, arquivo, { fetch: falso });
+    expect(r).toEqual({
+      ok: false,
+      erro: { tipo: "nao_encontrado", status: 404, detalhe: { detail: "Atleta não encontrado" } },
+    });
+  });
+
+  it("422: validação no formato do FastAPI", async () => {
+    const corpo = { detail: [{ loc: ["body", "arquivo"], msg: "Field required", type: "missing" }] };
+    const falso = jest.fn().mockResolvedValue(respostaJson(corpo, 422));
+    const r = await enviarAtividadeFit(1, arquivo, { fetch: falso });
+    expect(r).toEqual({ ok: false, erro: { tipo: "validacao", status: 422, detalhe: corpo } });
+  });
+
+  it("corpo que não é JSON: http sem detail", async () => {
+    const falso = jest.fn().mockResolvedValue(new Response("<html>", { status: 502 }));
+    const r = await enviarAtividadeFit(1, arquivo, { fetch: falso });
+    expect(r).toEqual({ ok: false, erro: { tipo: "http", status: 502 } });
+  });
+
+  it("falha de rede: erro `rede`, sem lançar", async () => {
+    const falso = jest.fn().mockRejectedValue(new Error("Network request failed"));
+    const r = await enviarAtividadeFit(1, arquivo, { fetch: falso });
+    expect(r).toEqual({ ok: false, erro: { tipo: "rede", mensagem: "Network request failed" } });
   });
 });
