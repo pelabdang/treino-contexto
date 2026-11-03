@@ -2,8 +2,8 @@
 tipo: modulo
 status: em-uso
 dono: caio
-atualizado: 2026-10-31
-links: [[metricas/tiros-1km]], [[modulos/api]], [[modulos/worker]], [[produto/roadmap]]
+atualizado: 2026-11-03
+links: [[metricas/tiros-1km]], [[decisoes/0004-contrato-tela-evolucao]], [[modulos/api]], [[modulos/worker]], [[produto/roadmap]]
 ---
 # Módulo: gráfico dos tiros de 1 km
 
@@ -15,18 +15,45 @@ a série e chamam estas funções, então o PNG é o mesmo nos dois lugares.
 ## Entradas e saídas
 - `render_png(serie, atleta_nome) -> bytes`: PNG 1600 x 1000 px (figsize 16 x 10, dpi 100), fundo branco.
   Dois painéis com o mesmo eixo X (data `dd/mm/aa`, rótulo "Data do treino"): em cima "Pace médio dos tiros
-  (min/km)", eixo `m:ss` invertido (mais rápido para cima); embaixo "FC média dos tiros (bpm)". Sessão sem FC
+  (min/km)", eixo `m:ss` invertido (mais rápido para cima), faixa mínima de 30 s/km; embaixo "FC média dos tiros (bpm)", faixa mínima de 5 bpm. Sessão sem FC
   fica sem ponto no painel de FC. Série vazia gera o PNG com "Sem treinos intervalados com tiros de 1 km no
   período".
 - `linhas_csv(serie) -> list[dict[str, str]]`: colunas `data, atividade_id, n_tiros, pace_medio_s_km,
   pace_medio_min_km, fc_media`; pace com 1 casa, `m:ss` via `formatar_pace`, FC com 1 casa ou vazia.
+- `escala_eixo(valores, amplitude_minima, passo, rotulo, max_marcas) -> Escala | None` (em
+  `app/graficos/escala.py`): regra única da escala dos eixos, usada pelo PNG e, na #66, pelo bloco `eixos` do JSON.
+  Veja a seção "Escala mínima dos eixos".
 - `formatar_pace(s_km) -> "m:ss"` (em `app/metricas/tiros_1km.py`): regra única, ver [[metricas/tiros-1km]].
 - Entrada: `list[PontoSessao]` (ver [[metricas/tiros-1km]]).
 
+## Escala mínima dos eixos (issue #63)
+Antes o eixo se ajustava à faixa dos dados, e 1 a 2 bpm de diferença parecia uma subida grande (QA da Meta 1, #18).
+Agora `escala_eixo` devolve `min`, `max` e as marcas (`valor` e `rotulo`):
+
+1. Faixa dos dados (maior menos menor) maior ou igual à amplitude mínima: `min` e `max` são os próprios dados.
+2. Faixa menor: centro = (menor + maior) / 2 e faixa = centro mais ou menos amplitude / 2.
+3. Marcas nos múltiplos do passo dentro da faixa. Passando de 8 marcas, o passo sobe (x2, x5, x10...), sempre
+   múltiplo do passo base.
+4. Lista vazia ou só `None`: `None` (sem eixo).
+
+| Eixo | Constante | Valor | Passo | Rótulo |
+|---|---|---|---|---|
+| FC | `AMPLITUDE_MIN_FC_BPM` | 5 bpm (decisão do Angelo, não muda sem ele) | 1 bpm | inteiro |
+| Pace | `AMPLITUDE_MIN_PACE_S_KM` | 30 s/km (valor inicial; Caio e Bia podem ajustar, registrando aqui) | 15 s | `formatar_pace` |
+
+Passo da FC: 1 bpm, porque 2 bpm pode dar só 2 marcas numa faixa de 5 (centro 171: 168,5 a 173,5 tem 170 e 172).
+Com 1 bpm uma faixa de 5 sempre tem 5 ou 6 marcas.
+
+Exemplos à mão: FC 170 e 171 (faixa 1): centro 170,5, faixa 168 a 173, marcas 168 a 173. Pace 240 e 242:
+centro 241, faixa 226 a 256, marcas 240 ("4:00") e 255 ("4:15"). FC de 150 a 180 (faixa 30): os dados; passo 1 dá 31
+marcas, x2 dá 16, x5 dá 7 (150, 155, ..., 180). Mudar uma constante muda o contrato: ver
+[[decisoes/0004-contrato-tela-evolucao]].
+
 ## Arquivos principais
 - `services/api/app/graficos/tiros_1km.py`
+- `services/api/app/graficos/escala.py` (`escala_eixo`, `escala_pace`, `escala_fc` e as constantes)
 - `services/api/app/metricas/tiros_1km.py` (`formatar_pace`)
-- Testes: `services/api/tests/metricas/test_grafico_tiros_1km.py`
+- Testes: `services/api/tests/metricas/test_grafico_tiros_1km.py` e `services/api/tests/metricas/test_escala_eixo.py`
 
 ## Depende de
 matplotlib (backend `Agg`, sem display) e de [[metricas/tiros-1km]].

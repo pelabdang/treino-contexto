@@ -14,8 +14,9 @@ matplotlib.use("Agg")  # sem display; antes de importar pyplot
 
 import matplotlib.dates as mdates  # noqa: E402
 import matplotlib.pyplot as plt  # noqa: E402
-from matplotlib.ticker import FuncFormatter, MaxNLocator  # noqa: E402
+from matplotlib.ticker import FixedLocator, FuncFormatter  # noqa: E402
 
+from app.graficos.escala import Escala, escala_fc, escala_pace  # noqa: E402
 from app.metricas.tiros_1km import PontoSessao, formatar_pace  # noqa: E402
 
 COLUNAS_CSV = (
@@ -53,6 +54,16 @@ def linhas_csv(serie: list[PontoSessao]) -> list[dict[str, str]]:
     ]
 
 
+def _aplicar_escala(ax, escala: Escala | None) -> None:
+    """Limites e marcas do eixo Y vindos de ``escala_eixo`` (regra única, #63)."""
+    if escala is None:
+        return
+    ax.set_ylim(escala.min, escala.max)
+    ax.yaxis.set_major_locator(FixedLocator([m.valor for m in escala.marcas]))
+    rotulos = {m.valor: m.rotulo for m in escala.marcas}
+    ax.yaxis.set_major_formatter(FuncFormatter(lambda v, _: rotulos.get(v, "")))
+
+
 def render_png(serie: list[PontoSessao], atleta_nome: str) -> bytes:
     """PNG 1600 x 1000 (figsize 16 x 10, dpi 100), fundo branco, dois painéis."""
     fig, (ax_pace, ax_fc) = plt.subplots(
@@ -77,16 +88,15 @@ def render_png(serie: list[PontoSessao], atleta_nome: str) -> bytes:
 
             ax_pace.plot(datas, [p.pace_s_km for p in serie], marker="o", color="#1f5fa8")
             ax_pace.set_title("Pace médio dos tiros (min/km)", loc="left", fontsize=13)
-            for ax in (ax_pace, ax_fc):
-                ax.yaxis.set_major_locator(MaxNLocator(integer=True))  # segundos e bpm inteiros
+            _aplicar_escala(ax_pace, escala_pace([p.pace_s_km for p in serie]))
             ax_pace.invert_yaxis()  # mais rápido (menos s/km) para cima
-            ax_pace.yaxis.set_major_formatter(FuncFormatter(lambda v, _: formatar_pace(v)))
 
             com_fc = [(p.data, p.fc_media) for p in serie if p.fc_media is not None]
             if com_fc:
                 ax_fc.plot(
                     [d for d, _ in com_fc], [f for _, f in com_fc], marker="o", color="#b3261e"
                 )
+            _aplicar_escala(ax_fc, escala_fc([p.fc_media for p in serie]))
             ax_fc.set_title("FC média dos tiros (bpm)", loc="left", fontsize=13)
 
             ax_fc.set_xlabel("Data do treino")
