@@ -156,7 +156,8 @@ Revisadas ao fim de cada meta com o que se aprendeu. Ordem tirada da "Fundação
 - **Entrega visível:** clima na resposta da API e marca "indoor" em esteira.
 - **Critério de pronto:** nova tabela com ADR; cliente Open-Meteo com teste usando resposta gravada.
 - **Quem:** duda-dados, caio-ciencia (ajuste de pace por calor só como estimativa), Theo (ADR).
-- **Fora:** previsão do tempo; ajuste por vento. Uso comercial do Open-Meteo: ver "PRECISA DO ANGELO".
+- **Fora:** previsão do tempo; ajuste por vento. No desenvolvimento, a API gratuita do Open-Meteo (indicação do Angelo);
+  plano comercial para produção: ver "PRECISA DO ANGELO".
 
 ### Meta 5: carga e linha de base pessoal
 - **Objetivo:** primeiras métricas derivadas versionadas (rTSS/hrTSS, CTL, ATL, TSB) e a linha de base por tipo de treino.
@@ -199,10 +200,10 @@ Bloqueios e decisões que o time não toma sozinho. O time segue planejando em v
 Resolvidos na Meta 1: exportação da Garmin em `dados-teste/garmin/`, Docker instalado, conferência do resultado
 real, esteira fora do gráfico (#51) e as decisões da Meta 2 (sem deploy, atleta fixo por configuração, 5 bpm na FC,
 stack Expo). A chave do provedor de LLM foi entregue e está no `.env` (fora do git).
+- **Histórico público: resolvido (Angelo, 03/11).** O repositório continua público, o comentário de revisão no PR #49 foi apagado e o commit antigo fica.
+- **Atividades do resumo sem arquivo FIT: resolvido (Angelo, 03/11).** Não faltam arquivos. Ver [[modulos/ingestao-garmin]].
+- **Open-Meteo:** o Angelo indicou a API gratuita para o desenvolvimento; o plano comercial continua em aberto para produção (Meta 4).
 
 Em aberto:
-1. **Histórico público:** tornar o repositório privado, aceitar o commit antigo do PR #49 ou apagar o comentário de
-   revisão nesse PR (ver [[diario/2026-11-01]]).
-2. **Atividades do resumo sem arquivo FIT:** são só musculação e afins? Fecha a pendência em [[modulos/ingestao-garmin]].
-3. **Próximas metas, sem pressa:** CNPJ e pedido da API da Garmin; pedido da API do TrainingPeaks com a assessoria;
-   plano comercial do Open-Meteo (Meta 4).
+1. **Próximas metas, sem pressa:** CNPJ e pedido da API da Garmin; pedido da API do TrainingPeaks com a assessoria;
+   plano comercial do Open-Meteo para produção (Meta 4).

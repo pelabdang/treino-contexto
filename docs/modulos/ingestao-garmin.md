@@ -2,8 +2,8 @@
 tipo: modulo
 status: em-uso
 dono: duda
-atualizado: 2026-10-31
-links: [[modulos/worker]], [[modulos/banco]], [[produto/roadmap]]
+atualizado: 2026-11-03
+links: [[modulos/worker]], [[modulos/banco]], [[produto/roadmap]], [[diario/2026-11-03]]
 ---
 # Módulo: ingestão Garmin
 
@@ -175,8 +175,8 @@ Divergências em relação às fixtures:
 - **Lixo do macOS:** `__MACOSX/` e `._*` aparecem nos zips; são ignorados.
 - **Arquivos sem relação** com treino estão na raiz; só `*summarizedActivities.json`, `.fit` e `.zip`
   são lidos, e os outros nem são abertos.
-- **Atividades sem FIT:** parte das atividades do resumo não tem `.fit` (musculação e semelhantes, e algumas
-  corridas); entram sem voltas, com aviso.
+- **Atividades sem FIT:** parte das atividades do resumo não tem `.fit`; entram sem voltas, com aviso.
+  Conferido com o dono em 03/11: não faltam arquivos.
 - **Regra dos tiros em dado real:** a intensidade de uma rodagem leve real não vem toda igual (a última volta,
   parcial, vem `rest`/`recovery`/`cooldown`), então a regra "intensidade informativa" de [[metricas/tiros-1km]]
   marca falsos intervalados. Registrado em issue própria (regra do Caio).
@@ -195,4 +195,4 @@ inexistente): suba o container em outra porta e ajuste `DATABASE_URL`. A importa
 ## Pendências
 - Corrigir a regra de tiros em rodagens com intensidade mista (#48).
 - `track_running` (pista) ainda sem exemplo real; a fixture B continua cobrindo.
-- Atividades do resumo sem FIT: confirmar com o dono se faltam arquivos ou se são atividades sem voltas.
+- ~~Atividades do resumo sem FIT~~: resolvido em 03/11. Não faltam arquivos.

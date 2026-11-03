@@ -99,8 +99,10 @@ Nada pendente da própria meta. Ficam como limitação documentada (sem critéri
   PRs e notas falam só de casos sintéticos.
 
 ## PRECISA DO ANGELO
-Os bloqueios da #19 foram resolvidos (exportação, Docker e conferência do resultado). Seguem em aberto, fora da
-meta: o histórico público do PR #49 e as atividades do resumo sem arquivo FIT (ver [[produto/roadmap]]).
+Nada em aberto da Meta 1. Os bloqueios da #19 foram resolvidos (exportação, Docker e conferência do resultado).
+Também resolvidos em 03/11: o histórico público (o repositório continua público, o comentário de revisão no PR #49
+foi apagado e o commit antigo fica) e as atividades do resumo sem arquivo FIT (não faltam arquivos). Os itens das
+próximas metas estão em [[produto/roadmap]].
 
 ## Resultado
 **Meta 1 feita.** Com as fixtures, o critério de pronto foi cumprido no QA da Bia (#18, PR #45), sem divergência
