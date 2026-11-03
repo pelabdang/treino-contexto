@@ -20,7 +20,7 @@ da importação e do cálculo de métricas, fora da [[modulos/api]].
   git). Atleta inexistente: mensagem em stderr e código de saída 1. Formato em [[modulos/grafico-tiros]].
   Exemplo com as fixtures: ![[_anexos/tiros-1km-atleta-fixtures.png]]
 
-- Apagar FIT enviados: `uv run python -m worker.apagar_fit --atleta-id <id>` apaga os arquivos de `FIT_DIR/<id>/` e limpa `arquivo_bruto`, sem apagar as atividades ([[decisoes/0006-upload-de-fit]]).
+- Apagar FIT enviados: `uv run python -m worker.apagar_fit --atleta-id <id>` apaga os arquivos de `FIT_DIR/<id>/` e limpa `arquivo_bruto`, sem apagar as atividades ([[decisoes/0006-upload-de-fit]]; uso na prática em [[produto/meta-3-como-rodar]]).
 - Reclassificação: `uv run python -m worker.reclassificar --atleta-id <id>` roda `classificar_atividades` e mostra
   quantas corridas processou. Idempotente. Use quando a API devolve `reclassificacao_pendente: true`
   (passo a passo em "Reclassificar" de [[modulos/api]]). Atleta inexistente: stderr e saída 1.

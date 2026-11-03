@@ -10,6 +10,8 @@ links: [[modulos/ingestao-garmin]], [[modulos/api]], [[modulos/worker]], [[modul
 **Status: aceita (Theo, 03/11).** Só documentação: nenhum código muda aqui. As
 issues da Meta 3 (leitor, `importar_fit`, endpoint, app) seguem esta ADR.
 
+**Implementada** nas #92 (leitor na API), #94 (`importar_fit` e guarda), #95 (endpoint e cliente) e #96 (botão no app). Para rodar: [[produto/meta-3-como-rodar]].
+
 ## Contexto
 Enquanto a API da Garmin não é aprovada, o plano B é o atleta enviar um `.fit` pelo app. A atividade entra no banco
 e, se for um treino de tiros, na série da Meta 2. Isso toca API, worker, banco e app, por isso é ADR.

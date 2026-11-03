@@ -3,7 +3,7 @@ tipo: modulo
 status: em-uso
 dono: duda
 atualizado: 2026-11-03
-links: [[modulos/worker]], [[modulos/banco]], [[decisoes/0006-upload-de-fit]], [[produto/roadmap]], [[diario/2026-11-03]]
+links: [[produto/meta-3-como-rodar]], [[modulos/worker]], [[modulos/banco]], [[decisoes/0006-upload-de-fit]], [[produto/roadmap]], [[diario/2026-11-03]]
 ---
 # Módulo: ingestão Garmin
 
@@ -155,7 +155,7 @@ esperados e contas à mão em `tests/test_fixtures_fit_upload.py`.
 | `upload_natacao_400m.fit` | natação em piscina, 4 x 100 m | modalidade `natacao`, no banco e fora da série |
 
 ## Upload de FIT (Meta 3, #94)
-Decisões em [[decisoes/0006-upload-de-fit]]. O atleta envia um `.fit` (o endpoint e o app vêm nas próximas issues);
+Decisões em [[decisoes/0006-upload-de-fit]]. O atleta envia um `.fit` pelo endpoint `POST /atletas/{atleta_id}/atividades/fit` ([[modulos/api]], #95) ou pelo botão do app ([[modulos/mobile]], #96);
 a função é `importar_fit(session, atleta_id, conteudo)` em `services/api/app/ingestao/importacao.py`, que devolve
 `inserida`, `atualizada` ou `ignorada`, o `atividade_id` e os avisos. A gravação (exportação e upload) mora na API
 (`app/ingestao/importacao.py`), e `worker/importar_garmin.py` é só a linha de comando.
@@ -181,7 +181,7 @@ a função é `importar_fit(session, atleta_id, conteudo)` em `services/api/app/
 - **Ordem:** valida e lê o FIT, grava a atividade na sessão, grava o arquivo, `commit`, apaga o antigo órfão, classifica as corridas
   do atleta. Se o `commit` falha, o arquivo criado é removido. Violação da chave única (envios simultâneos): lê de novo uma vez.
 - **Erros (exceções):** `AtletaInexistente`, `FitGrande` (mais de 10 MB), `FitNaoEAtividade` (FIT que não é atividade) e
-  `FitInvalido` (corrompido, truncado, sem início ou sem duração; as duas últimas são `ValueError`). Inválido nunca chega ao banco nem ao disco.
+  `FitInvalido` (corrompido, truncado, sem início ou sem duração). Hierarquia: `FitInvalido` e `FitGrande` herdam de `ValueError`, `FitNaoEAtividade` herda de `FitInvalido` e `AtletaInexistente` de `LookupError`. No endpoint: `FitInvalido` e `FitNaoEAtividade` viram `400`, `FitGrande` `413` e `AtletaInexistente` `404`. Inválido nunca chega ao banco nem ao disco.
 - **Só corrida entra na série:** natação, ciclismo e esteira ficam gravados e fora do gráfico ([[decisoes/0005-serie-de-tiros-o-que-entra]]).
 - **Apagar:** `uv run python -m worker.apagar_fit --atleta-id <id>` apaga os arquivos do atleta e limpa `arquivo_bruto`
   das atividades que apontavam para eles; as atividades e a série ficam. Idempotente. Atleta inexistente: stderr e saída 1.

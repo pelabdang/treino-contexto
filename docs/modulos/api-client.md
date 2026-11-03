@@ -3,7 +3,7 @@ tipo: modulo
 status: em-uso
 dono: duda
 atualizado: 2026-11-03
-links: [[modulos/api]], [[modulos/mobile]], [[decisoes/0004-contrato-tela-evolucao]], [[decisoes/0006-upload-de-fit]]
+links: [[produto/meta-3-como-rodar]], [[modulos/api]], [[modulos/mobile]], [[decisoes/0004-contrato-tela-evolucao]], [[decisoes/0006-upload-de-fit]]
 ---
 # Módulo: api-client
 
