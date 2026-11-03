@@ -148,14 +148,14 @@ def test_intensidade_normalizada():
 
 
 def test_intensidade_estranha_vai_para_other_sem_erro(session, monkeypatch):
-    from worker import importar_garmin
+    from app.ingestao import importacao
     from app.ingestao.garmin import ler_exportacao
     originais = ler_exportacao(ZIP)
     originais[0].voltas[1] = originais[0].voltas[1].__class__(
         **{**originais[0].voltas[1].__dict__, "intensidade": " Active "})
     originais[0].voltas[2] = originais[0].voltas[2].__class__(
         **{**originais[0].voltas[2].__dict__, "intensidade": "Sprint"})
-    monkeypatch.setattr(importar_garmin, "ler_exportacao", lambda _: originais)
+    monkeypatch.setattr(importacao, "ler_exportacao", lambda _: originais)
     importar(session, ZIP, "Ana")  # nao levanta IntegrityError no CHECK
     segs = session.scalars(select(Segmento).join(Atividade).where(Atividade.fonte_id == originais[0].fonte_id)
                            .order_by(Segmento.ordem)).all()

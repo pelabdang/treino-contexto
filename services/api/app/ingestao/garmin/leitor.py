@@ -118,6 +118,20 @@ def _de_fit(f: _Fit) -> AtividadeImportada:
     )
 
 
+def ler_atividade_fit(conteudo: bytes, fonte: str = "garmin_export") -> AtividadeImportada:
+    """Um FIT em memoria (upload) como atividade. Levanta `FitSemAtividade` ou `ValueError` (ver `ler_fit`).
+
+    Sem horario local (`inicio_local` fica `None`) e sem `arquivo_bruto`: quem guarda o arquivo preenche.
+    """
+    lido = ler_fit(conteudo)
+    modalidade, subtipo = tipos.de_fit(lido.sport, lido.sub_sport)
+    return AtividadeImportada(
+        fonte_id=lido.id_derivado, modalidade=modalidade, subtipo=subtipo, inicio=lido.inicio,
+        duracao_s=lido.duracao_s, distancia_m=lido.distancia_m, fc_media=lido.fc_media,
+        arquivo_bruto=None, fonte=fonte, voltas=list(lido.voltas),
+    )
+
+
 def ler_exportacao(caminho: str | Path) -> list[AtividadeImportada]:
     """Le a exportacao Garmin (zip, pasta, summarizedActivities.json ou .fit) sem tocar no banco.
 

@@ -79,6 +79,12 @@ Casou: **atualiza** a atividade existente (mesmo `id`), nunca insere outra. Não
 - **Quais campos mudam:** os mesmos da importação de hoje (modalidade, subtipo, início, duração, distância, FC,
   `fuso_min` só se a fonte trouxer, voltas substituídas se mudaram). Um upload sem horário local **não apaga**
   `fuso_min` já gravado (ADR 0003).
+  - *Detalhe da #94:* quando o upload casa com uma linha **da exportação**, os campos da exportação ficam (início,
+    duração, distância, FC, `fuso_min`: o JSON é mais rico e o FIT começa alguns segundos depois); o upload só
+    completa as voltas se a linha não tinha nenhuma e troca o `arquivo_bruto`. Isso evita que upload e exportação
+    reescrevam um ao outro a cada envio. Upload sobre linha de upload atualiza todos os campos, como acima.
+  - *Detalhe da #94:* na exportação, linhas que já são `garmin_export` não contam como candidatas (cada
+    `activityId` é uma atividade distinta).
 - **Resultado:** `inserida`, `atualizada` (algo mudou) ou `ignorada` (nada mudou), com o `id` da atividade. Depois
   de qualquer um, `classificar_atividades` roda para o atleta.
 - **Corrida concorrente** (dois envios iguais ao mesmo tempo, violação da chave única): relê uma vez e trata como

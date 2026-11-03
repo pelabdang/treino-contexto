@@ -8,7 +8,7 @@ links: [[decisoes/0006-upload-de-fit]], [[modulos/api]], [[modulos/grafico-tiros
 # Módulo: worker
 
 ## Para que serve
-Serviço de processamento em segundo plano (FastAPI). Hoje tem `/health` e a importação da exportação Garmin no banco (o parser mora na API, em `app/ingestao/garmin/`, desde a #92) (`worker/importar_garmin.py`). Vai rodar tarefas pesadas
+Serviço de processamento em segundo plano (FastAPI). Hoje tem `/health` e a importação da exportação Garmin no banco (`worker/importar_garmin.py`, linha de comando; o parser e a gravação moram na API, em `app/ingestao/`, desde a #92 e a #94). Vai rodar tarefas pesadas
 da importação e do cálculo de métricas, fora da [[modulos/api]].
 
 ## Entradas e saídas
@@ -20,6 +20,7 @@ da importação e do cálculo de métricas, fora da [[modulos/api]].
   git). Atleta inexistente: mensagem em stderr e código de saída 1. Formato em [[modulos/grafico-tiros]].
   Exemplo com as fixtures: ![[_anexos/tiros-1km-atleta-fixtures.png]]
 
+- Apagar FIT enviados: `uv run python -m worker.apagar_fit --atleta-id <id>` apaga os arquivos de `FIT_DIR/<id>/` e limpa `arquivo_bruto`, sem apagar as atividades ([[decisoes/0006-upload-de-fit]]).
 - Reclassificação: `uv run python -m worker.reclassificar --atleta-id <id>` roda `classificar_atividades` e mostra
   quantas corridas processou. Idempotente. Use quando a API devolve `reclassificacao_pendente: true`
   (passo a passo em "Reclassificar" de [[modulos/api]]). Atleta inexistente: stderr e saída 1.
@@ -29,6 +30,7 @@ da importação e do cálculo de métricas, fora da [[modulos/api]].
 - O parser (`leitor.py`, `fit.py`, `tipos.py`, `unidades.py`, `modelos.py`) está em `services/api/app/ingestao/garmin/`; o worker importa de lá
 - `services/worker/worker/importar_garmin.py` (importação no banco, CLI `python -m worker.importar_garmin`)
 - `services/worker/worker/grafico_tiros_1km.py` (gráfico e CSV, CLI `python -m worker.grafico_tiros_1km`)
+- `services/worker/worker/apagar_fit.py` (CLI `python -m worker.apagar_fit`)
 - `services/worker/worker/reclassificar.py` (CLI `python -m worker.reclassificar`)
 - `services/worker/tests/test_reclassificar.py`
 - `services/worker/tests/test_grafico_tiros_1km.py`

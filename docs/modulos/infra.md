@@ -13,7 +13,8 @@ Ambiente local e CI. Postgres 16 em Docker Compose. Produção futura: DigitalOc
 ## Entradas e saídas
 - Subir: `docker compose -f infra/docker-compose.yml up -d`.
 - Variáveis `POSTGRES_USER`, `POSTGRES_PASSWORD`, `POSTGRES_DB` (padrão `treino`). Porta 5432, volume `pgdata`.
-- `.env.example` lista `DATABASE_URL`, `CORS_ORIGENS`, `LLM_PROVIDER` e `LLM_MODEL` (IA sempre por camada trocável).
+- `.env.example` lista `DATABASE_URL`, `CORS_ORIGENS`, `FIT_DIR`, `LLM_PROVIDER` e `LLM_MODEL` (IA sempre por camada trocável).
+- `FIT_DIR`: pasta dos FIT enviados por upload ([[decisoes/0006-upload-de-fit]]). Padrão `dados-upload/fit`, relativo à raiz do repositório; a pasta `dados-upload/` fica na lista de ignorados do controle de versão (dado pessoal, nunca no repositório).
 - `CORS_ORIGENS`: origens do app web liberadas na API, separadas por vírgula. Padrão `http://localhost:8081`
   (`npx expo start --web`). Nunca `*` (a API recusa subir). Vazia não libera nenhuma. iOS e Android não precisam de CORS.
   Ver [[modulos/api]] e [[decisoes/0004-contrato-tela-evolucao]].

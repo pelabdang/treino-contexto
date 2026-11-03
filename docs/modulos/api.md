@@ -13,7 +13,7 @@ Futuramente recebe a importação Garmin e serve métricas ao [[modulos/mobile]]
 
 ## Entradas e saídas
 - Entrada: variável `DATABASE_URL` (ver `.env.example`).
-- Entrada: variável `CORS_ORIGENS` (ver "CORS" abaixo).
+- Entrada: variável `CORS_ORIGENS` (ver "CORS" abaixo) e `FIT_DIR` (pasta dos FIT do upload, ver [[modulos/ingestao-garmin]]).
 - Saída: `GET /health` devolve `{"status": "ok"}`.
 - Saída: `GET /atletas/{atleta_id}/evolucao/tiros-1km` (ver "Endpoint" abaixo).
 
@@ -25,7 +25,8 @@ Futuramente recebe a importação Garmin e serve métricas ao [[modulos/mobile]]
 - `services/api/app/metricas/`: funções puras das métricas (tiros de 1 km, [[metricas/tiros-1km]]).
 - `services/api/app/graficos/`: desenho do gráfico e do CSV da série ([[modulos/grafico-tiros]]).
 - `services/api/app/servicos/fuso.py`: `data_local(inicio, fuso_min)`, a data local da sessão ([[decisoes/0003-fuso-da-atividade]]).
-- `services/api/app/ingestao/garmin/`: parser da exportação Garmin e do FIT (`ler_exportacao`, `ler_fit`), sem banco; o worker importa daqui ([[modulos/ingestao-garmin]], [[decisoes/0006-upload-de-fit]]).
+- `services/api/app/ingestao/garmin/`: parser da exportação Garmin e do FIT (`ler_exportacao`, `ler_atividade_fit`), sem banco; o worker importa daqui ([[modulos/ingestao-garmin]], [[decisoes/0006-upload-de-fit]]).
+- `services/api/app/ingestao/importacao.py` e `fit_guardado.py`: gravação da exportação e do upload (`importar`, `importar_fit`) e guarda dos FIT em `FIT_DIR`. O endpoint de upload vem na #95.
 - `services/api/app/servicos/evolucao_tiros.py`: liga as métricas ao banco (ver abaixo).
 - `services/api/app/explicacao/`: pacote reservado.
 

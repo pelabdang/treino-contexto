@@ -110,12 +110,12 @@ enums para texto (`intensity="active"`) e de datas para `datetime`, que é o que
 que usamos. Se algum relógio real trouxer mensagens que o `fitdecode` não entenda, reavaliar (#19).
 `fit-tool` segue só como dependência de desenvolvimento (gera FIT nas fixtures).
 
-## Importação no banco (`worker/importar_garmin.py`)
+## Importação no banco (`app/ingestao/importacao.py`, CLI em `worker/importar_garmin.py`)
 ```
 uv run python -m worker.importar_garmin <caminho> --atleta "<nome>"
 ```
 Usa `DATABASE_URL` (Postgres do docker compose; rode `alembic upgrade head` antes). Imprime
-`inseridas`, `atualizadas`, `ignoradas` e os avisos (inclui os do parser). Função: `importar(session, caminho, atleta_nome)`.
+`inseridas`, `atualizadas`, `ignoradas` e os avisos (inclui os do parser). Função: `importar(session, caminho, atleta_nome)`. Uma atividade que já veio por upload (regra dos 60 s, abaixo) é atualizada, não duplicada.
 
 - **Atleta:** busca pelo nome; cria se não existir (sem assessoria).
 - **Chave:** `(atleta_id, fonte, fonte_id)`. Reimportar não duplica atividades nem segmentos e não muda o `id`.
@@ -154,17 +154,42 @@ esperados e contas à mão em `tests/test_fixtures_fit_upload.py`.
 | `upload_esteira_4x1km.fit` | 4 x 1 km em esteira | subtipo `esteira`, fora da série |
 | `upload_natacao_400m.fit` | natação em piscina, 4 x 100 m | modalidade `natacao`, no banco e fora da série |
 
-## Upload de FIT (Meta 3, ainda não implementado)
-A [[decisoes/0006-upload-de-fit]] decide o plano B enquanto a API da Garmin não é aprovada: o atleta envia um `.fit`
-pelo app. Em resumo: o parser e a gravação passam do worker para a API (`app/ingestao/`), sem ciclo; a mesma atividade
-por upload e por exportação casa por atleta, modalidade e início a até 60 s (empate: início mais próximo, depois menor
-`id`); o FIT fica em `FIT_DIR` como `<atleta_id>/<sha256>.fit` (fora do git, caminho em `arquivo_bruto`); limite de
-10 MB; qualquer modalidade entra, só corrida na série. Esta nota passa a descrever o upload quando as issues da
-Meta 3 forem feitas. Já feito: o parser foi para a API (#92); a gravação (`importar`) ainda está no worker até a #94.
+## Upload de FIT (Meta 3, #94)
+Decisões em [[decisoes/0006-upload-de-fit]]. O atleta envia um `.fit` (o endpoint e o app vêm nas próximas issues);
+a função é `importar_fit(session, atleta_id, conteudo)` em `services/api/app/ingestao/importacao.py`, que devolve
+`inserida`, `atualizada` ou `ignorada`, o `atividade_id` e os avisos. A gravação (exportação e upload) mora na API
+(`app/ingestao/importacao.py`), e `worker/importar_garmin.py` é só a linha de comando.
+
+- **Leitura:** `ler_atividade_fit(bytes, fonte)` (parser) junta `ler_fit` e `tipos.de_fit`. O upload usa `fonte = fit_upload` e
+  `fonte_id` = o id derivado do FIT; não há horário local, então `fuso_min` fica `NULL` (fallback `America/Sao_Paulo`).
+- **Identidade (`gravar_atividade`, usada também por `importar`):** primeiro a chave `(atleta_id, fonte, fonte_id)`;
+  se não existe, a regra dos 60 s (mesmo atleta, mesma modalidade, início a até 60 s). Empate: início mais
+  próximo, depois menor `id`, com aviso `candidatas 12, 15; usada a 12`. A exportação ignora como candidatas as
+  linhas que já são da exportação (outro `activityId` é outra atividade).
+  - *Exportação casa com linha de upload:* a linha vira `garmin_export` com o `activityId`, e a chave de hoje volta a valer.
+  - *Upload casa com linha da exportação:* a linha mantém `fonte`, `fonte_id` e os campos da exportação (início, duração,
+    distância, FC, `fuso_min`); o upload só completa as voltas se a linha não tinha nenhuma e troca o `arquivo_bruto`.
+  - *Upload casa com linha de upload:* atualiza como a importação de hoje (campos e voltas).
+- **Guarda (`app/ingestao/fit_guardado.py`):** `FIT_DIR` (padrão `dados-upload/fit/`, relativo à raiz do repositório,
+  na lista de ignorados do controle de versão) / `<atleta_id>/<sha256>.fit`; `arquivo_bruto` leva o caminho relativo. Gravação em
+  temporário com renomeação (permissão só do usuário); o nome enviado pelo cliente nunca é usado. Reenvio do mesmo conteúdo é
+  `ignorada` e não regrava; se o arquivo sumiu, regrava e conta `atualizada`. FIT diferente que casa troca o `arquivo_bruto` e
+  **apaga o antigo** se nenhuma outra atividade o referencia (falha ao apagar vira aviso). A exportação não troca um
+  `arquivo_bruto` que já aponta para `FIT_DIR`.
+- **Ordem:** valida e lê o FIT, grava a atividade na sessão, grava o arquivo, `commit`, apaga o antigo órfão, classifica as corridas
+  do atleta. Se o `commit` falha, o arquivo criado é removido. Violação da chave única (envios simultâneos): lê de novo uma vez.
+- **Erros (exceções):** `AtletaInexistente`, `FitGrande` (mais de 10 MB), `FitNaoEAtividade` (FIT que não é atividade) e
+  `FitInvalido` (corrompido, truncado, sem início ou sem duração; as duas últimas são `ValueError`). Inválido nunca chega ao banco nem ao disco.
+- **Só corrida entra na série:** natação, ciclismo e esteira ficam gravados e fora do gráfico ([[decisoes/0005-serie-de-tiros-o-que-entra]]).
+- **Apagar:** `uv run python -m worker.apagar_fit --atleta-id <id>` apaga os arquivos do atleta e limpa `arquivo_bruto`
+  das atividades que apontavam para eles; as atividades e a série ficam. Idempotente. Atleta inexistente: stderr e saída 1.
+- Testes: `services/api/tests/ingestao/test_importar_fit.py` (FIT sintéticos da #93, `FIT_DIR` em diretório temporário).
 
 ## Arquivos principais
 - `services/api/app/ingestao/garmin/` e `services/api/tests/ingestao/test_garmin_parser.py`
-- `services/worker/worker/importar_garmin.py` e `services/worker/tests/test_importar_garmin.py`
+- `services/api/app/ingestao/importacao.py` (gravação: `importar`, `importar_fit`, `gravar_atividade`) e `fit_guardado.py` (guarda em `FIT_DIR`)
+- `services/worker/worker/importar_garmin.py` e `apagar_fit.py` (linhas de comando) e `services/worker/tests/test_importar_garmin.py`
+- `services/api/tests/ingestao/test_importar_fit.py`
 - `tests/fixtures/garmin/gerar_fixtures.py` e `tests/fixtures/garmin/exportacao_minima.zip`
 - `tests/test_fixtures_garmin.py`
 - `tests/fixtures/garmin/fit/` e `tests/test_fixtures_fit_upload.py` (FIT do upload)
