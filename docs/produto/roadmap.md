@@ -146,8 +146,8 @@ Revisadas ao fim de cada meta com o que se aprendeu. Ordem tirada da "Fundação
   | #72 | QA de ponta a ponta com fixtures | bia-qa | feita |
   | #73 | Resultado da meta e roteiro | paulo-planejador | esta |
 
-- **Melhorias abertas depois da meta** (fora do critério de pronto, não são pendências): #86 (aviso do
-  `react-native-svg` na web, só em desenvolvimento) e #87 (eixo de pace com poucas marcas).
+- **Melhorias abertas depois da meta:** nenhuma. A #86 (aviso do `react-native-svg` na web) foi feita no PR #90 e a
+  #87 (eixo de pace com poucas marcas) no PR #89.
 - **Aprendido na Meta 2:** contrato antes do código (ADR 0004) evitou retrabalho; o teste com texto trocado (`9:99`)
   prova que o app não recalcula; ver a tela é uma etapa própria do QA; estados difíceis de provocar à mão precisam
   de um jeito documentado de forçar.
