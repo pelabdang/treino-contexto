@@ -17,6 +17,10 @@ fixtures, API com `FIT_DIR` temporária, app na web e envio pelo botão. Só dad
 #96 (`201`, de 2 para 3 sessões). Os estados `413` e rede na tela estão cobertos pelo `npm test`
 (`__tests__/BotaoEnviarFit.test.tsx`); o `404` e o `413` na API, pelo `curl`.
 
+**Verificado na #98 (Bia, 03/11):** o clique no botão foi rodado no Chrome, com banco `treino-qa98` (Postgres 5441), API com `FIT_DIR` temporária e app na web, só com FIT sintético. Resultados na tela: `201` "Atividade adicionada" (série de 2 para 3 sessões, a nova em 01/04/25, 4:06 min/km), `200` "Essa atividade já estava aqui" no reenvio e na mesma atividade da exportação (sem duplicar: 6 atividades no banco), `400` "FIT inválido ou corrompido", `400` "o arquivo é um FIT, mas não é uma atividade", `400` "o arquivo precisa ter extensão .fit" e `413` "arquivo acima de 10 MB". O seletor nativo do Chrome não é acessível à automação: o `File` foi montado em JavaScript com os bytes do FIT sintético e o evento `change` foi disparado no input que o botão cria (como na #96). Em `FIT_DIR` ficaram só `<atleta_id>/<sha256>.fit`, e `git status` não mostrou a pasta (`dados-upload/` está no `.gitignore`). O `404` na tela, a rede fora do ar e iOS/Android (sem aparelho) **não foram verificados** na #98. O teste automatizado é `tests/test_e2e_meta3.py`. Print: `docs/_anexos/meta-3-qa-201-serie.jpg`.
+
+**Tradutor do Chrome:** o `index.html` do Expo sai com `lang="en"`, então o Chrome traduz a página mesmo com o texto em português. Foi preciso um proxy local que injeta `translate="no"` para ler as mensagens corretas.
+
 ## Antes de começar
 - `git`, `uv`, Docker (Compose 2.24 ou mais novo), Node e `curl`.
 - Três terminais: API, app e um livre. Comandos na **raiz** do repositório, salvo indicação.
