@@ -25,6 +25,7 @@ Futuramente recebe a importação Garmin e serve métricas ao [[modulos/mobile]]
 - `services/api/app/metricas/`: funções puras das métricas (tiros de 1 km, [[metricas/tiros-1km]]).
 - `services/api/app/graficos/`: desenho do gráfico e do CSV da série ([[modulos/grafico-tiros]]).
 - `services/api/app/servicos/fuso.py`: `data_local(inicio, fuso_min)`, a data local da sessão ([[decisoes/0003-fuso-da-atividade]]).
+- `services/api/app/ingestao/garmin/`: parser da exportação Garmin e do FIT (`ler_exportacao`, `ler_fit`), sem banco; o worker importa daqui ([[modulos/ingestao-garmin]], [[decisoes/0006-upload-de-fit]]).
 - `services/api/app/servicos/evolucao_tiros.py`: liga as métricas ao banco (ver abaixo).
 - `services/api/app/explicacao/`: pacote reservado.
 

@@ -14,12 +14,11 @@ from dataclasses import dataclass, field
 from pathlib import Path
 
 from app.db.models import INTENSIDADES, Atividade, Atleta, Segmento
+from app.ingestao.garmin import AtividadeImportada, VoltaImportada, ler_exportacao
+from app.ingestao.garmin.unidades import para_utc
 from app.servicos.evolucao_tiros import classificar_atividades
 from sqlalchemy import select
 from sqlalchemy.orm import Session
-
-from worker.garmin import AtividadeImportada, VoltaImportada, ler_exportacao
-from worker.garmin.unidades import para_utc
 
 log = logging.getLogger(__name__)
 
@@ -111,7 +110,7 @@ def importar(session: Session, caminho: str | Path, atleta_nome: str) -> Relator
     """
     rel = RelatorioImportacao()
     coleta = _ColetaAvisos(rel.avisos)
-    logger_parser = logging.getLogger("worker.garmin")
+    logger_parser = logging.getLogger("app.ingestao.garmin")
     logger_parser.addHandler(coleta)
     try:
         importadas = ler_exportacao(caminho)

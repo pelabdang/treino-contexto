@@ -10,9 +10,9 @@ from pathlib import Path
 
 import pytest
 
-from worker.garmin import ler_exportacao, unidades
+from app.ingestao.garmin import ler_exportacao, unidades
 
-RAIZ = Path(__file__).resolve().parents[3]
+RAIZ = Path(__file__).resolve().parents[4]
 ZIP = RAIZ / "tests" / "fixtures" / "garmin" / "exportacao_minima.zip"
 
 # (intensidade, distancia_m, duracao_s, fc) -- tabela de tests/fixtures/garmin/gerar_fixtures.py
@@ -31,7 +31,7 @@ TABELA_A = [
 @pytest.fixture(autouse=True)
 def _logger_ativo():
     """Outros testes (uvicorn/dictConfig) podem desativar loggers ja criados."""
-    logger = logging.getLogger("worker.garmin.leitor")
+    logger = logging.getLogger("app.ingestao.garmin.leitor")
     logger.disabled = False
     yield
 

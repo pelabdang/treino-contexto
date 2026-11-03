@@ -620,6 +620,7 @@ source = { editable = "services/api" }
 dependencies = [
     { name = "alembic" },
     { name = "fastapi" },
+    { name = "fitdecode" },
     { name = "matplotlib" },
     { name = "psycopg", extra = ["binary"] },
     { name = "pydantic-settings" },
@@ -632,6 +633,7 @@ dependencies = [
 requires-dist = [
     { name = "alembic", specifier = ">=1.13" },
     { name = "fastapi", specifier = ">=0.115" },
+    { name = "fitdecode", specifier = ">=0.11.0" },
     { name = "matplotlib", specifier = ">=3.9" },
     { name = "psycopg", extras = ["binary"], specifier = ">=3.2" },
     { name = "pydantic-settings", specifier = ">=2.4" },
@@ -671,7 +673,6 @@ version = "0.1.0"
 source = { editable = "services/worker" }
 dependencies = [
     { name = "fastapi" },
-    { name = "fitdecode" },
     { name = "treino-api" },
     { name = "uvicorn", extra = ["standard"] },
 ]
@@ -679,7 +680,6 @@ dependencies = [
 [package.metadata]
 requires-dist = [
     { name = "fastapi", specifier = ">=0.115" },
-    { name = "fitdecode", specifier = ">=0.11.0" },
     { name = "treino-api", editable = "services/api" },
     { name = "uvicorn", extras = ["standard"], specifier = ">=0.30" },
 ]

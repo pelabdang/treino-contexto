@@ -19,6 +19,14 @@ ZIP = RAIZ / "tests" / "fixtures" / "garmin" / "exportacao_minima.zip"
 TOTAL_VOLTAS = 13 + 11 + 8 + 4  # fixtures A, B, C, D (E nao tem FIT)
 
 
+@pytest.fixture(autouse=True)
+def _logger_do_parser_ativo():
+    """O Alembic (fileConfig nos testes de migração) desativa loggers já criados; o relatório precisa dos avisos."""
+    import logging
+    logging.getLogger("app.ingestao.garmin.leitor").disabled = False
+    yield
+
+
 @pytest.fixture
 def engine():
     eng = create_engine(os.environ.get("TEST_DATABASE_URL", "sqlite://"))
@@ -149,7 +157,7 @@ def test_intensidade_normalizada():
 
 def test_intensidade_estranha_vai_para_other_sem_erro(session, monkeypatch):
     from worker import importar_garmin
-    from worker.garmin import ler_exportacao
+    from app.ingestao.garmin import ler_exportacao
     originais = ler_exportacao(ZIP)
     originais[0].voltas[1] = originais[0].voltas[1].__class__(
         **{**originais[0].voltas[1].__dict__, "intensidade": " Active "})
@@ -232,7 +240,7 @@ def test_importacao_classifica_e_respeita_professor(session):
 def test_fuso_min_do_parser():
     from datetime import datetime, timedelta, timezone
 
-    from worker.garmin import AtividadeImportada
+    from app.ingestao.garmin import AtividadeImportada
     from worker.importar_garmin import fuso_min
     inicio = datetime(2025, 3, 5, 1, 30, tzinfo=timezone.utc)
 

@@ -55,7 +55,7 @@ Mensagens usadas (formato binário da Garmin, lido com `fitdecode`, ver "Parser"
 | `file_id` | `serial_number`, `time_created` | | base do id quando não há JSON |
 
 Os leitores de FIT costumam devolver as unidades já convertidas (s e m). A conversão de unidades fica num
-único lugar do código (`worker/garmin/unidades.py`) e tem teste.
+único lugar do código (`app/ingestao/garmin/unidades.py`) e tem teste.
 
 ### Fixtures sintéticas
 `tests/fixtures/garmin/exportacao_minima.zip`, gerada por `tests/fixtures/garmin/gerar_fixtures.py`
@@ -73,7 +73,8 @@ A tabela com os valores de cada volta está no topo do script. Só as atividades
 Regerar: `uv run python tests/fixtures/garmin/gerar_fixtures.py`. A biblioteca `fit-tool` é só dependência de
 desenvolvimento (escreve FIT nos testes).
 
-## Parser (`services/worker/worker/garmin/`)
+## Parser (`services/api/app/ingestao/garmin/`)
+O parser mora na API desde a #92 ([[decisoes/0006-upload-de-fit]]), para a API e o worker usarem sem ciclo de dependência; o código e o comportamento são os mesmos de quando ficava em `services/worker/worker/garmin/`. `fitdecode` é dependência do `treino-api`.
 `ler_exportacao(caminho) -> list[AtividadeImportada]`, sem banco. Aceita o zip completo, a pasta descompactada,
 um `summarizedActivities.json` solto ou um `.fit` solto. Zips aninhados (o `UploadedFiles_*.zip`) são abertos
 em memória, até 3 níveis. Na pasta e no zip só entram `*summarizedActivities.json` e `*.fit`.
@@ -142,16 +143,16 @@ pelo app. Em resumo: o parser e a gravação passam do worker para a API (`app/i
 por upload e por exportação casa por atleta, modalidade e início a até 60 s (empate: início mais próximo, depois menor
 `id`); o FIT fica em `FIT_DIR` como `<atleta_id>/<sha256>.fit` (fora do git, caminho em `arquivo_bruto`); limite de
 10 MB; qualquer modalidade entra, só corrida na série. Esta nota passa a descrever o upload quando as issues da
-Meta 3 forem feitas.
+Meta 3 forem feitas. Já feito: o parser foi para a API (#92); a gravação (`importar`) ainda está no worker até a #94.
 
 ## Arquivos principais
-- `services/worker/worker/garmin/` e `services/worker/tests/test_garmin_parser.py`
+- `services/api/app/ingestao/garmin/` e `services/api/tests/ingestao/test_garmin_parser.py`
 - `services/worker/worker/importar_garmin.py` e `services/worker/tests/test_importar_garmin.py`
 - `tests/fixtures/garmin/gerar_fixtures.py` e `tests/fixtures/garmin/exportacao_minima.zip`
 - `tests/test_fixtures_garmin.py`
 
 ## Depende de
-- [[modulos/worker]] (onde fica o parser) e [[modulos/banco]] (destino).
+- [[modulos/api]] (onde fica o parser, `app/ingestao/`), [[modulos/worker]] (importação no banco e CLI) e [[modulos/banco]] (destino).
 
 ## Como testar
 `uv run pytest -q` na raiz.
