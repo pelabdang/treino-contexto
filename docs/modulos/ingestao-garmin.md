@@ -3,7 +3,7 @@ tipo: modulo
 status: em-uso
 dono: duda
 atualizado: 2026-11-03
-links: [[produto/meta-3-como-rodar]], [[modulos/worker]], [[modulos/banco]], [[decisoes/0006-upload-de-fit]], [[produto/roadmap]], [[diario/2026-11-03]]
+links: [[produto/meta-3-como-rodar]], [[modulos/worker]], [[modulos/banco]], [[decisoes/0006-upload-de-fit]], [[decisoes/0007-clima-da-atividade]], [[produto/roadmap]], [[diario/2026-11-03]]
 ---
 # Módulo: ingestão Garmin
 
@@ -94,6 +94,18 @@ em memória, até 3 níveis. Na pasta e no zip só entram `*summarizedActivities
   do `file_id`; sem esses campos, `fit-` + 16 primeiros caracteres do SHA-1 do arquivo. O id é estável entre
   leituras (a importação idempotente, #13, depende disso).
 - **`inicio_local`:** mesmo instante de `inicio`, com o fuso do atleta (deslocamento = `startTimeLocal` - `startTimeGmt`, em minutos), então `.date()` dá a data local. `None` quando o JSON não traz o campo (FIT sem JSON, atividades C, D e E das fixtures) ou o deslocamento sai de UTC-12 a UTC+14. O parser não inventa fuso: o fallback `America/Sao_Paulo` fica na série ([[modulos/api]]).
+- **Posição de início (Meta 4, #110, [[decisoes/0007-clima-da-atividade]]):** `AtividadeImportada.inicio_lat/inicio_lon`,
+  em graus, **já arredondados a 2 casas (~1 km) dentro do leitor** (`garmin/posicao.py`): a coordenada exata nunca chega
+  a objeto de importação, banco, log nem teste. Só a posição de **início**; `record`, fim e trajeto não são lidos.
+  - *FIT:* `session.start_position_lat/long`; se faltar, os da **primeira** `lap`. O `fitdecode` devolve **semicírculos**
+    (inteiro de 32 bits, `units = semicircles`), convertidos por `graus = semicírculos * 180 / 2^31`; o inválido
+    `0x7FFFFFFF` (e `None`) vira sem posição.
+  - *JSON:* `startLatitude` / `startLongitude` (conferidos com JSON sintético nos testes).
+  - *Descarte (as duas ficam `None`):* fora da faixa (lat -90..90, lon -180..180), não numérico, só um dos dois, ou
+    `(0, 0)` depois do arredondamento (ponto "sem GPS").
+  - *JSON e FIT casados:* vale a posição do JSON; se o JSON não tiver, a do FIT.
+  - *Indoor não guarda posição:* `subtipo` em `esteira`, `piscina` ou `virtual` sai com `None`, mesmo que o arquivo traga coordenada.
+    O subtipo novo **`virtual`** vem de `virtual_ride` (JSON) e `sub_sport = virtual_activity` (FIT); antes, ciclismo virtual saía sem subtipo.
 - **Dados da atividade:** com JSON, duração/distância/FC vêm do JSON; só FIT, vêm da `session` (ou da soma das voltas).
 - **`arquivo_bruto`:** caminho lógico dentro da exportação, com `!/` para zips aninhados
   (ex.: `exportacao.zip!/DI_CONNECT/.../UploadedFiles_0-_Part1.zip!/x.fit`). Sem FIT, é o caminho do JSON.
@@ -130,6 +142,11 @@ Usa `DATABASE_URL` (Postgres do docker compose; rode `alembic upgrade head` ante
   (`inicio_local` - `inicio`, ex.: `-180`), conforme [[decisoes/0003-fuso-da-atividade]]. Sem horário local na fonte
   fica `NULL`, e uma reimportação sem esse horário **não apaga** um `fuso_min` já gravado. `fuso_min` conta na
   comparação "mudou": reimportar a exportação preenche as atividades gravadas antes da migração 0003.
+- **`inicio_lat` / `inicio_lon`:** gravadas em `atividade` e comparadas como os demais campos: reimportar uma exportação
+  antiga preenche a posição (atividade `atualizada` uma vez, depois `ignorada`), sem duplicar e sem mudar o `id`. Atividade
+  indoor grava `NULL`. Fonte sem posição **não apaga** uma já gravada (como `fuso_min`); a exceção é a atividade que passa a
+  ser indoor (subtipo novo), que perde a posição. Upload que casa com linha da exportação sem posição completa a posição.
+  `importar` e `importar_fit` usam o mesmo `gravar_atividade`. A posição não sai pela API.
 - **Classificação no fim:** depois de gravar, chama `classificar_atividades` ([[modulos/api]]): marca os segmentos
   das corridas como `tiro`/`recuperacao`/`volta`, grava `versao_deteccao` e sugere `tipo_treino = intervalado`
   (sem sobrescrever professor/TrainingPeaks/confirmado). É idempotente e refaz a classificação quando as voltas
@@ -168,7 +185,7 @@ a função é `importar_fit(session, atleta_id, conteudo)` em `services/api/app/
   linhas que já são da exportação (outro `activityId` é outra atividade).
   - *Exportação casa com linha de upload:* a linha vira `garmin_export` com o `activityId`, e a chave de hoje volta a valer.
   - *Upload casa com linha da exportação:* a linha mantém `fonte`, `fonte_id` e os campos da exportação (início, duração,
-    distância, FC, `fuso_min`); o upload só completa as voltas se a linha não tinha nenhuma e troca o `arquivo_bruto`.
+    distância, FC, `fuso_min`); o upload só completa as voltas se a linha não tinha nenhuma, a posição de início se a linha não tinha (e não é indoor), e troca o `arquivo_bruto`.
   - *Upload casa com linha de upload:* atualiza como a importação de hoje (campos e voltas).
 - **Guarda (`app/ingestao/fit_guardado.py`):** `FIT_DIR` (padrão `dados-upload/fit/`, relativo à raiz do repositório,
   na lista de ignorados do controle de versão) / `<atleta_id>/<sha256>.fit`; `arquivo_bruto` leva o caminho relativo. Gravação em

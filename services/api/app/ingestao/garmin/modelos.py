@@ -29,5 +29,8 @@ class AtividadeImportada:
     arquivo_bruto: str | None  # caminho do original dentro da exportacao
     fonte: str = "garmin_export"
     inicio_local: datetime | None = None  # mesmo instante com o fuso do atleta (startTimeLocal - startTimeGmt); None se faltar
-    subtipo: str | None = None  # esteira, pista, trilha, piscina, aguas_abertas
+    subtipo: str | None = None  # esteira, pista, trilha, piscina, aguas_abertas, virtual
     voltas: list[VoltaImportada] = field(default_factory=list)
+    # posicao de inicio ja arredondada a 2 casas (ADR 0007); None se faltar, for invalida ou a atividade for indoor
+    inicio_lat: float | None = None
+    inicio_lon: float | None = None

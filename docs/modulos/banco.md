@@ -2,8 +2,8 @@
 tipo: modulo
 status: em-uso
 dono: theo
-atualizado: 2026-10-31
-links: [[decisoes/0001-modelo-de-dados-minimo]], [[decisoes/0002-segmento-intensidade-e-versao]], [[decisoes/0003-fuso-da-atividade]], [[modulos/api]], [[modulos/infra]]
+atualizado: 2026-11-03
+links: [[decisoes/0001-modelo-de-dados-minimo]], [[decisoes/0002-segmento-intensidade-e-versao]], [[decisoes/0003-fuso-da-atividade]], [[decisoes/0007-clima-da-atividade]], [[modulos/api]], [[modulos/infra]]
 ---
 # Módulo: banco
 
@@ -16,6 +16,7 @@ Motivos da escolha em [[decisoes/0001-modelo-de-dados-minimo]].
 - `atividade` é única por `(atleta_id, fonte, fonte_id)`: reimportar não duplica.
 - `segmento` tem `intensidade` (valor do FIT, com `CHECK`) e `versao_deteccao` (ex.: `tiros_1km@1`), ambos anuláveis. Ver [[decisoes/0002-segmento-intensidade-e-versao]].
 - `atividade.fuso_min` (int, anulável, `CHECK` de -720 a 840): deslocamento do fuso em minutos; a data local da sessão é a de `inicio + fuso_min`, ou `America/Sao_Paulo` se for `NULL`. Ver [[decisoes/0003-fuso-da-atividade]].
+- `atividade.inicio_lat` e `inicio_lon` (float, anuláveis): posição de **início** em graus, arredondada a 2 casas (~1 km) no leitor, sem trajeto. `CHECK` de faixa (-90..90 e -180..180) e `CHECK` de que as duas são nulas ou as duas preenchidas. `NULL` para atividade indoor (`esteira`, `piscina`, `virtual`), sem GPS ou antiga ainda não reimportada. Nunca sai pela API. Ver [[decisoes/0007-clima-da-atividade]].
 - `arquivo_bruto` guarda o caminho do original (princípio "guardar o dado bruto").
 - Domínios fixos (modalidade, tipo de treino, origem do tipo, tipo de segmento) são texto com `CHECK`.
 
@@ -24,6 +25,7 @@ Motivos da escolha em [[decisoes/0001-modelo-de-dados-minimo]].
 - `services/api/alembic/versions/0001_modelo_de_dados_minimo.py`: migração inicial.
 - `services/api/alembic/versions/0002_segmento_intensidade_e_versao.py`: colunas `intensidade` e `versao_deteccao`.
 - `services/api/alembic/versions/0003_atividade_fuso_min.py`: coluna `fuso_min` e seu `CHECK`.
+- `services/api/alembic/versions/0004_atividade_posicao_inicio.py`: colunas `inicio_lat`, `inicio_lon` e seus três `CHECK` (linhas antigas ficam `NULL`).
 - `services/api/tests/test_migracoes.py`: garante que a migração gera o esquema dos modelos.
 
 ## Depende de

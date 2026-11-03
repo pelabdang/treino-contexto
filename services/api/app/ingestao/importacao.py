@@ -19,6 +19,7 @@ from app.ingestao.fit_guardado import AtletaInexistente
 from app.ingestao.garmin import AtividadeImportada, VoltaImportada, ler_atividade_fit, ler_exportacao
 from app.ingestao.garmin.fit import FitSemAtividade
 from app.ingestao.garmin.leitor import TOLERANCIA_S
+from app.ingestao.garmin.posicao import e_indoor
 from app.ingestao.garmin.unidades import para_utc
 from app.servicos.evolucao_tiros import classificar_atividades
 from sqlalchemy import select
@@ -110,6 +111,10 @@ def fuso_min(a: AtividadeImportada) -> int | None:
 def _campos(a: AtividadeImportada, duracao_s: float) -> dict:
     campos = dict(modalidade=a.modalidade, subtipo=a.subtipo, inicio=para_utc(a.inicio), duracao_s=duracao_s,
                   distancia_m=a.distancia_m, fc_media=a.fc_media, arquivo_bruto=a.arquivo_bruto)
+    if e_indoor(a.subtipo):  # indoor nunca guarda posicao, mesmo que o arquivo traga coordenada (ADR 0007)
+        campos.update(inicio_lat=None, inicio_lon=None)
+    elif a.inicio_lat is not None:  # sem posicao na fonte nao apaga uma ja gravada (como o fuso)
+        campos.update(inicio_lat=a.inicio_lat, inicio_lon=a.inicio_lon)
     fuso = fuso_min(a)
     if fuso is not None:  # sem horario local na fonte nao apaga um fuso ja gravado (ADR 0003)
         campos["fuso_min"] = fuso
@@ -189,6 +194,9 @@ def gravar_atividade(session: Session, atleta_id: int, a: AtividadeImportada, du
             mudou = True
         if ativ.arquivo_bruto != a.arquivo_bruto:
             ativ.arquivo_bruto = a.arquivo_bruto
+            mudou = True
+        if ativ.inicio_lat is None and a.inicio_lat is not None and not e_indoor(ativ.subtipo):
+            ativ.inicio_lat, ativ.inicio_lon = a.inicio_lat, a.inicio_lon  # o JSON vale; sem posicao nele, a do FIT
             mudou = True
         return ("atualizada" if mudou else "ignorada"), ativ, anterior
 

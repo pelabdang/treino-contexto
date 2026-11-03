@@ -10,6 +10,7 @@ from datetime import datetime
 import fitdecode
 
 from .modelos import VoltaImportada
+from .posicao import posicao_de_semicirculos
 from .unidades import para_utc
 
 
@@ -23,6 +24,8 @@ class FitLido:
     fc_media: int | None
     id_derivado: str
     voltas: list[VoltaImportada] = field(default_factory=list)
+    inicio_lat: float | None = None  # posicao de inicio ja arredondada (ADR 0007); so session ou 1a lap
+    inicio_lon: float | None = None
 
 
 def _num(v) -> float | None:
@@ -99,6 +102,11 @@ def ler_fit(conteudo: bytes) -> FitLido:
         dur = sum(v.duracao_s for v in voltas)
     if dist is None and voltas:
         dist = sum(v.distancia_m for v in voltas)
+    # So a posicao de inicio: da session; se faltar, da 1a lap. Nunca record, fim nem trajeto.
+    posicao = posicao_de_semicirculos(session.get("start_position_lat"), session.get("start_position_long"))
+    if posicao is None and laps:
+        posicao = posicao_de_semicirculos(laps[0].get("start_position_lat"), laps[0].get("start_position_long"))
+    lat, lon = posicao if posicao else (None, None)
     return FitLido(
         inicio=inicio,
         sport=_txt(session.get("sport")),
@@ -108,4 +116,6 @@ def ler_fit(conteudo: bytes) -> FitLido:
         fc_media=_int(session.get("avg_heart_rate")),
         id_derivado=id_derivado,
         voltas=voltas,
+        inicio_lat=lat,
+        inicio_lon=lon,
     )
