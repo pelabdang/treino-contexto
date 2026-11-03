@@ -81,13 +81,21 @@ Uso e opções em [[modulos/worker]]. Regras (ADR 0007, itens 6 a 8):
   zera `tentativas`.
 - `pendente` (rede, timeout, 5xx, 429 ou `null` na janela) soma 1 em `tentativas` por rodada; ao chegar a 5 vira `falha`
   (`erro` guarda o motivo). `falha` do cliente (HTTP 400, resposta fora do esperado) vira `falha` na hora.
-  `falha` só é refeita com `--refazer-falhas` (que zera `tentativas`), ou se a `entrada` mudou.
+  `falha` só é refeita com `--refazer-falhas` (que zera `tentativas`), ou se a `entrada` mudou (nesse caso é refeita sem a flag).
+  O 429 persistente, que para a rodada, também conta como uma tentativa da atividade em curso.
 - Chamadas sequenciais, pausa de 0,25 s (injetável), teto de 500 por rodada (`--limite`), um `commit` por atividade.
   Com `parar_rodada` (429 persistente), a rodada para depois de gravar a atividade atual.
-- **Posição do passado:** relê o FIT guardado (`arquivo_bruto` no formato `<n>/<64 hex>.fit`) e, com `--exportacao`, a
-  exportação (vale primeiro; o JSON vale mais que o FIT). Só preenche `NULL`, nunca sobrescreve; indoor não recebe posição.
+- **Posição do passado:** vem **primeiro da exportação** (`--exportacao`; o JSON vale mais que o FIT) e, se ela não tiver,
+  do FIT guardado em `FIT_DIR` (`arquivo_bruto` no formato `<n>/<64 hex>.fit`). Só preenche `NULL`, nunca sobrescreve; indoor não recebe posição.
 - **No fim de `importar` (linha de comando):** clima só das atividades que entraram ou mudaram (`RelatorioImportacao.ids_alterados`).
   `importar` e o endpoint de upload em si não usam a rede; erro de clima na linha de comando é aviso.
+
+## Decisões do Theo (03/11)
+Aprovadas na revisão da #113, sobre o que a [[decisoes/0007-clima-da-atividade]] deixou em aberto:
+1. A guarda de socket dos testes do comando libera só loopback (`localhost`, `127.0.0.1`, `::1`) e `AF_UNIX`, para o Postgres local do CI. Qualquer outro destino falha.
+2. Uma `falha` cuja `entrada` mudou é refeita sem a flag. `--refazer-falhas` zera `tentativas`.
+3. `pendente` soma 1 por rodada e vira `falha` em 5. O 429 que para a rodada conta como tentativa.
+4. A posição relida vem primeiro da exportação e depois do FIT em `FIT_DIR`.
 
 ## Arquivos principais
 - `services/api/app/clima/cliente.py` e `services/api/app/clima/__init__.py`
@@ -99,9 +107,9 @@ Uso e opções em [[modulos/worker]]. Regras (ADR 0007, itens 6 a 8):
 `httpx` (agora dependência de runtime da API, já estava no lock). O serviço usa o banco ([[modulos/banco]]) e o leitor ([[modulos/ingestao-garmin]]); o cliente em si não.
 
 ## Como testar
-`uv run pytest services/api/tests/clima`. Nenhum teste abre conexão: um teste automático troca `socket.connect`,
+`uv run pytest services/api/tests/clima services/worker/tests/test_preencher_clima.py`. Nenhum teste abre conexão externa: um teste automático troca `socket.connect`,
 `create_connection` e `getaddrinfo` por uma falha, e outro teste confere que a guarda pega o cliente com transporte
-padrão. As esperas são falsas (nada dorme). Os valores batem com `oraculo_clima.json` (tolerância do oráculo).
+padrão. Nos testes do comando, a guarda deixa passar só loopback e `AF_UNIX` (decisão 1 acima). As esperas são falsas (nada dorme). Os valores batem com `oraculo_clima.json` (tolerância do oráculo).
 
 ## Pendências
 - Clima na API e no cliente TypeScript: issue seguinte da Meta 4.

@@ -25,7 +25,7 @@ da importação e do cálculo de métricas, fora da [[modulos/api]].
   quantas corridas processou. Idempotente. Use quando a API devolve `reclassificacao_pendente: true`
   (passo a passo em "Reclassificar" de [[modulos/api]]). Atleta inexistente: stderr e saída 1.
 - Clima: `uv run python -m worker.preencher_clima [--atleta-id N] [--exportacao CAMINHO] [--limite N] [--refazer-falhas] [--so-posicao]`.
-  Primeiro relê o FIT de `FIT_DIR` (e a exportação, se dada) para preencher `inicio_lat/lon` onde está `NULL`; depois busca
+  Primeiro relê a posição, da exportação (se dada) e, na falta dela, do FIT de `FIT_DIR`, para preencher `inicio_lat/lon` onde está `NULL`; depois busca
   o clima das atividades ao ar livre, com posição, sem `ok` válido e com fim a mais de 7 dias. Sequencial, pausa de 0,25 s,
   teto de 500 chamadas por rodada, um `commit` por atividade, para se o Open-Meteo limitar (429). Imprime posições
   preenchidas e atividades por estado. `--so-posicao` não usa a rede. Regras e estados em [[modulos/clima]].
