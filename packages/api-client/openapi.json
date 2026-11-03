@@ -1,0 +1,645 @@
+{
+  "components": {
+    "schemas": {
+      "EixoFc": {
+        "properties": {
+          "marcas": {
+            "items": {
+              "$ref": "#/components/schemas/MarcaFc"
+            },
+            "title": "Marcas",
+            "type": "array"
+          },
+          "max_bpm": {
+            "title": "Max Bpm",
+            "type": "number"
+          },
+          "min_bpm": {
+            "title": "Min Bpm",
+            "type": "number"
+          }
+        },
+        "required": [
+          "min_bpm",
+          "max_bpm",
+          "marcas"
+        ],
+        "title": "EixoFc",
+        "type": "object"
+      },
+      "EixoPace": {
+        "properties": {
+          "invertido": {
+            "title": "Invertido",
+            "type": "boolean"
+          },
+          "marcas": {
+            "items": {
+              "$ref": "#/components/schemas/MarcaPace"
+            },
+            "title": "Marcas",
+            "type": "array"
+          },
+          "max_s_km": {
+            "title": "Max S Km",
+            "type": "number"
+          },
+          "min_s_km": {
+            "title": "Min S Km",
+            "type": "number"
+          }
+        },
+        "required": [
+          "min_s_km",
+          "max_s_km",
+          "invertido",
+          "marcas"
+        ],
+        "title": "EixoPace",
+        "type": "object"
+      },
+      "Eixos": {
+        "properties": {
+          "fc": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/EixoFc"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "pace": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/EixoPace"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "required": [
+          "pace",
+          "fc"
+        ],
+        "title": "Eixos",
+        "type": "object"
+      },
+      "Erro": {
+        "properties": {
+          "detail": {
+            "title": "Detail",
+            "type": "string"
+          }
+        },
+        "required": [
+          "detail"
+        ],
+        "title": "Erro",
+        "type": "object"
+      },
+      "EvolucaoTiros1km": {
+        "properties": {
+          "atleta_id": {
+            "title": "Atleta Id",
+            "type": "integer"
+          },
+          "eixos": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Eixos"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "metrica": {
+            "const": "tiros_1km",
+            "title": "Metrica",
+            "type": "string"
+          },
+          "periodo": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Periodo"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "reclassificacao_pendente": {
+            "title": "Reclassificacao Pendente",
+            "type": "boolean"
+          },
+          "sessoes": {
+            "items": {
+              "$ref": "#/components/schemas/SessaoOut"
+            },
+            "title": "Sessoes",
+            "type": "array"
+          },
+          "unidades": {
+            "$ref": "#/components/schemas/Unidades"
+          },
+          "versao_calculo": {
+            "title": "Versao Calculo",
+            "type": "string"
+          }
+        },
+        "required": [
+          "atleta_id",
+          "metrica",
+          "versao_calculo",
+          "reclassificacao_pendente",
+          "unidades",
+          "periodo",
+          "eixos",
+          "sessoes"
+        ],
+        "title": "EvolucaoTiros1km",
+        "type": "object"
+      },
+      "HTTPValidationError": {
+        "properties": {
+          "detail": {
+            "items": {
+              "$ref": "#/components/schemas/ValidationError"
+            },
+            "title": "Detail",
+            "type": "array"
+          }
+        },
+        "title": "HTTPValidationError",
+        "type": "object"
+      },
+      "MarcaFc": {
+        "properties": {
+          "rotulo": {
+            "title": "Rotulo",
+            "type": "string"
+          },
+          "valor_bpm": {
+            "title": "Valor Bpm",
+            "type": "number"
+          }
+        },
+        "required": [
+          "valor_bpm",
+          "rotulo"
+        ],
+        "title": "MarcaFc",
+        "type": "object"
+      },
+      "MarcaPace": {
+        "properties": {
+          "rotulo": {
+            "title": "Rotulo",
+            "type": "string"
+          },
+          "valor_s_km": {
+            "title": "Valor S Km",
+            "type": "number"
+          }
+        },
+        "required": [
+          "valor_s_km",
+          "rotulo"
+        ],
+        "title": "MarcaPace",
+        "type": "object"
+      },
+      "Periodo": {
+        "properties": {
+          "fim": {
+            "anyOf": [
+              {
+                "format": "date",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Fim"
+          },
+          "inicio": {
+            "anyOf": [
+              {
+                "format": "date",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Inicio"
+          }
+        },
+        "required": [
+          "inicio",
+          "fim"
+        ],
+        "title": "Periodo",
+        "type": "object"
+      },
+      "SessaoOut": {
+        "properties": {
+          "atividade_id": {
+            "title": "Atividade Id",
+            "type": "integer"
+          },
+          "data": {
+            "format": "date",
+            "title": "Data",
+            "type": "string"
+          },
+          "fc_media": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Fc Media"
+          },
+          "inicio": {
+            "format": "date-time",
+            "title": "Inicio",
+            "type": "string"
+          },
+          "n_tiros": {
+            "title": "N Tiros",
+            "type": "integer"
+          },
+          "pace_medio": {
+            "title": "Pace Medio",
+            "type": "string"
+          },
+          "pace_medio_s_km": {
+            "title": "Pace Medio S Km",
+            "type": "number"
+          },
+          "tiros": {
+            "items": {
+              "$ref": "#/components/schemas/TiroOut"
+            },
+            "title": "Tiros",
+            "type": "array"
+          }
+        },
+        "required": [
+          "atividade_id",
+          "data",
+          "inicio",
+          "n_tiros",
+          "pace_medio_s_km",
+          "pace_medio",
+          "fc_media",
+          "tiros"
+        ],
+        "title": "SessaoOut",
+        "type": "object"
+      },
+      "TiroOut": {
+        "properties": {
+          "distancia_m": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Distancia M"
+          },
+          "duracao_s": {
+            "title": "Duracao S",
+            "type": "number"
+          },
+          "fc_media": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Fc Media"
+          },
+          "ordem": {
+            "title": "Ordem",
+            "type": "integer"
+          },
+          "pace": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Pace"
+          },
+          "pace_s_km": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Pace S Km"
+          }
+        },
+        "required": [
+          "ordem",
+          "distancia_m",
+          "duracao_s",
+          "pace_s_km",
+          "pace",
+          "fc_media"
+        ],
+        "title": "TiroOut",
+        "type": "object"
+      },
+      "Unidades": {
+        "properties": {
+          "distancia": {
+            "title": "Distancia",
+            "type": "string"
+          },
+          "duracao": {
+            "title": "Duracao",
+            "type": "string"
+          },
+          "fc": {
+            "title": "Fc",
+            "type": "string"
+          },
+          "pace": {
+            "title": "Pace",
+            "type": "string"
+          }
+        },
+        "required": [
+          "pace",
+          "fc",
+          "distancia",
+          "duracao"
+        ],
+        "title": "Unidades",
+        "type": "object"
+      },
+      "ValidationError": {
+        "properties": {
+          "ctx": {
+            "title": "Context",
+            "type": "object"
+          },
+          "input": {
+            "title": "Input"
+          },
+          "loc": {
+            "items": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "integer"
+                }
+              ]
+            },
+            "title": "Location",
+            "type": "array"
+          },
+          "msg": {
+            "title": "Message",
+            "type": "string"
+          },
+          "type": {
+            "title": "Error Type",
+            "type": "string"
+          }
+        },
+        "required": [
+          "loc",
+          "msg",
+          "type"
+        ],
+        "title": "ValidationError",
+        "type": "object"
+      }
+    }
+  },
+  "info": {
+    "title": "treino-contexto API",
+    "version": "0.1.0"
+  },
+  "openapi": "3.1.0",
+  "paths": {
+    "/atletas/{atleta_id}/evolucao/tiros-1km": {
+      "get": {
+        "description": "Pace e FC médios dos tiros de 1 km por sessão. `inicio` e `fim` (AAAA-MM-DD) são datas locais, inclusivas.",
+        "operationId": "evolucaoTiros1km",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "atleta_id",
+            "required": true,
+            "schema": {
+              "title": "Atleta Id",
+              "type": "integer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "inicio",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "format": "date",
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Inicio"
+            }
+          },
+          {
+            "in": "query",
+            "name": "fim",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "format": "date",
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Fim"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EvolucaoTiros1km"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Erro"
+                }
+              }
+            },
+            "description": "Atleta não encontrado"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Evolucao Tiros 1Km",
+        "tags": [
+          "evolução"
+        ]
+      }
+    },
+    "/atletas/{atleta_id}/evolucao/tiros-1km.png": {
+      "get": {
+        "description": "O mesmo gráfico do comando de `entregas/`, com os mesmos filtros do JSON.",
+        "operationId": "evolucaoTiros1kmPng",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "atleta_id",
+            "required": true,
+            "schema": {
+              "title": "Atleta Id",
+              "type": "integer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "inicio",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "format": "date",
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Inicio"
+            }
+          },
+          {
+            "in": "query",
+            "name": "fim",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "format": "date",
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Fim"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "image/png": {}
+            },
+            "description": "Gráfico PNG (1600 x 1000)"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Erro"
+                }
+              }
+            },
+            "description": "Atleta não encontrado"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Evolucao Tiros 1Km Png",
+        "tags": [
+          "evolução"
+        ]
+      }
+    },
+    "/health": {
+      "get": {
+        "operationId": "health_health_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": {
+                    "type": "string"
+                  },
+                  "title": "Response Health Health Get",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Health"
+      }
+    }
+  }
+}

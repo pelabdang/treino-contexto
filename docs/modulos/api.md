@@ -3,7 +3,7 @@ tipo: modulo
 status: em-uso
 dono: theo
 atualizado: 2026-11-03
-links: [[decisoes/0001-modelo-de-dados-minimo]], [[decisoes/0003-fuso-da-atividade]], [[decisoes/0004-contrato-tela-evolucao]], [[metricas/tiros-1km]], [[modulos/grafico-tiros]], [[modulos/banco]], [[modulos/worker]], [[modulos/infra]]
+links: [[decisoes/0001-modelo-de-dados-minimo]], [[decisoes/0003-fuso-da-atividade]], [[decisoes/0004-contrato-tela-evolucao]], [[metricas/tiros-1km]], [[modulos/grafico-tiros]], [[modulos/banco]], [[modulos/worker]], [[modulos/infra]], [[modulos/api-client]]
 ---
 # Módulo: api
 
@@ -109,7 +109,9 @@ em stderr e saída 1). É idempotente: rodar de novo dá o mesmo resultado. Depo
 O contrato que o app consome está em [[decisoes/0004-contrato-tela-evolucao]], com a lista "antes e depois".
 Já valem aqui (#64): D2 a D11 (erro `404` declarado, `versao_calculo` fixa mais `reclassificacao_pendente`, `Unidades`
 obrigatória, 1 casa decimal, `pace` do tiro, distância `null`, `inicio` > `fim` com `422`, `operationId`, `metrica`
-literal). Falta o cliente gerado (#68).
+literal). O cliente gerado (#68) está em [[modulos/api-client]]: depois de mudar o schema ou a resposta, regere com
+`uv run python services/api/scripts/exportar_openapi.py` e `cd packages/api-client && npm run gerar`; o teste
+`services/api/tests/test_contrato_cliente.py` falha enquanto estiver desatualizado.
 
 ## Depende de
 - [[modulos/banco]] (Postgres 16 via [[modulos/infra]]).
@@ -118,6 +120,6 @@ literal). Falta o cliente gerado (#68).
 `uv run pytest -q` na raiz. Roda em SQLite local e em Postgres no CI.
 
 ## Pendências
-- Cliente TypeScript a partir do OpenAPI (Meta 2, #68; contrato em [[decisoes/0004-contrato-tela-evolucao]]). Ver [[produto/roadmap]].
+- Contrato da Meta 2 em [[decisoes/0004-contrato-tela-evolucao]]; cliente TypeScript em [[modulos/api-client]]. Ver [[produto/roadmap]].
 - Passo a passo para reproduzir a Meta 1: [[produto/meta-1-como-reproduzir]].
 - Cada métrica nova ganha nota em [[metricas/]].
