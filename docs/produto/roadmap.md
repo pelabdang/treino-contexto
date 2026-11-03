@@ -3,7 +3,7 @@ tipo: roteiro
 status: em-uso
 dono: paulo
 atualizado: 2026-11-03
-links: [[produto/plano-mvp-execucao]], [[decisoes/0001-modelo-de-dados-minimo]], [[decisoes/0005-serie-de-tiros-o-que-entra]], [[produto/metas/meta-1-tiros-1km]], [[produto/metas/meta-2-evolucao-tiros-app]], [[decisoes/0004-contrato-tela-evolucao]], [[diario/2026-11-03]], [[00-inicio]]
+links: [[produto/plano-mvp-execucao]], [[decisoes/0001-modelo-de-dados-minimo]], [[decisoes/0005-serie-de-tiros-o-que-entra]], [[produto/metas/meta-1-tiros-1km]], [[produto/metas/meta-2-evolucao-tiros-app]], [[produto/metas/meta-3-upload-fit]], [[decisoes/0004-contrato-tela-evolucao]], [[decisoes/0006-upload-de-fit]], [[decisoes/0003-fuso-da-atividade]], [[diario/2026-11-03]], [[00-inicio]]
 ---
 # Roteiro de metas
 
@@ -15,8 +15,8 @@ Ao fechar uma meta, o Paulo registra o resultado em `docs/produto/metas/` e revi
 | 0 | Fundação: monorepo, modelo mínimo, CI, base de docs | feita (#1, #3) |
 | 1 | Tiros de 1 km a partir da exportação Garmin | feita (fixtures e dado real; [[produto/metas/meta-1-tiros-1km]]) |
 | 2 | Evolução dos tiros no app | feita (web com fixtures; [[produto/metas/meta-2-evolucao-tiros-app]]) |
-| **3** | **Upload de arquivo FIT** | **próxima** (issues propostas, aguardando aprovação) |
-| 4 | Clima de cada atividade | esboço |
+| 3 | Upload de arquivo FIT | feita (web com FIT sintéticos; [[produto/metas/meta-3-upload-fit]]) |
+| **4** | **Clima de cada atividade** | **próxima** (revisada; issues propostas, aguardando as decisões do Angelo) |
 | 5 | Carga e linha de base pessoal | esboço |
 | 6 | Check-in pós-treino | esboço |
 | 7 | Feedback automático por treino | esboço |
@@ -155,7 +155,7 @@ Revisadas ao fim de cada meta com o que se aprendeu. Ordem tirada da "Fundação
 - **Fora:** login e lista de atletas; outras métricas; edição de dados; filtro de período na tela; deploy, EAS,
   lojas e conta Expo; dado real em prints, testes ou PRs.
 
-### Meta 3: upload de arquivo FIT (próxima)
+### Meta 3: upload de arquivo FIT (feita)
 - **Objetivo:** plano B enquanto a API da Garmin não é aprovada: o atleta envia um `.fit` pelo app, e a atividade
   entra no banco e, se for um treino de tiros, na série da Meta 2.
 - **Entrega visível:** `POST /atletas/{atleta_id}/atividades/fit` na API e o botão "Enviar arquivo FIT" no app; a
@@ -166,31 +166,83 @@ Revisadas ao fim de cada meta com o que se aprendeu. Ordem tirada da "Fundação
   - arquivo inválido, que não é atividade ou grande demais dá erro claro, declarado no OpenAPI;
   - cliente regerado e botão com os estados enviando, sucesso e erro no `npm test`;
   - QA na web com FIT sintéticos, com um jeito documentado de forçar cada estado.
-- **Conferido no código antes das issues:** o leitor FIT está no worker, que depende da API (a API não pode importar
-  o worker); um FIT sozinho tem `fonte_id` diferente do da exportação, então a mesma atividade entraria duas vezes;
-  a API ainda não aceita arquivo (falta `python-multipart`).
-- **Ordem e donos** (proposta; as issues saem quando o Theo e o Angelo aprovarem):
-  1. ADR 0006, upload de FIT: onde fica o leitor, identidade da atividade, arquivo bruto, limites (duda-dados,
-     aprovação do Theo).
-  2. Em paralelo: leitor FIT num lugar que a API e o worker usam (duda-dados); FIT sintéticos para o upload
-     (caio-ciencia).
-  3. `importar_fit`, idempotente e sem duplicar a atividade da exportação (duda-dados).
-  4. Endpoint de upload e cliente regerado (duda-dados).
-  5. Botão "Enviar arquivo FIT" no app (rafa-app).
-  6. Documentação e diário (nina-docs).
-  7. QA de ponta a ponta com FIT sintéticos (bia-qa).
-  8. Resultado da meta e roteiro (paulo-planejador).
+- **Decisões (Angelo e Theo, 03/11):** guardar o FIT localmente em `FIT_DIR`; sem login, só local; 10 MB; qualquer
+  modalidade, só corrida na série; regra dos 60 s nos dois caminhos; leitor dentro da API. Tudo na
+  [[decisoes/0006-upload-de-fit]].
+- **Resultado:** feita. Na web, com FIT sintéticos, o envio pelo botão grava a atividade sem duplicar e o treino de
+  tiros aparece na série (QA da Bia, #98 / PR #107). Não verificados: iOS e Android (sem aparelho) e, na tela, o
+  `404` e a falta de rede (só nos testes). Passo a passo em [[produto/meta-3-como-rodar]]; resultado completo em
+  [[produto/metas/meta-3-upload-fit]].
+- **Issues e ordem:**
+
+  | # | Issue | Dono | Situação |
+  |---|---|---|---|
+  | #91 | ADR 0006, upload de FIT | duda-dados (aprovação do Theo) | feita |
+  | #92 | Leitor FIT num lugar que a API e o worker usam | duda-dados | feita |
+  | #93 | FIT sintéticos para o upload | caio-ciencia | feita |
+  | #94 | `importar_fit`, idempotente, regra dos 60 s e `apagar_fit` | duda-dados | feita |
+  | #95 | Endpoint de upload e cliente regerado | duda-dados | feita |
+  | #96 | Botão "Enviar arquivo FIT" no app | rafa-app | feita |
+  | #97 | Documentação e diário | nina-docs | feita |
+  | #98 | QA de ponta a ponta com FIT sintéticos | bia-qa | feita |
+  | #99 | Resultado da meta e roteiro | paulo-planejador | esta |
+
+- **Achados depois da meta (propostas, sem issue criada):** app web declara `lang="en"` e o Chrome traduz as
+  mensagens (proposta: `pt-BR`, issue pequena do Rafa); o servidor grava o upload inteiro num temporário antes do
+  limite de 10 MB (aceito local; limitar no proxy na meta de deploy); docs-ok aplicado antes do CI travou dois PRs
+  (regra decidida pelo Theo em 03/11); a série de tiros com o histórico real pode estar incompleta (proposta de investigação, ordem com o Angelo). Detalhes em [[produto/metas/meta-3-upload-fit]].
+- **Aprendido na Meta 3:** conferir o código antes da ADR achou o ciclo API-worker e a duplicação entre fontes; a
+  identidade da atividade é regra única para toda fonte nova; o FIT do upload não traz horário local nem posição
+  guardada; o navegador (tradutor, seletor de arquivo) também é parte do QA.
 - **Quem:** duda-dados, caio-ciencia, rafa-app, nina-docs, bia-qa.
 - **Fora:** GPX/TCX, webhook e API da Garmin, storage em nuvem, vários arquivos de uma vez, login, deploy, edição ou
   exclusão de atividade.
 
-### Meta 4: clima de cada atividade
-- **Objetivo:** cada atividade ao ar livre ganha temperatura, umidade, vento e sensação térmica.
-- **Entrega visível:** clima na resposta da API e marca "indoor" em esteira.
-- **Critério de pronto:** nova tabela com ADR; cliente Open-Meteo com teste usando resposta gravada.
-- **Quem:** duda-dados, caio-ciencia (ajuste de pace por calor só como estimativa), Theo (ADR).
-- **Fora:** previsão do tempo; ajuste por vento. No desenvolvimento, a API gratuita do Open-Meteo (indicação do Angelo);
-  plano comercial para produção: ver "PRECISA DO ANGELO".
+### Meta 4: clima de cada atividade (próxima, revisada em 03/11)
+- **Objetivo:** cada atividade ao ar livre ganha temperatura, umidade, vento e sensação térmica na hora e no local do
+  treino; esteira e piscina ficam marcadas "indoor", sem clima.
+- **Entrega visível:** o clima de cada atividade na resposta da API (com a marca "indoor" ou o motivo de não ter
+  clima) e um comando que preenche o clima das atividades já gravadas.
+- **Critério de pronto (proposta):**
+  - ADR do clima aprovada pelo Theo: tabela `clima_atividade` (plano MVP), de onde vem a posição, o que é indoor,
+    qual API do Open-Meteo e o que fazer quando falta dado;
+  - o leitor guarda a posição de início da atividade, vinda do FIT (exportação e upload) e do JSON da exportação,
+    no formato que o Angelo decidir (ver "PRECISA DO ANGELO");
+  - cliente Open-Meteo testado só com resposta gravada (nenhum teste chama a rede); clima de uma atividade sintética
+    batendo com a resposta gravada na hora do treino;
+  - preencher o clima é idempotente: rodar de novo não duplica nem chama a API para o que já tem clima;
+  - esteira, piscina e atividade sem posição saem como "indoor" ou "sem posição", nunca com clima inventado;
+  - funciona para atividade da exportação e do upload; QA com fixtures sintéticas com posição fictícia.
+- **Conferido no código antes das issues (03/11):**
+  - **Nenhuma atividade guarda posição hoje.** O modelo `atividade` não tem latitude nem longitude, e o leitor FIT
+    (`services/api/app/ingestao/garmin/fit.py`) só lê `file_id`, `session` e `lap`; a posição de início do FIT
+    (`session.start_position_lat/long`) e a do JSON da exportação não são lidas. Vale para os dois caminhos, não só
+    para o upload.
+  - **As fixtures sintéticas não têm posição:** `tests/test_fixtures_garmin.py` e `tests/test_fixtures_fit_upload.py`
+    conferem que `position_lat/long` estão vazios. A Meta 4 precisa de fixtures com posição fictícia.
+  - **O FIT do upload não traz horário local:** `fuso_min` fica vazio e a data cai no fallback `America/Sao_Paulo`
+    ([[decisoes/0003-fuso-da-atividade]]). Para buscar o clima basta o `inicio` em UTC; o fuso só importa para
+    exibir a hora local. Ler o horário local do FIT (mensagem `activity`) é melhoria possível, fora do critério.
+  - **Dá para preencher o passado:** os FIT do upload estão guardados em `FIT_DIR` e a exportação segue em
+    `dados-teste/`, então as atividades já gravadas podem ganhar posição reimportando ou relendo o arquivo, sem
+    pedir nada ao atleta.
+  - **"Indoor" já tem base:** o `subtipo` `esteira` vem do JSON e do FIT (`sub_sport`), e `piscina` também.
+- **Ordem e donos** (proposta; as issues saem com o "pode criar" do Angelo e depois das decisões dele):
+  1. ADR 0007, clima da atividade: tabela, posição, indoor, API do Open-Meteo (histórico ou previsão com dias
+     passados, a conferir), falhas e limites de chamada (duda-dados, aprovação do Theo).
+  2. Em paralelo: leitor guarda a posição de início (FIT e JSON), com migração (duda-dados); fixtures sintéticas com
+     posição fictícia e o oráculo do clima a partir de uma resposta gravada (caio-ciencia).
+  3. Cliente Open-Meteo com resposta gravada (duda-dados).
+  4. Comando idempotente que preenche o clima e chamada no fim da importação e do upload (duda-dados).
+  5. Clima na resposta da API e cliente regerado (duda-dados).
+  6. Documentação e diário (nina-docs).
+  7. QA de ponta a ponta com fixtures (bia-qa).
+  8. Resultado da meta e roteiro (paulo-planejador).
+  Em paralelo, se o Angelo escolher "junto": investigação da série de tiros com o dado real (caio-ciencia).
+- **Quem:** duda-dados, caio-ciencia (oráculo; ajuste de pace por calor só como estimativa, fora do critério),
+  nina-docs, bia-qa, Theo (ADR). rafa-app só se a proposta do `pt-BR` for aprovada.
+- **Fora:** previsão do tempo; ajuste por vento; clima na tela do app; trajeto completo (só a posição de início);
+  plano comercial do Open-Meteo (no desenvolvimento, a API gratuita, indicação do Angelo); deploy.
 
 ### Meta 5: carga e linha de base pessoal
 - **Objetivo:** primeiras métricas derivadas versionadas (rTSS/hrTSS, CTL, ATL, TSB) e a linha de base por tipo de treino.
@@ -236,10 +288,22 @@ stack Expo). A chave do provedor de LLM foi entregue e está no `.env` (fora do 
 - **Histórico público:** resolvido (Angelo, 03/11).
 - **Atividades do resumo sem arquivo FIT: resolvido (Angelo, 03/11).** Não faltam arquivos. Ver [[modulos/ingestao-garmin]].
 - **Open-Meteo:** o Angelo indicou a API gratuita para o desenvolvimento; o plano comercial continua em aberto para produção (Meta 4).
+- **Meta 3: resolvido (Angelo, 03/11).** Guardar o FIT localmente; sem login, só local; 10 MB; qualquer
+  modalidade, só corrida na série. Registrado na [[decisoes/0006-upload-de-fit]].
 
 Em aberto:
-1. **Meta 3, antes das issues:** guardar ou não o arquivo FIT enviado (dado pessoal do aluno; proposta do time: não
-   guardar nesta meta); confirmar o upload sem login, só local; tamanho máximo (proposta: 10 MB); aceitar qualquer
-   modalidade ou só corrida (proposta: qualquer uma, fora da série quando não é corrida).
-2. **Próximas metas, sem pressa:** CNPJ e pedido da API da Garmin; pedido da API do TrainingPeaks com a assessoria;
-   plano comercial do Open-Meteo para produção (Meta 4).
+1. **Ordem da investigação da série de tiros com o dado real:** antes da Meta 4 (meta curta só para isso) ou junto
+   com ela (issue paralela do Caio). Proposta do time: junto, porque a Meta 4 é quase toda da Duda. Os dados reais
+   ficam só em `entregas/`. Se a regra mudar, a série do atleta muda. Ver [[produto/metas/meta-3-upload-fit]].
+2. **Meta 4, antes das issues (dado de aluno):**
+   - guardar a posição de início das atividades? É dado pessoal: mostra onde o aluno treina e, muitas vezes, onde
+     mora. Proposta do time: guardar só a posição de início **arredondada** (por exemplo 2 casas decimais, cerca de
+     1 km), que basta para o clima, e nunca o trajeto;
+   - enviar essa posição e o horário ao Open-Meteo (serviço de terceiro). Proposta: sim, arredondada, sem nenhum
+     identificador do aluno na chamada;
+   - preencher o clima das atividades antigas (relendo os FIT guardados e a exportação). Proposta: sim, pelo
+     comando, só local.
+3. **"Pode criar"** para as propostas da Meta 3 (app web em `pt-BR` e a investigação da série) e para as issues da
+   Meta 4, depois do item 2.
+4. **Próximas metas, sem pressa:** CNPJ e pedido da API da Garmin; pedido da API do TrainingPeaks com a assessoria;
+   plano comercial do Open-Meteo para produção; limite de tamanho do upload no proxy, obrigatório na meta de deploy.
