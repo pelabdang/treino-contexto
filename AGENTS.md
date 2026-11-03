@@ -37,5 +37,6 @@ Plano completo: docs/produto/plano-mvp-execucao.md
 - Métrica nova = nota nova em docs/metricas/ usando o template.
 - Decisão que afeta mais de um módulo = ADR em docs/decisoes/.
 - A Nina adiciona o label docs-ok no PR (gh pr edit <n> --add-label docs-ok). Commit novo remove o label.
+  Depois de um commit dela no PR, a Nina só aplica o label quando o CI daquele commit terminar (testes e verificar-docs-ok concluídos).
   O Theo só faz merge com os checks testes e docs verdes.
 - Nunca edite docs/_grafo/ nem graphify-out/: são gerados.
