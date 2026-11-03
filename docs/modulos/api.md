@@ -21,6 +21,7 @@ Futuramente recebe a importação Garmin e serve métricas ao [[modulos/mobile]]
 ## Arquivos principais
 - `services/api/app/main.py`: app FastAPI.
 - `services/api/app/rotas/evolucao.py`: roteador e modelos Pydantic da evolução dos tiros (aparecem em `/openapi.json`).
+- `services/api/app/rotas/atividades.py`: roteador e modelo `UploadFitOut` do upload de FIT (ver "Upload de FIT").
 - `services/api/app/config.py`: configuração via pydantic-settings.
 - `services/api/app/db/`: modelos, sessão e base. Veja [[modulos/banco]].
 - `services/api/app/metricas/`: funções puras das métricas (tiros de 1 km, [[metricas/tiros-1km]]).
