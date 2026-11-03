@@ -3,7 +3,7 @@ tipo: modulo
 status: em-uso
 dono: duda
 atualizado: 2026-11-03
-links: [[produto/meta-3-como-rodar]], [[modulos/api]], [[modulos/mobile]], [[decisoes/0004-contrato-tela-evolucao]], [[decisoes/0006-upload-de-fit]]
+links: [[produto/meta-3-como-rodar]], [[modulos/api]], [[modulos/mobile]], [[decisoes/0004-contrato-tela-evolucao]], [[decisoes/0006-upload-de-fit]], [[decisoes/0007-clima-da-atividade]]
 ---
 # Módulo: api-client
 
@@ -18,7 +18,7 @@ mão. Contrato e decisões em [[decisoes/0004-contrato-tela-evolucao]] (item 6).
   - `{ok: false, erro}` com `erro.tipo`: `nao_encontrado` (`404`, `detalhe: {detail}`), `validacao` (`422`, `detalhe` no
     formato do FastAPI), `http` (outro status ou corpo que não é JSON) ou `rede` (falha do `fetch`, com `mensagem`).
 - `baseUrl` padrão `http://localhost:8000`; `fetch` padrão é o global (troque nos testes). O app passa `config.apiUrl`.
-- Também exporta os tipos `EvolucaoTiros1km`, `SessaoTiros`, `TiroSessao`, `Eixos`, `ErroApi` e `RespostaUploadFit` (alias de `UploadFitOut`, a resposta do `POST /atletas/{atleta_id}/atividades/fit` da [[modulos/api]], [[decisoes/0006-upload-de-fit]]), além de `components` e
+- Também exporta os tipos `EvolucaoTiros1km`, `SessaoTiros`, `TiroSessao`, `Eixos`, `ErroApi` e `Atividade`, `ClimaAtividade` e `EstadoClima` (a atividade do `GET /atletas/{atleta_id}/atividades/{atividade_id}` com o `clima` da [[decisoes/0007-clima-da-atividade]]; só tipos, ainda sem função), `RespostaUploadFit` (alias de `UploadFitOut`, a resposta do `POST /atletas/{atleta_id}/atividades/fit` da [[modulos/api]], [[decisoes/0006-upload-de-fit]]), além de `components` e
   `operations` do `schema.d.ts`.
 - `enviarAtividadeFit(atletaId, arquivo, {baseUrl?, fetch?, nome?})` faz o `POST /atletas/{id}/atividades/fit` (multipart, campo `arquivo`; ver [[modulos/api]], "Upload de FIT") e nunca lança. `arquivo` é `ArquivoFit`: `Blob`/`File` (web; `nome` dá o nome do arquivo) ou `{uri, name, type}` (React Native).
   - `{ok: true, dados: {criada, resposta}}`: `criada` é `true` no `201` e `false` no `200`; `resposta` é `RespostaUploadFit`.
@@ -55,6 +55,7 @@ quatro arquivos. O `npm install` só é preciso na primeira vez (o `node_modules
 - `cd apps/mobile && npm test`: `__tests__/api-client.test.ts` cobre o cliente com `fetch` falso (`200`, `404`, `422`, rede, outros erros) e o upload (`201`, `200`, `400`, `404`, `413`, `422`, rede).
 
 ## Pendências
+- A atividade com clima só tem tipos; a função de busca nasce quando o app precisar (Meta 4).
 - Só o endpoint JSON da evolução dos tiros tem função (o PNG não é chamado pelo app).
 - A tela que usa o cliente é a #69/#70 ([[modulos/mobile]]).
 - `npm audit` aponta um aviso moderado de `minimatch` dentro do `openapi-typescript`, só na geração (ferramenta de desenvolvimento, não vai para o app).

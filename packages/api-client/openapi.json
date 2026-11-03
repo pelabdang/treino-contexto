@@ -1,6 +1,82 @@
 {
   "components": {
     "schemas": {
+      "AtividadeOut": {
+        "description": "A atividade como a API mostra. A posicao de inicio nunca sai (ADR 0007).",
+        "properties": {
+          "atividade_id": {
+            "title": "Atividade Id",
+            "type": "integer"
+          },
+          "clima": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ClimaOut"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "distancia_m": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Distancia M"
+          },
+          "duracao_s": {
+            "title": "Duracao S",
+            "type": "number"
+          },
+          "fc_media": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Fc Media"
+          },
+          "inicio": {
+            "format": "date-time",
+            "title": "Inicio",
+            "type": "string"
+          },
+          "modalidade": {
+            "title": "Modalidade",
+            "type": "string"
+          },
+          "subtipo": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Subtipo"
+          }
+        },
+        "required": [
+          "atividade_id",
+          "modalidade",
+          "subtipo",
+          "inicio",
+          "duracao_s",
+          "distancia_m",
+          "fc_media"
+        ],
+        "title": "AtividadeOut",
+        "type": "object"
+      },
       "Body_enviarAtividadeFit": {
         "properties": {
           "arquivo": {
@@ -14,6 +90,71 @@
           "arquivo"
         ],
         "title": "Body_enviarAtividadeFit",
+        "type": "object"
+      },
+      "ClimaOut": {
+        "description": "Clima da atividade (ADR 0007, item 5). Os quatro valores so existem em `ok`; nos outros estados nem aparecem.",
+        "properties": {
+          "estado": {
+            "enum": [
+              "ok",
+              "indoor",
+              "sem_posicao",
+              "pendente",
+              "falha"
+            ],
+            "title": "Estado",
+            "type": "string"
+          },
+          "sensacao_c": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Sensacao C"
+          },
+          "temperatura_c": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Temperatura C"
+          },
+          "umidade_pct": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Umidade Pct"
+          },
+          "vento_kmh": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Vento Kmh"
+          }
+        },
+        "required": [
+          "estado"
+        ],
+        "title": "ClimaOut",
         "type": "object"
       },
       "EixoFc": {
@@ -583,6 +724,68 @@
           }
         },
         "summary": "Enviar Atividade Fit",
+        "tags": [
+          "atividades"
+        ]
+      }
+    },
+    "/atletas/{atleta_id}/atividades/{atividade_id}": {
+      "get": {
+        "description": "A atividade com o `clima` (ADR 0007). `indoor`, `sem_posicao`, `pendente` e `falha` dizem por que não há valores.",
+        "operationId": "buscarAtividade",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "atleta_id",
+            "required": true,
+            "schema": {
+              "title": "Atleta Id",
+              "type": "integer"
+            }
+          },
+          {
+            "in": "path",
+            "name": "atividade_id",
+            "required": true,
+            "schema": {
+              "title": "Atividade Id",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AtividadeOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Erro"
+                }
+              }
+            },
+            "description": "Atleta ou atividade não encontrados (atividade de outro atleta também)"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Buscar Atividade",
         "tags": [
           "atividades"
         ]

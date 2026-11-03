@@ -2,10 +2,11 @@
 
 from __future__ import annotations
 
+from datetime import datetime
 from pathlib import Path
 from typing import Literal
 
-from app.db.models import Atleta
+from app.db.models import Atividade, Atleta
 from app.db.session import get_session
 from app.ingestao.fit_guardado import AtletaInexistente
 from app.ingestao.importacao import (
@@ -17,7 +18,8 @@ from app.ingestao.importacao import (
 )
 from app.rotas.evolucao import Erro
 from fastapi import APIRouter, Depends, File, HTTPException, Response, UploadFile
-from pydantic import BaseModel
+from app.servicos.clima import ClimaDaAtividade, EstadoClima, clima_da_atividade
+from pydantic import BaseModel, Field
 from sqlalchemy.orm import Session
 
 router = APIRouter(prefix="/atletas/{atleta_id}/atividades", tags=["atividades"])
@@ -29,6 +31,39 @@ class UploadFitOut(BaseModel):
     resultado: Literal["inserida", "atualizada", "ignorada"]
     atividade_id: int
     avisos: list[str]
+
+
+class ClimaOut(BaseModel):
+    """Clima da atividade (ADR 0007, item 5). Os quatro valores so existem em `ok`; nos outros estados nem aparecem."""
+
+    estado: EstadoClima
+    temperatura_c: float | None = Field(None, exclude_if=lambda v: v is None)
+    sensacao_c: float | None = Field(None, exclude_if=lambda v: v is None)
+    umidade_pct: float | None = Field(None, exclude_if=lambda v: v is None)
+    vento_kmh: float | None = Field(None, exclude_if=lambda v: v is None)
+
+
+class AtividadeOut(BaseModel):
+    """A atividade como a API mostra. A posicao de inicio nunca sai (ADR 0007)."""
+
+    atividade_id: int
+    modalidade: str
+    subtipo: str | None
+    inicio: datetime  # UTC
+    duracao_s: float
+    distancia_m: float | None
+    fc_media: float | None
+    clima: ClimaOut | None = None  # campo novo e opcional
+
+
+def _clima_out(c: ClimaDaAtividade) -> ClimaOut:
+    return ClimaOut(
+        estado=c.estado,
+        temperatura_c=c.temperatura_c,
+        sensacao_c=c.sensacao_c,
+        umidade_pct=c.umidade_pct,
+        vento_kmh=c.vento_kmh,
+    )
 
 
 def get_fit_dir() -> Path | None:
@@ -89,3 +124,33 @@ def enviar_atividade_fit(
     if r.resultado != "inserida":
         response.status_code = 200
     return UploadFitOut(resultado=r.resultado, atividade_id=r.atividade_id, avisos=r.avisos)
+
+
+@router.get(
+    "/{atividade_id}",
+    response_model=AtividadeOut,
+    operation_id="buscarAtividade",
+    responses={404: {"model": Erro, "description": "Atleta ou atividade não encontrados (atividade de outro atleta também)"}},
+)
+def buscar_atividade(
+    atleta_id: int,
+    atividade_id: int,
+    session: Session = Depends(get_session),
+) -> AtividadeOut:
+    """A atividade com o `clima` (ADR 0007). `indoor`, `sem_posicao`, `pendente` e `falha` dizem por que não há valores."""
+    if session.get(Atleta, atleta_id) is None:
+        raise HTTPException(status_code=404, detail="atleta não encontrado")
+    a = session.get(Atividade, atividade_id)
+    if a is None or a.atleta_id != atleta_id:
+        raise HTTPException(status_code=404, detail="atividade não encontrada")
+    clima = clima_da_atividade(session, atividade_id)
+    return AtividadeOut(
+        atividade_id=a.id,
+        modalidade=a.modalidade,
+        subtipo=a.subtipo,
+        inicio=a.inicio,
+        duracao_s=a.duracao_s,
+        distancia_m=a.distancia_m,
+        fc_media=a.fc_media,
+        clima=None if clima is None else _clima_out(clima),
+    )
