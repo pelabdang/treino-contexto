@@ -18,6 +18,21 @@ com transporte falso (`httpx.MockTransport`) e a resposta gravada. **Não rodado
 chamada manual com a posição inventada foi feita na #112, resultado em [[modulos/clima]]), o upload de FIT seguido de
 `preencher_clima` com `FIT_DIR` (coberto pelos testes) e o app mobile (o clima ainda não aparece na tela).
 
+**Verificado na #116 (Bia, 03/11):** o guia foi rodado de novo, com banco `treino-qa116` (Postgres 5455, API na 8055,
+`FIT_DIR` temporária), só dado sintético, e tudo foi derrubado no fim (`down -v`; `docker ps` só com os containers que já
+existiam). **Bateu:** cinco `Running upgrade` até a `0005`; `inseridas=5` (JSON, 5 avisos) e `inseridas=6` (FIT); posições
+`12.35 / -45.68` só nas atividades 7, 12, 13 e 15; `--so-posicao` com `0`, `1` e `0`; `clima_gravado.py ok` com `chamadas=4`
+(`ok=4 indoor=5 sem_posicao=7`) e depois `chamadas=0`; os valores da tabela do passo 5; o `GET` da 13, 9, 10, 8, 7 e os dois
+`404`; `openapi.json` sem `inicio_lat`; e a tabela do passo 7 (pendente nos 7 dias com `chamadas=0`, `null` com 12 e 13
+pendentes e a 15 `ok`, 503 até `tentativas=5` com "5 rodadas sem sucesso: HTTP 503", 400 como `falha` na hora, e
+`--refazer-falhas` com `chamadas=3`). **O que o guia não cobria e agora foi rodado:** o upload do FIT da lap por
+`POST /atletas/1/atividades/fit` (`201`, atividade 17, posição `12.35 / -45.68`, `pendente` até `clima_gravado.py ok`, depois
+`ok` com os mesmos valores da 13). **Não bateu:** nada. **Diferença:** na Bia o passo 3 importou a Meta 1 também pela função
+`importar` (e não por `worker.importar_garmin`), para não passar por nenhum caminho com rede; por isso a linha `clima: chamadas=0`
+desse comando **não foi conferida** na #116. **Não verificados:** a chamada real ao Open-Meteo (proibida aqui), o app (web, iOS e
+Android: o clima não tem tela, "não se aplica") e o `worker.importar_garmin` com as fixtures de clima. O teste automatizado é
+`tests/test_e2e_meta4.py` (15 testes, guarda de socket, `httpx.MockTransport` sobre a resposta gravada).
+
 ## Antes de começar
 - `git`, `uv`, Docker (Compose 2.24 ou mais novo) e `curl`. Comandos na **raiz** do repositório.
 - **Não use o banco do seu dia a dia** (`treino-contexto-postgres-1`). Rode sempre com `-p treino-meta4`
@@ -182,6 +197,6 @@ fixa, por exemplo `curl 'https://archive-api.open-meteo.com/v1/archive?latitude=
   Não é erro.
 
 ## Testes
-`uv run pytest -q` na raiz. Os do clima: `services/api/tests/clima`, `services/worker/tests/test_preencher_clima.py`,
+`uv run pytest -q` na raiz. O de ponta a ponta é `tests/test_e2e_meta4.py`. Os do clima: `services/api/tests/clima`, `services/worker/tests/test_preencher_clima.py`,
 `services/api/tests/rotas/test_atividade_clima.py` e `tests/test_fixtures_clima.py`. Nenhum abre conexão externa.
 Atribuição dos dados: Weather data by Open-Meteo.com (CC BY 4.0).
