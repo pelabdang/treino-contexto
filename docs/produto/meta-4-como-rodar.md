@@ -15,8 +15,8 @@ lugar inventado). A base é a mesma do [[produto/meta-3-como-rodar]]; as regras 
 **Situação da verificação (#115, Nina, 03/11):** todos os passos abaixo foram rodados de verdade, com banco
 `treino-meta4` na porta 5444, e o banco foi derrubado no fim. **Nada chamou o Open-Meteo:** o clima usou o cliente real
 com transporte falso (`httpx.MockTransport`) e a resposta gravada. **Não rodado aqui:** a chamada real à API (uma
-chamada manual com a posição inventada foi feita na #112, resultado em [[modulos/clima]]), o upload de FIT seguido de
-`preencher_clima` com `FIT_DIR` (coberto pelos testes) e o app mobile (o clima ainda não aparece na tela).
+chamada manual com a posição inventada foi feita na #112, resultado em [[modulos/clima]]), o app mobile (o clima ainda não aparece na tela). O upload de FIT seguido
+de `preencher_clima` com `FIT_DIR` foi rodado depois, na #116 (parágrafo abaixo), e é coberto por `tests/test_e2e_meta4.py`.
 
 **Verificado na #116 (Bia, 03/11):** o guia foi rodado de novo, com banco `treino-qa116` (Postgres 5455, API na 8055,
 `FIT_DIR` temporária), só dado sintético, e tudo foi derrubado no fim (`down -v`; `docker ps` só com os containers que já
