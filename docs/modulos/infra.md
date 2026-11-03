@@ -3,7 +3,7 @@ tipo: modulo
 status: em-uso
 dono: theo
 atualizado: 2026-11-03
-links: [[modulos/banco]], [[modulos/api]]
+links: [[modulos/banco]], [[modulos/api]], [[decisoes/0004-contrato-tela-evolucao]]
 ---
 # Módulo: infra
 
