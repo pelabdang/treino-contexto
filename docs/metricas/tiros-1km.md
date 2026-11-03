@@ -90,7 +90,10 @@ Um treino de tiros de 1 km é um treino em que o que importa são as repetiçõe
 A regra procura isso em três passos: acha as voltas de 1 km que estão cercadas por recuperação (e não coladas a outras
 voltas de 1 km no mesmo ritmo, que é rodagem); exige pelo menos 3; e confere que elas são a parte principal do treino,
 isto é, que somam pelo menos tanta distância quanto as voltas curtas (por exemplo, de 400 m) do mesmo treino.
-Se os tiros curtos pesam mais, o treino é de tiros curtos e não entra na série de 1 km.
+Se os tiros curtos pesam mais, o treino é de tiros curtos e não entra na série de 1 km. Desde a `@4`, dois filtros
+tiram o que parece tiro mas não é: o **ritmo parecido** (um km bem mais lento que os outros tiros é desaquecimento, não
+repetição) e o **bloco contínuo** (um km forte colado, mesmo por cima de uma pausa curta, a outro km de corrida quase tão
+rápido é progressivo ou fartlek, não tiro).
 
 ### Exemplos à mão
 - 6 x 1000 m com 5 recuperações de 400 m sem rótulo: 6000 m de tiros contra 2000 m de voltas curtas: dentro.
@@ -104,8 +107,8 @@ Se os tiros curtos pesam mais, o treino é de tiros curtos e não entra na séri
 - 4 blocos de 3 x 1000 m a 280 s/km com parada de 7 m: as voltas do meio têm vizinha de 1 km no mesmo ritmo,
   e as das pontas, de um dos lados: nenhuma tiro.
 
-### Ritmo habitual do atleta (`@3`, issue #53)
-A estrutura (itens 1 a 7) diz se o treino tem repetições de 1 km separadas por recuperação. Falta saber se elas são
+### Ritmo habitual do atleta (`@3`, issue #53; limite de 10% desde a `@4`, issue #58)
+A estrutura (itens 1 a 9) diz se o treino tem repetições de 1 km separadas por recuperação. Falta saber se elas são
 **treino de ritmo** e não rodagem: numa rodagem lenta com paradas curtas (sinal, pausa manual) ou com o ritmo
 oscilando de uma volta para a outra, as voltas de 1 km também ficam "separadas" e passam. O que as separa de um
 treino de tiros é o ritmo: os tiros precisam ser mais rápidos que o ritmo de rodagem **do próprio atleta**.
@@ -116,16 +119,17 @@ treino de tiros é o ritmo: os tiros precisam ser mais rápidos que o ritmo de r
   ritmo habitual (`None`) e a sessão não é filtrada. É a mediana, e não a média, para não ser puxada pelas poucas
   sessões de tiros nem por uma corrida atípica. A janela é móvel para acompanhar o atleta que evolui.
 - **Filtro** (`mais_rapido_que_o_habitual`, aplicado na série em `serie_tiros_1km`/`sessoes_tiros_1km`, num lugar
-  só): a sessão entra se `pace médio dos tiros <= ritmo habitual x 0,95`, sem arredondar; o limite exato entra.
-- **Por que 5%.** O 8% da regra vale **por volta**: um tiro contra a volta ao lado, no mesmo dia, em que o ruído de
-  uma volta para outra (relevo, vento) é pequeno. Contra o ritmo habitual, que mistura dias e condições, a
-  comparação é mais ruidosa, então pede-se menos (5%) e a margem entre treino de ritmo e rodagem fica no meio:
-  tiros de verdade ficam bem abaixo do ritmo de rodagem, e rodagens com paradas ficam em volta dele.
+  só): a sessão entra se `pace médio dos tiros <= ritmo habitual x 0,90`, sem arredondar; o limite exato entra.
+- **Por que 10% (era 5% na `@3`).** O 8% da regra vale **por volta**: um tiro contra a volta ao lado, no mesmo dia, em
+  que o ruído de uma volta para outra (relevo, vento) é pequeno. Contra o ritmo habitual, que mistura dias e
+  condições, a comparação é mais ruidosa, então pede-se uma margem própria. Com 5%, séries de 1 km em ritmo moderado
+  ainda passavam, porque ficam perto do ritmo habitual; tiros de verdade ficam bem abaixo dele. Subiu para 10%, um valor
+  redondo que mantém folga para tiros de verdade e tira essas séries. Decisão do projeto, não vem de artigo.
 - A comparação é entre o pace dos tiros **da sessão** e o histórico do atleta, por isso o filtro mora na série
   (precisa do histórico), e não em `detectar_tiros`, que olha uma atividade só.
 
-Exemplo à mão: histórico com mediana de 330 s/km (5:30). Limite = 330 x 0,95 = 313,5 s/km (5:13,5). Tiros a 270 s/km:
-entram. "Tiros" a 330 s/km (rodagem com paradas): 330 > 313,5, ficam fora. Tiros a 313,5: entram (o limite entra).
+Exemplo à mão: histórico com mediana de 330 s/km (5:30). Limite = 330 x 0,90 = 297 s/km (4:57). Tiros a 270 s/km:
+entram. "Tiros" a 330 s/km (rodagem com paradas): 330 > 297, ficam fora. Tiros a 297: entram (o limite entra).
 
 ## Agregação por sessão (issue #12)
 Um ponto por atividade com `eh_intervalado` verdadeiro; série ordenada por data (empate: id da atividade).
@@ -193,8 +197,7 @@ Regra própria do projeto; não há artigo.
 
 ## Limitações e quando não usar
 - **Validado com um atleta.** Os limites da `@4` (15% de bloco contínuo, 20% de ritmo parecido, 10% do ritmo habitual)
-  foram escolhidos conferindo a série de um único atleta contra o que ele mesmo apontou; não foram testados em outros
-  perfis. Atleta que faz progressivo com km final bem mais rápido que os anteriores (mais de 15%) ou que treina tiros
+  foram calibrados com uma amostra pequena e ainda não foram testados com outros perfis. Atleta que faz progressivo com km final bem mais rápido que os anteriores (mais de 15%) ou que treina tiros
   em ritmo próximo ao de rodagem pode ser classificado diferente do que espera.
 - Ficam como limitação, sem critério geral encontrado: (a) progressivo ou série moderada em que o km forte é mais de
   15% mais rápido que o km vizinho e há recuperação curta (parece tiro de verdade); (b) fartlek de 1 km forte e 500 m
@@ -203,7 +206,7 @@ Regra própria do projeto; não há artigo.
 - Efeito colateral aceito da `@4`: uma série de 3 tiros em que um é desaquecimento lento perde o terceiro e deixa de
   valer; e uma sessão com um km de aquecimento mais rápido que 85% do tiro, colado por pausa curta, perde esse tiro.
 - O filtro do ritmo habitual (agora 10%) e a janela de 12 semanas também só foram vistos com **um atleta**. Atleta novo, sem corridas anteriores, não é filtrado (e com menos de 10 corridas na janela o
-  histórico todo é a referência, que é menos preciso). Um treino de tiros leve, mais lento que 5% abaixo do ritmo
+  histórico todo é a referência, que é menos preciso). Um treino de tiros leve, mais lento que 10% abaixo do ritmo
   habitual (por exemplo, volta à corrida depois de lesão), não entra na série de tiros.
 - Só detecta tiros de 1 km; 400 m, 2 km e outras distâncias ficam fora da Meta 1. Num treino misto, só entra
   se o volume dos tiros de 1 km for pelo menos o dos curtos (item 6); aí só os de 1 km vão para a série.
