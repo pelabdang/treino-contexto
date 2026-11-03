@@ -3,7 +3,7 @@ tipo: modulo
 status: em-uso
 dono: duda
 atualizado: 2026-11-03
-links: [[decisoes/0007-clima-da-atividade]], [[modulos/ingestao-garmin]], [[modulos/banco]], [[modulos/worker]], [[metricas/clima-oraculo]], [[produto/roadmap]]
+links: [[decisoes/0007-clima-da-atividade]], [[modulos/ingestao-garmin]], [[modulos/banco]], [[modulos/worker]], [[modulos/api]], [[modulos/api-client]], [[metricas/clima-oraculo]], [[produto/roadmap]]
 ---
 # Módulo: clima
 
@@ -12,7 +12,7 @@ Weather data by Open-Meteo.com (licença CC BY 4.0, <https://open-meteo.com/>).
 ## Para que serve
 Busca o clima da atividade (temperatura, sensação térmica, umidade e vento) na hora e no local do treino, para a Meta 4
 ([[decisoes/0007-clima-da-atividade]]). Tem o **cliente** (#112) e o **serviço que guarda e preenche o clima** (#113): tabela `clima_atividade`, estados e o
-comando `worker.preencher_clima`. O clima na API vem na issue seguinte.
+comando `worker.preencher_clima`. O clima na API (#114) é o `GET /atletas/{atleta_id}/atividades/{atividade_id}` (`buscarAtividade`), em [[modulos/api]].
 
 ## Entradas e saídas
 - Código: `services/api/app/clima/cliente.py`. Interface `ClienteClima.buscar(lat, lon, inicio, duracao_s)`; a
@@ -69,7 +69,7 @@ atleta. A resposta **não** foi gravada como fixture.
   `duracao_s` (inteiro) e a posição (2 casas).
 - `app.servicos.clima.clima_da_atividade(session, atividade_id)` devolve `ClimaDaAtividade(estado, temperatura_c,
   sensacao_c, umidade_pct, vento_kmh)`; `estado_clima(atividade, linha)` é a versão sem consulta, para listas. É o que a API
-  (#114) deve usar. `indoor` (subtipo `esteira`, `piscina`, `virtual`) e `sem_posicao` são **calculados**, sem linha.
+  (#114, `buscarAtividade`, [[modulos/api]]) usa. `indoor` (subtipo `esteira`, `piscina`, `virtual`) e `sem_posicao` são **calculados**, sem linha.
   Ao ar livre com posição: sem linha, ou linha de outra `entrada`, é `pendente`; senão vale o estado da linha. Valores só em `ok`.
 - Posição e horário são tudo que vai ao Open-Meteo. Nenhum log ou relatório mostra coordenada.
 
@@ -112,5 +112,5 @@ Aprovadas na revisão da #113, sobre o que a [[decisoes/0007-clima-da-atividade]
 padrão. Nos testes do comando, a guarda deixa passar só loopback e `AF_UNIX` (decisão 1 acima). As esperas são falsas (nada dorme). Os valores batem com `oraculo_clima.json` (tolerância do oráculo).
 
 ## Pendências
-- Clima na API e no cliente TypeScript: issue seguinte da Meta 4.
+- Cliente TypeScript: só tipos (`Atividade`, `ClimaAtividade`, `EstadoClima`, [[modulos/api-client]]); a função de busca nasce quando o app precisar.
 - Atribuição "Weather data by Open-Meteo.com" na tela, se o clima aparecer um dia no app.
