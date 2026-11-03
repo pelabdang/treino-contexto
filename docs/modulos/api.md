@@ -8,7 +8,7 @@ links: [[decisoes/0001-modelo-de-dados-minimo]], [[decisoes/0003-fuso-da-ativida
 # Módulo: api
 
 ## Para que serve
-API HTTP do produto (FastAPI). Hoje expõe `/health` e a evolução dos tiros de 1 km. É a dona do modelo de dados e das migrações.
+API HTTP do produto (FastAPI). Hoje expõe `/health`, a evolução dos tiros de 1 km e o upload de FIT. É a dona do modelo de dados e das migrações.
 Futuramente recebe a importação Garmin e serve métricas ao [[modulos/mobile]].
 
 ## Entradas e saídas
@@ -16,6 +16,7 @@ Futuramente recebe a importação Garmin e serve métricas ao [[modulos/mobile]]
 - Entrada: variável `CORS_ORIGENS` (ver "CORS" abaixo) e `FIT_DIR` (pasta dos FIT do upload, ver [[modulos/ingestao-garmin]]).
 - Saída: `GET /health` devolve `{"status": "ok"}`.
 - Saída: `GET /atletas/{atleta_id}/evolucao/tiros-1km` (ver "Endpoint" abaixo).
+- Entrada e saída: `POST /atletas/{atleta_id}/atividades/fit` (ver "Upload de FIT" abaixo).
 
 ## Arquivos principais
 - `services/api/app/main.py`: app FastAPI.
@@ -26,14 +27,14 @@ Futuramente recebe a importação Garmin e serve métricas ao [[modulos/mobile]]
 - `services/api/app/graficos/`: desenho do gráfico e do CSV da série ([[modulos/grafico-tiros]]).
 - `services/api/app/servicos/fuso.py`: `data_local(inicio, fuso_min)`, a data local da sessão ([[decisoes/0003-fuso-da-atividade]]).
 - `services/api/app/ingestao/garmin/`: parser da exportação Garmin e do FIT (`ler_exportacao`, `ler_atividade_fit`), sem banco; o worker importa daqui ([[modulos/ingestao-garmin]], [[decisoes/0006-upload-de-fit]]).
-- `services/api/app/ingestao/importacao.py` e `fit_guardado.py`: gravação da exportação e do upload (`importar`, `importar_fit`) e guarda dos FIT em `FIT_DIR`. O endpoint de upload vem na #95.
+- `services/api/app/ingestao/importacao.py` e `fit_guardado.py`: gravação da exportação e do upload (`importar`, `importar_fit`) e guarda dos FIT em `FIT_DIR`. O endpoint de upload está em `app/rotas/atividades.py` (#95).
 - `services/api/app/servicos/evolucao_tiros.py`: liga as métricas ao banco (ver abaixo).
 - `services/api/app/explicacao/`: pacote reservado.
 
 ## CORS
 O app web roda em outra porta (`http://localhost:8081`), então a API libera as origens de `CORS_ORIGENS` (lista
 separada por vírgula, lida em `app/config.py`; middleware em `criar_app` de `app/main.py`).
-- Padrão local: `http://localhost:8081`. Só `GET` (e o preflight dele); sem cookies nem cabeçalhos extras.
+- Padrão local: `http://localhost:8081`. `GET` e `POST` (o `POST` é o upload de FIT, #95; amplia o item 7 da [[decisoes/0004-contrato-tela-evolucao]]) e o preflight deles; sem cookies nem cabeçalhos extras.
 - Nunca `*`: com `*` na lista a API não sobe (`ValueError`). Variável vazia não libera nenhuma origem.
 - Origem fora da lista recebe a resposta normal, sem `Access-Control-Allow-Origin` (o navegador bloqueia).
 - Exemplo para mais de uma origem: `CORS_ORIGENS=http://localhost:8081,https://app.exemplo.com`.
@@ -95,6 +96,30 @@ curl "http://localhost:8000/atletas/1/evolucao/tiros-1km?inicio=2025-03-01"
   curl -o tiros.png "http://localhost:8000/atletas/1/evolucao/tiros-1km.png"
   ```
 - Testes: `services/api/tests/rotas/test_evolucao_tiros.py` (banco com as fixtures importadas).
+
+## Upload de FIT: `POST /atletas/{atleta_id}/atividades/fit`
+Regras na [[decisoes/0006-upload-de-fit]] (itens 4 e 5). Multipart com um campo `arquivo`; só nome terminado em `.fit`
+(maiúsculas valem). Usa `importar_fit` e as exceções de `app/ingestao/importacao.py`; o nome enviado nunca vai para o disco.
+```
+curl -F "arquivo=@treino.fit" http://localhost:8000/atletas/1/atividades/fit
+```
+```json
+{"resultado": "inserida", "atividade_id": 7, "avisos": []}
+```
+| Status | Quando |
+|---|---|
+| `201` | atividade inserida |
+| `200` | atividade que já existia (`atualizada` ou `ignorada`) |
+| `400` | FIT corrompido, truncado ou sem início/duração; FIT que não é atividade; nome sem `.fit` |
+| `404` | atleta inexistente (checado antes de ler o arquivo) |
+| `413` | mais de 10 MB (10 485 760 bytes), contado pelos bytes realmente lidos (em pedaços de 64 KB, para em 10 MB + 1) |
+| `422` | campo `arquivo` ausente (formato do FastAPI) |
+
+- Erros `400`, `404` e `413` têm o corpo `Erro {detail}`; a mensagem não repete dado do arquivo. `operationId`: `enviarAtividadeFit`.
+- Resposta de sucesso no modelo `UploadFitOut`; o tipo `RespostaUploadFit` está em [[modulos/api-client]].
+- A pasta vem de `FIT_DIR`; a dependência `get_fit_dir` existe para os testes apontarem para um diretório temporário.
+- Sem login: só para uso local (ADR 0006, item 6). `python-multipart` é dependência do `treino-api`.
+- Testes: `services/api/tests/rotas/test_upload_fit.py` (um por resposta, o `413` com arquivo sintético gerado no teste, e o OpenAPI).
 
 ## Rodar localmente com as fixtures
 Passo a passo de ponta a ponta (Postgres, migrações, fixtures, API com `CORS_ORIGENS` e app web) em [[produto/meta-2-como-rodar]]. Resumo: a API demora alguns segundos para subir; `docker compose` sem `-p` reusa o volume `treino-contexto_pgdata`.
