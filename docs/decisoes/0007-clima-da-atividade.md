@@ -1,14 +1,14 @@
 ---
 tipo: decisao
-status: proposta
+status: aceita
 dono: theo
 atualizado: 2026-11-03
 links: [[modulos/ingestao-garmin]], [[modulos/api]], [[modulos/worker]], [[modulos/banco]], [[decisoes/0001-modelo-de-dados-minimo]], [[decisoes/0003-fuso-da-atividade]], [[decisoes/0004-contrato-tela-evolucao]], [[decisoes/0006-upload-de-fit]], [[produto/roadmap]], [[produto/plano-mvp-execucao]]
 ---
 # ADR: 0007 Clima da atividade (Meta 4)
 
-**Status: proposta (Duda, 03/11), aguardando o Theo.** Só documentação: nenhum código muda aqui. As issues da Meta 4
-(posição no leitor, cliente Open-Meteo, comando, API) seguem esta ADR depois de aprovada.
+**Status: aceita (Theo, 03/11).** Só documentação: nenhum código muda aqui. As issues da Meta 4
+(posição no leitor, cliente Open-Meteo, comando, API) seguem esta ADR a partir daqui.
 
 ## Contexto
 Cada atividade ao ar livre deve ganhar temperatura, umidade, vento e sensação térmica na hora e no local do treino
@@ -26,13 +26,12 @@ do atleta, na API gratuita do desenvolvimento; o passado é preenchido relendo o
   `session` e as `lap`; `FitLido` não tem posição. As fixtures sintéticas existentes conferem que `position_lat/long`
   são vazios (`tests/test_fixtures_garmin.py`, `tests/test_fixtures_fit_upload.py`).
 - **O JSON da exportação traz a posição de início**, em graus decimais (float): `startLatitude` e `startLongitude`
-  (conferido localmente nas chaves e nos tipos da exportação real; nenhum valor é registrado aqui). Só as atividades com
-  GPS têm essas chaves. O JSON também traz `endLatitude/endLongitude`, `min/maxLatitude/Longitude` e `locationName`,
+  (formato da exportação da Garmin). Só as atividades com GPS têm essas chaves. O JSON também traz `endLatitude/endLongitude`, `min/maxLatitude/Longitude` e `locationName`,
   que **não serão lidos** (fim, caixa do trajeto e nome do lugar são mais dado pessoal do que o clima precisa).
-- **Quem tem posição não é só ao ar livre.** O `activityType` `virtual_ride` (ciclismo virtual) vem **com** posição
-  no JSON (um mundo virtual, não o lugar do atleta), e `tipos._por_texto` só marca `esteira` para ciclismo se o texto
-  tem `indoor`, então `virtual_ride` sai com `subtipo = NULL`. Sem tratar isso, o clima dessas atividades seria
-  inventado. Já `treadmill_running`, `lap_swimming` (quase todas), `indoor_cycling`, força, pilates e elíptico vêm sem posição.
+- **Quem tem posição não é só ao ar livre.** Tipos virtuais, como `virtual_ride`, podem trazer posição de um mundo
+  virtual, que não é o lugar do atleta. `tipos._por_texto` só marca `esteira` para ciclismo se o texto tem `indoor`,
+  então `virtual_ride` sai com `subtipo = NULL`. Sem tratar isso, o clima dessas atividades seria inventado.
+  Atividades indoor costumam vir sem posição; o código não depende disso.
 - **Indoor já tem base:** `subtipo` `esteira` (JSON `treadmill_running`; FIT `sub_sport = treadmill`; ciclismo indoor, que
   hoje também vira `esteira`) e `piscina` (`lap_swim`/`lap_swimming`). `aguas_abertas`, `pista` e `trilha` são ao ar livre.
 - **O FIT do upload não traz horário local** (ADR 0003): para o clima basta o `inicio` em UTC.
@@ -86,8 +85,7 @@ Estado calculado na leitura, sem linha na tabela de clima:
 - **`indoor`:** `subtipo` em `{esteira, piscina, virtual}`. Novo subtipo **`virtual`** para `virtual_ride` no JSON e
   `sub_sport = virtual_activity` no FIT (mudança pequena em `tipos.py`; o ciclismo virtual hoje sai sem subtipo).
   `aguas_abertas`, `pista`, `trilha` e subtipo vazio são ao ar livre.
-- **`sem_posicao`:** ao ar livre mas sem `inicio_lat/lon` (FIT sem GPS, JSON sem coordenada, modalidade `outra`
-  como força e pilates). Nunca se busca clima para ela.
+- **`sem_posicao`:** ao ar livre mas sem `inicio_lat/lon` (FIT sem GPS, JSON sem coordenada). Nunca se busca clima para ela.
 - Atividade `outra` **com** posição (por exemplo multiesporte) pede clima como as demais.
 
 ### 3. Tabela `clima_atividade` (modelo de dados: aprovação do Theo, ADR 0001)
@@ -114,7 +112,7 @@ As colunas de valor são nulas fora de `ok`.
 
 ### 4. Qual API e que hora
 - **Passado: Historical Weather API** (`archive-api.open-meteo.com/v1/archive`). Foi feita para isso, cobre desde 1940
-  (a exportação pode ser anterior a 2022, o que exclui a Historical Forecast como padrão) e é estável entre consultas.
+  (o histórico pode ter vários anos, o que exclui a Historical Forecast como padrão) e é estável entre consultas.
   O modelo é o padrão da API; a issue do cliente confere na resposta real que `apparent_temperature` vem preenchida e,
   se precisar, passa o parâmetro `models` (a documentação cita o "seamless" para a sensação térmica). Resolução de 11 a
   25 km: o arredondamento a 1 km não perde nada que o modelo enxergue.
@@ -226,7 +224,7 @@ Esteira fictícia com coordenada no arquivo: subtipo esteira -> estado "indoor",
   IP da máquina chega a ele (inevitável em qualquer chamada); entra no texto de consentimento quando houver login e deploy.
 - **Uso não comercial:** a API gratuita vale para o desenvolvimento e o piloto sem cobrança. Para produto pago o plano
   comercial é necessário (em aberto no roadmap).
-- **Subtipo `virtual`** novo no vocabulário (JSON e FIT); `piscina` e `esteira` não mudam. Atividades `virtual_ride` já
+- **Subtipo `virtual`** novo no vocabulário (JSON e FIT); `piscina` e `esteira` não mudam. Atividades virtuais já
   gravadas ganham o subtipo na reimportação.
 - **Importação:** a posição vira campo comparado (reimportar uma exportação antiga marca as atividades como `atualizada`
   uma vez, depois volta a `ignorada`).
@@ -236,7 +234,7 @@ Esteira fictícia com coordenada no arquivo: subtipo esteira -> estado "indoor",
   regerado; documentação; QA; resultado.
 
 ## Pendências e perguntas
-- **Theo:** aprovar a tabela e as colunas; o subtipo `virtual`; a janela de 7 dias, as 5 rodadas e o teto de 500.
+- **Theo:** aprovou o modelo (tabela e colunas, subtipo `virtual`, janela de 7 dias, 5 rodadas, teto de 500) em 03/11.
 - **Angelo (só se discordar, já alinhado):** (1) ciclismo virtual é indoor, sem clima; (2) o clima da semana corrente fica
   pendente em vez de usar previsão.
 - **A confirmar na implementação:** que o `fitdecode` devolve semicírculos; o `models` do archive para ter sensação
@@ -245,4 +243,4 @@ Esteira fictícia com coordenada no arquivo: subtipo esteira -> estado "indoor",
 ## Data e quem decidiu
 2026-11-03. Posição de início arredondada a ~1 km, sem trajeto; envio ao Open-Meteo só de posição arredondada e horário,
 na API gratuita; passado preenchido relendo os arquivos locais: Angelo. Tabela, estados, hora ponderada, falhas, limites,
-idempotência, subtipo `virtual` e comando: proposta da Duda, aguardando a aprovação do Theo.
+idempotência, subtipo `virtual` e comando: proposta da Duda, aprovada pelo Theo em 03/11.
