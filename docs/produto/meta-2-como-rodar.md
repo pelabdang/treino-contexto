@@ -95,9 +95,9 @@ O passo 7 (ver a tela) foi verificado na web pela Bia (#72).
    **Verificado na #72 (Bia), na web:** a tela mostra as 2 sessões, os rótulos de pace (`3:50`, `4:00` e `4:10`, passo de 10 s/km desde a #87) e de FC
    (169 a 173), todos vindos do bloco `eixos` da API, o clique no ponto abre o detalhe e o rodapé diz `cálculo: tiros_1km@4`.
    Com a API desligada aparece "Não foi possível falar com o servidor" e "Tentar de novo" recupera ao religar; com
-   `EXPO_PUBLIC_ATLETA_ID=99` aparece "Atleta não encontrado". No modo dev o Expo mostra um aviso vermelho
-   (`Unknown event handler property onResponderTerminate`, do `react-native-svg` na web); provavelmente some no build de produção (não conferido)
-   e não afetou a tela. O `npm test` do app cobre os estados com `fetch` falso ([[modulos/mobile]]).
+   `EXPO_PUBLIC_ATLETA_ID=99` aparece "Atleta não encontrado". O aviso vermelho do modo dev
+   (`Unknown event handler property onResponderTerminate`, do `react-native-svg` na web) foi corrigido na #86 e o
+   console da tela fica limpo no modo dev. O `npm test` do app cobre os estados com `fetch` falso ([[modulos/mobile]]).
    Prints sintéticos em `docs/_anexos/meta-2-qa-*.jpg`.
 
 ## Encerrar e limpar
