@@ -19,14 +19,6 @@ ZIP = RAIZ / "tests" / "fixtures" / "garmin" / "exportacao_minima.zip"
 TOTAL_VOLTAS = 13 + 11 + 8 + 4  # fixtures A, B, C, D (E nao tem FIT)
 
 
-@pytest.fixture(autouse=True)
-def _logger_do_parser_ativo():
-    """O Alembic (fileConfig nos testes de migração) desativa loggers já criados; o relatório precisa dos avisos."""
-    import logging
-    logging.getLogger("app.ingestao.garmin.leitor").disabled = False
-    yield
-
-
 @pytest.fixture
 def engine():
     eng = create_engine(os.environ.get("TEST_DATABASE_URL", "sqlite://"))
