@@ -17,12 +17,16 @@
       "invertido": true,
       "marcas": [
         {
+          "valor_s_km": 230.0,
+          "rotulo": "3:50"
+        },
+        {
           "valor_s_km": 240.0,
           "rotulo": "4:00"
         },
         {
-          "valor_s_km": 255.0,
-          "rotulo": "4:15"
+          "valor_s_km": 250.0,
+          "rotulo": "4:10"
         }
       ]
     },

@@ -92,8 +92,8 @@ O passo 7 (ver a tela) foi verificado na web pela Bia (#72).
    `expo-env.d.ts` do `include`). Descarte com `git checkout apps/mobile/tsconfig.json`.
 7. **Ver a tela** em `http://localhost:8081`: "Evolução dos tiros de 1 km" com as 2 sessões (04/03/25 e 11/03/25).
    Valores: 6 x 1 km, `4:11`, 170,3 bpm; 5 x 1 km, `3:57`, 171,8 bpm ([[produto/meta-1-como-reproduzir]]).
-   **Verificado na #72 (Bia), na web:** a tela mostra as 2 sessões, os rótulos de pace (`4:00`, `4:15`) e de FC
-   (169 a 173) vindos do JSON, o clique no ponto abre o detalhe e o rodapé diz `cálculo: tiros_1km@4`.
+   **Verificado na #72 (Bia), na web:** a tela mostra as 2 sessões, os rótulos de pace (`3:50`, `4:00` e `4:10`, passo de 10 s/km desde a #87) e de FC
+   (169 a 173), todos vindos do bloco `eixos` da API, o clique no ponto abre o detalhe e o rodapé diz `cálculo: tiros_1km@4`.
    Com a API desligada aparece "Não foi possível falar com o servidor" e "Tentar de novo" recupera ao religar; com
    `EXPO_PUBLIC_ATLETA_ID=99` aparece "Atleta não encontrado". No modo dev o Expo mostra um aviso vermelho
    (`Unknown event handler property onResponderTerminate`, do `react-native-svg` na web); provavelmente some no build de produção (não conferido)
