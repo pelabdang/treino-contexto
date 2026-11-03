@@ -11,7 +11,7 @@ Passo a passo de ponta a ponta, num clone limpo: Postgres, migrações, fixtures
 Só dado sintético. Nada de dado real. Parte da base está em [[produto/meta-1-como-reproduzir]].
 
 **Situação da verificação (#71):** os passos 1 a 6 foram rodados de verdade pela Nina, com o resultado abaixo.
-O passo 7 (ver a tela com as sessões) **não foi verificado nesta issue; a conferência visual é da #72 (QA da Bia)**.
+O passo 7 (ver a tela) foi verificado na web pela Bia (#72).
 
 ## Antes de começar
 - `git`, `uv`, Docker (Compose 2.24 ou mais novo), Node e `curl`.
@@ -92,8 +92,13 @@ O passo 7 (ver a tela com as sessões) **não foi verificado nesta issue; a conf
    `expo-env.d.ts` do `include`). Descarte com `git checkout apps/mobile/tsconfig.json`.
 7. **Ver a tela** em `http://localhost:8081`: "Evolução dos tiros de 1 km" com as 2 sessões (04/03/25 e 11/03/25).
    Valores: 6 x 1 km, `4:11`, 170,3 bpm; 5 x 1 km, `3:57`, 171,8 bpm ([[produto/meta-1-como-reproduzir]]).
-   **Não verificado nesta issue; a conferência visual é da #72 (QA da Bia).** O `npm test` do app cobre os estados com
-   `fetch` falso ([[modulos/mobile]]).
+   **Verificado na #72 (Bia), na web:** a tela mostra as 2 sessões, os rótulos de pace (`4:00`, `4:15`) e de FC
+   (169 a 173) vindos do JSON, o clique no ponto abre o detalhe e o rodapé diz `cálculo: tiros_1km@4`.
+   Com a API desligada aparece "Não foi possível falar com o servidor" e "Tentar de novo" recupera ao religar; com
+   `EXPO_PUBLIC_ATLETA_ID=99` aparece "Atleta não encontrado". No modo dev o Expo mostra um aviso vermelho
+   (`Unknown event handler property onResponderTerminate`, do `react-native-svg` na web); some no build de produção
+   e não afeta a tela. O `npm test` do app cobre os estados com `fetch` falso ([[modulos/mobile]]).
+   Prints sintéticos em `docs/_anexos/meta-2-qa-*.jpg`.
 
 ## Encerrar e limpar
 - `Ctrl+C` na API e no Expo.
