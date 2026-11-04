@@ -129,7 +129,7 @@ bater com a faixa atual de 1 km (950 a 1050 m) e não deixar faixas se sobrepore
 | `d400` | 400 m | 370 a 430 m |
 | `d500` | 500 m | 470 a 530 m |
 | `d600` | 600 m | 570 a 630 m |
-| `d800` | 800 m | 770 a 830 m |
+| `d800` | 800 m | 760 a 840 m |
 | `d1000` | 1000 m | 950 a 1050 m |
 | `d1200` | 1200 m | 1140 a 1260 m |
 | `d1500` | 1500 m | 1425 a 1575 m |
