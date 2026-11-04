@@ -127,7 +127,7 @@ leitura: Theo. Escala mínima de 5 bpm na FC, app local sem deploy, atleta fixo 
 mínima de 30 s/km no pace: time (Caio e Bia ajustam). Aprovação do Theo no PR deste ADR.
 
 ## Adendo 1 (2026-11-04): melhor tiro como valor principal (#152)
-**Status: proposto, aprovação do Theo neste PR.** Decisão de produto do Angelo (04/11): o valor principal do gráfico
+**Status: aprovado (Theo, 04/11).** Decisão de produto do Angelo (04/11): o valor principal do gráfico
 é o **melhor pace de tiro** da sessão; a média fica como secundária; o painel de FC mostra a **FC do melhor tiro**.
 O melhor tiro vem de `agregar_sessao` (#151): o de menor pace; empate fica com o primeiro; se ele não tem FC, a FC
 fica `null` (não se troca por outro tiro).
@@ -151,8 +151,8 @@ mesmas regras de antes.
   mínimas (30 s/km e 5 bpm). Sessão com `fc_melhor_tiro` `null` não entra na escala da FC; se nenhuma tem,
   `eixos.fc` é `null`. A média não entra nos eixos (se o app desenhar a média, ela pode sair da faixa).
 - **O PNG e o CSV continuam com a média** (fora do escopo da #152). Por isso a decisão 2 ("mesma regra do PNG")
-  passa a valer só quanto à função `escala_eixo`: o JSON e o PNG deixam de ter a mesma faixa até a issue que levar
-  o melhor tiro ao PNG.
+  passa a valer só quanto à função `escala_eixo`: o JSON e o PNG deixam de ter a mesma faixa até a #153, que leva
+  o melhor tiro ao PNG e ao CSV.
 
 ### Exemplo (fixtures, sessão 1 da amostra)
 ```json
