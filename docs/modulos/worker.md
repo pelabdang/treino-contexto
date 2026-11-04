@@ -2,7 +2,7 @@
 tipo: modulo
 status: em-uso
 dono: theo
-atualizado: 2026-11-03
+atualizado: 2026-11-04
 links: [[decisoes/0006-upload-de-fit]], [[modulos/api]], [[modulos/grafico-tiros]], [[modulos/infra]], [[modulos/ingestao-garmin]], [[modulos/banco]], [[modulos/clima]], [[decisoes/0007-clima-da-atividade]], [[produto/meta-4-como-rodar]]
 ---
 # Módulo: worker
@@ -14,7 +14,7 @@ da importação e do cálculo de métricas, fora da [[modulos/api]].
 ## Entradas e saídas
 - Saída: `GET /health` devolve `{"status": "ok"}`.
 - Parser (na API desde a #92, [[decisoes/0006-upload-de-fit]]): `app.ingestao.garmin.ler_exportacao(caminho)` lê zip, pasta, `summarizedActivities.json` ou `.fit` e devolve atividades com voltas. Detalhes em [[modulos/ingestao-garmin]].
-- Importação: `uv run python -m worker.importar_garmin <caminho> --atleta "<nome>"` grava atividades e voltas no banco ([[modulos/banco]]), de forma idempotente.
+- Importação: `uv run python -m worker.importar_garmin <caminho> --atleta "<nome>" [--com-clima]` grava atividades e voltas no banco ([[modulos/banco]]), de forma idempotente. **Sem rede por padrão** (#132): sem `--com-clima` nenhuma conexão é aberta e o fim da importação imprime `clima: nao buscado` com o comando a rodar.
 - Gráfico: `uv run python -m worker.grafico_tiros_1km --atleta-id <id> [--inicio AAAA-MM-DD] [--fim AAAA-MM-DD] [--saida <pasta>]`
   lê a série do banco e grava `entregas/meta-1/tiros-1km-atleta-<id>.png` e `.csv` (pasta criada se faltar; fora do
   git). Atleta inexistente: mensagem em stderr e código de saída 1. Formato em [[modulos/grafico-tiros]].
@@ -29,9 +29,8 @@ da importação e do cálculo de métricas, fora da [[modulos/api]].
   o clima das atividades ao ar livre, com posição, sem `ok` válido e com fim a mais de 7 dias. Sequencial, pausa de 0,25 s,
   teto de 500 chamadas por rodada, um `commit` por atividade, para se o Open-Meteo limitar (429). Imprime posições
   preenchidas e atividades por estado. `--so-posicao` não usa a rede. Regras e estados em [[modulos/clima]]; passo a passo rodado em [[produto/meta-4-como-rodar]].
-- **Atenção:** no fim de `worker.importar_garmin` o clima é buscado **com a rede de verdade** (ver [[produto/meta-4-como-rodar]] para importar fixtures de clima sem rede).
-- No fim de `worker.importar_garmin`, o clima é buscado só das atividades que entraram ou mudaram; erro de clima vira aviso
-  e nunca derruba a importação. O upload de FIT (endpoint) não chama a rede: o clima fica `pendente` até a próxima rodada.
+- Com `--com-clima`, no fim de `worker.importar_garmin` o clima é buscado **com a rede de verdade**, só das atividades que entraram ou mudaram (posições arredondadas vão ao Open-Meteo); erro de clima vira aviso
+  e nunca derruba a importação. Sem a opção, rode `worker.preencher_clima` quando quiser. O upload de FIT (endpoint) não chama a rede: o clima fica `pendente` até a próxima rodada.
 
 ## Arquivos principais
 - `services/worker/worker/main.py`

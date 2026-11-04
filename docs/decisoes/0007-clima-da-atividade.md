@@ -2,7 +2,7 @@
 tipo: decisao
 status: aceita
 dono: theo
-atualizado: 2026-11-03
+atualizado: 2026-11-04
 links: [[modulos/ingestao-garmin]], [[modulos/api]], [[modulos/worker]], [[modulos/banco]], [[decisoes/0001-modelo-de-dados-minimo]], [[decisoes/0003-fuso-da-atividade]], [[decisoes/0004-contrato-tela-evolucao]], [[decisoes/0006-upload-de-fit]], [[produto/roadmap]], [[produto/plano-mvp-execucao]]
 ---
 # ADR: 0007 Clima da atividade (Meta 4)
@@ -177,6 +177,7 @@ Cada atividade na resposta ganha um objeto `clima`:
   de entrar ou mudar (erro de clima **nunca** derruba a importação); (b) o comando abaixo.
 - **O upload não espera a rede.** O `POST /atletas/{id}/atividades/fit` grava, responde e deixa o clima `pendente` para a
   próxima rodada; o endpoint não chama o Open-Meteo na requisição. Então (a) vale só para o `importar` de linha de comando.
+  **Atualização (#132, 04/11):** (a) virou opt-in. O `worker.importar_garmin` só busca o clima com `--com-clima`; sem a opção não abre conexão de rede ([[modulos/worker]]).
 
 ### 8. Passado: um comando só
 `uv run python -m worker.preencher_clima [--atleta-id N] [--exportacao CAMINHO] [--limite N] [--refazer-falhas]
