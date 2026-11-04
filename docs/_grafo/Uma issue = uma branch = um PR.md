@@ -1,17 +1,18 @@
 ---
 source_file: "AGENTS.md"
 type: "document"
-community: "Stack e Ingestão de Dados"
+community: "Comunidade 1"
 tags:
   - graphify/document
   - graphify/EXTRACTED
-  - community/Stack_e_Ingesto_de_Dados
+  - community/Comunidade_1
 ---
 
 # Uma issue = uma branch = um PR
 
 ## Connections
-- [[Duda (dados e backend)]] - `implements` [EXTRACTED]
-- [[Regras do time (AGENTS.md)]] - `implements` [EXTRACTED]
+- [[AGENTS.md (regras do time)]] - `references` [EXTRACTED]
+- [[Agente Duda (dados e backend)]] - `references` [EXTRACTED]
+- [[Agente Rafa (app Expo)]] - `references` [EXTRACTED]
 
-#graphify/document #graphify/EXTRACTED #community/Stack_e_Ingesto_de_Dados
+#graphify/document #graphify/EXTRACTED #community/Comunidade_1

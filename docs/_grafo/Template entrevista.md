@@ -1,18 +1,18 @@
 ---
 source_file: "docs/_templates/entrevista.md"
 type: "document"
-community: "Documentação e Revisão"
+community: "Comunidade 3"
 tags:
   - graphify/document
   - graphify/EXTRACTED
-  - community/Documentao_e_Reviso
+  - community/Comunidade_3
 ---
 
 # Template: entrevista
 
 ## Connections
-- [[Mapa do projeto (00-inicio)]] - `references` [INFERRED]
-- [[Nina (documentadora)]] - `implements` [EXTRACTED]
-- [[Template regra]] - `references` [EXTRACTED]
+- [[Agente Nina (documentação)]] - `references` [EXTRACTED]
+- [[Entrevistas com treinadores]] - `conceptually_related_to` [INFERRED]
+- [[Regras da base de conhecimento (cienciaregras)]] - `references` [EXTRACTED]
 
-#graphify/document #graphify/EXTRACTED #community/Documentao_e_Reviso
+#graphify/document #graphify/EXTRACTED #community/Comunidade_3

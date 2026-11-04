@@ -1,17 +1,18 @@
 ---
 source_file: "docs/_templates/modulo.md"
 type: "document"
-community: "Documentação e Revisão"
+community: "Comunidade 3"
 tags:
   - graphify/document
-  - graphify/EXTRACTED
-  - community/Documentao_e_Reviso
+  - graphify/INFERRED
+  - community/Comunidade_3
 ---
 
 # Template: módulo
 
 ## Connections
-- [[Mapa do projeto (00-inicio)]] - `references` [INFERRED]
-- [[Nina (documentadora)]] - `implements` [EXTRACTED]
+- [[00-inicio (mapa do projeto)]] - `conceptually_related_to` [INFERRED]
+- [[Agente Nina (documentação)]] - `references` [EXTRACTED]
+- [[Módulo api_1]] - `conceptually_related_to` [AMBIGUOUS]
 
-#graphify/document #graphify/EXTRACTED #community/Documentao_e_Reviso
+#graphify/document #graphify/INFERRED #community/Comunidade_3

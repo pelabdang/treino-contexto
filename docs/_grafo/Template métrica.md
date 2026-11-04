@@ -1,22 +1,19 @@
 ---
 source_file: "docs/_templates/metrica.md"
 type: "document"
-community: "Documentação e Revisão"
+community: "Comunidade 3"
 tags:
   - graphify/document
   - graphify/EXTRACTED
-  - community/Documentao_e_Reviso
+  - community/Comunidade_3
 ---
 
 # Template: métrica
 
 ## Connections
-- [[Ingestão GarminFITGPXTCX (fitdecode)]] - `references` [INFERRED]
-- [[Mapa do projeto (00-inicio)]] - `references` [INFERRED]
-- [[Nina (documentadora)]] - `implements` [EXTRACTED]
-- [[Regras de documentação (Obsidian + Graphify)]] - `references` [EXTRACTED]
-- [[Template artigo]] - `references` [EXTRACTED]
-- [[Teste com valor calculado à mão e fonte citada]] - `implements` [INFERRED]
-- [[servicesapiappmetricas]] - `references` [EXTRACTED]
+- [[AGENTS.md (regras do time)]] - `references` [EXTRACTED]
+- [[Agente Nina (documentação)]] - `references` [EXTRACTED]
+- [[Artigos científicos (cienciaartigos)]] - `references` [EXTRACTED]
+- [[docsmetricas (notas de métrica)]] - `conceptually_related_to` [EXTRACTED]
 
-#graphify/document #graphify/EXTRACTED #community/Documentao_e_Reviso
+#graphify/document #graphify/EXTRACTED #community/Comunidade_3

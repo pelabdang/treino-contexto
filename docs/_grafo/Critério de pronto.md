@@ -1,19 +1,18 @@
 ---
-source_file: "AGENTS.md"
+source_file: ".claude/agents/bia-qa.md"
 type: "document"
-community: "Governança e Fluxo de Metas"
+community: "Comunidade 1"
 tags:
   - graphify/document
   - graphify/EXTRACTED
-  - community/Governana_e_Fluxo_de_Metas
+  - community/Comunidade_1
 ---
 
 # Critério de pronto
 
 ## Connections
-- [[Bia (QA)]] - `references` [EXTRACTED]
-- [[Issues da meta no GitHub]] - `references` [EXTRACTED]
-- [[Regras do time (AGENTS.md)]] - `implements` [EXTRACTED]
-- [[Template meta]] - `references` [EXTRACTED]
+- [[Agente Bia (QA)]] - `implements` [EXTRACTED]
+- [[Agente Paulo (planejador)]] - `references` [EXTRACTED]
+- [[Issues no GitHub (até 1 dia de trabalho)]] - `references` [EXTRACTED]
 
-#graphify/document #graphify/EXTRACTED #community/Governana_e_Fluxo_de_Metas
+#graphify/document #graphify/EXTRACTED #community/Comunidade_1

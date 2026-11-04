@@ -1,20 +1,17 @@
 ---
 source_file: "docs/_templates/artigo.md"
 type: "document"
-community: "Documentação e Revisão"
+community: "Comunidade 3"
 tags:
   - graphify/document
-  - graphify/INFERRED
-  - community/Documentao_e_Reviso
+  - graphify/EXTRACTED
+  - community/Comunidade_3
 ---
 
 # Template: artigo
 
 ## Connections
-- [[Mapa do projeto (00-inicio)]] - `references` [INFERRED]
-- [[Nina (documentadora)]] - `implements` [EXTRACTED]
-- [[Template métrica]] - `references` [EXTRACTED]
-- [[Template regra]] - `references` [INFERRED]
-- [[Teste com valor calculado à mão e fonte citada]] - `semantically_similar_to` [INFERRED]
+- [[Agente Nina (documentação)]] - `references` [EXTRACTED]
+- [[Artigos científicos (cienciaartigos)]] - `references` [EXTRACTED]
 
-#graphify/document #graphify/INFERRED #community/Documentao_e_Reviso
+#graphify/document #graphify/EXTRACTED #community/Comunidade_3
