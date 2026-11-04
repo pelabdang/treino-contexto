@@ -1,0 +1,260 @@
+"""Blocos do treino: pausas, junção de laps, aquecimento e desaquecimento (issue #162; ADR 0008).
+
+Função pura: sem banco, sem IA. A regra e os limites estão em ``docs/metricas/esforcos.md`` e na ADR 0008
+(``docs/decisoes/0008-deteccao-de-esforcos.md``). Qualquer mudança de regra ou de constante exige subir ``VERSAO``
+(a versão é gravada junto do resultado e dispara a reclassificação).
+
+Fonte: regra própria do projeto, sem artigo (ADR 0008, "Consequências"). Todos os limites são decisão do projeto,
+aprovados pelo Angelo em 04/11, e ficam aqui como constantes nomeadas.
+
+Esta versão faz o primeiro passo comum às modalidades: ler a sequência de voltas como blocos. Faixa nomeada
+(``d400``, ``t4``...) e treino-chave contínuo são das issues #163 a #165 e não são calculados aqui.
+"""
+
+from __future__ import annotations
+
+from collections.abc import Sequence
+from dataclasses import dataclass
+from typing import Literal
+
+VERSAO = "esforcos@1"
+
+MODALIDADE_CORRIDA = "corrida"
+MODALIDADE_CICLISMO = "ciclismo"
+
+# Item 2 da ADR: tempo parado entre duas voltas que as separa (menor que isto junta).
+PAUSA_SEPARA_S_CORRIDA = 15.0
+PAUSA_SEPARA_S_CICLISMO = 30.0  # semáforo e cruzamento são comuns
+# Item 2: o ritmo da volta precisa ficar a até 5% do ritmo do bloco acumulado (pace na corrida, velocidade no ciclismo).
+JUNTAR_TOLERANCIA = 0.05
+# Item 3: volta de pausa (parado ou andando) quando o relógio não pausou sozinho.
+PAUSA_PACE_S_KM = 600.0  # corrida: pace maior que isto
+PAUSA_DIST_MIN_M = 50.0  # corrida: distância menor que isto
+PAUSA_VEL_KMH = 5.0  # ciclismo: velocidade menor que isto
+# Item 5: esforço = pace <= ref x (1 - 0,10) na corrida; velocidade >= ref x (1 + 0,15) no ciclismo.
+ESFORCO_GANHO_CORRIDA = 0.10
+ESFORCO_GANHO_CICLISMO = 0.15
+
+AQUECIMENTO = "aquecimento"
+ESFORCO = "esforco"
+RECUPERACAO = "recuperacao"
+DESAQUECIMENTO = "desaquecimento"
+LEVE = "leve"
+CATEGORIAS = (ESFORCO, RECUPERACAO, AQUECIMENTO, DESAQUECIMENTO, LEVE)
+
+REF_HABITUAL = "habitual"  # referência vinda do histórico do atleta
+REF_ATIVIDADE = "atividade"  # reserva: mediana ponderada dos blocos da própria atividade
+
+_EPS = 1e-9  # os limites são inclusivos; evita que o erro de ponto flutuante tire um valor exato do limite
+
+
+@dataclass(frozen=True)
+class VoltaTreino:
+    """Uma volta como o banco a guarda (``segmento``). ``duracao_s`` é o tempo em movimento."""
+
+    ordem: int
+    inicio_offset_s: float  # tempo corrido desde o início da atividade
+    duracao_s: float
+    distancia_m: float
+    fc_media: float | None = None
+    intensidade: str | None = None  # dica do FIT; não muda a categoria nesta versão
+
+
+@dataclass(frozen=True)
+class BlocoTreino:
+    ordem: int  # posição do bloco, a partir de 0
+    categoria: str
+    volta_inicial: int  # VoltaTreino.ordem da primeira volta
+    volta_final: int  # VoltaTreino.ordem da última volta (voltas contíguas, sem pausa no meio)
+    inicio_offset_s: float
+    duracao_s: float  # tempo em movimento (soma)
+    parada_apos_s: float  # tempo parado até o bloco seguinte; 0 no último
+    distancia_m: float
+    fc_media: float | None  # ponderada pela duração, só sobre voltas com FC
+    pace_s_km: float  # duracao / distancia x 1000
+    velocidade_kmh: float  # distancia / duracao x 3,6
+
+
+@dataclass(frozen=True)
+class ResultadoBlocos:
+    blocos: tuple[BlocoTreino, ...]
+    referencia: float | None  # ritmo habitual (s/km) ou velocidade habitual (km/h) usado; None sem blocos
+    ref_origem: Literal["habitual", "atividade"] | None
+    versao: str = VERSAO
+
+
+def _pace(distancia_m: float, duracao_s: float) -> float | None:
+    if distancia_m <= 0 or duracao_s <= 0:
+        return None
+    return duracao_s / distancia_m * 1000.0
+
+
+def _velocidade(distancia_m: float, duracao_s: float) -> float | None:
+    if distancia_m <= 0 or duracao_s <= 0:
+        return None
+    return distancia_m / duracao_s * 3.6
+
+
+def _pausa_separa_s(modalidade: str) -> float:
+    return PAUSA_SEPARA_S_CICLISMO if modalidade == MODALIDADE_CICLISMO else PAUSA_SEPARA_S_CORRIDA
+
+
+def tempos_parados(voltas: Sequence[VoltaTreino]) -> list[float]:
+    """Tempo parado depois de cada volta (item 3): (início da próxima - início desta) - duração, mínimo 0.
+
+    A última volta não tem próxima: 0. Sem ``start_time`` no FIT todos os inícios são 0 e a conta dá 0.
+    """
+    paradas = []
+    for i, v in enumerate(voltas):
+        if i + 1 < len(voltas):
+            paradas.append(max(0.0, voltas[i + 1].inicio_offset_s - v.inicio_offset_s - v.duracao_s))
+        else:
+            paradas.append(0.0)
+    return paradas
+
+
+def eh_volta_de_pausa(volta: VoltaTreino, modalidade: str) -> bool:
+    """Volta parada ou muito curta (item 3): o atleta parou e o relógio não pausou sozinho."""
+    pace = _pace(volta.distancia_m, volta.duracao_s)
+    vel = _velocidade(volta.distancia_m, volta.duracao_s)
+    if pace is None or vel is None:
+        return True
+    if modalidade == MODALIDADE_CICLISMO:
+        return vel < PAUSA_VEL_KMH
+    return pace > PAUSA_PACE_S_KM or volta.distancia_m < PAUSA_DIST_MIN_M
+
+
+def _ritmo_parecido(volta: VoltaTreino, dist_bloco: float, dur_bloco: float, modalidade: str) -> bool:
+    """Ritmo da volta a até ``JUNTAR_TOLERANCIA`` do ritmo do bloco acumulado (ponderado por distância)."""
+    if modalidade == MODALIDADE_CICLISMO:
+        v, ref = _velocidade(volta.distancia_m, volta.duracao_s), _velocidade(dist_bloco, dur_bloco)
+    else:
+        v, ref = _pace(volta.distancia_m, volta.duracao_s), _pace(dist_bloco, dur_bloco)
+    if v is None or ref is None:
+        return False
+    return abs(v - ref) / ref <= JUNTAR_TOLERANCIA + _EPS
+
+
+def _agregar(voltas: Sequence[VoltaTreino]) -> tuple[float, float, float | None]:
+    dist = sum(v.distancia_m for v in voltas)
+    dur = sum(v.duracao_s for v in voltas)
+    com_fc = [v for v in voltas if v.fc_media is not None]
+    dur_fc = sum(v.duracao_s for v in com_fc)
+    fc = sum(v.fc_media * v.duracao_s for v in com_fc) / dur_fc if dur_fc > 0 else None
+    return dist, dur, fc
+
+
+def _mediana_ponderada(valores_e_pesos: list[tuple[float, float]]) -> float:
+    """Menor valor cujo peso acumulado chega à metade do peso total."""
+    ordenado = sorted(valores_e_pesos)
+    total = sum(p for _, p in ordenado)
+    acumulado = 0.0
+    for valor, peso in ordenado:
+        acumulado += peso
+        if acumulado >= total / 2 - _EPS:
+            return valor
+    return ordenado[-1][0]
+
+
+def _eh_esforco(bloco: BlocoTreino, referencia: float, modalidade: str) -> bool:
+    if modalidade == MODALIDADE_CICLISMO:
+        return bloco.velocidade_kmh >= referencia * (1 + ESFORCO_GANHO_CICLISMO) - _EPS
+    return bloco.pace_s_km <= referencia * (1 - ESFORCO_GANHO_CORRIDA) + _EPS
+
+
+def montar_blocos(
+    voltas: Sequence[VoltaTreino],
+    modalidade: str,
+    referencia: float | None = None,
+) -> ResultadoBlocos:
+    """Lê as voltas de uma atividade como blocos (ADR 0008, itens 1 a 5).
+
+    1. Volta de pausa (parada ou muito curta) não é bloco: separa os blocos e o tempo dela entra em
+       ``parada_apos_s`` do bloco anterior, junto do tempo parado entre as voltas.
+    2. Voltas consecutivas se juntam quando o tempo parado entre elas é menor que a pausa que separa e o ritmo da
+       volta fica a até 5% do ritmo do bloco acumulado.
+    3. ``referencia`` é o ritmo habitual (s/km, corrida) ou a velocidade habitual (km/h, ciclismo). Sem ela, vale a
+       mediana, ponderada pela duração, dos blocos da própria atividade (``ref_origem = "atividade"``).
+    4. Esforço = ritmo melhor que o limiar da ADR. Com esforço: antes do primeiro, aquecimento; depois do último,
+       desaquecimento; entre eles, recuperação. Sem esforço, todos os blocos são leves.
+
+    Só ``corrida`` e ``ciclismo``; outra modalidade devolve zero blocos. O tempo parado antes do primeiro bloco e
+    depois do último é ignorado (não há bloco do outro lado).
+    """
+    if modalidade not in (MODALIDADE_CORRIDA, MODALIDADE_CICLISMO):
+        return ResultadoBlocos((), None, None)
+    ordenadas = sorted(voltas, key=lambda v: v.ordem)
+    paradas = tempos_parados(ordenadas)
+    separa_s = _pausa_separa_s(modalidade)
+
+    # 1 e 2: grupos de voltas; cada grupo guarda a parada que o segue.
+    grupos: list[list[VoltaTreino]] = []
+    parada_apos: list[float] = []
+    anterior_fechou = True  # True: a próxima volta abre um grupo novo
+    for v, parada in zip(ordenadas, paradas):
+        if eh_volta_de_pausa(v, modalidade):
+            if grupos:
+                parada_apos[-1] += v.duracao_s + parada
+            anterior_fechou = True
+            continue
+        if not anterior_fechou:
+            atual = grupos[-1]
+            dist, dur, _ = _agregar(atual)
+            if parada_apos[-1] < separa_s - _EPS and _ritmo_parecido(v, dist, dur, modalidade):
+                atual.append(v)
+                parada_apos[-1] = parada
+                continue
+        grupos.append([v])
+        parada_apos.append(parada)
+        anterior_fechou = False
+
+    brutos = []
+    for i, g in enumerate(grupos):
+        dist, dur, fc = _agregar(g)
+        brutos.append(
+            (g, dist, dur, fc, parada_apos[i] if i + 1 < len(grupos) else 0.0)
+        )
+    if not brutos:
+        return ResultadoBlocos((), None, None)
+
+    # 3: referência
+    medidas = [
+        (_velocidade(d, t) if modalidade == MODALIDADE_CICLISMO else _pace(d, t), t) for _, d, t, _, _ in brutos
+    ]
+    if referencia is not None:
+        ref, origem = referencia, REF_HABITUAL
+    else:
+        ref, origem = _mediana_ponderada([(m, t) for m, t in medidas]), REF_ATIVIDADE
+
+    # 4: categorias
+    previos = [
+        BlocoTreino(
+            ordem=i,
+            categoria=LEVE,
+            volta_inicial=g[0].ordem,
+            volta_final=g[-1].ordem,
+            inicio_offset_s=g[0].inicio_offset_s,
+            duracao_s=dur,
+            parada_apos_s=parada,
+            distancia_m=dist,
+            fc_media=fc,
+            pace_s_km=_pace(dist, dur),
+            velocidade_kmh=_velocidade(dist, dur),
+        )
+        for i, (g, dist, dur, fc, parada) in enumerate(brutos)
+    ]
+    esforcos = [i for i, b in enumerate(previos) if _eh_esforco(b, ref, modalidade)]
+    blocos = []
+    for i, b in enumerate(previos):
+        if not esforcos:
+            cat = LEVE
+        elif i in esforcos:
+            cat = ESFORCO
+        elif i < esforcos[0]:
+            cat = AQUECIMENTO
+        elif i > esforcos[-1]:
+            cat = DESAQUECIMENTO
+        else:
+            cat = RECUPERACAO
+        blocos.append(BlocoTreino(**{**b.__dict__, "categoria": cat}))
+    return ResultadoBlocos(tuple(blocos), ref, origem)
