@@ -2,8 +2,8 @@
 tipo: modulo
 status: em-uso
 dono: rafa
-atualizado: 2026-11-03
-links: [[modulos/api]], [[modulos/api-client]], [[produto/roadmap]], [[decisoes/0004-contrato-tela-evolucao]], [[produto/meta-2-como-rodar]], [[decisoes/0006-upload-de-fit]]
+atualizado: 2026-11-04
+links: [[modulos/api]], [[modulos/api-client]], [[produto/roadmap]], [[decisoes/0004-contrato-tela-evolucao]], [[produto/meta-2-como-rodar]], [[decisoes/0006-upload-de-fit]], [[design/guia-visual]], [[design/tokens]]
 ---
 # Módulo: mobile
 
@@ -56,17 +56,28 @@ Verificado na web (#96) com API e Postgres locais, FIT sintético `upload_interv
   - "Nenhuma sessão deste período tem frequência cardíaca." (painel de FC quando `eixos.fc` é null).
 - Carregamento, erro e ligação com a API ficam na #70.
 
+## Tema (tokens do guia visual)
+`src/tema/` transforma [[design/tokens]] (fonte única) em código, com os mesmos nomes do guia ([[design/guia-visual]]):
+- `tokens.ts`: `cores.claro` e `cores.escuro` (chaves como na tabela, sem o prefixo `cor.`: `cor["superficie-2"]`, `cor["grafico.pace"]`), `espaco`, `raio`, `borda`, `tamanho`, `movimento`, `familia` e `fonte` (Inter, com `tabular-nums` nos números).
+- `index.tsx`: `useTema()` devolve `{ escuro, cor }` conforme o tema do sistema (`useColorScheme`; claro quando o sistema não informa). O objeto é estável, então serve de dependência de `useMemo`.
+- `fontes.ts`: `useFontesInter()` carrega a Inter (`@expo-google-fonts/inter`, OFL); o `_layout.tsx` espera as fontes e, se falharem, segue com a fonte do sistema. Fica separado do resto para os testes dos componentes não carregarem `expo-font`.
+- Os componentes montam o `StyleSheet` com `criarEstilos(tema)` dentro de `useMemo`. Cor, fonte, espaço e raio das telas só vêm de tokens: sem cor literal nas telas.
+- `@expo/vector-icons` (Material Icons) já está instalado, mas ainda sem uso: nenhum ícone entra nas telas atuais para não mudar o layout.
+- Teste `__tests__/tema.test.tsx` lê a tabela "Cores" de `docs/design/tokens.md` e exige que o tema tenha os mesmos nomes e valores (claro e escuro), mais conferências de espaço, raio e tipografia e do `useTema`. Mudou uma cor no guia? Atualize `tokens.ts` na mesma hora, senão o teste falha.
+- Diferenças visuais pequenas em relação às telas antigas, vindas do guia: botão com 48 de altura e cor `destaque`, desligado em `superficie-2` (antes opacidade 0,5), alvo de toque do ponto do gráfico em 44 (antes 32), rótulos de eixo em 12 (antes 11) e conteúdo limitado a 720 de largura na web. O destaque do melhor tiro fica para a #154.
+
 ## Arquivos principais
 - `apps/mobile/src/componentes/TelaEvolucao.tsx`
 - `apps/mobile/src/componentes/BotaoEnviarFit.tsx`
 - `apps/mobile/src/componentes/GraficoTiros.tsx` e `apps/mobile/__tests__/GraficoTiros.test.tsx` (usa o exemplo de `packages/api-client/exemplos/`)
 - `apps/mobile/src/app/` (rotas do Expo Router; código que não é rota fica fora)
+- `apps/mobile/src/tema/` (tokens, `useTema`, fontes) e `apps/mobile/__tests__/tema.test.tsx`
 - `apps/mobile/src/config.ts` (`lerConfig` e `config`)
 - `apps/mobile/__tests__/index.test.tsx`, `BotaoEnviarFit.test.tsx`, `config.test.ts` e `api-client.test.ts` (cliente com `fetch` falso)
 - `apps/mobile/package.json` (Jest via `jest-expo`, Testing Library), `app.json`, `eslint.config.js`, `.env.example`
 
 ## Depende de
-- [[modulos/api]] (via o cliente: leitura da evolução e upload de FIT) e [[modulos/api-client]] (tipos e funções `buscarEvolucaoTiros1km` e `enviarAtividadeFit`). Pacote `expo-document-picker` para escolher o arquivo.
+- [[modulos/api]] (via o cliente: leitura da evolução e upload de FIT) e [[modulos/api-client]] (tipos e funções `buscarEvolucaoTiros1km` e `enviarAtividadeFit`). Pacote `expo-document-picker` para escolher o arquivo; `@expo-google-fonts/inter`, `expo-font`, `expo-asset` e `@expo/vector-icons` para o tema.
 
 ## Como testar
 ```
