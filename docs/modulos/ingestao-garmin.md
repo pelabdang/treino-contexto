@@ -181,8 +181,16 @@ a função é `importar_fit(session, atleta_id, conteudo)` em `services/api/app/
   `fonte_id` = o id derivado do FIT; não há horário local, então `fuso_min` fica `NULL` (fallback `America/Sao_Paulo`).
 - **Identidade (`gravar_atividade`, usada também por `importar`):** primeiro a chave `(atleta_id, fonte, fonte_id)`;
   se não existe, a regra dos 60 s (mesmo atleta, mesma modalidade, início a até 60 s). Empate: início mais
-  próximo, depois menor `id`, com aviso `candidatas 12, 15; usada a 12`. A exportação ignora como candidatas as
-  linhas que já são da exportação (outro `activityId` é outra atividade).
+  próximo, depois menor `id`, com aviso `candidatas 12, 15; usada a 12`. A exclusão
+  "exportação não casa com exportação" vale **só quando os dois lados têm `activityId`** (outro `activityId` é outra
+  atividade). FIT avulso importado pela exportação (`fonte_id` `fit-…`) não tem `activityId` e casa pela regra dos 60 s
+  ([[decisoes/0006-upload-de-fit]], ajuste da #133).
+  - *FIT avulso casa com linha com `activityId`:* age como o upload (a linha mantém `fonte_id` e campos do JSON; o FIT só
+    completa voltas e posição e preenche `arquivo_bruto` se vazio). Importar JSON e depois FIT avulso, ou o inverso, dá
+    uma linha só; a linha termina com o `activityId`.
+  - *Limitação conhecida (#133):* dois FIT avulsos `fit-…` da mesma modalidade com início a até 60 s um do outro viram
+    uma atividade só, porque nenhum dos dois tem `activityId` para separá-los. É raro (dois treinos reais não começam
+    com menos de 1 minuto de diferença); se acontecer, só o JSON da exportação os distingue.
   - *Exportação casa com linha de upload:* a linha vira `garmin_export` com o `activityId`, e a chave de hoje volta a valer.
   - *Upload casa com linha da exportação:* a linha mantém `fonte`, `fonte_id` e os campos da exportação (início, duração,
     distância, FC, `fuso_min`); o upload só completa as voltas se a linha não tinha nenhuma, a posição de início se a linha não tinha (e não é indoor), e troca o `arquivo_bruto`.

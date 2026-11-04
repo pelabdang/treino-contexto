@@ -62,6 +62,8 @@ parados depois das voltas 1 a 9.
 - Os 10 esforços somam 4000 m em 880 s. Total: 12 blocos (1 + 10 + 1).
 
 ### 2. Corrida, 3 x 1500 m cortados pelo lap automático
+Os números diferem um pouco do exemplo 1 da ADR 0008 (240 s e 241 s/km): aqui cada repetição tem laps diferentes, para
+cobrir três casos de junção. A regra é a mesma.
 Voltas: 0 e 1 aquecimento (1000 m em 330 s e 1000 m em 332 s); 2 e 3 (1000 m em 240 s + 500 m em 121 s, parada
 de 120 s); 4 e 5 (1000 m em 242 s + 500 m em 121 s, parada de 120 s); 6 e 7 (1000 m em 243 s + 500 m em 122 s);
 8 desaquecimento 1000 m em 340 s.
@@ -82,7 +84,7 @@ de 120 s); 4 e 5 (1000 m em 242 s + 500 m em 121 s, parada de 120 s); 6 e 7 (100
 8 voltas de 1000 m em 268, 271, 270, 272, 269, 270, 271 e 269 s.
 - Soma das durações: 268 + 271 = 539; + 270 = 809; + 272 = 1081; + 269 = 1350; + 270 = 1620; + 271 = 1891;
   + 269 = **2160 s**.
-- Nenhuma volta passa de 1% do bloco: **um bloco** de 8000 m, pace 2160 / 8000 x 1000 = **270,0 s/km**.
+- Todas as voltas ficam a menos de 5% do bloco acumulado (a maior diferença é de 1,1%, 271 s contra 268 s): **um bloco** de 8000 m, pace 2160 / 8000 x 1000 = **270,0 s/km**.
 - 270 <= 297: esforço. Margem sobre o habitual: 1 - 270 / 330 = **18,18%**.
 - FC x duração: 150 x 268 + 160 x 271 + 164 x 270 + 166 x 272 + 168 x 269 + 169 x 270 + 170 x 271 + 171 x 269 =
   40200 + 43360 + 44280 + 45152 + 45192 + 45630 + 46070 + 45999 = 355883; FC = 355883 / 2160 = **164,7606**.

@@ -12,8 +12,8 @@
   "periodo": null,
   "eixos": {
     "pace": {
-      "min_s_km": 228.9,
-      "max_s_km": 258.9,
+      "min_s_km": 226.0,
+      "max_s_km": 256.0,
       "invertido": true,
       "marcas": [
         {
@@ -31,28 +31,28 @@
       ]
     },
     "fc": {
-      "min_bpm": 168.5,
-      "max_bpm": 173.5,
+      "min_bpm": 173.5,
+      "max_bpm": 178.5,
       "marcas": [
         {
-          "valor_bpm": 169.0,
-          "rotulo": "169"
+          "valor_bpm": 174.0,
+          "rotulo": "174"
         },
         {
-          "valor_bpm": 170.0,
-          "rotulo": "170"
+          "valor_bpm": 175.0,
+          "rotulo": "175"
         },
         {
-          "valor_bpm": 171.0,
-          "rotulo": "171"
+          "valor_bpm": 176.0,
+          "rotulo": "176"
         },
         {
-          "valor_bpm": 172.0,
-          "rotulo": "172"
+          "valor_bpm": 177.0,
+          "rotulo": "177"
         },
         {
-          "valor_bpm": 173.0,
-          "rotulo": "173"
+          "valor_bpm": 178.0,
+          "rotulo": "178"
         }
       ]
     }
@@ -66,6 +66,10 @@
       "pace_medio_s_km": 250.8,
       "pace_medio": "4:11",
       "fc_media": 170.3,
+      "pace_melhor_s_km": 248.0,
+      "pace_melhor": "4:08",
+      "fc_melhor_tiro": 175.0,
+      "ordem_melhor_tiro": 11,
       "tiros": [
         {
           "ordem": 1,
@@ -125,6 +129,10 @@
       "pace_medio_s_km": 237.0,
       "pace_medio": "3:57",
       "fc_media": 171.8,
+      "pace_melhor_s_km": 234.0,
+      "pace_melhor": "3:54",
+      "fc_melhor_tiro": 177.0,
+      "ordem_melhor_tiro": 9,
       "tiros": [
         {
           "ordem": 1,

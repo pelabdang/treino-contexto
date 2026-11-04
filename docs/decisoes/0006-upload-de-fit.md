@@ -2,7 +2,7 @@
 tipo: decisao
 status: em-uso
 dono: theo
-atualizado: 2026-11-03
+atualizado: 2026-11-04
 links: [[modulos/ingestao-garmin]], [[modulos/api]], [[modulos/worker]], [[modulos/banco]], [[modulos/mobile]], [[modulos/api-client]], [[decisoes/0001-modelo-de-dados-minimo]], [[decisoes/0003-fuso-da-atividade]], [[decisoes/0004-contrato-tela-evolucao]], [[decisoes/0005-serie-de-tiros-o-que-entra]], [[produto/roadmap]]
 ---
 # ADR: 0006 Upload de arquivo FIT (Meta 3)
@@ -87,6 +87,15 @@ Casou: **atualiza** a atividade existente (mesmo `id`), nunca insere outra. Não
     reescrevam um ao outro a cada envio. Upload sobre linha de upload atualiza todos os campos, como acima.
   - *Detalhe da #94:* na exportação, linhas que já são `garmin_export` não contam como candidatas (cada
     `activityId` é uma atividade distinta).
+  - *Ajuste da #133 (04/11/2026):* a exclusão acima vale **só quando os dois lados têm `activityId`**
+    (`fonte = garmin_export` e `fonte_id` que não começa com `fit-`). Um FIT avulso importado pela exportação
+    (`fonte_id` `fit-…`) não tem `activityId`, então casa pela regra dos 60 s com qualquer linha, como o upload.
+    Motivo: na #115, FIT avulsos importados depois do JSON entraram como atividades novas (treino duplicado).
+    Consequências: FIT avulso sobre linha com `activityId` age como o upload (a linha mantém `fonte_id` e campos do JSON;
+    o FIT só completa voltas e posição, e só preenche `arquivo_bruto` se estiver vazio); JSON sobre linha de FIT avulso
+    ou de upload **adota** o `activityId` (a linha mantém o `id`); dois `activityId` diferentes a menos de 60 s
+    continuam duas atividades. Reimportar é idempotente nos dois sentidos. Sem mudança de modelo de dados.
+    Exceção à regra de identidade proposta pela Duda; **aprovado (Theo, 04/11, PR #186)**.
 - **Resultado:** `inserida`, `atualizada` (algo mudou) ou `ignorada` (nada mudou), com o `id` da atividade. Depois
   de qualquer um, `classificar_atividades` roda para o atleta.
 - **Corrida concorrente** (dois envios iguais ao mesmo tempo, violação da chave única): relê uma vez e trata como

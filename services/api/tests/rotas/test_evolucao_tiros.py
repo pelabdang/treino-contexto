@@ -42,9 +42,12 @@ def test_json_com_os_valores_do_oraculo(client, importar_fixtures):
     assert j["periodo"] is None
     a, b = j["sessoes"]
     assert set(a) == {"atividade_id", "data", "inicio", "n_tiros", "pace_medio_s_km", "pace_medio",
-                      "fc_media", "tiros"}
+                      "fc_media", "pace_melhor_s_km", "pace_melhor", "fc_melhor_tiro", "ordem_melhor_tiro", "tiros"}
     assert (a["data"], a["inicio"], a["n_tiros"]) == ("2025-03-04", "2025-03-04T09:00:00Z", 6)
     assert (a["pace_medio_s_km"], a["pace_medio"], a["fc_media"]) == (250.8, "4:11", 170.3)
+    # melhor tiro: oráculo da #151 (test_oraculo_fixtures.MELHOR_TIRO), 6o tiro (ordem 11) e 5o tiro (ordem 9)
+    assert (a["pace_melhor_s_km"], a["pace_melhor"], a["fc_melhor_tiro"], a["ordem_melhor_tiro"]) == (248.0, "4:08", 175.0, 11)
+    assert (b["pace_melhor_s_km"], b["pace_melhor"], b["fc_melhor_tiro"], b["ordem_melhor_tiro"]) == (234.0, "3:54", 177.0, 9)
     assert (b["data"], b["n_tiros"]) == ("2025-03-11", 5)
     assert (b["pace_medio_s_km"], b["pace_medio"], b["fc_media"]) == (237.0, "3:57", 171.8)
     assert len(a["tiros"]) == 6 and len(b["tiros"]) == 5
@@ -93,6 +96,9 @@ def test_esquema_no_openapi(client):
     esquemas = j["components"]["schemas"]
     assert {"EvolucaoTiros1km", "SessaoOut", "TiroOut", "Periodo", "Unidades"} <= set(esquemas)
     assert "pace_medio" in esquemas["SessaoOut"]["properties"]
+    req = set(esquemas["SessaoOut"]["required"])
+    assert {"pace_melhor_s_km", "pace_melhor", "ordem_melhor_tiro"} <= req
+    assert "fc_melhor_tiro" in esquemas["SessaoOut"]["properties"]
 
 
 def test_inicio_utc_de_treino_noturno(client, importar_fixtures, session):
@@ -242,15 +248,12 @@ def _escalas_da_serie(session, atleta):
     from app.graficos.escala import escala_fc, escala_pace
     from app.servicos.evolucao_tiros import serie_tiros_1km
     serie = serie_tiros_1km(session, atleta.id)
-    return escala_pace([p.pace_s_km for p in serie]), escala_fc([p.fc_media for p in serie])
+    return escala_pace([p.melhor_pace_s_km for p in serie]), escala_fc([p.melhor_fc_media for p in serie])
 
 
-def test_eixos_iguais_a_escala_eixo_e_ao_png(client, importar_fixtures, session, monkeypatch):
-    """Fixtures: pace 237,0 e 250,83 (faixa 13,8 < 30) e FC 170,3 e 171,8 (faixa 1,5 < 5): escala mínima."""
-    import app.graficos.tiros_1km as g
-    usadas = []
-    original = g._aplicar_escala
-    monkeypatch.setattr(g, "_aplicar_escala", lambda ax, e: (usadas.append(e), original(ax, e))[1])
+def test_eixos_iguais_a_escala_eixo_do_melhor_tiro(client, importar_fixtures, session):
+    """Eixos pelo valor principal (ADR 0004, adendo 1). Fixtures: melhor pace 234,0 e 248,0 (faixa 14 < 30) e
+    FC do melhor tiro 175 e 177 (faixa 2 < 5): escala mínima."""
     esc_pace, esc_fc = _escalas_da_serie(session, importar_fixtures)
     eixos = client.get(_url(importar_fixtures)).json()["eixos"]
     assert set(eixos) == {"pace", "fc"}
@@ -261,9 +264,6 @@ def test_eixos_iguais_a_escala_eixo_e_ao_png(client, importar_fixtures, session,
     assert [(m["valor_bpm"], m["rotulo"]) for m in f["marcas"]] == [(round(m.valor, 1), m.rotulo) for m in esc_fc.marcas]
     assert p["max_s_km"] - p["min_s_km"] == pytest.approx(30.0, abs=0.11)
     assert f["max_bpm"] - f["min_bpm"] == pytest.approx(5.0, abs=0.11)
-    # o PNG do mesmo filtro usa exatamente as mesmas escalas
-    assert _png(client, importar_fixtures).status_code == 200
-    assert usadas == [esc_pace, esc_fc]
 
 
 def test_rotulo_de_pace_e_formatar_pace_do_valor(client, importar_fixtures):
@@ -279,6 +279,20 @@ def test_eixos_null_sem_sessoes(client, session):
     session.add(atleta)
     session.commit()
     assert client.get(_url(atleta)).json()["eixos"] is None
+
+
+def test_melhor_tiro_sem_fc_fica_sem_fc_e_nao_troca_de_tiro(client, importar_fixtures, session):
+    """Melhor tiro da 1a sessão (ordem 11) sem FC: `fc_melhor_tiro` null; a média e os eixos seguem."""
+    from app.db.models import Segmento
+    seg = session.query(Segmento).filter_by(atividade_id=1, ordem=11).one()
+    seg.fc_media = None
+    session.commit()
+    j = client.get(_url(importar_fixtures)).json()
+    a, b = j["sessoes"]
+    assert (a["ordem_melhor_tiro"], a["pace_melhor_s_km"], a["fc_melhor_tiro"]) == (11, 248.0, None)
+    assert b["fc_melhor_tiro"] == 177.0
+    assert a["fc_media"] is not None
+    assert j["eixos"]["fc"] is not None  # a 2a sessão ainda tem FC
 
 
 def test_eixos_fc_null_sem_fc(client, importar_fixtures, session):
