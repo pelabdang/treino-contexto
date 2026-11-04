@@ -245,6 +245,12 @@ class PontoSessao:
     n_tiros: int
     pace_s_km: float
     fc_media: float | None
+    # Melhor tiro (#151): o de menor pace; empate = o primeiro na ordem dada.
+    # Sempre preenchidos por ``agregar_sessao``; o default None só mantém compatível quem monta
+    # o ponto à mão (testes do gráfico) até a #152 levar o melhor tiro ao contrato.
+    melhor_pace_s_km: float | None = None
+    melhor_fc_media: float | None = None  # FC dele; None se ele não tem FC (não troca de tiro)
+    melhor_ordem: int | None = None  # ordem da volta do melhor tiro
     versao: str = VERSAO
 
 
@@ -276,6 +282,11 @@ def agregar_sessao(
     FC (bpm) = soma(FC x duração) / soma(duração), só sobre tiros com FC.
     Sem nenhuma FC, ``None``. Fonte: média ponderada simples (definição
     combinada na issue #12); sem arredondamento aqui.
+
+    Melhor tiro (#151): o de menor pace (duração / distância x 1000), com a FC
+    dele. Empate: o primeiro da sequência recebida (``min`` devolve o primeiro
+    mínimo). Se o melhor tiro não tem FC, ``melhor_fc_media`` é ``None``: não
+    se troca por outro tiro. Regra própria do projeto, sem artigo.
     """
     if not tiros:
         raise ValueError("sessão sem tiros não tem agregação")
@@ -292,7 +303,19 @@ def agregar_sessao(
         if com_fc and dur_fc > 0
         else None
     )
-    return PontoSessao(atividade_id, data, len(tiros), pace, fc, versao)
+    # tiro sem distância não tem pace: fora da escolha (dist_total > 0 garante ao menos um)
+    melhor = min((t for t in tiros if t.distancia_m > 0), key=lambda t: t.duracao_s / t.distancia_m)
+    return PontoSessao(
+        atividade_id,
+        data,
+        len(tiros),
+        pace,
+        fc,
+        melhor.duracao_s / melhor.distancia_m * 1000.0,
+        melhor.fc_media,
+        melhor.ordem,
+        versao,
+    )
 
 
 def serie_por_sessao(sessoes: list[SessaoTiros]) -> list[PontoSessao]:

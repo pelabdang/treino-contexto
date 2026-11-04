@@ -18,6 +18,10 @@ Conta à mão, 1000000002 (5 x 1 km):
   pace = 1185 / 5000 x 1000 = 237,0 s/km (3:57,0)
   FC x duração: 39840 + 40460 + 40764 + 41064 + 41418 = 203546
   FC = 203546 / 1185 = 171,7688 bpm
+Melhor tiro (#151): o de menor pace, com a FC dele.
+  1000000001: paces 255, 252, 250, 251, 249, 248 s/km -> melhor 248,0 s/km (4:08), FC 175 (6o tiro)
+  1000000002: paces 240, 238, 237, 236, 234 s/km -> melhor 234,0 s/km (3:54), FC 177 (5o tiro)
+  (cada tiro tem 1000 m, então pace = duração em s/km)
 Fora da série: 1000000003 (8 x 1 km leve, sem tiros: nenhuma volta é 8% mais
 rápida que a mediana), 1000000004 (natação) e 1000000005 (esteira sem FIT, sem voltas).
 """
@@ -39,6 +43,8 @@ from app.metricas.tiros_1km import (
 GERADOR = Path(__file__).parents[4] / "tests" / "fixtures" / "garmin" / "gerar_fixtures.py"
 
 # id da atividade -> (n_tiros, pace s/km, FC bpm), à mão (ver docstring)
+# id -> (melhor pace s/km, FC do melhor tiro bpm), à mão (ver docstring)
+MELHOR_TIRO = {1000000001: (248.0, 175), 1000000002: (234.0, 177)}
 ESPERADO = {
     1000000001: (6, 1505 / 6000 * 1000, 256309 / 1505),
     1000000002: (5, 1185 / 5000 * 1000, 203546 / 1185),
@@ -80,6 +86,13 @@ def test_serie_das_fixtures_bate_com_o_calculo_a_mao(gerador, com_intensidade):
         assert p.pace_s_km == pytest.approx(pace, abs=1e-9)
         assert p.fc_media == pytest.approx(fc, abs=1e-9)
         assert p.versao == "tiros_1km@4"
+
+
+def test_melhor_tiro_das_fixtures_bate_com_o_calculo_a_mao(gerador):
+    for p in serie_por_sessao(_sessoes(gerador, True)):
+        pace, fc = MELHOR_TIRO[p.atividade_id]
+        assert p.melhor_pace_s_km == pytest.approx(pace, abs=1e-9)
+        assert p.melhor_fc_media == fc
 
 
 def test_valores_a_mao_apresentados(gerador):

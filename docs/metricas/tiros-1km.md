@@ -2,7 +2,7 @@
 tipo: metrica
 status: em-uso
 dono: caio
-atualizado: 2026-11-03
+atualizado: 2026-11-04
 links: [[modulos/grafico-tiros]], [[produto/meta-1-como-reproduzir]], [[produto/roadmap]], [[decisoes/0001-modelo-de-dados-minimo]], [[decisoes/0002-segmento-intensidade-e-versao]], [[glossario]]
 ---
 # Tiros de 1 km
@@ -139,6 +139,14 @@ Rodagem leve e natação não entram.
   ponderada pela distância, não a média simples dos paces.
 - **FC da sessão (bpm)** = soma(FC x duração) / soma(duração), média ponderada pela duração. Tiros sem FC ficam
   fora (inclusive do peso); se nenhum tem FC, `None`.
+- **Melhor tiro da sessão** (issue #151): o tiro de **menor pace** (duração / distância x 1000, por tiro), com a **FC
+  dele** (`melhor_pace_s_km`, `melhor_fc_media`, `melhor_ordem`). Empate de pace: **o primeiro** na ordem da
+  atividade. Decisão de produto (04/11): o valor principal do gráfico é o melhor tiro e a média (pace e FC acima)
+  fica como valor secundário; o painel de FC mostra a FC do melhor tiro. Esta nota só define a métrica; contrato,
+  PNG/CSV e app vêm em #152, #153 e #154.
+- **Melhor tiro sem FC**: `melhor_fc_media` é `None`. Não se troca por outro tiro nem por a FC média: o ponto fica
+  sem FC no painel. A FC média da sessão (só tiros com FC) continua existindo à parte.
+- Tiro sem distância (0 m) não tem pace e não concorre a melhor tiro.
 - Também saem `n_tiros`, `data` (data local do início) e `atividade_id`.
 - `versao`: versão da regra de detecção (`tiros_1km@4`), vinda da detecção e levada até o ponto da série
   (`SessaoTiros.versao`, `PontoSessao.versao`). É o valor a gravar em `segmento.versao_deteccao` ([[decisoes/0002-segmento-intensidade-e-versao]]).
@@ -147,6 +155,15 @@ Rodagem leve e natação não entram.
 
 Exemplo à mão: tiros 1000 m/240 s/160 bpm, 1000 m/236 s/165 bpm, 990 m/238 s sem FC:
 pace = 714 / 2990 x 1000 = 238,8 s/km; FC = (160x240 + 165x236) / 476 = 162,5 bpm.
+
+Exemplo à mão do melhor tiro (#151): tiros 1000 m/250 s/165 bpm, 1000 m/244 s/170 bpm, 990 m/247 s sem FC. Paces:
+250,0; 244,0; 247 / 990 x 1000 = 249,5 s/km. Melhor: 244,0 s/km (4:04), FC 170 bpm. Média: 741 / 2990 x 1000 =
+247,8 s/km (a média aparece como secundária). Empate: 1000 m/240 s/160 bpm e 1000 m/240 s/170 bpm têm o mesmo pace;
+vale o primeiro (FC 160). Se o melhor fosse o de 990 m, a FC do melhor tiro seria `None`, sem emprestar a de outro.
+
+**Versão: não sobe** (`tiros_1km@4` segue). O melhor tiro é só uma agregação a mais sobre os tiros que a detecção já
+devolve; não muda `detectar_tiros`, constantes nem quais voltas são tiro. Por isso **não pede reclassificação**
+(`classificar_atividades`); os segmentos já gravados com `@4` continuam válidos.
 
 ### Formato do pace em `m:ss` (issue #39)
 `formatar_pace(s_km)` arredonda ao segundo **com meio para cima** (piso de `s_km + 0,5`) e só depois separa
@@ -166,10 +183,10 @@ do eixo do gráfico, do CSV e do JSON ([[modulos/grafico-tiros]]).
 Calculados à mão a partir de `tests/fixtures/garmin/gerar_fixtures.py`; o teste
 `services/api/tests/metricas/test_oraculo_fixtures.py` os guarda em `ESPERADO` para a #14 e a #18 reutilizarem.
 
-| Atividade | Tiros | Pace (s/km) | FC (bpm) | Conta |
-|---|---|---|---|---|
-| 1000000001 (6 x 1 km) | 6 | 250,83 (4:10,8) | 170,30 | 1505 s / 6000 m; 256309 / 1505 |
-| 1000000002 (5 x 1 km) | 5 | 237,0 (3:57,0) | 171,77 | 1185 s / 5000 m; 203546 / 1185 |
+| Atividade | Tiros | Pace (s/km) | FC (bpm) | Melhor tiro (s/km, FC) | Conta |
+|---|---|---|---|---|---|
+| 1000000001 (6 x 1 km) | 6 | 250,83 (4:10,8) | 170,30 | 248,0 (4:08), 175 bpm | 1505 s / 6000 m; 256309 / 1505; paces 255, 252, 250, 251, 249, 248: o menor é o 6o, 248 s em 1000 m, FC 175 |
+| 1000000002 (5 x 1 km) | 5 | 237,0 (3:57,0) | 171,77 | 234,0 (3:54), 177 bpm | 1185 s / 5000 m; 203546 / 1185; paces 240, 238, 237, 236, 234: o menor é o 5o, 234 s em 1000 m, FC 177 |
 
 Ficam fora da série: 1000000003 (corrida leve, sem tiros), 1000000004 (natação) e 1000000005 (sem FIT).
 
@@ -195,6 +212,7 @@ Regra própria do projeto; não há artigo.
   série. Mudou a detecção: é preciso **reclassificar** (`classificar_atividades`) para regravar `tipo` e `versao_deteccao`.
 
 ## Código e teste
+- Melhor tiro (#151): sem mudança de versão, ver "Agregação por sessão".
 - Código: `services/api/app/metricas/tiros_1km.py` (`detectar_tiros`, `agregar_sessao`, `serie_por_sessao`); escala dos eixos em `services/api/app/graficos/escala.py`
 - Testes: `services/api/tests/metricas/test_agregacao_sessao.py` (exemplo acima) e
   `services/api/tests/metricas/test_tiros_1km.py` (valor esperado calculado à mão em cada caso, ex.:
