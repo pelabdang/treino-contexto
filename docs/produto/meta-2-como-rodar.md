@@ -23,17 +23,17 @@ O passo 7 (ver a tela) foi verificado na web pela Bia (#72).
   volume e a importação das fixtures cai **dentro dele**.
 - Por isso, para o roteiro com fixtures, use sempre um projeto próprio: `-p treino-meta2`. O volume vira
   `treino-meta2_pgdata`, separado.
-- Se a porta 5432 estiver ocupada (outro Postgres, ou outro container), use o override de porta pelo stdin,
+- A porta padrão do container é a 5433. Veja quem ocupa uma porta com `lsof -iTCP:5433 -sTCP:LISTEN`. Se ela estiver ocupada, use o override de porta pelo stdin,
   sem editar o repositório e sem arquivo fora dele (passo 1, variante B).
 
 ## Passo a passo
 1. **Subir o Postgres.**
-   - Variante A (porta 5432 livre):
+   - Variante A (porta 5433 livre):
      ```
      docker compose -p treino-meta2 -f infra/docker-compose.yml up -d
-     export DATABASE_URL="postgresql+psycopg://treino:treino@localhost:5432/treino"
+     export DATABASE_URL="postgresql+psycopg://treino:treino@localhost:5433/treino"
      ```
-   - Variante B (5432 ocupada; aqui a 5439):
+   - Variante B (5433 ocupada; aqui a 5439):
      ```
      docker compose -p treino-meta2 -f infra/docker-compose.yml -f - up -d <<'EOF'
      services:

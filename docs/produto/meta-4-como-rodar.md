@@ -37,7 +37,7 @@ Android: o clima não tem tela, "não se aplica") e o `worker.importar_garmin` c
 - `git`, `uv`, Docker (Compose 2.24 ou mais novo) e `curl`. Comandos na **raiz** do repositório.
 - **Não use o banco do seu dia a dia** (`treino-contexto-postgres-1`). Rode sempre com `-p treino-meta4`
   (volume `treino-meta4_pgdata`). Sem `-p`, o `docker compose` usa o volume `treino-contexto_pgdata`.
-- Escolha uma **porta livre** (`docker ps` e `lsof -i :<porta>`). Abaixo, a 5444 para o Postgres e a 8044 para a API.
+- Escolha uma **porta livre** (`docker ps` e `lsof -iTCP:<porta> -sTCP:LISTEN`; o padrão do compose é a 5433, e a 5432 costuma ter um Postgres nativo). Abaixo, a 5444 para o Postgres e a 8044 para a API.
 - **`worker.importar_garmin` não usa a rede por padrão** (#132): o clima só é buscado com `--com-clima`. Este guia nunca
   passa a opção, então a posição inventada das fixtures não sai da máquina.
 

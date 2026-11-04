@@ -269,7 +269,7 @@ uv run python -m worker.importar_garmin dados-teste/garmin --atleta "<nome>"
 uv run python -m worker.grafico_tiros_1km --atleta-id <id>
 ```
 Se a porta 5432 já estiver ocupada por um Postgres nativo, o container não é alcançado (erro de papel `treino`
-inexistente): suba o container em outra porta e ajuste `DATABASE_URL`. A importação completa leva alguns minutos.
+inexistente): confira com `lsof -iTCP:5432 -sTCP:LISTEN` e use a porta padrão do container (5433) em `DATABASE_URL`; detalhes em [[modulos/infra]]. A importação completa leva alguns minutos.
 
 ## Pendências
 - Corrigir a regra de tiros em rodagens com intensidade mista (#48).
