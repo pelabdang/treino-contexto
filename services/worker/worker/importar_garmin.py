@@ -65,8 +65,7 @@ def main(argv: list[str] | None = None, cliente=None) -> int:
     if args.com_clima:
         clima_do_que_mudou(rel, cliente=cliente)
     else:
-        print("clima: nao buscado (sem rede). Para buscar: uv run python -m worker.preencher_clima "
-              "(ou reimporte com --com-clima)")
+        print("clima: nao buscado (sem rede). Para buscar: uv run python -m worker.preencher_clima")
     return 0
 
 
