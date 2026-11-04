@@ -14,7 +14,7 @@ App de análise de treinos com contexto (corrida, natação, ciclismo) para atle
 - Meta 3 feita: upload de arquivo FIT pelo botão no app, vista na web com FIT sintéticos ([[produto/metas/meta-3-upload-fit]]). 
 - Meta 4 feita: clima de cada atividade na API, visto com fixtures e a resposta gravada, sem rede ([[produto/metas/meta-4-clima-atividade]]). Atual: Meta 5, detecção de esforços (desde 04/11); depois a Meta 6, carga de treino. Ver [[produto/roadmap]]
 - Como reproduzir: [[produto/meta-1-como-reproduzir]] (Meta 1) e [[produto/meta-2-como-rodar]] (API e app), [[produto/meta-3-como-rodar]] (upload de FIT), [[produto/meta-4-como-rodar]] (clima)
-- Último diário: [[diario/2026-11-03]]
+- Último diário: [[diario/2026-11-04]]
 
 ## Produto
 - [[produto/plano-mvp-execucao]]: plano completo do MVP

@@ -2,7 +2,7 @@
 tipo: glossario
 status: em-uso
 dono: nina
-atualizado: 2026-11-03
+atualizado: 2026-11-04
 ---
 # Glossário
 
@@ -33,3 +33,7 @@ atualizado: 2026-11-03
 - **Posição de início (arredondada)**: latitude e longitude do começo da atividade, com 2 casas (~1 km), sem trajeto. É o único dado de lugar que o produto guarda. Ver [[decisoes/0007-clima-da-atividade]] e [[modulos/ingestao-garmin]].
 - **`entrada` (do clima)**: SHA-256 de início, duração e posição. Se muda, o clima é buscado de novo; se é igual e o estado é `ok`, a atividade não é consultada outra vez. Ver [[modulos/clima]].
 - **Rodada (do clima)**: uma execução de `worker.preencher_clima`. `pendente` conta 1 por rodada e vira `falha` na quinta. Não confundir com as repetições dentro de uma consulta (1 chamada mais até 3). Ver [[produto/meta-4-como-rodar]].
+- **Bloco (de atividade)**: uma ou mais voltas consecutivas juntadas por ritmo parecido e sem pausa, com distância, duração, pace e FC próprios. Ver [[decisoes/0008-deteccao-de-esforcos]].
+- **Esforço**: bloco de intensidade alta em relação ao ritmo habitual (corrida) ou à velocidade habitual (ciclismo). As outras categorias de bloco são recuperação, aquecimento, desaquecimento e leve. Ver [[decisoes/0008-deteccao-de-esforcos]].
+- **Faixa (de esforço)**: nome do esforço pela distância (corrida, ex.: `d400`) ou pela duração (ciclismo, ex.: `t4`), com tolerância. Fora de qualquer faixa, o esforço fica sem nome. Ver [[decisoes/0008-deteccao-de-esforcos]].
+- **Treino-chave contínuo**: sequência de esforços sem recuperação que soma pelo menos 20 min, sem outra estrutura de repetição. Ver [[decisoes/0008-deteccao-de-esforcos]].
