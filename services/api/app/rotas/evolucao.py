@@ -54,6 +54,11 @@ class SessaoOut(BaseModel):
     pace_medio_s_km: float
     pace_medio: str  # m:ss
     fc_media: float | None
+    # Melhor tiro (ADR 0004, adendo 1): valor principal do gráfico; a média acima é a secundária.
+    pace_melhor_s_km: float
+    pace_melhor: str  # m:ss, de formatar_pace sobre o valor sem arredondar
+    fc_melhor_tiro: float | None  # FC do melhor tiro; null se ele não tem FC (não troca de tiro)
+    ordem_melhor_tiro: int  # `ordem` do melhor tiro em `tiros`
     tiros: list[TiroOut]
 
 
@@ -101,11 +106,11 @@ def _um_decimal(v: float | None) -> float | None:
 
 
 def _eixos(sessoes: list[SessaoSerie]) -> Eixos | None:
-    """Eixos pela mesma regra do PNG, sobre os valores sem arredondar da série (1 casa só na saída)."""
+    """Eixos pela regra de `escala_eixo`, sobre o valor principal (melhor tiro) sem arredondar (1 casa só na saída)."""
     if not sessoes:
         return None
-    pace: Escala | None = escala_pace([s.ponto.pace_s_km for s in sessoes])
-    fc: Escala | None = escala_fc([s.ponto.fc_media for s in sessoes])
+    pace: Escala | None = escala_pace([s.ponto.melhor_pace_s_km for s in sessoes])
+    fc: Escala | None = escala_fc([s.ponto.melhor_fc_media for s in sessoes])
     return Eixos(
         pace=None if pace is None else EixoPace(
             min_s_km=round(pace.min, 1), max_s_km=round(pace.max, 1), invertido=True,
@@ -138,6 +143,10 @@ def _sessao_out(s: SessaoSerie) -> SessaoOut:
         pace_medio_s_km=_um_decimal(p.pace_s_km),
         pace_medio=formatar_pace(p.pace_s_km),
         fc_media=_um_decimal(p.fc_media),
+        pace_melhor_s_km=_um_decimal(p.melhor_pace_s_km),
+        pace_melhor=formatar_pace(p.melhor_pace_s_km),
+        fc_melhor_tiro=_um_decimal(p.melhor_fc_media),
+        ordem_melhor_tiro=p.melhor_ordem,
         tiros=[_tiro_out(t) for t in s.tiros],
     )
 
@@ -170,7 +179,7 @@ def evolucao_tiros_1km(
     fim: date | None = None,
     session: Session = Depends(get_session),
 ) -> EvolucaoTiros1km:
-    """Pace e FC médios dos tiros de 1 km por sessão. `inicio` e `fim` (AAAA-MM-DD) são datas locais, inclusivas."""
+    """Melhor tiro (principal) e média dos tiros de 1 km por sessão. `inicio` e `fim` (AAAA-MM-DD) são datas locais, inclusivas."""
     _periodo_valido(inicio, fim)
     _atleta_ou_404(session, atleta_id)
     sessoes = sessoes_tiros_1km(session, atleta_id, inicio, fim)

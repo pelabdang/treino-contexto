@@ -2,7 +2,7 @@
 tipo: decisao
 status: em-uso
 dono: theo
-atualizado: 2026-11-03
+atualizado: 2026-11-04
 links: [[modulos/api]], [[modulos/grafico-tiros]], [[modulos/mobile]], [[modulos/worker]], [[metricas/tiros-1km]], [[decisoes/0002-segmento-intensidade-e-versao]], [[decisoes/0003-fuso-da-atividade]], [[decisoes/0005-serie-de-tiros-o-que-entra]], [[decisoes/0006-upload-de-fit]], [[produto/roadmap]]
 ---
 # ADR: 0004 Contrato da tela de evolução dos tiros (Meta 2)
@@ -125,3 +125,45 @@ Erro: `{"detail": "atleta não encontrado"}` com `404`. Resposta com `422` mant�
 2026-11-03. Pace só pela API (opção A) e `versao_calculo` com `reclassificacao_pendente`, sem reclassificar na
 leitura: Theo. Escala mínima de 5 bpm na FC, app local sem deploy, atleta fixo por variável e Expo: Angelo. Escala
 mínima de 30 s/km no pace: time (Caio e Bia ajustam). Aprovação do Theo no PR deste ADR.
+
+## Adendo 1 (2026-11-04): melhor tiro como valor principal (#152)
+**Status: aprovado (Theo, 04/11).** Decisão de produto do Angelo (04/11): o valor principal do gráfico
+é o **melhor pace de tiro** da sessão; a média fica como secundária; o painel de FC mostra a **FC do melhor tiro**.
+O melhor tiro vem de `agregar_sessao` (#151): o de menor pace; empate fica com o primeiro; se ele não tem FC, a FC
+fica `null` (não se troca por outro tiro).
+
+### Campos novos em cada item de `sessoes` (todos de uma vez, sem remover nenhum)
+| Campo | Tipo | Regra |
+|---|---|---|
+| `pace_melhor_s_km` | número, obrigatório | pace do melhor tiro, 1 casa |
+| `pace_melhor` | texto `m:ss`, obrigatório | `formatar_pace` sobre o valor **sem arredondar** (o app não formata pace) |
+| `fc_melhor_tiro` | número ou `null` | FC do melhor tiro, 1 casa; `null` se ele não tem FC |
+| `ordem_melhor_tiro` | inteiro, obrigatório | `ordem` do melhor tiro dentro de `tiros` (para o app destacá-lo; extra pedido pela leitura do contrato, além dos três da issue) |
+
+Mantidos por compatibilidade: `pace_medio_s_km`, `pace_medio`, `fc_media` (a média, agora secundária), com as
+mesmas regras de antes.
+
+### Valor principal e bloco `eixos`
+- Valor principal do gráfico de pace: `pace_melhor_s_km` (texto `pace_melhor`). Do painel de FC: `fc_melhor_tiro`.
+  A média (`pace_medio*`, `fc_media`) é detalhe secundário.
+- `eixos` passa a ser calculado **pelo valor principal**: `eixos.pace` sobre os `pace_melhor_s_km` e `eixos.fc`
+  sobre os `fc_melhor_tiro` (sem arredondar, 1 casa só na saída), com a mesma `escala_eixo` e as mesmas escalas
+  mínimas (30 s/km e 5 bpm). Sessão com `fc_melhor_tiro` `null` não entra na escala da FC; se nenhuma tem,
+  `eixos.fc` é `null`. A média não entra nos eixos (se o app desenhar a média, ela pode sair da faixa).
+- **O PNG e o CSV continuam com a média** (fora do escopo da #152). Por isso a decisão 2 ("mesma regra do PNG")
+  passa a valer só quanto à função `escala_eixo`: o JSON e o PNG deixam de ter a mesma faixa até a #153, que leva
+  o melhor tiro ao PNG e ao CSV.
+
+### Exemplo (fixtures, sessão 1 da amostra)
+```json
+{"atividade_id": 1, "data": "2025-03-04", "inicio": "2025-03-04T09:00:00Z", "n_tiros": 6,
+ "pace_medio_s_km": 250.8, "pace_medio": "4:11", "fc_media": 170.3,
+ "pace_melhor_s_km": 248.0, "pace_melhor": "4:08", "fc_melhor_tiro": 175.0, "ordem_melhor_tiro": 11,
+ "tiros": [...]}
+```
+
+### Consequências
+- Mudança aditiva no JSON; o cliente TypeScript é regerado (`SessaoOut` ganha os quatro campos). O app (#154) passa a
+  ler os novos campos como principais.
+- `PontoSessao` mantém os defaults `None` do melhor tiro: os testes do gráfico (PNG/CSV, que seguem na média) montam
+  o ponto à mão.
