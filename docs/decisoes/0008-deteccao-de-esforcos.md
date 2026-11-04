@@ -1,13 +1,14 @@
 ---
 tipo: decisao
-status: rascunho
+status: aceita
 dono: caio
 atualizado: 2026-11-04
 links: [[metricas/tiros-1km]], [[decisoes/0001-modelo-de-dados-minimo]], [[decisoes/0002-segmento-intensidade-e-versao]], [[decisoes/0005-serie-de-tiros-o-que-entra]], [[modulos/banco]], [[modulos/ingestao-garmin]], [[produto/roadmap]], [[glossario]]
 ---
 # ADR: 0008 Detecção de esforços (corrida por distância, ciclismo por duração)
 
-> Rascunho (issue #148). O item 9 (modelo de dados) foi aprovado pelo Theo em 04/11; o resto segue em revisão. Nenhuma linha de código muda neste PR. Todos os números abaixo são sintéticos.
+> Aceita em 04/11 (issue #148): item 9 aprovado pelo Theo e itens 2 a 4 de "A confirmar" aprovados pelo Angelo.
+> Ficam só duas pendências com dado real (itens 5 e 6), que não bloqueiam. Nenhuma linha de código muda neste PR. Todos os números abaixo são sintéticos.
 
 ## Contexto
 A série de tiros reconhece só voltas de ~1 km, uma a uma ([[metricas/tiros-1km]], `tiros_1km@4`). Ficam de fora:
@@ -280,13 +281,13 @@ para esforços. Decisão do Theo (04/11): **tabela `bloco_atividade`**.
   apoio da ideia de faixas e do mínimo de 20 min; **não consultados nesta rodada**, ver "A confirmar".
 
 ## A confirmar
-Itens 2 a 4 e 6 seguem abertos com o Angelo (tolerâncias, faixas, treino-chave e velocidade habitual).
+Itens 1 a 4 aprovados. Em aberto, sem bloquear: 5 e 6 (Caio, com dado real). Os itens 7 a 10 são seguimentos de outras issues.
 
 1. ~~Modelo de dados do item 9~~: aprovado pelo Theo em 04/11 (tabela `bloco_atividade`).
-2. **Angelo**: tolerância de junção (5%) e pausa que separa (15 s corrida, 30 s ciclismo); conferir com um treino
+2. ~~Aprovado pelo Angelo em 04/11.~~ Tolerância de junção (5%) e pausa que separa (15 s corrida, 30 s ciclismo); conferir com um treino
    real, fora do git, que o lap automático cortando esforço de 1500 m junta como esperado.
-3. **Angelo**: o que é treino-chave contínuo (20 min e 10% de ganho na corrida; 20 min e 15% no ciclismo).
-4. **Angelo**: faixas de corrida e de ciclismo (as listas acima) e a tolerância de cada lado.
+3. ~~Aprovado pelo Angelo em 04/11.~~ O que é treino-chave contínuo (20 min e 10% de ganho na corrida; 20 min e 15% no ciclismo).
+4. ~~Aprovado pelo Angelo em 04/11.~~ Faixas de corrida e de ciclismo (as listas acima) e a tolerância de cada lado.
 5. **Caio com dado real**: o campo `total_timer_time` do lap e o `start_time` do lap são mesmo coerentes em
    exportações com pausa automática ligada e desligada (premissa do item 3). Se o relógio não grava `start_time`
    do lap, `inicio_offset_s` vem 0 (código em `fit.py`) e o tempo parado não é computável: cair para a volta de pausa.
@@ -300,3 +301,8 @@ Itens 2 a 4 e 6 seguem abertos com o Angelo (tolerâncias, faixas, treino-chave 
 ## Data e quem decidiu
 2026-11-04. Pedido de produto: Angelo (04/11). Rascunho: Caio (ciência). Aprovação do Theo no PR desta ADR
 (item 9 em especial). Issue #148.
+
+Aprovações em 04/11: item 9 (tabela `bloco_atividade`) pelo Theo; itens 2 a 4 de "A confirmar" pelo Angelo (junção de laps com
+pausa abaixo de 15 s na corrida e 30 s no ciclismo e 5% de ritmo; faixas de corrida e de ciclismo com as tolerâncias
+propostas; treino-chave contínuo de 20 min, com 10% na corrida e 15% no ciclismo). Status passa de `rascunho` a `aceita`.
+Pendências sem bloqueio: itens 5 e 6, do Caio com dado real.
