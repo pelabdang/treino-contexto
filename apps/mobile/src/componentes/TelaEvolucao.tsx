@@ -1,8 +1,9 @@
 import { buscarEvolucaoTiros1km, type ErroApi, type EvolucaoTiros1km } from "@treino/api-client";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { ActivityIndicator, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 
 import { BotaoEnviarFit } from "./BotaoEnviarFit";
+import { borda, espaco, fonte, larguraConteudoMax, raio, tamanho, useTema, type Tema } from "../tema";
 import { dataCurta, GraficoTiros } from "./GraficoTiros";
 
 type Props = {
@@ -29,6 +30,8 @@ function mensagemErro(erro: ErroApi): string {
 }
 
 export function TelaEvolucao({ apiUrl, atletaId, fetchFn }: Props) {
+  const tema = useTema();
+  const styles = useMemo(() => criarEstilos(tema), [tema]);
   const [estado, setEstado] = useState<Estado>({ tipo: "carregando" });
   const [tentativa, setTentativa] = useState(0);
 
@@ -58,7 +61,7 @@ export function TelaEvolucao({ apiUrl, atletaId, fetchFn }: Props) {
       <BotaoEnviarFit apiUrl={apiUrl} atletaId={atletaId} fetchFn={fetchFn} aoEnviar={recarregar} />
       {estado.tipo === "carregando" && (
         <View style={styles.centro}>
-          <ActivityIndicator />
+          <ActivityIndicator color={tema.cor.destaque} />
           <Text style={styles.texto}>Carregando seus tiros...</Text>
         </View>
       )}
@@ -66,18 +69,22 @@ export function TelaEvolucao({ apiUrl, atletaId, fetchFn }: Props) {
         <View>
           <Text style={styles.erro}>{mensagemErro(estado.erro)}</Text>
           {estado.erro.tipo === "rede" && (
-            <Pressable accessibilityRole="button" onPress={tentarDeNovo} style={styles.botao}>
+            <Pressable
+              accessibilityRole="button"
+              onPress={tentarDeNovo}
+              style={({ pressed }) => [styles.botao, pressed && { backgroundColor: tema.cor["destaque-pressionado"] }]}
+            >
               <Text style={styles.botaoTexto}>Tentar de novo</Text>
             </Pressable>
           )}
         </View>
       )}
-      {estado.tipo === "ok" && <Sucesso dados={estado.dados} />}
+      {estado.tipo === "ok" && <Sucesso dados={estado.dados} styles={styles} />}
     </ScrollView>
   );
 }
 
-function Sucesso({ dados }: { dados: EvolucaoTiros1km }) {
+function Sucesso({ dados, styles }: { dados: EvolucaoTiros1km; styles: Estilos }) {
   return (
     <View>
       {dados.sessoes.length === 0 ? (
@@ -105,17 +112,42 @@ function Sucesso({ dados }: { dados: EvolucaoTiros1km }) {
   );
 }
 
-const styles = StyleSheet.create({
-  container: { padding: 24, backgroundColor: "#fff", flexGrow: 1 },
-  titulo: { fontSize: 24, fontWeight: "700", marginBottom: 12, color: "#111" },
-  centro: { alignItems: "center", paddingVertical: 24, gap: 8 },
-  texto: { fontSize: 16, color: "#444" },
-  erro: { fontSize: 16, color: "#b00020", marginBottom: 12 },
-  botao: { alignSelf: "flex-start", paddingVertical: 10, paddingHorizontal: 16, borderRadius: 8, backgroundColor: "#1b6ca8" },
-  botaoTexto: { color: "#fff", fontWeight: "600" },
-  lista: { marginTop: 16 },
-  linha: { flexDirection: "row", flexWrap: "wrap", gap: 12, paddingVertical: 6, borderBottomWidth: 1, borderBottomColor: "#eee" },
-  celula: { fontSize: 14, color: "#222" },
-  rodape: { marginTop: 24 },
-  pequeno: { fontSize: 12, color: "#666" },
-});
+type Estilos = ReturnType<typeof criarEstilos>;
+
+function criarEstilos({ cor }: Tema) {
+  return StyleSheet.create({
+    container: {
+      padding: espaco[5],
+      backgroundColor: cor.fundo,
+      flexGrow: 1,
+      width: "100%",
+      maxWidth: larguraConteudoMax + 2 * espaco[5],
+      alignSelf: "center",
+    },
+    titulo: { ...fonte["titulo-tela"], marginBottom: espaco[3], color: cor.texto },
+    centro: { alignItems: "center", paddingVertical: espaco[5], gap: espaco[2] },
+    texto: { ...fonte.corpo, color: cor["texto-2"] },
+    erro: { ...fonte.corpo, color: cor.erro, marginBottom: espaco[3] },
+    botao: {
+      alignSelf: "flex-start",
+      minHeight: tamanho.botaoAltura,
+      justifyContent: "center",
+      paddingHorizontal: espaco[4],
+      borderRadius: raio.medio,
+      backgroundColor: cor.destaque,
+    },
+    botaoTexto: { ...fonte.botao, color: cor["sobre-destaque"] },
+    lista: { marginTop: espaco[4] },
+    linha: {
+      flexDirection: "row",
+      flexWrap: "wrap",
+      gap: espaco[3],
+      paddingVertical: espaco[2],
+      borderBottomWidth: borda.fina,
+      borderBottomColor: cor.borda,
+    },
+    celula: { ...fonte.rotulo, fontVariant: ["tabular-nums"], color: cor.texto },
+    rodape: { marginTop: espaco[5] },
+    pequeno: { ...fonte.legenda, color: cor["texto-2"] },
+  });
+}

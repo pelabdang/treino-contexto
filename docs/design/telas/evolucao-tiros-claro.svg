@@ -1,0 +1,111 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="360" height="1320" viewBox="0 0 360 1320" font-family="Inter, system-ui, sans-serif" role="img" aria-labelledby="t d">
+  <title id="t">Esboço da tela Evolução dos tiros de 1 km, tema claro</title>
+  <desc id="d">Esboço do guia visual (issue 192). Todos os dados são sintéticos. Largura de celular pequeno (360).</desc>
+  <style>
+    .tela{fill:#F6F5F1}
+    .card{fill:#FFFFFF;stroke:#DEDBD3;stroke-width:1}
+    .t{fill:#1A1D1F}
+    .t2{fill:#4C5257}
+    .dest{fill:#0B6A6E}
+    .num{font-variant-numeric:tabular-nums}
+    .grade{stroke:#E3E1DA;stroke-width:1}
+  </style>
+  <rect class="tela" width="360" height="1320"/>
+
+  <!-- Cabeçalho -->
+  <text x="16" y="48" class="t" font-size="24" font-weight="700">Tiros de 1 km</text>
+  <rect x="16" y="60" width="96" height="28" rx="14" fill="#ECEAE4"/>
+  <circle cx="34" cy="74" r="7" fill="#B4470F"/>
+  <text x="48" y="79" class="t" font-size="14" font-weight="500">Corrida</text>
+  <text x="16" y="114" class="t2" font-size="16">Evolução do melhor tiro de cada treino</text>
+
+  <!-- Botão secundário -->
+  <rect x="16.5" y="128.5" width="327" height="47" rx="8" fill="#FFFFFF" stroke="#7D7A72"/>
+  <rect x="105" y="142" width="16" height="20" rx="2" fill="none" stroke="#0B6A6E" stroke-width="2"/>
+  <path d="M113 157 v-9 m-4 4 l4 -4 l4 4" stroke="#0B6A6E" stroke-width="2" fill="none"/>
+  <text x="129" y="158" class="dest" font-size="16" font-weight="600">Enviar arquivo FIT</text>
+
+  <!-- Cartão: último treino -->
+  <rect class="card" x="16.5" y="200.5" width="327" height="163" rx="12"/>
+  <text x="32" y="230" class="t" font-size="18" font-weight="600">Último treino · <tspan class="num">25/03/25</tspan></text>
+  <text x="32" y="258" class="t2" font-size="14" font-weight="500">Melhor tiro</text>
+  <text x="32" y="300" class="t num" font-size="40" font-weight="700">4:02</text>
+  <text x="128" y="300" class="t2" font-size="14" font-weight="500">min/km</text>
+  <text x="32" y="328" class="t2" font-size="16">FC do melhor tiro <tspan class="t num" font-weight="600">173 bpm</tspan></text>
+  <text x="32" y="350" class="t2" font-size="16">Média dos tiros <tspan class="num">4:06</tspan> min/km · 6 tiros</text>
+
+  <!-- Cartão: evolução -->
+  <rect class="card" x="16.5" y="388.5" width="327" height="555" rx="12"/>
+  <text x="32" y="418" class="t" font-size="18" font-weight="600">Evolução</text>
+
+  <!-- Painel de pace -->
+  <text x="32" y="448" class="t" font-size="14" font-weight="600">Melhor pace (min/km)</text>
+  <text x="328" y="448" class="t2" font-size="13" text-anchor="end">mais rápido ↑</text>
+  <line class="grade" x1="76" x2="312" y1="513.3" y2="513.3"/>
+  <line class="grade" x1="76" x2="312" y1="558.7" y2="558.7"/>
+  <text x="68" y="517" class="t2 num" font-size="12" font-weight="500" text-anchor="end">4:00</text>
+  <text x="68" y="563" class="t2 num" font-size="12" font-weight="500" text-anchor="end">4:10</text>
+  <polyline points="84,549.6 158,540.5 232,536 306,522.4" fill="none" stroke="#3340B0" stroke-width="2"/>
+  <circle cx="84" cy="549.6" r="5" fill="#3340B0"/>
+  <circle cx="158" cy="540.5" r="5" fill="#3340B0"/>
+  <circle cx="232" cy="536" r="7" fill="#3340B0" stroke="#1A1D1F" stroke-width="2"/>
+  <circle cx="306" cy="522.4" r="5" fill="#3340B0"/>
+
+  <!-- Painel de FC -->
+  <text x="32" y="640" class="t" font-size="14" font-weight="600">FC do melhor tiro (bpm)</text>
+  <line class="grade" x1="76" x2="312" y1="687.2" y2="687.2"/>
+  <line class="grade" x1="76" x2="312" y1="741.6" y2="741.6"/>
+  <line class="grade" x1="76" x2="312" y1="796" y2="796"/>
+  <text x="68" y="691" class="t2 num" font-size="12" font-weight="500" text-anchor="end">176</text>
+  <text x="68" y="746" class="t2 num" font-size="12" font-weight="500" text-anchor="end">174</text>
+  <text x="68" y="800" class="t2 num" font-size="12" font-weight="500" text-anchor="end">172</text>
+  <polyline points="84,714.4 158,741.6 232,687.2 306,768.8" fill="none" stroke="#A3205F" stroke-width="2"/>
+  <circle cx="84" cy="714.4" r="5" fill="#A3205F"/>
+  <circle cx="158" cy="741.6" r="5" fill="#A3205F"/>
+  <circle cx="232" cy="687.2" r="7" fill="#A3205F" stroke="#1A1D1F" stroke-width="2"/>
+  <circle cx="306" cy="768.8" r="5" fill="#A3205F"/>
+
+  <!-- Datas -->
+  <text x="84" y="828" class="t2 num" font-size="12" font-weight="500" text-anchor="middle">04/03/25</text>
+  <text x="158" y="828" class="t2 num" font-size="12" font-weight="500" text-anchor="middle">11/03/25</text>
+  <text x="232" y="828" class="t num" font-size="12" font-weight="700" text-anchor="middle">18/03/25</text>
+  <text x="306" y="828" class="t2 num" font-size="12" font-weight="500" text-anchor="middle">25/03/25</text>
+
+  <!-- Detalhe da sessão tocada -->
+  <rect x="32" y="844" width="296" height="84" rx="8" fill="#ECEAE4"/>
+  <text x="44" y="868" class="t num" font-size="16" font-weight="600">18/03/25 · 5 tiros</text>
+  <text x="44" y="890" class="t2" font-size="14">Melhor tiro <tspan class="t num" font-weight="600">4:05 min/km</tspan> · FC <tspan class="t num" font-weight="600">176 bpm</tspan></text>
+  <text x="44" y="912" class="t2" font-size="14">Média dos tiros <tspan class="num">4:09</tspan> min/km · FC <tspan class="num">171</tspan> bpm</text>
+
+  <!-- Cartão: lista de treinos -->
+  <rect class="card" x="16.5" y="968.5" width="327" height="275" rx="12"/>
+  <text x="32" y="998" class="t" font-size="18" font-weight="600">Treinos</text>
+  <g font-size="16">
+    <text x="32" y="1034" class="t2 num" font-size="14">25/03/25</text>
+    <text x="116" y="1034" class="t num" font-weight="600">4:02 min/km</text>
+    <text x="328" y="1034" class="t num" text-anchor="end">173 bpm</text>
+    <text x="116" y="1055" class="t2 num" font-size="13">média 4:06 · 6 tiros</text>
+    <line x1="32" x2="328" y1="1068" y2="1068" stroke="#DEDBD3"/>
+
+    <text x="32" y="1090" class="t2 num" font-size="14">18/03/25</text>
+    <text x="116" y="1090" class="t num" font-weight="600">4:05 min/km</text>
+    <text x="328" y="1090" class="t num" text-anchor="end">176 bpm</text>
+    <text x="116" y="1111" class="t2 num" font-size="13">média 4:09 · 5 tiros</text>
+    <line x1="32" x2="328" y1="1124" y2="1124" stroke="#DEDBD3"/>
+
+    <text x="32" y="1146" class="t2 num" font-size="14">11/03/25</text>
+    <text x="116" y="1146" class="t num" font-weight="600">4:06 min/km</text>
+    <text x="328" y="1146" class="t num" text-anchor="end">174 bpm</text>
+    <text x="116" y="1167" class="t2 num" font-size="13">média 4:10 · 6 tiros</text>
+    <line x1="32" x2="328" y1="1180" y2="1180" stroke="#DEDBD3"/>
+
+    <text x="32" y="1202" class="t2 num" font-size="14">04/03/25</text>
+    <text x="116" y="1202" class="t num" font-weight="600">4:08 min/km</text>
+    <text x="328" y="1202" class="t num" text-anchor="end">175 bpm</text>
+    <text x="116" y="1223" class="t2 num" font-size="13">média 4:11 · 6 tiros</text>
+  </g>
+
+  <!-- Rodapé -->
+  <text x="16" y="1280" class="t2" font-size="13">cálculo: tiros_1km@4</text>
+  <text x="16" y="1306" class="t2" font-size="13">Esboço, tema claro. Dados sintéticos.</text>
+</svg>

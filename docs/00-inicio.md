@@ -15,7 +15,7 @@ App de análise de treinos com contexto (corrida, natação, ciclismo) para atle
 - Meta 4 feita: clima de cada atividade na API, visto com fixtures e a resposta gravada, sem rede ([[produto/metas/meta-4-clima-atividade]]). Atual: Meta 5, detecção de esforços (desde 04/11); depois a Meta 6, carga de treino. Ver [[produto/roadmap]]
 - Como reproduzir: [[produto/meta-1-como-reproduzir]] (Meta 1) e [[produto/meta-2-como-rodar]] (API e app), [[produto/meta-3-como-rodar]] (upload de FIT), [[produto/meta-4-como-rodar]] (clima)
 - Meta 5 em andamento (04/11): ADR 0008 aceita, oráculo ([[metricas/esforcos-oraculo]]) e função de blocos ([[metricas/esforcos]]) prontos; faltam corrida, ciclismo, banco e worker, e a visão de tiros
-- Time e papéis: [[time]]. A Lia (design) é dona de `docs/design/`; o guia visual está em andamento (#192)
+- Time e papéis: [[time]]. A Lia (design) é dona de `docs/design/`; o guia visual e o tema do app estão no main (#192 e #195)
 - Último diário: [[diario/2026-11-04]]
 
 ## Produto
@@ -32,6 +32,7 @@ App de análise de treinos com contexto (corrida, natação, ciclismo) para atle
 ## Como o sistema funciona
 - Módulos: [[modulos/api]], [[modulos/api-client]], [[modulos/banco]], [[modulos/worker]], [[modulos/mobile]], [[modulos/infra]], [[modulos/grafico-tiros]], [[modulos/ingestao-garmin]] (índice em [[modulos]])
 - Métricas: pasta [[metricas/]]; [[metricas/tiros-1km]]; [[metricas/clima-oraculo]]; [[metricas/esforcos]]; [[metricas/esforcos-oraculo]]
+- Design (Lia): [[design/guia-visual]] (identidade, princípios e componentes), [[design/tokens]] (tokens do tema e contraste WCAG) e telas em [[design/telas/]] ([[design/telas/evolucao-tiros]])
 - Decisões de arquitetura: pasta [[decisoes/]] (a 0004 tem o adendo 1, melhor tiro; a 0006 tem o ajuste da #133)
   - [[decisoes/0001-modelo-de-dados-minimo]]: modelo de dados mínimo e monorepo
   - [[decisoes/0002-segmento-intensidade-e-versao]]: intensidade da volta e versão da detecção no segmento
