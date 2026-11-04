@@ -35,6 +35,9 @@ da importação e do cálculo de métricas, fora da [[modulos/api]].
   Só mexe em `subtipo`; se o novo for indoor, apaga `inicio_lat/lon` (ADR 0007). Subtipo `None` na exportação nunca apaga
   o gravado. Idempotente (2ª rodada muda 0); `--dry-run` imprime `antigo -> novo: N` sem gravar. Reimportar a exportação
   também atualiza o subtipo, mas relê as voltas e reclassifica as corridas; este comando é o caminho estreito.
+  **Limitações:** (1) se a atividade que vira indoor já tinha linha em `clima_atividade`, a linha fica órfã (não é apagada);
+  a API mostra `indoor` pelo subtipo antes de olhar a linha, então nada aparece errado, só sobra um registro velho.
+  (2) O caminho inverso (indoor que vira ao ar livre) não recupera a posição; `worker.preencher_clima --so-posicao` resolve.
 - Com `--com-clima`, no fim de `worker.importar_garmin` o clima é buscado **com a rede de verdade**, só das atividades que entraram ou mudaram (posições arredondadas vão ao Open-Meteo); erro de clima vira aviso
   e nunca derruba a importação. Sem a opção, rode `worker.preencher_clima` quando quiser. O upload de FIT (endpoint) não chama a rede: o clima fica `pendente` até a próxima rodada.
 
