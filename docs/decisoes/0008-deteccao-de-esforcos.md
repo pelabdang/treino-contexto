@@ -7,8 +7,7 @@ links: [[metricas/tiros-1km]], [[decisoes/0001-modelo-de-dados-minimo]], [[decis
 ---
 # ADR: 0008 Detecção de esforços (corrida por distância, ciclismo por duração)
 
-> Rascunho para aprovação do Theo (issue #148). O item 9 (modelo de dados) só vale depois da aprovação dele, como
-> pede o AGENTS.md. Nenhuma linha de código muda neste PR. Todos os números abaixo são sintéticos.
+> Rascunho (issue #148). O item 9 (modelo de dados) foi aprovado pelo Theo em 04/11; o resto segue em revisão. Nenhuma linha de código muda neste PR. Todos os números abaixo são sintéticos.
 
 ## Contexto
 A série de tiros reconhece só voltas de ~1 km, uma a uma ([[metricas/tiros-1km]], `tiros_1km@4`). Ficam de fora:
@@ -190,7 +189,7 @@ visão: ritmo parecido (20% sobre a mediana), bloco contínuo (15% sobre o vizin
 Um esforço de 1500 m (item 2) **não** é tiro de 1 km. Dois km seguidos no mesmo ritmo viram um único esforço de
 2000 m (`d2000`), o que reproduz a regra "vizinha de 1 km no mesmo ritmo não separa".
 - Versão: a visão sai como nova versão da `tiros_1km`, cujo número a #168 define (depende de as #149 e #150 serem
-  implementadas antes ou absorvidas). A visão deixa de ler voltas e passa a ler `esforco` (item 9).
+  implementadas antes ou absorvidas). A visão deixa de ler voltas e passa a ler `bloco_atividade` (item 9).
 - Reclassificação: `worker.reclassificar` recria os esforços e a visão (ADR 0005, item 4).
 - **Testes de regressão** (casos das #149, #150 e #168, todos sintéticos):
   1. 2 x 1000 m a 250 s/km com 400 m de recuperação a 420 s/km: `250 <= 420 x 0,92 = 386,4`, 2 tiros, entra.
@@ -201,8 +200,8 @@ Um esforço de 1500 m (item 2) **não** é tiro de 1 km. Dois km seguidos no mes
   5. Tiros curtos com 1 km de aquecimento e 1 km de desaquecimento lentos: fora (são `aquecimento` e `desaquecimento`).
   6. Progressivo, fartlek e bloco contínuo de `test_tiros_1km.py`: mesmo resultado, ou mudança justificada na nota.
 
-### 9. Modelo de dados (precisa da aprovação do Theo)
-**Proposta: tabela nova `esforco`**, uma linha por **bloco** (todas as categorias, não só os esforços), e `segmento`
+### 9. Modelo de dados (aprovado: Theo, 04/11)
+**Decisão (aprovada pelo Theo em 04/11): tabela nova `bloco_atividade`** (nome escolhido para não se confundir com a categoria `esforco`), uma linha por **bloco** (todas as categorias, não só os esforços), e `segmento`
 não muda.
 
 Por que não ampliar `segmento.tipo`: o segmento é uma volta e o bloco junta N voltas (1000 m + 500 m = 1 esforço);
@@ -236,7 +235,7 @@ funcionando enquanto a #168 não troca a fonte da série.
 **Alternativas ao item 9**: (a) ampliar `segmento.tipo` com as 5 categorias: menor, mas perde o bloco juntado;
 (b) não gravar, calcular na leitura: simples, mas a série e a API teriam de reprocessar as voltas toda vez e não
 haveria versão gravada para reclassificar. A ADR 0002 já previa uma tabela de derivadas "na Meta 5"; esta é ela, só
-para esforços. Decisão pedida ao Theo: **tabela `esforco`**, ou a alternativa (a).
+para esforços. Decisão do Theo (04/11): **tabela `bloco_atividade`**.
 
 ## Alternativas consideradas
 - **Referência só da atividade (mediana ponderada)** em vez do ritmo habitual: independe de histórico, mas falha
@@ -253,12 +252,20 @@ para esforços. Decisão pedida ao Theo: **tabela `esforco`**, ou a alternativa 
 - Cada atividade ganha blocos com categoria; a série de tiros de 1 km vira consulta sobre eles (#168).
 - O ciclismo passa a ter estrutura de treino (aquecimento, esforços de minutos, desaquecimento) sem potência, com
   limitação conhecida de relevo e vento.
-- Nova tabela e nova migração (item 9, aprovação do Theo), e uma nova `VERSAO` (`esforcos@1`) com reclassificação
+- Nova tabela `bloco_atividade` e nova migração (item 9, aprovado pelo Theo), e uma nova `VERSAO` (`esforcos@1`) com reclassificação
   completa ao mudar qualquer constante.
 - Todos os limites propostos (5%, 15 s, 30 s, 600 s/km, 50 m, 5 km/h, 10%, 15%, 20 min) são **decisão do projeto,
   não de artigo**, e ficam como constantes nomeadas em um só módulo; validação só com dado real fora do git.
 - Fixtures e oráculo dos exemplos acima: #161. Blocos: #162. Corrida: #163. Ciclismo: #164 e #165.
   Banco e worker: #166.
+
+## Limitações
+- **Ciclismo sem histórico**: a referência é a mediana, ponderada pela duração, da própria atividade. Se o esforço
+  domina o volume, a mediana sobe e esforços reais deixam de ser detectados; num treino todo leve, o ritmo de
+  passeio pode virar esforço. O resultado traz `ref_origem` para a tela poder avisar.
+- **Fartlek e progressivo** (blocos com 10% ou mais de ganho sobre o habitual, sem recuperação lenta no meio) caem como
+  **treino-chave contínuo** (item 6), não como séries. A visão de tiros de 1 km continua os excluindo (item 8).
+- Ciclismo sem potência: a velocidade sofre com relevo e vento (item 5). Sem teto de duração para o aquecimento.
 
 ## Fontes
 - Garmin FIT SDK, mensagem `lap`: `total_timer_time` (tempo de cronômetro, exclui pausa automática),
@@ -273,7 +280,9 @@ para esforços. Decisão pedida ao Theo: **tabela `esforco`**, ou a alternativa 
   apoio da ideia de faixas e do mínimo de 20 min; **não consultados nesta rodada**, ver "A confirmar".
 
 ## A confirmar
-1. **Theo**: modelo de dados do item 9 (tabela `esforco` ou `segmento.tipo` ampliado).
+Itens 2 a 4 e 6 seguem abertos com o Angelo (tolerâncias, faixas, treino-chave e velocidade habitual).
+
+1. ~~Modelo de dados do item 9~~: aprovado pelo Theo em 04/11 (tabela `bloco_atividade`).
 2. **Angelo**: tolerância de junção (5%) e pausa que separa (15 s corrida, 30 s ciclismo); conferir com um treino
    real, fora do git, que o lap automático cortando esforço de 1500 m junta como esperado.
 3. **Angelo**: o que é treino-chave contínuo (20 min e 10% de ganho na corrida; 20 min e 15% no ciclismo).
