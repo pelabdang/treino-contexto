@@ -12,6 +12,7 @@ from app.metricas.tiros_1km import (
     SessaoTiros,
     VoltaEntrada,
     agregar_sessao,
+    formatar_pace,
     para_apresentacao,
     serie_por_sessao,
     sessao_de_voltas,
@@ -128,3 +129,53 @@ def test_versao_da_deteccao_chega_ao_ponto_da_serie():
     (ponto,) = serie_por_sessao([sessao])
     assert ponto.versao == "tiros_1km@4"
     assert agregar_sessao("a1", date(2025, 3, 4), sessao.tiros).versao == "tiros_1km@4"
+
+
+def test_melhor_tiro_do_exemplo_da_issue_151():
+    # 1000 m/250 s/165 bpm; 1000 m/244 s/170 bpm; 990 m/247 s sem FC.
+    # paces: 250,0; 244,0; 247 / 990 x 1000 = 249,495. Melhor: 244,0 s/km (4:04), FC 170.
+    # média: (250 + 244 + 247) / (1000 + 1000 + 990) x 1000 = 741 / 2990 x 1000 = 247,826
+    p = agregar_sessao("a1", date(2026, 3, 1), [t(1, 1000, 250, 165), t(2, 1000, 244, 170), t(3, 990, 247)])
+    assert p.melhor_pace_s_km == pytest.approx(244.0)
+    assert p.melhor_fc_media == 170
+    assert p.melhor_ordem == 2
+    assert p.pace_s_km == pytest.approx(741 / 2990 * 1000)
+    assert para_apresentacao(p.pace_s_km) == 247.8
+    assert formatar_pace(p.melhor_pace_s_km) == "4:04"
+
+
+def test_melhor_tiro_empate_fica_com_o_primeiro():
+    # 1000 m/240 s/160 bpm e 1000 m/240 s/170 bpm: mesmo pace (240), vale o primeiro (FC 160).
+    p = agregar_sessao(1, date(2026, 3, 1), [t(1, 1000, 240, 160), t(2, 1000, 240, 170)])
+    assert p.melhor_pace_s_km == pytest.approx(240.0)
+    assert p.melhor_fc_media == 160
+    assert p.melhor_ordem == 1
+
+
+def test_melhor_tiro_empate_de_pace_com_distancias_diferentes():
+    # 500 m/120 s = 240 s/km e 1000 m/240 s = 240 s/km: empate, vale o primeiro (500 m, sem FC).
+    p = agregar_sessao(1, date(2026, 3, 1), [t(1, 500, 120), t(2, 1000, 240, 170)])
+    assert p.melhor_ordem == 1
+    assert p.melhor_fc_media is None
+
+
+def test_melhor_tiro_sem_fc_nao_troca_por_outro_tiro():
+    # melhor: 1000 m/236 s sem FC (236 s/km); os outros têm FC mas são mais lentos.
+    # FC do melhor = None (não empresta a FC de outro); a FC média da sessão segue existindo:
+    # (160 x 240 + 165 x 238) / 478 = 77670 / 478 = 162,490
+    p = agregar_sessao(1, date(2026, 3, 1), [t(1, 1000, 240, 160), t(2, 1000, 236), t(3, 1000, 238, 165)])
+    assert p.melhor_pace_s_km == pytest.approx(236.0)
+    assert p.melhor_fc_media is None
+    assert p.melhor_ordem == 2
+    assert p.fc_media == pytest.approx(77670 / 478)
+
+
+def test_melhor_tiro_de_um_unico_tiro_e_o_proprio_tiro():
+    p = agregar_sessao(1, date(2026, 3, 1), [t(7, 1000, 245, 168)])
+    assert (p.melhor_pace_s_km, p.melhor_fc_media, p.melhor_ordem) == (245.0, 168, 7)
+
+
+def test_melhor_tiro_ignora_tiro_sem_distancia():
+    # 0 m/10 s não tem pace: não pode ser o melhor. Vale o de 1000 m/245 s.
+    p = agregar_sessao(1, date(2026, 3, 1), [t(1, 0, 10, 150), t(2, 1000, 245, 168)])
+    assert (p.melhor_pace_s_km, p.melhor_ordem) == (245.0, 2)
