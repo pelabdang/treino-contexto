@@ -10,6 +10,9 @@ Cada volta: (intensidade, distancia_m, duracao_s, fc_media).
 
 Tambem gera, em ``fit/``, os FIT avulsos do upload de arquivo (Meta 3, issue #93; ADR 0006). Os valores
 esperados e a conta a mao de cada um estao em ``tests/test_fixtures_fit_upload.py``.
+
+Gera ainda, em ``esforcos/``, os FIT da deteccao de esforcos (Meta 5, issue #161; ADR 0008), com tempo parado entre
+voltas. Oraculo: ``docs/metricas/esforcos-oraculo.md``.
 """
 
 from __future__ import annotations
@@ -165,6 +168,91 @@ ATIVIDADES_UPLOAD = {
     "empate_chegada_mais_perto_de_b.fit": Atividade(  # 30 s de A, 10 s de B
         2000000014, "Chegada perto de B", *_RUN, _INICIO_EMPATE, VOLTAS_H, deslocamento_fit_s=30),
 }
+# --------------------------------------------------------------------------
+# ESFORCOS (Meta 5, #161; ADR 0008). Cada volta: (intensidade, distancia_m, duracao_s, fc_media, parada_apos_s).
+# Duracoes e paradas em segundos inteiros: o start_time do FIT tem resolucao de 1 s.
+# parada_apos_s = tempo parado (pausa automatica) entre o fim desta volta e o inicio da seguinte: no FIT aparece
+# como a diferenca entre os start_time das voltas, e total_timer_time continua sendo so o tempo em movimento.
+# Os valores esperados e a conta a mao estao em docs/metricas/esforcos-oraculo.md e em
+# services/api/tests/metricas/test_esforcos_oraculo.py.
+# --------------------------------------------------------------------------
+# (1) ADR exemplo 2: aquecimento 2 km, 10 x 400 m com 90 s parado entre eles, desaquecimento 1 km
+_FC_400 = [160, 164, 167, 169, 171, 172, 173, 174, 175, 176]
+VOLTAS_E1 = (
+    [(AQUEC, 2000, 660, 130, 0)]
+    + [(TIRO, 400, 88, fc, 90 if i < 9 else 0) for i, fc in enumerate(_FC_400)]
+    + [(DESAQ, 1000, 340, 140, 0)]
+)
+# (2) ADR exemplo 1: aquecimento em 2 laps automaticos de 1 km; 3 x 1500 m cortados pelo lap em 1000 m + 500 m,
+# 120 s parado entre as repeticoes; desaquecimento 1 km
+VOLTAS_E2 = [
+    (AQUEC, 1000, 330, 128, 0), (AQUEC, 1000, 332, 131, 0),
+    (TIRO, 1000, 240, 165, 0), (TIRO, 500, 121, 168, 120),
+    (TIRO, 1000, 242, 167, 0), (TIRO, 500, 121, 170, 120),
+    (TIRO, 1000, 243, 168, 0), (TIRO, 500, 122, 171, 0),
+    (DESAQ, 1000, 340, 138, 0),
+]
+# (3) ADR exemplo 3: 8 km continuos fortes (lap automatico de 1 km), sem aquecimento
+VOLTAS_E3 = [(TIRO, 1000, d, fc, 0) for d, fc in
+             [(268, 150), (271, 160), (270, 164), (272, 166), (269, 168), (270, 169), (271, 170), (269, 171)]]
+# (4) rodagem leve de 6 km, lap automatico de 1 km
+VOLTAS_E4 = [(TIRO, 1000, d, fc, 0) for d, fc in
+             [(355, 140), (352, 142), (350, 143), (351, 144), (349, 145), (348, 146)]]
+# (5) treino misto (ADR 8, caso 4): 5 x 1 km com 400 m de recuperacao, 8 x 400 m com 200 m de recuperacao
+_FC_1K = [160, 163, 165, 167, 168]
+_FC_M400 = [170, 172, 173, 174, 175, 176, 177, 178]
+VOLTAS_E5 = [(AQUEC, 2000, 660, 130, 0)]
+for _fc in _FC_1K:
+    VOLTAS_E5 += [(TIRO, 1000, 250, _fc, 0), (RECUP, 400, 168, 145, 0)]
+for _i, _fc in enumerate(_FC_M400):
+    VOLTAS_E5.append((TIRO, 400, 92, _fc, 0))
+    if _i < 7:
+        VOLTAS_E5.append((RECUP, 200, 90, 150, 0))
+VOLTAS_E5.append((DESAQ, 1000, 340, 140, 0))
+# (6) ADR exemplo 4, ciclismo: 15 min a 25 km/h, 5 x [4 min a 36 km/h + 2 min a 22 km/h], 10 min a 24 km/h.
+# 22 km/h x 120 s = 733,33 m (o FIT guarda centimetros)
+_FC_PEDAL = [150, 155, 158, 160, 162]
+VOLTAS_E6 = [(AQUEC, 6250, 900, 125, 0)]
+for _fc in _FC_PEDAL:
+    VOLTAS_E6 += [(TIRO, 2400, 240, _fc, 0), (RECUP, 733.33, 120, 140, 0)]
+VOLTAS_E6.append((DESAQ, 4000, 600, 135, 0))
+# (7) ADR exemplo 5, ciclismo: bloco de 20 min a 24 km/h (8 km) cortado pelo lap de 5 km
+VOLTAS_E7 = [
+    (AQUEC, 3000, 600, 120, 0),
+    (TIRO, 5000, 750, 150, 0), (TIRO, 3000, 450, 156, 0),
+    (DESAQ, 3000, 600, 125, 0),
+]
+
+_CICLO = ("cycling", "CYCLING", Sport.CYCLING, SubSport.ROAD)
+# nome do arquivo em esforcos/ -> atividade
+ATIVIDADES_ESFORCOS = {
+    "esforcos_corrida_400_com_pausa.fit": Atividade(
+        3000000001, "Tiros de 400", *_RUN, _utc(2025, 5, 5, 9, 0, 0), VOLTAS_E1),
+    "esforcos_corrida_1500_lap_automatico.fit": Atividade(
+        3000000002, "Tiros de 1500", *_RUN, _utc(2025, 5, 7, 9, 0, 0), VOLTAS_E2),
+    "esforcos_corrida_continuo_forte.fit": Atividade(
+        3000000003, "Continuo forte 8 km", *_RUN, _utc(2025, 5, 9, 8, 0, 0), VOLTAS_E3),
+    "esforcos_corrida_rodagem_leve.fit": Atividade(
+        3000000004, "Rodagem leve 6 km", *_RUN, _utc(2025, 5, 10, 8, 0, 0), VOLTAS_E4),
+    "esforcos_corrida_misto.fit": Atividade(
+        3000000005, "Misto 1 km e 400 m", *_RUN, _utc(2025, 5, 12, 9, 0, 0), VOLTAS_E5),
+    "esforcos_ciclismo_blocos_4min.fit": Atividade(
+        3000000006, "Pedal 5 x 4 min", *_CICLO, _utc(2025, 5, 14, 8, 0, 0), VOLTAS_E6),
+    "esforcos_ciclismo_lap_automatico.fit": Atividade(
+        3000000007, "Pedal 20 min", *_CICLO, _utc(2025, 5, 16, 8, 0, 0), VOLTAS_E7),
+}
+# Referencia de intensidade de cada uma (ADR 0008, item 5): ritmo habitual em s/km na corrida, velocidade habitual
+# em km/h no ciclismo. Entra como dado do teste, nao do FIT.
+REFERENCIA_ESFORCOS = {
+    "esforcos_corrida_400_com_pausa.fit": 330,
+    "esforcos_corrida_1500_lap_automatico.fit": 330,
+    "esforcos_corrida_continuo_forte.fit": 330,
+    "esforcos_corrida_rodagem_leve.fit": 330,
+    "esforcos_corrida_misto.fit": 330,
+    "esforcos_ciclismo_blocos_4min.fit": 22,
+    "esforcos_ciclismo_lap_automatico.fit": 20,
+}
+
 FRACAO_TRUNCADO = 0.6  # o FIT truncado guarda os primeiros 60% dos bytes de upload_intervalado_5x1km.fit
 
 RAIZ_ZIP = "DI_CONNECT"
@@ -285,6 +373,57 @@ def montar_fits_upload() -> dict[str, bytes]:
     return fits
 
 
+def montar_fit_esforcos(a: Atividade) -> bytes:
+    """FIT com tempo parado entre as voltas (voltas de 5 campos: ver VOLTAS_E1..E7)."""
+    inicio = _ms(a.inicio)
+    b = FitFileBuilder(auto_define=True, min_string_size=50)
+    fid = FileIdMessage()
+    fid.type = FileType.ACTIVITY
+    fid.manufacturer = Manufacturer.GARMIN.value
+    fid.product = 1
+    fid.serial_number = a.id % 1_000_000  # ficticio
+    fid.time_created = inicio
+    b.add(fid)
+
+    t = inicio
+    for i, (intens, dist, dur, fc, parada) in enumerate(a.voltas):
+        lap = LapMessage()
+        lap.message_index = i
+        lap.start_time = t
+        lap.timestamp = t + int(dur * 1000)
+        lap.total_elapsed_time = dur
+        lap.total_timer_time = dur  # so o tempo em movimento; a parada fica entre os start_time
+        lap.total_distance = dist
+        lap.avg_heart_rate = fc
+        lap.sport = a.sport_fit
+        lap.sub_sport = a.sub_sport_fit
+        lap.intensity = {AQUEC: Intensity.WARMUP, TIRO: Intensity.ACTIVE,
+                         RECUP: Intensity.REST, DESAQ: Intensity.COOLDOWN}[intens]
+        b.add(lap)
+        t += int((dur + parada) * 1000)
+
+    dist = sum(v[1] for v in a.voltas)
+    mov = sum(v[2] for v in a.voltas)
+    fc = round(sum(v[2] * v[3] for v in a.voltas) / mov)
+    s = SessionMessage()
+    s.message_index = 0
+    s.start_time = inicio
+    s.timestamp = t
+    s.total_elapsed_time = (t - inicio) / 1000
+    s.total_timer_time = mov
+    s.total_distance = dist
+    s.avg_heart_rate = fc
+    s.num_laps = len(a.voltas)
+    s.sport = a.sport_fit
+    s.sub_sport = a.sub_sport_fit
+    b.add(s)
+    return b.build().to_bytes()
+
+
+def montar_fits_esforcos() -> dict[str, bytes]:
+    return {nome: montar_fit_esforcos(a) for nome, a in ATIVIDADES_ESFORCOS.items()}
+
+
 def main(destino: Path) -> None:
     destino.mkdir(parents=True, exist_ok=True)
     (destino / "exportacao_minima.zip").write_bytes(montar_exportacao())
@@ -293,6 +432,10 @@ def main(destino: Path) -> None:
     for nome, conteudo in montar_fits_upload().items():
         (destino / "fit" / nome).write_bytes(conteudo)
     print(f"gerados: {len(montar_fits_upload())} FIT em {destino / 'fit'}")
+    (destino / "esforcos").mkdir(exist_ok=True)
+    for nome, conteudo in montar_fits_esforcos().items():
+        (destino / "esforcos" / nome).write_bytes(conteudo)
+    print(f"gerados: {len(ATIVIDADES_ESFORCOS)} FIT em {destino / 'esforcos'}")
 
 
 if __name__ == "__main__":
