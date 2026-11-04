@@ -243,8 +243,8 @@ Revisadas ao fim de cada meta com o que se aprendeu. Ordem tirada da "Fundação
   | #120 | Regra do docs-ok no `AGENTS.md` (proposta da Meta 3) | Theo | feita |
 
 - **Achados depois da meta (propostas, sem issue criada):** o `worker.importar_garmin` chamava o Open-Meteo por padrão no
-  fim da importação (resolvido na #132: só com `--com-clima`), e reimportar o histórico real mandaria as posições na hora (proposta: `--sem-clima` ou, melhor,
-  inverter o padrão); um FIT avulso importado depois do JSON duplica a atividade, porque a exclusão "exportação não casa
+  fim da importação, e reimportar o histórico real mandaria as posições na hora (resolvido na #132, PR #160: o padrão
+  virou sem rede, e o clima só entra com `--com-clima`); um FIT avulso importado depois do JSON duplica a atividade, porque a exclusão "exportação não casa
   com exportação" vale também para `fonte_id` `fit-…` (proposta: a exclusão só quando os dois lados têm `activityId`); a
   investigação da série de tiros deixou recomendações (R1, melhor tiro junto da média; R2, `tiros_1km@5`, que amplia
   o que entra) que esperam o Angelo; clima na tela do app fica como candidata a meta futura. Detalhes em
