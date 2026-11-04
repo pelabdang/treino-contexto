@@ -2,7 +2,7 @@
 tipo: meta
 status: em-uso
 dono: paulo
-atualizado: 2026-11-03
+atualizado: 2026-11-04
 links: [[produto/roadmap]], [[produto/meta-4-como-rodar]], [[decisoes/0007-clima-da-atividade]], [[modulos/clima]], [[metricas/clima-oraculo]], [[modulos/ingestao-garmin]], [[modulos/worker]], [[modulos/banco]], [[modulos/api]], [[modulos/api-client]], [[decisoes/0006-upload-de-fit]], [[decisoes/0005-serie-de-tiros-o-que-entra]], [[metricas/tiros-1km]], [[produto/metas/meta-3-upload-fit]], [[diario/2026-11-03]]
 ---
 # Meta 4: clima de cada atividade
@@ -64,8 +64,8 @@ Fora da sequência, na mesma meta (propostas da Meta 3 aprovadas pelo Angelo):
 - **Chamada real ao Open-Meteo pelo código.** Houve uma única chamada manual, na #112, com a posição inventada do "Parque do
   Exemplo" ([[modulos/clima]], "O que a chamada real mostrou"). O `preencher_clima` e o cliente só rodaram com a resposta
   gravada. A primeira chamada do código de verdade será a do histórico real, que espera o Angelo (abaixo).
-- **`worker.importar_garmin` na linha de comando com as fixtures de clima.** O comando busca o clima no fim e usaria a rede;
-  por isso o guia e o QA importam essas fixtures pela função `importar`. A linha `clima: chamadas=0` do comando só foi vista
+- **`worker.importar_garmin` na linha de comando com as fixtures de clima.** Na época o comando buscava o clima no fim e usaria a rede;
+  por isso o guia e o QA importaram essas fixtures pela função `importar`. Desde a #132 o comando não usa a rede por padrão. A linha `clima: chamadas=0` do comando só foi vista
   com as fixtures da Meta 1 (sem posição), na #115.
 - **Tela.** O clima não aparece no app: web, iOS e Android ficam como "não se aplica".
 
@@ -88,10 +88,10 @@ recomendações, e ambas esperam as respostas do Angelo a perguntas sobre o que 
 Não estão no critério de pronto, então não são pendências da Meta 4. Viram propostas; nenhuma issue foi criada, porque
 isso depende do "pode criar" do Angelo.
 
-- **O `worker.importar_garmin` chama o Open-Meteo por padrão.** No fim da importação ele busca o clima das atividades que
+- **(Resolvido na #132, 04/11: só com `--com-clima`.) O `worker.importar_garmin` chamava o Open-Meteo por padrão.** No fim da importação ele busca o clima das atividades que
   entraram ou mudaram. Com as fixtures de clima isso mandaria a posição inventada para fora; com o histórico real,
   **reimportar a exportação mandaria as posições arredondadas na hora**, sem a decisão que o Angelo ainda não tomou.
-  Hoje só o aviso no guia e em [[modulos/worker]] impede isso.
+  Na época só o aviso no guia e em [[modulos/worker]] impedia isso.
 - **Duplicação ao importar um FIT avulso depois do JSON.** Na #115, os FIT de clima importados depois do JSON entraram como
   atividades novas. Causa: a regra de que "a exportação não casa com outra linha da exportação" (detalhe da #94, na
   [[decisoes/0006-upload-de-fit]]) supõe que as duas linhas têm `activityId`. Um FIT sem JSON tem `fonte_id` `fit-…`, que não
@@ -100,7 +100,7 @@ isso depende do "pode criar" do Angelo.
 - **Clima só no banco e na API.** O valor para o atleta aparece quando o clima chegar à tela ou ao feedback do treino.
 
 ## Propostas (aguardando "pode criar")
-1. **`--sem-clima` no `worker.importar_garmin`** (duda-dados, menos de 1 dia). Opção para importar sem buscar o clima, ou
+1. **(Feita na #132: padrão invertido, `--com-clima`.) `--sem-clima` no `worker.importar_garmin`** (duda-dados, menos de 1 dia). Opção para importar sem buscar o clima, ou
    inverter o padrão (só busca com `--com-clima`). Proposta do time: **inverter o padrão**, porque nada que manda dado do
    atleta a terceiro deve acontecer sem pedido explícito. Critério de pronto: o comando sem a opção não abre conexão (teste
    com guarda de socket); com a opção, chama `preencher_clima` só para o que mudou; guia da Meta 4 e

@@ -2,7 +2,7 @@
 tipo: roteiro
 status: em-uso
 dono: paulo
-atualizado: 2026-11-03
+atualizado: 2026-11-04
 links: [[produto/plano-mvp-execucao]], [[decisoes/0001-modelo-de-dados-minimo]], [[decisoes/0005-serie-de-tiros-o-que-entra]], [[produto/metas/meta-1-tiros-1km]], [[produto/metas/meta-2-evolucao-tiros-app]], [[produto/metas/meta-3-upload-fit]], [[decisoes/0004-contrato-tela-evolucao]], [[decisoes/0006-upload-de-fit]], [[decisoes/0003-fuso-da-atividade]], [[diario/2026-11-03]], [[00-inicio]], [[produto/metas/meta-4-clima-atividade]], [[decisoes/0007-clima-da-atividade]], [[produto/meta-4-como-rodar]], [[metricas/tiros-1km]]
 ---
 # Roteiro de metas
@@ -239,8 +239,8 @@ Revisadas ao fim de cada meta com o que se aprendeu. Ordem tirada da "Fundação
   | #119 | App web em `pt-BR` (proposta da Meta 3) | rafa-app | feita |
   | #120 | Regra do docs-ok no `AGENTS.md` (proposta da Meta 3) | Theo | feita |
 
-- **Achados depois da meta (propostas, sem issue criada):** o `worker.importar_garmin` chama o Open-Meteo por padrão no
-  fim da importação, e reimportar o histórico real mandaria as posições na hora (proposta: `--sem-clima` ou, melhor,
+- **Achados depois da meta (propostas, sem issue criada):** o `worker.importar_garmin` chamava o Open-Meteo por padrão no
+  fim da importação (resolvido na #132: só com `--com-clima`), e reimportar o histórico real mandaria as posições na hora (proposta: `--sem-clima` ou, melhor,
   inverter o padrão); um FIT avulso importado depois do JSON duplica a atividade, porque a exclusão "exportação não casa
   com exportação" vale também para `fonte_id` `fit-…` (proposta: a exclusão só quando os dois lados têm `activityId`); a
   investigação da série de tiros deixou recomendações (R1, melhor tiro junto da média; R2, `tiros_1km@5`, que amplia
@@ -367,7 +367,7 @@ stack Expo). A chave do provedor de LLM foi entregue e está no `.env` (fora do 
 Em aberto:
 1. **Rodar o `preencher_clima` no histórico real.** Primeira vez que dado real vai a um terceiro: só a posição de início
    arredondada e o horário, sem identificador; o Open-Meteo guarda coordenadas em log por 90 dias e vê o IP da máquina.
-   Proposta do time: antes, o `importar_garmin` deixa de chamar a rede por padrão; depois `--so-posicao` (local) e, com o
+   O `importar_garmin` já não chama a rede por padrão (#132); depois `--so-posicao` (local) e, com o
    ok, uma rodada de clima com `--limite` baixo. Números só em `entregas/`. Ver [[produto/metas/meta-4-clima-atividade]].
 2. **Série de tiros:** as perguntas do relatório da #118 (em `entregas/`, fora do git) sobre o que o atleta quer ver
    na série. Delas dependem a R1 (melhor tiro junto da média; muda o contrato e o gráfico, não a regra) e a R2
@@ -377,7 +377,7 @@ Em aberto:
      estimado pelo código a partir do histórico, guardado só no banco local, com a origem marcada e mostrado como
      estimativa; um valor informado pelo atleta ou pelo professor passa na frente quando existir (sem tela por enquanto);
    - **conferir a carga com o histórico real**, como na #19 da Meta 1: proposta sim, local, com os números só em `entregas/`.
-4. **"Pode criar"** para as propostas da Meta 4 (`importar_garmin` sem rede por padrão, identidade do FIT avulso, tela de
+4. **"Pode criar"** para as propostas da Meta 4 (identidade do FIT avulso, tela de
    um treino com o clima) e para as issues da Meta 5, depois do item 3.
 5. **Próximas metas, sem pressa:** CNPJ e pedido da API da Garmin; pedido da API do TrainingPeaks com a assessoria;
    plano comercial do Open-Meteo para produção; limite de tamanho do upload no proxy, obrigatório na meta de deploy.
