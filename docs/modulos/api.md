@@ -74,19 +74,21 @@ curl "http://localhost:8000/atletas/1/evolucao/tiros-1km?inicio=2025-03-01"
 {"atleta_id": 1, "metrica": "tiros_1km", "versao_calculo": "tiros_1km@4", "reclassificacao_pendente": false,
  "unidades": {"pace": "s/km", "fc": "bpm", "distancia": "m", "duracao": "s"},
  "periodo": {"inicio": "2025-03-01", "fim": null},
- "eixos": {"pace": {"min_s_km": 228.9, "max_s_km": 258.9, "invertido": true,
+ "eixos": {"pace": {"min_s_km": 226.0, "max_s_km": 256.0, "invertido": true,
                     "marcas": [{"valor_s_km": 230.0, "rotulo": "3:50"}, {"valor_s_km": 240.0, "rotulo": "4:00"}, {"valor_s_km": 250.0, "rotulo": "4:10"}]},
-           "fc": {"min_bpm": 168.5, "max_bpm": 173.5,
-                  "marcas": [{"valor_bpm": 169.0, "rotulo": "169"}, {"valor_bpm": 170.0, "rotulo": "170"}, {"valor_bpm": 171.0, "rotulo": "171"}, {"valor_bpm": 172.0, "rotulo": "172"}, {"valor_bpm": 173.0, "rotulo": "173"}]}},
+           "fc": {"min_bpm": 173.5, "max_bpm": 178.5,
+                  "marcas": [{"valor_bpm": 174.0, "rotulo": "174"}, {"valor_bpm": 175.0, "rotulo": "175"}, {"valor_bpm": 176.0, "rotulo": "176"}, {"valor_bpm": 177.0, "rotulo": "177"}, {"valor_bpm": 178.0, "rotulo": "178"}]}},
  "sessoes": [{"atividade_id": 1, "data": "2025-03-04", "inicio": "2025-03-04T09:00:00Z", "n_tiros": 6,
               "pace_medio_s_km": 250.8, "pace_medio": "4:11", "fc_media": 170.3,
+              "pace_melhor_s_km": 248.0, "pace_melhor": "4:08", "fc_melhor_tiro": 175.0, "ordem_melhor_tiro": 11,
               "tiros": [{"ordem": 1, "distancia_m": 1000.0, "duracao_s": 255.0, "pace_s_km": 255.0, "pace": "4:15", "fc_media": 165.0}]}]}
 ```
 - `versao_calculo` é sempre a `VERSAO` da regra atual (não vem do banco). `reclassificacao_pendente` é `true` quando algum segmento foi gravado com outra versão; o `GET` nunca reclassifica nem escreve. Para voltar a `false`, veja "Reclassificar".
 - `metrica` é sempre `"tiros_1km"` (`Literal` no OpenAPI). Todos os campos de `unidades` são obrigatórios no schema.
 - Todo decimal sai com 1 casa, inclusive os do tiro. `distancia_m` do tiro é `null` (e `pace_s_km` e `pace` também) quando o segmento não tem distância, nunca `0`.
+- **Melhor tiro (#152, [[decisoes/0004-contrato-tela-evolucao]], adendo 1):** `pace_melhor_s_km`, `pace_melhor` (`m:ss` de `formatar_pace`), `fc_melhor_tiro` (`null` se o melhor tiro não tem FC; não troca de tiro) e `ordem_melhor_tiro`. É o valor principal do gráfico e do painel de FC; `pace_medio*` e `fc_media` ficam como secundários.
 - O texto de pace (`pace_medio` da sessão, `pace` do tiro) é feito por `formatar_pace` a partir do valor **sem arredondar**; formatar o número de 1 casa pode dar outro resultado (239,46 s/km: texto `3:59`, número `239.5`). O app não formata pace.
-- `eixos` (#66): faixa e marcas prontas para o app desenhar, calculadas por `escala_pace` e `escala_fc` (`app/graficos/escala.py`, #63), a **mesma regra e a mesma faixa** do PNG para o mesmo filtro, sobre os valores sem arredondar da série (1 casa só na saída). Escala mínima de 30 s/km no pace e 5 bpm na FC. `rotulo` do pace é `formatar_pace(valor_s_km)`; o da FC é o inteiro em texto. `invertido: true` no pace (mais rápido no alto). `eixos` é `null` sem sessões; `eixos.fc` é `null` se nenhuma sessão tem FC. O app não escolhe escala nem formata pace. O exemplo acima usa as fixtures (as duas sessões).
+- `eixos` (#66): faixa e marcas prontas para o app desenhar, calculadas por `escala_pace` e `escala_fc` (`app/graficos/escala.py`, #63), pelo **valor principal** (`pace_melhor_s_km` e `fc_melhor_tiro`, adendo 1 da ADR 0004; o PNG e o CSV seguem na média e não têm mais a mesma faixa), sobre os valores sem arredondar (1 casa só na saída). Escala mínima de 30 s/km no pace e 5 bpm na FC. `rotulo` do pace é `formatar_pace(valor_s_km)`; o da FC é o inteiro em texto. `invertido: true` no pace (mais rápido no alto). `eixos` é `null` sem sessões; `eixos.fc` é `null` se nenhum melhor tiro tem FC. O app não escolhe escala nem formata pace. O exemplo acima usa as fixtures (as duas sessões).
 - `sessoes` por `data` crescente; `fc_media` pode ser `null`; valores com 1 casa; `pace_medio` vem de `formatar_pace` ([[metricas/tiros-1km]]).
 - `periodo` é `null` sem filtro; com algum filtro, os dois campos, `null` no que não veio.
 - Atleta inexistente: `404` `{"detail": "atleta não encontrado"}`, declarado no OpenAPI com o modelo `Erro` nos dois endpoints. Sem sessões: `200` com `"sessoes": []`. Data inválida ou `inicio` depois de `fim`: `422` (formato do FastAPI, `detail` é lista).

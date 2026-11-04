@@ -68,6 +68,8 @@ def test_textos_de_pace_e_versao(client_e_atleta):
     assert j["versao_calculo"] == "tiros_1km@4" and j["reclassificacao_pendente"] is False
     assert [s["pace_medio"] for s in j["sessoes"]] == ["4:11", "3:57"]
     assert [s["data"] for s in j["sessoes"]] == ["2025-03-04", "2025-03-11"]
+    assert [s["pace_melhor"] for s in j["sessoes"]] == ["4:08", "3:54"]
+    assert [s["fc_melhor_tiro"] for s in j["sessoes"]] == [175.0, 177.0]
     # escala mínima: 5 bpm na FC e 30 s/km no pace
     assert j["eixos"]["fc"]["max_bpm"] - j["eixos"]["fc"]["min_bpm"] >= 5 - 1e-6
     assert j["eixos"]["pace"]["max_s_km"] - j["eixos"]["pace"]["min_s_km"] >= 30 - 1e-6

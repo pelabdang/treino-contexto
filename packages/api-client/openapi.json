@@ -425,6 +425,17 @@
             ],
             "title": "Fc Media"
           },
+          "fc_melhor_tiro": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Fc Melhor Tiro"
+          },
           "inicio": {
             "format": "date-time",
             "title": "Inicio",
@@ -434,12 +445,24 @@
             "title": "N Tiros",
             "type": "integer"
           },
+          "ordem_melhor_tiro": {
+            "title": "Ordem Melhor Tiro",
+            "type": "integer"
+          },
           "pace_medio": {
             "title": "Pace Medio",
             "type": "string"
           },
           "pace_medio_s_km": {
             "title": "Pace Medio S Km",
+            "type": "number"
+          },
+          "pace_melhor": {
+            "title": "Pace Melhor",
+            "type": "string"
+          },
+          "pace_melhor_s_km": {
+            "title": "Pace Melhor S Km",
             "type": "number"
           },
           "tiros": {
@@ -458,6 +481,10 @@
           "pace_medio_s_km",
           "pace_medio",
           "fc_media",
+          "pace_melhor_s_km",
+          "pace_melhor",
+          "fc_melhor_tiro",
+          "ordem_melhor_tiro",
           "tiros"
         ],
         "title": "SessaoOut",
@@ -793,7 +820,7 @@
     },
     "/atletas/{atleta_id}/evolucao/tiros-1km": {
       "get": {
-        "description": "Pace e FC médios dos tiros de 1 km por sessão. `inicio` e `fim` (AAAA-MM-DD) são datas locais, inclusivas.",
+        "description": "Melhor tiro (principal) e média dos tiros de 1 km por sessão. `inicio` e `fim` (AAAA-MM-DD) são datas locais, inclusivas.",
         "operationId": "evolucaoTiros1km",
         "parameters": [
           {
