@@ -5,6 +5,9 @@
             "Bash(gh pr merge * --squash)"
         ]
     },
+    "env": {
+        "CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS": "1"
+    },
     "teammateMode": "tmux",
     "hooks": {
         "TaskCompleted": [
@@ -17,8 +20,5 @@
                 ]
             }
         ]
-    },
-    "env": {
-        "CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS": "1"
     }
 }
