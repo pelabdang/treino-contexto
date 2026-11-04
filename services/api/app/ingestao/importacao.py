@@ -137,6 +137,11 @@ def _igual(ativ: Atividade, campos: dict) -> bool:
     )
 
 
+def tem_activity_id(fonte: str, fonte_id: str) -> bool:
+    """A linha vem do JSON da exportacao (`fonte_id` = `activityId`). FIT avulso (`fit-...`) e upload nao tem."""
+    return fonte == FONTE_EXPORTACAO and not fonte_id.startswith("fit-")
+
+
 def duracao_da(a: AtividadeImportada) -> float | None:
     return a.duracao_s if a.duracao_s is not None else (sum(v.duracao_s for v in a.voltas) or None)
 
@@ -153,9 +158,10 @@ def _casar(session: Session, atleta_id: int, a: AtividadeImportada, avisos: list
         Atividade.atleta_id == atleta_id, Atividade.modalidade == a.modalidade,
         Atividade.inicio.between(inicio - timedelta(seconds=TOLERANCIA_S), inicio + timedelta(seconds=TOLERANCIA_S)),
     )))
-    if a.fonte == FONTE_EXPORTACAO:
-        # a exportacao tem um activityId por atividade: outra linha da exportacao e outra atividade, nunca a mesma
-        candidatas = [c for c in candidatas if c.fonte != FONTE_EXPORTACAO]
+    if tem_activity_id(a.fonte, a.fonte_id):
+        # um activityId por atividade: se os DOIS lados tem activityId, e outra atividade, nunca a mesma (#133).
+        # FIT avulso (`fit-...`) e upload nao tem activityId e entram na regra dos 60 s.
+        candidatas = [c for c in candidatas if not tem_activity_id(c.fonte, c.fonte_id)]
     if not candidatas:
         return None, False
     candidatas.sort(key=lambda c: (abs((para_utc(c.inicio) - inicio).total_seconds()), c.id))
@@ -170,6 +176,9 @@ def gravar_atividade(session: Session, atleta_id: int, a: AtividadeImportada, du
     """Insere ou atualiza a atividade (sem `commit`). Usada pela exportacao e pelo upload.
 
     - Casou (chave ou 60 s): atualiza a linha existente, o `id` nao muda. Nao casou: insere.
+    - FIT avulso da exportacao (`fonte_id` `fit-...`) casa pela regra dos 60 s com qualquer linha; a exclusao
+      "exportacao nao casa com exportacao" so vale quando os dois lados tem `activityId` (#133).
+    - Linha com `activityId` que casa com linha sem `activityId` (upload ou FIT avulso): a linha adota o `activityId`.
     - Exportacao que casa com linha do upload: a linha passa a `garmin_export` com o `activityId`.
     - Upload que casa com linha da exportacao: a linha mantem fonte, `fonte_id` e os campos da exportacao
       (mais ricos, com horario local); o upload so completa as voltas se faltarem e troca o `arquivo_bruto`.
@@ -188,13 +197,15 @@ def gravar_atividade(session: Session, atleta_id: int, a: AtividadeImportada, du
         return "inserida", nova, None
 
     anterior = ativ.arquivo_bruto
-    if not por_chave and a.fonte == FONTE_UPLOAD and ativ.fonte == FONTE_EXPORTACAO:
+    so_fit = a.fonte == FONTE_UPLOAD or not tem_activity_id(a.fonte, a.fonte_id)  # upload ou FIT avulso
+    if not por_chave and so_fit and ativ.fonte == FONTE_EXPORTACAO and (
+            a.fonte == FONTE_UPLOAD or tem_activity_id(ativ.fonte, ativ.fonte_id)):
         mudou = False
         if not ativ.segmentos and a.voltas:
             ativ.segmentos.extend(_segmentos(a.voltas))
             mudou = True
-        if ativ.arquivo_bruto != a.arquivo_bruto:
-            ativ.arquivo_bruto = a.arquivo_bruto
+        if ativ.arquivo_bruto != a.arquivo_bruto and (a.fonte == FONTE_UPLOAD or not ativ.arquivo_bruto):
+            ativ.arquivo_bruto = a.arquivo_bruto  # FIT avulso so preenche; nao troca a origem que a linha ja tem
             mudou = True
         if ativ.inicio_lat is None and a.inicio_lat is not None and not e_indoor(ativ.subtipo):
             ativ.inicio_lat, ativ.inicio_lon = a.inicio_lat, a.inicio_lon  # o JSON vale; sem posicao nele, a do FIT
@@ -202,7 +213,8 @@ def gravar_atividade(session: Session, atleta_id: int, a: AtividadeImportada, du
         return ("atualizada" if mudou else "ignorada"), ativ, anterior
 
     adotou = False
-    if not por_chave and a.fonte == FONTE_EXPORTACAO and ativ.fonte != FONTE_EXPORTACAO:
+    if (not por_chave and a.fonte == FONTE_EXPORTACAO and not tem_activity_id(ativ.fonte, ativ.fonte_id)
+            and (ativ.fonte != FONTE_EXPORTACAO or tem_activity_id(a.fonte, a.fonte_id))):
         ativ.fonte, ativ.fonte_id = a.fonte, a.fonte_id
         adotou = True
     if a.fonte != FONTE_UPLOAD and fit_guardado.esta_guardado(ativ.arquivo_bruto):

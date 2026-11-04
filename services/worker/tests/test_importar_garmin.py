@@ -200,7 +200,9 @@ def test_fonte_sem_horario_local_nao_apaga_fuso_gravado(session, tmp_path):
     importar(session, ZIP, "Ana")
     so_fit = _recortar(tmp_path, set())  # JSON vazio: so os FITs, sem startTimeLocal
     rel = importar(session, so_fit, "Ana")
-    assert rel.inseridas == 4  # FIT sem JSON tem outro fonte_id (id derivado)
+    # FIT avulso (fonte_id derivado) casa pela regra dos 60 s com a linha do JSON: nao duplica (#133)
+    assert rel.inseridas == 0
+    assert session.scalar(select(func.count()).select_from(Atividade)) == 5
     ativ = session.scalars(select(Atividade).where(Atividade.fonte_id == "1000000001")).one()
     assert ativ.fuso_min == -180
 
