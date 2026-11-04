@@ -2,7 +2,7 @@
 tipo: decisao
 status: em-uso
 dono: theo
-atualizado: 2026-10-31
+atualizado: 2026-11-04
 links: [[decisoes/0001-modelo-de-dados-minimo]], [[modulos/banco]], [[modulos/ingestao-garmin]], [[produto/roadmap]]
 ---
 # ADR: 0002 Segmento com intensidade da volta e versão da detecção
@@ -29,7 +29,7 @@ Se a detecção não conseguir usar a intensidade (ela é opcional), cai para di
 - Enum do Postgres para `intensidade`: mais difícil de migrar; segue a regra da 0001 (texto com `CHECK`).
 - Guardar a intensidade só dentro de `tipo`: perde o dado bruto do relógio e mistura origem com classificação.
 - Tabela separada de métricas derivadas versionadas: mais correta no longo prazo, grande demais para a Meta 1.
-  Reavaliar quando houver mais de uma métrica derivada (Meta 5).
+  Reavaliar quando houver mais de uma métrica derivada (Meta 6, carga de treino; era a Meta 5 antes da renumeração de 04/11, [[produto/roadmap]]).
 - Não mudar o modelo e detectar só por distância e pace: fica como plano B se a mudança for recusada.
 
 ## Consequências
