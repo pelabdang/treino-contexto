@@ -105,7 +105,7 @@ em memória, até 3 níveis. Na pasta e no zip só entram `*summarizedActivities
     `(0, 0)` depois do arredondamento (ponto "sem GPS").
   - *JSON e FIT casados:* vale a posição do JSON; se o JSON não tiver, a do FIT.
   - *Indoor não guarda posição:* `subtipo` em `esteira`, `piscina` ou `virtual` sai com `None`, mesmo que o arquivo traga coordenada.
-    O subtipo novo **`virtual`** vem de `virtual_ride` (JSON) e `sub_sport = virtual_activity` (FIT); antes, ciclismo virtual saía sem subtipo.
+    O subtipo novo **`virtual`** vem de `virtual_ride` (JSON) e `sub_sport = virtual_activity` (FIT); antes, ciclismo virtual saía sem subtipo. Banco importado nessa época: `worker.reclassificar_subtipo` corrige o subtipo (e apaga a posição) sem reimportar ([[modulos/worker]], #183).
 - **Dados da atividade:** com JSON, duração/distância/FC vêm do JSON; só FIT, vêm da `session` (ou da soma das voltas).
 - **`arquivo_bruto`:** caminho lógico dentro da exportação, com `!/` para zips aninhados
   (ex.: `exportacao.zip!/DI_CONNECT/.../UploadedFiles_0-_Part1.zip!/x.fit`). Sem FIT, é o caminho do JSON.
