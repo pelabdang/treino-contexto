@@ -95,7 +95,7 @@ Casou: **atualiza** a atividade existente (mesmo `id`), nunca insere outra. Não
     o FIT só completa voltas e posição, e só preenche `arquivo_bruto` se estiver vazio); JSON sobre linha de FIT avulso
     ou de upload **adota** o `activityId` (a linha mantém o `id`); dois `activityId` diferentes a menos de 60 s
     continuam duas atividades. Reimportar é idempotente nos dois sentidos. Sem mudança de modelo de dados.
-    Exceção à regra de identidade proposta pela Duda; **aprovação do Theo no PR**.
+    Exceção à regra de identidade proposta pela Duda; **aprovado (Theo, 04/11, PR #186)**.
 - **Resultado:** `inserida`, `atualizada` (algo mudou) ou `ignorada` (nada mudou), com o `id` da atividade. Depois
   de qualquer um, `classificar_atividades` roda para o atleta.
 - **Corrida concorrente** (dois envios iguais ao mesmo tempo, violação da chave única): relê uma vez e trata como

@@ -188,6 +188,9 @@ a função é `importar_fit(session, atleta_id, conteudo)` em `services/api/app/
   - *FIT avulso casa com linha com `activityId`:* age como o upload (a linha mantém `fonte_id` e campos do JSON; o FIT só
     completa voltas e posição e preenche `arquivo_bruto` se vazio). Importar JSON e depois FIT avulso, ou o inverso, dá
     uma linha só; a linha termina com o `activityId`.
+  - *Limitação conhecida (#133):* dois FIT avulsos `fit-…` da mesma modalidade com início a até 60 s um do outro viram
+    uma atividade só, porque nenhum dos dois tem `activityId` para separá-los. É raro (dois treinos reais não começam
+    com menos de 1 minuto de diferença); se acontecer, só o JSON da exportação os distingue.
   - *Exportação casa com linha de upload:* a linha vira `garmin_export` com o `activityId`, e a chave de hoje volta a valer.
   - *Upload casa com linha da exportação:* a linha mantém `fonte`, `fonte_id` e os campos da exportação (início, duração,
     distância, FC, `fuso_min`); o upload só completa as voltas se a linha não tinha nenhuma, a posição de início se a linha não tinha (e não é indoor), e troca o `arquivo_bruto`.
