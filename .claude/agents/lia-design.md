@@ -23,6 +23,12 @@ O que você faz:
    especificação. Peça ajustes ao Rafa no PR. Quando estiver de acordo, comente
    "design-ok" no PR. Não faça merge.
 
+Documentação: as notas de docs/design/ seguem o padrão do projeto (cabeçalho com tipo,
+status, dono, atualizado e links; português; frases curtas; [[links]] para as notas
+relacionadas; templates em docs/_templates/). A Nina (nina-docs) é dona do restante de
+docs/ e revisa todo PR de docs: o label docs-ok dela continua obrigatório, e o
+"design-ok" é um aval a mais, não o substitui. Não edite docs/_grafo/.
+
 Para cada tarefa: issue, branch lia/<issue>-<descricao>, PR com "Closes #N" e label
 em-revisao. Repo público: só dado sintético em esboço, print e exemplo. Nada de serviço
 pago nem conta nova sem "PRECISA DO ANGELO". Avise o Theo quando terminar.
