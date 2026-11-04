@@ -1,7 +1,9 @@
 import { enviarAtividadeFit, type ArquivoFit, type ErroApi } from "@treino/api-client";
 import * as DocumentPicker from "expo-document-picker";
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { ActivityIndicator, Pressable, StyleSheet, Text, View } from "react-native";
+
+import { espaco, fonte, raio, tamanho, useTema, type Tema } from "../tema";
 
 type Props = {
   apiUrl: string;
@@ -32,6 +34,8 @@ export function mensagemErroEnvio(erro: ErroApi): string {
 }
 
 export function BotaoEnviarFit({ apiUrl, atletaId, aoEnviar, fetchFn }: Props) {
+  const tema = useTema();
+  const styles = useMemo(() => criarEstilos(tema), [tema]);
   const [estado, setEstado] = useState<Estado>({ tipo: "parado" });
 
   async function escolherEEnviar() {
@@ -65,13 +69,17 @@ export function BotaoEnviarFit({ apiUrl, atletaId, aoEnviar, fetchFn }: Props) {
         accessibilityState={{ disabled: enviando }}
         disabled={enviando}
         onPress={escolherEEnviar}
-        style={[styles.botao, enviando && styles.desligado]}
+        style={({ pressed }) => [
+          styles.botao,
+          pressed && { backgroundColor: tema.cor["destaque-pressionado"] },
+          enviando && styles.desligado,
+        ]}
       >
-        <Text style={styles.botaoTexto}>Enviar arquivo FIT</Text>
+        <Text style={[styles.botaoTexto, enviando && styles.botaoTextoDesligado]}>Enviar arquivo FIT</Text>
       </Pressable>
       {enviando && (
         <View style={styles.linha}>
-          <ActivityIndicator />
+          <ActivityIndicator color={tema.cor.destaque} />
           <Text style={styles.texto}>Enviando...</Text>
         </View>
       )}
@@ -81,13 +89,23 @@ export function BotaoEnviarFit({ apiUrl, atletaId, aoEnviar, fetchFn }: Props) {
   );
 }
 
-const styles = StyleSheet.create({
-  caixa: { marginBottom: 16, gap: 8 },
-  botao: { alignSelf: "flex-start", paddingVertical: 10, paddingHorizontal: 16, borderRadius: 8, backgroundColor: "#1b6ca8" },
-  desligado: { opacity: 0.5 },
-  botaoTexto: { color: "#fff", fontWeight: "600" },
-  linha: { flexDirection: "row", alignItems: "center", gap: 8 },
-  texto: { fontSize: 16, color: "#444" },
-  sucesso: { fontSize: 16, color: "#1b7a3a" },
-  erro: { fontSize: 16, color: "#b00020" },
-});
+function criarEstilos({ cor }: Tema) {
+  return StyleSheet.create({
+    caixa: { marginBottom: espaco[4], gap: espaco[2] },
+    botao: {
+      alignSelf: "flex-start",
+      minHeight: tamanho.botaoAltura,
+      justifyContent: "center",
+      paddingHorizontal: espaco[4],
+      borderRadius: raio.medio,
+      backgroundColor: cor.destaque,
+    },
+    desligado: { backgroundColor: cor["superficie-2"] },
+    botaoTexto: { ...fonte.botao, color: cor["sobre-destaque"] },
+    botaoTextoDesligado: { color: cor["texto-desligado"] },
+    linha: { flexDirection: "row", alignItems: "center", gap: espaco[2] },
+    texto: { ...fonte.corpo, color: cor["texto-2"] },
+    sucesso: { ...fonte.corpo, color: cor.sucesso },
+    erro: { ...fonte.corpo, color: cor.erro },
+  });
+}

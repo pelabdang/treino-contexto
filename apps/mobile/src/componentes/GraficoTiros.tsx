@@ -1,19 +1,19 @@
 import type { EvolucaoTiros1km, SessaoTiros } from "@treino/api-client";
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 import Svg, { Circle, G, Line, Polyline } from "react-native-svg";
+
+import { borda, espaco, fonte, raio, tamanho, useTema, type Tema } from "../tema";
 
 // Desenha os dois painéis (pace e FC). Faixa, marcas e rótulos vêm do bloco
 // `eixos` da API: aqui só se converte valor em posição na tela. O app não
 // formata pace nem escolhe escala (ADR 0004).
 
 const LARGURA_PADRAO = 320;
-const ALTURA_PAINEL = 160;
+const ALTURA_PAINEL = tamanho.graficoPainelAltura;
 const MARGEM = { esq: 44, dir: 16, topo: 12, base: 12 };
 const ALTURA_TITULO = 28;
-const ALVO_TOQUE = 32;
-const COR_PACE = "#1b6ca8";
-const COR_FC = "#c0392b";
+const ALVO_TOQUE = tamanho.alvoMinimo;
 
 type Eixo = {
   min: number;
@@ -58,8 +58,10 @@ function Painel(props: {
   pontos: Ponto[];
   aoTocar: (s: SessaoTiros) => void;
   selecionada: number | null;
+  tema: Tema;
+  styles: Estilos;
 }) {
-  const { nome, titulo, cor, largura, eixo, pontos, aoTocar, selecionada } = props;
+  const { nome, titulo, cor, largura, eixo, pontos, aoTocar, selecionada, tema, styles } = props;
   const linha = pontos.map((p) => `${p.x},${p.y}`).join(" ");
   return (
     <View testID={`painel-${nome}`} style={styles.painel}>
@@ -69,18 +71,18 @@ function Painel(props: {
           const y = posicaoY(m.valor, eixo);
           return (
             <G key={`${m.valor}-${m.rotulo}`}>
-              <Line x1={MARGEM.esq} x2={largura - MARGEM.dir} y1={y} y2={y} stroke="#ddd" strokeWidth={1} />
+              <Line x1={MARGEM.esq} x2={largura - MARGEM.dir} y1={y} y2={y} stroke={tema.cor["grafico.grade"]} strokeWidth={borda.fina} />
             </G>
           );
         })}
-        {pontos.length > 1 && <Polyline points={linha} fill="none" stroke={cor} strokeWidth={1.5} />}
+        {pontos.length > 1 && <Polyline points={linha} fill="none" stroke={cor} strokeWidth={tamanho.graficoLinhaPrincipal} />}
         {pontos.map((p) => (
           <Circle
             key={p.sessao.atividade_id}
             testID={`ponto-${nome}-${p.sessao.atividade_id}`}
             cx={p.x}
             cy={p.y}
-            r={p.sessao.atividade_id === selecionada ? 7 : 5}
+            r={p.sessao.atividade_id === selecionada ? tamanho.graficoPontoSelecionadoRaio : tamanho.graficoPontoRaio}
             fill={cor}
           />
         ))}
@@ -113,12 +115,14 @@ function Painel(props: {
 }
 
 export function GraficoTiros({ dados }: Props) {
+  const tema = useTema();
+  const styles = useMemo(() => criarEstilos(tema), [tema]);
   const [largura, setLargura] = useState(LARGURA_PADRAO);
   const [selecionada, setSelecionada] = useState<SessaoTiros | null>(null);
   const { eixos, sessoes } = dados;
 
   if (!eixos || sessoes.length === 0) {
-    return <Text>Sem sessões de tiros no período.</Text>;
+    return <Text style={styles.texto}>Sem sessões de tiros no período.</Text>;
   }
 
   const xs = posicoesX(sessoes, largura);
@@ -150,26 +154,30 @@ export function GraficoTiros({ dados }: Props) {
         <Painel
           nome="pace"
           titulo="Pace médio dos tiros (min/km)"
-          cor={COR_PACE}
+          cor={tema.cor["grafico.pace"]}
           largura={largura}
           eixo={eixoPace}
           pontos={pontosPace}
           aoTocar={setSelecionada}
           selecionada={selecionada?.atividade_id ?? null}
+          tema={tema}
+          styles={styles}
         />
       ) : (
-        <Text>Sem pace para mostrar.</Text>
+        <Text style={styles.texto}>Sem pace para mostrar.</Text>
       )}
       {eixoFc ? (
         <Painel
           nome="fc"
           titulo="FC média dos tiros (bpm)"
-          cor={COR_FC}
+          cor={tema.cor["grafico.fc"]}
           largura={largura}
           eixo={eixoFc}
           pontos={pontosFc}
           aoTocar={setSelecionada}
           selecionada={selecionada?.atividade_id ?? null}
+          tema={tema}
+          styles={styles}
         />
       ) : (
         <View testID="aviso-sem-fc">
@@ -177,7 +185,7 @@ export function GraficoTiros({ dados }: Props) {
           <Text style={styles.aviso}>Nenhuma sessão deste período tem frequência cardíaca.</Text>
         </View>
       )}
-      <View style={{ height: 24 }}>
+      <View style={{ height: espaco[5] }}>
         {sessoes.map((s, i) => (
           <Text key={s.atividade_id} style={[styles.data, { left: xs[i] - 30 }]}>
             {dataCurta(s.data)}
@@ -187,21 +195,26 @@ export function GraficoTiros({ dados }: Props) {
       {selecionada && (
         <View testID="detalhe-sessao" style={styles.detalhe}>
           <Text style={styles.detalheTitulo}>{dataCurta(selecionada.data)}</Text>
-          <Text>Pace médio: {selecionada.pace_medio} min/km</Text>
-          <Text>FC média: {selecionada.fc_media === null ? "sem FC" : `${selecionada.fc_media} bpm`}</Text>
+          <Text style={styles.texto}>Pace médio: {selecionada.pace_medio} min/km</Text>
+          <Text style={styles.texto}>FC média: {selecionada.fc_media === null ? "sem FC" : `${selecionada.fc_media} bpm`}</Text>
         </View>
       )}
     </View>
   );
 }
 
-const styles = StyleSheet.create({
-  painel: { position: "relative" },
-  alvo: { position: "absolute", width: ALVO_TOQUE, height: ALVO_TOQUE, borderRadius: ALVO_TOQUE / 2 },
-  rotulo: { position: "absolute", left: 0, width: MARGEM.esq - 6, textAlign: "right", fontSize: 11, color: "#444" },
-  data: { position: "absolute", top: 4, width: 60, textAlign: "center", fontSize: 11, color: "#444" },
-  tituloPainel: { fontSize: 14, fontWeight: "600", height: ALTURA_TITULO, paddingTop: 8, color: "#111" },
-  aviso: { fontSize: 14, color: "#666", paddingVertical: 12 },
-  detalhe: { marginTop: 8, padding: 12, borderRadius: 8, backgroundColor: "#f3f3f3" },
-  detalheTitulo: { fontWeight: "700" },
-});
+type Estilos = ReturnType<typeof criarEstilos>;
+
+function criarEstilos({ cor }: Tema) {
+  return StyleSheet.create({
+    painel: { position: "relative" },
+    alvo: { position: "absolute", width: ALVO_TOQUE, height: ALVO_TOQUE, borderRadius: ALVO_TOQUE / 2 },
+    rotulo: { ...fonte.eixo, position: "absolute", left: 0, width: MARGEM.esq - 6, textAlign: "right", color: cor["texto-2"] },
+    data: { ...fonte.eixo, position: "absolute", top: espaco[1], width: 60, textAlign: "center", color: cor["texto-2"] },
+    tituloPainel: { ...fonte.rotulo, height: ALTURA_TITULO, paddingTop: espaco[2], color: cor.texto },
+    aviso: { ...fonte.rotulo, color: cor["texto-2"], paddingVertical: espaco[3] },
+    texto: { ...fonte.corpo, color: cor.texto },
+    detalhe: { marginTop: espaco[2], padding: espaco[3], borderRadius: raio.medio, backgroundColor: cor["superficie-2"] },
+    detalheTitulo: { ...fonte["corpo-forte"], color: cor.texto },
+  });
+}
