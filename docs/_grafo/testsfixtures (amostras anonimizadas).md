@@ -1,17 +1,18 @@
 ---
-source_file: ".claude/agents/duda-dados.md"
+source_file: "README.md"
 type: "document"
-community: "Stack e Ingestão de Dados"
+community: "Comunidade 1"
 tags:
   - graphify/document
   - graphify/EXTRACTED
-  - community/Stack_e_Ingesto_de_Dados
+  - community/Comunidade_1
 ---
 
-# tests/fixtures/ (amostras anonimizadas)
+# tests/fixtures (amostras anonimizadas)
 
 ## Connections
-- [[Duda (dados e backend)]] - `implements` [EXTRACTED]
-- [[dados-teste (dados reais fora do git)]] - `conceptually_related_to` [EXTRACTED]
+- [[Agente Duda (dados e backend)]] - `references` [EXTRACTED]
+- [[README do repositório]] - `references` [EXTRACTED]
+- [[SQLite em memória para testes locais]] - `conceptually_related_to` [EXTRACTED]
 
-#graphify/document #graphify/EXTRACTED #community/Stack_e_Ingesto_de_Dados
+#graphify/document #graphify/EXTRACTED #community/Comunidade_1

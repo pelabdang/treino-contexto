@@ -1,19 +1,17 @@
 ---
 source_file: "docs/_templates/meta.md"
 type: "document"
-community: "Governança e Fluxo de Metas"
+community: "Comunidade 3"
 tags:
   - graphify/document
   - graphify/EXTRACTED
-  - community/Governana_e_Fluxo_de_Metas
+  - community/Comunidade_3
 ---
 
 # Template: meta
 
 ## Connections
-- [[Critério de pronto]] - `references` [EXTRACTED]
-- [[Nina (documentadora)]] - `implements` [EXTRACTED]
-- [[docsprodutometas (resultado das metas)]] - `implements` [INFERRED]
-- [[docsprodutoroadmap.md (roteiro de metas)]] - `references` [EXTRACTED]
+- [[Agente Nina (documentação)]] - `references` [EXTRACTED]
+- [[Roteiro de metas (docsprodutoroadmap.md)]] - `references` [EXTRACTED]
 
-#graphify/document #graphify/EXTRACTED #community/Governana_e_Fluxo_de_Metas
+#graphify/document #graphify/EXTRACTED #community/Comunidade_3

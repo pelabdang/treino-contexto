@@ -1,19 +1,16 @@
 ---
 source_file: ".claude/agents/caio-ciencia.md"
 type: "document"
-community: "Métricas de Carga e Ciência"
+community: "Comunidade 5"
 tags:
   - graphify/document
-  - graphify/INFERRED
-  - community/Mtricas_de_Carga_e_Cincia
+  - graphify/EXTRACTED
+  - community/Comunidade_5
 ---
 
 # Linha de base por tipo de treino
 
 ## Connections
-- [[Caio (cientista de dados do esporte)]] - `implements` [EXTRACTED]
-- [[Linha de base]] - `references` [INFERRED]
-- [[Tipo de treino]] - `references` [INFERRED]
-- [[servicesapiappmetricas]] - `conceptually_related_to` [INFERRED]
+- [[Agente Caio (ciência do esporte)]] - `implements` [EXTRACTED]
 
-#graphify/document #graphify/INFERRED #community/Mtricas_de_Carga_e_Cincia
+#graphify/document #graphify/EXTRACTED #community/Comunidade_5

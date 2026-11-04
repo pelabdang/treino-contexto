@@ -1,31 +1,31 @@
 ---
-source_file: "docs/glossario.md"
+source_file: ".claude/agents/nina-docs.md"
 type: "document"
-community: "Métricas de Carga e Ciência"
+community: "Comunidade 2"
 tags:
   - graphify/document
   - graphify/EXTRACTED
-  - community/Mtricas_de_Carga_e_Cincia
+  - community/Comunidade_2
 ---
 
 # Glossário
 
 ## Connections
-- [[A1, A2, A3 (zonas aeróbias natação)]] - `implements` [EXTRACTED]
-- [[ATL (carga aguda)]] - `implements` [EXTRACTED]
-- [[CTL (carga crônica)]] - `implements` [EXTRACTED]
-- [[Desacoplamento (PaHR)]] - `implements` [EXTRACTED]
-- [[FTP]] - `implements` [EXTRACTED]
-- [[GAP (pace ajustado à inclinação)]] - `implements` [EXTRACTED]
-- [[HRV]] - `implements` [EXTRACTED]
-- [[Linha de base]] - `implements` [EXTRACTED]
-- [[Mapa do projeto (00-inicio)]] - `references` [EXTRACTED]
-- [[NP (potência normalizada)]] - `implements` [EXTRACTED]
-- [[Nina (documentadora)]] - `implements` [EXTRACTED]
-- [[PSE (percepção subjetiva de esforço)]] - `implements` [EXTRACTED]
-- [[SWOLF]] - `implements` [EXTRACTED]
-- [[TSB (forma)]] - `implements` [EXTRACTED]
-- [[TSS  rTSS  hrTSS]] - `implements` [EXTRACTED]
-- [[Tipo de treino]] - `implements` [EXTRACTED]
+- [[00-inicio (mapa do projeto)]] - `references` [EXTRACTED]
+- [[ADR 0007 Clima da atividade (Meta 4)]] - `references` [EXTRACTED]
+- [[ADR 0008 Deteccao de esforcos (Meta 5)]] - `references` [EXTRACTED]
+- [[Agente Nina (documentação)]] - `implements` [EXTRACTED]
+- [[Categorias de bloco (esforco, recuperacao, aquecimento, desaquecimento, leve)]] - `references` [EXTRACTED]
+- [[Coluna atividade.fuso_min]] - `references` [EXTRACTED]
+- [[Coluna segmento.intensidade]] - `references` [EXTRACTED]
+- [[Diário de 2026-11-04]] - `references` [EXTRACTED]
+- [[Estados do clima (ok, indoor, sem_posicao, pendente, falha)]] - `references` [EXTRACTED]
+- [[Faixa de esforco (d400, t4 etc.)]] - `references` [EXTRACTED]
+- [[Modulo clima (Open-Meteo)]] - `references` [EXTRACTED]
+- [[Módulo api_1]] - `references` [EXTRACTED]
+- [[Posicao de inicio arredondada (~1 km)]] - `references` [EXTRACTED]
+- [[Tiros de 1 km (metrica)]] - `references` [EXTRACTED]
+- [[Treino-chave continuo]] - `references` [EXTRACTED]
+- [[Versao da deteccao (versao_deteccao)]] - `references` [EXTRACTED]
 
-#graphify/document #graphify/EXTRACTED #community/Mtricas_de_Carga_e_Cincia
+#graphify/document #graphify/EXTRACTED #community/Comunidade_2

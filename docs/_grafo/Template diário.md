@@ -1,18 +1,17 @@
 ---
 source_file: "docs/_templates/diario.md"
 type: "document"
-community: "Documentação e Revisão"
+community: "Comunidade 3"
 tags:
   - graphify/document
   - graphify/EXTRACTED
-  - community/Documentao_e_Reviso
+  - community/Comunidade_3
 ---
 
 # Template: diário
 
 ## Connections
-- [[PRECISA DO ANGELO]] - `references` [EXTRACTED]
-- [[Fim de ciclo diário + graphify --obsidian]] - `references` [INFERRED]
-- [[Nina (documentadora)]] - `implements` [EXTRACTED]
+- [[Agente Nina (documentação)]] - `references` [EXTRACTED]
+- [[docsdiario (diário por data)]] - `conceptually_related_to` [EXTRACTED]
 
-#graphify/document #graphify/EXTRACTED #community/Documentao_e_Reviso
+#graphify/document #graphify/EXTRACTED #community/Comunidade_3

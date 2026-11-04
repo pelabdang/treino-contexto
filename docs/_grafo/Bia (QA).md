@@ -1,19 +1,16 @@
 ---
-source_file: ".claude/agents/bia-qa.md"
+source_file: "docs/diario/2026-11-03.md"
 type: "document"
-community: "Governança e Fluxo de Metas"
+community: "Comunidade 4"
 tags:
   - graphify/document
   - graphify/EXTRACTED
-  - community/Governana_e_Fluxo_de_Metas
+  - community/Comunidade_4
 ---
 
 # Bia (QA)
 
 ## Connections
-- [[Critério de pronto]] - `references` [EXTRACTED]
-- [[dados-teste (dados reais fora do git)]] - `references` [EXTRACTED]
-- [[docsprodutometas (resultado das metas)]] - `references` [EXTRACTED]
-- [[testse2e (testes ponta a ponta)]] - `implements` [EXTRACTED]
+- [[Diario 2026-11-03]] - `references` [EXTRACTED]
 
-#graphify/document #graphify/EXTRACTED #community/Governana_e_Fluxo_de_Metas
+#graphify/document #graphify/EXTRACTED #community/Comunidade_4

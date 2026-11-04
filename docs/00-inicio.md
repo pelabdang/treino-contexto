@@ -14,6 +14,8 @@ App de análise de treinos com contexto (corrida, natação, ciclismo) para atle
 - Meta 3 feita: upload de arquivo FIT pelo botão no app, vista na web com FIT sintéticos ([[produto/metas/meta-3-upload-fit]]). 
 - Meta 4 feita: clima de cada atividade na API, visto com fixtures e a resposta gravada, sem rede ([[produto/metas/meta-4-clima-atividade]]). Atual: Meta 5, detecção de esforços (desde 04/11); depois a Meta 6, carga de treino. Ver [[produto/roadmap]]
 - Como reproduzir: [[produto/meta-1-como-reproduzir]] (Meta 1) e [[produto/meta-2-como-rodar]] (API e app), [[produto/meta-3-como-rodar]] (upload de FIT), [[produto/meta-4-como-rodar]] (clima)
+- Meta 5 em andamento (04/11): ADR 0008 aceita, oráculo ([[metricas/esforcos-oraculo]]) e função de blocos ([[metricas/esforcos]]) prontos; faltam corrida, ciclismo, banco e worker, e a visão de tiros
+- Time e papéis: [[time]]. A Lia (design) é dona de `docs/design/`; o guia visual está em andamento (#192)
 - Último diário: [[diario/2026-11-04]]
 
 ## Produto
@@ -29,8 +31,8 @@ App de análise de treinos com contexto (corrida, natação, ciclismo) para atle
 
 ## Como o sistema funciona
 - Módulos: [[modulos/api]], [[modulos/api-client]], [[modulos/banco]], [[modulos/worker]], [[modulos/mobile]], [[modulos/infra]], [[modulos/grafico-tiros]], [[modulos/ingestao-garmin]] (índice em [[modulos]])
-- Métricas: pasta [[metricas/]]; [[metricas/tiros-1km]]; [[metricas/clima-oraculo]]
-- Decisões de arquitetura: pasta [[decisoes/]]
+- Métricas: pasta [[metricas/]]; [[metricas/tiros-1km]]; [[metricas/clima-oraculo]]; [[metricas/esforcos]]; [[metricas/esforcos-oraculo]]
+- Decisões de arquitetura: pasta [[decisoes/]] (a 0004 tem o adendo 1, melhor tiro; a 0006 tem o ajuste da #133)
   - [[decisoes/0001-modelo-de-dados-minimo]]: modelo de dados mínimo e monorepo
   - [[decisoes/0002-segmento-intensidade-e-versao]]: intensidade da volta e versão da detecção no segmento
   - [[decisoes/0003-fuso-da-atividade]]: fuso da atividade (`fuso_min`) e data local da sessão
@@ -38,6 +40,7 @@ App de análise de treinos com contexto (corrida, natação, ciclismo) para atle
   - [[decisoes/0005-serie-de-tiros-o-que-entra]]: o que entra na série de tiros e como a regra muda
   - [[decisoes/0006-upload-de-fit]]: upload de arquivo FIT (Meta 3): onde fica o leitor, identidade da atividade, guarda do arquivo, limites e erros
   - [[decisoes/0007-clima-da-atividade]]: clima de cada atividade (Meta 4): posição de início arredondada, tabela clima_atividade, API do Open-Meteo, falhas e idempotência
+  - [[decisoes/0008-deteccao-de-esforcos]]: detecção de esforços (Meta 5): blocos, junção de laps, faixas, treino-chave e tabela `bloco_atividade`
 
 ## Ciência e especialistas
 - Artigos: pasta [[ciencia/artigos/]]
@@ -46,6 +49,7 @@ App de análise de treinos com contexto (corrida, natação, ciclismo) para atle
 
 ## Termos
 - [[glossario]]
+- [[time]]: quem faz o quê
 
 ## Mapa automático do código
 - Pasta `_grafo/` (gerada pelo Graphify; não editar)

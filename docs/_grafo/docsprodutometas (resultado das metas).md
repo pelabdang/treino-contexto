@@ -1,18 +1,16 @@
 ---
 source_file: ".claude/agents/paulo-planejador.md"
 type: "document"
-community: "Governança e Fluxo de Metas"
+community: "Comunidade 1"
 tags:
   - graphify/document
   - graphify/EXTRACTED
-  - community/Governana_e_Fluxo_de_Metas
+  - community/Comunidade_1
 ---
 
-# docs/produto/metas/ (resultado das metas)
+# docs/produto/metas (resultado das metas)
 
 ## Connections
-- [[Bia (QA)]] - `references` [EXTRACTED]
-- [[Paulo (planejador)]] - `implements` [EXTRACTED]
-- [[Template meta]] - `implements` [INFERRED]
+- [[Agente Paulo (planejador)]] - `implements` [EXTRACTED]
 
-#graphify/document #graphify/EXTRACTED #community/Governana_e_Fluxo_de_Metas
+#graphify/document #graphify/EXTRACTED #community/Comunidade_1
