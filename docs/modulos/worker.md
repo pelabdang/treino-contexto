@@ -29,6 +29,12 @@ da importação e do cálculo de métricas, fora da [[modulos/api]].
   o clima das atividades ao ar livre, com posição, sem `ok` válido e com fim a mais de 7 dias. Sequencial, pausa de 0,25 s,
   teto de 500 chamadas por rodada, um `commit` por atividade, para se o Open-Meteo limitar (429). Imprime posições
   preenchidas e atividades por estado. `--so-posicao` não usa a rede. Regras e estados em [[modulos/clima]]; passo a passo rodado em [[produto/meta-4-como-rodar]].
+- Subtipo: `uv run python -m worker.reclassificar_subtipo --exportacao CAMINHO [--atleta-id N] [--dry-run]` relê o tipo da
+  exportação (sem rede) e grava o `subtipo` pelo `tipos.py` atual só onde está `NULL` ou diverge, nas linhas `garmin_export`
+  (casa por `fonte_id`). Para bancos importados antes de um mapeamento existir (ex.: `virtual_ride` -> `virtual`, #183).
+  Só mexe em `subtipo`; se o novo for indoor, apaga `inicio_lat/lon` (ADR 0007). Subtipo `None` na exportação nunca apaga
+  o gravado. Idempotente (2ª rodada muda 0); `--dry-run` imprime `antigo -> novo: N` sem gravar. Reimportar a exportação
+  também atualiza o subtipo, mas relê as voltas e reclassifica as corridas; este comando é o caminho estreito.
 - Com `--com-clima`, no fim de `worker.importar_garmin` o clima é buscado **com a rede de verdade**, só das atividades que entraram ou mudaram (posições arredondadas vão ao Open-Meteo); erro de clima vira aviso
   e nunca derruba a importação. Sem a opção, rode `worker.preencher_clima` quando quiser. O upload de FIT (endpoint) não chama a rede: o clima fica `pendente` até a próxima rodada.
 
@@ -39,9 +45,11 @@ da importação e do cálculo de métricas, fora da [[modulos/api]].
 - `services/worker/worker/grafico_tiros_1km.py` (gráfico e CSV, CLI `python -m worker.grafico_tiros_1km`)
 - `services/worker/worker/apagar_fit.py` (CLI `python -m worker.apagar_fit`)
 - `services/worker/worker/reclassificar.py` (CLI `python -m worker.reclassificar`)
+- `services/worker/worker/reclassificar_subtipo.py` (CLI `python -m worker.reclassificar_subtipo`)
 - `services/worker/worker/preencher_clima.py` (CLI `python -m worker.preencher_clima`); a lógica está em `services/api/app/servicos/clima.py`
 - `services/worker/tests/test_preencher_clima.py`
 - `services/worker/tests/test_reclassificar.py`
+- `services/worker/tests/test_reclassificar_subtipo.py`
 - `services/worker/tests/test_grafico_tiros_1km.py`
 - `services/worker/tests/test_health.py`
 - `services/api/tests/ingestao/test_garmin_parser.py` (testes do parser, na API)
