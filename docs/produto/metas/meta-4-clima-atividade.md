@@ -2,7 +2,7 @@
 tipo: meta
 status: em-uso
 dono: paulo
-atualizado: 2026-11-03
+atualizado: 2026-11-04
 links: [[produto/roadmap]], [[produto/meta-4-como-rodar]], [[decisoes/0007-clima-da-atividade]], [[modulos/clima]], [[metricas/clima-oraculo]], [[modulos/ingestao-garmin]], [[modulos/worker]], [[modulos/banco]], [[modulos/api]], [[modulos/api-client]], [[decisoes/0006-upload-de-fit]], [[decisoes/0005-serie-de-tiros-o-que-entra]], [[metricas/tiros-1km]], [[produto/metas/meta-3-upload-fit]], [[diario/2026-11-03]]
 ---
 # Meta 4: clima de cada atividade
@@ -113,7 +113,7 @@ isso depende do "pode criar" do Angelo.
 3. **R1 e R2 da série de tiros** (caio-ciencia, com duda-dados e rafa-app no R1). Só depois das respostas do Angelo; ver
    "PRECISA DO ANGELO".
 4. **Clima na tela do app** (rafa-app, com duda-dados). Fora da Meta 4; candidata a meta futura, junto da tela de um treino
-   (a mesma tela vai receber o check-in da Meta 7 e o feedback da Meta 8, na numeração revista em 03/11). Exige a atribuição "Weather data by
+   (a mesma tela vai receber o check-in da Meta 8 e o feedback da Meta 9, na numeração revista em 04/11). Exige a atribuição "Weather data by
    Open-Meteo.com" na tela (ADR 0007, item 4).
 
 ## O que se aprendeu
@@ -139,7 +139,7 @@ isso depende do "pode criar" do Angelo.
   na série. Delas dependem a R1 (melhor tiro junto da média) e a R2 (`tiros_1km@5`, que amplia o que entra). A R2 muda a série
   do atleta.
 - **"Pode criar"** para as propostas 1, 2 e 4 e, depois das respostas acima, a 3.
-- As decisões da Meta 5 que envolvem dado de aluno estão em [[produto/roadmap]].
+- As decisões da Meta 6 (carga; era a Meta 5 até 04/11) que envolvem dado de aluno estão em [[produto/roadmap]].
 
 ## Resultado
 **Meta 4 feita.** Com fixtures sintéticas e a resposta gravada, cada atividade ao ar livre com posição ganha o clima da hora
@@ -147,4 +147,4 @@ do treino, sem repetir chamadas; indoor e sem posição nunca ganham clima; o es
 atividades da exportação e do upload funcionam. Não verificados: a chamada real pelo código, o `worker.importar_garmin` com
 as fixtures de clima e a tela (o clima não tem tela).
 
-Próxima: Meta 5, carga de treino ([[produto/roadmap]]), com decisões do Angelo pendentes antes das issues.
+Próxima (na época): Meta 5, carga de treino. Desde 04/11 a Meta 5 é a detecção de esforços e a carga é a Meta 6 ([[produto/roadmap]]).

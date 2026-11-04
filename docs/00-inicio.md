@@ -2,7 +2,7 @@
 tipo: mapa
 status: em-uso
 dono: nina
-atualizado: 2026-11-03
+atualizado: 2026-11-04
 ---
 # Treino Contexto: mapa do projeto
 
@@ -12,7 +12,7 @@ App de análise de treinos com contexto (corrida, natação, ciclismo) para atle
 - Meta 1 feita: tiros de 1 km a partir da exportação Garmin, com fixtures e dado real ([[produto/metas/meta-1-tiros-1km]])
 - Meta 2 feita: evolução dos tiros no app, vista na web com as fixtures ([[produto/metas/meta-2-evolucao-tiros-app]])
 - Meta 3 feita: upload de arquivo FIT pelo botão no app, vista na web com FIT sintéticos ([[produto/metas/meta-3-upload-fit]]). 
-- Meta 4 feita: clima de cada atividade na API, visto com fixtures e a resposta gravada, sem rede ([[produto/metas/meta-4-clima-atividade]]). Próxima: Meta 5, carga de treino, esperando as decisões do Angelo. Ver [[produto/roadmap]]
+- Meta 4 feita: clima de cada atividade na API, visto com fixtures e a resposta gravada, sem rede ([[produto/metas/meta-4-clima-atividade]]). Atual: Meta 5, detecção de esforços (desde 04/11); depois a Meta 6, carga de treino. Ver [[produto/roadmap]]
 - Como reproduzir: [[produto/meta-1-como-reproduzir]] (Meta 1) e [[produto/meta-2-como-rodar]] (API e app), [[produto/meta-3-como-rodar]] (upload de FIT), [[produto/meta-4-como-rodar]] (clima)
 - Último diário: [[diario/2026-11-03]]
 
