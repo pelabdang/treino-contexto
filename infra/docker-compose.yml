@@ -1,4 +1,4 @@
-# Banco local do treino-contexto.
+# Banco local do treino-contexto. Porta 5433 no host (a 5432 costuma estar com um Postgres nativo).
 # Subir:   docker compose -f infra/docker-compose.yml up -d
 # Migrar:  cd services/api && uv run alembic upgrade head
 name: treino-contexto
@@ -11,7 +11,7 @@ services:
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-treino}
       POSTGRES_DB: ${POSTGRES_DB:-treino}
     ports:
-      - "5432:5432"
+      - "5433:5432"
     volumes:
       - pgdata:/var/lib/postgresql/data
     healthcheck:

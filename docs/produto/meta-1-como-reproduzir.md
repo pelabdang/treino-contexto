@@ -84,7 +84,7 @@ Mesmos passos, trocando o passo 2:
 ```
 docker compose -f infra/docker-compose.yml up -d
 cp .env.example .env
-export DATABASE_URL="postgresql+psycopg://treino:treino@localhost:5432/treino"
+export DATABASE_URL="postgresql+psycopg://treino:treino@localhost:5433/treino"
 ```
 O CI roda os testes contra o Postgres 16. O roteiro acima foi executado de ponta a ponta só em SQLite;
 com o Postgres local e com a exportação real isso fica para a #19.

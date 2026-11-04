@@ -26,8 +26,8 @@ fixtures, API com `FIT_DIR` temporária, app na web e envio pelo botão. Só dad
 - Três terminais: API, app e um livre. Comandos na **raiz** do repositório, salvo indicação.
 - **Não use o banco do seu dia a dia.** Rode sempre com `-p treino-meta3` (volume `treino-meta3_pgdata`, separado).
   Sem `-p`, o `docker compose` usa o volume `treino-contexto_pgdata`.
-- Escolha uma **porta livre** para o Postgres. A 5432 pode estar ocupada, e outras (5433, 5439) também. Confira com
-  `docker ps` e `lsof -i :<porta>`. Abaixo, a 5440.
+- Escolha uma **porta livre** para o Postgres. O padrão do compose é a 5433 (a 5432 costuma ter um Postgres nativo, erro `role "treino" does not exist`). Confira com
+  `docker ps` e `lsof -iTCP:<porta> -sTCP:LISTEN`. Abaixo, a 5440.
 
 ## Passo a passo
 1. **Subir o Postgres** (porta 5440, override pelo stdin, sem editar o repositório):
@@ -41,7 +41,7 @@ fixtures, API com `FIT_DIR` temporária, app na web e envio pelo botão. Só dad
    export DATABASE_URL="postgresql+psycopg://treino:treino@localhost:5440/treino"
    ```
    Esperado: `treino-meta3-postgres-1` com status `healthy` (`docker compose -p treino-meta3 -f infra/docker-compose.yml ps`).
-   Se a 5432 estiver livre, pode tirar o override e usar a porta 5432 na URL. Use o mesmo terminal nos passos 2 a 4.
+   Se a 5433 estiver livre, pode tirar o override e usar a porta 5433 na URL. Use o mesmo terminal nos passos 2 a 4.
 2. **Instalar e migrar:**
    ```
    uv sync
