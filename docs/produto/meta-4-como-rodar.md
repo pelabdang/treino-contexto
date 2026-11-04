@@ -2,7 +2,7 @@
 tipo: guia
 status: em-uso
 dono: nina
-atualizado: 2026-11-03
+atualizado: 2026-11-04
 links: [[produto/meta-3-como-rodar]], [[produto/meta-2-como-rodar]], [[produto/meta-1-como-reproduzir]], [[decisoes/0007-clima-da-atividade]], [[modulos/clima]], [[modulos/ingestao-garmin]], [[modulos/banco]], [[modulos/worker]], [[modulos/api]], [[modulos/api-client]], [[metricas/clima-oraculo]], [[diario/2026-11-03]]
 ---
 # Meta 4: como rodar o clima da atividade
@@ -38,9 +38,8 @@ Android: o clima não tem tela, "não se aplica") e o `worker.importar_garmin` c
 - **Não use o banco do seu dia a dia** (`treino-contexto-postgres-1`). Rode sempre com `-p treino-meta4`
   (volume `treino-meta4_pgdata`). Sem `-p`, o `docker compose` usa o volume `treino-contexto_pgdata`.
 - Escolha uma **porta livre** (`docker ps` e `lsof -i :<porta>`). Abaixo, a 5444 para o Postgres e a 8044 para a API.
-- **Cuidado com `worker.importar_garmin`:** no fim, ele busca o clima das atividades que entraram e **usa a rede de
-  verdade**. Com as fixtures de clima isso mandaria a posição inventada ao Open-Meteo. Por isso o passo 3 importa as
-  fixtures de clima por um script Python, que não chama a rede. (As fixtures da Meta 1 não têm posição: sem chamada.)
+- **`worker.importar_garmin` não usa a rede por padrão** (#132): o clima só é buscado com `--com-clima`. Este guia nunca
+  passa a opção, então a posição inventada das fixtures não sai da máquina.
 
 ## Passo a passo
 1. **Subir o Postgres.** Salve fora do repositório um `porta.yml` com
@@ -67,17 +66,10 @@ Android: o clima não tem tela, "não se aplica") e o `worker.importar_garmin` c
    ```
    uv run python -m worker.importar_garmin tests/fixtures/garmin/exportacao_minima.zip --atleta "Atleta Fictício"
    ```
-   Esperado: `inseridas=5 ... avisos=1` e `clima: chamadas=0`. Agora as de clima, sem rede. Salve como `importar_clima.py`
-   (fora do repositório) e rode com `uv run python importar_clima.py`:
-   ```python
-   from app.db.session import SessionLocal
-   from app.ingestao.importacao import importar
-
-   with SessionLocal() as s:
-       for caminho, atleta in [("tests/fixtures/clima/exportacao_clima.json", "Atleta Fictício"),
-                               ("tests/fixtures/clima/fit", "Atleta dos FIT")]:
-           r = importar(s, caminho, atleta)
-           print(caminho, f"inseridas={r.inseridas} atualizadas={r.atualizadas} ignoradas={r.ignoradas} avisos={len(r.avisos)}")
+   Esperado: `inseridas=5 ... avisos=1` e `clima: nao buscado (sem rede)...`. Agora as de clima, pelo mesmo comando (sem rede):
+   ```
+   uv run python -m worker.importar_garmin tests/fixtures/clima/exportacao_clima.json --atleta "Atleta Fictício"
+   uv run python -m worker.importar_garmin tests/fixtures/clima/fit --atleta "Atleta dos FIT"
    ```
    Esperado: `inseridas=5` (JSON; 5 avisos de "sem FIT correspondente", normais) e `inseridas=6` (FIT). Ficam 11
    atividades: 6 a 10 no atleta 1 e 11 a 16 no atleta 2. O que cada arquivo representa está em [[metricas/clima-oraculo]].
@@ -181,7 +173,7 @@ fixa, por exemplo `curl 'https://archive-api.open-meteo.com/v1/archive?latitude=
 **Nunca** com posição do atleta. Não foi rodada neste guia; o que ela mostrou está em [[modulos/clima]].
 
 ## Encerrar e limpar
-- `Ctrl+C` na API; apague a pasta de `FIT_DIR` e os scripts `importar_clima.py`, `clima_gravado.py` e `porta.yml`.
+- `Ctrl+C` na API; apague a pasta de `FIT_DIR` e os scripts `clima_gravado.py` e `porta.yml`.
 - Apagar o banco de vez (só o projeto `treino-meta4`): `docker compose -p treino-meta4 -f infra/docker-compose.yml down -v`.
 - Confira com `docker ps`: só devem sobrar os containers que já existiam.
 
@@ -189,8 +181,8 @@ fixa, por exemplo `curl 'https://archive-api.open-meteo.com/v1/archive?latitude=
 - **`connection refused` no `curl`:** a API ainda está subindo; espere alguns segundos.
 - **Porta ocupada no `up`:** escolha outra porta no override e ajuste a `DATABASE_URL`.
 - **Tudo cai no banco errado:** faltou o `-p treino-meta4` ou o `export DATABASE_URL` neste terminal.
-- **O `importar_garmin` tentou usar a rede com as fixtures de clima:** use o script do passo 3. O comando faz a busca no
-  fim da importação; erro de clima ali vira aviso e nunca derruba a importação.
+- **Quero o clima na hora da importação:** acrescente `--com-clima` (usa a rede de verdade; nunca com as fixtures
+  de clima neste guia). Sem a opção, o comando termina com `clima: nao buscado`.
 - **`chamadas=0` e nada mudou:** o estado já estava resolvido (`ok` com a mesma `entrada`, `falha` sem a flag, ou atividade
   dentro dos 7 dias).
 - **Clima de atividade recente fica `pendente`:** a API do passado tem atraso de 5 dias; a janela é de 7 (ADR 0007, item 4).

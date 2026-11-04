@@ -1,6 +1,9 @@
 """Importa a exportacao Garmin para o banco (issue #13).
 
-    uv run python -m worker.importar_garmin <caminho> --atleta "<nome>"
+    uv run python -m worker.importar_garmin <caminho> --atleta "<nome>" [--com-clima]
+
+Por padrao nao abre conexao de rede (issue #132). So com `--com-clima` busca o clima no Open-Meteo, das atividades que
+entraram ou mudaram; sem a opcao, rode depois `python -m worker.preencher_clima`.
 
 Idempotente: a chave de `atividade` e (atleta_id, fonte, fonte_id) (ADR 0001), mais a regra dos 60 s da ADR 0006.
 A gravacao mora na API (`app.ingestao.importacao`); aqui fica so a linha de comando. Os nomes abaixo continuam
@@ -40,11 +43,14 @@ def clima_do_que_mudou(rel: RelatorioImportacao, cliente=None, session_factory=N
         print(f"aviso: clima nao preenchido ({e.__class__.__name__}); rode worker.preencher_clima", file=sys.stderr)
 
 
-def main(argv: list[str] | None = None) -> int:
+def main(argv: list[str] | None = None, cliente=None) -> int:
     p = argparse.ArgumentParser(prog="python -m worker.importar_garmin",
                                 description="Importa a exportacao Garmin (zip, pasta, JSON ou FIT) no banco.")
     p.add_argument("caminho")
     p.add_argument("--atleta", required=True, help="nome do atleta (criado se nao existir)")
+    p.add_argument("--com-clima", action="store_true",
+                   help="busca o clima no Open-Meteo (usa a rede e envia posicoes arredondadas) so das atividades "
+                        "que entraram ou mudaram; sem a opcao, nenhuma conexao de rede e aberta")
     args = p.parse_args(argv)
     logging.basicConfig(level=logging.WARNING, format="%(levelname)s %(message)s")
 
@@ -56,7 +62,11 @@ def main(argv: list[str] | None = None) -> int:
           f"avisos={len(rel.avisos)}")
     for aviso in rel.avisos:
         print(f"  aviso: {aviso}")
-    clima_do_que_mudou(rel)
+    if args.com_clima:
+        clima_do_que_mudou(rel, cliente=cliente)
+    else:
+        print("clima: nao buscado (sem rede). Para buscar: uv run python -m worker.preencher_clima "
+              "(ou reimporte com --com-clima)")
     return 0
 
 

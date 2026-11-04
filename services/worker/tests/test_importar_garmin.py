@@ -2,6 +2,7 @@
 
 import os
 import shutil
+import socket
 import zipfile
 from pathlib import Path
 
@@ -242,3 +243,63 @@ def test_fuso_min_do_parser():
     assert fuso_min(ativ(inicio.astimezone(timezone(timedelta(hours=-3))))) == -180
     assert fuso_min(ativ(inicio.astimezone(timezone(timedelta(hours=5, minutes=30))))) == 330
     assert fuso_min(ativ(None)) is None
+
+
+CLIMA_JSON = RAIZ / "tests" / "fixtures" / "clima" / "exportacao_clima.json"
+
+
+def _sessao_cli(engine, monkeypatch):
+    from app.db import session as sessao
+    from sqlalchemy.orm import sessionmaker
+    fabrica = sessionmaker(bind=engine, expire_on_commit=False)
+    monkeypatch.setattr(sessao, "SessionLocal", fabrica)
+    return fabrica
+
+
+def test_sem_com_clima_nao_abre_conexao_de_rede(engine, monkeypatch, capsys):
+    """Fixtures de clima tem posicao; sem --com-clima nada pode sair da maquina (#132)."""
+    def bloqueia(*a, **k):
+        raise AssertionError("importar_garmin abriu conexao de rede")
+
+    for nome in ("connect", "connect_ex"):
+        monkeypatch.setattr(socket.socket, nome, bloqueia)
+    monkeypatch.setattr(socket, "create_connection", bloqueia)
+    monkeypatch.setattr(socket, "getaddrinfo", bloqueia)
+    _sessao_cli(engine, monkeypatch)
+    chamadas = []
+    monkeypatch.setattr("app.servicos.clima.preencher_clima", lambda *a, **k: chamadas.append(k))
+
+    assert main([str(CLIMA_JSON), "--atleta", "Ana"]) == 0
+    saida = capsys.readouterr()
+    assert "inseridas=5" in saida.out
+    assert "clima: nao buscado" in saida.out and "worker.preencher_clima" in saida.out
+    assert "aviso: clima" not in saida.err
+    assert chamadas == []
+
+
+def test_com_clima_chama_preencher_so_com_ids_alterados(engine, monkeypatch, capsys):
+    from types import SimpleNamespace
+    fabrica = _sessao_cli(engine, monkeypatch)
+    cliente = object()
+    chamadas = []
+
+    def falso(session, cli, atividade_ids=None, **k):
+        chamadas.append((cli, sorted(atividade_ids)))
+        return SimpleNamespace(chamadas=0, parou=False)
+
+    monkeypatch.setattr("app.servicos.clima.preencher_clima", falso)
+    assert main([str(ZIP), "--atleta", "Ana", "--com-clima"], cliente=cliente) == 0
+    with fabrica() as s:
+        ids = sorted(s.scalars(select(Atividade.id)))
+    assert chamadas == [(cliente, ids)] and len(ids) == 5
+    assert "clima: chamadas=0" in capsys.readouterr().out
+
+    # reimportar sem mudanca: nenhuma atividade alterada, nenhuma chamada
+    assert main([str(ZIP), "--atleta", "Ana", "--com-clima"], cliente=cliente) == 0
+    assert len(chamadas) == 1
+
+
+def test_help_documenta_com_clima(capsys):
+    with pytest.raises(SystemExit):
+        main(["--help"])
+    assert "--com-clima" in capsys.readouterr().out

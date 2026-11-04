@@ -2,7 +2,7 @@
 tipo: modulo
 status: em-uso
 dono: duda
-atualizado: 2026-11-03
+atualizado: 2026-11-04
 links: [[produto/meta-3-como-rodar]], [[modulos/worker]], [[modulos/banco]], [[decisoes/0006-upload-de-fit]], [[decisoes/0007-clima-da-atividade]], [[produto/roadmap]], [[diario/2026-11-03]], [[produto/meta-4-como-rodar]]
 ---
 # Módulo: ingestão Garmin
@@ -124,9 +124,9 @@ que usamos. Se algum relógio real trouxer mensagens que o `fitdecode` não ente
 
 ## Importação no banco (`app/ingestao/importacao.py`, CLI em `worker/importar_garmin.py`)
 ```
-uv run python -m worker.importar_garmin <caminho> --atleta "<nome>"
+uv run python -m worker.importar_garmin <caminho> --atleta "<nome>" [--com-clima]
 ```
-Usa `DATABASE_URL` (Postgres do docker compose; rode `alembic upgrade head` antes). Imprime
+Sem rede por padrão; `--com-clima` busca o clima das atividades que mudaram ([[modulos/worker]]). Usa `DATABASE_URL` (Postgres do docker compose; rode `alembic upgrade head` antes). Imprime
 `inseridas`, `atualizadas`, `ignoradas` e os avisos (inclui os do parser). Função: `importar(session, caminho, atleta_nome)`. Uma atividade que já veio por upload (regra dos 60 s, abaixo) é atualizada, não duplicada.
 
 - **Atleta:** busca pelo nome; cria se não existir (sem assessoria).
