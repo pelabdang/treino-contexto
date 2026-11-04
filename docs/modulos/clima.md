@@ -2,7 +2,7 @@
 tipo: modulo
 status: em-uso
 dono: duda
-atualizado: 2026-11-03
+atualizado: 2026-11-04
 links: [[decisoes/0007-clima-da-atividade]], [[modulos/ingestao-garmin]], [[modulos/banco]], [[modulos/worker]], [[modulos/api]], [[modulos/api-client]], [[metricas/clima-oraculo]], [[produto/roadmap]], [[produto/meta-4-como-rodar]]
 ---
 # Módulo: clima
@@ -87,8 +87,8 @@ Uso e opções em [[modulos/worker]]. Regras (ADR 0007, itens 6 a 8):
   Com `parar_rodada` (429 persistente), a rodada para depois de gravar a atividade atual.
 - **Posição do passado:** vem **primeiro da exportação** (`--exportacao`; o JSON vale mais que o FIT) e, se ela não tiver,
   do FIT guardado em `FIT_DIR` (`arquivo_bruto` no formato `<n>/<64 hex>.fit`). Só preenche `NULL`, nunca sobrescreve; indoor não recebe posição.
-- **No fim de `importar` (linha de comando):** clima só das atividades que entraram ou mudaram (`RelatorioImportacao.ids_alterados`).
-  `importar` e o endpoint de upload em si não usam a rede; erro de clima na linha de comando é aviso.
+- **No fim do `worker.importar_garmin`, só com `--com-clima` (#132):** clima só das atividades que entraram ou mudaram (`RelatorioImportacao.ids_alterados`).
+  Sem a opção, a linha de comando não abre conexão e imprime `clima: nao buscado`. `importar` e o endpoint de upload em si não usam a rede; erro de clima na linha de comando é aviso. Ver [[modulos/worker]].
 
 ## Decisões do Theo (03/11)
 Aprovadas na revisão da #113, sobre o que a [[decisoes/0007-clima-da-atividade]] deixou em aberto:

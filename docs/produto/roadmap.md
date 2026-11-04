@@ -242,8 +242,8 @@ Revisadas ao fim de cada meta com o que se aprendeu. Ordem tirada da "Fundação
   | #119 | App web em `pt-BR` (proposta da Meta 3) | rafa-app | feita |
   | #120 | Regra do docs-ok no `AGENTS.md` (proposta da Meta 3) | Theo | feita |
 
-- **Achados depois da meta (propostas, sem issue criada):** o `worker.importar_garmin` chama o Open-Meteo por padrão no
-  fim da importação, e reimportar o histórico real mandaria as posições na hora (proposta: `--sem-clima` ou, melhor,
+- **Achados depois da meta (propostas, sem issue criada):** o `worker.importar_garmin` chamava o Open-Meteo por padrão no
+  fim da importação (resolvido na #132: só com `--com-clima`), e reimportar o histórico real mandaria as posições na hora (proposta: `--sem-clima` ou, melhor,
   inverter o padrão); um FIT avulso importado depois do JSON duplica a atividade, porque a exclusão "exportação não casa
   com exportação" vale também para `fonte_id` `fit-…` (proposta: a exclusão só quando os dois lados têm `activityId`); a
   investigação da série de tiros deixou recomendações (R1, melhor tiro junto da média; R2, `tiros_1km@5`, que amplia
@@ -303,12 +303,12 @@ Revisadas ao fim de cada meta com o que se aprendeu. Ordem tirada da "Fundação
   | #173 | Resultado da meta e roteiro | paulo-planejador | #172, #169 |
 
   Caminhos paralelos: depois da ADR, o Caio faz o oráculo e os blocos e depois as três funções. A Duda começa pelas
-  paralelas (#132, #133) e pela #152, e encontra o Caio na #166. O Rafa faz a #154 e a tela de um treino.
+  paralelas (#133; a #132 já entrou) e pela #152, e encontra o Caio na #166. O Rafa faz a #154 e a tela de um treino.
 - **Paralelas na Meta 5** (fora do critério de pronto):
 
   | # | Issue | Dono | Depende de |
   |---|---|---|---|
-  | #132 | `importar_garmin` sem rede por padrão (PR #160); vem antes de qualquer uso do histórico real | duda-dados | nenhuma |
+  | #132 | `importar_garmin` sem rede por padrão; clima só com `--com-clima` (feita, PR #160, 04/11) | duda-dados | nenhuma |
   | #133 | Identidade do FIT avulso importado depois do JSON | duda-dados (aprovação do Theo) | nenhuma |
   | #158 | Tela de um treino: campos prontos na resposta da atividade | duda-dados | nenhuma |
   | #159 | Tela de um treino com o clima no app | rafa-app | #158 |
@@ -438,7 +438,7 @@ stack Expo). A chave do provedor de LLM foi entregue e está no `.env` (fora do 
   as issues da Meta 4 e para as propostas da Meta 3 (#118, #119, #120). Registrado na [[decisoes/0007-clima-da-atividade]].
 
 - **Decisões de 04/11: resolvidas.**
-  - **Clima do histórico real:** sim, nesta ordem: primeiro o `importar_garmin` sem rede por padrão (#132), depois
+  - **Clima do histórico real:** sim, nesta ordem: primeiro o `importar_garmin` sem rede por padrão (#132, feita: clima só com `--com-clima`), depois
     `--so-posicao` (local) e então uma rodada pequena de clima. A execução é local; os números ficam só em `entregas/`.
   - **Série de tiros:** sessões com 2 tiros entram; num treino misto, os tiros de 1 km do bloco principal contam; o valor
     principal é o melhor pace de tiro e o painel de FC mostra a FC do melhor tiro; treino de transição vira um rótulo
