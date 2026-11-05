@@ -99,6 +99,13 @@ def test_esforco_entre_faixas_segue_a_adr():
     assert e.faixa is None and e.distancia_m == 1350
 
 
+def test_vizinhos_que_a_regra_de_5pct_nao_junta_sao_dois_esforcos():
+    # Decidido pelo Angelo em 05/11. 1000 m em 250 s (250 s/km) + 500 m em 135 s (270 s/km): 270 / 250 = +8% > 5%,
+    # não junta; os dois <= 297 (esforço) -> d1000 e d500, não um d1500.
+    es = _esforcos([(1000, 340, 0), (1000, 250, 0), (500, 135, 0), (1000, 340, 0)])
+    assert [e.faixa for e in es] == ["d1000", "d500"]
+
+
 def test_fc_do_esforco_e_ponderada_pela_duracao():
     # 1000 m em 240 s com FC 165 e 500 m em 121 s com FC 168 (juntam: 242 vs 240 s/km, +0,83%).
     # FC = (165 x 240 + 168 x 121) / 361 = (39600 + 20328) / 361 = 59928 / 361 = 166,0055

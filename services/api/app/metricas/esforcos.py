@@ -9,7 +9,8 @@ aprovados pelo Angelo em 04/11, e ficam aqui como constantes nomeadas.
 
 O primeiro passo, comum às modalidades, é ler a sequência de voltas como blocos (``montar_blocos``, #162). Sobre os
 blocos, ``esforcos_corrida`` (#163) dá a faixa nomeada de distância (``d200`` a ``d5000``) de cada esforço de corrida.
-Faixa de ciclismo (``t4``...) e treino-chave contínuo são das issues #164 e #165 e não são calculados aqui.
+``esforcos_ciclismo`` (#164) dá a faixa de duração (``t1`` a ``t60``) dos esforços de ciclismo. Treino-chave
+contínuo é da #165 e não é calculado aqui.
 """
 
 from __future__ import annotations
@@ -328,6 +329,78 @@ def esforcos_corrida(resultado: ResultadoBlocos) -> tuple[EsforcoCorrida, ...]:
             distancia_m=b.distancia_m,
             duracao_s=b.duracao_s,
             pace_s_km=b.pace_s_km,
+            fc_media=b.fc_media,
+            parada_apos_s=b.parada_apos_s,
+        )
+        for b in resultado.blocos
+        if b.categoria == ESFORCO
+    )
+
+
+# --- Esforços de ciclismo por duração (issue #164; ADR 0008, item 5) -------------------------------------------
+# Faixas nomeadas (alvo em minutos): tolerância max(8% do alvo, 15 s) para cada lado, inclusiva, sobre a duração em
+# movimento do bloco. Fonte: regra própria do projeto, sem artigo. Os limites são os inteiros da ADR (aprovados pelo
+# Angelo em 04/11), que arredonda ao segundo mais próximo (ex.: t12, 720 +- 57,6 = 662,4 a 777,6 -> 662 a 778).
+FAIXA_TOLERANCIA_CICLISMO_PCT = 0.08
+FAIXA_TOLERANCIA_CICLISMO_MIN_S = 15.0
+FAIXAS_CICLISMO: tuple[tuple[str, float, float], ...] = (
+    ("t1", 45.0, 75.0),
+    ("t2", 105.0, 135.0),
+    ("t3", 165.0, 195.0),
+    ("t4", 221.0, 259.0),
+    ("t5", 276.0, 324.0),
+    ("t8", 442.0, 518.0),
+    ("t10", 552.0, 648.0),
+    ("t12", 662.0, 778.0),
+    ("t15", 828.0, 972.0),
+    ("t20", 1104.0, 1296.0),
+    ("t30", 1656.0, 1944.0),
+    ("t40", 2208.0, 2592.0),
+    ("t60", 3312.0, 3888.0),
+)
+
+
+@dataclass(frozen=True)
+class EsforcoCiclismo:
+    """Um bloco de esforço do ciclismo com a faixa de duração (``faixa`` é None fora de todas)."""
+
+    bloco_ordem: int
+    faixa: str | None
+    volta_inicial: int
+    volta_final: int
+    inicio_offset_s: float
+    duracao_s: float
+    distancia_m: float
+    velocidade_kmh: float
+    fc_media: float | None
+    parada_apos_s: float
+
+
+def faixa_de_duracao(duracao_s: float) -> str | None:
+    """Faixa de ciclismo que contém a duração em movimento, ou None. Limites inclusivos, sem sobreposição."""
+    for nome, minimo, maximo in FAIXAS_CICLISMO:
+        if minimo - _EPS <= duracao_s <= maximo + _EPS:
+            return nome
+    return None
+
+
+def esforcos_ciclismo(resultado: ResultadoBlocos) -> tuple[EsforcoCiclismo, ...]:
+    """Esforços de um pedal, na ordem, com a faixa de duração (ADR 0008, item 5).
+
+    Recebe ``montar_blocos(..., "ciclismo")``: só os blocos de categoria ``esforco`` entram (aquecimento,
+    recuperação e desaquecimento ficam de fora). A junção de laps já veio dos blocos. Sem potência: a intensidade
+    é a velocidade contra a habitual (limitação de relevo e vento na nota da métrica).
+    """
+    return tuple(
+        EsforcoCiclismo(
+            bloco_ordem=b.ordem,
+            faixa=faixa_de_duracao(b.duracao_s),
+            volta_inicial=b.volta_inicial,
+            volta_final=b.volta_final,
+            inicio_offset_s=b.inicio_offset_s,
+            duracao_s=b.duracao_s,
+            distancia_m=b.distancia_m,
+            velocidade_kmh=b.velocidade_kmh,
             fc_media=b.fc_media,
             parada_apos_s=b.parada_apos_s,
         )
