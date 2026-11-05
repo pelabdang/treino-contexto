@@ -14,8 +14,8 @@ App de análise de treinos com contexto (corrida, natação, ciclismo) para atle
 - Meta 3 feita: upload de arquivo FIT pelo botão no app, vista na web com FIT sintéticos ([[produto/metas/meta-3-upload-fit]]). 
 - Meta 4 feita: clima de cada atividade na API, visto com fixtures e a resposta gravada, sem rede ([[produto/metas/meta-4-clima-atividade]]). Atual: Meta 5, detecção de esforços (desde 04/11); depois a Meta 6, carga de treino. Ver [[produto/roadmap]]
 - Como reproduzir: [[produto/meta-1-como-reproduzir]] (Meta 1) e [[produto/meta-2-como-rodar]] (API e app), [[produto/meta-3-como-rodar]] (upload de FIT), [[produto/meta-4-como-rodar]] (clima)
-- Meta 5 em andamento (04/11): ADR 0008 aceita, oráculo ([[metricas/esforcos-oraculo]]) e função de blocos ([[metricas/esforcos]]) prontos; faltam corrida, ciclismo, banco e worker, e a visão de tiros
-- Time e papéis: [[time]]. A Lia (design) é dona de `docs/design/`; o guia visual e o tema do app estão no main (#192 e #195)
+- Meta 5 em andamento (04/11): ADR 0008 aceita; oráculo ([[metricas/esforcos-oraculo]]), blocos, esforços de corrida e de ciclismo ([[metricas/esforcos]]) prontos; faltam o treino-chave contínuo (#165), o banco e o worker (#166) e a visão de tiros
+- Time e papéis: [[time]]. A Lia (design) é dona de `docs/design/`; o guia visual, o tema do app e a tela com o melhor tiro estão no main (#192, #195 e #154)
 - Último diário: [[diario/2026-11-04]]
 
 ## Produto
