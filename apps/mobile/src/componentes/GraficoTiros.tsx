@@ -50,10 +50,13 @@ function posicoesX(sessoes: SessaoTiros[], largura: number): number[] {
 type Ponto = { sessao: SessaoTiros; x: number; y: number };
 
 /**
- * Faixa horizontal do alvo de toque de cada ponto: 44 de largura, mas cortada no
- * meio do caminho até o vizinho, para dois alvos nunca se sobreporem quando as
- * datas estão próximas. A altura segue sempre 44.
+ * Faixa horizontal do alvo de toque de cada ponto: 44 de largura, cortada no meio
+ * do caminho até o vizinho para os alvos não se sobreporem. Nunca fica abaixo de
+ * `ALVO_MIN_LARGURA` (24), centrada no ponto: se as datas são coladas ou iguais, os
+ * alvos se sobrepõem e vale o da sessão mais recente (renderizado depois, por cima).
+ * A altura segue sempre 44.
  */
+const ALVO_MIN_LARGURA = 24;
 export function faixasDeToque(xs: number[], alvo: number = ALVO_TOQUE): { esq: number; largura: number }[] {
   const ordem = xs.map((x, i) => ({ x, i })).sort((a, b) => a.x - b.x);
   const faixas = new Array<{ esq: number; largura: number }>(xs.length);
@@ -62,7 +65,10 @@ export function faixasDeToque(xs: number[], alvo: number = ALVO_TOQUE): { esq: n
     const prox = ordem[k + 1];
     const esq = ant ? Math.max(x - alvo / 2, (ant.x + x) / 2) : x - alvo / 2;
     const dir = prox ? Math.min(x + alvo / 2, (x + prox.x) / 2) : x + alvo / 2;
-    faixas[i] = { esq, largura: Math.max(dir - esq, 0) };
+    faixas[i] =
+      dir - esq >= ALVO_MIN_LARGURA
+        ? { esq, largura: dir - esq }
+        : { esq: x - ALVO_MIN_LARGURA / 2, largura: ALVO_MIN_LARGURA };
   });
   return faixas;
 }
@@ -125,7 +131,7 @@ function Painel(props: {
           onPress={() => aoTocar(p.sessao)}
           style={[
             styles.alvo,
-            { left: faixas[i].esq, width: faixas[i].largura, top: ALTURA_TITULO + p.y - ALVO_TOQUE / 2 },
+            { left: faixas[i].esq, width: faixas[i].largura, zIndex: i, top: ALTURA_TITULO + p.y - ALVO_TOQUE / 2 },
           ]}
         />
       ))}

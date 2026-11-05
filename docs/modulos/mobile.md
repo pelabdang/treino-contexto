@@ -51,7 +51,7 @@ Verificado na web (#96) com API e Postgres locais, FIT sintético `upload_interv
 - Sessão com `fc_melhor_tiro` nulo: sem ponto no painel de FC, com ponto no de pace.
 - Ponto selecionado: raio 7 com anel de 2 em `cor.texto`, e a data dele no eixo fica em negrito (#197).
 - O toque fica num `Pressable` transparente (44 de altura) por cima de cada ponto, com o `testID` `toque-<painel>-<atividade_id>`; o `Circle` do SVG não leva `onPress`. Com `onPress` no `Circle`, o `react-native-svg` repassava props de responder (`onResponderTerminate` e outras) ao DOM na web e o React avisava "Unknown event handler property" no modo dev.
-- A largura do alvo é 44, cortada no meio do caminho até o ponto vizinho (`faixasDeToque`), para dois alvos nunca se sobreporem quando as datas estão próximas; com datas coladas a largura fica menor que 44 (caso que o guia não cobre, decisão pendente da Lia). `accessibilityLabel`: "Sessão de 18/03/25, melhor tiro 4:05 min/km" (pace) e "..., FC do melhor tiro 176 bpm" (FC).
+- A largura do alvo é 44, cortada no meio do caminho até o ponto vizinho (`faixasDeToque`), para dois alvos nunca se sobreporem quando as datas estão próximas; a largura nunca fica abaixo de 24 (centrada no ponto): com datas coladas ou iguais os alvos se sobrepõem e vale a sessão mais recente, por cima (`zIndex`). `accessibilityLabel`: "Sessão de 18/03/25, melhor tiro 4:05 min/km" (pace) e "..., FC do melhor tiro 176 bpm" (FC).
 - Tocar num ponto mostra o detalhe: data e `n_tiros`, "Melhor tiro", "FC do melhor tiro", "Média dos tiros" e "FC média", todos como vieram da API; sem FC, "sem FC".
 - Mensagens de "sem dados":
   - "Sem sessões de tiros no período." (`eixos` null ou nenhuma sessão);

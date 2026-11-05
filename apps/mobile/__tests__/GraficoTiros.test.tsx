@@ -133,6 +133,18 @@ describe("GraficoTiros", () => {
     expect(a.dir).toBeLessThanOrEqual(b.esq + 0.001);
   });
 
+  it("duas sessões na mesma data: as duas continuam tocáveis (24 ou mais) e a mais recente fica por cima", async () => {
+    const d = copia();
+    d.sessoes[1].data = d.sessoes[0].data;
+    await render(<GraficoTiros dados={d} />);
+    const st = (id: number) => StyleSheet.flatten(screen.getByTestId(`toque-pace-${id}`).props.style);
+    expect(st(1).width).toBeGreaterThanOrEqual(24);
+    expect(st(4).width).toBeGreaterThanOrEqual(24);
+    expect(st(4).zIndex).toBeGreaterThan(st(1).zIndex);
+    await fireEvent.press(screen.getByTestId("toque-pace-4"));
+    expect(screen.getByText("Melhor tiro: 3:54 min/km")).toBeTruthy();
+  });
+
   it("rótulo de acessibilidade do ponto traz data e o texto da API", async () => {
     await render(<GraficoTiros dados={base} />);
     expect(screen.getByLabelText("Sessão de 11/03/25, melhor tiro 3:54 min/km")).toBeTruthy();
@@ -189,9 +201,12 @@ describe("faixasDeToque", () => {
       { esq: 278, largura: 44 },
     ]);
   });
-  it("com vizinho a 20, corta no meio do caminho", () => {
-    const [a, b] = faixasDeToque([100, 120]);
-    expect(a.esq + a.largura).toBe(110);
-    expect(b.esq).toBe(110);
+  it("com vizinho a 40, corta no meio do caminho", () => {
+    const [a, b] = faixasDeToque([100, 140]);
+    expect(a.esq + a.largura).toBe(120);
+    expect(b.esq).toBe(120);
+  });
+  it("largura mínima de 24, mesmo com x igual (nunca 0)", () => {
+    for (const f of faixasDeToque([100, 100, 105])) expect(f.largura).toBeGreaterThanOrEqual(24);
   });
 });
