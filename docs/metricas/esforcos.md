@@ -11,8 +11,8 @@ links: [[decisoes/0008-deteccao-de-esforcos]], [[metricas/esforcos-oraculo]], [[
 Lê a sequência de voltas de uma atividade como **blocos** e dá a cada bloco uma categoria: `aquecimento`, `esforco`,
 `recuperacao`, `desaquecimento` ou `leve`. É o primeiro passo comum da detecção de esforços (corrida por distância,
 ciclismo por duração; [[decisoes/0008-deteccao-de-esforcos]]). Esta nota cobre a versão `esforcos@1`: a função de
-blocos (#162) e as **faixas de distância dos esforços de corrida** (#163, seção abaixo). Faixas de ciclismo (`t4`...)
-e treino-chave contínuo vêm nas notas das issues seguintes (#164 e #165). Cálculo
+blocos (#162) e as **faixas de distância dos esforços de corrida** (#163) e as **faixas de duração dos esforços de ciclismo** (#164), nas seções abaixo.
+O treino-chave contínuo vem na #165. Cálculo
 determinístico, em código, sem banco e sem IA. Só corrida e ciclismo; outra modalidade devolve zero blocos.
 
 ## Fórmula
@@ -72,6 +72,36 @@ Exemplos à mão (sintéticos, referência 330 s/km, limiar 297 s/km):
 - 1350 m em 300 s (222,2 s/km): esforço sem faixa (entre 1260 e 1425).
 - 8 km contínuos a 270 s/km: esforço sem faixa (passa de 5250 m); o treino-chave é da #165.
 
+## Esforços de ciclismo por duração (#164)
+`esforcos_ciclismo(resultado_dos_blocos)` pega os blocos de categoria `esforco` de um pedal e devolve, para cada um, a
+**faixa** pela duração em movimento do bloco inteiro (laps já juntados), com velocidade média (km/h) e FC. Aquecimento,
+recuperação e desaquecimento não entram. A junção (parada menor que 30 s e velocidade a até 5% do bloco acumulado) e o
+limiar (velocidade >= habitual x 1,15) são os dos blocos. Não há potência.
+
+Faixas da ADR 0008, item 5 (aprovadas pelo Angelo em 04/11): tolerância `max(8% do alvo, 15 s)` para cada lado,
+limites inclusivos, em segundos de tempo em movimento.
+
+| faixa | aceita (s) | faixa | aceita (s) |
+|---|---|---|---|
+| `t1` | 45 a 75 | `t12` | 662 a 778 |
+| `t2` | 105 a 135 | `t15` | 828 a 972 |
+| `t3` | 165 a 195 | `t20` | 1104 a 1296 |
+| `t4` | 221 a 259 | `t30` | 1656 a 1944 |
+| `t5` | 276 a 324 | `t40` | 2208 a 2592 |
+| `t8` | 442 a 518 | `t60` | 3312 a 3888 |
+| `t10` | 552 a 648 | | |
+
+Conta: `t1` = max(4,8; 15) = 15 s, logo 45 a 75; `t4` = max(19,2; 15) = 19,2, logo 220,8 a 259,2, que a ADR escreve
+221 a 259; `t12` = max(57,6; 15) = 57,6, logo 662,4 a 777,6, escrito 662 a 778 (a ADR arredonda ao segundo mais
+próximo; o texto dela diz "para dentro", o que daria 663 a 777 só na `t12`; vale a tabela da ADR). Fora de
+qualquer faixa (360 s, entre `t5` e `t8`) o esforço continua esforço com `faixa = None` e a duração real.
+
+Exemplos à mão (sintéticos):
+- 5 x (240 s a 2400 m + 120 s leve), ref 22 km/h, limiar 25,3: cada esforço 2400 / 240 x 3,6 = 36 km/h, faixa `t4`;
+  as recuperações (22 km/h) e o aquecimento (25 km/h) ficam fora.
+- 5000 m em 750 s + 3000 m em 450 s, ref 20 km/h (limiar 23): 24 km/h nas duas, sem parada, juntam: 8000 m, 1200 s,
+  faixa `t20`; FC = (150 x 750 + 156 x 450) / 1200 = 152,25.
+
 ## Dados de entrada
 Voltas do banco (`segmento`: `ordem`, `inicio_offset_s`, `duracao_s`, `distancia_m`, `fc_media`, `intensidade`) e
 `atividade.modalidade`. O FIT sem `start_time` no lap grava `inicio_offset_s = 0` e o tempo parado não é computável: a
@@ -85,6 +115,9 @@ conta dá 0 e a parada só aparece como volta de pausa (ADR 0008, "A confirmar",
 ## Código e teste
 - Código: `services/api/app/metricas/esforcos.py` (`montar_blocos`, `esforcos_corrida`, `faixa_de_distancia`,
   `FAIXAS_CORRIDA`, `VERSAO = "esforcos@1"`).
+- Ciclismo: `esforcos_ciclismo`, `faixa_de_duracao`, `FAIXAS_CICLISMO`; teste
+  `services/api/tests/metricas/test_esforcos_ciclismo.py` (fórmula das faixas, limites, 5 x 4 min, 20 min cortados
+  por lap, aquecimento fora, sem faixa e os dois pedais do oráculo).
 - Teste das faixas: `services/api/tests/metricas/test_esforcos_corrida.py` (fórmula de cada faixa, limites de 760 e
   840 m, entre faixas, 10 x 400 m, 1000 + 500 m, FC ponderada e as cinco corridas do oráculo).
 - Teste: `services/api/tests/metricas/test_esforcos_blocos.py` (valor esperado calculado à mão: 1000 m + 500 m viram
