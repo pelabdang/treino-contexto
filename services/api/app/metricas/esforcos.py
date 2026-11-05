@@ -7,8 +7,9 @@ Função pura: sem banco, sem IA. A regra e os limites estão em ``docs/metricas
 Fonte: regra própria do projeto, sem artigo (ADR 0008, "Consequências"). Todos os limites são decisão do projeto,
 aprovados pelo Angelo em 04/11, e ficam aqui como constantes nomeadas.
 
-Esta versão faz o primeiro passo comum às modalidades: ler a sequência de voltas como blocos. Faixa nomeada
-(``d400``, ``t4``...) e treino-chave contínuo são das issues #163 a #165 e não são calculados aqui.
+O primeiro passo, comum às modalidades, é ler a sequência de voltas como blocos (``montar_blocos``, #162). Sobre os
+blocos, ``esforcos_corrida`` (#163) dá a faixa nomeada de distância (``d200`` a ``d5000``) de cada esforço de corrida.
+Faixa de ciclismo (``t4``...) e treino-chave contínuo são das issues #164 e #165 e não são calculados aqui.
 """
 
 from __future__ import annotations
@@ -258,3 +259,78 @@ def montar_blocos(
             cat = RECUPERACAO
         blocos.append(BlocoTreino(**{**b.__dict__, "categoria": cat}))
     return ResultadoBlocos(tuple(blocos), ref, origem)
+
+
+# --- Esforços de corrida por distância (issue #163; ADR 0008, item 5) -------------------------------------------
+# Faixas nomeadas (alvo em metros): tolerância max(5% do alvo, 30 m) para cada lado, inclusiva nos dois extremos.
+# Fonte: regra própria do projeto, sem artigo (ADR 0008, "Consequências"). Os limites estão escritos como a ADR os
+# lista (inteiros), para não depender de arredondamento de ponto flutuante; o teste confere cada um com a fórmula.
+FAIXA_TOLERANCIA_PCT = 0.05
+FAIXA_TOLERANCIA_MIN_M = 30.0
+FAIXAS_CORRIDA: tuple[tuple[str, float, float], ...] = (
+    ("d200", 170.0, 230.0),
+    ("d300", 270.0, 330.0),
+    ("d400", 370.0, 430.0),
+    ("d500", 470.0, 530.0),
+    ("d600", 570.0, 630.0),
+    ("d800", 760.0, 840.0),
+    ("d1000", 950.0, 1050.0),
+    ("d1200", 1140.0, 1260.0),
+    ("d1500", 1425.0, 1575.0),
+    ("d2000", 1900.0, 2100.0),
+    ("d3000", 2850.0, 3150.0),
+    ("d5000", 4750.0, 5250.0),
+)
+
+
+@dataclass(frozen=True)
+class EsforcoCorrida:
+    """Um bloco de esforço da corrida com a faixa de distância a que pertence (``faixa`` é None fora de todas)."""
+
+    bloco_ordem: int
+    faixa: str | None
+    volta_inicial: int
+    volta_final: int
+    inicio_offset_s: float
+    distancia_m: float
+    duracao_s: float
+    pace_s_km: float
+    fc_media: float | None
+    parada_apos_s: float
+
+
+def faixa_de_distancia(distancia_m: float) -> str | None:
+    """Nome da faixa de corrida que contém a distância, ou None (esforço entre faixas ou fora delas).
+
+    Limites inclusivos. As faixas da ADR não se sobrepõem, então há no máximo uma. Distância entre duas faixas
+    (por exemplo 700 m ou 1350 m) não tem faixa: o esforço continua esforço, com a distância real (ADR, item 5).
+    """
+    for nome, minimo, maximo in FAIXAS_CORRIDA:
+        if minimo - _EPS <= distancia_m <= maximo + _EPS:
+            return nome
+    return None
+
+
+def esforcos_corrida(resultado: ResultadoBlocos) -> tuple[EsforcoCorrida, ...]:
+    """Esforços de uma corrida, na ordem, com a faixa de distância de cada um (ADR 0008, item 5).
+
+    Recebe o resultado de ``montar_blocos(..., "corrida")``: só os blocos de categoria ``esforco`` entram; a junção
+    de laps (1000 m + 500 m = 1500 m) já veio dos blocos. A faixa vem da distância do bloco inteiro. Pace e FC são
+    os do bloco (pace = duração / distância x 1000; FC ponderada pela duração).
+    """
+    return tuple(
+        EsforcoCorrida(
+            bloco_ordem=b.ordem,
+            faixa=faixa_de_distancia(b.distancia_m),
+            volta_inicial=b.volta_inicial,
+            volta_final=b.volta_final,
+            inicio_offset_s=b.inicio_offset_s,
+            distancia_m=b.distancia_m,
+            duracao_s=b.duracao_s,
+            pace_s_km=b.pace_s_km,
+            fc_media=b.fc_media,
+            parada_apos_s=b.parada_apos_s,
+        )
+        for b in resultado.blocos
+        if b.categoria == ESFORCO
+    )
