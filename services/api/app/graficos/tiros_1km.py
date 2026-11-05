@@ -26,7 +26,15 @@ COLUNAS_CSV = (
     "pace_medio_s_km",
     "pace_medio_min_km",
     "fc_media",
+    # melhor tiro (#153; ADR 0004, adendo 1): colunas novas ao final, sem mexer nas da média
+    "pace_melhor_s_km",
+    "pace_melhor_min_km",
+    "fc_melhor_tiro",
+    "ordem_melhor_tiro",
 )
+COR_PACE = "#3340B0"  # guia visual: pace (melhor tiro)
+COR_FC = "#A3205F"  # guia visual: FC (melhor tiro)
+COR_MEDIA = "#6B7176"  # guia visual: média (secundária)
 TEXTO_VAZIO = "Sem treinos intervalados com tiros de 1 km no período"
 MAX_TICKS_POR_SESSAO = 12
 
@@ -38,8 +46,9 @@ def _dd_mm_aa(d) -> str:
 def linhas_csv(serie: list[PontoSessao]) -> list[dict[str, str]]:
     """Uma linha por sessão, colunas na ordem de ``COLUNAS_CSV``.
 
-    Pace em s/km com 1 casa; ``pace_medio_min_km`` via ``formatar_pace``;
-    FC com 1 casa ou vazio. Valores já em texto, prontos para ``csv``.
+    Pace em s/km com 1 casa; ``pace_*_min_km`` via ``formatar_pace`` (sobre o
+    valor sem arredondar); FC com 1 casa ou vazio. As colunas do melhor tiro
+    ficam vazias se o ponto não o tem (FC vazia também se ele não tem FC). Valores já em texto, prontos para ``csv``.
     """
     return [
         {
@@ -49,6 +58,12 @@ def linhas_csv(serie: list[PontoSessao]) -> list[dict[str, str]]:
             "pace_medio_s_km": f"{p.pace_s_km:.1f}",
             "pace_medio_min_km": formatar_pace(p.pace_s_km),
             "fc_media": "" if p.fc_media is None else f"{p.fc_media:.1f}",
+            "pace_melhor_s_km": "" if p.melhor_pace_s_km is None else f"{p.melhor_pace_s_km:.1f}",
+            "pace_melhor_min_km": (
+                "" if p.melhor_pace_s_km is None else formatar_pace(p.melhor_pace_s_km)
+            ),
+            "fc_melhor_tiro": "" if p.melhor_fc_media is None else f"{p.melhor_fc_media:.1f}",
+            "ordem_melhor_tiro": "" if p.melhor_ordem is None else str(p.melhor_ordem),
         }
         for p in serie
     ]
@@ -86,18 +101,31 @@ def render_png(serie: list[PontoSessao], atleta_nome: str) -> bytes:
                 fontsize=16,
             )
 
-            ax_pace.plot(datas, [p.pace_s_km for p in serie], marker="o", color="#1f5fa8")
-            ax_pace.set_title("Pace médio dos tiros (min/km)", loc="left", fontsize=13)
-            _aplicar_escala(ax_pace, escala_pace([p.pace_s_km for p in serie]))
+            com_melhor = [(p.data, p.melhor_pace_s_km) for p in serie if p.melhor_pace_s_km is not None]
+            if com_melhor:
+                ax_pace.plot(
+                    [d for d, _ in com_melhor], [v for _, v in com_melhor],
+                    marker="o", color=COR_PACE, linewidth=2.2, label="Melhor tiro (principal)",
+                )
+            ax_pace.plot(
+                datas, [p.pace_s_km for p in serie], marker=".", color=COR_MEDIA,
+                linestyle="--", linewidth=1.0, alpha=0.8, label="Média dos tiros (secundária)",
+            )
+            ax_pace.set_title("Pace do melhor tiro (min/km); tracejado: média dos tiros", loc="left", fontsize=13)
+            # eixo pelo valor principal (melhor tiro), como o bloco `eixos` da API (ADR 0004, adendo 1)
+            _aplicar_escala(ax_pace, escala_pace([v for _, v in com_melhor]))
             ax_pace.invert_yaxis()  # mais rápido (menos s/km) para cima
+            ax_pace.legend(loc="best", fontsize=10)
 
-            com_fc = [(p.data, p.fc_media) for p in serie if p.fc_media is not None]
+            com_fc = [(p.data, p.melhor_fc_media) for p in serie if p.melhor_fc_media is not None]
             if com_fc:
                 ax_fc.plot(
-                    [d for d, _ in com_fc], [f for _, f in com_fc], marker="o", color="#b3261e"
+                    [d for d, _ in com_fc], [f for _, f in com_fc],
+                    marker="o", color=COR_FC, linewidth=2.2, label="FC do melhor tiro",
                 )
-            _aplicar_escala(ax_fc, escala_fc([p.fc_media for p in serie]))
-            ax_fc.set_title("FC média dos tiros (bpm)", loc="left", fontsize=13)
+                ax_fc.legend(loc="best", fontsize=10)
+            _aplicar_escala(ax_fc, escala_fc([f for _, f in com_fc]))
+            ax_fc.set_title("FC do melhor tiro (bpm)", loc="left", fontsize=13)
 
             ax_fc.set_xlabel("Data do treino")
             if len(set(datas)) <= MAX_TICKS_POR_SESSAO:

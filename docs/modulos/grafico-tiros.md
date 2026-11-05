@@ -2,24 +2,32 @@
 tipo: modulo
 status: em-uso
 dono: caio
-atualizado: 2026-11-03
+atualizado: 2026-11-04
 links: [[metricas/tiros-1km]], [[decisoes/0004-contrato-tela-evolucao]], [[modulos/api]], [[modulos/worker]], [[produto/roadmap]]
 ---
 # Módulo: gráfico dos tiros de 1 km
 
 ## Para que serve
-Desenha a evolução dos tiros de 1 km (pace e FC médios por sessão) e monta as linhas do CSV, a partir de uma
+Desenha a evolução dos tiros de 1 km (melhor pace e FC do melhor tiro por sessão, com a média como detalhe) e monta as linhas do CSV, a partir de uma
 série já calculada. Não acessa banco: a #15 (comando que grava em `entregas/`) e a #16 (endpoint PNG) só leem
 a série e chamam estas funções, então o PNG é o mesmo nos dois lugares.
 
 ## Entradas e saídas
 - `render_png(serie, atleta_nome) -> bytes`: PNG 1600 x 1000 px (figsize 16 x 10, dpi 100), fundo branco.
-  Dois painéis com o mesmo eixo X (data `dd/mm/aa`, rótulo "Data do treino"): em cima "Pace médio dos tiros
-  (min/km)", eixo `m:ss` invertido (mais rápido para cima), faixa mínima de 30 s/km; embaixo "FC média dos tiros (bpm)", faixa mínima de 5 bpm. Sessão sem FC
-  fica sem ponto no painel de FC. Série vazia gera o PNG com "Sem treinos intervalados com tiros de 1 km no
-  período".
+  Dois painéis com o mesmo eixo X (data `dd/mm/aa`, rótulo "Data do treino"). Valor principal = melhor tiro
+  ([[decisoes/0004-contrato-tela-evolucao]], adendo 1, #153):
+  - em cima "Pace do melhor tiro (min/km); tracejado: média dos tiros": melhor pace como linha cheia azul
+    `#3340B0` (legenda "Melhor tiro (principal)"); a média como linha tracejada cinza `#6B7176`, fina, com
+    legenda "Média dos tiros (secundária)". Eixo `m:ss` invertido (mais rápido para cima), faixa mínima de 30 s/km.
+  - embaixo "FC do melhor tiro (bpm)": linha magenta `#A3205F`, faixa mínima de 5 bpm. A FC média não aparece
+    no PNG, só no CSV. Sessão cujo melhor tiro não tem FC fica sem ponto.
+  - A escala dos dois eixos é calculada pelo valor principal (melhor tiro), igual ao bloco `eixos` da API; a
+    média pode sair da faixa e é cortada. Ponto sem melhor tiro (montado à mão, sem os campos) só aparece na média.
+  Série vazia gera o PNG com "Sem treinos intervalados com tiros de 1 km no período".
 - `linhas_csv(serie) -> list[dict[str, str]]`: colunas `data, atividade_id, n_tiros, pace_medio_s_km,
-  pace_medio_min_km, fc_media`; pace com 1 casa, `m:ss` via `formatar_pace`, FC com 1 casa ou vazia.
+  pace_medio_min_km, fc_media` (média, como antes) e, ao final, `pace_melhor_s_km, pace_melhor_min_km,
+  fc_melhor_tiro, ordem_melhor_tiro` (melhor tiro). Pace com 1 casa, `m:ss` via `formatar_pace` sobre o valor sem
+  arredondar, FC com 1 casa ou vazia (vazia também se o melhor tiro não tem FC; o melhor tiro não é trocado).
 - `escala_eixo(valores, amplitude_minima, passo, rotulo, max_marcas) -> Escala | None` (em
   `app/graficos/escala.py`): regra única da escala dos eixos, usada pelo PNG e, na #66, pelo bloco `eixos` do JSON.
   Veja a seção "Escala mínima dos eixos".
@@ -66,7 +74,8 @@ matplotlib (backend `Agg`, sem display) e de [[metricas/tiros-1km]].
 Exemplo gerado com os 2 pontos do oráculo (#30): ![[_anexos/tiros-1km-fixtures.png]]
 
 `uv run pytest -q services/api/tests/metricas/test_grafico_tiros_1km.py`. Os testes usam os 2 pontos do oráculo
-da #30 (250,83 s/km e 170,30 bpm; 237,0 s/km e 171,77 bpm).
+da #30 (média: 250,83 s/km e 170,30 bpm; 237,0 s/km e 171,77 bpm) e da #151 (melhor tiro: 248,0 s/km "4:08" e
+FC 175; 234,0 s/km "3:54" e FC 177). O teste do worker confere o CSV gerado a partir das fixtures com esses valores.
 
 ## Pendências
 - Usadas pelo comando `worker.grafico_tiros_1km` ([[modulos/worker]], #15) e pelo endpoint PNG ([[modulos/api]], #16).
