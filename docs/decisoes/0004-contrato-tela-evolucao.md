@@ -150,9 +150,8 @@ mesmas regras de antes.
   sobre os `fc_melhor_tiro` (sem arredondar, 1 casa só na saída), com a mesma `escala_eixo` e as mesmas escalas
   mínimas (30 s/km e 5 bpm). Sessão com `fc_melhor_tiro` `null` não entra na escala da FC; se nenhuma tem,
   `eixos.fc` é `null`. A média não entra nos eixos (se o app desenhar a média, ela pode sair da faixa).
-- **O PNG e o CSV continuam com a média** (fora do escopo da #152). Por isso a decisão 2 ("mesma regra do PNG")
-  passa a valer só quanto à função `escala_eixo`: o JSON e o PNG deixam de ter a mesma faixa até a #153, que leva
-  o melhor tiro ao PNG e ao CSV.
+- **O PNG e o CSV continuavam com a média na #152; a #153 os levou ao melhor tiro** (ver [[modulos/grafico-tiros]]). Entre a #152 e a #153 a decisão 2 ("mesma
+  regra do PNG") valeu só quanto à função `escala_eixo`; com a #153 o JSON e o PNG voltam a ter a mesma faixa (pelo melhor tiro).
 
 ### Exemplo (fixtures, sessão 1 da amostra)
 ```json

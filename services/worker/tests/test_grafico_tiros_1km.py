@@ -62,6 +62,7 @@ def test_fixtures_geram_png_e_csv_do_oraculo(session, tmp_path):
     linhas = _ler_csv(arq_csv)
     assert list(linhas[0]) == [
         "data", "atividade_id", "n_tiros", "pace_medio_s_km", "pace_medio_min_km", "fc_media",
+        "pace_melhor_s_km", "pace_melhor_min_km", "fc_melhor_tiro", "ordem_melhor_tiro",
     ]
     assert len(linhas) == 2
     a, b = linhas  # ordenadas por data: 04/03 e 11/03 (fixtures)
@@ -69,6 +70,10 @@ def test_fixtures_geram_png_e_csv_do_oraculo(session, tmp_path):
         "6", "250.8", "4:11", "170.3")
     assert (b["n_tiros"], b["pace_medio_s_km"], b["pace_medio_min_km"], b["fc_media"]) == (
         "5", "237.0", "3:57", "171.8")
+    # melhor tiro (oráculo da #151): 248,0 s/km "4:08" FC 175; 234,0 s/km "3:54" FC 177
+    assert (a["pace_melhor_s_km"], a["pace_melhor_min_km"], a["fc_melhor_tiro"]) == ("248.0", "4:08", "175.0")
+    assert (b["pace_melhor_s_km"], b["pace_melhor_min_km"], b["fc_melhor_tiro"]) == ("234.0", "3:54", "177.0")
+    assert a["ordem_melhor_tiro"].isdigit() and b["ordem_melhor_tiro"].isdigit()
     assert a["data"] < b["data"]
 
 
@@ -90,7 +95,8 @@ def test_atleta_sem_sessoes_gera_png_e_csv_so_com_cabecalho(session, tmp_path):
     assert png.read_bytes().startswith(ASSINATURA_PNG)
     assert _ler_csv(arq_csv) == []
     assert arq_csv.read_text(encoding="utf-8").strip() == (
-        "data,atividade_id,n_tiros,pace_medio_s_km,pace_medio_min_km,fc_media"
+        "data,atividade_id,n_tiros,pace_medio_s_km,pace_medio_min_km,fc_media,"
+        "pace_melhor_s_km,pace_melhor_min_km,fc_melhor_tiro,ordem_melhor_tiro"
     )
 
 

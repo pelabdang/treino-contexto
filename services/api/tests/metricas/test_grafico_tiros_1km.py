@@ -16,8 +16,9 @@ from app.metricas.tiros_1km import PontoSessao, formatar_pace
 
 ASSINATURA_PNG = b"\x89PNG\r\n\x1a\n"
 
-A = PontoSessao(1000000001, date(2025, 3, 4), 6, 1505 / 6000 * 1000, 256309 / 1505)
-B = PontoSessao(1000000002, date(2025, 3, 11), 5, 1185 / 5000 * 1000, 203546 / 1185)
+# melhor tiro do oráculo (#151): 248,0 s/km (4:08), FC 175, 6o tiro; e 234,0 s/km (3:54), FC 177, 5o tiro
+A = PontoSessao(1000000001, date(2025, 3, 4), 6, 1505 / 6000 * 1000, 256309 / 1505, 248.0, 175, 11)
+B = PontoSessao(1000000002, date(2025, 3, 11), 5, 1185 / 5000 * 1000, 203546 / 1185, 234.0, 177, 9)
 
 
 def _tamanho(png: bytes) -> tuple[int, int]:
@@ -70,6 +71,7 @@ def test_linhas_csv():
     assert len(linhas) == 2
     assert tuple(linhas[0]) == COLUNAS_CSV == (
         "data", "atividade_id", "n_tiros", "pace_medio_s_km", "pace_medio_min_km", "fc_media",
+        "pace_melhor_s_km", "pace_melhor_min_km", "fc_melhor_tiro", "ordem_melhor_tiro",
     )
     assert linhas[0] == {
         "data": "2025-03-04",
@@ -78,6 +80,10 @@ def test_linhas_csv():
         "pace_medio_s_km": "250.8",
         "pace_medio_min_km": "4:11",
         "fc_media": "170.3",
+        "pace_melhor_s_km": "248.0",
+        "pace_melhor_min_km": "4:08",
+        "fc_melhor_tiro": "175.0",
+        "ordem_melhor_tiro": "11",
     }
     assert linhas[1] == {
         "data": "2025-03-11",
@@ -86,9 +92,35 @@ def test_linhas_csv():
         "pace_medio_s_km": "237.0",
         "pace_medio_min_km": "3:57",
         "fc_media": "171.8",
+        "pace_melhor_s_km": "234.0",
+        "pace_melhor_min_km": "3:54",
+        "fc_melhor_tiro": "177.0",
+        "ordem_melhor_tiro": "9",
     }
 
 
 def test_linhas_csv_fc_vazia_quando_sem_fc():
     (linha,) = linhas_csv([PontoSessao(1, date(2025, 3, 4), 4, 240.0, None)])
     assert linha["fc_media"] == ""
+
+
+def test_linhas_csv_melhor_tiro_sem_fc_ou_ausente():
+    sem_fc = PontoSessao(1, date(2025, 3, 4), 4, 240.0, 160.0, 236.0, None, 2)
+    sem_melhor = PontoSessao(2, date(2025, 3, 5), 4, 240.0, 160.0)
+    l1, l2 = linhas_csv([sem_fc, sem_melhor])
+    assert (l1["pace_melhor_min_km"], l1["fc_melhor_tiro"], l1["ordem_melhor_tiro"]) == ("3:56", "", "2")
+    assert l2["fc_media"] == "160.0"
+    assert (l2["pace_melhor_s_km"], l2["pace_melhor_min_km"], l2["fc_melhor_tiro"]) == ("", "", "")
+
+
+def test_png_melhor_tiro_sem_fc_e_sem_melhor():
+    sem_fc = PontoSessao(1, date(2025, 3, 4), 4, 240.0, 160.0, 236.0, None, 2)
+    sem_melhor = PontoSessao(2, date(2025, 3, 5), 4, 240.0, 160.0)
+    for serie in ([sem_fc], [sem_melhor], [A, sem_fc, sem_melhor, B]):
+        assert render_png(serie, "Atleta Fictício").startswith(ASSINATURA_PNG)
+
+
+def test_cores_do_guia():
+    from app.graficos.tiros_1km import COR_FC, COR_MEDIA, COR_PACE
+
+    assert (COR_PACE, COR_FC, COR_MEDIA) == ("#3340B0", "#A3205F", "#6B7176")
