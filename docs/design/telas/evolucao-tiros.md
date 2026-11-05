@@ -116,7 +116,7 @@ Os textos de erro e de sucesso são os de hoje ([[decisoes/0006-upload-de-fit]])
 - Ponto do gráfico: `accessibilityLabel` "Sessão de 18/03/25, melhor tiro 4:05 min/km" (pace) e "Sessão de
   18/03/25, FC do melhor tiro 176 bpm" (FC), com os textos da API.
 - A lista de treinos repete todos os valores do gráfico em texto.
-- Linha da lista com 56 de altura (tocar abre o mesmo detalhe do ponto).
+- Linha da lista com 56 de altura (`lista.linha-altura`; tocar abre o mesmo detalhe do ponto).
 
 ## O que muda em relação ao app de hoje
 Para a issue do tema (Rafa). Nada aqui muda comportamento da API.
