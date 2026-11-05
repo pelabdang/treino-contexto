@@ -138,6 +138,6 @@ conta dá 0 e a parada só aparece como volta de pausa (ADR 0008, "A confirmar",
 - Pausa só por pace, distância ou velocidade quando o relógio não grava `start_time`; uma parada curta (menos de
   15 s) dentro do esforço não separa os blocos.
 - **Faixa pela soma**: dois esforços vizinhos que a regra de 5% não junta (1000 m a 250 s/km e 500 m a 270 s/km, por
-  exemplo) ficam como `d1000` e `d500`, não como um `d1500`. Decidido pelo Angelo em 05/11: contam como dois esforços
+  exemplo) ficam como `d1000` e `d500`, não como um `d1500`. Decidido pelo Angelo em 04/11: contam como dois esforços
   separados (a regra de junção segue como está).
 - A tabela `bloco_atividade` (ADR 0008, item 9) é da Duda e da #166; esta função não toca o banco.
