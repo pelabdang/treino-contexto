@@ -2,7 +2,7 @@
 tipo: guia
 status: em-uso
 dono: nina
-atualizado: 2026-10-31
+atualizado: 2026-11-04
 links: [[produto/roadmap]], [[modulos/ingestao-garmin]], [[modulos/worker]], [[modulos/api]], [[modulos/grafico-tiros]], [[metricas/tiros-1km]], [[decisoes/0002-segmento-intensidade-e-versao]], [[decisoes/0003-fuso-da-atividade]], [[modulos/banco]]
 ---
 # Meta 1: como reproduzir
@@ -64,18 +64,19 @@ Meta e critério de pronto em [[produto/roadmap]].
 ## Valores esperados
 Calculados à mão a partir da tabela das fixtures; conta completa em [[metricas/tiros-1km]].
 
-| Sessão (`activityId`) | Data | Tiros | Pace médio | FC média |
-|---|---|---|---|---|
-| 1000000001 (6 x 1 km) | 2025-03-04 | 6 | 250,8 s/km (`4:11`) | 170,3 bpm |
-| 1000000002 (5 x 1 km) | 2025-03-11 | 5 | 237,0 s/km (`3:57`) | 171,8 bpm |
+| Sessão (`activityId`) | Data | Tiros | Pace médio | FC média | Melhor tiro | FC do melhor tiro |
+|---|---|---|---|---|---|---|
+| 1000000001 (6 x 1 km) | 2025-03-04 | 6 | 250,8 s/km (`4:11`) | 170,3 bpm | 248,0 s/km (`4:08`) | 175,0 bpm |
+| 1000000002 (5 x 1 km) | 2025-03-11 | 5 | 237,0 s/km (`3:57`) | 171,8 bpm | 234,0 s/km (`3:54`) | 177,0 bpm |
 
-- O CSV tem as colunas `data, atividade_id, n_tiros, pace_medio_s_km, pace_medio_min_km, fc_media`
-  e **duas linhas**, com esses valores. O `atividade_id` é o id do banco, que depende da ordem da
+- O CSV tem as colunas `data, atividade_id, n_tiros, pace_medio_s_km, pace_medio_min_km, fc_media` (média) e, ao
+  final, `pace_melhor_s_km, pace_melhor_min_km, fc_melhor_tiro, ordem_melhor_tiro` (melhor tiro, #153), e
+  **duas linhas**, com esses valores. O `atividade_id` é o id do banco, que depende da ordem da
   importação; não compare esse número com o `activityId` do Garmin.
 - Ficam **fora** da série: a rodagem leve de 8 km (`1000000003`), a natação (`1000000004`) e a esteira
   sem FIT (`1000000005`).
-- O PNG tem dois painéis com o mesmo eixo X (`dd/mm/aa`): pace em cima, com o eixo invertido
-  (mais rápido para cima), e FC embaixo. O exemplo está em [[modulos/grafico-tiros]].
+- O PNG tem dois painéis com o mesmo eixo X (`dd/mm/aa`): pace do melhor tiro em cima (linha cheia; a média vai
+  tracejada), com o eixo invertido (mais rápido para cima), e FC do melhor tiro embaixo. O exemplo está em [[modulos/grafico-tiros]].
 - `periodo` do JSON é `null` sem filtro. Filtro: `?inicio=AAAA-MM-DD&fim=AAAA-MM-DD`, datas locais
   ([[decisoes/0003-fuso-da-atividade]]).
 

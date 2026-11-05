@@ -164,5 +164,5 @@ mesmas regras de antes.
 ### Consequências
 - Mudança aditiva no JSON; o cliente TypeScript é regerado (`SessaoOut` ganha os quatro campos). O app (#154) passa a
   ler os novos campos como principais.
-- `PontoSessao` mantém os defaults `None` do melhor tiro: os testes do gráfico (PNG/CSV, que seguem na média) montam
-  o ponto à mão.
+- `PontoSessao` mantém os defaults `None` do melhor tiro: ponto montado à mão, sem os campos, só aparece na média do PNG
+  e tem as colunas do melhor tiro vazias no CSV ([[modulos/grafico-tiros]], #153).
