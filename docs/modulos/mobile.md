@@ -28,8 +28,9 @@ O app não calcula pace: todo `m:ss` virá da [[modulos/api]].
 - carregando: "Carregando seus tiros...";
 - vazio (`sessoes: []`): "Ainda não há treinos de tiros de 1 km.";
 - erro `404`: "Atleta não encontrado"; `422` ou outro status: "Não foi possível carregar os tiros. Tente de novo mais tarde."; rede: "Não foi possível falar com o servidor" com o botão "Tentar de novo";
-- sucesso: `GraficoTiros`, lista das sessões (data, `pace_medio`, `fc_media` ou "sem FC", `n_tiros`) e rodapé "cálculo: <versao_calculo>" como texto, mais "cálculo em atualização" quando `reclassificacao_pendente` é `true`. O app nunca compara a versão com um valor fixo.
-Testes em `__tests__/index.test.tsx` com `fetch` falso (todos os estados, "9:99" e rótulo de eixo trocados, versão `tiros_1km@9`, aviso de reclassificação). O componente aceita `fetchFn` só para teste.
+- sucesso, nesta ordem (#154): cartão "Último treino · dd/mm/aa" (a última sessão da lista, que a API manda em data crescente) com o **melhor tiro** em `fonte.numero-destaque` (`pace_melhor` + "min/km"), "FC do melhor tiro" (`fc_melhor_tiro` ou "sem FC") e, em secundário, "Média dos tiros" (`pace_medio`) e `n_tiros`; cartão "Evolução" com o `GraficoTiros`; cartão "Treinos" com a lista, **mais recente no alto**, uma linha por sessão (data, `pace_melhor`, `fc_melhor_tiro` ou "sem FC") e abaixo "média `pace_medio` · `n_tiros` tiros"; e o rodapé "cálculo: <versao_calculo>" como texto, mais "cálculo em atualização" quando `reclassificacao_pendente` é `true`. O app nunca compara a versão com um valor fixo.
+- Margem da tela: 16 no celular e 24 a partir de 600 de largura (`useMargemTela` / `margemDaTela` em `src/tema/`, #197).
+Testes em `__tests__/index.test.tsx` com `fetch` falso (todos os estados, cartão do último treino, ordem da lista, "9:99" em `pace_melhor` e rótulo de eixo trocados (prova que o app não recalcula), margem 16/24, versão `tiros_1km@9`, aviso de reclassificação). O componente aceita `fetchFn` só para teste.
 
 Rodar com dado sintético: passo a passo em [[produto/meta-2-como-rodar]] (API com fixtures, `CORS_ORIGENS` com `http://localhost:8081` e `npx expo start --web --port 8081`). O `expo start` reescreve `apps/mobile/tsconfig.json`: não commitar.
 
@@ -43,13 +44,15 @@ Regras do arquivo (só `.fit`, 10 MB, FIT sintético ou do atleta) são da API (
 Verificado na web (#96) com API e Postgres locais, FIT sintético `upload_intervalado_5x1km.fit`: o `POST` devolveu `201` e a tela passou de 2 para 3 sessões (01/04/2025). Como forçar cada estado na tela: [[produto/meta-3-como-rodar]]. O HTML da web declara `lang="pt-BR"` em `src/app/+html.tsx` (#119). Para o `+html.tsx` valer no export, o `app.json` tem `web.output: "static"`: `npx expo export --platform web` gera `index.html` com `lang="pt-BR"` e a tela pré-renderizada no estado "Carregando". Teste: `__tests__/html.test.tsx`. Assim o Chrome não oferece tradução e não é mais preciso desligá-la (antes o tradutor mexia nas mensagens, aparecia só "Atividade").
 
 ## Componente GraficoTiros
-`src/componentes/GraficoTiros.tsx` recebe `dados: EvolucaoTiros1km` (tipo de `@treino/api-client`) e desenha dois painéis com o mesmo eixo X (data `dd/mm/aa`, posição proporcional ao tempo): "Pace médio dos tiros (min/km)" em cima e "FC média dos tiros (bpm)" embaixo, um ponto por sessão. Usa `react-native-svg` (gratuito, incluído no Expo Go) para linhas e pontos; rótulos são `Text` nativo.
+`src/componentes/GraficoTiros.tsx` recebe `dados: EvolucaoTiros1km` (tipo de `@treino/api-client`) e desenha dois painéis com o mesmo eixo X (data `dd/mm/aa`, posição proporcional ao tempo): "Melhor pace (min/km)" (com "mais rápido ↑") em cima e "FC do melhor tiro (bpm)" embaixo, um ponto por sessão. O valor principal é o do melhor tiro (`pace_melhor_s_km` e `fc_melhor_tiro`, contrato do Adendo 1 da [[decisoes/0004-contrato-tela-evolucao]]); a média não entra no gráfico, porque os `eixos` são calculados pelo melhor tiro. Usa `react-native-svg` (gratuito, incluído no Expo Go) para linhas e pontos; rótulos são `Text` nativo.
 - Faixa, marcas e rótulos vêm só de `eixos` da API. O app só converte valor em posição na tela; não formata pace nem escolhe escala (ver [[decisoes/0004-contrato-tela-evolucao]]).
 - Pace invertido (`eixos.pace.invertido`): pace menor fica no alto.
 - A única formatação no app é a data (dd/mm/aa); pace, FC e rótulos vêm prontos da API.
-- Sessão sem `fc_media`: sem ponto no painel de FC, com ponto no de pace.
-- O toque fica num `Pressable` transparente (32 px) por cima de cada ponto, com o `testID` `toque-<painel>-<atividade_id>`; o `Circle` do SVG não leva `onPress`. Com `onPress` no `Circle`, o `react-native-svg` repassava props de responder (`onResponderTerminate` e outras) ao DOM na web e o React avisava "Unknown event handler property" no modo dev.
-- Tocar num ponto mostra data, `pace_medio` e `fc_media` como vieram da API; sem FC na sessão, mostra "FC média: sem FC".
+- Sessão com `fc_melhor_tiro` nulo: sem ponto no painel de FC, com ponto no de pace.
+- Ponto selecionado: raio 7 com anel de 2 em `cor.texto`, e a data dele no eixo fica em negrito (#197).
+- O toque fica num `Pressable` transparente (44 de altura) por cima de cada ponto, com o `testID` `toque-<painel>-<atividade_id>`; o `Circle` do SVG não leva `onPress`. Com `onPress` no `Circle`, o `react-native-svg` repassava props de responder (`onResponderTerminate` e outras) ao DOM na web e o React avisava "Unknown event handler property" no modo dev.
+- A largura do alvo é 44, cortada no meio do caminho até o ponto vizinho (`faixasDeToque`), para dois alvos nunca se sobreporem quando as datas estão próximas; a largura nunca fica abaixo de 24 (centrada no ponto): com datas coladas ou iguais os alvos se sobrepõem e vale a sessão mais recente, por cima (`zIndex`). `accessibilityLabel`: "Sessão de 18/03/25, melhor tiro 4:05 min/km" (pace) e "..., FC do melhor tiro 176 bpm" (FC).
+- Tocar num ponto mostra o detalhe: data e `n_tiros`, "Melhor tiro", "FC do melhor tiro", "Média dos tiros" e "FC média", todos como vieram da API; sem FC, "sem FC".
 - Mensagens de "sem dados":
   - "Sem sessões de tiros no período." (`eixos` null ou nenhuma sessão);
   - "Sem pace para mostrar." (`eixos.pace` null);
@@ -60,11 +63,11 @@ Verificado na web (#96) com API e Postgres locais, FIT sintético `upload_interv
 `src/tema/` transforma [[design/tokens]] (fonte única) em código, com os mesmos nomes do guia ([[design/guia-visual]]):
 - `tokens.ts`: `cores.claro` e `cores.escuro` (chaves como na tabela, sem o prefixo `cor.`: `cor["superficie-2"]`, `cor["grafico.pace"]`), `espaco`, `raio`, `borda`, `tamanho`, `movimento`, `familia` e `fonte` (Inter, com `tabular-nums` nos números).
 - `index.tsx`: `useTema()` devolve `{ escuro, cor }` conforme o tema do sistema (`useColorScheme`; claro quando o sistema não informa). O objeto é estável, então serve de dependência de `useMemo`.
-- `fontes.ts`: `useFontesInter()` carrega a Inter (`@expo-google-fonts/inter`, OFL); o `_layout.tsx` espera as fontes e, se falharem, segue com a fonte do sistema. Fica separado do resto para os testes dos componentes não carregarem `expo-font`.
+- `fontes.ts`: `useFontesInter()` carrega a Inter (`@expo-google-fonts/inter`, OFL); o `_layout.tsx` espera as fontes mostrando uma `View` com `cor.fundo` (sem piscar em branco) e, se falharem, segue com a fonte do sistema. Fica separado do resto para os testes dos componentes não carregarem `expo-font`.
 - Os componentes montam o `StyleSheet` com `criarEstilos(tema)` dentro de `useMemo`. Cor, fonte, espaço e raio das telas só vêm de tokens: sem cor literal nas telas.
 - `@expo/vector-icons` (Material Icons) já está instalado, mas ainda sem uso: nenhum ícone entra nas telas atuais para não mudar o layout.
 - Teste `__tests__/tema.test.tsx` lê a tabela "Cores" de `docs/design/tokens.md` e exige que o tema tenha os mesmos nomes e valores (claro e escuro), mais conferências de espaço, raio e tipografia e do `useTema`. Mudou uma cor no guia? Atualize `tokens.ts` na mesma hora, senão o teste falha.
-- Diferenças visuais pequenas em relação às telas antigas, vindas do guia: botão com 48 de altura e cor `destaque`, desligado em `superficie-2` (antes opacidade 0,5), alvo de toque do ponto do gráfico em 44 (antes 32), rótulos de eixo em 12 (antes 11) e conteúdo limitado a 720 de largura na web. O destaque do melhor tiro fica para a #154.
+- Diferenças visuais pequenas em relação às telas antigas, vindas do guia: botão com 48 de altura e cor `destaque`, desligado em `superficie-2` (antes opacidade 0,5), alvo de toque do ponto do gráfico em 44 (antes 32), rótulos de eixo em 12 (antes 11) e conteúdo limitado a 720 de largura na web. O destaque do melhor tiro é da #154 (acima).
 
 ## Arquivos principais
 - `apps/mobile/src/componentes/TelaEvolucao.tsx`
@@ -72,6 +75,7 @@ Verificado na web (#96) com API e Postgres locais, FIT sintético `upload_interv
 - `apps/mobile/src/componentes/GraficoTiros.tsx` e `apps/mobile/__tests__/GraficoTiros.test.tsx` (usa o exemplo de `packages/api-client/exemplos/`)
 - `apps/mobile/src/app/` (rotas do Expo Router; código que não é rota fica fora)
 - `apps/mobile/src/tema/` (tokens, `useTema`, fontes) e `apps/mobile/__tests__/tema.test.tsx`
+- `apps/mobile/__tests__/layout.test.tsx` (fundo do tema enquanto a fonte carrega)
 - `apps/mobile/src/config.ts` (`lerConfig` e `config`)
 - `apps/mobile/__tests__/index.test.tsx`, `BotaoEnviarFit.test.tsx`, `config.test.ts` e `api-client.test.ts` (cliente com `fetch` falso)
 - `apps/mobile/package.json` (Jest via `jest-expo`, Testing Library), `app.json`, `eslint.config.js`, `.env.example`

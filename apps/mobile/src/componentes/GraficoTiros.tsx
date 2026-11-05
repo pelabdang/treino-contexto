@@ -3,7 +3,7 @@ import { useMemo, useState } from "react";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 import Svg, { Circle, G, Line, Polyline } from "react-native-svg";
 
-import { borda, espaco, fonte, raio, tamanho, useTema, type Tema } from "../tema";
+import { borda, espaco, familia, fonte, raio, tamanho, useTema, type Tema } from "../tema";
 
 // Desenha os dois painéis (pace e FC). Faixa, marcas e rótulos vêm do bloco
 // `eixos` da API: aqui só se converte valor em posição na tela. O app não
@@ -49,9 +49,35 @@ function posicoesX(sessoes: SessaoTiros[], largura: number): number[] {
 
 type Ponto = { sessao: SessaoTiros; x: number; y: number };
 
+/**
+ * Faixa horizontal do alvo de toque de cada ponto: 44 de largura, cortada no meio
+ * do caminho até o vizinho para os alvos não se sobreporem. Nunca fica abaixo de
+ * `ALVO_MIN_LARGURA` (24), centrada no ponto: se as datas são coladas ou iguais, os
+ * alvos se sobrepõem e vale o da sessão mais recente (renderizado depois, por cima).
+ * A altura segue sempre 44.
+ */
+const ALVO_MIN_LARGURA = 24;
+export function faixasDeToque(xs: number[], alvo: number = ALVO_TOQUE): { esq: number; largura: number }[] {
+  const ordem = xs.map((x, i) => ({ x, i })).sort((a, b) => a.x - b.x);
+  const faixas = new Array<{ esq: number; largura: number }>(xs.length);
+  ordem.forEach(({ x, i }, k) => {
+    const ant = ordem[k - 1];
+    const prox = ordem[k + 1];
+    const esq = ant ? Math.max(x - alvo / 2, (ant.x + x) / 2) : x - alvo / 2;
+    const dir = prox ? Math.min(x + alvo / 2, (x + prox.x) / 2) : x + alvo / 2;
+    faixas[i] =
+      dir - esq >= ALVO_MIN_LARGURA
+        ? { esq, largura: dir - esq }
+        : { esq: x - ALVO_MIN_LARGURA / 2, largura: ALVO_MIN_LARGURA };
+  });
+  return faixas;
+}
+
 function Painel(props: {
   nome: string;
   titulo: string;
+  dica?: string;
+  rotuloPonto: (s: SessaoTiros) => string;
   cor: string;
   largura: number;
   eixo: Eixo;
@@ -61,11 +87,15 @@ function Painel(props: {
   tema: Tema;
   styles: Estilos;
 }) {
-  const { nome, titulo, cor, largura, eixo, pontos, aoTocar, selecionada, tema, styles } = props;
+  const { nome, titulo, dica, rotuloPonto, cor, largura, eixo, pontos, aoTocar, selecionada, tema, styles } = props;
+  const faixas = faixasDeToque(pontos.map((p) => p.x));
   const linha = pontos.map((p) => `${p.x},${p.y}`).join(" ");
   return (
     <View testID={`painel-${nome}`} style={styles.painel}>
-      <Text style={styles.tituloPainel}>{titulo}</Text>
+      <View style={styles.cabecalhoPainel}>
+        <Text style={styles.tituloPainel}>{titulo}</Text>
+        {dica && <Text style={styles.dica}>{dica}</Text>}
+      </View>
       <Svg width={largura} height={ALTURA_PAINEL}>
         {eixo.marcas.map((m) => {
           const y = posicaoY(m.valor, eixo);
@@ -84,21 +114,24 @@ function Painel(props: {
             cy={p.y}
             r={p.sessao.atividade_id === selecionada ? tamanho.graficoPontoSelecionadoRaio : tamanho.graficoPontoRaio}
             fill={cor}
+            {...(p.sessao.atividade_id === selecionada
+              ? { stroke: tema.cor.texto, strokeWidth: borda.foco }
+              : {})}
           />
         ))}
       </Svg>
       {/* O toque fica num Pressable por cima: onPress no Circle faz o react-native-svg
           repassar props de responder ao DOM na web ("Unknown event handler property"). */}
-      {pontos.map((p) => (
+      {pontos.map((p, i) => (
         <Pressable
           key={`toque-${p.sessao.atividade_id}`}
           testID={`toque-${nome}-${p.sessao.atividade_id}`}
           accessibilityRole="button"
-          accessibilityLabel={`Sessão de ${dataCurta(p.sessao.data)}`}
+          accessibilityLabel={`Sessão de ${dataCurta(p.sessao.data)}, ${rotuloPonto(p.sessao)}`}
           onPress={() => aoTocar(p.sessao)}
           style={[
             styles.alvo,
-            { left: p.x - ALVO_TOQUE / 2, top: ALTURA_TITULO + p.y - ALVO_TOQUE / 2 },
+            { left: faixas[i].esq, width: faixas[i].largura, zIndex: i, top: ALTURA_TITULO + p.y - ALVO_TOQUE / 2 },
           ]}
         />
       ))}
@@ -140,11 +173,11 @@ export function GraficoTiros({ dados }: Props) {
   };
 
   const pontosPace: Ponto[] = eixoPace
-    ? sessoes.map((s, i) => ({ sessao: s, x: xs[i], y: posicaoY(s.pace_medio_s_km, eixoPace) }))
+    ? sessoes.map((s, i) => ({ sessao: s, x: xs[i], y: posicaoY(s.pace_melhor_s_km, eixoPace) }))
     : [];
   const pontosFc: Ponto[] = eixoFc
     ? sessoes.flatMap((s, i) =>
-        s.fc_media === null ? [] : [{ sessao: s, x: xs[i], y: posicaoY(s.fc_media, eixoFc) }],
+        s.fc_melhor_tiro === null ? [] : [{ sessao: s, x: xs[i], y: posicaoY(s.fc_melhor_tiro, eixoFc) }],
       )
     : [];
 
@@ -153,7 +186,9 @@ export function GraficoTiros({ dados }: Props) {
       {eixoPace ? (
         <Painel
           nome="pace"
-          titulo="Pace médio dos tiros (min/km)"
+          titulo="Melhor pace (min/km)"
+          dica="mais rápido ↑"
+          rotuloPonto={(s) => `melhor tiro ${s.pace_melhor} min/km`}
           cor={tema.cor["grafico.pace"]}
           largura={largura}
           eixo={eixoPace}
@@ -169,7 +204,8 @@ export function GraficoTiros({ dados }: Props) {
       {eixoFc ? (
         <Painel
           nome="fc"
-          titulo="FC média dos tiros (bpm)"
+          titulo="FC do melhor tiro (bpm)"
+          rotuloPonto={(s) => `FC do melhor tiro ${s.fc_melhor_tiro} bpm`}
           cor={tema.cor["grafico.fc"]}
           largura={largura}
           eixo={eixoFc}
@@ -181,21 +217,30 @@ export function GraficoTiros({ dados }: Props) {
         />
       ) : (
         <View testID="aviso-sem-fc">
-          <Text style={styles.tituloPainel}>FC média dos tiros (bpm)</Text>
+          <Text style={styles.tituloPainel}>FC do melhor tiro (bpm)</Text>
           <Text style={styles.aviso}>Nenhuma sessão deste período tem frequência cardíaca.</Text>
         </View>
       )}
       <View style={{ height: espaco[5] }}>
         {sessoes.map((s, i) => (
-          <Text key={s.atividade_id} style={[styles.data, { left: xs[i] - 30 }]}>
+          <Text
+            key={s.atividade_id}
+            style={[styles.data, { left: xs[i] - 30 }, s.atividade_id === selecionada?.atividade_id && styles.dataSelecionada]}
+          >
             {dataCurta(s.data)}
           </Text>
         ))}
       </View>
       {selecionada && (
         <View testID="detalhe-sessao" style={styles.detalhe}>
-          <Text style={styles.detalheTitulo}>{dataCurta(selecionada.data)}</Text>
-          <Text style={styles.texto}>Pace médio: {selecionada.pace_medio} min/km</Text>
+          <Text style={styles.detalheTitulo}>
+            {dataCurta(selecionada.data)} · {selecionada.n_tiros} tiros
+          </Text>
+          <Text style={styles.texto}>Melhor tiro: {selecionada.pace_melhor} min/km</Text>
+          <Text style={styles.texto}>
+            FC do melhor tiro: {selecionada.fc_melhor_tiro === null ? "sem FC" : `${selecionada.fc_melhor_tiro} bpm`}
+          </Text>
+          <Text style={styles.texto}>Média dos tiros: {selecionada.pace_medio} min/km</Text>
           <Text style={styles.texto}>FC média: {selecionada.fc_media === null ? "sem FC" : `${selecionada.fc_media} bpm`}</Text>
         </View>
       )}
@@ -208,8 +253,11 @@ type Estilos = ReturnType<typeof criarEstilos>;
 function criarEstilos({ cor }: Tema) {
   return StyleSheet.create({
     painel: { position: "relative" },
-    alvo: { position: "absolute", width: ALVO_TOQUE, height: ALVO_TOQUE, borderRadius: ALVO_TOQUE / 2 },
+    alvo: { position: "absolute", height: ALVO_TOQUE },
+    cabecalhoPainel: { flexDirection: "row", alignItems: "baseline", justifyContent: "space-between" },
+    dica: { ...fonte.legenda, color: cor["texto-2"] },
     rotulo: { ...fonte.eixo, position: "absolute", left: 0, width: MARGEM.esq - 6, textAlign: "right", color: cor["texto-2"] },
+    dataSelecionada: { fontFamily: familia.bold, color: cor.texto },
     data: { ...fonte.eixo, position: "absolute", top: espaco[1], width: 60, textAlign: "center", color: cor["texto-2"] },
     tituloPainel: { ...fonte.rotulo, height: ALTURA_TITULO, paddingTop: espaco[2], color: cor.texto },
     aviso: { ...fonte.rotulo, color: cor["texto-2"], paddingVertical: espaco[3] },

@@ -1,4 +1,5 @@
 import type { EvolucaoTiros1km } from "@treino/api-client";
+import { StyleSheet } from "react-native";
 import { fireEvent, render, screen, waitFor, within } from "@testing-library/react-native";
 
 import exemplo from "../../../packages/api-client/exemplos/evolucao-tiros-1km.json";
@@ -42,10 +43,10 @@ describe("tela de evolução", () => {
   it("sucesso: gráfico, lista das sessões e rodapé", async () => {
     await render(tela(fetchCom(200, base)));
     const lista = await screen.findByTestId("lista-sessoes");
-    expect(within(lista).getByText("4:11 min/km")).toBeTruthy();
-    expect(within(lista).getByText("170.3 bpm")).toBeTruthy();
-    expect(within(lista).getByText("6 tiros")).toBeTruthy();
-    expect(within(lista).getByText("3:57 min/km")).toBeTruthy();
+    expect(within(lista).getByText("4:08 min/km")).toBeTruthy();
+    expect(within(lista).getByText("175 bpm")).toBeTruthy();
+    expect(within(lista).getByText("média 4:11 · 6 tiros")).toBeTruthy();
+    expect(within(lista).getByText("3:54 min/km")).toBeTruthy();
     expect(screen.getByTestId("painel-pace")).toBeTruthy();
     expect(screen.getByText(`cálculo: ${base.versao_calculo}`)).toBeTruthy();
   });
@@ -82,14 +83,61 @@ describe("tela de evolução", () => {
     expect(screen.queryByText("Não foi possível falar com o servidor")).toBeNull();
   });
 
-  it("o app não reformata: pace_medio e rótulo de eixo trocados aparecem como vieram", async () => {
+  it("cartão do último treino: melhor tiro em destaque, FC do melhor tiro e média no secundário", async () => {
+    await render(tela(fetchCom(200, base)));
+    const cartao = await screen.findByTestId("cartao-ultimo-treino");
+    // a última sessão da lista (data crescente) é a de 11/03/25
+    expect(within(cartao).getByText("Último treino · 11/03/25")).toBeTruthy();
+    expect(within(cartao).getByText("Melhor tiro")).toBeTruthy();
+    expect(within(cartao).getByText(/3:54/)).toBeTruthy();
+    expect(within(cartao).getByText("FC do melhor tiro: 177 bpm")).toBeTruthy();
+    expect(within(cartao).getByText("Média dos tiros: 3:57 min/km · 5 tiros")).toBeTruthy();
+  });
+
+  it("lista: mais recente no alto", async () => {
+    await render(tela(fetchCom(200, base)));
+    const lista = await screen.findByTestId("lista-sessoes");
+    const datas = within(lista)
+      .getAllByText(/^\d\d\/\d\d\/\d\d$/)
+      .map((n) => n.props.children);
+    expect(datas).toEqual(["11/03/25", "04/03/25"]);
+  });
+
+  it("melhor tiro sem FC: 'sem FC' no cartão e na lista", async () => {
     const d = copia();
-    d.sessoes[0].pace_medio = "9:99";
+    d.sessoes[1].fc_melhor_tiro = null;
+    await render(tela(fetchCom(200, d)));
+    const cartao = await screen.findByTestId("cartao-ultimo-treino");
+    expect(within(cartao).getByText("FC do melhor tiro: sem FC")).toBeTruthy();
+    expect(within(screen.getByTestId("lista-sessoes")).getByText("sem FC")).toBeTruthy();
+  });
+
+  it("o app não recalcula: pace_melhor e rótulo de eixo trocados aparecem como vieram (9:99)", async () => {
+    const d = copia();
+    d.sessoes[1].pace_melhor = "9:99";
+    d.sessoes[1].pace_medio = "7:77";
     d.eixos!.pace!.marcas[0].rotulo = "8:88";
     await render(tela(fetchCom(200, d)));
     const lista = await screen.findByTestId("lista-sessoes");
     expect(within(lista).getByText("9:99 min/km")).toBeTruthy();
+    expect(within(lista).getByText("média 7:77 · 5 tiros")).toBeTruthy();
+    expect(within(screen.getByTestId("cartao-ultimo-treino")).getByText(/9:99/)).toBeTruthy();
     expect(screen.getByText("8:88")).toBeTruthy();
+  });
+
+  it("margem da tela: 16 no celular e 24 a partir de 600 de largura", async () => {
+    const spy = jest.spyOn(require("react-native"), "useWindowDimensions");
+    const pad = () => StyleSheet.flatten(screen.getByTestId("rolagem-tela").props.contentContainerStyle).padding;
+    spy.mockReturnValue({ width: 360, height: 800, scale: 2, fontScale: 1 });
+    const { unmount } = await render(tela(fetchCom(200, base)));
+    await screen.findByTestId("lista-sessoes");
+    expect(pad()).toBe(16);
+    await unmount();
+    spy.mockReturnValue({ width: 900, height: 800, scale: 2, fontScale: 1 });
+    await render(tela(fetchCom(200, base)));
+    await screen.findByTestId("lista-sessoes");
+    expect(pad()).toBe(24);
+    spy.mockRestore();
   });
 
   it("versão desconhecida aparece no rodapé sem quebrar", async () => {
