@@ -68,3 +68,13 @@ describe("useTema", () => {
     expect(screen.getByText("claro #F6F5F1")).toBeTruthy();
   });
 });
+
+describe("margem da tela", () => {
+  it("16 no celular, 24 a partir de 600", () => {
+    const { margemDaTela } = require("../src/tema");
+    expect(margemDaTela(320)).toBe(16);
+    expect(margemDaTela(599)).toBe(16);
+    expect(margemDaTela(600)).toBe(24);
+    expect(margemDaTela(1280)).toBe(24);
+  });
+});
