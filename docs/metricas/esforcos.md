@@ -10,8 +10,9 @@ links: [[decisoes/0008-deteccao-de-esforcos]], [[metricas/esforcos-oraculo]], [[
 ## O que mede
 Lê a sequência de voltas de uma atividade como **blocos** e dá a cada bloco uma categoria: `aquecimento`, `esforco`,
 `recuperacao`, `desaquecimento` ou `leve`. É o primeiro passo comum da detecção de esforços (corrida por distância,
-ciclismo por duração; [[decisoes/0008-deteccao-de-esforcos]]). Esta nota cobre a versão `esforcos@1`, da função de
-blocos. Faixas nomeadas (`d400`, `t4`...) e treino-chave contínuo vêm nas notas das issues seguintes. Cálculo
+ciclismo por duração; [[decisoes/0008-deteccao-de-esforcos]]). Esta nota cobre a versão `esforcos@1`: a função de
+blocos (#162) e as **faixas de distância dos esforços de corrida** (#163, seção abaixo). Faixas de ciclismo (`t4`...)
+e treino-chave contínuo vêm nas notas das issues seguintes (#164 e #165). Cálculo
 determinístico, em código, sem banco e sem IA. Só corrida e ciclismo; outra modalidade devolve zero blocos.
 
 ## Fórmula
@@ -46,6 +47,31 @@ sem artigo, aprovadas em 04/11.
 Exemplo: 1000 m em 240 s + 500 m em 120,5 s. Pace das voltas 240 e 241 s/km: diferença 0,42% < 5%, sem parada: um
 bloco de 1500 m em 360,5 s, pace = 360,5 / 1500 x 1000 = **240,3333 s/km**. Com ref 330, limiar 297: esforço.
 
+## Esforços de corrida por distância (#163)
+`esforcos_corrida(resultado_dos_blocos)` pega os blocos de categoria `esforco` de uma corrida e devolve, para cada um,
+a **faixa** pela distância do bloco inteiro (laps já juntados), com pace e FC do bloco. Faixas da ADR 0008, item 5
+(aprovadas pelo Angelo em 04/11): tolerância `max(5% do alvo, 30 m)` para cada lado, limites inclusivos.
+
+| faixa | aceita (m) | faixa | aceita (m) |
+|---|---|---|---|
+| `d200` | 170 a 230 | `d1000` | 950 a 1050 |
+| `d300` | 270 a 330 | `d1200` | 1140 a 1260 |
+| `d400` | 370 a 430 | `d1500` | 1425 a 1575 |
+| `d500` | 470 a 530 | `d2000` | 1900 a 2100 |
+| `d600` | 570 a 630 | `d3000` | 2850 a 3150 |
+| `d800` | 760 a 840 | `d5000` | 4750 a 5250 |
+
+Conta: `d800` = max(5% x 800 = 40, 30) = 40, logo 760 a 840; `d200` = max(10, 30) = 30, logo 170 a 230; `d1500` =
+max(75, 30) = 75, logo 1425 a 1575. As faixas não se sobrepõem (o menor vão é de 40 m, entre `d500` e `d600`).
+**Esforço entre faixas ou fora delas** (700 m, 1350 m, 8 km) continua sendo esforço, com `faixa = None` e a distância
+real. Não é arredondado para a faixa mais próxima.
+
+Exemplos à mão (sintéticos, referência 330 s/km, limiar 297 s/km):
+- 10 x 400 m em 88 s com 90 s parado: pace 88 / 400 x 1000 = 220 s/km, 10 esforços `d400`, recuperação 9 x 90 = 810 s.
+- 1000 m em 240 s + 500 m em 120,5 s, sem parada: junta (0,42%), 1500 m, pace 240,3333 s/km, faixa `d1500`.
+- 1350 m em 300 s (222,2 s/km): esforço sem faixa (entre 1260 e 1425).
+- 8 km contínuos a 270 s/km: esforço sem faixa (passa de 5250 m); o treino-chave é da #165.
+
 ## Dados de entrada
 Voltas do banco (`segmento`: `ordem`, `inicio_offset_s`, `duracao_s`, `distancia_m`, `fc_media`, `intensidade`) e
 `atividade.modalidade`. O FIT sem `start_time` no lap grava `inicio_offset_s = 0` e o tempo parado não é computável: a
@@ -57,7 +83,10 @@ conta dá 0 e a parada só aparece como volta de pausa (ADR 0008, "A confirmar",
 - Oráculo: [[metricas/esforcos-oraculo]] (sete atividades sintéticas, com a conta à mão).
 
 ## Código e teste
-- Código: `services/api/app/metricas/esforcos.py` (`montar_blocos`, `VERSAO = "esforcos@1"`).
+- Código: `services/api/app/metricas/esforcos.py` (`montar_blocos`, `esforcos_corrida`, `faixa_de_distancia`,
+  `FAIXAS_CORRIDA`, `VERSAO = "esforcos@1"`).
+- Teste das faixas: `services/api/tests/metricas/test_esforcos_corrida.py` (fórmula de cada faixa, limites de 760 e
+  840 m, entre faixas, 10 x 400 m, 1000 + 500 m, FC ponderada e as cinco corridas do oráculo).
 - Teste: `services/api/tests/metricas/test_esforcos_blocos.py` (valor esperado calculado à mão: 1000 m + 500 m viram
   1500 m; pausa de 90 s separa; limites de 14 s/15 s e de 5%; aquecimento e desaquecimento; rodagem leve; FC
   ponderada; mediana da atividade) e os blocos de cada FIT sintético contra `ESPERADO` de
@@ -72,7 +101,9 @@ conta dá 0 e a parada só aparece como volta de pausa (ADR 0008, "A confirmar",
   no modelo.
 - Sem teto de duração para o aquecimento e o desaquecimento (tudo antes do primeiro e depois do último esforço).
 - **Progressivo suave** e fartlek moderado juntam num bloco só ou viram um esforço contínuo; a distinção fica para o
-  treino-chave (#163).
+  treino-chave (#165).
 - Pausa só por pace, distância ou velocidade quando o relógio não grava `start_time`; uma parada curta (menos de
   15 s) dentro do esforço não separa os blocos.
+- **Faixa pela soma**: dois esforços vizinhos que a regra de 5% não junta (1000 m a 250 s/km e 500 m a 270 s/km, por
+  exemplo) ficam como `d1000` e `d500`, não como um `d1500`. Cabe à calibração futura, se o produto quiser outra leitura.
 - A tabela `bloco_atividade` (ADR 0008, item 9) é da Duda e da #166; esta função não toca o banco.
