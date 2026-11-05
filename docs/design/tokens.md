@@ -153,6 +153,7 @@ Base 4.
 |---|---|---|
 | `alvo.minimo` | 44 | altura e largura mínimas de tudo que se toca (inclui ponto do gráfico) |
 | `botao.altura` | 48 | botão primário e secundário |
+| `lista.linha-altura` | 56 | altura mínima da linha tocável de lista (acima do `alvo.minimo` de 44, para caber duas linhas de texto) |
 | `icone.pequeno` | 16 | ícone dentro de chip e legenda |
 | `icone.medio` | 20 | ícone de botão e de aviso |
 | `icone.grande` | 24 | ícone de cabeçalho |
