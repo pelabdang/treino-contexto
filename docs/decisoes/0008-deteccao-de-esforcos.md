@@ -142,7 +142,7 @@ bater com a faixa atual de 1 km (950 a 1050 m) e não deixar faixas se sobrepore
 `t1` (1 min, 45 a 75 s), `t2` (105 a 135 s), `t3` (165 a 195 s), `t4` (221 a 259 s), `t5` (276 a 324 s),
 `t8` (442 a 518 s), `t10` (552 a 648 s), `t12` (662 a 778 s), `t15` (828 a 972 s), `t20` (1104 a 1296 s),
 `t30` (1656 a 1944 s), `t40` (2208 a 2592 s), `t60` (3312 a 3888 s). Os limites usam a duração em segundos,
-arredondados para dentro da faixa.
+arredondados ao segundo mais próximo (só a `t12` muda: 662,4 a 777,6 vira 662 a 778; nas outras o resultado é o mesmo).
 
 Um esforço fora de qualquer faixa continua sendo esforço, com `faixa = NULL` e a distância (ou duração) real.
 
