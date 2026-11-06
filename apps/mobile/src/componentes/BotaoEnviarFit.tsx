@@ -3,13 +3,15 @@ import * as DocumentPicker from "expo-document-picker";
 import { useMemo, useState } from "react";
 import { ActivityIndicator, Pressable, StyleSheet, Text, View } from "react-native";
 
-import { espaco, fonte, raio, tamanho, useTema, type Tema } from "../tema";
+import { borda, espaco, fonte, raio, tamanho, useTema, type Tema } from "../tema";
 
 type Props = {
   apiUrl: string;
   atletaId: number;
   /** Chamado depois de um envio com sucesso (201 ou 200). */
   aoEnviar?: () => void;
+  /** "secundario" (padrão, guia visual) com dados na tela; "primario" no estado vazio. */
+  variante?: "primario" | "secundario";
   /** Troque nos testes. Padrão: o fetch global. */
   fetchFn?: typeof fetch;
 };
@@ -33,7 +35,7 @@ export function mensagemErroEnvio(erro: ErroApi): string {
   }
 }
 
-export function BotaoEnviarFit({ apiUrl, atletaId, aoEnviar, fetchFn }: Props) {
+export function BotaoEnviarFit({ apiUrl, atletaId, aoEnviar, fetchFn, variante = "secundario" }: Props) {
   const tema = useTema();
   const styles = useMemo(() => criarEstilos(tema), [tema]);
   const [estado, setEstado] = useState<Estado>({ tipo: "parado" });
@@ -71,11 +73,15 @@ export function BotaoEnviarFit({ apiUrl, atletaId, aoEnviar, fetchFn }: Props) {
         onPress={escolherEEnviar}
         style={({ pressed }) => [
           styles.botao,
-          pressed && { backgroundColor: tema.cor["destaque-pressionado"] },
+          variante === "secundario" && styles.botaoSecundario,
+          pressed &&
+            (variante === "primario"
+              ? { backgroundColor: tema.cor["destaque-pressionado"] }
+              : { backgroundColor: tema.cor["destaque-suave"] }),
           enviando && styles.desligado,
         ]}
       >
-        <Text style={[styles.botaoTexto, enviando && styles.botaoTextoDesligado]}>Enviar arquivo FIT</Text>
+        <Text style={[styles.botaoTexto, variante === "secundario" && styles.botaoTextoSecundario, enviando && styles.botaoTextoDesligado]}>Enviar arquivo FIT</Text>
       </Pressable>
       {enviando && (
         <View style={styles.linha}>
@@ -100,7 +106,9 @@ function criarEstilos({ cor }: Tema) {
       borderRadius: raio.medio,
       backgroundColor: cor.destaque,
     },
-    desligado: { backgroundColor: cor["superficie-2"] },
+    botaoSecundario: { backgroundColor: cor.superficie, borderWidth: borda.fina, borderColor: cor["borda-forte"] },
+    botaoTextoSecundario: { color: cor.destaque },
+    desligado: { backgroundColor: cor["superficie-2"], borderWidth: 0 },
     botaoTexto: { ...fonte.botao, color: cor["sobre-destaque"] },
     botaoTextoDesligado: { color: cor["texto-desligado"] },
     linha: { flexDirection: "row", alignItems: "center", gap: espaco[2] },
