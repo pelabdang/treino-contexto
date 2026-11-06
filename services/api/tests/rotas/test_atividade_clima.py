@@ -53,7 +53,8 @@ def test_clima_ok_com_os_quatro_valores(client, session, atleta):
     assert r.status_code == 200
     j = r.json()
     assert j["atividade_id"] == a.id and j["modalidade"] == "corrida" and j["distancia_m"] == 5000.0
-    assert j["clima"] == {"estado": "ok", "temperatura_c": 24.3, "sensacao_c": 25.1, "umidade_pct": 61, "vento_kmh": 8.2}
+    assert j["clima"] == {"estado": "ok", "temperatura_c": 24.3, "sensacao_c": 25.1, "umidade_pct": 61, "vento_kmh": 8.2,
+                    "atribuicao": "Weather data by Open-Meteo.com"}
 
 
 def test_clima_indoor(client, session, atleta):
@@ -128,3 +129,82 @@ def test_openapi_tem_clima_opcional_e_sem_posicao(client):
     assert clima["required"] == ["estado"]
     op = doc["paths"]["/atletas/{atleta_id}/atividades/{atividade_id}"]["get"]
     assert op["operationId"] == "buscarAtividade" and "404" in op["responses"]
+
+
+# --- Campos prontos para a tela (#158, ADR 0004 adendo 2). Contas feitas a mao. ---
+
+
+def _ativ(session, atleta, n, **kw):
+    base = dict(
+        atleta_id=atleta.id, fonte="teste", fonte_id=f"p{n}", modalidade="corrida", subtipo=None,
+        inicio=datetime(2025, 3, 5, 1, 30, tzinfo=timezone.utc), duracao_s=1800.0, distancia_m=5000.0,
+        inicio_lat=LAT, inicio_lon=LON,
+    )
+    base.update(kw)
+    a = Atividade(**base)
+    session.add(a)
+    session.commit()
+    return a
+
+
+def test_data_e_hora_locais_pelo_fuso_da_atividade(client, session, atleta):
+    # 01:30 UTC com fuso -180 min = 22:30 do dia anterior
+    a = _ativ(session, atleta, 1, fuso_min=-180)
+    j = client.get(URL.format(atleta.id, a.id)).json()
+    assert (j["data_local"], j["hora_local"]) == ("2025-03-04", "22:30")
+    assert j["inicio"].startswith("2025-03-05T01:30")  # UTC continua na resposta
+
+
+def test_data_e_hora_locais_sem_fuso_usam_sao_paulo(client, session, atleta):
+    a = _ativ(session, atleta, 2, fuso_min=None)
+    j = client.get(URL.format(atleta.id, a.id)).json()
+    assert (j["data_local"], j["hora_local"]) == ("2025-03-04", "22:30")
+
+
+def test_duracao_h_mm_ss_e_pace_m_ss(client, session, atleta):
+    # 3725 s = 1:02:05; 3725 s / 10,5 km = 354,76 s/km -> 5:55
+    a = _ativ(session, atleta, 3, duracao_s=3725.0, distancia_m=10500.0)
+    j = client.get(URL.format(atleta.id, a.id)).json()
+    assert j["duracao"] == "1:02:05" and j["pace_medio"] == "5:55"
+
+
+def test_duracao_curta_e_arredondamento(client, session, atleta):
+    a = _ativ(session, atleta, 4, duracao_s=59.5, distancia_m=200.0)  # 1:00 ; 297,5 s/km -> 4:58
+    j = client.get(URL.format(atleta.id, a.id)).json()
+    assert j["duracao"] == "0:01:00" and j["pace_medio"] == "4:58"
+
+
+@pytest.mark.parametrize("modalidade,dist", [("natacao", 1000.0), ("ciclismo", 30000.0), ("corrida", None), ("corrida", 0.0)])
+def test_pace_ausente_quando_nao_faz_sentido(client, session, atleta, modalidade, dist):
+    a = _ativ(session, atleta, 5, modalidade=modalidade, distancia_m=dist)
+    j = client.get(URL.format(atleta.id, a.id)).json()
+    assert j["pace_medio"] is None
+
+
+def test_atribuicao_so_com_clima_ok(client, session, atleta):
+    a = _ativ(session, atleta, 6)
+    _linha(session, a, "ok", temperatura_c=20.0, sensacao_c=20.0, umidade_pct=50, vento_kmh=5.0, fonte=FONTE_CLIMA)
+    assert client.get(URL.format(atleta.id, a.id)).json()["clima"]["atribuicao"] == "Weather data by Open-Meteo.com"
+
+
+def test_indoor_e_sem_posicao_nao_trazem_atribuicao(client, session, atleta):
+    indoor = _ativ(session, atleta, 7, subtipo="esteira", inicio_lat=None, inicio_lon=None)
+    sem = _ativ(session, atleta, 8, inicio_lat=None, inicio_lon=None)
+    for a in (indoor, sem):
+        j = client.get(URL.format(atleta.id, a.id)).json()
+        assert "atribuicao" not in j["clima"] and "Open-Meteo" not in json.dumps(j)
+
+
+def test_pendente_e_falha_nao_trazem_atribuicao(client, session, atleta):
+    p = _ativ(session, atleta, 9)
+    f = _ativ(session, atleta, 10)
+    _linha(session, f, "falha", erro="x")
+    for a in (p, f):
+        assert "atribuicao" not in client.get(URL.format(atleta.id, a.id)).json()["clima"]
+
+
+def test_openapi_campos_prontos_obrigatorios_e_pace_opcional(client):
+    ativ = client.get("/openapi.json").json()["components"]["schemas"]["AtividadeOut"]
+    for c in ("data_local", "hora_local", "duracao"):
+        assert c in ativ["required"]
+    assert "pace_medio" not in ativ["required"]

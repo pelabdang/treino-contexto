@@ -2,7 +2,7 @@
 tipo: modulo
 status: em-uso
 dono: theo
-atualizado: 2026-11-03
+atualizado: 2026-11-06
 links: [[decisoes/0001-modelo-de-dados-minimo]], [[decisoes/0003-fuso-da-atividade]], [[decisoes/0004-contrato-tela-evolucao]], [[metricas/tiros-1km]], [[modulos/grafico-tiros]], [[modulos/banco]], [[modulos/worker]], [[modulos/infra]], [[modulos/api-client]], [[decisoes/0006-upload-de-fit]], [[produto/meta-2-como-rodar]], [[decisoes/0007-clima-da-atividade]], [[modulos/clima]], [[produto/meta-4-como-rodar]]
 ---
 # Módulo: api
@@ -133,6 +133,8 @@ Item 5 da [[decisoes/0007-clima-da-atividade]]. Devolve a atividade (`atividade_
 {"estado": "ok", "temperatura_c": 24.3, "sensacao_c": 25.1, "umidade_pct": 61, "vento_kmh": 8.2}
 {"estado": "indoor"}
 ```
+- **Campos prontos para a tela (#158, [[decisoes/0004-contrato-tela-evolucao]], adendo 2):** a regra "a API formata, o app mostra" vale aqui também.
+  `data_local` (`AAAA-MM-DD`) e `hora_local` (`HH:MM`): início no fuso da atividade (`fuso_min`; sem ele, `America/Sao_Paulo`, [[decisoes/0003-fuso-da-atividade]]), por `inicio_local` em `app/servicos/fuso.py`. `duracao` em `h:mm:ss` (horas sem limite; segundos arredondados com meio para cima). `pace_medio` em `m:ss` (`formatar_pace` sobre duração / km, sem arredondar antes): só para `corrida` com distância e duração maiores que zero, senão `null`. `clima.atribuicao` = "Weather data by Open-Meteo.com" só quando `estado` é `ok` (ADR 0007, item 4); nos outros estados a chave nem vem. `inicio` em UTC e os campos numéricos continuam. A `carga` (#142) e os `esforcos` (#167) entram na mesma resposta quando saírem.
 - `estado` é `ok`, `indoor`, `sem_posicao`, `pendente` ou `falha`. Os quatro valores só aparecem em `ok`; nos outros estados
   a chave nem vem. O texto do erro da consulta (`erro` da tabela) nunca sai.
 - `clima` é campo opcional no schema. A posição de início (`inicio_lat/lon`) nunca está na resposta nem no OpenAPI.
@@ -141,7 +143,7 @@ Item 5 da [[decisoes/0007-clima-da-atividade]]. Devolve a atividade (`atividade_
 - Por que aqui: é o lugar mais simples para "o clima de cada atividade". O contrato da evolução de tiros
   ([[decisoes/0004-contrato-tela-evolucao]]) não mudou, então o app e o exemplo de contrato continuam iguais.
   Se a tela precisar do clima por sessão, basta acrescentar um `clima` opcional em `SessaoOut`.
-- Testes: `services/api/tests/rotas/test_atividade_clima.py` (um por estado, os `404`, a posição fora da resposta e o OpenAPI).
+- Testes: `services/api/tests/rotas/test_atividade_clima.py` (um por estado, os `404`, a posição fora da resposta, os campos prontos e o OpenAPI).
 
 ## Rodar localmente com as fixtures
 Passo a passo de ponta a ponta (Postgres, migrações, fixtures, API com `CORS_ORIGENS` e app web) em [[produto/meta-2-como-rodar]]; o do upload de FIT, com como forçar cada status, em [[produto/meta-3-como-rodar]]; o do clima (`GET` da atividade em cada estado), em [[produto/meta-4-como-rodar]]. Resumo: a API demora alguns segundos para subir; `docker compose` sem `-p` reusa o volume `treino-contexto_pgdata`.

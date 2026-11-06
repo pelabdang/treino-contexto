@@ -18,6 +18,10 @@
               }
             ]
           },
+          "data_local": {
+            "title": "Data Local",
+            "type": "string"
+          },
           "distancia_m": {
             "anyOf": [
               {
@@ -28,6 +32,10 @@
               }
             ],
             "title": "Distancia M"
+          },
+          "duracao": {
+            "title": "Duracao",
+            "type": "string"
           },
           "duracao_s": {
             "title": "Duracao S",
@@ -44,6 +52,10 @@
             ],
             "title": "Fc Media"
           },
+          "hora_local": {
+            "title": "Hora Local",
+            "type": "string"
+          },
           "inicio": {
             "format": "date-time",
             "title": "Inicio",
@@ -52,6 +64,17 @@
           "modalidade": {
             "title": "Modalidade",
             "type": "string"
+          },
+          "pace_medio": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Pace Medio"
           },
           "subtipo": {
             "anyOf": [
@@ -72,7 +95,10 @@
           "inicio",
           "duracao_s",
           "distancia_m",
-          "fc_media"
+          "fc_media",
+          "data_local",
+          "hora_local",
+          "duracao"
         ],
         "title": "AtividadeOut",
         "type": "object"
@@ -95,6 +121,17 @@
       "ClimaOut": {
         "description": "Clima da atividade (ADR 0007, item 5). Os quatro valores so existem em `ok`; nos outros estados nem aparecem.",
         "properties": {
+          "atribuicao": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Atribuicao"
+          },
           "estado": {
             "enum": [
               "ok",

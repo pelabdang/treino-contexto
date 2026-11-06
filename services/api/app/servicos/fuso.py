@@ -19,3 +19,12 @@ def data_local(inicio: datetime, fuso_min: int | None) -> date:
     if fuso_min is not None:
         return (inicio.astimezone(timezone.utc) + timedelta(minutes=fuso_min)).date()
     return inicio.astimezone(FUSO_PADRAO).date()
+
+
+def inicio_local(inicio: datetime, fuso_min: int | None) -> datetime:
+    """Data e hora do início no horário local do atleta, sem fuso (mesma regra de `data_local`)."""
+    if inicio.tzinfo is None:
+        inicio = inicio.replace(tzinfo=timezone.utc)
+    if fuso_min is not None:
+        return (inicio.astimezone(timezone.utc) + timedelta(minutes=fuso_min)).replace(tzinfo=None)
+    return inicio.astimezone(FUSO_PADRAO).replace(tzinfo=None)

@@ -18,6 +18,8 @@ from app.ingestao.importacao import (
 )
 from app.rotas.evolucao import Erro
 from fastapi import APIRouter, Depends, File, HTTPException, Response, UploadFile
+from app.metricas.tiros_1km import formatar_pace
+from app.servicos.fuso import inicio_local
 from app.servicos.clima import ClimaDaAtividade, EstadoClima, clima_da_atividade
 from pydantic import BaseModel, Field
 from sqlalchemy.orm import Session
@@ -41,6 +43,7 @@ class ClimaOut(BaseModel):
     sensacao_c: float | None = Field(None, exclude_if=lambda v: v is None)
     umidade_pct: float | None = Field(None, exclude_if=lambda v: v is None)
     vento_kmh: float | None = Field(None, exclude_if=lambda v: v is None)
+    atribuicao: str | None = Field(None, exclude_if=lambda v: v is None)  # so em `ok` (ADR 0007, item 4)
 
 
 class AtividadeOut(BaseModel):
@@ -54,6 +57,28 @@ class AtividadeOut(BaseModel):
     distancia_m: float | None
     fc_media: float | None
     clima: ClimaOut | None = None  # campo novo e opcional
+    # Campos prontos para a tela (#158): a API formata, o app mostra (ADR 0004, adendo 2).
+    data_local: str  # AAAA-MM-DD, pelo fuso da atividade (ADR 0003)
+    hora_local: str  # HH:MM, pelo fuso da atividade
+    duracao: str  # h:mm:ss (horas sem limite, segundos arredondados com meio para cima)
+    pace_medio: str | None = None  # m:ss por km; so corrida com distancia (formatar_pace)
+
+
+ATRIBUICAO_CLIMA = "Weather data by Open-Meteo.com"
+MODALIDADES_COM_PACE = ("corrida",)
+
+
+def _duracao_hms(duracao_s: float) -> str:
+    total = int(duracao_s + 0.5)
+    h, resto = divmod(total, 3600)
+    m, s = divmod(resto, 60)
+    return f"{h}:{m:02d}:{s:02d}"
+
+
+def _pace_medio(a: Atividade) -> str | None:
+    if a.modalidade not in MODALIDADES_COM_PACE or not a.distancia_m or a.distancia_m <= 0 or a.duracao_s <= 0:
+        return None
+    return formatar_pace(a.duracao_s / (a.distancia_m / 1000))
 
 
 def _clima_out(c: ClimaDaAtividade) -> ClimaOut:
@@ -63,6 +88,7 @@ def _clima_out(c: ClimaDaAtividade) -> ClimaOut:
         sensacao_c=c.sensacao_c,
         umidade_pct=c.umidade_pct,
         vento_kmh=c.vento_kmh,
+        atribuicao=ATRIBUICAO_CLIMA if c.estado == "ok" else None,
     )
 
 
@@ -144,6 +170,7 @@ def buscar_atividade(
     if a is None or a.atleta_id != atleta_id:
         raise HTTPException(status_code=404, detail="atividade não encontrada")
     clima = clima_da_atividade(session, atividade_id)
+    local = inicio_local(a.inicio, a.fuso_min)
     return AtividadeOut(
         atividade_id=a.id,
         modalidade=a.modalidade,
@@ -153,4 +180,8 @@ def buscar_atividade(
         distancia_m=a.distancia_m,
         fc_media=a.fc_media,
         clima=None if clima is None else _clima_out(clima),
+        data_local=local.date().isoformat(),
+        hora_local=local.strftime("%H:%M"),
+        duracao=_duracao_hms(a.duracao_s),
+        pace_medio=_pace_medio(a),
     )

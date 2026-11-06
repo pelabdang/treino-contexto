@@ -2,8 +2,8 @@
 tipo: decisao
 status: em-uso
 dono: theo
-atualizado: 2026-11-04
-links: [[modulos/api]], [[modulos/grafico-tiros]], [[modulos/mobile]], [[modulos/worker]], [[metricas/tiros-1km]], [[decisoes/0002-segmento-intensidade-e-versao]], [[decisoes/0003-fuso-da-atividade]], [[decisoes/0005-serie-de-tiros-o-que-entra]], [[decisoes/0006-upload-de-fit]], [[produto/roadmap]]
+atualizado: 2026-11-06
+links: [[modulos/api]], [[modulos/grafico-tiros]], [[modulos/mobile]], [[modulos/worker]], [[metricas/tiros-1km]], [[decisoes/0002-segmento-intensidade-e-versao]], [[decisoes/0003-fuso-da-atividade]], [[decisoes/0005-serie-de-tiros-o-que-entra]], [[decisoes/0006-upload-de-fit]], [[decisoes/0007-clima-da-atividade]], [[produto/roadmap]]
 ---
 # ADR: 0004 Contrato da tela de evolução dos tiros (Meta 2)
 
@@ -166,3 +166,11 @@ mesmas regras de antes.
   ler os novos campos como principais.
 - `PontoSessao` mantém os defaults `None` do melhor tiro: ponto montado à mão, sem os campos, só aparece na média do PNG
   e tem as colunas do melhor tiro vazias no CSV ([[modulos/grafico-tiros]], #153).
+
+## Adendo 2 (2026-11-06): a regra "a API formata, o app mostra" vale também para a tela de um treino (#158)
+**Status: aceito (Theo, 06/11).** Não muda o modelo de dados. `GET /atletas/{id}/atividades/{id}`
+ganha campos prontos, para o app não formatar pace nem converter fuso: `data_local` (`AAAA-MM-DD`) e `hora_local`
+(`HH:MM`) pelo fuso da atividade ([[decisoes/0003-fuso-da-atividade]]), `duracao` (`h:mm:ss`), `pace_medio` (`m:ss` de
+`formatar_pace`, só para corrida com distância; `null` nas outras modalidades) e `clima.atribuicao` (só com clima `ok`,
+[[decisoes/0007-clima-da-atividade]], item 4). Os campos antigos continuam. Detalhes em [[modulos/api]].
+
