@@ -3,7 +3,7 @@ tipo: roteiro
 status: em-uso
 dono: paulo
 atualizado: 2026-11-06
-links: [[produto/plano-mvp-execucao]], [[decisoes/0001-modelo-de-dados-minimo]], [[decisoes/0005-serie-de-tiros-o-que-entra]], [[produto/metas/meta-1-tiros-1km]], [[produto/metas/meta-2-evolucao-tiros-app]], [[produto/metas/meta-3-upload-fit]], [[decisoes/0004-contrato-tela-evolucao]], [[decisoes/0006-upload-de-fit]], [[decisoes/0003-fuso-da-atividade]], [[diario/2026-11-03]], [[00-inicio]], [[produto/metas/meta-4-clima-atividade]], [[decisoes/0007-clima-da-atividade]], [[produto/meta-4-como-rodar]], [[metricas/tiros-1km]], [[decisoes/0008-deteccao-de-esforcos]], [[diario/2026-11-04]]
+links: [[produto/plano-mvp-execucao]], [[decisoes/0001-modelo-de-dados-minimo]], [[decisoes/0005-serie-de-tiros-o-que-entra]], [[produto/metas/meta-1-tiros-1km]], [[produto/metas/meta-2-evolucao-tiros-app]], [[produto/metas/meta-3-upload-fit]], [[decisoes/0004-contrato-tela-evolucao]], [[decisoes/0006-upload-de-fit]], [[decisoes/0003-fuso-da-atividade]], [[diario/2026-11-03]], [[00-inicio]], [[produto/metas/meta-4-clima-atividade]], [[decisoes/0007-clima-da-atividade]], [[produto/meta-4-como-rodar]], [[metricas/tiros-1km]], [[decisoes/0008-deteccao-de-esforcos]], [[diario/2026-11-04]], [[produto/metas/meta-5-deteccao-esforcos]], [[produto/meta-5-como-rodar]], [[decisoes/0009-treino-de-transicao]], [[metricas/esforcos]], [[metricas/transicao]], [[modulos/ingestao-garmin]], [[diario/2026-11-06]]
 ---
 # Roteiro de metas
 
@@ -17,8 +17,8 @@ Ao fechar uma meta, o Paulo registra o resultado em `docs/produto/metas/` e revi
 | 2 | Evolução dos tiros no app | feita (web com fixtures; [[produto/metas/meta-2-evolucao-tiros-app]]) |
 | 3 | Upload de arquivo FIT | feita (web com FIT sintéticos; [[produto/metas/meta-3-upload-fit]]) |
 | 4 | Clima de cada atividade | feita (fixtures e resposta gravada, sem rede; [[produto/metas/meta-4-clima-atividade]]) |
-| **5** | **Detecção de esforços (corrida por distância, ciclismo por duração) e série de tiros com o melhor tiro** | **atual** (desde 04/11; feitas #148, #151 a #154, #161 a #164; faltam #165 a #169 e #171 a #173) |
-| 6 | Carga de treino (rTSS, hrTSS, CTL, ATL, TSB) | próxima (revisada em 04/11; issues #134 a #147 e #174) |
+| 5 | Detecção de esforços (corrida por distância, ciclismo por duração) e série de tiros com o melhor tiro | feita (fixtures, sem rede; conferência local com o histórico real; [[produto/metas/meta-5-deteccao-esforcos]]) |
+| **6** | **Carga de treino (rTSS, hrTSS, CTL, ATL, TSB)** | **atual** (desde 06/11; issues #134 a #147 e #174) |
 | 7 | Linha de base pessoal | esboço |
 | 8 | Check-in pós-treino | esboço |
 | 9 | Feedback automático por treino | esboço |
@@ -257,7 +257,7 @@ Revisadas ao fim de cada meta com o que se aprendeu. Ordem tirada da "Fundação
 - **Fora:** previsão do tempo; ajuste por vento ou calor; clima na tela; trajeto completo; plano comercial do Open-Meteo;
   deploy.
 
-### Meta 5: detecção de esforços (atual, desde 04/11)
+### Meta 5: detecção de esforços (feita)
 - **Objetivo:** cada treino lido como blocos (aquecimento, esforços, recuperações, desaquecimento, treino leve), com
   esforços de qualquer distância na corrida e por **duração** no ciclismo, laps automáticos do mesmo esforço juntados e a
   recuperação reconhecida pelo tempo de pausa entre as voltas. Treinos contínuos fortes ficam marcados como treinos-chave.
@@ -280,66 +280,59 @@ Revisadas ao fim de cada meta com o que se aprendeu. Ordem tirada da "Fundação
   mede por distância e no ciclismo por tempo. Sessões com 2 tiros entram. Num treino misto, os tiros de 1 km do bloco
   principal contam. O valor principal da série é o melhor pace de tiro, e o painel de FC mostra a FC do melhor tiro.
   O treino de transição vira um rótulo sim/não (sugerido por regra e corrigível pelo atleta), em vez de juntar atividades.
-- **Decisão do Angelo (04/11, depois dos merges):** dois esforços vizinhos que a regra de 5% (`JUNTAR_TOLERANCIA`, ADR
-  0008) não junta contam como **dois esforços** separados. Não muda nenhuma issue; a #166 e a #168 seguem essa regra.
-- **Estado em 06/11:** entregues no main a ADR 0008 e as funções de blocos, corrida e ciclismo, o melhor tiro de ponta a
-  ponta (agregação, contrato, PNG/CSV e tela) e as paralelas #132 e #133. Em andamento: #165 (Caio) e #202 (Rafa).
-  Ainda abertas: #155 a #159 e #166 a #173.
+  Dois esforços vizinhos que a regra de 5% não junta contam como dois.
+- **Decisões de 06/11:** parada de 15 s ou mais (corrida) ou 30 s (ciclismo) corta a sequência do treino-chave (Angelo);
+  "ok para todas" as recomendações do treino de transição (Angelo); ADR 0009 aceita, `ref_origem` recalculado na leitura,
+  um único ponto de detecção (`classificar_atividades`), adendos 2 a 4 da ADR 0004 e subtipos do multiesporte sem migração
+  (Theo). Ver [[diario/2026-11-06]].
+- **Resultado:** feita. Com fixtures sintéticas, num clone limpo e seguindo só o [[produto/meta-5-como-rodar]], todos os
+  itens do critério bateram (QA da Bia, #172 / PR #239, com `tests/test_e2e_meta5.py`); a conferência com o histórico real
+  foi local (#169), e no repositório ficaram só as limitações genéricas ([[metricas/esforcos]], [[metricas/tiros-1km]]).
+  Não verificados: a tela no navegador, no iOS e no Android (só `npm test` e capturas sintéticas) e o `downgrade` das
+  migrações 0006 e 0007. Resultado completo em [[produto/metas/meta-5-deteccao-esforcos]].
 - **Issues e ordem:**
 
-  | # | Issue | Dono | Depende de | Situação |
-  |---|---|---|---|---|
-  | #148 | ADR 0008, detecção de esforços | caio-ciencia com duda-dados (aprovação do Theo) | nenhuma | feita (PR #180) |
-  | #161 | Fixtures sintéticas e oráculo dos esforços | caio-ciencia | #148 | feita (PR #187) |
-  | #162 | Blocos do treino: pausas, laps juntados, aquecimento e desaquecimento | caio-ciencia | #148 (oráculo #161) | feita (PR #188) |
-  | #163 | Esforços de corrida por distância (d200 a d5000) | caio-ciencia | #162 | feita (PR #200) |
-  | #164 | Esforços de ciclismo por duração (t1 a t60) | caio-ciencia | #162 | feita (PR #205) |
-  | #165 | Treino-chave contínuo | caio-ciencia | #162 | em andamento |
-  | #151 | Melhor tiro da sessão na agregação | caio-ciencia | nenhuma | feita (PR #178) |
-  | #152 | Melhor pace e FC do melhor tiro no contrato (ADR 0004) e na API | duda-dados (aprovação do Theo) | #151 | feita (PR #185) |
-  | #153 | Melhor pace no PNG e no CSV | caio-ciencia | #151 | feita (PR #199) |
-  | #154 | Melhor pace como valor principal na tela | rafa-app | #152 | feita (PR #201) |
-  | #166 | Esforços no banco e `worker.detectar_esforcos` | duda-dados | #148, #163, #164, #165 | aberta |
-  | #167 | Esforços na API e cliente regerado | duda-dados | #166 | aberta |
-  | #168 | Série de tiros de 1 km a partir dos esforços | caio-ciencia | #163, #166, #151 | aberta |
-  | #169 | Conferência local da detecção com o histórico real | caio-ciencia (com duda-dados) | #132, #166, #168 | aberta |
-  | #171 | Documentação, guia `meta-5-como-rodar` e diário | nina-docs | #167, #168, #154 | aberta |
-  | #172 | QA de ponta a ponta com fixtures de esforços | bia-qa | #171 | aberta |
-  | #173 | Resultado da meta e roteiro | paulo-planejador | #172, #169 | aberta |
+  | # | Issue | Dono | Situação |
+  |---|---|---|---|
+  | #148 | ADR 0008, detecção de esforços | caio-ciencia com duda-dados (aprovação do Theo) | feita (PR #180) |
+  | #161 | Fixtures sintéticas e oráculo dos esforços | caio-ciencia | feita (PR #187) |
+  | #162 | Blocos do treino: pausas, laps juntados, aquecimento e desaquecimento | caio-ciencia | feita (PR #188) |
+  | #163 | Esforços de corrida por distância (d200 a d5000) | caio-ciencia | feita (PR #200) |
+  | #164 | Esforços de ciclismo por duração (t1 a t60) | caio-ciencia | feita (PR #205) |
+  | #165 | Treino-chave contínuo | caio-ciencia | feita (PR #210) |
+  | #151 | Melhor tiro da sessão na agregação | caio-ciencia | feita (PR #178) |
+  | #152 | Melhor pace e FC do melhor tiro no contrato (ADR 0004) e na API | duda-dados (aprovação do Theo) | feita (PR #185) |
+  | #153 | Melhor pace no PNG e no CSV | caio-ciencia | feita (PR #199) |
+  | #154 | Melhor pace como valor principal na tela | rafa-app | feita (PR #201) |
+  | #166 | Esforços no banco e `worker.detectar_esforcos` | duda-dados | feita (PR #222) |
+  | #167 | Esforços na API e cliente regerado | duda-dados | feita (PR #226) |
+  | #168 | Série de tiros de 1 km a partir dos esforços (`tiros_1km@5`) | caio-ciencia | feita (PR #228) |
+  | #169 | Conferência local da detecção com o histórico real | caio-ciencia (com duda-dados) | feita (PR #235; relatório só em `entregas/`) |
+  | #171 | Documentação, guia `meta-5-como-rodar` e diário | nina-docs | feita (PR #238) |
+  | #172 | QA de ponta a ponta com fixtures de esforços | bia-qa | feita (PR #239) |
+  | #173 | Resultado da meta e roteiro | paulo-planejador | esta |
 
-  **Ordem do que falta:**
-  1. #165 → #166 → #167 (o caminho crítico: a #166 só começa com o treino-chave pronto, e a API vem depois do banco);
-  2. #168 → #169 (a série sai dos esforços no banco, então a #168 também espera a #166; a conferência com o histórico
-     real fecha esse caminho);
-  3. #158 → #159 (paralela, tela de um treino; pode andar já);
-  4. fechamento: #171 → #172 → #173 (docs e guia, QA num clone limpo, resultado e roteiro).
-
-  Caminhos paralelos: enquanto o Caio termina a #165, a Duda pode adiantar a #158 e o esqueleto da #166 (tabela e
-  comando) sobre as funções já entregues. O Rafa termina a #202 e pega a #159 quando a #158 entrar.
-- **Paralelas na Meta 5** (fora do critério de pronto):
-
-  | # | Issue | Dono | Depende de | Situação |
-  |---|---|---|---|---|
-  | #132 | `importar_garmin` sem rede por padrão; clima só com `--com-clima` | duda-dados | nenhuma | feita (PR #160) |
-  | #133 | Identidade do FIT avulso importado depois do JSON | duda-dados (aprovação do Theo) | nenhuma | feita (PR #186) |
-  | #202 | Tela de evolução: ícones nos estados, esqueleto de carregamento e lista tocável | rafa-app (revisão da Lia) | #154 | em andamento |
-  | #158 | Tela de um treino: campos prontos na resposta da atividade | duda-dados | nenhuma | aberta |
-  | #159 | Tela de um treino com o clima no app | rafa-app | #158 | aberta |
-  | #155 | ADR 0009, treino de transição (rótulo sugerido e corrigível) | duda-dados com caio-ciencia (aprovação do Theo) | nenhuma | aberta |
-  | #156 | Treino de transição: regra que sugere o rótulo | caio-ciencia | #155 | aberta |
-  | #157 | Treino de transição: rótulo no banco e comando de sugestão | duda-dados | #155, #156 | aberta |
-  | #170 | Treino de transição: listar, comparar e corrigir pela API | duda-dados | #157 | aberta |
-
-  Se a semana apertar, o treino de transição (#155 a #157 e #170) passa para a Meta 6 sem prejuízo da meta.
-- **#149 e #150:** fechadas sem implementar, absorvidas pela #168; os exemplos delas viram teste de regressão na
-  #168.
-- **Quem:** caio-ciencia (ADR, regras, oráculo, série, gráfico), duda-dados (banco, comando, API), rafa-app (tela),
-  nina-docs, bia-qa, Theo (ADRs 0008 e 0009 e o adendo da 0004).
+- **Paralelas na Meta 5** (fora do critério de pronto), todas feitas: #132 (PR #160), #133 (PR #186), #183 (PR #184),
+  treino de transição #155, #156, #157 e #170 (PRs #214, #223, #229, #232), tela de um treino #158, #159, #216, #217,
+  #219, #220 e #233 (PRs #212, #215, #231, #227, #225, #221, #234), tela de evolução #202 (PR #211), HTML do app web #218
+  (PR #224) e multiesporte #230 (PR #236). As #149 e #150 foram absorvidas pela #168. Lista com as entregas em
+  [[produto/metas/meta-5-deteccao-esforcos]].
+- **Pendências fora da meta (abertas):** #213 (rafa-app, acessibilidade e visual da tela de evolução), #237 (rafa-app com a
+  Lia, mesma aparência para distância e pace na tela de um treino) e #74 (vault do Graphify, quando o Theo pedir o grafo).
+  Não entram na Meta 6; o lugar natural das duas do app é a candidata "tela dos esforços" (abaixo).
+- **Aprendido na Meta 5:** premissa marcada como pendente até a resposta do Angelo evitou retrabalho; o oráculo tem de dizer
+  a referência que supõe (no banco com histórico, o mesmo pedal dá outro resultado); um único ponto de detecção manteve
+  importação, upload e comando iguais; a regra "a API formata, o app mostra" escala, mas o formato pronto decide a
+  aparência (#237); a meta cresceu pelas paralelas e o roteiro ficou defasado durante a semana (achado da Bia): a situação
+  do dia a dia fica no GitHub, e o roteiro guarda plano, ordem e resultado.
+- **Quem:** caio-ciencia (ADR, regras, oráculo, série, gráfico, conferência), duda-dados (banco, comandos, API,
+  multiesporte), rafa-app (telas), lia-design (spec da tela de um treino), nina-docs, bia-qa, Theo (ADRs 0008 e 0009 e os
+  adendos da 0004).
 - **Fora:** calibração pela lista de recordes pessoais (os recordes chegam ao banco na Meta 6, #174); esforço por tempo
   na corrida; potência no ciclismo; esforços na natação; tela dos esforços e dos treinos de transição no app; evolução
   por faixa de distância na tela.
 
-### Meta 6: carga de treino (revisada em 04/11)
+### Meta 6: carga de treino (atual, desde 06/11)
 - **Objetivo:** a primeira métrica derivada de carga: a carga de cada atividade (rTSS pelo pace, hrTSS pela FC) e, dia a dia,
   condicionamento (CTL), fadiga (ATL) e forma (TSB), sempre mostrados como estimativa.
 - **Entrega visível:** `GET /atletas/{atleta_id}/carga` (série diária de CTL, ATL e TSB, com a carga de cada dia e quantas
@@ -355,6 +348,7 @@ Revisadas ao fim de cada meta com o que se aprendeu. Ordem tirada da "Fundação
   - o cálculo é idempotente e versionado: rodar de novo não duplica, e mudar a versão ou o limiar recalcula;
   - atividade sem dado suficiente fica "sem carga", com o motivo, nunca com carga inventada; **atleta sem os dados de saúde
     importados fica "sem carga", sem estimar o limiar**; a série diária diz quantas ficaram de fora;
+  - as atividades com subtipo `multiesporte_pai` e `troca` não entram na carga (nem contam em dobro com as partes);
   - conferência com a carga do Garmin com fixtures e, localmente, com o histórico real (números só em `entregas/`);
   - endpoint declarado no OpenAPI e cliente regerado; QA com fixtures sintéticas, num clone limpo, seguindo só o guia.
 - **Decisões de produto (04/11):** o limiar vem dos dados de saúde da exportação Garmin, onde há limiar por FC e por
@@ -364,26 +358,51 @@ Revisadas ao fim de cada meta com o que se aprendeu. Ordem tirada da "Fundação
   nem tabela de métrica derivada, e `segmento.zona` nunca é preenchida. O leitor FIT não lê a série por segundo, então a
   primeira versão calcula **por volta**, sem ajuste de subida. `tipo_treino` só tem `intervalado`. Natação sem FC fica
   "sem carga". Ciclismo sem potência usa o hrTSS.
+- **Aviso da Meta 5 para a ADR 0010 (#134):**
+  - **A carga ignora os subtipos `multiesporte_pai` e `troca`** (decisão do Theo na #230). O pai agrupa as partes, que já
+    são atividades com carga própria; contar o pai somaria a mesma carga duas vezes. A troca entra como `outra`. A ADR diz
+    como os dois aparecem na série (fora da conta ou com um motivo próprio) e o teste cobre o caso com as fixtures de
+    `tests/fixtures/multiesporte/`.
+  - O "conferido no código" acima é de 03/11. O main de agora tem `bloco_atividade` (migração 0006), `rotulo_transicao`
+    (0007), os subtipos novos e `worker.reclassificar_subtipo`; a próxima migração é a 0008. A ADR confere contra o main
+    atual e diz se a carga usa as voltas (como planejado) ou os blocos da detecção.
+  - Cada parte de um treino de transição tem a sua carga; o grupo não soma nada além das partes.
+  - A conferir na ADR: esteira (distância do sensor) no rTSS e pedal `virtual` no hrTSS.
 - **Issues e ordem:**
 
-  | # | Issue | Dono | Depende de |
-  |---|---|---|---|
-  | #134 | ADR 0010, carga de treino | caio-ciencia com duda-dados (aprovação do Theo) | nenhuma |
-  | #135 | Formato dos dados de saúde da exportação Garmin e fixtures sintéticas | duda-dados | nenhuma |
-  | #136 | Leitor dos dados de saúde e métricas | duda-dados | #135 |
-  | #137 | Fixtures de algumas semanas e oráculo da carga | caio-ciencia | #134, #135 |
-  | #138 | rTSS e hrTSS por volta (função pura) | caio-ciencia | #134 (oráculo #137) |
-  | #139 | CTL, ATL e TSB diários (função pura) | caio-ciencia | #134 (oráculo #137) |
-  | #140 | Limiar e zonas no banco, importação idempotente | duda-dados | #134, #136, #132 |
-  | #174 | Recordes pessoais e carga do Garmin no banco | duda-dados | #134, #136 |
-  | #141 | Carga por atividade no banco e `worker.calcular_carga` | duda-dados | #138, #140 |
-  | #142 | Endpoint da carga, carga no `GET` da atividade e cliente regerado | duda-dados | #139, #141 |
-  | #143 | Gráfico de carga em `entregas/` | caio-ciencia | #139, #141 |
-  | #144 | Conferência da nossa carga com a carga do Garmin (fixtures e histórico real local) | caio-ciencia | #174, #141 |
-  | #145 | Documentação, guia `meta-6-como-rodar` e diário | nina-docs | #142, #143, #144 |
-  | #146 | QA de ponta a ponta com fixtures | bia-qa | #145 |
-  | #147 | Resultado da meta e roteiro | paulo-planejador | #146 |
+  | # | Issue | Dono | Depende de | Situação |
+  |---|---|---|---|---|
+  | #134 | ADR 0010, carga de treino | caio-ciencia com duda-dados (aprovação do Theo) | nenhuma | aberta |
+  | #135 | Formato dos dados de saúde da exportação Garmin e fixtures sintéticas | duda-dados | nenhuma | aberta |
+  | #136 | Leitor dos dados de saúde e métricas | duda-dados | #135 | aberta |
+  | #137 | Fixtures de algumas semanas e oráculo da carga | caio-ciencia | #134, #135 | aberta |
+  | #138 | rTSS e hrTSS por volta (função pura) | caio-ciencia | #134 (oráculo #137) | aberta |
+  | #139 | CTL, ATL e TSB diários (função pura) | caio-ciencia | #134 (oráculo #137) | aberta |
+  | #140 | Limiar e zonas no banco, importação idempotente | duda-dados | #134, #136, #132 | aberta |
+  | #174 | Recordes pessoais e carga do Garmin no banco | duda-dados | #134, #136 | aberta |
+  | #141 | Carga por atividade no banco e `worker.calcular_carga` | duda-dados | #138, #140 | aberta |
+  | #142 | Endpoint da carga, carga no `GET` da atividade e cliente regerado | duda-dados | #139, #141 | aberta |
+  | #143 | Gráfico de carga em `entregas/` | caio-ciencia | #139, #141 | aberta |
+  | #144 | Conferência da nossa carga com a carga do Garmin (fixtures e histórico real local) | caio-ciencia | #174, #141 | aberta |
+  | #145 | Documentação, guia `meta-6-como-rodar` e diário | nina-docs | #142, #143, #144 | aberta |
+  | #146 | QA de ponta a ponta com fixtures | bia-qa | #145 | aberta |
+  | #147 | Resultado da meta e roteiro | paulo-planejador | #146 | aberta |
 
+  A coluna "Situação" só muda para "feita" no fechamento da meta; o andamento do dia a dia fica no GitHub (aprendido na
+  Meta 5).
+
+  **Ordem:**
+  1. **Largada, em paralelo:** #134 (Caio, com a Duda) e #135 (Duda). Nenhuma das duas depende de outra.
+  2. **Dados de saúde:** #135 → #136 (o leitor pode começar pelo limiar antes do merge da ADR).
+  3. **Fórmulas, depois da ADR:** #137 (oráculo; precisa também do formato da #135) → #138 e #139 em paralelo.
+  4. **Banco, depois da ADR e do leitor:** #140 e #174 (uma migração combinada entre as duas, a partir da 0008).
+  5. **Carga gravada:** #141 (precisa da #138 e da #140). É o ponto onde os dois caminhos se encontram.
+  6. **Saídas, em paralelo:** #142 (API; #139, #141), #143 (gráfico; #139, #141) e #144 (conferência com o Garmin; #174,
+     #141).
+  7. **Fechamento:** #145 → #146 → #147.
+
+  Caminho crítico: #135 → #136 → #140 → #141 → #142 / #144 → #145 → #146 → #147, com a #134 liberando a #140 e a #174.
+  Enquanto a ADR não entra, a Duda faz a #135 e a #136, e o Caio adianta o oráculo à mão sobre o formato da #135.
 - **Quem:** caio-ciencia (fórmulas, oráculo, gráfico, conferência), duda-dados (dados de saúde, banco, comando, API),
   nina-docs, bia-qa, Theo (ADR).
 - **Fora:** linha de base pessoal (Meta 7); estimar o limiar do histórico; NGP e ajuste de subida; leitura da série por
@@ -427,8 +446,11 @@ Revisadas ao fim de cada meta com o que se aprendeu. Ordem tirada da "Fundação
 - **Fora:** pergunta livre sem catálogo.
 
 ### Candidatas sem número
-- **Tela dos esforços e dos treinos de transição no app** (rafa-app): depois da Meta 5, que entrega só a API. Pode
-  vir junto da tela de um treino (#158, #159), que depois recebe o check-in (Meta 8) e o feedback (Meta 9).
+- **Tela dos esforços e dos treinos de transição no app** (rafa-app, com a Lia): a Meta 5 entregou só a API. A tela de
+  um treino (#159, feita) já existe e é onde os esforços entram; depois ela recebe o check-in (Meta 8) e o feedback (Meta 9).
+  As pendências do app (#213 e #237) podem vir junto.
+- **Uma possível `tiros_1km@6`** (caio-ciencia): só depois das decisões do Angelo sobre a série de tiros (ver "PRECISA DO
+  ANGELO"). Mudança de regra é versão nova, em issue própria ([[metricas/tiros-1km]], limitações).
 - **Calibração da detecção de esforços pelos recordes pessoais** (caio-ciencia): depois da Meta 6, quando os recordes
   estiverem no banco (#174).
 
@@ -462,6 +484,12 @@ stack Expo). A chave do provedor de LLM foi entregue e está no `.env` (fora do 
     localmente, com os números só em `entregas/`.
   - **"Pode criar"** para as issues das Metas 5 e 6 e para as propostas da Meta 4.
 
+- **Decisões de 06/11: resolvidas.** Parada de 15 s ou mais na corrida (30 s no ciclismo) corta a sequência do
+  treino-chave (#165, ADR 0008 item 6); "ok para todas" as recomendações do treino de transição (ADR 0009). Ver
+  [[diario/2026-11-06]].
+
 Em aberto:
-1. **Próximas metas, sem pressa:** CNPJ e pedido da API da Garmin; pedido da API do TrainingPeaks com a assessoria;
+1. **Meta 5:** há decisões do Angelo pendentes sobre a série de tiros, o ciclismo e o treino de transição; uma possível
+   `tiros_1km@6` depende delas. Nenhuma bloqueia a Meta 6.
+2. **Próximas metas, sem pressa:** CNPJ e pedido da API da Garmin; pedido da API do TrainingPeaks com a assessoria;
    plano comercial do Open-Meteo para produção; limite de tamanho do upload no proxy, obrigatório na meta de deploy.
