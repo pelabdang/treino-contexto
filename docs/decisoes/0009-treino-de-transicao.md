@@ -1,13 +1,13 @@
 ---
 tipo: decisao
-status: rascunho
+status: aceita
 dono: duda
 atualizado: 2026-11-06
 links: [[decisoes/0001-modelo-de-dados-minimo]], [[decisoes/0003-fuso-da-atividade]], [[decisoes/0005-serie-de-tiros-o-que-entra]], [[decisoes/0006-upload-de-fit]], [[decisoes/0007-clima-da-atividade]], [[decisoes/0008-deteccao-de-esforcos]], [[metricas/esforcos]], [[modulos/banco]], [[modulos/api]], [[produto/roadmap]], [[glossario]]
 ---
 # ADR: 0009 Treino de transição (rótulo sugerido e corrigível)
 
-> Rascunho para aprovação do Theo (modelo de dados) e respostas do Angelo (seção "Perguntas ao Angelo"). **Nenhuma linha de código nem migração muda neste PR.**
+> Aceita em 06/11: o Angelo respondeu "ok para todas" às recomendações (seção "Decisões do Angelo") e o Theo aprovou o modelo de dados, o esboço das rotas e a regra sem mesmo dia local. **Nenhuma linha de código nem migração muda neste PR.**
 > Todos os exemplos abaixo são sintéticos. Issue #155; dá base para #156 (regra), #157 (banco e comando) e #170 (API).
 
 ## Contexto
@@ -25,7 +25,7 @@ transição" (sim/não)**. Uma regra automática **sugere** o rótulo; o atleta 
   uma tabela que aponte para `atividade.id` sobrevive à reimportação. As tabelas ligadas à atividade seguem `ON DELETE CASCADE`
   (`segmento`, `clima_atividade`, `bloco_atividade` da ADR 0008).
 - `tipos.py` devolve `outra` para tudo que não é natação, ciclismo ou corrida. **Não conferi como a exportação real trata o multiesporte** (os
-  arquivos reais ficam com o Caio, fora do git); ver pergunta 6.
+  arquivos reais ficam com o Caio, fora do repositório); ver "Seguimento".
 - `duracao_s` é o tempo em movimento (`total_timer_time` no FIT; é a mesma dúvida do item 5 de "A confirmar" da ADR 0008). Logo `inicio + duracao_s`
   é o fim **no melhor caso**: com pausa automática ligada o fim real é um pouco depois, e o intervalo calculado sai maior que o real.
 - Todos os consumidores atuais (identidade, clima, `tiros_1km`, `bloco_atividade`) olham **uma atividade por vez**, e continuam olhando.
@@ -64,7 +64,7 @@ Duas atividades **vizinhas** (ordenadas por `inicio`) do mesmo atleta formam um 
 2. as **modalidades são diferentes**;
 3. o **intervalo** `inicio_seguinte - (inicio + duracao_s)` fica entre `-SOBREPOSICAO_MAX_S` e `INTERVALO_MAX_S`.
 
-Valores propostos, **a calibrar pelo Caio** em #156 e confirmar com o Angelo (pergunta 1): `INTERVALO_MAX_S = 1800` (30 min) e `SOBREPOSICAO_MAX_S = 60`.
+Valores: os 30 min foram aceitos pelo Angelo (06/11) e o Caio pode calibrar em #156; a sobreposição de 60 s é proposta: `INTERVALO_MAX_S = 1800` (30 min) e `SOBREPOSICAO_MAX_S = 60`.
 A sobreposição pequena cobre relógios que começam a parte seguinte antes de fechar a anterior e o fim estimado do aviso acima; sobreposição maior é
 registro duplicado ou dois aparelhos, não transição.
 
@@ -154,30 +154,27 @@ O grupo **não é guardado**: é calculado na leitura, a partir dos rótulos fin
 - **Contar mesma modalidade colada como transição:** não é transição, é corte do relógio.
 
 ## Consequências
-- Tabela nova `rotulo_transicao` e migração nova em #157; nada muda em `atividade`. Precisa da aprovação do Theo (AGENTS.md).
+- Tabela nova `rotulo_transicao` e migração nova em #157; nada muda em `atividade`. Aprovada pelo Theo (06/11).
 - Mais uma versão de regra (`transicao@1`), que sobe a cada mudança da regra; subir a versão exige rodar o comando, que não toca em correções do atleta.
 - Uma regra de intervalo erra nos dois sentidos (pausa longa entre duas partes reais; duas atividades sem relação coladas). Por isso a correção é parte do
   desenho, não um extra, e a nota da regra registra isso como limitação.
 - O fim da atividade é estimado por `inicio + duracao_s` (tempo em movimento): o intervalo mostrado pode ser maior que o real. API e nota dizem isso.
 - O produto passa a ter dois rótulos por atividade (tipo de treino e transição); eles não se influenciam.
 
-## Perguntas ao Angelo
-Cada uma com a minha recomendação; nenhuma está decidida.
-1. **Qual o intervalo máximo entre uma parte e a seguinte?** Recomendo **30 min**: cobre a troca de equipamento de um treino de transição sem juntar o treino da
-   manhã com o da tarde. O Caio confere com o histórico real (fora do git) em #156 e propõe ajuste se for o caso.
-2. **Natação entra na regra?** Recomendo **sim** (corrida, natação e ciclismo, em qualquer ordem), porque o produto atende os três esportes; `outra` fica fora.
-3. **O atleta pode marcar "sim" numa atividade que a regra não sugeriu, ou numa só?** Recomendo **sim** (cobre a parte gravada em outro aparelho ou com intervalo
-   maior); a listagem a mostra como `incompleto`.
-4. **Comparar só treinos com a mesma sequência de modalidades?** Recomendo **sim** (ciclismo>corrida só com ciclismo>corrida); outras formas listam, mas não comparam.
-5. **Esteira e piscina contam como partes?** Recomendo **sim**, sem tratamento especial (o subtipo não entra na regra).
-6. **O relógio do atleta grava um treino multiesporte como uma atividade só (`outra`)?** Se sim, ele já é "um treino" e a regra não se aplica a ele; se as partes
-   vêm separadas, tudo acima vale. Recomendo o Caio conferir com o histórico real e dizer só o resultado (sim ou não) no PR de #156.
+## Decisões do Angelo (06/11)
+O Angelo aceitou as recomendações ("ok para todas"):
+1. **Intervalo máximo** entre uma parte e a seguinte: **30 min** (`INTERVALO_MAX_S = 1800`). O Caio ainda pode propor ajuste em #156 com o histórico real.
+2. **Natação entra:** corrida, natação e ciclismo, em qualquer ordem; `outra` fica fora.
+3. **O atleta pode marcar "sim"** numa atividade que a regra não sugeriu ou numa só; a listagem mostra como `incompleto`.
+4. **Compara-se só grupos com a mesma sequência de modalidades**; os outros só listam.
+5. **Esteira e piscina contam como partes**, sem tratamento especial (o subtipo não entra na regra).
 
-## O que precisa da aprovação do Theo
-- Tabela `rotulo_transicao` (item 1), com migração só em #157 e sem tocar `atividade`.
-- As rotas novas e `AtividadeOut.transicao` (item 5) como direção; o detalhe do contrato volta ao Theo na #170.
-- A regra `transicao@1` sem a condição de mesmo dia local (item 2).
+## Seguimento (não bloqueia)
+- **Multiesporte gravado como uma atividade só (`outra`):** o Caio confere no histórico real (fora do repositório) e responde só sim ou não no PR da #156. Se sim, essa atividade já é "um treino" e a regra não se aplica a ela; se as partes vêm separadas, tudo acima vale.
+
+## Aprovação do Theo (06/11)
+Aprovados: a tabela `rotulo_transicao` (item 1; migração só em #157, sem tocar `atividade`), o esboço das rotas e de `AtividadeOut.transicao` (item 5; o detalhe volta ao Theo na #170) e a regra `transicao@1` sem a condição de mesmo dia local (item 2).
 
 ## Data e quem decidiu
 2026-11-06. Pedido de produto: Angelo (04/11), issue #155. Rascunho: Duda (dados), tendo como base científica as notas do Caio em `docs/metricas/` e a ADR 0008.
-Aprovação: Theo no PR (modelo de dados); respostas do Angelo às perguntas acima.
+Aceita em 06/11: Angelo (decisões acima) e Theo (modelo de dados, rotas e regra, no PR #214).
