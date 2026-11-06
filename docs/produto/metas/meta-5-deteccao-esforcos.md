@@ -150,8 +150,8 @@ escritas em texto genérico, sem nada do histórico.
 - **Conferência com o dado real em paralelo, com só o genérico no repositório,** funcionou de novo (#169), como na #118.
 
 ## PRECISA DO ANGELO
-- Há decisões do Angelo pendentes sobre a série de tiros, o ciclismo e o treino de transição; uma possível `tiros_1km@6`
-  depende delas. Nenhuma bloqueia a Meta 6.
+- Há decisões do Angelo pendentes da conferência local (#169). Os detalhes ficam em `entregas/`, fora do repositório.
+  Nenhuma bloqueia a Meta 6.
 - As decisões da Meta 6 que envolvem dado de aluno já foram tomadas em 04/11 ([[produto/roadmap]]).
 
 ## Resultado
