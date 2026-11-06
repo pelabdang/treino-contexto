@@ -124,6 +124,10 @@ describe("tela de evolução", () => {
     await fireEvent.press(screen.getByTestId(`linha-sessao-${id}`));
     const botao = screen.getByRole("button", { name: "Ver treino" });
     expect(StyleSheet.flatten(botao.props.style).minHeight).toBeGreaterThanOrEqual(48);
+    // texto alinhado à esquerda, na borda do gráfico (revisão da Lia no #227)
+    const estiloBotao = StyleSheet.flatten(botao.props.style);
+    expect(estiloBotao.alignSelf).toBe("flex-start");
+    expect(estiloBotao.paddingLeft ?? estiloBotao.paddingHorizontal ?? 0).toBe(0);
     await fireEvent.press(botao);
     expect(aoAbrirTreino).toHaveBeenCalledWith(id);
     // a seleção continua (a tela não é recriada): é o que o "Voltar" encontra

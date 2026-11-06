@@ -11,6 +11,7 @@ const corrida: Atividade = {
   duracao_s: 3125,
   duracao: "0:52:05",
   distancia_m: 10000,
+  distancia: "10,00 km",
   pace_medio: "5:12",
   fc_media: 152,
   clima: {
@@ -30,6 +31,7 @@ export const atividades = {
     atividade_id: 102,
     subtipo: "esteira",
     distancia_m: 8000,
+    distancia: "8,00 km",
     pace_medio: "5:30",
     clima: { estado: "indoor" },
   } as Atividade,
@@ -46,6 +48,7 @@ export const atividades = {
     duracao_s: 2700,
     duracao: "0:45:00",
     distancia_m: 1800,
+    distancia: "1.800 m",
     pace_medio: null,
     fc_media: null,
     clima: { estado: "indoor" },

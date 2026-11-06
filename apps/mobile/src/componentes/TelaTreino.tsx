@@ -44,11 +44,6 @@ function numeroBr(n: number): string {
   return String(n).replace(".", ",");
 }
 
-/** Metros em km, só para exibir (a API manda `distancia_m`). */
-function distanciaKm(metros: number): string {
-  return (metros / 1000).toFixed(2).replace(".", ",");
-}
-
 export function TelaTreino({ apiUrl, atletaId, atividadeId, aoVoltar, fetchFn }: Props) {
   const tema = useTema();
   const margem = useMargemTela();
@@ -132,11 +127,7 @@ function Treino({ atividade, styles, tema }: { atividade: Atividade; styles: Est
       <View testID="cartao-resumo" style={styles.cartao}>
         <Text style={styles.rotulo}>Duração</Text>
         <Text style={styles.destaque}>{atividade.duracao}</Text>
-        {atividade.distancia_m !== null && (
-          <Text style={styles.corpo}>
-            Distância: {distanciaKm(atividade.distancia_m)} <Text style={styles.secundario}>km</Text>
-          </Text>
-        )}
+        {atividade.distancia != null && <Text style={styles.corpo}>Distância: {atividade.distancia}</Text>}
         {atividade.pace_medio != null && (
           <Text style={styles.corpo}>
             Pace médio: {atividade.pace_medio} <Text style={styles.secundario}>min/km</Text>

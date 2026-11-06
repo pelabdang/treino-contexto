@@ -57,7 +57,7 @@ const evolucao = {
     },
   },
 };
-const atividade = (id) => ({
+const corrida = (id) => ({
   atividade_id: id,
   modalidade: "corrida",
   subtipo: "rua",
@@ -67,6 +67,7 @@ const atividade = (id) => ({
   duracao_s: 3125,
   duracao: "0:52:05",
   distancia_m: 10000,
+  distancia: "10,00 km",
   pace_medio: "5:12",
   fc_media: 152,
   clima: {
@@ -78,6 +79,24 @@ const atividade = (id) => ({
     atribuicao: "Weather data by Open-Meteo.com",
   },
 });
+
+// Natação (id 106): sem pace, sem FC, distância em metros, como a API manda.
+const natacao = (id) => ({
+  ...corrida(id),
+  modalidade: "natacao",
+  subtipo: "piscina",
+  inicio: "2025-03-20T10:00:00Z",
+  data_local: "2025-03-20",
+  hora_local: "07:00",
+  duracao_s: 2700,
+  duracao: "0:45:00",
+  distancia_m: 1800,
+  distancia: "1.800 m",
+  pace_medio: null,
+  fc_media: null,
+  clima: { estado: "indoor" },
+});
+const atividade = (id) => (id === 106 ? natacao(id) : corrida(id));
 
 createServer((req, res) => {
   const cabecalhos = {
