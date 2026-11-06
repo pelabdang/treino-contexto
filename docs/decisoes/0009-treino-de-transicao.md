@@ -32,7 +32,7 @@ transição" (sim/não)**. Uma regra automática **sugere** o rótulo; o atleta 
 
 ## Decisão
 
-### 1. Onde fica o rótulo: tabela própria `rotulo_transicao` (proposta; precisa do Theo)
+### 1. Onde fica o rótulo: tabela própria `rotulo_transicao` (aprovada pelo Theo em 06/11)
 Uma linha por atividade que tem um rótulo que vale registrar. A atividade não ganha coluna e não muda de identidade.
 
 | Coluna | Tipo | Observação |
@@ -176,10 +176,10 @@ O Angelo aceitou as recomendações ("ok para todas"):
 5. **Esteira e piscina contam como partes**, sem tratamento especial (o subtipo não entra na regra).
 
 ## Seguimento (não bloqueia)
-- **Atividade-pai e atividades de transição do multiesporte (para a #157):** exportações Garmin de treino multiesporte trazem uma atividade-pai
-  (`multi_sport`) e as partes como atividades separadas, mais atividades de transição (`transition_v2`). Hoje as duas viram `outra` (`tipos.py`). A regra
-  continua pegando as partes, porque `outra` fica fora dela. A #157 decide o que fazer com o pai (distância e tempo duplicam as partes, o que importa para a
-  carga da Meta 6) e com a atividade de transição. O Caio confirma na #156 que as partes aparecem separadas, sem expor dado do histórico.
+- **Atividade-pai e atividade de transição do multiesporte (para a #157):** um relógio pode gravar um treino multiesporte com uma atividade que
+  agrupa as partes e com atividades próprias para a troca entre elas. Isso não foi conferido neste repositório: qualquer tipo que `tipos.py` não
+  reconhece vira `outra`, e `outra` fica fora da regra. A #157 verifica o formato com os fixtures sintéticos e decide o que fazer com uma atividade
+  que duplique distância e tempo das partes (importa para a carga da Meta 6). O Caio confirma na #156 que as partes aparecem separadas, sem expor dado do histórico.
 
 ## Aprovação do Theo (06/11)
 Aprovados: a tabela `rotulo_transicao` (item 1; migração só em #157, sem tocar `atividade`), o esboço das rotas e de `AtividadeOut.transicao` (item 5; o detalhe volta ao Theo na #170) e a regra `transicao@1` sem a condição de mesmo dia local (item 2).
