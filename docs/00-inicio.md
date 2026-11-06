@@ -31,7 +31,7 @@ App de análise de treinos com contexto (corrida, natação, ciclismo) para atle
 
 ## Como o sistema funciona
 - Módulos: [[modulos/api]], [[modulos/api-client]], [[modulos/banco]], [[modulos/worker]], [[modulos/mobile]], [[modulos/infra]], [[modulos/grafico-tiros]], [[modulos/ingestao-garmin]] (índice em [[modulos]])
-- Métricas: pasta [[metricas/]]; [[metricas/tiros-1km]]; [[metricas/clima-oraculo]]; [[metricas/esforcos]]; [[metricas/esforcos-oraculo]]
+- Métricas: pasta [[metricas/]]; [[metricas/tiros-1km]]; [[metricas/clima-oraculo]]; [[metricas/esforcos]]; [[metricas/esforcos-oraculo]]; [[metricas/transicao]]
 - Design (Lia): [[design/guia-visual]] (identidade, princípios e componentes), [[design/tokens]] (tokens do tema e contraste WCAG) e telas em [[design/telas/]] ([[design/telas/evolucao-tiros]])
 - Decisões de arquitetura: pasta [[decisoes/]] (a 0004 tem o adendo 1, melhor tiro; a 0006 tem o ajuste da #133)
   - [[decisoes/0001-modelo-de-dados-minimo]]: modelo de dados mínimo e monorepo
