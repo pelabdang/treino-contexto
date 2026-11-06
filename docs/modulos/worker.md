@@ -2,8 +2,8 @@
 tipo: modulo
 status: em-uso
 dono: theo
-atualizado: 2026-11-04
-links: [[decisoes/0006-upload-de-fit]], [[modulos/api]], [[modulos/grafico-tiros]], [[modulos/infra]], [[modulos/ingestao-garmin]], [[modulos/banco]], [[modulos/clima]], [[decisoes/0007-clima-da-atividade]], [[produto/meta-4-como-rodar]]
+atualizado: 2026-11-06
+links: [[decisoes/0006-upload-de-fit]], [[modulos/api]], [[modulos/grafico-tiros]], [[modulos/infra]], [[modulos/ingestao-garmin]], [[modulos/banco]], [[modulos/clima]], [[decisoes/0008-deteccao-de-esforcos]], [[metricas/esforcos]], [[decisoes/0007-clima-da-atividade]], [[produto/meta-4-como-rodar]]
 ---
 # Módulo: worker
 
@@ -24,6 +24,17 @@ da importação e do cálculo de métricas, fora da [[modulos/api]].
 - Reclassificação: `uv run python -m worker.reclassificar --atleta-id <id>` roda `classificar_atividades` e mostra
   quantas corridas processou. Idempotente. Use quando a API devolve `reclassificacao_pendente: true`
   (passo a passo em "Reclassificar" de [[modulos/api]]). Atleta inexistente: stderr e saída 1.
+- Esforços: `uv run python -m worker.detectar_esforcos --atleta-id <id>` (#166, [[decisoes/0008-deteccao-de-esforcos]]) lê as voltas
+  de cada corrida e pedalada do atleta, monta os blocos ([[metricas/esforcos]]) e grava em `bloco_atividade` ([[modulos/banco]]).
+  **Sem rede.** Idempotente: calcula os blocos de cada atividade e só regrava os que mudaram (valores ou
+  `versao_deteccao`); a 2ª rodada muda 0 e os `id` ficam. Mudar `VERSAO` em `app/metricas/esforcos.py` (ou qualquer
+  constante da regra) faz a rodada seguinte redetectar tudo. A referência é o ritmo habitual (corrida) ou a velocidade
+  habitual (ciclismo: mediana das pedaladas de mais de 30 min, fora do trainer, 12 semanas antes, ou todo o histórico
+  com menos de 10); sem histórico vale a mediana da própria atividade. Imprime atividades processadas (regravadas,
+  sem mudança, sem blocos), esforços e treinos-chave por modalidade, esforços por faixa e quantas atividades usaram a
+  referência de reserva. Atleta inexistente: stderr e saída 1. A importação (`importar`) e o upload de FIT
+  (`importar_fit`) chamam a mesma detecção só para as atividades que entraram ou mudaram; um erro nela vira aviso no
+  log e nunca derruba a importação (rode o comando para refazer). Nada é exposto pela API ainda (#167).
 - Clima: `uv run python -m worker.preencher_clima [--atleta-id N] [--exportacao CAMINHO] [--limite N] [--refazer-falhas] [--so-posicao]`.
   Primeiro relê a posição, da exportação (se dada) e, na falta dela, do FIT de `FIT_DIR`, para preencher `inicio_lat/lon` onde está `NULL`; depois busca
   o clima das atividades ao ar livre, com posição, sem `ok` válido e com fim a mais de 7 dias. Sequencial, pausa de 0,25 s,
@@ -49,6 +60,8 @@ da importação e do cálculo de métricas, fora da [[modulos/api]].
 - `services/worker/worker/apagar_fit.py` (CLI `python -m worker.apagar_fit`)
 - `services/worker/worker/reclassificar.py` (CLI `python -m worker.reclassificar`)
 - `services/worker/worker/reclassificar_subtipo.py` (CLI `python -m worker.reclassificar_subtipo`)
+- `services/worker/worker/detectar_esforcos.py` (CLI `python -m worker.detectar_esforcos`); a lógica está em `services/api/app/servicos/esforcos.py`
+- `services/worker/tests/test_detectar_esforcos.py`
 - `services/worker/worker/preencher_clima.py` (CLI `python -m worker.preencher_clima`); a lógica está em `services/api/app/servicos/clima.py`
 - `services/worker/tests/test_preencher_clima.py`
 - `services/worker/tests/test_reclassificar.py`

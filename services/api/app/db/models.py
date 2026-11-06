@@ -26,6 +26,7 @@ MODALIDADES = ("corrida", "natacao", "ciclismo", "outra")
 TIPOS_TREINO = ("leve", "moderado", "longo", "intervalado", "fartlek")
 ORIGENS_TIPO = ("sugestao", "professor", "trainingpeaks")
 TIPOS_SEGMENTO = ("volta", "tiro", "recuperacao")
+CATEGORIAS_BLOCO = ("esforco", "recuperacao", "aquecimento", "desaquecimento", "leve")  # ADR 0008, item 1
 # Valores do campo `intensity` do lap no FIT, normalizados em minúsculas (ADR 0002).
 INTENSIDADES = ("active", "rest", "warmup", "cooldown", "recovery", "interval", "other")
 
@@ -116,6 +117,9 @@ class Atividade(Base):
     segmentos: Mapped[list["Segmento"]] = relationship(
         back_populates="atividade", cascade="all, delete-orphan", order_by="Segmento.ordem"
     )
+    blocos: Mapped[list["BlocoAtividade"]] = relationship(
+        back_populates="atividade", cascade="all, delete-orphan", order_by="BlocoAtividade.ordem"
+    )
 
 
 class Segmento(Base):
@@ -141,6 +145,38 @@ class Segmento(Base):
     versao_deteccao: Mapped[str | None] = mapped_column(String(40))  # ex.: tiros_1km@1; ADR 0002
 
     atividade: Mapped[Atividade] = relationship(back_populates="segmentos")
+
+
+class BlocoAtividade(Base):
+    """Um bloco de uma atividade: voltas contiguas juntadas e classificadas (ADR 0008, item 9).
+
+    Uma linha por bloco, de todas as categorias. So guarda o que a regra produz; a modalidade vem da atividade.
+    Quem grava e `app.servicos.esforcos.detectar_esforcos`, que apaga e recria os blocos da atividade.
+    """
+
+    __tablename__ = "bloco_atividade"
+    __table_args__ = (
+        UniqueConstraint("atividade_id", "ordem", name="uq_bloco_atividade_ordem"),
+        CheckConstraint(_in("categoria", CATEGORIAS_BLOCO), name="categoria"),
+    )
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    atividade_id: Mapped[int] = mapped_column(ForeignKey("atividade.id", ondelete="CASCADE"), index=True)
+    ordem: Mapped[int] = mapped_column(Integer)
+    categoria: Mapped[str] = mapped_column(String(20))
+    volta_inicial: Mapped[int] = mapped_column(Integer)  # segmento.ordem da primeira volta
+    volta_final: Mapped[int] = mapped_column(Integer)  # segmento.ordem da ultima volta
+    inicio_offset_s: Mapped[float] = mapped_column(Float)
+    duracao_s: Mapped[float] = mapped_column(Float)  # tempo em movimento
+    parada_apos_s: Mapped[float | None] = mapped_column(Float)  # parado entre este bloco e o seguinte
+    distancia_m: Mapped[float | None] = mapped_column(Float)
+    fc_media: Mapped[float | None] = mapped_column(Float)  # ponderada pela duracao
+    pace_s_km: Mapped[float | None] = mapped_column(Float)
+    faixa: Mapped[str | None] = mapped_column(String(10))  # d400, t4...; NULL fora de qualquer faixa
+    treino_chave: Mapped[bool] = mapped_column(Boolean, default=False, server_default="false")
+    versao_deteccao: Mapped[str] = mapped_column(String(40))  # ex.: esforcos@1
+
+    atividade: Mapped[Atividade] = relationship(back_populates="blocos")
 
 
 class ClimaAtividade(Base):
