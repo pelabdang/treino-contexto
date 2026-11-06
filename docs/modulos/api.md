@@ -30,6 +30,7 @@ Futuramente recebe a importação Garmin e serve métricas ao [[modulos/mobile]]
 - `services/api/app/servicos/fuso.py`: `data_local(inicio, fuso_min)`, a data local da sessão ([[decisoes/0003-fuso-da-atividade]]).
 - `services/api/app/ingestao/garmin/`: parser da exportação Garmin e do FIT (`ler_exportacao`, `ler_atividade_fit`), sem banco; o worker importa daqui ([[modulos/ingestao-garmin]], [[decisoes/0006-upload-de-fit]]).
 - `services/api/app/ingestao/importacao.py` e `fit_guardado.py`: gravação da exportação e do upload (`importar`, `importar_fit`) e guarda dos FIT em `FIT_DIR`. O endpoint de upload está em `app/rotas/atividades.py` (#95).
+- `services/api/app/servicos/esforcos_leitura.py`: lê os blocos gravados para a resposta da atividade (#167).
 - `services/api/app/servicos/evolucao_tiros.py`: liga as métricas ao banco (ver abaixo).
 - `services/api/app/explicacao/`: pacote reservado.
 
@@ -68,7 +69,7 @@ separada por vírgula, lida em `app/config.py`; middleware em `criar_app` de `ap
 - `detectar_esforcos(session, atleta_id, atividade_ids=None)` (#166, [[decisoes/0008-deteccao-de-esforcos]]): para cada corrida e
   pedalada monta os blocos com `app.metricas.esforcos` ([[metricas/esforcos]]) e grava em `bloco_atividade` ([[modulos/banco]]),
   com a faixa de cada esforço e o `treino_chave` (os esforços da sequência contínua). Idempotente: só regrava a atividade
-  cujos blocos mudaram (ou cuja `versao_deteccao` é outra). Devolve um `RelatorioEsforcos`. Sem rede, nada exposto pela API ainda (#167).
+  cujos blocos mudaram (ou cuja `versao_deteccao` é outra). Devolve um `RelatorioEsforcos`. Sem rede. A API só lê o que isto grava (#167, abaixo).
 - `velocidade_habitual(historico, data)`: a referência do ciclismo (mediana da velocidade das pedaladas de mais de 30 min,
   fora do trainer e do `virtual`, nas 12 semanas antes; todo o histórico anterior com menos de 10). A da corrida é a `pace_habitual`.
 - A importação e o upload de FIT chamam `detectar_esforcos` para as atividades que entraram ou mudaram. Comando: `worker.detectar_esforcos` ([[modulos/worker]]).
@@ -144,7 +145,21 @@ Item 5 da [[decisoes/0007-clima-da-atividade]]. Devolve a atividade (`atividade_
 {"estado": "indoor"}
 ```
 - **Campos prontos para a tela (#158, [[decisoes/0004-contrato-tela-evolucao]], adendo 2):** a regra "a API formata, o app mostra" vale aqui também.
-  `data_local` (`AAAA-MM-DD`) e `hora_local` (`HH:MM`): início no fuso da atividade (`fuso_min`; sem ele, `America/Sao_Paulo`, [[decisoes/0003-fuso-da-atividade]]), por `inicio_local` em `app/servicos/fuso.py`. `duracao` em `h:mm:ss` (horas sem limite; segundos arredondados com meio para cima). `pace_medio` em `m:ss` (`formatar_pace` sobre duração / km, sem arredondar antes): só para `corrida` com distância e duração maiores que zero, senão `null`. `clima.atribuicao` = "Weather data by Open-Meteo.com" só quando `estado` é `ok` (ADR 0007, item 4); nos outros estados a chave nem vem. `inicio` em UTC e os campos numéricos continuam. A `carga` (#142) e os `esforcos` (#167) entram na mesma resposta quando saírem.
+  `data_local` (`AAAA-MM-DD`) e `hora_local` (`HH:MM`): início no fuso da atividade (`fuso_min`; sem ele, `America/Sao_Paulo`, [[decisoes/0003-fuso-da-atividade]]), por `inicio_local` em `app/servicos/fuso.py`. `duracao` em `h:mm:ss` (horas sem limite; segundos arredondados com meio para cima). `pace_medio` em `m:ss` (`formatar_pace` sobre duração / km, sem arredondar antes): só para `corrida` com distância e duração maiores que zero, senão `null`. `clima.atribuicao` = "Weather data by Open-Meteo.com" só quando `estado` é `ok` (ADR 0007, item 4); nos outros estados a chave nem vem. `inicio` em UTC e os campos numéricos continuam. A `carga` (#142) entra na mesma resposta quando sair.
+- **`esforcos` (#167, [[decisoes/0008-deteccao-de-esforcos]]):** objeto opcional (`null` fora de corrida e ciclismo) com os blocos que
+  `detectar_esforcos` gravou. A API **não detecta** na leitura (`servicos/esforcos_leitura.py`). Campos: `versao` (`esforcos@1`, a gravada; sem
+  blocos, a atual), `referencia_da_atividade` (`true` quando não havia histórico e a referência foi a da própria atividade: a tela avisa),
+  `treino_chave` (algum esforço é de um treino-chave contínuo) e `blocos` em ordem. Cada bloco: `ordem`, `categoria`
+  (`esforco`, `recuperacao`, `aquecimento`, `desaquecimento`, `leve`), `faixa` e `faixa_rotulo` (`d400` / "400 m", `t4` / "4 min"; `null`
+  fora de faixa), `treino_chave`, números com 1 casa (`inicio_offset_s`, `duracao_s`, `distancia_m`, `parada_apos_s`, `fc_media`,
+  `pace_s_km` só na corrida, `velocidade_kmh` só no ciclismo) e **textos prontos** (ADR 0004): `duracao` e `parada_apos` em `m:ss`
+  (`formatar_pace`; `parada_apos` é `null` sem parada), `distancia` ("400 m" ou "1,50 km"), `pace` (`m:ss`, só corrida) e
+  `velocidade` ("25,3 km/h", só ciclismo). Chaves de pace/velocidade da outra modalidade nem vêm.
+- `ref_origem` não é gravado ([[decisoes/0008-deteccao-de-esforcos]], decisões da #166): `origem_da_referencia` recalcula na leitura com
+  `pace_habitual` / `velocidade_habitual` (uma consulta leve ao histórico da modalidade; só colunas, sem blocos). Limite: atividade antiga importada
+  depois da detecção pode mudar a origem recalculada em relação à usada; `detectar_esforcos` não regrava sozinho nesse caso.
+- Exemplo de contrato: `packages/api-client/exemplos/atividade-esforcos.json` ([[modulos/api-client]]). Testes: `services/api/tests/rotas/test_atividade_esforcos.py`
+  (oráculo da #161, textos, aviso de referência, lista vazia com a versão, `404`, modalidade sem detecção, a leitura não detecta, OpenAPI).
 - `estado` é `ok`, `indoor`, `sem_posicao`, `pendente` ou `falha`. Os quatro valores só aparecem em `ok`; nos outros estados
   a chave nem vem. O texto do erro da consulta (`erro` da tabela) nunca sai.
 - `clima` é campo opcional no schema. A posição de início (`inicio_lat/lon`) nunca está na resposta nem no OpenAPI.
