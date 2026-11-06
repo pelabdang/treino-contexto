@@ -41,6 +41,16 @@
             "title": "Duracao S",
             "type": "number"
           },
+          "esforcos": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/EsforcosOut"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
           "fc_media": {
             "anyOf": [
               {
@@ -101,6 +111,180 @@
           "duracao"
         ],
         "title": "AtividadeOut",
+        "type": "object"
+      },
+      "BlocoOut": {
+        "description": "Um bloco do treino (ADR 0008). Textos prontos para a tela; os numeros seguem para quem precisar (1 casa).",
+        "properties": {
+          "categoria": {
+            "enum": [
+              "esforco",
+              "recuperacao",
+              "aquecimento",
+              "desaquecimento",
+              "leve"
+            ],
+            "title": "Categoria",
+            "type": "string"
+          },
+          "distancia": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Distancia"
+          },
+          "distancia_m": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Distancia M"
+          },
+          "duracao": {
+            "title": "Duracao",
+            "type": "string"
+          },
+          "duracao_s": {
+            "title": "Duracao S",
+            "type": "number"
+          },
+          "faixa": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Faixa"
+          },
+          "faixa_rotulo": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Faixa Rotulo"
+          },
+          "fc_media": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Fc Media"
+          },
+          "inicio_offset_s": {
+            "title": "Inicio Offset S",
+            "type": "number"
+          },
+          "ordem": {
+            "title": "Ordem",
+            "type": "integer"
+          },
+          "pace": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Pace"
+          },
+          "pace_s_km": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Pace S Km"
+          },
+          "parada_apos": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Parada Apos"
+          },
+          "parada_apos_s": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Parada Apos S"
+          },
+          "treino_chave": {
+            "title": "Treino Chave",
+            "type": "boolean"
+          },
+          "velocidade": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Velocidade"
+          },
+          "velocidade_kmh": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Velocidade Kmh"
+          }
+        },
+        "required": [
+          "ordem",
+          "categoria",
+          "faixa",
+          "faixa_rotulo",
+          "treino_chave",
+          "inicio_offset_s",
+          "duracao_s",
+          "distancia_m",
+          "parada_apos_s",
+          "fc_media",
+          "duracao",
+          "distancia",
+          "parada_apos"
+        ],
+        "title": "BlocoOut",
         "type": "object"
       },
       "Body_enviarAtividadeFit": {
@@ -292,6 +476,38 @@
           "detail"
         ],
         "title": "Erro",
+        "type": "object"
+      },
+      "EsforcosOut": {
+        "description": "Blocos e esforcos que o comando `detectar_esforcos` gravou (#166). A leitura nao detecta.",
+        "properties": {
+          "blocos": {
+            "items": {
+              "$ref": "#/components/schemas/BlocoOut"
+            },
+            "title": "Blocos",
+            "type": "array"
+          },
+          "referencia_da_atividade": {
+            "title": "Referencia Da Atividade",
+            "type": "boolean"
+          },
+          "treino_chave": {
+            "title": "Treino Chave",
+            "type": "boolean"
+          },
+          "versao": {
+            "title": "Versao",
+            "type": "string"
+          }
+        },
+        "required": [
+          "versao",
+          "referencia_da_atividade",
+          "treino_chave",
+          "blocos"
+        ],
+        "title": "EsforcosOut",
         "type": "object"
       },
       "EvolucaoTiros1km": {
