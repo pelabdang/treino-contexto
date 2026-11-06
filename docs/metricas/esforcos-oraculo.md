@@ -2,7 +2,7 @@
 tipo: metrica
 status: rascunho
 dono: caio
-atualizado: 2026-11-04
+atualizado: 2026-11-06
 links: [[decisoes/0008-deteccao-de-esforcos]], [[metricas/tiros-1km]], [[modulos/ingestao-garmin]], [[produto/roadmap]], [[glossario]]
 ---
 # Detecção de esforços: fixtures e oráculo

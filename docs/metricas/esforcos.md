@@ -118,10 +118,12 @@ própria do projeto, sem artigo (a ADR cita Daniels só como inspiração para o
    final, duração, distância, pace e velocidade), `margem` (corrida `1 - pace/ref`; ciclismo `velocidade/ref - 1`),
    `esforcos_fora`, `referencia` e `ref_origem`.
 
-**Premissa nomeada além do texto da ADR**: uma parada de `PAUSA_SEPARA_S` ou mais entre dois esforços (15 s na corrida,
+**Premissa pendente de confirmação do Angelo (não é decisão; vai além do texto da ADR)**: uma parada de `PAUSA_SEPARA_S` ou mais entre dois esforços (15 s na corrida,
 30 s no ciclismo) conta como recuperação e corta a sequência. Sem isso, 5 x 1 km a 240 s/km com 90 s parados somariam
 1200 s e seriam "contínuos". Dois esforços vizinhos separados só por diferença de ritmo (mais de 5%, parada menor) seguem
 na mesma sequência: é o progressivo forte.
+A ADR 0008 aprovou os 15 s e 30 s só para separar blocos na junção de laps (item 2 de "A confirmar"); usá-los para cortar a
+sequência do treino-chave ainda precisa do aval do Angelo. Até lá a regra vale como premissa e o resultado pode mudar.
 
 Exemplos à mão (sintéticos, habitual de 330 s/km, limiar 297 s/km):
 - **8 km a 270 s/km**: 8 x 1000 m em 270 s, 2160 s >= 1200 s, 270 <= 297, margem 1 - 270/330 = 18,2%, 0 esforços fora:
