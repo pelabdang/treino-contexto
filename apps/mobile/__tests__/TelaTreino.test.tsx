@@ -18,6 +18,9 @@ const tela = (f: typeof fetch, extra = {}) => (
   <TelaTreino apiUrl="http://api.teste" atletaId={1} atividadeId={101} fetchFn={f} {...extra} />
 );
 
+// O primeiro render a frio no CI passou de 5 s uma vez (#219); folga para a máquina lenta.
+jest.setTimeout(20000);
+
 describe("tela de um treino", () => {
   it("chama a API da atividade", async () => {
     const f = fetchCom(200, atividades.ok);
