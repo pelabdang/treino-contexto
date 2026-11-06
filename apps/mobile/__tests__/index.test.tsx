@@ -12,6 +12,9 @@ jest.mock("@expo/vector-icons", () => {
   return { MaterialIcons: ({ name, size }: { name: string; size: number }) => <Text testID={`icone-${name}`}>{`${name}:${size}`}</Text> };
 });
 
+const mockPush = jest.fn();
+jest.mock("expo-router", () => ({ router: { push: (...a: unknown[]) => mockPush(...a) } }));
+
 const base = exemplo as unknown as EvolucaoTiros1km;
 const copia = (): EvolucaoTiros1km => JSON.parse(JSON.stringify(base));
 
@@ -110,6 +113,41 @@ describe("tela de evolução", () => {
     await render(tela(fetchCom(404, { detail: "atleta não encontrado" })));
     const nf = await screen.findByTestId("estado-erro");
     expect(within(nf).getByText("error-outline:40")).toBeTruthy();
+  });
+
+  it("'Ver treino' só aparece com a sessão selecionada e abre a tela daquele treino", async () => {
+    const aoAbrirTreino = jest.fn();
+    await render(<TelaEvolucao apiUrl="http://api.teste" atletaId={1} fetchFn={fetchCom(200, base)} aoAbrirTreino={aoAbrirTreino} />);
+    await screen.findByTestId("lista-sessoes");
+    expect(screen.queryByTestId("ver-treino")).toBeNull();
+    const id = base.sessoes[1].atividade_id;
+    await fireEvent.press(screen.getByTestId(`linha-sessao-${id}`));
+    const botao = screen.getByRole("button", { name: "Ver treino" });
+    expect(StyleSheet.flatten(botao.props.style).minHeight).toBeGreaterThanOrEqual(48);
+    await fireEvent.press(botao);
+    expect(aoAbrirTreino).toHaveBeenCalledWith(id);
+    // a seleção continua (a tela não é recriada): é o que o "Voltar" encontra
+    expect(screen.getByTestId(`linha-sessao-${id}`).props.accessibilityState.selected).toBe(true);
+    expect(screen.getByTestId("ver-treino")).toBeTruthy();
+  });
+
+  it("sem aoAbrirTreino não mostra 'Ver treino'", async () => {
+    await render(tela(fetchCom(200, base)));
+    await screen.findByTestId("lista-sessoes");
+    await fireEvent.press(screen.getByTestId(`linha-sessao-${base.sessoes[0].atividade_id}`));
+    expect(screen.queryByTestId("ver-treino")).toBeNull();
+  });
+
+  it("na rota inicial, 'Ver treino' navega para /treino/<id>", async () => {
+    const original = globalThis.fetch;
+    globalThis.fetch = fetchCom(200, base);
+    await render(<Inicio />);
+    await screen.findByTestId("lista-sessoes");
+    const id = base.sessoes[0].atividade_id;
+    await fireEvent.press(screen.getByTestId(`linha-sessao-${id}`));
+    await fireEvent.press(screen.getByTestId("ver-treino"));
+    expect(mockPush).toHaveBeenCalledWith(`/treino/${id}`);
+    globalThis.fetch = original;
   });
 
   it("tocar na linha da lista seleciona a sessão e mostra o detalhe do gráfico", async () => {
