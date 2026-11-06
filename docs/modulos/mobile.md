@@ -2,7 +2,7 @@
 tipo: modulo
 status: em-uso
 dono: rafa
-atualizado: 2026-11-04
+atualizado: 2026-11-06
 links: [[modulos/api]], [[modulos/api-client]], [[produto/roadmap]], [[decisoes/0004-contrato-tela-evolucao]], [[produto/meta-2-como-rodar]], [[decisoes/0006-upload-de-fit]], [[design/guia-visual]], [[design/tokens]]
 ---
 # Módulo: mobile
@@ -25,12 +25,12 @@ O app não calcula pace: todo `m:ss` virá da [[modulos/api]].
 
 ## Tela de evolução (`TelaEvolucao`)
 `src/componentes/TelaEvolucao.tsx` chama `buscarEvolucaoTiros1km` e mostra um estado por vez:
-- carregando: "Carregando seus tiros...";
-- vazio (`sessoes: []`): "Ainda não há treinos de tiros de 1 km.";
-- erro `404`: "Atleta não encontrado"; `422` ou outro status: "Não foi possível carregar os tiros. Tente de novo mais tarde."; rede: "Não foi possível falar com o servidor" com o botão "Tentar de novo";
-- sucesso, nesta ordem (#154): cartão "Último treino · dd/mm/aa" (a última sessão da lista, que a API manda em data crescente) com o **melhor tiro** em `fonte.numero-destaque` (`pace_melhor` + "min/km"), "FC do melhor tiro" (`fc_melhor_tiro` ou "sem FC") e, em secundário, "Média dos tiros" (`pace_medio`) e `n_tiros`; cartão "Evolução" com o `GraficoTiros`; cartão "Treinos" com a lista, **mais recente no alto**, uma linha por sessão (data, `pace_melhor`, `fc_melhor_tiro` ou "sem FC") e abaixo "média `pace_medio` · `n_tiros` tiros"; e o rodapé "cálculo: <versao_calculo>" como texto, mais "cálculo em atualização" quando `reclassificacao_pendente` é `true`. O app nunca compara a versão com um valor fixo.
+- carregando (#202): o texto "Carregando seus tiros..." e o esqueleto dos três cartões (`EsqueletoEvolucao`, `src/componentes/Esqueleto.tsx`; `cor.superficie-2`, `raio.pequeno`), com pulso de opacidade 1 para 0,6 em `movimento.esqueleto` (1200 ms). Com "reduzir movimento" no sistema (`AccessibilityInfo`) o esqueleto fica parado. O esqueleto é escondido do leitor de tela; o texto fica;
+- vazio (`sessoes: []`): ícone `insert-chart-outlined` (40, `cor.texto-2`), título "Ainda não há treinos de tiros de 1 km" e a frase "Envie o arquivo FIT de um treino com tiros para ver a evolução aqui."; o botão "Enviar arquivo FIT" do alto vira **primário** (`variante="primario"` do `BotaoEnviarFit`). Fica um botão só, no mesmo lugar, para não perder o aviso de envio quando a lista passa a ter dados;
+- erro (ícone de 40 em `cor.erro`, frase e `accessibilityRole="alert"`): rede usa `wifi-off`, "Não foi possível falar com o servidor" e o botão "Tentar de novo"; `404` usa `error-outline`, "Atleta não encontrado"; `422` ou outro status usa `error-outline`, "Não foi possível carregar os tiros. Tente de novo mais tarde.";
+- sucesso, nesta ordem (#154): cartão "Último treino · dd/mm/aa" (a última sessão da lista, que a API manda em data crescente) com o **melhor tiro** em `fonte.numero-destaque` (`pace_melhor` + "min/km"), "FC do melhor tiro" (`fc_melhor_tiro` ou "sem FC") e, em secundário, "Média dos tiros" (`pace_medio`) e `n_tiros`; cartão "Evolução" com o `GraficoTiros`; cartão "Treinos" com a lista, **mais recente no alto**, uma linha por sessão (data, `pace_melhor`, `fc_melhor_tiro` ou "sem FC") e abaixo "média `pace_medio` · `n_tiros` tiros". A linha é **tocável** (#202): altura mínima de 56 (`tamanho.listaLinhaAltura`, `lista.linha-altura`), `accessibilityRole="button"`, `accessibilityState.selected` e fundo `cor.destaque-suave` quando selecionada. A seleção é uma só, guardada na `TelaEvolucao`: tocar a linha ou o ponto do gráfico escolhe a mesma sessão (ponto maior com anel, linha destacada e o detalhe do gráfico). A partir de 600 de largura (web larga) a lista ganha um cabeçalho de colunas e a coluna "Média dos tiros" (`pace_medio` · `n_tiros`) em vez da segunda linha; e o rodapé "cálculo: <versao_calculo>" como texto, mais "cálculo em atualização" quando `reclassificacao_pendente` é `true`. O app nunca compara a versão com um valor fixo.
 - Margem da tela: 16 no celular e 24 a partir de 600 de largura (`useMargemTela` / `margemDaTela` em `src/tema/`, #197).
-Testes em `__tests__/index.test.tsx` com `fetch` falso (todos os estados, cartão do último treino, ordem da lista, "9:99" em `pace_melhor` e rótulo de eixo trocados (prova que o app não recalcula), margem 16/24, versão `tiros_1km@9`, aviso de reclassificação). O componente aceita `fetchFn` só para teste.
+Testes em `__tests__/index.test.tsx` com `fetch` falso (todos os estados, ícones, esqueleto, toque na linha e no ponto marcando a mesma sessão, coluna da média na web larga, cartão do último treino, ordem da lista, "9:99" em `pace_melhor` e rótulo de eixo trocados (prova que o app não recalcula), margem 16/24, versão `tiros_1km@9`, aviso de reclassificação). O componente aceita `fetchFn` só para teste.
 
 Rodar com dado sintético: passo a passo em [[produto/meta-2-como-rodar]] (API com fixtures, `CORS_ORIGENS` com `http://localhost:8081` e `npx expo start --web --port 8081`). O `expo start` reescreve `apps/mobile/tsconfig.json`: não commitar.
 
@@ -57,7 +57,7 @@ Verificado na web (#96) com API e Postgres locais, FIT sintético `upload_interv
   - "Sem sessões de tiros no período." (`eixos` null ou nenhuma sessão);
   - "Sem pace para mostrar." (`eixos.pace` null);
   - "Nenhuma sessão deste período tem frequência cardíaca." (painel de FC quando `eixos.fc` é null).
-- Carregamento, erro e ligação com a API ficam na #70.
+- Carregamento, erro e ligação com a API ficam na `TelaEvolucao`. O gráfico aceita `selecionadaId` e `aoSelecionar` (seleção controlada pela tela, #202); sem eles guarda a seleção sozinho.
 
 ## Tema (tokens do guia visual)
 `src/tema/` transforma [[design/tokens]] (fonte única) em código, com os mesmos nomes do guia ([[design/guia-visual]]):
@@ -65,7 +65,7 @@ Verificado na web (#96) com API e Postgres locais, FIT sintético `upload_interv
 - `index.tsx`: `useTema()` devolve `{ escuro, cor }` conforme o tema do sistema (`useColorScheme`; claro quando o sistema não informa). O objeto é estável, então serve de dependência de `useMemo`.
 - `fontes.ts`: `useFontesInter()` carrega a Inter (`@expo-google-fonts/inter`, OFL); o `_layout.tsx` espera as fontes mostrando uma `View` com `cor.fundo` (sem piscar em branco) e, se falharem, segue com a fonte do sistema. Fica separado do resto para os testes dos componentes não carregarem `expo-font`.
 - Os componentes montam o `StyleSheet` com `criarEstilos(tema)` dentro de `useMemo`. Cor, fonte, espaço e raio das telas só vêm de tokens: sem cor literal nas telas.
-- `@expo/vector-icons` (Material Icons) já está instalado, mas ainda sem uso: nenhum ícone entra nas telas atuais para não mudar o layout.
+- `@expo/vector-icons` (Material Icons) é usado nos estados vazio e de erro da `TelaEvolucao` (#202), sempre com texto ao lado (o ícone fica fora da acessibilidade). Nos testes de Jest o pacote é trocado por um texto `nome:tamanho`, porque a fonte do ícone carrega de forma assíncrona e não existe no Jest.
 - Teste `__tests__/tema.test.tsx` lê a tabela "Cores" de `docs/design/tokens.md` e exige que o tema tenha os mesmos nomes e valores (claro e escuro), mais conferências de espaço, raio e tipografia e do `useTema`. Mudou uma cor no guia? Atualize `tokens.ts` na mesma hora, senão o teste falha.
 - Diferenças visuais pequenas em relação às telas antigas, vindas do guia: botão com 48 de altura e cor `destaque`, desligado em `superficie-2` (antes opacidade 0,5), alvo de toque do ponto do gráfico em 44 (antes 32), rótulos de eixo em 12 (antes 11) e conteúdo limitado a 720 de largura na web. O destaque do melhor tiro é da #154 (acima).
 

@@ -1,9 +1,22 @@
 import { buscarEvolucaoTiros1km, type ErroApi, type EvolucaoTiros1km } from "@treino/api-client";
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { ActivityIndicator, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
+import { MaterialIcons } from "@expo/vector-icons";
+import { Pressable, ScrollView, StyleSheet, Text, useWindowDimensions, View } from "react-native";
 
 import { BotaoEnviarFit } from "./BotaoEnviarFit";
-import { borda, espaco, fonte, larguraConteudoMax, raio, tamanho, useMargemTela, useTema, type Tema } from "../tema";
+import { EsqueletoEvolucao } from "./Esqueleto";
+import {
+  borda,
+  espaco,
+  fonte,
+  larguraConteudoMax,
+  larguraMargemGrande,
+  raio,
+  tamanho,
+  useMargemTela,
+  useTema,
+  type Tema,
+} from "../tema";
 import { dataCurta, GraficoTiros } from "./GraficoTiros";
 
 type Props = {
@@ -54,21 +67,39 @@ export function TelaEvolucao({ apiUrl, atletaId, fetchFn }: Props) {
   // Depois de um envio com sucesso, busca a evolução de novo (sem esconder o que já está na tela).
   const recarregar = useCallback(() => setTentativa((n) => n + 1), []);
 
+  const vazio = estado.tipo === "ok" && estado.dados.sessoes.length === 0;
+
   return (
     <ScrollView testID="rolagem-tela" contentContainerStyle={styles.container}>
       <Text accessibilityRole="header" style={styles.titulo}>
         Evolução dos tiros de 1 km
       </Text>
-      <BotaoEnviarFit apiUrl={apiUrl} atletaId={atletaId} fetchFn={fetchFn} aoEnviar={recarregar} />
+      <BotaoEnviarFit
+        apiUrl={apiUrl}
+        atletaId={atletaId}
+        fetchFn={fetchFn}
+        aoEnviar={recarregar}
+        variante={vazio ? "primario" : "secundario"}
+      />
       {estado.tipo === "carregando" && (
-        <View style={styles.centro}>
-          <ActivityIndicator color={tema.cor.destaque} />
-          <Text style={styles.texto}>Carregando seus tiros...</Text>
+        <View>
+          <Text accessibilityLiveRegion="polite" style={styles.texto}>
+            Carregando seus tiros...
+          </Text>
+          <EsqueletoEvolucao />
         </View>
       )}
       {estado.tipo === "erro" && (
-        <View>
-          <Text style={styles.erro}>{mensagemErro(estado.erro)}</Text>
+        <View testID="estado-erro" style={styles.estado}>
+          <MaterialIcons
+            name={estado.erro.tipo === "rede" ? "wifi-off" : "error-outline"}
+            size={tamanho.iconeEstado}
+            color={tema.cor.erro}
+            accessible={false}
+          />
+          <Text accessibilityRole="alert" style={styles.erro}>
+            {mensagemErro(estado.erro)}
+          </Text>
           {estado.erro.tipo === "rede" && (
             <Pressable
               accessibilityRole="button"
@@ -80,18 +111,27 @@ export function TelaEvolucao({ apiUrl, atletaId, fetchFn }: Props) {
           )}
         </View>
       )}
-      {estado.tipo === "ok" && <Sucesso dados={estado.dados} styles={styles} />}
+      {estado.tipo === "ok" && <Sucesso dados={estado.dados} styles={styles} tema={tema} />}
     </ScrollView>
   );
 }
 
-function Sucesso({ dados, styles }: { dados: EvolucaoTiros1km; styles: Estilos }) {
+function Sucesso({ dados, styles, tema }: { dados: EvolucaoTiros1km; styles: Estilos; tema: Tema }) {
   // A API manda as sessões em ordem de data crescente: a última é o último treino.
   const ultima = dados.sessoes.at(-1);
+  // A seleção é única: ponto do gráfico e linha da lista escolhem a mesma sessão.
+  const [selecionadaId, setSelecionadaId] = useState<number | null>(null);
+  const larga = useWindowDimensions().width >= larguraMargemGrande;
   return (
     <View>
       {dados.sessoes.length === 0 ? (
-        <Text style={styles.texto}>Ainda não há treinos de tiros de 1 km.</Text>
+        <View testID="estado-vazio" style={styles.estado}>
+          <MaterialIcons name="insert-chart-outlined" size={tamanho.iconeEstado} color={tema.cor["texto-2"]} accessible={false} />
+          <Text accessibilityRole="header" style={styles.estadoTitulo}>
+            Ainda não há treinos de tiros de 1 km
+          </Text>
+          <Text style={styles.texto}>Envie o arquivo FIT de um treino com tiros para ver a evolução aqui.</Text>
+        </View>
       ) : (
         <>
           {ultima && (
@@ -111,20 +151,50 @@ function Sucesso({ dados, styles }: { dados: EvolucaoTiros1km; styles: Estilos }
           )}
           <View style={styles.cartao}>
             <Text style={styles.cartaoTitulo}>Evolução</Text>
-            <GraficoTiros dados={dados} />
+            <GraficoTiros dados={dados} selecionadaId={selecionadaId} aoSelecionar={setSelecionadaId} />
           </View>
           <View testID="lista-sessoes" style={styles.cartao}>
             <Text style={styles.cartaoTitulo}>Treinos</Text>
-            {[...dados.sessoes].reverse().map((s) => (
-              <View key={s.atividade_id} style={styles.linha}>
-                <Text style={styles.celula}>{dataCurta(s.data)}</Text>
-                <Text style={styles.celula}>{s.pace_melhor} min/km</Text>
-                <Text style={styles.celula}>{s.fc_melhor_tiro === null ? "sem FC" : `${s.fc_melhor_tiro} bpm`}</Text>
-                <Text style={styles.secundarioLinha}>
-                  média {s.pace_medio} · {s.n_tiros} tiros
-                </Text>
+            {larga && (
+              <View testID="cabecalho-lista" style={styles.cabecalhoLista}>
+                <Text style={[styles.colunaTitulo, styles.colData]}>Data</Text>
+                <Text style={[styles.colunaTitulo, styles.colPace]}>Melhor tiro</Text>
+                <Text style={[styles.colunaTitulo, styles.colFc]}>FC do melhor tiro</Text>
+                <Text style={[styles.colunaTitulo, styles.colunaMedia]}>Média dos tiros</Text>
               </View>
-            ))}
+            )}
+            {[...dados.sessoes].reverse().map((s) => {
+              const selecionada = s.atividade_id === selecionadaId;
+              return (
+                <Pressable
+                  key={s.atividade_id}
+                  testID={`linha-sessao-${s.atividade_id}`}
+                  accessibilityRole="button"
+                  accessibilityState={{ selected: selecionada }}
+                  accessibilityLabel={`Sessão de ${dataCurta(s.data)}, melhor tiro ${s.pace_melhor} min/km`}
+                  onPress={() => setSelecionadaId(s.atividade_id)}
+                  style={({ pressed }) => [
+                    styles.linha,
+                    (selecionada || pressed) && { backgroundColor: tema.cor["destaque-suave"] },
+                  ]}
+                >
+                  <Text style={[styles.celula, larga && styles.colData]}>{dataCurta(s.data)}</Text>
+                  <Text style={[styles.celula, larga && styles.colPace]}>{s.pace_melhor} min/km</Text>
+                  <Text style={[styles.celula, larga && styles.colFc]}>
+                    {s.fc_melhor_tiro === null ? "sem FC" : `${s.fc_melhor_tiro} bpm`}
+                  </Text>
+                  {larga ? (
+                    <Text style={[styles.secundarioLinha, styles.colunaMedia]}>
+                      {s.pace_medio} min/km · {s.n_tiros} tiros
+                    </Text>
+                  ) : (
+                    <Text style={styles.secundarioLinha}>
+                      média {s.pace_medio} · {s.n_tiros} tiros
+                    </Text>
+                  )}
+                </Pressable>
+              );
+            })}
           </View>
         </>
       )}
@@ -149,9 +219,10 @@ function criarEstilos({ cor }: Tema, margem: number = espaco[4]) {
       alignSelf: "center",
     },
     titulo: { ...fonte["titulo-tela"], marginBottom: espaco[3], color: cor.texto },
-    centro: { alignItems: "center", paddingVertical: espaco[5], gap: espaco[2] },
+    estado: { alignItems: "center", paddingVertical: espaco[7], gap: espaco[2] },
+    estadoTitulo: { ...fonte["titulo-secao"], color: cor.texto, textAlign: "center" },
     texto: { ...fonte.corpo, color: cor["texto-2"] },
-    erro: { ...fonte.corpo, color: cor.erro, marginBottom: espaco[3] },
+    erro: { ...fonte.corpo, color: cor.erro, textAlign: "center", marginBottom: espaco[3] },
     botao: {
       alignSelf: "flex-start",
       minHeight: tamanho.botaoAltura,
@@ -180,12 +251,18 @@ function criarEstilos({ cor }: Tema, margem: number = espaco[4]) {
       flexDirection: "row",
       flexWrap: "wrap",
       columnGap: espaco[3],
-      minHeight: 56,
+      minHeight: tamanho.listaLinhaAltura,
       alignItems: "center",
       paddingVertical: espaco[2],
       borderBottomWidth: borda.fina,
       borderBottomColor: cor.borda,
     },
+    cabecalhoLista: { flexDirection: "row", columnGap: espaco[3], marginTop: espaco[3], paddingBottom: espaco[1] },
+    colunaTitulo: { ...fonte.rotulo, color: cor["texto-2"] },
+    colData: { width: 88 },
+    colPace: { width: 120 },
+    colFc: { width: 140 },
+    colunaMedia: { flexBasis: 0, flexGrow: 1 },
     celula: { ...fonte.rotulo, fontVariant: ["tabular-nums"], color: cor.texto },
     rodape: { marginTop: espaco[5] },
     pequeno: { ...fonte.legenda, color: cor["texto-2"] },
