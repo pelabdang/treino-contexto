@@ -2,7 +2,7 @@
 tipo: metrica
 status: rascunho
 dono: caio
-atualizado: 2026-11-04
+atualizado: 2026-11-06
 links: [[decisoes/0008-deteccao-de-esforcos]], [[metricas/tiros-1km]], [[modulos/ingestao-garmin]], [[produto/roadmap]], [[glossario]]
 ---
 # Detecção de esforços: fixtures e oráculo
@@ -130,6 +130,8 @@ Ref 20 km/h, limiar 23,0 km/h.
   8000 m, 1200 s, 8000 / 1200 x 3,6 = **24,0 km/h** >= 23: esforço, 20 min, faixa `t20` (1104 a 1296 s).
 - FC = (150 x 750 + 156 x 450) / 1200 = (112500 + 70200) / 1200 = 182700 / 1200 = **152,25**.
 - Total: 3 blocos (aquecimento, esforço, desaquecimento).
+- Treino-chave contínuo (#165, ADR 0008, item 6): 1200 s >= 1200 s e 24,0 >= 23,0 km/h durante os 20 min (os dois limites
+  são inclusivos): **é treino-chave**, margem 24 / 20 - 1 = 20%. Corrigido na #165: antes o oráculo o marcava `False`.
 
 ## Referência
 - [[decisoes/0008-deteccao-de-esforcos]], itens 1 a 6 e 8, e os exemplos 1 a 5. Todos os limites são regra própria do
