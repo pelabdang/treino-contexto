@@ -302,6 +302,15 @@ Itens 1 a 4 aprovados. Em aberto, sem bloquear: 5 e 6 (Caio, com dado real). Os 
 9. Fartlek por tempo na corrida (proposta, fora da Meta 5) e teto de duração do aquecimento.
 10. Calibração pelos recordes pessoais (item 7): ADR própria depois da #174.
 
+## Decisões de implementação (Theo, 06/11, #166)
+Tomadas no PR #222. Nenhuma muda o modelo do item 9.
+1. **`ref_origem` não é gravado.** A tabela `bloco_atividade` fica como no item 9, sem coluna nova. A #167 recalcula na
+   leitura se a referência foi o ritmo habitual ou a da própria atividade.
+2. **Trainer no ciclismo.** `esteira` e `virtual` ficam fora da velocidade habitual (item 5, "fora do trainer").
+3. **Quando detectar.** A detecção roda na importação da exportação e no upload de FIT, só para as atividades que entraram
+   ou mudaram, além do comando `worker.detectar_esforcos`. Erro na detecção vira aviso e não derruba a importação.
+(Janela de 12 semanas e mínimo de 30 min da velocidade habitual seguem em "A confirmar", item 6, com o Caio na #169.)
+
 ## Data e quem decidiu
 2026-11-04. Pedido de produto: Angelo (04/11). Rascunho: Caio (ciência). Aprovação do Theo no PR desta ADR
 (item 9 em especial). Issue #148.
