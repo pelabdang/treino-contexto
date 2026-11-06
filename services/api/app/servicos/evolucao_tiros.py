@@ -6,6 +6,7 @@ Desde a `tiros_1km@5` a série é uma visão dos esforços: lê `bloco_atividade
 
 from __future__ import annotations
 
+import logging
 from dataclasses import dataclass
 from datetime import date, datetime, timezone
 
@@ -28,6 +29,8 @@ from app.metricas.tiros_1km import (
 )
 from app.servicos.esforcos import detectar_esforcos
 from app.servicos.fuso import data_local
+
+log = logging.getLogger(__name__)
 
 ORIGENS_PROTEGIDAS = ("professor", "trainingpeaks")
 # Fora da série (continuam guardadas e classificadas): decisão do Angelo, issue #51.
@@ -76,8 +79,13 @@ def classificar_atividades(session: Session, atleta_id: int) -> int:
     `tiro`/`recuperacao`/`volta` nos segmentos pela visão de 1 km e grava `versao_deteccao`. Se é intervalado
     (2 ou mais tiros), sugere `tipo_treino = intervalado` sem sobrescrever o tipo do professor/TrainingPeaks nem
     um tipo confirmado. É também a reclassificação: uma versão nova da regra regrava tudo.
+    Falha na detecção de esforços vira aviso no log (não exceção): é o único ponto de detecção da importação.
     """
-    detectar_esforcos(session, atleta_id)
+    try:
+        detectar_esforcos(session, atleta_id)
+    except Exception:  # noqa: BLE001 - nunca derruba a importacao; reclassificacao_pendente avisa a API
+        session.rollback()
+        log.warning("esforcos nao detectados; rode worker.detectar_esforcos", exc_info=True)
     ativs = session.scalars(
         select(Atividade)
         .where(Atividade.atleta_id == atleta_id, Atividade.modalidade == "corrida")

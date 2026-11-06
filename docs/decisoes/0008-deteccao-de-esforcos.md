@@ -193,8 +193,7 @@ volume (item 6 da `tiros_1km@4`), porque o aquecimento e o desaquecimento já sa
 visão: ritmo parecido (20% sobre a mediana), bloco contínuo (15% sobre o vizinho de ~1 km) e ritmo habitual (10%).
 Um esforço de 1500 m (item 2) **não** é tiro de 1 km. Dois km seguidos no mesmo ritmo viram um único esforço de
 2000 m (`d2000`), o que reproduz a regra "vizinha de 1 km no mesmo ritmo não separa".
-- Versão: a visão sai como nova versão da `tiros_1km`, cujo número a #168 define (depende de as #149 e #150 serem
-  implementadas antes ou absorvidas). A visão deixa de ler voltas e passa a ler `bloco_atividade` (item 9).
+- Versão: a visão saiu como `tiros_1km@5` (#168, 06/11); as #149 e #150 foram absorvidas. A visão deixa de ler voltas e passa a ler `bloco_atividade` (item 9).
 - Reclassificação: `worker.reclassificar` recria os esforços e a visão (ADR 0005, item 4).
 - **Testes de regressão** (casos das #149, #150 e #168, todos sintéticos):
   1. 2 x 1000 m a 250 s/km com 400 m de recuperação a 420 s/km: `250 <= 420 x 0,92 = 386,4`, 2 tiros, entra.
@@ -298,7 +297,7 @@ Itens 1 a 4 aprovados. Em aberto, sem bloquear: 5 e 6 (Caio, com dado real). Os 
 6. **Caio**: velocidade habitual do ciclismo (janela de 12 semanas e mínimo de 30 min por pedalada) e se a
    referência por atividade (reserva) é aceitável para atleta novo.
 7. **Caio**: as referências bibliográficas: abrir os textos e conferir o que sustentam antes de a nota da métrica citá-las.
-8. **Theo, na #168**: numeração final da versão da `tiros_1km` conforme a decisão sobre as #149 e #150.
+8. ~~**Theo, na #168**: numeração final da versão da `tiros_1km`.~~ Definida: **`tiros_1km@5`** (#168, 06/11); as #149 e #150 foram absorvidas.
 9. Fartlek por tempo na corrida (proposta, fora da Meta 5) e teto de duração do aquecimento.
 10. Calibração pelos recordes pessoais (item 7): ADR própria depois da #174.
 
