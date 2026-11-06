@@ -206,6 +206,10 @@ Regra própria do projeto; não há artigo.
 - O filtro do ritmo habitual (agora 10%) e a janela de 12 semanas também só foram vistos com **um atleta**. Atleta novo, sem corridas anteriores, não é filtrado na série (mas a detecção usa a referência da atividade, ver acima; e com menos de 10 corridas na janela o
   histórico todo é a referência, que é menos preciso). Um treino de tiros leve, mais lento que 10% abaixo do ritmo
   habitual (por exemplo, volta à corrida depois de lesão), não entra na série de tiros.
+- **Vizinho separado por pausa corta o tiro** (conferência local, #169): o vizinho de 950 m ou mais só é ignorado
+  quando ele próprio é candidato a tiro e há parada de 15 s ou mais entre os dois. Um vizinho que não é candidato (por
+  exemplo um esforço de 1500 m) corta o tiro de 1 km como continuação mesmo com descanso parado entre eles; séries
+  mistas (1500 m e 1000 m) e pirâmides perdem tiros de 1 km. Mudar isso é mudança de regra (nova versão), em issue própria.
 - Só detecta tiros de 1 km; 400 m, 2 km e outras distâncias ficam fora da Meta 1. Num treino misto, os
   tiros de 1 km contam e os curtos não (`@5`).
 - Uma volta solta de ~1 km, sem rótulo, no fim do treino (por exemplo, um desaquecimento de 1 km) vale como tiro se

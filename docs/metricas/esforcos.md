@@ -192,3 +192,12 @@ conta dá 0 e a parada só aparece como volta de pausa (ADR 0008, "A confirmar",
   exemplo) ficam como `d1000` e `d500`, não como um `d1500`. Decidido pelo Angelo em 04/11: contam como dois esforços
   separados (a regra de junção segue como está).
 - A tabela `bloco_atividade` (ADR 0008, item 9) é da Duda e da #166; esta função não toca o banco.
+- **Referência ruidosa nas primeiras corridas** (conferência local, #169): com poucas atividades anteriores, a
+  referência vem de pouquíssimas corridas (ou só da própria atividade) e pode marcar como esforço o que é ritmo normal
+  do atleta. Melhora sozinha quando o histórico cresce; redetectar depois de importar muito histórico antigo.
+- **`ref_origem` é recalculado na leitura**, com o histórico de agora, e não é gravado. Se entrar, mudar de subtipo ou
+  sair uma atividade anterior depois da detecção, a leitura pode informar `habitual` enquanto os blocos foram feitos
+  com a referência da atividade (ou o contrário), e nada marca a diferença. Depois de uma importação grande, rode
+  `worker.detectar_esforcos` de novo.
+- **Dado de origem ruim** (GPS com distância absurda numa volta) vira um bloco de esforço com ritmo impossível; a
+  detecção não valida isso.
