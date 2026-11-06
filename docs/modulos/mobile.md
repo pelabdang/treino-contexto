@@ -3,7 +3,7 @@ tipo: modulo
 status: em-uso
 dono: rafa
 atualizado: 2026-11-06
-links: [[modulos/api]], [[modulos/api-client]], [[produto/roadmap]], [[decisoes/0004-contrato-tela-evolucao]], [[produto/meta-2-como-rodar]], [[decisoes/0006-upload-de-fit]], [[design/guia-visual]], [[design/tokens]], [[decisoes/0007-clima-da-atividade]], [[modulos/clima]]
+links: [[modulos/api]], [[modulos/api-client]], [[produto/roadmap]], [[decisoes/0004-contrato-tela-evolucao]], [[produto/meta-2-como-rodar]], [[decisoes/0006-upload-de-fit]], [[design/guia-visual]], [[design/tokens]], [[decisoes/0007-clima-da-atividade]], [[modulos/clima]], [[design/telas/treino]]
 ---
 # Módulo: mobile
 
