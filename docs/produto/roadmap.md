@@ -449,8 +449,6 @@ Revisadas ao fim de cada meta com o que se aprendeu. Ordem tirada da "Fundação
 - **Tela dos esforços e dos treinos de transição no app** (rafa-app, com a Lia): a Meta 5 entregou só a API. A tela de
   um treino (#159, feita) já existe e é onde os esforços entram; depois ela recebe o check-in (Meta 8) e o feedback (Meta 9).
   As pendências do app (#213 e #237) podem vir junto.
-- **Uma possível `tiros_1km@6`** (caio-ciencia): só depois das decisões do Angelo sobre a série de tiros (ver "PRECISA DO
-  ANGELO"). Mudança de regra é versão nova, em issue própria ([[metricas/tiros-1km]], limitações).
 - **Calibração da detecção de esforços pelos recordes pessoais** (caio-ciencia): depois da Meta 6, quando os recordes
   estiverem no banco (#174).
 
@@ -489,7 +487,7 @@ stack Expo). A chave do provedor de LLM foi entregue e está no `.env` (fora do 
   [[diario/2026-11-06]].
 
 Em aberto:
-1. **Meta 5:** há decisões do Angelo pendentes sobre a série de tiros, o ciclismo e o treino de transição; uma possível
-   `tiros_1km@6` depende delas. Nenhuma bloqueia a Meta 6.
+1. **Meta 5:** há decisões pendentes da conferência local (#169). Os detalhes ficam em `entregas/`, fora do repositório.
+   Nenhuma bloqueia a Meta 6.
 2. **Próximas metas, sem pressa:** CNPJ e pedido da API da Garmin; pedido da API do TrainingPeaks com a assessoria;
    plano comercial do Open-Meteo para produção; limite de tamanho do upload no proxy, obrigatório na meta de deploy.
