@@ -1,7 +1,7 @@
 {
   "atleta_id": 1,
   "metrica": "tiros_1km",
-  "versao_calculo": "tiros_1km@4",
+  "versao_calculo": "tiros_1km@5",
   "reclassificacao_pendente": false,
   "unidades": {
     "pace": "s/km",

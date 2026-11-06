@@ -1,463 +1,361 @@
-"""Testes da detecção de tiros de 1 km. Todos os valores esperados foram
-calculados à mão (o cálculo está no comentário de cada caso).
+"""Testes dos tiros de 1 km como visão dos esforços (issue #168; ADR 0008, item 8). Valores à mão.
 
-Regra tiros_1km@4 (docs/metricas/tiros-1km.md): corrida; candidata = 950 a 1050 m
-que não seja rest/recovery/warmup/cooldown; é tiro se as DUAS voltas vizinhas a
-separam: não existir vizinha, ser warmup/cooldown, ser pausa (< 200 m), ou ser
-uma volta de recuperação (não candidata) ou pelo menos 8% mais lenta que o
-tiro (tiro <= 0,92 x pace da vizinha). A intensidade só veta; o pace decide.
+Regra tiros_1km@5 (docs/metricas/tiros-1km.md): tiro = bloco ``esforco`` da faixa ``d1000`` (950 a 1050 m) de uma
+corrida, depois do ritmo parecido (20% sobre a mediana, com 3 ou mais) e do bloco contínuo (menos de 15% mais
+rápido que um bloco vizinho de corrida). Pelo menos 2 tiros formam a sessão.
+
+As voltas sintéticas passam por ``montar_blocos`` (esforcos@1) com ritmo habitual de 330 s/km: esforço = pace
+<= 330 x 0,90 = 297 s/km. Cada caso diz as contas. Os casos do ``test_tiros_1km.py`` da @4 que continuam valendo
+(progressivo, fartlek, bloco contínuo, ritmo parecido) estão na seção "regressão da @4" com o mesmo resultado; os
+que mudam estão na seção "o que mudou" com a justificativa.
 """
 
-from app.metricas.tiros_1km import VERSAO, VoltaEntrada, detectar_tiros
+import importlib.util
+from pathlib import Path
+
+import pytest
+
+from app.metricas.tiros_1km import VERSAO, agregar_sessao, tiro_de_bloco, tiros_de_blocos
+
+_spec = importlib.util.spec_from_file_location("_tiros_blocos", Path(__file__).with_name("_tiros_blocos.py"))
+_ajuda = importlib.util.module_from_spec(_spec)
+_spec.loader.exec_module(_ajuda)
+blocos_de = _ajuda.blocos_de
 
 
-def volta(ordem, dist, dur, intens=None, fc=None):
-    return VoltaEntrada(ordem, dist, dur, fc_media=fc, intensidade=intens)
+def tiros(specs, ref=330.0):
+    return tiros_de_blocos(blocos_de(specs, ref))
 
 
-def seis_x_1km(com_intensidade: bool):
-    """Aquecimento + 6 x (1000 m tiro, 400 m recuperação) + desaquecimento.
+def paces_dos_tiros(specs, ref=330.0):
+    blocos = {b.ordem: b for b in blocos_de(specs, ref)}
+    return [round(blocos[o].duracao_s / blocos[o].distancia_m * 1000, 6) for o in tiros(specs, ref).tiros]
 
-    Ordens: 1 aquecimento; tiros 2,4,6,8,10,12; recuperações 3,5,7,9,11;
-    13 desaquecimento (a última recuperação seria 13, mas o treino termina
-    em tiro + desaquecimento).
-    """
-    i = (lambda x: x) if com_intensidade else (lambda x: None)
-    voltas = [volta(1, 2000, 720, i("warmup"))]
-    ordem = 2
+
+def test_versao():
+    assert VERSAO == "tiros_1km@5"
+    assert tiros([(1000, 250), (400, 168, 0)] * 2).versao == VERSAO
+
+
+# ---------------------------------------------------------------------------
+# Exemplos da #168 e da ADR 0008, item 8 (regressão pedida na issue)
+# ---------------------------------------------------------------------------
+
+
+def test_dois_tiros_com_recuperacao_entram():
+    # 2 x 1000 m a 250 s/km, recuperação de 400 m a 420 s/km (168 s). Limiar 297: 250 é esforço, 420 não.
+    # Blocos: 0 tiro, 1 recuperação, 2 tiro. Os vizinhos de 400 m não passam de 950 m: o bloco contínuo não olha.
+    r = tiros([(1000, 250), (400, 168), (1000, 250)])
+    assert (r.tiros, r.recuperacoes, r.eh_intervalado) == ((0, 2), (1,), True)
+    assert paces_dos_tiros([(1000, 250), (400, 168), (1000, 250)]) == [250.0, 250.0]
+
+
+def test_um_tiro_so_nao_e_sessao():
+    r = tiros([(1000, 250), (400, 168), (1000, 330)])
+    assert r.tiros == (0,) and r.eh_intervalado is False  # 1 < 2
+
+
+def _cinco_km_e_oito_400():
+    # 5 x (1000 m a 250 s/km + 400 m a 420 s/km), depois 8 x (400 m a 230 s/km = 92 s + 200 m a 450 s/km = 90 s).
+    specs = []
+    for _ in range(5):
+        specs += [(1000, 250), (400, 168)]
+    for _ in range(8):
+        specs += [(400, 92), (200, 90)]
+    return specs
+
+
+def test_cinco_km_e_oito_400_so_contam_os_cinco_km():
+    # Os d400 (230 s/km) são esforços, mas não da faixa d1000. Tiros = blocos 0,2,4,6,8; pace da sessão:
+    # 5 x 250 s / 5 x 1000 m x 1000 = 250 s/km.
+    specs = _cinco_km_e_oito_400()
+    r = tiros(specs)
+    assert r.tiros == (0, 2, 4, 6, 8) and r.eh_intervalado is True
+    blocos = {b.ordem: b for b in blocos_de(specs)}
+    ponto = agregar_sessao("x", None, [tiro_de_bloco(blocos[o]) for o in r.tiros])
+    assert ponto.n_tiros == 5 and ponto.pace_s_km == pytest.approx(250.0)
+
+
+def test_tiros_curtos_com_km_de_aquecimento_e_desaquecimento_lentos_ficam_fora():
+    # aquec. 1000 m a 335 s/km (> 297: não é esforço), 8 x (400 m a 230 + 200 m a 450), desaq. 1000 m a 340.
+    specs = [(1000, 335)]
+    for _ in range(8):
+        specs += [(400, 92), (200, 90)]
+    specs += [(1000, 340)]
+    r = tiros(specs)
+    assert r.tiros == () and r.eh_intervalado is False
+    cats = [b.categoria for b in blocos_de(specs)]
+    assert cats[0] == "aquecimento" and cats[-1] == "desaquecimento"
+
+
+def test_rodagem_com_autolap_de_1km_fica_fora():
+    # 8 voltas de 1000 m, 328 a 340 s: cada uma dentro de 5% do bloco, viram um bloco leve de 8000 m.
+    specs = [(1000, d) for d in (330, 335, 328, 340, 332, 336, 331, 334)]
+    blocos = blocos_de(specs)
+    assert [b.categoria for b in blocos] == ["leve"]
+    assert tiros(specs).tiros == ()
+
+
+def test_um_esforco_de_1500_m_nao_e_tiro_de_1km():
+    # 1000 m a 250 s + 500 m a 125 s (250 s/km): sem pausa e no mesmo ritmo, um bloco d1500. Duas vezes: 0 tiros.
+    specs = [(1000, 250), (500, 125), (400, 168), (1000, 250), (500, 125)]
+    blocos = blocos_de(specs)
+    assert [b.faixa for b in blocos] == ["d1500", None, "d1500"]
+    assert tiros(specs).tiros == ()
+
+
+def test_dois_km_seguidos_no_mesmo_ritmo_sao_um_esforco_de_2000_m():
+    # Um bloco d2000: a regra "vizinha de 1 km no mesmo ritmo não separa" da @4 sai pela própria junção.
+    specs = [(1000, 250), (1000, 250), (400, 168), (1000, 250), (1000, 250)]
+    assert tiros(specs).tiros == ()
+
+
+def test_lap_automatico_cortando_o_tiro_ao_meio_ainda_e_um_tiro():
+    # 2 x [500 m a 125 s + 500 m a 125 s] com 90 s parado entre os tiros: cada par vira um bloco de 1000 m.
+    specs = [(500, 125), (500, 125, 90), (500, 125), (500, 125)]
+    blocos = blocos_de(specs)
+    assert [(b.volta_inicial, b.volta_final, b.faixa) for b in blocos] == [(0, 1, "d1000"), (2, 3, "d1000")]
+    r = tiros_de_blocos(blocos)
+    assert r.tiros == (0, 1) and r.eh_intervalado is True
+    assert tiro_de_bloco(blocos[1]).ordem == 2  # `ordem` do tiro = primeira volta do bloco (segmento.ordem)
+
+
+def test_esforco_vizinho_que_a_regra_de_5_nao_junta_conta_como_dois_esforcos():
+    # Decisão do Angelo (04/11): 1000 m a 250 e 500 m a 270 (8% mais lento) ficam d1000 e d500, não d1500.
+    # O d1000 vale como tiro (o vizinho de 500 m não chega a 950 m, o bloco contínuo não olha). 2 repetições com
+    # 90 s parados: 2 tiros.
+    specs = [(1000, 250), (500, 135, 90), (1000, 250), (500, 135)]
+    blocos = blocos_de(specs)
+    assert [b.faixa for b in blocos] == ["d1000", "d500", "d1000", "d500"]
+    assert tiros_de_blocos(blocos).tiros == (0, 2)
+
+
+def test_tiros_de_1km_com_descanso_parado_nao_viram_bloco_continuo():
+    # 5 x 1000 m a 250 s/km, 90 s parado entre eles (sem volta de recuperação): 5 blocos d1000 em fila. Vizinhos
+    # candidatos separados por parada de 90 s (>= 15 s) não são bloco contínuo: 5 tiros.
+    specs = [(1000, 250, 90)] * 4 + [(1000, 250)]
+    assert tiros(specs).tiros == (0, 1, 2, 3, 4)
+
+
+def test_parada_curta_entre_km_em_ritmos_diferentes_e_bloco_continuo():
+    # 1000 m a 250 e 1000 m a 266 (6,4% mais lento: não junta), parada de 10 s (< 15 s): 250 > 266 x 0,85 = 226,1
+    # e 266 > 250 x 0,85 = 212,5, os dois saem: é corrida contínua em ritmos próximos, não repetição.
+    specs = [(1000, 250, 10), (1000, 266, 10), (1000, 250, 10), (1000, 266)]
+    assert tiros(specs).tiros == ()
+
+
+def test_so_corrida_e_blocos_vazios():
+    assert tiros_de_blocos(blocos_de([(1000, 250), (400, 168), (1000, 250)]), "natacao").tiros == ()
+    assert tiros_de_blocos([]).eh_intervalado is False
+
+
+# ---------------------------------------------------------------------------
+# Regressão da @4: mesmo resultado (tiros_1km@4 -> @5)
+# ---------------------------------------------------------------------------
+
+
+def seis_x_1km():
+    # aquec. 2000 m/720 s (360), 6 x (1000 m a 240 + 400 m/180 s, 450 s/km, entre eles), desaq. 1500 m/570 s (380).
+    specs = [(2000, 720)]
     for k in range(6):
-        voltas.append(volta(ordem, 1000, 240, i("active")))
-        ordem += 1
+        specs.append((1000, 240))
         if k < 5:
-            voltas.append(volta(ordem, 400, 180, i("recovery")))
-            ordem += 1
-    voltas.append(volta(ordem, 1500, 570, i("cooldown")))
-    return voltas
+            specs.append((400, 180))
+    specs.append((1500, 570))
+    return specs
 
 
-def test_seis_tiros_com_intensidade():
-    r = detectar_tiros(seis_x_1km(True), "corrida")
-    assert r.tiros == (2, 4, 6, 8, 10, 12)
-    assert r.recuperacoes == (3, 5, 7, 9, 11)
-    assert r.eh_intervalado is True
-    assert r.versao == VERSAO == "tiros_1km@4"
-
-
-def test_seis_tiros_sem_intensidade_por_pace():
-    # Sem intensidade: paces s/km = 360 (aquec. 2000 m), 6 x 240 (tiros),
-    # 5 x 450 (400 m em 180 s), 380 (1500 m em 570 s). Cada tiro tem vizinhas
-    # de recuperação (400 m a 450: 240 <= 450 x 0,92 = 414) ou o aquecimento
-    # (2000 m a 360: 240 <= 331,2) ou o desaquecimento (1500 m a 380: 240 <= 349,6).
-    r = detectar_tiros(seis_x_1km(False), "corrida")
-    assert r.tiros == (2, 4, 6, 8, 10, 12)
-    assert r.recuperacoes == (3, 5, 7, 9, 11)
+def test_seis_tiros_com_aquecimento_e_desaquecimento():
+    # Blocos: 0 aquecimento, 1,3,5,7,9,11 tiros, 2,4,6,8,10 recuperações, 12 desaquecimento.
+    r = tiros(seis_x_1km())
+    assert r.tiros == (1, 3, 5, 7, 9, 11)
+    assert r.recuperacoes == (2, 4, 6, 8, 10)
     assert r.eh_intervalado is True
 
 
-def _com_trote_de_1km(intens):
-    # aquec. 2000 m/720 s (360); 4 x [tiro 1000/240 (240), trote 1000/360 (360)];
-    # desaq. 1000/370 (370). Ordem: 1; tiros 2,4,6,8; trotes 3,5,7,9; 10.
-    voltas = [volta(1, 2000, 720, "warmup" if intens else None)]
-    o = 2
+def _fartlek_1km(duracao_trote):
+    # aquec. 2000 m/720 s; 4 x [1000 m a 240 s/km, 1000 m de trote em duracao_trote s]; desaq. 1000 m/370 s.
+    specs = [(2000, 720)]
     for _ in range(4):
-        voltas.append(volta(o, 1000, 240, "active" if intens else None))
-        voltas.append(volta(o + 1, 1000, 360, "rest" if intens else None))
-        o += 2
-    voltas.append(volta(o, 1000, 370, "cooldown" if intens else None))
-    return voltas
+        specs += [(1000, 240), (1000, duracao_trote)]
+    specs.append((1000, 370))
+    return specs
 
 
-def test_trote_de_1km_marcado_rest_nao_e_tiro():
-    r = detectar_tiros(_com_trote_de_1km(True), "corrida")
-    assert r.tiros == (2, 4, 6, 8)
-    assert r.recuperacoes == (3, 5, 7)
+def test_fartlek_de_1km_forte_e_1km_moderado_nao_e_tiro():
+    # Trote a 270 s/km: é esforço (270 <= 297) e vizinho colado de ~1 km; 240 > 270 x 0,85 = 229,5 (menos de 15%
+    # mais rápido): bloco contínuo. O trote também sai (270 > 240 x 0,85). Nenhum tiro, como na @4.
+    r = tiros(_fartlek_1km(270))
+    assert r.tiros == () and r.eh_intervalado is False
 
 
-def test_trote_de_1km_sem_intensidade_nao_e_tiro_por_pace():
-    # Paces: 360, 4 x 240, 4 x 360 (trote de 1000 m), 370. Cada tiro (240) é
-    # <= 360 x 0,92 = 331,2 em relação ao trote vizinho: o trote separa.
-    # O trote (360) NÃO é tiro: sua vizinha (240) é mais rápida, então
-    # 360 <= 240 x 0,92 = 220,8 é falso.
-    r = detectar_tiros(_com_trote_de_1km(False), "corrida")
-    assert r.tiros == (2, 4, 6, 8)
-
-
-def test_rodagem_leve_com_autolap_sem_intensidade():
-    # 8 voltas de 1000 m, 328 a 340 s. Vizinhas a ~333 s/km: para ser tiro a volta
-    # precisaria de <= 333 x 0,92 = 306,4 s/km; a mais rápida (328) não chega perto.
-    duracoes = [330, 335, 328, 340, 332, 336, 331, 334]
-    voltas = [volta(i + 1, 1000, d) for i, d in enumerate(duracoes)]
-    r = detectar_tiros(voltas, "corrida")
-    assert r.tiros == ()
-    assert r.eh_intervalado is False
-
-
-def test_rodagem_leve_com_autolap_todo_active_cai_para_pace():
-    # Garmin marca todas as voltas como active: a intensidade não basta para ser
-    # tiro, o pace decide (mesmas contas do caso anterior).
-    duracoes = [330, 335, 328, 340, 332, 336, 331, 334]
-    voltas = [volta(i + 1, 1000, d, "active") for i, d in enumerate(duracoes)]
-    r = detectar_tiros(voltas, "corrida")
-    assert r.tiros == ()
-    assert r.eh_intervalado is False
-
-
-def test_volta_de_1200_m_nao_e_tiro():
-    # 1200 m está fora de 950-1050, mesmo rápida (pace 200 s/km).
-    # Vizinha de 400 m a 450 s/km: 240 <= 414, então a de 1000 m é tiro.
-    for i in ("active", None):
-        voltas = [
-            volta(1, 1200, 240, i),
-            volta(2, 400, 180, "rest" if i else None),
-            volta(3, 1000, 240, i),
-            volta(4, 400, 180, "rest" if i else None),
-        ]
-        assert detectar_tiros(voltas).tiros == (3,)
-
-
-def test_volta_de_980_m_e_tiro():
-    # 980 m em 235 s -> pace 239,8 s/km. Vizinhas: 400 m em 180 s = 450 s/km,
-    # limite = 450 x 0,92 = 414 -> 239,8 <= 414 nas duas vizinhas: é tiro.
-    for intens in (None, "active"):
-        voltas = [
-            volta(1, 400, 180),
-            volta(2, 980, 235, intens),
-            volta(3, 400, 180),
-        ]
-        assert detectar_tiros(voltas).tiros == (2,)
-
-
-def test_limites_da_tolerancia():
-    # 950 e 1050 entram; 949 e 1051 não (ficam sem ser candidatas).
-    # Todas a 240 s/km (duração proporcional) entre recuperações de 400 m a 450 s/km.
-    # 240 <= 450 x 0,92 = 414: as vizinhas separam.
-    voltas, o = [volta(1, 400, 180)], 2
-    for d in (950, 1050, 949, 1051):
-        voltas += [volta(o, d, d * 0.24), volta(o + 1, 400, 180)]
-        o += 2
-    assert detectar_tiros(voltas).tiros == (2, 4)
-
-
-def test_limite_de_pace_8_por_cento():
-    # Vizinhas de 1000 m a 300 s/km: limite = 300 x 0,92 = 276.
-    # 270 <= 276: a volta do meio é tiro (separada nas duas pontas).
-    # 285 > 276: não é tiro (e as de 300 não são tiros: 300 > 285 x 0,92 = 262,2).
-    rapido = [volta(1, 1000, 300), volta(2, 1000, 270), volta(3, 1000, 300)]
-    assert detectar_tiros(rapido).tiros == (2,)
-    quase = [volta(1, 1000, 300), volta(2, 1000, 285), volta(3, 1000, 300)]
-    assert detectar_tiros(quase).tiros == ()
-
-
-def test_dois_tiros_nao_e_intervalado():
-    voltas = [
-        volta(1, 1000, 240, "active"),
-        volta(2, 400, 180, "rest"),
-        volta(3, 1000, 240, "active"),
-    ]
-    r = detectar_tiros(voltas)
-    assert r.tiros == (1, 3)
-    assert r.eh_intervalado is False  # 2 < 3
-
-
-def test_intensidade_warmup_cooldown_nunca_sao_tiro():
-    voltas = [
-        volta(1, 1000, 300, "warmup"),
-        volta(2, 1000, 240, "active"),
-        volta(3, 1000, 300, "cooldown"),
-    ]
-    assert detectar_tiros(voltas).tiros == (2,)
-
-
-def test_intensidade_desconhecida_conta_como_ausente():
-    # "other" não é reconhecida: vale como ausente. A volta 1 (240 s/km) tem como
-    # única vizinha uma de 400 m a 450 s/km: 240 <= 414, é tiro.
-    voltas = [volta(1, 1000, 240, "other"), volta(2, 400, 180, "other"),
-              volta(3, 400, 180, "other")]
-    assert detectar_tiros(voltas).tiros == (1,)
-
-
-def test_natacao_nao_tem_tiros():
-    voltas = [volta(i, 1000, 900, "active") for i in range(1, 5)]
-    voltas.append(volta(5, 400, 600, "rest"))
-    r = detectar_tiros(voltas, "natacao")
-    assert r.tiros == ()
-    assert r.eh_intervalado is False
-
-
-def test_sem_voltas_e_voltas_sem_distancia():
-    assert detectar_tiros([]).eh_intervalado is False
-    assert detectar_tiros([volta(1, 0, 0)]).tiros == ()
-
-
-def test_ordem_de_entrada_nao_importa():
-    voltas = list(reversed(seis_x_1km(True)))
-    assert detectar_tiros(voltas).tiros == (2, 4, 6, 8, 10, 12)
-
-
-# ---------------------------------------------------------------------------
-# tiros_1km@3 (issue #48): falsos positivos da @1. Voltas montadas à mão.
-# ---------------------------------------------------------------------------
-
-DURACOES_LEVE = [330, 335, 328, 340, 332, 336, 331, 334]  # 1000 m cada
-
-
-def _rodagem_com_parcial(intens_parcial, todas="active"):
-    # 8 voltas de 1000 m (328 a 340 s) + volta final parcial de 350 m a ~335 s/km.
-    # Nenhuma volta de 1 km tem vizinha 8% mais lenta (a menor razão possível é
-    # 328/340 = 0,965 > 0,92) nem separada por pausa: não há tiro.
-    voltas = [volta(i + 1, 1000, d, todas) for i, d in enumerate(DURACOES_LEVE)]
-    voltas.append(volta(9, 350, 117, intens_parcial))
-    return voltas
-
-
-def test_rodagem_com_volta_final_parcial_nao_e_intervalado():
-    # Caso que a @1 errava: a última volta (parcial) vinha rest/recovery/cooldown,
-    # criava "contraste de intensidade" e todas as de 1 km viravam tiro.
-    for parcial in ("rest", "recovery", "cooldown", "warmup", None):
-        r = detectar_tiros(_rodagem_com_parcial(parcial), "corrida")
-        assert r.tiros == (), parcial
-        assert r.eh_intervalado is False
-
-
-def test_parcial_final_de_pausa_nao_cria_tiro_na_ultima_volta_de_1km():
-    # Volta final de 45 m (parado). A última de 1 km (334 s/km) agora tem a pausa
-    # como vizinha, mas a vizinha anterior (331) não é 8% mais lenta: não é tiro.
-    voltas = [volta(i + 1, 1000, d, "active") for i, d in enumerate(DURACOES_LEVE)]
-    voltas.append(volta(9, 45, 60, "recovery"))
-    assert detectar_tiros(voltas).tiros == ()
-
-
-def test_autolap_inteiro_marcado_interval_nao_e_tiro():
-    # Rodagem progressiva: 6 x 1000 m, 407, 405, 420, 395, 392, 365 s/km, todas
-    # `interval`. Nenhuma vizinha é >= 8% mais lenta que a volta (a razão mais
-    # baixa é 365/392 = 0,931 > 0,92) e a primeira/última têm vizinha de 1 km.
-    paces = [407, 405, 420, 395, 392, 365]
-    voltas = [volta(i + 1, 1000, p, "interval") for i, p in enumerate(paces)]
-    voltas.append(volta(7, 45, 17, "interval"))
-    assert detectar_tiros(voltas).tiros == ()
-
-
-def test_intensidade_active_rest_sem_contraste_de_pace_nao_e_tiro():
-    # 4 x (1000 m active a 300 s/km, 1000 m rest a 305 s/km): a intensidade
-    # alterna, mas o pace não: 300 <= 305 x 0,92 = 280,6 é falso. Sem tiro.
-    voltas = []
-    for k in range(4):
-        voltas += [volta(2 * k + 1, 1000, 300, "active"), volta(2 * k + 2, 1000, 305, "rest")]
-    assert detectar_tiros(voltas).tiros == ()
-
-
-def test_bloco_continuo_de_3_km_com_pausa_nao_e_tiro_de_1_km():
-    # 4 x (3 voltas de 1000 m a 280 s/km + parada de 7 m): as voltas do meio têm
-    # vizinhas de 1 km no mesmo ritmo, e as das pontas também de um lado. Nenhuma
-    # fica separada nos dois lados.
-    voltas, o = [], 1
-    for _ in range(4):
-        voltas += [volta(o, 1000, 280), volta(o + 1, 1000, 280), volta(o + 2, 1000, 280),
-                   volta(o + 3, 7, 120)]
-        o += 4
-    assert detectar_tiros(voltas).tiros == ()
-
-
-def test_quatro_tiros_com_recuperacao_parada():
-    # 4 x 1000 m a 228 s/km com paradas de 60 m (60 s): pausa (< 200 m) separa
-    # sem comparar pace. Sem aquecimento nem desaquecimento: as pontas não têm
-    # vizinha, também separam.
-    voltas, o = [], 1
-    for k in range(4):
-        voltas.append(volta(o, 1000, 228))
-        o += 1
-        if k < 3:
-            voltas.append(volta(o, 60, 60))
-            o += 1
-    r = detectar_tiros(voltas)
+def test_trote_de_1km_bem_mais_lento_continua_sendo_recuperacao():
+    # Trote a 330 s/km (não é esforço): 240 <= 330 x 0,85 = 280,5. Os 4 seguem tiros. Blocos: 0 aq., tiros 1,3,5,7.
+    r = tiros(_fartlek_1km(330))
     assert r.tiros == (1, 3, 5, 7)
     assert r.recuperacoes == (2, 4, 6)
     assert r.eh_intervalado is True
 
 
-def test_tiros_curtos_e_de_1km_misturados_so_contam_os_de_1km():
-    # aquec. 2 x 1000 m warmup a 330; 3 x (1000 m a 250 + 400 m a 450); 4 x (300 m
-    # a 230 + 100 m de pausa). Os 3 de 1 km têm vizinha de recuperação (250 <=
-    # 450 x 0,92 = 414); as voltas de 300 m nunca são candidatas.
-    voltas = [volta(1, 1000, 330, "warmup"), volta(2, 1000, 330, "warmup")]
-    o = 3
+def test_limite_do_bloco_continuo_15_por_cento():
+    # Tiro a 240 s/km. Trote a 282: 282 x 0,85 = 239,7 < 240, bloco contínuo, fora.
+    # Trote a 283: 283 x 0,85 = 240,55 >= 240, o tiro fica (o trote, esforço colado a 240, sai: 283 > 204).
+    assert tiros(_fartlek_1km(282)).tiros == ()
+    assert tiros(_fartlek_1km(283)).tiros == (1, 3, 5, 7)
+
+
+def _blocos_com_parada(ritmo):
+    # 3 x [1000 m a ritmo, 1000 m a ritmo - 10, parada de 20 m/90 s, 1000 m a 275, parada de 20 m/90 s]. Os dois
+    # primeiros km se juntam (diferença menor que 5%): um bloco de 2000 m; o km de 275 fica entre as paradas.
+    specs = []
     for _ in range(3):
-        voltas += [volta(o, 1000, 250, "active"), volta(o + 1, 400, 180, "rest")]
-        o += 2
+        specs += [(1000, ritmo), (1000, ritmo - 10), (20, 90), (1000, 275), (20, 90)]
+    return specs
+
+
+def test_progressivo_com_paradas_nao_e_tiro():
+    # Blocos de 2000 m a 305 s/km (310 e 300, não são esforço) ao lado do km de 275: 275 > 305 x 0,85 = 259,25,
+    # continua a rodagem por cima da parada. Nenhum tiro, como na @4.
+    assert tiros(_blocos_com_parada(310)).tiros == ()
+
+
+def test_km_forte_depois_de_rodagem_lenta_com_parada_e_tiro():
+    # Rodagem a 340/330 (bloco a 335): 275 <= 335 x 0,85 = 284,75. Os 3 km de 275 ficam. Na @4 eram as voltas 4, 9, 14.
+    specs = _blocos_com_parada(340)
+    r = tiros(specs)
+    assert len(r.tiros) == 3 and r.eh_intervalado is True
+    assert paces_dos_tiros(specs) == [275.0] * 3
+
+
+def _tiros_e_volta_final(duracao_final):
+    # aquec. 2000 m/720 s; 3 x [1000 m a 240 s/km + parada de 40 m/30 s]; volta final de 1000 m em duracao_final s
+    # e uma sobra de 10 m. (40 m e 10 m são voltas de pausa.)
+    specs = [(2000, 720)]
+    for _ in range(3):
+        specs += [(1000, 240), (40, 30)]
+    specs += [(1000, duracao_final), (10, 5)]
+    return specs
+
+
+def test_desaquecimento_de_1km_lento_nao_conta_como_tiro():
+    # Volta final a 290 s/km ainda é esforço (290 <= 297). Mediana de (240, 240, 240, 290) = 240; limite 288.
+    # 290 > 288: sai. Sobram 3 tiros de 240, como na @4.
+    r = tiros(_tiros_e_volta_final(290))
+    assert len(r.tiros) == 3
+    assert paces_dos_tiros(_tiros_e_volta_final(290)) == [240.0] * 3
+
+
+def test_volta_no_limite_do_ritmo_parecido_fica():
+    # 288 <= 240 x 1,20 = 288: o limite entra, a volta final é o 4o tiro.
+    assert len(tiros(_tiros_e_volta_final(288)).tiros) == 4
+
+
+def test_desaquecimento_acima_do_limiar_de_esforco_sai_pela_categoria():
+    # 300 s/km > 297: não é esforço, é desaquecimento. Os 3 tiros ficam.
+    assert len(tiros(_tiros_e_volta_final(300)).tiros) == 3
+
+
+def test_progressivo_autolap_inteiro_nao_e_tiro():
+    # 6 x 1000 m a 407, 405, 420, 395, 392, 365 s/km e uma sobra de 45 m: acima de 297, nada é esforço. (@4: também 0.)
+    specs = [(1000, p) for p in (407, 405, 420, 395, 392, 365)] + [(45, 17)]
+    assert tiros(specs).tiros == ()
+
+
+def test_bloco_continuo_de_3_km_com_parada_curta_nao_e_tiro_de_1km():
+    # 4 x (3 voltas de 1000 m a 280 s/km + parada de 7 m): 3 km juntos a 280 s/km (esforço, 297) formam um bloco
+    # d3000. A parada de 7 m vira volta de pausa (< 50 m) mas dura 120 s: separa os blocos. Nenhum d1000.
+    specs = []
     for _ in range(4):
-        voltas += [volta(o, 300, 69, "active"), volta(o + 1, 100, 60, "rest")]
-        o += 2
-    assert detectar_tiros(voltas).tiros == (3, 5, 7)
+        specs += [(1000, 280), (1000, 280), (1000, 280), (7, 120)]
+    assert tiros(specs).tiros == ()
+
+
+def test_volta_de_980_m_e_tiro_e_de_949_m_nao():
+    # 980 m em 235 s (239,8 s/km) e 400 m de recuperação a 450 s/km: d1000 (950 a 1050).
+    assert len(tiros([(980, 235), (400, 180), (980, 235)]).tiros) == 2
+    # 949 m e 1051 m ficam fora da faixa (d1000), como na @4.
+    assert tiros([(949, 228), (400, 180), (1051, 252), (400, 180), (949, 228)]).tiros == ()
+    # 950 m e 1050 m entram.
+    assert len(tiros([(950, 228), (400, 180), (1050, 252)]).tiros) == 2
+
+
+def test_volta_de_1200_m_nao_e_tiro():
+    # 1200 m a 200 s/km é d1200. Com dois km de 240: só os dois entram.
+    assert len(tiros([(1200, 240), (400, 180), (1000, 240), (400, 180), (1000, 240)]).tiros) == 2
+
+
+def test_intensidade_do_fit_nao_decide():
+    # A intensidade do relógio é só dica (ADR 0008, item 1): a visão não a lê. Voltas ``rest`` ou ``active`` dão o
+    # mesmo resultado que sem rótulo, porque o pace e a estrutura decidem.
+    from app.metricas.esforcos import VoltaTreino, montar_blocos
+
+    sem = [VoltaTreino(0, 0, 240, 1000), VoltaTreino(1, 240, 180, 400), VoltaTreino(2, 420, 240, 1000)]
+    com = [VoltaTreino(v.ordem, v.inicio_offset_s, v.duracao_s, v.distancia_m, None, i)
+           for v, i in zip(sem, ("rest", "active", "rest"))]
+    assert montar_blocos(sem, "corrida", referencia=330).blocos == montar_blocos(com, "corrida", referencia=330).blocos
 
 
 # ---------------------------------------------------------------------------
-# Bloco principal (issue #48): treino misto com tiros curtos pesando mais.
+# O que mudou da @4 para a @5 (cada caso com a justificativa)
 # ---------------------------------------------------------------------------
 
 
 def _misto(n_1km, n_curtos):
-    # aquec. 2000 m; n_1km x (1000 m a 250 s/km + 400 m de trote a 450 s/km);
-    # n_curtos x (400 m a 225 s/km + 100 m parado a 60 s). Desaq. 1500 m.
-    voltas, o = [volta(1, 2000, 720, "warmup")], 2
+    # aquec. 2000 m/720 s; n_1km x (1000 m a 250 s/km + 400 m/180 s); n_curtos x (400 m a 225 s/km + 40 m parado/30 s).
+    specs = [(2000, 720)]
     for _ in range(n_1km):
-        voltas += [volta(o, 1000, 250, "active"), volta(o + 1, 400, 180, "rest")]
-        o += 2
+        specs += [(1000, 250), (400, 180)]
     for _ in range(n_curtos):
-        voltas += [volta(o, 400, 90, "active"), volta(o + 1, 100, 60, "rest")]
-        o += 2
-    voltas.append(volta(o, 1500, 570, "cooldown"))
-    return voltas
+        specs += [(400, 90), (40, 30)]
+    specs.append((1500, 570))
+    return specs
 
 
-def test_6x1km_puro_e_de_1km():
-    r = detectar_tiros(_misto(6, 0))
-    assert len(r.tiros) == 6
-    assert r.eh_intervalado is True
+def test_misto_3x1km_e_8x400m_agora_conta_os_3_tiros():
+    # @4: 3000 m de tiros < 3200 m de curtos, a sessão saía inteira (regra do volume do bloco principal).
+    # @5: decisão do Angelo (04/11): os 3-4 x 1 km dos treinos mistos contam. Os d400 não são de 1 km.
+    r = tiros(_misto(3, 8))
+    assert len(r.tiros) == 3 and r.eh_intervalado is True
 
 
-def test_misto_3x1km_e_8x400m_fica_fora():
-    # Volume dos tiros de 1 km: 3 x 1000 = 3000 m. Voltas curtas active (400 m, a
-    # 225 s/km): 8 x 400 = 3200 m. 3000 < 3200: o bloco principal são os tiros
-    # curtos, então a sessão não é de tiros de 1 km.
-    r = detectar_tiros(_misto(3, 8))
-    assert r.tiros == () and r.recuperacoes == ()
-    assert r.eh_intervalado is False
+def test_misto_2x1km_e_8x400m_agora_entra_com_2_tiros():
+    # @4: fora, por ter menos de 3 tiros. @5: o mínimo é 2 (decisão do Angelo, 04/11).
+    r = tiros(_misto(2, 8))
+    assert len(r.tiros) == 2 and r.eh_intervalado is True
 
 
-def test_misto_2x1km_e_8x400m_fica_fora():
-    # Só 2 tiros de 1 km (< 3): fora, como pedido pela definição do treino.
-    assert detectar_tiros(_misto(2, 8)).eh_intervalado is False
+def test_misto_6x1km_e_4x400m_segue_dentro():
+    r = tiros(_misto(6, 4))
+    assert len(r.tiros) == 6 and r.eh_intervalado is True
 
 
-def test_misto_6x1km_e_4x400m_fica_dentro():
-    # 6 x 1000 = 6000 m contra 4 x 400 = 1600 m: o bloco principal são os de 1 km.
-    r = detectar_tiros(_misto(6, 4))
-    assert len(r.tiros) == 6
-    assert r.eh_intervalado is True
+def test_dois_tiros_e_um_desaquecimento_agora_e_sessao():
+    # @4: dois tiros < 3, não era intervalado. @5: 2 tiros bastam; a volta final de 300 s/km (> 297) é desaquecimento.
+    specs = [(2000, 720), (1000, 240), (40, 30), (1000, 240), (40, 30), (1000, 300), (10, 5)]
+    r = tiros(specs)
+    assert len(r.tiros) == 2 and r.eh_intervalado is True
 
 
-def test_trote_de_400_m_nao_conta_como_tiro_curto():
-    # Sem intensidade, 5 trotes de 400 m pesam 2000 m contra 5000 m de tiros de 1 km:
-    # 5 x 1 km sem aquecimento com trote de 400 m seguem de 1 km.
-    voltas, o = [], 1
-    for _ in range(5):
-        voltas += [volta(o, 1000, 250), volta(o + 1, 400, 180)]
-        o += 2
-    assert detectar_tiros(voltas).eh_intervalado is True
+def test_dois_tiros_sem_recuperacao_marcada_entram():
+    # @4: dois tiros sem aquecimento e uma recuperação de 400 m: 2 < 3, fora. @5: entra (2 tiros).
+    r = tiros([(1000, 240), (400, 180), (1000, 240)])
+    assert r.tiros == (0, 2) and r.eh_intervalado is True
 
 
-def test_fronteira_volume_igual_dos_curtos_fica_dentro():
-    # 3 x 1000 m = 3000 m de tiros de 1 km; 10 x 300 m = 3000 m de tiros curtos.
-    # A regra é "maior ou igual" (3000 >= 3000): a sessão fica dentro.
-    voltas, o = [volta(1, 2000, 720, "warmup")], 2
+def test_nao_ha_mais_volume_do_bloco_principal():
+    # 3 x 1000 m e 10 x 300 m (3000 m contra 3000 m) e mais uma volta de 150 m: na @4 a última linha saía da série
+    # (3000 < 3150). Na @5 o volume dos curtos não pesa: 3 tiros nos dois casos.
+    specs = [(2000, 720)]
     for _ in range(3):
-        voltas += [volta(o, 1000, 250, "active"), volta(o + 1, 400, 180, "rest")]
-        o += 2
+        specs += [(1000, 250), (400, 180)]
     for _ in range(10):
-        voltas += [volta(o, 300, 69, "active"), volta(o + 1, 100, 60, "rest")]
-        o += 2
-    r = detectar_tiros(voltas)
-    assert len(r.tiros) == 3
-    assert r.eh_intervalado is True
-    # 150 m a mais nas voltas curtas (10 x 300 m + 1 volta de 150 m = 3150 m contra 3000 m) vira fora.
-    voltas += [volta(o, 150, 35, "active"), volta(o + 1, 100, 60, "rest")]
-    assert detectar_tiros(voltas).eh_intervalado is False
+        specs += [(300, 69), (40, 30)]
+    assert len(tiros(specs).tiros) == 3
+    specs += [(150, 35), (40, 30)]
+    assert len(tiros(specs).tiros) == 3
 
 
-# ---------------------------------------------------------------------------
-# tiros_1km@4 (issue #58): progressivo, fartlek e desaquecimento de 1 km não são tiros.
-# Voltas sintéticas, contas à mão.
-# ---------------------------------------------------------------------------
-
-
-def _fartlek_1km(duracao_trote):
-    # aquec. 2000 m/720 s (360 s/km); 4 x [1000 m a 240 s/km, 1000 m de trote em duracao_trote s];
-    # desaq. 1000 m/370 s. Ordens: 1; tiros candidatos 2,4,6,8; trotes 3,5,7,9; 10.
-    voltas = [volta(1, 2000, 720)]
-    o = 2
-    for _ in range(4):
-        voltas += [volta(o, 1000, 240), volta(o + 1, 1000, duracao_trote)]
-        o += 2
-    voltas.append(volta(o, 1000, 370))
-    return voltas
-
-
-def test_fartlek_de_1km_forte_e_1km_moderado_nao_e_tiro():
-    # Trote a 270 s/km: pela @3 separa (240 <= 270 x 0,92 = 248,4), mas o trote é de ~1 km e
-    # 240 > 270 x 0,85 = 229,5: menos de 15% mais rápido. Bloco contínuo, nenhum tiro.
-    r = detectar_tiros(_fartlek_1km(270))
-    assert r.tiros == () and r.eh_intervalado is False
-
-
-def test_trote_de_1km_bem_mais_lento_continua_sendo_recuperacao():
-    # Trote a 330 s/km: 240 <= 330 x 0,85 = 280,5. Os 4 seguem tiros.
-    r = detectar_tiros(_fartlek_1km(330))
-    assert r.tiros == (2, 4, 6, 8)
-    assert r.eh_intervalado is True
-
-
-def test_limite_do_bloco_continuo_15_por_cento():
-    # Tiro a 240 s/km. Trote a 282: 282 x 0,85 = 239,7 < 240, bloco contínuo, fora.
-    # Trote a 283: 283 x 0,85 = 240,55 >= 240, o tiro fica.
-    assert detectar_tiros(_fartlek_1km(282)).tiros == ()
-    assert detectar_tiros(_fartlek_1km(283)).tiros == (2, 4, 6, 8)
-
-
-def _blocos_com_parada(pace_ritmo):
-    # 3 x [1000 m a pace_ritmo + 1000 m a pace_ritmo - 10, parada de 20 m, 1000 m a 275,
-    # parada de 20 m]. A volta de 275 s/km fica entre paradas (tiro pela @3); o km moderado
-    # fica do outro lado da parada. As duas voltas moderadas seguidas não separam uma da outra.
-    voltas, o = [], 1
-    for _ in range(3):
-        voltas += [volta(o, 1000, pace_ritmo), volta(o + 1, 1000, pace_ritmo - 10),
-                   volta(o + 2, 20, 90), volta(o + 3, 1000, 275), volta(o + 4, 20, 90)]
-        o += 5
-    return voltas
-
-
-def test_progressivo_com_paradas_nao_e_tiro():
-    # Km moderados a 310/300 s/km: 275 > 300 x 0,85 = 255 (olhando por cima da parada). Fora.
-    assert detectar_tiros(_blocos_com_parada(310)).tiros == ()
-
-
-def test_km_forte_depois_de_rodagem_lenta_com_parada_e_tiro():
-    # Km a 340/330: 275 <= 330 x 0,85 = 280,5 (e 275 <= 340 x 0,85 = 289 do outro lado). Os 3 ficam.
-    r = detectar_tiros(_blocos_com_parada(340))
-    assert r.tiros == (4, 9, 14)
-    assert r.eh_intervalado is True
-
-
-def _tiros_e_volta_final(duracao_final):
-    # aquec. 2000 m/720 s; 3 x [1000 m a 240 s/km + parada de 50 m/30 s]; volta final de
-    # 1000 m em duracao_final s e uma sobra de 10 m. Ordens: 1; tiros 2,4,6; paradas 3,5,7;
-    # volta final 8; sobra 9.
-    voltas = [volta(1, 2000, 720)]
-    o = 2
-    for _ in range(3):
-        voltas += [volta(o, 1000, 240), volta(o + 1, 50, 30)]
-        o += 2
-    voltas += [volta(o, 1000, duracao_final), volta(o + 1, 10, 5)]
-    return voltas
-
-
-def test_desaquecimento_de_1km_lento_nao_conta_como_tiro():
-    # Mediana dos 4 "tiros" (240, 240, 240, 290) = 240; limite 240 x 1,20 = 288 s/km.
-    # 290 > 288: sai. Sobram 3 tiros de 240.
-    r = detectar_tiros(_tiros_e_volta_final(290))
-    assert r.tiros == (2, 4, 6)
-    assert r.eh_intervalado is True
-
-
-def test_volta_no_limite_do_ritmo_parecido_fica():
-    # 288 <= 240 x 1,20 = 288 (o limite entra): a volta final é o 4o tiro.
-    assert detectar_tiros(_tiros_e_volta_final(288)).tiros == (2, 4, 6, 8)
-
-
-def test_dois_tiros_e_um_desaquecimento_nao_e_intervalado():
-    # Só 2 x 1000 m a 240 s/km e a volta final a 300 s/km. Mediana (240, 240, 300) = 240,
-    # limite 288: a de 300 sai e sobram 2 tiros, abaixo do mínimo de 3.
-    voltas = [volta(1, 2000, 720), volta(2, 1000, 240), volta(3, 50, 30), volta(4, 1000, 240),
-              volta(5, 50, 30), volta(6, 1000, 300), volta(7, 10, 5)]
-    r = detectar_tiros(voltas)
-    assert r.eh_intervalado is False
-    assert r.tiros == (2, 4)
+def test_tiro_colado_a_um_km_so_um_pouco_mais_lento_perde_a_separacao_por_pausa():
+    # 1 km a 240 e 1 km a 280 ficam juntos (parada 0): fartlek. Igual à @4. (Sem pausa, sem repetição.)
+    specs = [(1000, 240), (1000, 280), (1000, 240), (1000, 280)]
+    assert tiros(specs).tiros == ()

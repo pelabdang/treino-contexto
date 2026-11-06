@@ -34,10 +34,11 @@ from pathlib import Path
 import pytest
 
 from app.metricas.tiros_1km import (
-    VoltaEntrada,
+    SessaoTiros,
     para_apresentacao,
     serie_por_sessao,
-    sessao_de_voltas,
+    tiro_de_bloco,
+    tiros_de_blocos,
 )
 
 GERADOR = Path(__file__).parents[4] / "tests" / "fixtures" / "garmin" / "gerar_fixtures.py"
@@ -61,35 +62,37 @@ def gerador():
     return mod
 
 
-def _sessoes(gerador, com_intensidade):
+def _sessoes(gerador):
+    """Sessões das fixtures pela visão de esforços (@5): voltas -> blocos (esforcos@1, ritmo habitual de 330 s/km)."""
+    ajuda = importlib.util.spec_from_file_location("_tiros_blocos", Path(__file__).with_name("_tiros_blocos.py"))
+    mod = importlib.util.module_from_spec(ajuda)
+    ajuda.loader.exec_module(mod)
     sessoes = []
     for i, a in enumerate(gerador.ATIVIDADES):
-        if a.voltas is None:  # sem FIT: nada a detectar
+        if a.voltas is None or a.sport_type != "RUNNING":  # sem FIT: nada a detectar; natação não tem tiros
             continue
-        voltas = [
-            VoltaEntrada(n, dist, dur, fc, intens if com_intensidade else None)
-            for n, (intens, dist, dur, fc) in enumerate(a.voltas)
-        ]
-        modalidade = "corrida" if a.sport_type == "RUNNING" else "natacao"
+        blocos = mod.blocos_de([(dist, dur, 0.0, fc) for (_, dist, dur, fc) in a.voltas])
+        r = tiros_de_blocos(blocos)
+        por_ordem = {b.ordem: b for b in blocos}
         # data só para ordenar a série; a data local real é da #14
-        sessoes.append(sessao_de_voltas(a.id, date(2025, 3, 1 + i), voltas, modalidade))
+        sessoes.append(SessaoTiros(a.id, date(2025, 3, 1 + i), r.eh_intervalado,
+                                   tuple(tiro_de_bloco(por_ordem[o]) for o in r.tiros), r.versao))
     return sessoes
 
 
-@pytest.mark.parametrize("com_intensidade", [True, False])
-def test_serie_das_fixtures_bate_com_o_calculo_a_mao(gerador, com_intensidade):
-    serie = serie_por_sessao(_sessoes(gerador, com_intensidade))
+def test_serie_das_fixtures_bate_com_o_calculo_a_mao(gerador):
+    serie = serie_por_sessao(_sessoes(gerador))
     assert [p.atividade_id for p in serie] == list(ESPERADO)
     for p in serie:
         n, pace, fc = ESPERADO[p.atividade_id]
         assert p.n_tiros == n
         assert p.pace_s_km == pytest.approx(pace, abs=1e-9)
         assert p.fc_media == pytest.approx(fc, abs=1e-9)
-        assert p.versao == "tiros_1km@4"
+        assert p.versao == "tiros_1km@5"
 
 
 def test_melhor_tiro_das_fixtures_bate_com_o_calculo_a_mao(gerador):
-    for p in serie_por_sessao(_sessoes(gerador, True)):
+    for p in serie_por_sessao(_sessoes(gerador)):
         pace, fc = MELHOR_TIRO[p.atividade_id]
         assert p.melhor_pace_s_km == pytest.approx(pace, abs=1e-9)
         assert p.melhor_fc_media == fc
@@ -97,12 +100,11 @@ def test_melhor_tiro_das_fixtures_bate_com_o_calculo_a_mao(gerador):
 
 def test_valores_a_mao_apresentados(gerador):
     # 250,8333 -> 250,8 ; 170,3050 -> 170,3 ; 237,0 ; 171,7688 -> 171,8
-    a, b = serie_por_sessao(_sessoes(gerador, True))
+    a, b = serie_por_sessao(_sessoes(gerador))
     assert (para_apresentacao(a.pace_s_km), para_apresentacao(a.fc_media)) == (250.8, 170.3)
     assert (para_apresentacao(b.pace_s_km), para_apresentacao(b.fc_media)) == (237.0, 171.8)
 
 
-@pytest.mark.parametrize("com_intensidade", [True, False])
-def test_atividades_fora_da_serie(gerador, com_intensidade):
-    ids_na_serie = {p.atividade_id for p in serie_por_sessao(_sessoes(gerador, com_intensidade))}
+def test_atividades_fora_da_serie(gerador):
+    ids_na_serie = {p.atividade_id for p in serie_por_sessao(_sessoes(gerador))}
     assert not ids_na_serie & set(FORA_DA_SERIE)

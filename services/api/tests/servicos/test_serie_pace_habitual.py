@@ -1,4 +1,4 @@
-"""Filtro do ritmo habitual na série de tiros (issue #53, tiros_1km@4). Dados sintéticos, contas à mão.
+"""Filtro do ritmo habitual na série de tiros (issue #53, tiros_1km@5). Dados sintéticos, contas à mão.
 
 Ritmo habitual: mediana do pace das corridas de mais de 3 km (sem esteira) anteriores à sessão, 84 dias;
 < 10 na janela usa todo o histórico; sem histórico não filtra. Os tiros valem se pace <= habitual x 0,90.
@@ -70,16 +70,16 @@ def test_tiros_reais_ficam_dentro(session, atleta):
     serie = _serie(session, atleta)
     assert len(serie) == 1
     assert serie[0].pace_s_km == pytest.approx(270.0)
-    assert serie[0].versao == "tiros_1km@4"
+    assert serie[0].versao == "tiros_1km@5"
 
 
 def test_rodagem_com_voltas_separadas_por_paradas_fica_fora(session, atleta):
-    # "tiros" a 330 s/km (o ritmo habitual): o detector os acha (voltas separadas por recuperações),
-    # mas 330 > 297: o filtro do ritmo habitual os tira da série.
+    # "tiros" a 330 s/km (o ritmo habitual): desde a @5 o esforço já pede pace <= 330 x 0,90 = 297 (esforcos@1,
+    # mesmo ritmo habitual), então nenhuma volta vira tiro. Na @4 o detector os marcava e só o filtro da série os tirava.
     _historico_facil(session, atleta)
     a = _corrida(session, atleta, dias=40, pace=0, voltas=_tiros(330))
     classificar_atividades(session, atleta.id)
-    assert sum(1 for s in a.segmentos if s.tipo == "tiro") == 4  # o detector marca
+    assert sum(1 for s in a.segmentos if s.tipo == "tiro") == 0
     assert serie_tiros_1km(session, atleta.id) == []  # a série não aceita
 
 
@@ -96,9 +96,19 @@ def test_logo_acima_do_limite_fica_fora(session, atleta):
 
 
 def test_sem_historico_nao_filtra(session, atleta):
-    # Sessão de tiros lentos (330) sendo a única corrida: sem histórico, não há filtro.
-    _corrida(session, atleta, dias=0, pace=0, voltas=_tiros(330))
+    # Única corrida, sem histórico: não há ritmo habitual para filtrar a sessão. A referência do esforço é a mediana
+    # ponderada da própria atividade (esforcos@1, ``ref_origem = atividade``): aquec. 720 s a 360, 4 tiros de 270
+    # (1080 s), 3 recuperações de 180 s a 450 (540 s) e desaq. 380 s a 380. Total 2720 s; metade 1360 s; ordenando
+    # por pace, 270 chega a 1080 s e 360 a 1800 s: a mediana é 360, limiar 324. Os tiros de 270 entram.
+    _corrida(session, atleta, dias=0, pace=0, voltas=_tiros(270))
     assert len(_serie(session, atleta)) == 1
+
+
+def test_sem_historico_tiros_no_ritmo_da_propria_atividade_nao_aparecem(session, atleta):
+    # Mesma sessão com "tiros" a 330 s/km: a mediana da atividade fica em 330 (limiar 297), nenhum bloco é esforço.
+    # É a limitação da referência de reserva (ADR 0008, "Limitações"), que na @4 não existia: a série não filtrava.
+    _corrida(session, atleta, dias=0, pace=0, voltas=_tiros(330))
+    assert _serie(session, atleta) == []
 
 
 def _historico_antigo(session, atleta):
@@ -143,3 +153,50 @@ def test_historico_fora_do_periodo_pedido_conta(session, atleta):
     dia = (BASE + timedelta(days=45)).date()
     serie = serie_tiros_1km(session, atleta.id, inicio=dia, fim=dia)
     assert [p.data for p in serie] == [dia]  # só a de 270; o histórico anterior (fora do período) foi usado
+
+
+# ---------------------------------------------------------------------------
+# #168: a série lê os esforços (bloco_atividade). Exemplos da issue, no banco, com histórico de 330 s/km.
+# ---------------------------------------------------------------------------
+
+
+def test_sessao_com_2_tiros_entra_na_serie(session, atleta):
+    # 2 x 1000 m a 250 s/km com 400 m a 420 s/km (168 s): 250 <= 297 e <= 420 x 0,92. Pace da sessão = 250 s/km.
+    _historico_facil(session, atleta)
+    voltas = [("warmup", 2000, 720), ("active", 1000, 250), ("rest", 400, 168), ("active", 1000, 250),
+              ("cooldown", 1000, 380)]
+    _corrida(session, atleta, dias=40, pace=0, voltas=voltas)
+    (ponto,) = _serie(session, atleta)
+    assert ponto.n_tiros == 2 and ponto.pace_s_km == pytest.approx(250.0)
+    assert ponto.melhor_pace_s_km == pytest.approx(250.0)
+
+
+def test_treino_misto_conta_so_os_tiros_de_1km(session, atleta):
+    # 5 x (1000 m a 250 + 400 m a 420) e depois 8 x (400 m a 230 + 200 m a 450): os 5 de 1 km, pace 250 s/km.
+    _historico_facil(session, atleta)
+    voltas = [("warmup", 2000, 720)]
+    for _ in range(5):
+        voltas += [("active", 1000, 250), ("rest", 400, 168)]
+    for _ in range(8):
+        voltas += [("active", 400, 92), ("rest", 200, 90)]
+    a = _corrida(session, atleta, dias=40, pace=0, voltas=voltas)
+    (ponto,) = _serie(session, atleta)
+    assert ponto.n_tiros == 5 and ponto.pace_s_km == pytest.approx(250.0)
+    assert sum(s.tipo == "tiro" for s in a.segmentos) == 5  # os 400 m não são tiro de 1 km
+    assert (a.tipo_treino, a.tipo_origem) == ("intervalado", "sugestao")
+
+
+def test_tiros_curtos_com_km_de_aquecimento_e_desaquecimento_ficam_fora(session, atleta):
+    _historico_facil(session, atleta)
+    voltas = [("warmup", 1000, 335)]
+    for _ in range(8):
+        voltas += [("active", 400, 92), ("rest", 200, 90)]
+    voltas += [("cooldown", 1000, 340)]
+    _corrida(session, atleta, dias=40, pace=0, voltas=voltas)
+    assert _serie(session, atleta) == []
+
+
+def test_rodagem_com_autolap_fica_fora(session, atleta):
+    _historico_facil(session, atleta)
+    _corrida(session, atleta, dias=40, pace=0, voltas=[("active", 1000, d) for d in (330, 335, 328, 340, 332)])
+    assert _serie(session, atleta) == []
