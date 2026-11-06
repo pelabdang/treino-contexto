@@ -1,10 +1,14 @@
 import { StyleSheet } from "react-native";
-import { fireEvent, render, screen } from "@testing-library/react-native";
+import { fireEvent, render, screen, within } from "@testing-library/react-native";
 
 import { TelaTreino } from "../src/componentes/TelaTreino";
 import { atividades } from "../__fixtures__/atividades";
 
-jest.mock("@expo/vector-icons", () => require("../__fixtures__/iconesFalsos"));
+// Ícone falso com nome e tamanho (o real carrega a fonte e quebra no Jest).
+jest.mock("@expo/vector-icons", () => {
+  const { Text } = require("react-native");
+  return { MaterialIcons: ({ name, size }: { name: string; size: number }) => <Text>{`${name}:${size}`}</Text> };
+});
 
 const resposta = (status: number, corpo: unknown) =>
   ({ ok: status >= 200 && status < 300, status, json: async () => corpo }) as Response;
@@ -26,6 +30,32 @@ describe("tela de um treino", () => {
     const f = jest.fn(() => new Promise<Response>(() => {})) as unknown as typeof fetch;
     await render(tela(f));
     expect(screen.getByText("Carregando o treino...")).toBeTruthy();
+    expect(screen.getByTestId("esqueleto-treino", { includeHiddenElements: true })).toBeTruthy();
+    expect(screen.queryByTestId("esqueleto-evolucao", { includeHiddenElements: true })).toBeNull();
+  });
+
+  it("erro de rede: ícone wifi-off de 40, alerta e 'Tentar de novo'; 404 e 500: error-outline de 40", async () => {
+    const { unmount } = await render(tela(jest.fn().mockRejectedValue(new Error("x")) as unknown as typeof fetch));
+    const rede = await screen.findByTestId("estado-erro");
+    expect(within(rede).getByText("wifi-off:40")).toBeTruthy();
+    expect(within(rede).getByRole("alert")).toBeTruthy();
+    await unmount();
+    for (const status of [404, 500]) {
+      const r = await render(tela(fetchCom(status, { detail: "x" })));
+      const e = await screen.findByTestId("estado-erro");
+      expect(within(e).getByText("error-outline:40")).toBeTruthy();
+      expect(within(e).getByRole("alert")).toBeTruthy();
+      expect(within(e).queryByText("Tentar de novo")).toBeNull();
+      await r.unmount();
+    }
+  });
+
+  it("cada linha do clima é um item só, lido como 'rótulo, valor'", async () => {
+    await render(tela(fetchCom(200, atividades.ok)));
+    const cartao = await screen.findByTestId("cartao-clima");
+    for (const rotulo of ["Temperatura, 24,3 °C", "Sensação térmica, 25,1 °C", "Umidade, 61 %", "Vento, 8,2 km/h"]) {
+      expect(within(cartao).getByLabelText(rotulo).props.accessible).toBe(true);
+    }
   });
 
   it("clima ok: resumo com campos prontos, valores do clima e atribuição", async () => {
