@@ -2,7 +2,7 @@
 tipo: decisao
 status: em-uso
 dono: theo
-atualizado: 2026-11-03
+atualizado: 2026-11-06
 links: [[metricas/tiros-1km]], [[modulos/api]], [[modulos/worker]], [[modulos/grafico-tiros]], [[decisoes/0002-segmento-intensidade-e-versao]], [[produto/metas/meta-1-tiros-1km]], [[produto/roadmap]]
 ---
 # ADR: 0005 Série de tiros: o que entra e como a regra muda
@@ -29,6 +29,12 @@ o comando que grava o gráfico e o CSV ([[modulos/worker]], [[modulos/grafico-ti
 5. **Validação com dado real fica fora do repositório.** O gabarito do atleta e os números ficam só no relatório
    privado em `entregas/meta-1/` (fora do git) e em mensagem ao Theo. Issues, PRs, testes e notas usam só exemplos
    sintéticos, com a conta à mão.
+
+6. **Regra de entrada na `tiros_1km@5`** (#168, ADR 0008, item 8): a série passa a ser uma visão dos esforços, em vez
+   de olhar voltas. Mudam o mínimo (**2 tiros por sessão**, Angelo 04/11), o treino misto (os tiros de 1 km do bloco
+   principal **contam**, sem a regra do volume) e a unidade (bloco `esforco` da faixa `d1000`). Seguem: esteira fora
+   (item 1), regra geral (item 2), ritmo parecido de 20%, bloco contínuo de 15% e ritmo habitual de 10%. Um esforço de
+   1500 m não é tiro de 1 km. O contrato da API não muda.
 
 ## Alternativas consideradas
 - **Esteira no mesmo gráfico, marcada pelo `subtipo`:** era o padrão até a conferência; o Angelo decidiu tirar (#51).
