@@ -41,8 +41,9 @@ da importação e do cálculo de métricas, fora da [[modulos/api]].
   com menos de 10); sem histórico vale a mediana da própria atividade. Imprime atividades processadas (regravadas,
   sem mudança, sem blocos), esforços e treinos-chave por modalidade, esforços por faixa e quantas atividades usaram a
   referência de reserva. Atleta inexistente: stderr e saída 1. A importação (`importar`) e o upload de FIT
-  (`importar_fit`) chamam a mesma detecção só para as atividades que entraram ou mudaram; um erro nela vira aviso no
-  log e nunca derruba a importação (rode o comando para refazer). Nada é exposto pela API ainda (#167).
+  (`importar_fit`) não chamam a detecção direto: ela roda dentro de `classificar_atividades` (#168), que é o único ponto de
+  detecção da importação; um erro nela vira aviso no log e nunca derruba a importação (rode o comando para refazer).
+  A API só lê o que ele grava (#167, [[modulos/api]]).
 - Clima: `uv run python -m worker.preencher_clima [--atleta-id N] [--exportacao CAMINHO] [--limite N] [--refazer-falhas] [--so-posicao]`.
   Primeiro relê a posição, da exportação (se dada) e, na falta dela, do FIT de `FIT_DIR`, para preencher `inicio_lat/lon` onde está `NULL`; depois busca
   o clima das atividades ao ar livre, com posição, sem `ok` válido e com fim a mais de 7 dias. Sequencial, pausa de 0,25 s,
