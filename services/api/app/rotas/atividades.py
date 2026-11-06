@@ -21,6 +21,8 @@ from fastapi import APIRouter, Depends, File, HTTPException, Response, UploadFil
 from app.metricas.tiros_1km import formatar_pace
 from app.servicos.fuso import inicio_local
 from app.servicos.clima import ClimaDaAtividade, EstadoClima, clima_da_atividade
+from app.servicos.esforcos_leitura import esforcos_da_atividade
+from app.metricas import esforcos as ef
 from pydantic import BaseModel, Field
 from sqlalchemy.orm import Session
 
@@ -46,6 +48,37 @@ class ClimaOut(BaseModel):
     atribuicao: str | None = Field(None, exclude_if=lambda v: v is None)  # so em `ok` (ADR 0007, item 4)
 
 
+class BlocoOut(BaseModel):
+    """Um bloco do treino (ADR 0008). Textos prontos para a tela; os numeros seguem para quem precisar (1 casa)."""
+
+    ordem: int
+    categoria: Literal["esforco", "recuperacao", "aquecimento", "desaquecimento", "leve"]
+    faixa: str | None  # d400, t4...; null fora de qualquer faixa (e nos que nao sao esforco)
+    faixa_rotulo: str | None  # "400 m", "4 min"
+    treino_chave: bool
+    inicio_offset_s: float
+    duracao_s: float
+    distancia_m: float | None
+    parada_apos_s: float | None
+    fc_media: float | None
+    pace_s_km: float | None = Field(None, exclude_if=lambda v: v is None)  # so corrida
+    velocidade_kmh: float | None = Field(None, exclude_if=lambda v: v is None)  # so ciclismo
+    duracao: str  # m:ss (minutos sem limite)
+    distancia: str | None  # "400 m" ou "1,50 km"
+    pace: str | None = Field(None, exclude_if=lambda v: v is None)  # m:ss por km; so corrida
+    velocidade: str | None = Field(None, exclude_if=lambda v: v is None)  # "25,3 km/h"; so ciclismo
+    parada_apos: str | None  # m:ss; null quando nao ha parada depois do bloco
+
+
+class EsforcosOut(BaseModel):
+    """Blocos e esforcos que o comando `detectar_esforcos` gravou (#166). A leitura nao detecta."""
+
+    versao: str  # esforcos@1
+    referencia_da_atividade: bool  # true: sem historico, a referencia foi a da propria atividade (a tela avisa)
+    treino_chave: bool  # algum esforco faz parte de um treino-chave continuo
+    blocos: list[BlocoOut]  # em ordem; vazio se nao ha blocos
+
+
 class AtividadeOut(BaseModel):
     """A atividade como a API mostra. A posicao de inicio nunca sai (ADR 0007)."""
 
@@ -57,6 +90,7 @@ class AtividadeOut(BaseModel):
     distancia_m: float | None
     fc_media: float | None
     clima: ClimaOut | None = None  # campo novo e opcional
+    esforcos: EsforcosOut | None = None  # so corrida e ciclismo (ADR 0008); null nas outras modalidades
     # Campos prontos para a tela (#158): a API formata, o app mostra (ADR 0004, adendo 2).
     data_local: str  # AAAA-MM-DD, pelo fuso da atividade (ADR 0003)
     hora_local: str  # HH:MM, pelo fuso da atividade
@@ -79,6 +113,60 @@ def _pace_medio(a: Atividade) -> str | None:
     if a.modalidade not in MODALIDADES_COM_PACE or not a.distancia_m or a.distancia_m <= 0 or a.duracao_s <= 0:
         return None
     return formatar_pace(a.duracao_s / (a.distancia_m / 1000))
+
+
+def _num(x: float | None) -> float | None:
+    return None if x is None else round(x, 1)
+
+
+def _distancia_texto(m: float | None) -> str | None:
+    if m is None:
+        return None
+    if m < 1000:
+        return f"{int(m + 0.5)} m"
+    return f"{m / 1000:.2f}".replace(".", ",") + " km"
+
+
+def _faixa_rotulo(faixa: str | None) -> str | None:
+    if not faixa:
+        return None
+    return f"{faixa[1:]} m" if faixa[0] == "d" else f"{faixa[1:]} min"
+
+
+def _bloco_out(b, modalidade: str) -> BlocoOut:
+    corrida = modalidade == ef.MODALIDADE_CORRIDA
+    vel = b.distancia_m / b.duracao_s * 3.6 if b.distancia_m and b.duracao_s > 0 else None
+    return BlocoOut(
+        ordem=b.ordem,
+        categoria=b.categoria,
+        faixa=b.faixa,
+        faixa_rotulo=_faixa_rotulo(b.faixa),
+        treino_chave=bool(b.treino_chave),
+        inicio_offset_s=_num(b.inicio_offset_s),
+        duracao_s=_num(b.duracao_s),
+        distancia_m=_num(b.distancia_m),
+        parada_apos_s=_num(b.parada_apos_s),
+        fc_media=_num(b.fc_media),
+        pace_s_km=_num(b.pace_s_km) if corrida else None,
+        velocidade_kmh=_num(vel) if not corrida else None,
+        duracao=formatar_pace(b.duracao_s),  # a regra unica de m:ss do projeto
+        distancia=_distancia_texto(b.distancia_m),
+        pace=formatar_pace(b.pace_s_km) if corrida and b.pace_s_km else None,
+        velocidade=f"{vel:.1f}".replace(".", ",") + " km/h" if not corrida and vel else None,
+        parada_apos=formatar_pace(b.parada_apos_s) if b.parada_apos_s else None,
+    )
+
+
+def _esforcos_out(session: Session, a: Atividade) -> EsforcosOut | None:
+    e = esforcos_da_atividade(session, a)
+    if e is None:
+        return None
+    return EsforcosOut(
+        versao=e.versao,
+        referencia_da_atividade=e.ref_origem == ef.REF_ATIVIDADE,
+        treino_chave=e.treino_chave,
+        blocos=[_bloco_out(b, a.modalidade) for b in e.blocos],
+    )
 
 
 def _clima_out(c: ClimaDaAtividade) -> ClimaOut:
@@ -180,6 +268,7 @@ def buscar_atividade(
         distancia_m=a.distancia_m,
         fc_media=a.fc_media,
         clima=None if clima is None else _clima_out(clima),
+        esforcos=_esforcos_out(session, a),
         data_local=local.date().isoformat(),
         hora_local=local.strftime("%H:%M"),
         duracao=_duracao_hms(a.duracao_s),

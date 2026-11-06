@@ -12,7 +12,11 @@ export type Atividade = components["schemas"]["AtividadeOut"];
 /** Clima da atividade: `estado` e, só em `ok`, `temperatura_c`, `sensacao_c`, `umidade_pct` e `vento_kmh` (ADR 0007). */
 export type ClimaAtividade = components["schemas"]["ClimaOut"];
 export type EstadoClima = ClimaAtividade["estado"];
-export type Eixos = components["schemas"]["Eixos"];
+/** Blocos e esforços da atividade (ADR 0008): `versao`, `referencia_da_atividade`, `treino_chave` e `blocos`. */
+export type EsforcosAtividade = components["schemas"]["EsforcosOut"];
+/** Um bloco do treino, com textos prontos (`duracao`, `distancia`, `pace` ou `velocidade`, `faixa_rotulo`). */
+export type BlocoEsforco = components["schemas"]["BlocoOut"];
+export type Eixos =components["schemas"]["Eixos"];
 export type ErroNaoEncontrado = components["schemas"]["Erro"];
 export type ErroValidacao = components["schemas"]["HTTPValidationError"];
 
