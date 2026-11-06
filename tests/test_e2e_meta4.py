@@ -174,7 +174,7 @@ def _confere(ctx, caso_id, estado=None):
     j = _get(ctx, *_atividade(ctx, caso_id))
     assert j["clima"]["estado"] == esperado
     if esperado == "ok":
-        assert set(j["clima"]) == {"estado", *CHAVES_CLIMA}
+        assert set(j["clima"]) == {"estado", "atribuicao", *CHAVES_CLIMA}
         for k, v in caso["clima"].items():
             assert j["clima"][k] == pytest.approx(v, abs=TOL), (caso_id, k)
     else:
