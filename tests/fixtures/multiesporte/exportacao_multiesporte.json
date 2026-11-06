@@ -1,0 +1,90 @@
+[
+ {
+  "summarizedActivitiesExport": [
+   {
+    "activityId": 3000000201,
+    "name": "Treino multiesporte ficticio",
+    "activityType": "multi_sport",
+    "sportType": "MULTI_SPORT",
+    "startTimeGmt": 1898665200000,
+    "beginTimestamp": 1898665200000,
+    "duration": 5400000,
+    "elapsedDuration": 5400000,
+    "distance": 3600000.0,
+    "avgHr": 140
+   },
+   {
+    "activityId": 3000000202,
+    "name": "Natacao do multiesporte",
+    "activityType": "open_water_swimming",
+    "sportType": "SWIMMING",
+    "startTimeGmt": 1898665200000,
+    "beginTimestamp": 1898665200000,
+    "duration": 1200000,
+    "elapsedDuration": 1200000,
+    "distance": 100000.0,
+    "avgHr": 140
+   },
+   {
+    "activityId": 3000000203,
+    "name": "Troca 1",
+    "activityType": "transition",
+    "sportType": "TRANSITION",
+    "startTimeGmt": 1898666400000,
+    "beginTimestamp": 1898666400000,
+    "duration": 120000,
+    "elapsedDuration": 120000,
+    "distance": 0.0,
+    "avgHr": 140
+   },
+   {
+    "activityId": 3000000204,
+    "name": "Pedal do multiesporte",
+    "activityType": "road_biking",
+    "sportType": "CYCLING",
+    "startTimeGmt": 1898666520000,
+    "beginTimestamp": 1898666520000,
+    "duration": 2700000,
+    "elapsedDuration": 2700000,
+    "distance": 3000000.0,
+    "avgHr": 140
+   },
+   {
+    "activityId": 3000000205,
+    "name": "Troca 2",
+    "activityType": "transition",
+    "sportType": "TRANSITION",
+    "startTimeGmt": 1898669220000,
+    "beginTimestamp": 1898669220000,
+    "duration": 60000,
+    "elapsedDuration": 60000,
+    "distance": 0.0,
+    "avgHr": 140
+   },
+   {
+    "activityId": 3000000206,
+    "name": "Corrida do multiesporte",
+    "activityType": "running",
+    "sportType": "RUNNING",
+    "startTimeGmt": 1898669280000,
+    "beginTimestamp": 1898669280000,
+    "duration": 1320000,
+    "elapsedDuration": 1320000,
+    "distance": 500000.0,
+    "avgHr": 140
+   },
+   {
+    "activityId": 3000000207,
+    "name": "Corrida solta ficticia",
+    "activityType": "running",
+    "sportType": "RUNNING",
+    "startTimeGmt": 1898924400000,
+    "beginTimestamp": 1898924400000,
+    "duration": 1800000,
+    "elapsedDuration": 1800000,
+    "distance": 500000.0,
+    "avgHr": 140
+   }
+  ]
+ }
+]

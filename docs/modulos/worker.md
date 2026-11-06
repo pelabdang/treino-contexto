@@ -49,6 +49,10 @@ da importação e do cálculo de métricas, fora da [[modulos/api]].
   o clima das atividades ao ar livre, com posição, sem `ok` válido e com fim a mais de 7 dias. Sequencial, pausa de 0,25 s,
   teto de 500 chamadas por rodada, um `commit` por atividade, para se o Open-Meteo limitar (429). Imprime posições
   preenchidas e atividades por estado. `--so-posicao` não usa a rede. Regras e estados em [[modulos/clima]]; passo a passo rodado em [[produto/meta-4-como-rodar]].
+- Multiesporte: `uv run python -m worker.reclassificar_multiesporte --exportacao CAMINHO [--atleta-id N] [--dry-run]` marca
+  `subtipo = multiesporte_pai` ou `troca` nas linhas `garmin_export` com `modalidade = outra` e subtipo vazio (valores e fonte
+  pública em [[modulos/ingestao-garmin]], #230). Nunca sobrescreve outro subtipo nem muda modalidade. Idempotente; `--dry-run`
+  imprime `NULL -> troca: N` e as linhas fora da exportação lida, sem gravar.
 - Subtipo: `uv run python -m worker.reclassificar_subtipo --exportacao CAMINHO [--atleta-id N] [--dry-run]` relê o tipo da
   exportação (sem rede) e grava o `subtipo` pelo `tipos.py` atual só onde está `NULL` ou diverge, nas linhas `garmin_export`
   (casa por `fonte_id`). Para bancos importados antes de um mapeamento existir (ex.: `virtual_ride` -> `virtual`, #183).
@@ -69,6 +73,7 @@ da importação e do cálculo de métricas, fora da [[modulos/api]].
 - `services/worker/worker/apagar_fit.py` (CLI `python -m worker.apagar_fit`)
 - `services/worker/worker/reclassificar.py` (CLI `python -m worker.reclassificar`)
 - `services/worker/worker/reclassificar_subtipo.py` (CLI `python -m worker.reclassificar_subtipo`)
+- `services/worker/worker/reclassificar_multiesporte.py` (CLI `python -m worker.reclassificar_multiesporte`)
 - `services/worker/worker/detectar_esforcos.py` (CLI `python -m worker.detectar_esforcos`); a lógica está em `services/api/app/servicos/esforcos.py`
 - `services/worker/tests/test_detectar_esforcos.py`
 - `services/worker/worker/sugerir_transicao.py` (CLI `python -m worker.sugerir_transicao`); a lógica está em `services/api/app/servicos/transicao.py`
@@ -77,6 +82,7 @@ da importação e do cálculo de métricas, fora da [[modulos/api]].
 - `services/worker/tests/test_preencher_clima.py`
 - `services/worker/tests/test_reclassificar.py`
 - `services/worker/tests/test_reclassificar_subtipo.py`
+- `services/worker/tests/test_reclassificar_multiesporte.py`
 - `services/worker/tests/test_grafico_tiros_1km.py`
 - `services/worker/tests/test_health.py`
 - `services/api/tests/ingestao/test_garmin_parser.py` (testes do parser, na API)
