@@ -9,8 +9,8 @@ aprovados pelo Angelo em 04/11, e ficam aqui como constantes nomeadas.
 
 O primeiro passo, comum às modalidades, é ler a sequência de voltas como blocos (``montar_blocos``, #162). Sobre os
 blocos, ``esforcos_corrida`` (#163) dá a faixa nomeada de distância (``d200`` a ``d5000``) de cada esforço de corrida.
-``esforcos_ciclismo`` (#164) dá a faixa de duração (``t1`` a ``t60``) dos esforços de ciclismo. Treino-chave
-contínuo é da #165 e não é calculado aqui.
+``esforcos_ciclismo`` (#164) dá a faixa de duração (``t1`` a ``t60``) dos esforços de ciclismo.
+``treino_chave_continuo`` (#165) marca o treino contínuo forte (item 6 da ADR), nas duas modalidades.
 """
 
 from __future__ import annotations
@@ -407,3 +407,88 @@ def esforcos_ciclismo(resultado: ResultadoBlocos) -> tuple[EsforcoCiclismo, ...]
         for b in resultado.blocos
         if b.categoria == ESFORCO
     )
+
+
+# --- Treino-chave contínuo (issue #165; ADR 0008, item 6) ------------------------------------------------------
+# Sequência contínua forte = blocos ``esforco`` vizinhos, sem recuperação entre eles. É treino-chave quando soma
+# pelo menos CONTINUO_MIN_S de tempo em movimento e a atividade tem menos de CONTINUO_FORA_MAX esforços fora dela.
+# O limiar de "forte" é o do esforço (corrida pace <= habitual x 0,90; ciclismo velocidade >= habitual x 1,15), já
+# aplicado em ``montar_blocos``. Fonte: regra própria do projeto, sem artigo (aprovada pelo Angelo em 04/11).
+CONTINUO_MIN_S = 1200.0  # 20 min, nas duas modalidades
+CONTINUO_FORA_MAX = 2  # "menos de 2 esforços fora da sequência": 0 ou 1 passa, 2 ou mais é treino de repetição
+
+
+@dataclass(frozen=True)
+class TreinoChaveContinuo:
+    """Resultado do item 6. ``sequencia_*`` descrevem a maior sequência forte (None se não há esforço)."""
+
+    treino_chave: bool
+    motivo: str  # "continuo", "sem_esforco", "curto" ou "repeticoes"
+    sequencia_bloco_inicial: int | None  # BlocoTreino.ordem
+    sequencia_bloco_final: int | None
+    duracao_s: float  # tempo em movimento da sequência
+    distancia_m: float
+    pace_s_km: float | None  # da sequência inteira
+    velocidade_kmh: float | None
+    margem: float | None  # corrida: 1 - pace/ref; ciclismo: velocidade/ref - 1 (os mínimos são 0,10 e 0,15)
+    esforcos_fora: int  # blocos de esforço fora da sequência
+    referencia: float | None
+    ref_origem: Literal["habitual", "atividade"] | None
+    versao: str = VERSAO
+
+
+def _sequencias_fortes(blocos: Sequence[BlocoTreino], separa_s: float) -> list[list[BlocoTreino]]:
+    """Esforços vizinhos sem recuperação entre eles. Uma parada de ``separa_s`` ou mais conta como recuperação."""
+    sequencias: list[list[BlocoTreino]] = []
+    anterior: BlocoTreino | None = None
+    for b in blocos:
+        if b.categoria != ESFORCO:
+            anterior = None
+            continue
+        if anterior is not None and anterior.parada_apos_s < separa_s - _EPS:
+            sequencias[-1].append(b)
+        else:
+            sequencias.append([b])
+        anterior = b
+    return sequencias
+
+
+def treino_chave_continuo(resultado: ResultadoBlocos, modalidade: str) -> TreinoChaveContinuo:
+    """Marca a atividade como treino-chave contínuo (ADR 0008, item 6). Função pura sobre ``montar_blocos``.
+
+    Regra: a maior sequência de esforços sem recuperação (a de mais tempo em movimento; empate fica com a primeira)
+    soma pelo menos ``CONTINUO_MIN_S`` (limite inclusivo) e há menos de ``CONTINUO_FORA_MAX`` esforços fora dela.
+    Cada bloco da sequência já passou no limiar de esforço, então o ritmo é forte durante todo o tempo.
+    Premissa nomeada além da ADR: uma parada de 15 s (corrida) ou 30 s (ciclismo) ou mais entre dois esforços é
+    recuperação e corta a sequência (sem isso, 5 x 1 km com 90 s parados somariam 20 min e virariam "contínuo").
+    ``referencia`` e ``ref_origem`` vão junto para a tela poder avisar quando a referência é a da própria atividade.
+    """
+    ciclismo = modalidade == MODALIDADE_CICLISMO
+    sequencias = _sequencias_fortes(resultado.blocos, PAUSA_SEPARA_S_CICLISMO if ciclismo else PAUSA_SEPARA_S_CORRIDA)
+    total_esforcos = sum(len(s) for s in sequencias)
+    ref = resultado.referencia
+
+    def montar(motivo: str, seq: list[BlocoTreino] | None) -> TreinoChaveContinuo:
+        if not seq:
+            return TreinoChaveContinuo(False, motivo, None, None, 0.0, 0.0, None, None, None, 0, ref, resultado.ref_origem)
+        dur = sum(b.duracao_s for b in seq)
+        dist = sum(b.distancia_m for b in seq)
+        pace, vel = _pace(dist, dur), _velocidade(dist, dur)
+        margem = None
+        if ref and ciclismo and vel is not None:
+            margem = vel / ref - 1
+        elif ref and not ciclismo and pace is not None:
+            margem = 1 - pace / ref
+        return TreinoChaveContinuo(
+            motivo == "continuo", motivo, seq[0].ordem, seq[-1].ordem, dur, dist, pace, vel, margem,
+            total_esforcos - len(seq), ref, resultado.ref_origem,
+        )  # fmt: skip
+
+    if not sequencias:
+        return montar("sem_esforco", None)
+    maior = max(sequencias, key=lambda s: sum(b.duracao_s for b in s))  # max devolve a primeira no empate
+    if sum(b.duracao_s for b in maior) < CONTINUO_MIN_S - _EPS:
+        return montar("curto", maior)
+    if total_esforcos - len(maior) >= CONTINUO_FORA_MAX:
+        return montar("repeticoes", maior)
+    return montar("continuo", maior)
