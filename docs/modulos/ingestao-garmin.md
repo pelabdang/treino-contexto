@@ -2,8 +2,8 @@
 tipo: modulo
 status: em-uso
 dono: duda
-atualizado: 2026-11-04
-links: [[produto/meta-3-como-rodar]], [[modulos/worker]], [[modulos/banco]], [[decisoes/0006-upload-de-fit]], [[decisoes/0007-clima-da-atividade]], [[produto/roadmap]], [[diario/2026-11-03]], [[produto/meta-4-como-rodar]]
+atualizado: 2026-11-06
+links: [[produto/meta-3-como-rodar]], [[modulos/worker]], [[modulos/banco]], [[decisoes/0006-upload-de-fit]], [[decisoes/0007-clima-da-atividade]], [[produto/roadmap]], [[diario/2026-11-03]], [[produto/meta-4-como-rodar]], [[decisoes/0008-deteccao-de-esforcos]], [[modulos/api]]
 ---
 # Módulo: ingestão Garmin
 
