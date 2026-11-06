@@ -1,9 +1,10 @@
 import { MaterialIcons } from "@expo/vector-icons";
 import { buscarAtividade, type Atividade, type ClimaAtividade, type ErroApi } from "@treino/api-client";
 import { useCallback, useEffect, useMemo, useState, type ReactNode } from "react";
-import { ActivityIndicator, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
+import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 
 import { borda, espaco, fonte, larguraConteudoMax, raio, tamanho, useMargemTela, useTema, type Tema } from "../tema";
+import { EsqueletoTreino } from "./Esqueleto";
 import { dataCurta } from "./GraficoTiros";
 
 type Props = {
@@ -79,17 +80,24 @@ export function TelaTreino({ apiUrl, atletaId, atividadeId, aoVoltar, fetchFn }:
         </Pressable>
       )}
       {estado.tipo === "carregando" && (
-        <View style={styles.centro}>
-          <ActivityIndicator color={tema.cor.destaque} />
-          <Text style={styles.texto}>Carregando o treino...</Text>
+        <View>
+          <Text accessibilityLiveRegion="polite" style={[styles.texto, { marginTop: espaco[2] }]}>
+            Carregando o treino...
+          </Text>
+          <EsqueletoTreino />
         </View>
       )}
       {estado.tipo === "erro" && (
-        <View>
-          <View style={[styles.aviso, { backgroundColor: tema.cor["erro-suave"] }]} accessibilityLiveRegion="polite">
-            <MaterialIcons name="error-outline" size={tamanho.iconeMedio} color={tema.cor.erro} />
-            <Text style={[styles.avisoTexto, { color: tema.cor.erro }]}>{mensagemErro(estado.erro)}</Text>
-          </View>
+        <View testID="estado-erro" style={styles.estado}>
+          <MaterialIcons
+            name={estado.erro.tipo === "rede" ? "wifi-off" : "error-outline"}
+            size={tamanho.iconeEstado}
+            color={tema.cor.erro}
+            accessible={false}
+          />
+          <Text accessibilityRole="alert" style={styles.erro}>
+            {mensagemErro(estado.erro)}
+          </Text>
           {estado.erro.tipo === "rede" && (
             <Pressable accessibilityRole="button" onPress={tentarDeNovo} style={styles.botao}>
               <Text style={styles.botaoTexto}>Tentar de novo</Text>
@@ -187,7 +195,7 @@ function CartaoClima({ clima, styles, tema }: { clima: ClimaAtividade; styles: E
 
 function Linha({ styles, rotulo, valor }: { styles: Estilos; rotulo: string; valor: string }) {
   return (
-    <View style={styles.linha}>
+    <View accessible accessibilityLabel={`${rotulo}, ${valor}`} style={styles.linha}>
       <Text style={styles.rotuloLinha}>{rotulo}</Text>
       <Text style={styles.valorLinha}>{valor}</Text>
     </View>
@@ -243,14 +251,14 @@ function criarEstilos({ cor }: Tema, margem: number = espaco[4]) {
     },
     chipTexto: { ...fonte.rotulo, color: cor.texto },
     subtitulo: { ...fonte.corpo, color: cor["texto-2"] },
-    centro: { alignItems: "center", paddingVertical: espaco[5], gap: espaco[2] },
+    estado: { alignItems: "center", paddingVertical: espaco[7], gap: espaco[2] },
+    erro: { ...fonte.corpo, color: cor.erro, textAlign: "center", marginBottom: espaco[3] },
     texto: { ...fonte.corpo, color: cor["texto-2"] },
     botao: {
       alignSelf: "flex-start",
       minHeight: tamanho.botaoAltura,
       justifyContent: "center",
       paddingHorizontal: espaco[4],
-      marginTop: espaco[3],
       borderRadius: raio.medio,
       backgroundColor: cor.destaque,
     },

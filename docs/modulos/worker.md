@@ -3,7 +3,7 @@ tipo: modulo
 status: em-uso
 dono: theo
 atualizado: 2026-11-06
-links: [[decisoes/0006-upload-de-fit]], [[modulos/api]], [[modulos/grafico-tiros]], [[modulos/infra]], [[modulos/ingestao-garmin]], [[modulos/banco]], [[modulos/clima]], [[decisoes/0008-deteccao-de-esforcos]], [[metricas/esforcos]], [[decisoes/0007-clima-da-atividade]], [[produto/meta-4-como-rodar]]
+links: [[decisoes/0006-upload-de-fit]], [[modulos/api]], [[modulos/grafico-tiros]], [[modulos/infra]], [[modulos/ingestao-garmin]], [[modulos/banco]], [[modulos/clima]], [[decisoes/0008-deteccao-de-esforcos]], [[decisoes/0009-treino-de-transicao]], [[metricas/transicao]], [[metricas/esforcos]], [[decisoes/0007-clima-da-atividade]], [[produto/meta-4-como-rodar]]
 ---
 # Módulo: worker
 
@@ -24,6 +24,14 @@ da importação e do cálculo de métricas, fora da [[modulos/api]].
 - Reclassificação: `uv run python -m worker.reclassificar --atleta-id <id>` roda `classificar_atividades` e mostra
   quantas corridas processou. Idempotente. Use quando a API devolve `reclassificacao_pendente: true`
   (passo a passo em "Reclassificar" de [[modulos/api]]). Atleta inexistente: stderr e saída 1.
+- Treino de transição: `uv run python -m worker.sugerir_transicao --atleta-id <id>` (#157, [[decisoes/0009-treino-de-transicao]]) aplica a regra
+  `transicao@1` ([[metricas/transicao]]) às atividades do atleta e grava em `rotulo_transicao` ([[modulos/banco]]). **Sem rede.**
+  A regra só grava "sim" (origem `sugerido`): insere as sugeridas sem linha, atualiza `versao_regra` e `definido_em` só quando a
+  versão mudou, apaga as `sugerido` que a regra não sugere mais e **nunca toca numa linha `atleta`** (correção do atleta).
+  Idempotente: a 2ª rodada não muda linha nenhuma (nem `definido_em`). Roda sobre o atleta inteiro, porque uma atividade nova
+  pode formar par com uma antiga. Imprime atividades (elegíveis), sugeridas, inseridas, atualizadas, removidas, sem mudança e
+  quantas correções do atleta existem (e em quantas a regra sugere "sim"). Atleta inexistente: stderr e saída 1. A importação
+  e o upload de FIT já chamam a mesma função (ver [[modulos/ingestao-garmin]]); o comando serve para o histórico e para uma versão nova da regra.
 - Esforços: `uv run python -m worker.detectar_esforcos --atleta-id <id>` (#166, [[decisoes/0008-deteccao-de-esforcos]]) lê as voltas
   de cada corrida e pedalada do atleta, monta os blocos ([[metricas/esforcos]]) e grava em `bloco_atividade` ([[modulos/banco]]).
   **Sem rede.** Idempotente: calcula os blocos de cada atividade e só regrava os que mudaram (valores ou
@@ -62,6 +70,8 @@ da importação e do cálculo de métricas, fora da [[modulos/api]].
 - `services/worker/worker/reclassificar_subtipo.py` (CLI `python -m worker.reclassificar_subtipo`)
 - `services/worker/worker/detectar_esforcos.py` (CLI `python -m worker.detectar_esforcos`); a lógica está em `services/api/app/servicos/esforcos.py`
 - `services/worker/tests/test_detectar_esforcos.py`
+- `services/worker/worker/sugerir_transicao.py` (CLI `python -m worker.sugerir_transicao`); a lógica está em `services/api/app/servicos/transicao.py`
+- `services/worker/tests/test_sugerir_transicao.py`
 - `services/worker/worker/preencher_clima.py` (CLI `python -m worker.preencher_clima`); a lógica está em `services/api/app/servicos/clima.py`
 - `services/worker/tests/test_preencher_clima.py`
 - `services/worker/tests/test_reclassificar.py`

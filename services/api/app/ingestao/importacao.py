@@ -21,6 +21,7 @@ from app.ingestao.garmin.fit import FitSemAtividade
 from app.ingestao.garmin.leitor import TOLERANCIA_S
 from app.ingestao.garmin.posicao import e_indoor
 from app.ingestao.garmin.unidades import para_utc
+from app.servicos.transicao import aplicar_sugestao
 from app.servicos.evolucao_tiros import classificar_atividades
 from sqlalchemy import select
 from sqlalchemy.exc import IntegrityError
@@ -237,6 +238,16 @@ def gravar_atividade(session: Session, atleta_id: int, a: AtividadeImportada, du
     return "atualizada", ativ, anterior
 
 
+def _sugerir_transicao(session: Session, atleta_id: int) -> None:
+    """Rotulo de transicao (#157) do atleta inteiro: uma atividade nova pode formar par com uma antiga. Um erro aqui
+    nunca derruba a importacao: fica o aviso no log e `python -m worker.sugerir_transicao` refaz."""
+    try:
+        aplicar_sugestao(session, atleta_id)
+    except Exception:  # noqa: BLE001
+        session.rollback()
+        log.warning("transicao nao sugerida; rode worker.sugerir_transicao", exc_info=True)
+
+
 def importar(session: Session, caminho: str | Path, atleta_nome: str) -> RelatorioImportacao:
     """Le a exportacao e grava atividades e voltas. Reimportar nao duplica nada.
 
@@ -278,6 +289,8 @@ def importar(session: Session, caminho: str | Path, atleta_nome: str) -> Relator
 
     session.commit()
     classificar_atividades(session, atleta.id)  # esforcos (#166), tiros/recuperacoes e tipo do treino (#14, #168); idempotente
+    if rel.ids_alterados:
+        _sugerir_transicao(session, atleta.id)  # rotulo de transicao (#157); idempotente
     return rel
 
 
@@ -338,5 +351,6 @@ def importar_fit(session: Session, atleta_id: int, conteudo: bytes, fit_dir: Pat
             avisos.append(f"não foi possível apagar o FIT substituído ({antigo}): {e.__class__.__name__}")
     atividade_id = ativ.id
     classificar_atividades(session, atleta_id)
+    _sugerir_transicao(session, atleta_id)
     return ResultadoUpload(resultado, atividade_id, avisos)
 

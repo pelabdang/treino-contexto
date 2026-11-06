@@ -31,6 +31,8 @@ CATEGORIAS_BLOCO = ("esforco", "recuperacao", "aquecimento", "desaquecimento", "
 INTENSIDADES = ("active", "rest", "warmup", "cooldown", "recovery", "interval", "other")
 
 
+ORIGENS_ROTULO = ("sugerido", "atleta")  # ADR 0009, item 1
+
 ESTADOS_CLIMA = ("ok", "pendente", "falha")  # indoor e sem_posicao sao calculados na leitura (ADR 0007)
 
 FUSO_MIN_MIN, FUSO_MIN_MAX = -720, 840  # minutos: UTC-12 a UTC+14
@@ -120,6 +122,9 @@ class Atividade(Base):
     blocos: Mapped[list["BlocoAtividade"]] = relationship(
         back_populates="atividade", cascade="all, delete-orphan", order_by="BlocoAtividade.ordem"
     )
+    rotulo_transicao: Mapped["RotuloTransicao | None"] = relationship(
+        back_populates="atividade", cascade="all, delete-orphan", uselist=False
+    )
 
 
 class Segmento(Base):
@@ -197,3 +202,31 @@ class ClimaAtividade(Base):
     tentativas: Mapped[int] = mapped_column(Integer, default=0, server_default="0")
     erro: Mapped[str | None] = mapped_column(String(200))
     consultado_em: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+
+
+class RotuloTransicao(Base):
+    """Rotulo "treino de transicao" de uma atividade (ADR 0009, item 1).
+
+    Sem linha = "nao". A regra (`transicao@N`) so grava "sim" (origem `sugerido`); a linha `atleta` e a correcao dele
+    (sim ou nao) e nunca e tocada pela regra. Quem grava a sugestao e `app.servicos.transicao`.
+    """
+
+    __tablename__ = "rotulo_transicao"
+    __table_args__ = (
+        CheckConstraint(_in("origem", ORIGENS_ROTULO), name="origem"),
+        # a regra so grava "sim", sempre com a versao; a correcao do atleta nao tem versao
+        CheckConstraint(
+            "(origem = 'sugerido' AND transicao AND versao_regra IS NOT NULL) OR "
+            "(origem = 'atleta' AND versao_regra IS NULL)",
+            name="origem_versao",
+        ),
+    )
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    atividade_id: Mapped[int] = mapped_column(ForeignKey("atividade.id", ondelete="CASCADE"), unique=True)
+    transicao: Mapped[bool] = mapped_column(Boolean)
+    origem: Mapped[str] = mapped_column(String(20))
+    versao_regra: Mapped[str | None] = mapped_column(String(40))  # ex.: transicao@1; nulo em `atleta`
+    definido_em: Mapped[datetime] = mapped_column(DateTime(timezone=True))
+
+    atividade: Mapped[Atividade] = relationship(back_populates="rotulo_transicao")
