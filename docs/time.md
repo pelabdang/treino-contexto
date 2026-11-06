@@ -16,7 +16,7 @@ pastas e notas que ela mantém. Cada agente tem um arquivo em `.claude/agents/`.
 | Theo | tech lead; revisa o código e faz o merge com CI verde e `docs-ok` | arquitetura, ADRs | [[decisoes/0001-modelo-de-dados-minimo]], [[decisoes/0008-deteccao-de-esforcos]] |
 | Paulo | planejador; mantém o roteiro de metas e as issues | `docs/produto/roadmap.md` e `docs/produto/metas/` | [[produto/roadmap]] |
 | Duda | dados e backend: ingestão Garmin/FIT, banco, clima e API | `services/api/` (menos `app/metricas/` e `app/explicacao/`) e `services/worker/` | [[modulos/ingestao-garmin]], [[modulos/api]], [[modulos/banco]], [[modulos/worker]], [[modulos/clima]] |
-| Caio | ciência do esporte: métricas, linha de base e motor de explicação | `services/api/app/metricas/` e `app/explicacao/`, com os testes | [[metricas/tiros-1km]], [[metricas/esforcos]], [[metricas/esforcos-oraculo]] |
+| Caio | ciência do esporte: métricas, linha de base e motor de explicação | `services/api/app/metricas/` e `app/explicacao/`, com os testes | [[metricas/tiros-1km]], [[metricas/esforcos]], [[metricas/esforcos-oraculo]], [[metricas/transicao]] |
 | Rafa | app em React Native com Expo (iOS, Android e web) | `apps/mobile/` | [[modulos/mobile]], [[modulos/api-client]] |
 | Lia | design de produto e UX; dá o "design-ok" como aval | `docs/design/` | [[design/guia-visual]], [[design/tokens]] |
 | Bia | QA: critério de pronto e testes de ponta a ponta | `tests/e2e/` | [[produto/meta-2-como-rodar]] |
