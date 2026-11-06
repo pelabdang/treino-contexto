@@ -174,3 +174,8 @@ ganha campos prontos, para o app não formatar pace nem converter fuso: `data_lo
 `formatar_pace`, só para corrida com distância; `null` nas outras modalidades) e `clima.atribuicao` (só com clima `ok`,
 [[decisoes/0007-clima-da-atividade]], item 4). Os campos antigos continuam. Detalhes em [[modulos/api]].
 
+
+## Adendo 4 (2026-11-06): CORS libera também PUT e DELETE (#170)
+**Status: aceito (Theo, 06/11).** Estende o item 7 (CORS): além de `GET` e `POST`, a API libera `PUT` e `DELETE` para as origens
+de `CORS_ORIGENS`, para o app web corrigir e desfazer o rótulo de transição ([[decisoes/0009-treino-de-transicao]]). Nada mais muda
+no CORS (sem `*`, sem cookies). Detalhes em [[modulos/api]].

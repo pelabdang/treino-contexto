@@ -10,9 +10,9 @@ from app.db.session import get_session
 from app.metricas.tiros_1km import formatar_pace
 from app.rotas.evolucao import Erro, Periodo, _periodo_valido
 from app.servicos.fuso import data_local, inicio_local
-from app.servicos.transicao import ORIGEM_ATLETA
+from app.servicos.transicao import ORIGEM_ATLETA, aplicar_sugestao
 from app.servicos.transicao_grupos import Grupo, Parte, grupos_do_atleta, ritmo
-from fastapi import APIRouter, Depends, HTTPException, Response
+from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel, Field
 from sqlalchemy.orm import Session
 
@@ -357,7 +357,7 @@ def corrigir_transicao(
 
 @router.delete(
     "/atividades/{atividade_id}/transicao",
-    status_code=204,
+    response_model=TransicaoOut,
     operation_id="desfazerCorrecaoDeTransicao",
     responses=_404_ATIVIDADE,
 )
@@ -365,12 +365,13 @@ def desfazer_correcao_de_transicao(
     atleta_id: int,
     atividade_id: int,
     session: Session = Depends(get_session),
-) -> Response:
-    """Apaga a correção do atleta; a regra volta a valer na próxima rodada de `worker.sugerir_transicao`. Sem correção, não faz
-    nada (`204` do mesmo jeito) e nunca apaga uma linha `sugerido`."""
+) -> TransicaoOut:
+    """Apaga a correção do atleta e roda a regra (`sugerir_transicao`) para ele; devolve o estado real da atividade
+    (`sugerido` se a regra a sugere, senão `valor = false`). Sem correção, só devolve o estado e nunca apaga uma linha `sugerido`."""
     _atividade_do_atleta(session, atleta_id, atividade_id)
     linha = session.query(RotuloTransicao).filter_by(atividade_id=atividade_id).one_or_none()
     if linha is not None and linha.origem == ORIGEM_ATLETA:
         session.delete(linha)
         session.commit()
-    return Response(status_code=204)
+        aplicar_sugestao(session, atleta_id)
+    return transicao_da_atividade(session, atividade_id)

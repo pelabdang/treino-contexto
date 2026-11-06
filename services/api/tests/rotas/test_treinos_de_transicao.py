@@ -181,17 +181,20 @@ def test_put_troca_a_linha_sugerida_pela_do_atleta(client, session, atleta, dois
     assert (row.origem, row.versao_regra) == ("atleta", None)
 
 
-def test_delete_desfaz_so_a_correcao_do_atleta(client, session, atleta, dois_bricks):
+def test_delete_desfaz_a_correcao_e_a_sugestao_volta(client, session, atleta, dois_bricks):
     a1, a2, *_ = dois_bricks
     client.put(URL_TRANS.format(atleta.id, a1.id), json={"transicao": False})
+    assert client.get(URL_ATIV.format(atleta.id, a1.id)).json()["transicao"] == {"valor": False, "origem": "atleta"}
     r = client.delete(URL_TRANS.format(atleta.id, a1.id))
-    assert r.status_code == 204 and r.content == b""
-    assert client.get(URL_ATIV.format(atleta.id, a1.id)).json()["transicao"] == {"valor": False, "origem": None}
-    aplicar_sugestao(session, atleta.id)  # a regra volta a valer
+    assert r.status_code == 200 and r.json() == {"valor": True, "origem": "sugerido"}  # estado real, sem esperar o worker
     assert client.get(URL_ATIV.format(atleta.id, a1.id)).json()["transicao"] == {"valor": True, "origem": "sugerido"}
-    # DELETE sobre linha sugerida (ou sem linha) e 204 e nao apaga nada
-    assert client.delete(URL_TRANS.format(atleta.id, a1.id)).status_code == 204
-    assert client.get(URL_ATIV.format(atleta.id, a1.id)).json()["transicao"] == {"valor": True, "origem": "sugerido"}
+    # sem correcao: devolve o estado e nao apaga a linha sugerida
+    r = client.delete(URL_TRANS.format(atleta.id, a1.id))
+    assert r.status_code == 200 and r.json() == {"valor": True, "origem": "sugerido"}
+    # desfazer o "sim" avulso numa atividade que a regra nao sugere volta a false/null
+    solta = _ativ(session, atleta, 20, "corrida", utc(20, 10), 1800, 5000, None)
+    client.put(URL_TRANS.format(atleta.id, solta.id), json={"transicao": True})
+    assert client.delete(URL_TRANS.format(atleta.id, solta.id)).json() == {"valor": False, "origem": None}
 
 
 def test_put_e_delete_404_e_422(client, session, atleta, dois_bricks):

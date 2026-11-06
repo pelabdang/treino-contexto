@@ -1570,7 +1570,7 @@
     },
     "/atletas/{atleta_id}/atividades/{atividade_id}/transicao": {
       "delete": {
-        "description": "Apaga a correção do atleta; a regra volta a valer na próxima rodada de `worker.sugerir_transicao`. Sem correção, não faz\nnada (`204` do mesmo jeito) e nunca apaga uma linha `sugerido`.",
+        "description": "Apaga a correção do atleta e roda a regra (`sugerir_transicao`) para ele; devolve o estado real da atividade\n(`sugerido` se a regra a sugere, senão `valor = false`). Sem correção, só devolve o estado e nunca apaga uma linha `sugerido`.",
         "operationId": "desfazerCorrecaoDeTransicao",
         "parameters": [
           {
@@ -1593,7 +1593,14 @@
           }
         ],
         "responses": {
-          "204": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TransicaoOut"
+                }
+              }
+            },
             "description": "Successful Response"
           },
           "404": {

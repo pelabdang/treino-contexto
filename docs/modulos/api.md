@@ -18,7 +18,7 @@ Futuramente recebe a importação Garmin e serve métricas ao [[modulos/mobile]]
 - Saída: `GET /atletas/{atleta_id}/evolucao/tiros-1km` (ver "Endpoint" abaixo).
 - Entrada e saída: `POST /atletas/{atleta_id}/atividades/fit` (ver "Upload de FIT" abaixo).
 - Saída: `GET /atletas/{atleta_id}/atividades/{atividade_id}` (ver "Atividade e clima" abaixo).
-- Entrada e saída: `/atletas/{atleta_id}/treinos-de-transicao` e `PUT`/`DELETE .../atividades/{id}/transicao` (ver "Treino de transição" abaixo).
+- Entrada e saída: `/atletas/{atleta_id}/treinos-de-transicao` e `PUT`/`DELETE .../atividades/{id}/transicao` (#170, ver "Treino de transição" abaixo).
 
 ## Arquivos principais
 - `services/api/app/main.py`: app FastAPI.
@@ -183,7 +183,7 @@ Textos prontos pela [[decisoes/0004-contrato-tela-evolucao]] (a API formata, o a
   - totais: `soma_duracoes`, `soma_intervalos_estimados`, `tempo_total` (início da primeira ao fim estimado da última) com o `_s` ao lado, e `fc_media` ponderada pela duração só entre as partes com FC.
 - `GET /atletas/{id}/treinos-de-transicao/comparar?a=&b=` (`compararTreinosDeTransicao`): `a` e `b` são `grupo_id` da listagem. Só compara a **mesma sequência de modalidades**: `400` com `detail` dizendo a forma de cada um; `404` para grupo inexistente, de outro atleta ou um `id` que é parte e não o início do grupo. Devolve `forma`, os dois grupos e a diferença **B menos A**, sem nota e sem "melhor": por parte (`duracao_dif`, `ritmo_dif` e texto, `fc_dif` e texto, `null` se faltar distância ou FC em um dos lados) e no total (`soma_duracoes_dif`, `soma_intervalos_estimados_dif`, `tempo_total_dif`, `fc_dif`). O intervalo estimado aparece mas **não ranqueia**.
 - `PUT /atletas/{id}/atividades/{atividade_id}/transicao` (`corrigirTransicao`), corpo `{"transicao": true|false}`: grava (ou troca) a linha `origem = atleta`, `versao_regra` nulo; devolve `{"valor", "origem": "atleta"}`. Vale para qualquer atividade do atleta, sugerida ou não. A regra (`worker.sugerir_transicao`) nunca mexe nela.
-- `DELETE` no mesmo caminho (`desfazerCorrecaoDeTransicao`): `204`. Apaga só a linha `atleta`; sem correção (ou com linha `sugerido`) não faz nada. A regra volta a valer na **próxima rodada** do comando; até lá a atividade volta a `valor = false`, `origem = null`.
+- `DELETE` no mesmo caminho (`desfazerCorrecaoDeTransicao`): apaga só a linha `atleta`, roda `aplicar_sugestao` para o atleta (a mesma regra do `worker.sugerir_transicao`) e devolve `200` com `{valor, origem}` reais: `sugerido` se a regra sugere a atividade, senão `valor = false`, `origem = null`. Sem correção só devolve o estado; nunca apaga uma linha `sugerido`.
 - `AtividadeOut.transicao` = `{"valor": bool, "origem": "sugerido"|"atleta"|null}`; sem linha é `valor = false`, `origem = null`.
 - `404` (atleta ou atividade, inclusive de outro atleta) e `422` (corpo inválido) como nas outras rotas.
 - Testes: `services/api/tests/rotas/test_treinos_de_transicao.py` (dois treinos inventados com contas à mão: intervalos de 120 s e 180 s, ritmos, FC ponderada 145,9, diferenças; corrigir para "não" e rodar a regra de novo; sim avulso `incompleto`; formas diferentes; 404/422). Exemplo de contrato: `packages/api-client/exemplos/treinos-de-transicao.json` ([[modulos/api-client]]).
