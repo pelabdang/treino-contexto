@@ -84,7 +84,7 @@ em memória, até 3 níveis. Na pasta e no zip só entram `*summarizedActivities
 | `modelos.py` | `AtividadeImportada` e `VoltaImportada` (dataclasses) |
 | `leitor.py` | entrada (4 formatos), leitura do JSON e casamento JSON x FIT |
 | `fit.py` | leitura de um FIT (`file_id`, `session`, `lap`) |
-| `tipos.py` | tipo Garmin para `modalidade` (corrida/natacao/ciclismo/outra) e `subtipo` (esteira, pista, trilha, piscina, aguas_abertas) |
+| `tipos.py` | tipo Garmin para `modalidade` (corrida/natacao/ciclismo/outra) e `subtipo` (esteira, pista, trilha, piscina, aguas_abertas, virtual, multiesporte_pai, troca) |
 | `unidades.py` | ms para s, cm para m, epoch ms para datetime UTC |
 
 ### Regras
@@ -280,24 +280,42 @@ uv run python -m worker.grafico_tiros_1km --atleta-id <id>
 Se a porta 5432 já estiver ocupada por um Postgres nativo, o container não é alcançado (erro de papel `treino`
 inexistente): confira com `lsof -iTCP:5432 -sTCP:LISTEN` e use a porta padrão do container (5433) em `DATABASE_URL`; detalhes em [[modulos/infra]]. A importação completa leva alguns minutos.
 
-## Treino multiesporte: atividade-pai e atividade de troca (proposta da #157; implementação na #230)
+## Treino multiesporte: atividade-pai e atividade de troca (#230, ADR 0009)
 Um relógio pode gravar um treino multiesporte como uma atividade **pai**, que agrupa as partes, mais uma atividade por parte e, às
-vezes, atividades próprias para a **troca** entre elas. Hoje qualquer tipo que `tipos.py` não reconhece vira `outra`, então pai e
-troca entram na tabela como `outra` e **ficam fora da regra** de transição ([[decisoes/0009-treino-de-transicao]]). O problema é a
-carga da Meta 6: o pai repete a distância e o tempo das partes, e somar tudo conta o treino duas vezes. Hoje nada distingue esse `outra`
-de outros `outra` legítimos.
+vezes, atividades próprias para a **troca** entre elas. O pai repete a distância e o tempo das partes; por isso a carga da Meta 6 não
+pode somar tudo (contaria o treino duas vezes).
 
-**Proposta (aguarda o Theo):**
-1. **Importar como hoje, sem descartar nada** (o pai e a troca continuam no banco, a identidade e a reimportação não mudam).
-2. **Marcar no `subtipo`**, que já é texto livre e não exige migração: `multiesporte_pai` para o agrupador e `troca` para a atividade de
-   troca, ambos com `modalidade = outra`. O mapeamento sai de `tipos.py` (JSON e FIT), com fixtures sintéticas.
-3. **A carga (Meta 6) ignora os dois subtipos**: cada parte conta uma vez, como já diz a ADR 0009 (item 6). O tempo da troca não é treino.
-4. A regra de transição continua só com corrida, natação e ciclismo; pai e troca não entram nem atrapalham a vizinhança.
-5. Banco já importado: um passo no estilo de `worker.reclassificar_subtipo` aplica o subtipo sem reimportar.
+**Como ficou (direção aprovada pelo Theo em 06/11):**
+1. **Importa como antes, sem descartar nada**: `modalidade = outra`; identidade e reimportação não mudam. Sem migração.
+2. **`subtipo`** (texto livre) recebe `multiesporte_pai` (agrupador) ou `troca` (transição entre as partes). Constantes e mapeamento em
+   `tipos.py` (`SUBTIPO_PAI`, `SUBTIPO_TROCA`, `SUBTIPOS_MULTIESPORTE`), para JSON e FIT.
+3. **A carga (Meta 6) ignora os dois subtipos**: cada parte conta uma vez, como diz a ADR 0009 (item 6). O tempo da troca não é treino.
+   Aviso para a ADR 0010 (carga, #134): ela ainda não existe no `main`; quem escrever a ADR deve registrar que a carga exclui
+   `subtipo in (multiesporte_pai, troca)`.
+4. A regra `transicao@1` não muda: continua só com corrida, natação e ciclismo; pai e troca (`outra`) não entram nem atrapalham a
+   vizinhança (teste em `services/api/tests/ingestao/test_multiesporte.py`).
+5. **Banco já importado:** `uv run python -m worker.reclassificar_multiesporte --exportacao CAMINHO [--atleta-id N] [--dry-run]`
+   (ver [[modulos/worker]]).
+
+**Valores reconhecidos (igualdade exata, sem diferenciar maiúsculas) e fonte pública:**
+
+| Formato | Campo | `multiesporte_pai` | `troca` |
+|---|---|---|---|
+| FIT | `sport` (enum `sport` do Profile do FIT SDK, <https://developer.garmin.com/fit/>) | `multisport` (valor 18) | `transition` (valor 3) |
+| Exportação Garmin (JSON) | `activityType` ou `sportType` | `multi_sport`, `multisport`, `triathlon`, `duathlon` | `transition` |
+
+Os valores de FIT vêm do Profile publicado pela Garmin. Os do JSON seguem as chaves de tipo de atividade do Garmin Connect, que
+repetem esses nomes (documentação pública do FIT SDK e bibliotecas abertas); a lista é conservadora e pode crescer. **Esta nota não
+afirma o que uma exportação específica contém**: depois de rodar o passo com `--dry-run`, o relatório mostra quantas linhas casaram, e
+quem tem o dado confere localmente que os valores batem. Fixtures sintéticas: `tests/fixtures/multiesporte/`
+(`exportacao_multiesporte.json`, `fit/multiesporte_pai.fit`, `fit/troca.fit`; gerador `gerar_fixtures_multiesporte.py`).
+
+**Limitações:** o passo de banco cobre as linhas `garmin_export` (casa por `fonte_id`); atividades vindas de upload de FIT já importadas
+antes do #230 só mudam se o arquivo for reenviado. O `worker.reclassificar_subtipo` (#183), por usar o mesmo `tipos.py`, também grava
+esses subtipos; o novo comando é o caminho estreito (só `outra` sem subtipo, nunca sobrescreve outro subtipo).
 
 Alternativas descartadas: **não importar** pai e troca (perde dado e muda a contagem de atividades) e **nova coluna ou modalidade**
-(migração e mudança de `CHECK` para algo que o subtipo resolve). Antes de implementar, falta confirmar com o Caio, sem expor dado do
-histórico, quais valores de tipo o relógio grava para pai e troca nos dois formatos (JSON e FIT).
+(migração e mudança de `CHECK` para algo que o subtipo resolve).
 
 ## Pendências
 - Corrigir a regra de tiros em rodagens com intensidade mista (#48).
