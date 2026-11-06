@@ -2,8 +2,8 @@
 tipo: roteiro
 status: em-uso
 dono: paulo
-atualizado: 2026-11-04
-links: [[produto/plano-mvp-execucao]], [[decisoes/0001-modelo-de-dados-minimo]], [[decisoes/0005-serie-de-tiros-o-que-entra]], [[produto/metas/meta-1-tiros-1km]], [[produto/metas/meta-2-evolucao-tiros-app]], [[produto/metas/meta-3-upload-fit]], [[decisoes/0004-contrato-tela-evolucao]], [[decisoes/0006-upload-de-fit]], [[decisoes/0003-fuso-da-atividade]], [[diario/2026-11-03]], [[00-inicio]], [[produto/metas/meta-4-clima-atividade]], [[decisoes/0007-clima-da-atividade]], [[produto/meta-4-como-rodar]], [[metricas/tiros-1km]]
+atualizado: 2026-11-06
+links: [[produto/plano-mvp-execucao]], [[decisoes/0001-modelo-de-dados-minimo]], [[decisoes/0005-serie-de-tiros-o-que-entra]], [[produto/metas/meta-1-tiros-1km]], [[produto/metas/meta-2-evolucao-tiros-app]], [[produto/metas/meta-3-upload-fit]], [[decisoes/0004-contrato-tela-evolucao]], [[decisoes/0006-upload-de-fit]], [[decisoes/0003-fuso-da-atividade]], [[diario/2026-11-03]], [[00-inicio]], [[produto/metas/meta-4-clima-atividade]], [[decisoes/0007-clima-da-atividade]], [[produto/meta-4-como-rodar]], [[metricas/tiros-1km]], [[decisoes/0008-deteccao-de-esforcos]], [[diario/2026-11-04]]
 ---
 # Roteiro de metas
 
@@ -17,7 +17,7 @@ Ao fechar uma meta, o Paulo registra o resultado em `docs/produto/metas/` e revi
 | 2 | Evolução dos tiros no app | feita (web com fixtures; [[produto/metas/meta-2-evolucao-tiros-app]]) |
 | 3 | Upload de arquivo FIT | feita (web com FIT sintéticos; [[produto/metas/meta-3-upload-fit]]) |
 | 4 | Clima de cada atividade | feita (fixtures e resposta gravada, sem rede; [[produto/metas/meta-4-clima-atividade]]) |
-| **5** | **Detecção de esforços (corrida por distância, ciclismo por duração) e série de tiros com o melhor tiro** | **atual** (desde 04/11; issues #148, #151 a #154, #161 a #169, #171 a #173) |
+| **5** | **Detecção de esforços (corrida por distância, ciclismo por duração) e série de tiros com o melhor tiro** | **atual** (desde 04/11; feitas #148, #151 a #154, #161 a #164; faltam #165 a #169 e #171 a #173) |
 | 6 | Carga de treino (rTSS, hrTSS, CTL, ATL, TSB) | próxima (revisada em 04/11; issues #134 a #147 e #174) |
 | 7 | Linha de base pessoal | esboço |
 | 8 | Check-in pós-treino | esboço |
@@ -280,46 +280,59 @@ Revisadas ao fim de cada meta com o que se aprendeu. Ordem tirada da "Fundação
   mede por distância e no ciclismo por tempo. Sessões com 2 tiros entram. Num treino misto, os tiros de 1 km do bloco
   principal contam. O valor principal da série é o melhor pace de tiro, e o painel de FC mostra a FC do melhor tiro.
   O treino de transição vira um rótulo sim/não (sugerido por regra e corrigível pelo atleta), em vez de juntar atividades.
+- **Decisão do Angelo (04/11, depois dos merges):** dois esforços vizinhos que a regra de 5% (`JUNTAR_TOLERANCIA`, ADR
+  0008) não junta contam como **dois esforços** separados. Não muda nenhuma issue; a #166 e a #168 seguem essa regra.
+- **Estado em 06/11:** entregues no main a ADR 0008 e as funções de blocos, corrida e ciclismo, o melhor tiro de ponta a
+  ponta (agregação, contrato, PNG/CSV e tela) e as paralelas #132 e #133. Em andamento: #165 (Caio) e #202 (Rafa).
+  Ainda abertas: #155 a #159 e #166 a #173.
 - **Issues e ordem:**
 
-  | # | Issue | Dono | Depende de |
-  |---|---|---|---|
-  | #148 | ADR 0008, detecção de esforços | caio-ciencia com duda-dados (aprovação do Theo) | nenhuma |
-  | #161 | Fixtures sintéticas e oráculo dos esforços | caio-ciencia | #148 |
-  | #162 | Blocos do treino: pausas, laps juntados, aquecimento e desaquecimento | caio-ciencia | #148 (oráculo #161) |
-  | #163 | Esforços de corrida por distância | caio-ciencia | #162 |
-  | #164 | Esforços de ciclismo por duração | caio-ciencia | #162 |
-  | #165 | Treino-chave contínuo | caio-ciencia | #162 |
-  | #151 | Melhor tiro da sessão na agregação | caio-ciencia | nenhuma |
-  | #152 | Melhor pace e FC do melhor tiro no contrato (ADR 0004) e na API | duda-dados (aprovação do Theo) | #151 |
-  | #153 | Melhor pace no PNG e no CSV | caio-ciencia | #151 |
-  | #154 | Melhor pace como valor principal na tela | rafa-app | #152 |
-  | #166 | Esforços no banco e `worker.detectar_esforcos` | duda-dados | #148, #163, #164, #165 |
-  | #167 | Esforços na API e cliente regerado | duda-dados | #166 |
-  | #168 | Série de tiros de 1 km a partir dos esforços | caio-ciencia | #163, #166, #151 |
-  | #169 | Conferência local da detecção com o histórico real | caio-ciencia (com duda-dados) | #132, #166, #168 |
-  | #171 | Documentação, guia `meta-5-como-rodar` e diário | nina-docs | #167, #168, #154 |
-  | #172 | QA de ponta a ponta com fixtures de esforços | bia-qa | #171 |
-  | #173 | Resultado da meta e roteiro | paulo-planejador | #172, #169 |
+  | # | Issue | Dono | Depende de | Situação |
+  |---|---|---|---|---|
+  | #148 | ADR 0008, detecção de esforços | caio-ciencia com duda-dados (aprovação do Theo) | nenhuma | feita (PR #180) |
+  | #161 | Fixtures sintéticas e oráculo dos esforços | caio-ciencia | #148 | feita (PR #187) |
+  | #162 | Blocos do treino: pausas, laps juntados, aquecimento e desaquecimento | caio-ciencia | #148 (oráculo #161) | feita (PR #188) |
+  | #163 | Esforços de corrida por distância (d200 a d5000) | caio-ciencia | #162 | feita (PR #200) |
+  | #164 | Esforços de ciclismo por duração (t1 a t60) | caio-ciencia | #162 | feita (PR #205) |
+  | #165 | Treino-chave contínuo | caio-ciencia | #162 | em andamento |
+  | #151 | Melhor tiro da sessão na agregação | caio-ciencia | nenhuma | feita (PR #178) |
+  | #152 | Melhor pace e FC do melhor tiro no contrato (ADR 0004) e na API | duda-dados (aprovação do Theo) | #151 | feita (PR #185) |
+  | #153 | Melhor pace no PNG e no CSV | caio-ciencia | #151 | feita (PR #199) |
+  | #154 | Melhor pace como valor principal na tela | rafa-app | #152 | feita (PR #201) |
+  | #166 | Esforços no banco e `worker.detectar_esforcos` | duda-dados | #148, #163, #164, #165 | aberta |
+  | #167 | Esforços na API e cliente regerado | duda-dados | #166 | aberta |
+  | #168 | Série de tiros de 1 km a partir dos esforços | caio-ciencia | #163, #166, #151 | aberta |
+  | #169 | Conferência local da detecção com o histórico real | caio-ciencia (com duda-dados) | #132, #166, #168 | aberta |
+  | #171 | Documentação, guia `meta-5-como-rodar` e diário | nina-docs | #167, #168, #154 | aberta |
+  | #172 | QA de ponta a ponta com fixtures de esforços | bia-qa | #171 | aberta |
+  | #173 | Resultado da meta e roteiro | paulo-planejador | #172, #169 | aberta |
 
-  Caminhos paralelos: depois da ADR, o Caio faz o oráculo e os blocos e depois as três funções. A Duda começa pelas
-  paralelas (#133; a #132 já entrou) e pela #152, e encontra o Caio na #166. O Rafa faz a #154 e a tela de um treino.
+  **Ordem do que falta:**
+  1. #165 → #166 → #167 (o caminho crítico: a #166 só começa com o treino-chave pronto, e a API vem depois do banco);
+  2. #168 → #169 (a série sai dos esforços no banco, então a #168 também espera a #166; a conferência com o histórico
+     real fecha esse caminho);
+  3. #158 → #159 (paralela, tela de um treino; pode andar já);
+  4. fechamento: #171 → #172 → #173 (docs e guia, QA num clone limpo, resultado e roteiro).
+
+  Caminhos paralelos: enquanto o Caio termina a #165, a Duda pode adiantar a #158 e o esqueleto da #166 (tabela e
+  comando) sobre as funções já entregues. O Rafa termina a #202 e pega a #159 quando a #158 entrar.
 - **Paralelas na Meta 5** (fora do critério de pronto):
 
-  | # | Issue | Dono | Depende de |
-  |---|---|---|---|
-  | #132 | `importar_garmin` sem rede por padrão; clima só com `--com-clima` (feita, PR #160, 04/11) | duda-dados | nenhuma |
-  | #133 | Identidade do FIT avulso importado depois do JSON | duda-dados (aprovação do Theo) | nenhuma |
-  | #158 | Tela de um treino: campos prontos na resposta da atividade | duda-dados | nenhuma |
-  | #159 | Tela de um treino com o clima no app | rafa-app | #158 |
-  | #155 | ADR 0009, treino de transição (rótulo sugerido e corrigível) | duda-dados com caio-ciencia (aprovação do Theo) | nenhuma |
-  | #156 | Treino de transição: regra que sugere o rótulo | caio-ciencia | #155 |
-  | #157 | Treino de transição: rótulo no banco e comando de sugestão | duda-dados | #155, #156 |
-  | #170 | Treino de transição: listar, comparar e corrigir pela API | duda-dados | #157 |
+  | # | Issue | Dono | Depende de | Situação |
+  |---|---|---|---|---|
+  | #132 | `importar_garmin` sem rede por padrão; clima só com `--com-clima` | duda-dados | nenhuma | feita (PR #160) |
+  | #133 | Identidade do FIT avulso importado depois do JSON | duda-dados (aprovação do Theo) | nenhuma | feita (PR #186) |
+  | #202 | Tela de evolução: ícones nos estados, esqueleto de carregamento e lista tocável | rafa-app (revisão da Lia) | #154 | em andamento |
+  | #158 | Tela de um treino: campos prontos na resposta da atividade | duda-dados | nenhuma | aberta |
+  | #159 | Tela de um treino com o clima no app | rafa-app | #158 | aberta |
+  | #155 | ADR 0009, treino de transição (rótulo sugerido e corrigível) | duda-dados com caio-ciencia (aprovação do Theo) | nenhuma | aberta |
+  | #156 | Treino de transição: regra que sugere o rótulo | caio-ciencia | #155 | aberta |
+  | #157 | Treino de transição: rótulo no banco e comando de sugestão | duda-dados | #155, #156 | aberta |
+  | #170 | Treino de transição: listar, comparar e corrigir pela API | duda-dados | #157 | aberta |
 
   Se a semana apertar, o treino de transição (#155 a #157 e #170) passa para a Meta 6 sem prejuízo da meta.
-- **Propostas para o Theo:** fechar sem implementar a #149 (mínimo de 2 tiros) e a #150 (treino misto). As duas ficam
-  absorvidas pela #168, que traz os exemplos delas como teste de regressão.
+- **#149 e #150:** fechadas sem implementar, absorvidas pela #168; os exemplos delas viram teste de regressão na
+  #168.
 - **Quem:** caio-ciencia (ADR, regras, oráculo, série, gráfico), duda-dados (banco, comando, API), rafa-app (tela),
   nina-docs, bia-qa, Theo (ADRs 0008 e 0009 e o adendo da 0004).
 - **Fora:** calibração pela lista de recordes pessoais (os recordes chegam ao banco na Meta 6, #174); esforço por tempo
