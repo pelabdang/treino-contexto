@@ -101,6 +101,10 @@
       }
     ]
   },
+  "transicao": {
+    "valor": false,
+    "origem": null
+  },
   "data_local": "2025-05-07",
   "hora_local": "06:00",
   "duracao": "0:34:51",

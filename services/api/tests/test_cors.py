@@ -38,7 +38,7 @@ def test_varias_origens_com_espacos():
     assert _get(app, APP_WEB).headers["access-control-allow-origin"] == APP_WEB
 
 
-def test_so_get_e_post_no_preflight():
+def test_so_metodos_da_api_no_preflight():
     app = criar_app(APP_WEB)
 
     def preflight(metodo):
@@ -46,9 +46,9 @@ def test_so_get_e_post_no_preflight():
             "/health", headers={"Origin": APP_WEB, "Access-Control-Request-Method": metodo}
         )
 
-    ok, post, ruim = preflight("GET"), preflight("POST"), preflight("DELETE")
-    assert ok.status_code == 200 and ok.headers["access-control-allow-methods"] == "GET, POST"
-    assert post.status_code == 200
+    ok, post, ruim = preflight("GET"), preflight("POST"), preflight("PATCH")
+    assert ok.status_code == 200 and ok.headers["access-control-allow-methods"] == "GET, POST, PUT, DELETE"
+    assert post.status_code == 200 and preflight("PUT").status_code == 200 and preflight("DELETE").status_code == 200  # #170
     assert ruim.status_code == 400
 
 

@@ -16,6 +16,12 @@ export type EstadoClima = ClimaAtividade["estado"];
 export type EsforcosAtividade = components["schemas"]["EsforcosOut"];
 /** Um bloco do treino, com textos prontos (`duracao`, `distancia`, `pace` ou `velocidade`, `faixa_rotulo`). */
 export type BlocoEsforco = components["schemas"]["BlocoOut"];
+// Treino de transição (#170, ADR 0009): só os tipos; as funções nascem com a tela.
+export type TransicaoAtividade = components["schemas"]["TransicaoOut"];
+export type TreinosDeTransicao = components["schemas"]["TreinosDeTransicaoOut"];
+export type GrupoTransicao = components["schemas"]["GrupoOut"];
+export type ParteTransicao = components["schemas"]["ParteOut"];
+export type ComparacaoTransicao = components["schemas"]["ComparacaoOut"];
 export type Eixos =components["schemas"]["Eixos"];
 export type ErroNaoEncontrado = components["schemas"]["Erro"];
 export type ErroValidacao = components["schemas"]["HTTPValidationError"];
