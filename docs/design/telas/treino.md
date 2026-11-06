@@ -18,7 +18,7 @@ condição de tempo foi feito. Responde: "como foi esse dia?".
 `GET /atletas/{id}/atividades/{id}`, pelo cliente (`buscarAtividade`). Campos: `modalidade`, `data_local`,
 `hora_local`, `duracao`, `distancia_m`, `pace_medio`, `fc_media` e `clima`. O app só mostra o que a API manda
 ([[decisoes/0004-contrato-tela-evolucao]], Adendo 2): não calcula nem reformata pace e duração.
-A distância hoje é convertida de metros no app; a API passa a mandar o texto pronto (#216) e o app deixa de converter.
+A API manda a distância como texto pronto (`distancia`, #216, adendo 3 da [[decisoes/0004-contrato-tela-evolucao]]) e o app a mostra como veio, sem converter (#233).
 
 ## Hierarquia da informação
 1. Duração, em `fonte.numero-destaque`.
@@ -56,7 +56,7 @@ mais o nome; a cor da modalidade nunca é a única informação).
 ## Distância
 - Corrida e ciclismo: km com duas casas e vírgula ("10,00 km").
 - **Natação: metros**, com separador de milhar ("1.800 m"). Piscina e águas abertas se medem em metros.
-- Quem formata é a API (#216); a regra acima é o pedido de design para ela. Sem distância, a linha some.
+- Quem formata é a API (#216, feito); a regra acima foi o pedido de design para ela. Sem distância, a linha some.
 
 ## Estados
 Segue o padrão do [[design/guia-visual]] e da [[design/telas/evolucao-tiros]] (#211).
@@ -98,7 +98,7 @@ em captura (repositório público); 390 de largura, tema claro e escuro.
 ## O que muda em relação ao app de hoje
 | hoje | proposta | issue |
 |---|---|---|
-| distância em km para todos, convertida no app | API manda o texto pronto; natação em metros | #216 |
+| (feito no #216 e #233) distância em km para todos, convertida no app | API manda o texto pronto; natação em metros | #216 |
 | carregando com spinner | esqueleto dos cartões | #219 |
 | erro só em faixa | ícone de 40, `alert` e "Tentar de novo" na rede | #219 |
 | rótulo e valor do clima lidos separados | um item por linha | #219 |

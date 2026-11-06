@@ -261,7 +261,7 @@ function criarEstilos({ cor }: Tema, margem: number = espaco[4]) {
       alignItems: "center",
       alignSelf: "flex-start",
       minHeight: tamanho.botaoAltura,
-      paddingHorizontal: espaco[2],
+      paddingRight: espaco[2],
       borderRadius: raio.medio,
     },
     verTreinoTexto: { ...fonte.botao, color: cor.destaque },

@@ -85,6 +85,26 @@ describe("tela de um treino", () => {
     expect(screen.getByText(/Pace médio: 9:99/)).toBeTruthy();
   });
 
+  it("distância: mostra `distancia` exatamente como veio, sem converter distancia_m", async () => {
+    const a = { ...atividades.ok, distancia: "ABC 7,5 xyz", distancia_m: 123456 };
+    await render(tela(fetchCom(200, a)));
+    await screen.findByTestId("cartao-resumo");
+    expect(screen.getByText("Distância: ABC 7,5 xyz")).toBeTruthy();
+    expect(screen.queryByText(/123/)).toBeNull();
+  });
+
+  it("distância: natação em metros e sem distância não mostra a linha", async () => {
+    await render(tela(fetchCom(200, atividades.natacao)));
+    await screen.findByTestId("cartao-resumo");
+    expect(screen.getByText("Distância: 1.800 m")).toBeTruthy();
+  });
+
+  it("distância null: não mostra a linha, mesmo com distancia_m", async () => {
+    await render(tela(fetchCom(200, { ...atividades.ok, distancia: null, distancia_m: 5000 })));
+    await screen.findByTestId("cartao-resumo");
+    expect(screen.queryByText(/Distância/)).toBeNull();
+  });
+
   it("atribuição vem da API: sem o campo, não inventa", async () => {
     const clima = { ...atividades.ok.clima!, atribuicao: undefined };
     await render(tela(fetchCom(200, { ...atividades.ok, clima })));
