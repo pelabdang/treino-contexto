@@ -96,6 +96,7 @@ class AtividadeOut(BaseModel):
     hora_local: str  # HH:MM, pelo fuso da atividade
     duracao: str  # h:mm:ss (horas sem limite, segundos arredondados com meio para cima)
     pace_medio: str | None = None  # m:ss por km; so corrida com distancia (formatar_pace)
+    distancia: str | None = None  # "10,00 km"; natacao em metros ("1.800 m"); null sem distancia (#216)
 
 
 ATRIBUICAO_CLIMA = "Weather data by Open-Meteo.com"
@@ -124,6 +125,15 @@ def _distancia_texto(m: float | None) -> str | None:
         return None
     if m < 1000:
         return f"{int(m + 0.5)} m"
+    return f"{m / 1000:.2f}".replace(".", ",") + " km"
+
+
+def distancia_da_atividade(modalidade: str, m: float | None) -> str | None:
+    """Texto da distancia da atividade (#216): natacao em metros com ponto de milhar, o resto em km com 2 casas."""
+    if m is None or m <= 0:
+        return None
+    if modalidade == "natacao":
+        return f"{int(m + 0.5):,}".replace(",", ".") + " m"
     return f"{m / 1000:.2f}".replace(".", ",") + " km"
 
 
@@ -273,4 +283,5 @@ def buscar_atividade(
         hora_local=local.strftime("%H:%M"),
         duracao=_duracao_hms(a.duracao_s),
         pace_medio=_pace_medio(a),
+        distancia=distancia_da_atividade(a.modalidade, a.distancia_m),
     )

@@ -22,6 +22,17 @@
             "title": "Data Local",
             "type": "string"
           },
+          "distancia": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Distancia"
+          },
           "distancia_m": {
             "anyOf": [
               {
