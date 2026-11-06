@@ -80,7 +80,7 @@ Segue o padrão do [[design/guia-visual]] e da [[design/telas/evolucao-tiros]] (
 Sem o campo `clima`, o cartão não aparece. A atribuição é obrigatória com `ok` (CC BY 4.0, [[decisoes/0007-clima-da-atividade]]).
 
 ## Entrada pela lista da evolução
-Hoje a tela só abre digitando a URL (#217). Proposta, sem quebrar a seleção compartilhada do #211:
+Implementado no #217 (antes a tela só abria digitando a URL). Sem quebrar a seleção compartilhada do #211:
 - A linha da lista continua selecionando a sessão. Quando ela está **selecionada**, aparece abaixo do detalhe do gráfico o botão de texto "Ver treino" com `chevron-right`, alvo 48.
 - "Voltar" na tela do treino devolve à evolução com a sessão ainda selecionada.
 - Na web larga, o mesmo botão no detalhe; o endereço `/treino/<id>` continua abrindo direto.
@@ -105,5 +105,5 @@ do Angelo; só dado sintético em captura, no repositório público.
 | carregando com spinner | esqueleto dos cartões | #219 |
 | erro só em faixa | ícone de 40, `alert` e "Tentar de novo" na rede | #219 |
 | rótulo e valor do clima lidos separados | um item por linha | #219 |
-| tela só abre pela URL | botão "Ver treino" na evolução e volta com a seleção | #217 |
+| (feito no #217) tela só abre pela URL | botão "Ver treino" na evolução e volta com a seleção | #217 |
 | capturas antigas repetem a modalidade no título | regerar com o título "Treino" | #219 |

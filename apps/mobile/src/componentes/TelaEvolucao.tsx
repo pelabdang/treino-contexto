@@ -22,6 +22,8 @@ import { dataCurta, GraficoTiros } from "./GraficoTiros";
 type Props = {
   apiUrl: string;
   atletaId: number;
+  /** Abre a tela do treino. Sem ele, o botão "Ver treino" não aparece. */
+  aoAbrirTreino?: (atividadeId: number) => void;
   /** Troque nos testes. Padrão: o fetch global. */
   fetchFn?: typeof fetch;
 };
@@ -42,7 +44,7 @@ function mensagemErro(erro: ErroApi): string {
   }
 }
 
-export function TelaEvolucao({ apiUrl, atletaId, fetchFn }: Props) {
+export function TelaEvolucao({ apiUrl, atletaId, aoAbrirTreino, fetchFn }: Props) {
   const tema = useTema();
   const margem = useMargemTela();
   const styles = useMemo(() => criarEstilos(tema, margem), [tema, margem]);
@@ -111,12 +113,22 @@ export function TelaEvolucao({ apiUrl, atletaId, fetchFn }: Props) {
           )}
         </View>
       )}
-      {estado.tipo === "ok" && <Sucesso dados={estado.dados} styles={styles} tema={tema} />}
+      {estado.tipo === "ok" && <Sucesso dados={estado.dados} aoAbrirTreino={aoAbrirTreino} styles={styles} tema={tema} />}
     </ScrollView>
   );
 }
 
-function Sucesso({ dados, styles, tema }: { dados: EvolucaoTiros1km; styles: Estilos; tema: Tema }) {
+function Sucesso({
+  dados,
+  aoAbrirTreino,
+  styles,
+  tema,
+}: {
+  dados: EvolucaoTiros1km;
+  aoAbrirTreino?: (atividadeId: number) => void;
+  styles: Estilos;
+  tema: Tema;
+}) {
   // A API manda as sessões em ordem de data crescente: a última é o último treino.
   const ultima = dados.sessoes.at(-1);
   // A seleção é única: ponto do gráfico e linha da lista escolhem a mesma sessão.
@@ -152,6 +164,18 @@ function Sucesso({ dados, styles, tema }: { dados: EvolucaoTiros1km; styles: Est
           <View style={styles.cartao}>
             <Text style={styles.cartaoTitulo}>Evolução</Text>
             <GraficoTiros dados={dados} selecionadaId={selecionadaId} aoSelecionar={setSelecionadaId} />
+            {aoAbrirTreino && selecionadaId !== null && (
+              <Pressable
+                testID="ver-treino"
+                accessibilityRole="button"
+                accessibilityLabel="Ver treino"
+                onPress={() => aoAbrirTreino(selecionadaId)}
+                style={({ pressed }) => [styles.verTreino, pressed && { backgroundColor: tema.cor["destaque-suave"] }]}
+              >
+                <Text style={styles.verTreinoTexto}>Ver treino</Text>
+                <MaterialIcons name="chevron-right" size={tamanho.iconeMedio} color={tema.cor.destaque} accessible={false} />
+              </Pressable>
+            )}
           </View>
           <View testID="lista-sessoes" style={styles.cartao}>
             <Text style={styles.cartaoTitulo}>Treinos</Text>
@@ -232,6 +256,15 @@ function criarEstilos({ cor }: Tema, margem: number = espaco[4]) {
       backgroundColor: cor.destaque,
     },
     botaoTexto: { ...fonte.botao, color: cor["sobre-destaque"] },
+    verTreino: {
+      flexDirection: "row",
+      alignItems: "center",
+      alignSelf: "flex-start",
+      minHeight: tamanho.botaoAltura,
+      paddingHorizontal: espaco[2],
+      borderRadius: raio.medio,
+    },
+    verTreinoTexto: { ...fonte.botao, color: cor.destaque },
     cartao: {
       marginTop: espaco[4],
       padding: espaco[4],
