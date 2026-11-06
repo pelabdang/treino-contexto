@@ -2,7 +2,7 @@
 tipo: design
 status: rascunho
 dono: lia
-atualizado: 2026-11-04
+atualizado: 2026-11-06
 links: [[design/guia-visual]], [[design/tokens]], [[modulos/mobile]], [[decisoes/0004-contrato-tela-evolucao]], [[metricas/tiros-1km]], [[decisoes/0006-upload-de-fit]]
 ---
 # Tela: evolução dos tiros de 1 km (exemplo do guia)
@@ -70,7 +70,7 @@ Adendo 1). Valor principal: `pace_melhor` (texto `m:ss` da API) e `fc_melhor_tir
 │ │ 18/03/25  4:05 min/km 176 bpm│ │
 │ │ ...                          │ │
 │ └──────────────────────────────┘ │
-│ cálculo: tiros_1km@4             │  fonte.legenda
+│ cálculo: tiros_1km@5             │  fonte.legenda
 └──────────────────────────────────┘
 ```
 O desenho em ASCII é aproximado; as posições exatas estão no SVG.
