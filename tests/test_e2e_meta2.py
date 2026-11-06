@@ -65,7 +65,7 @@ def test_json_igual_ao_exemplo_do_contrato(client_e_atleta):
 def test_textos_de_pace_e_versao(client_e_atleta):
     client, atleta_id = client_e_atleta
     j = client.get(f"/atletas/{atleta_id}/evolucao/tiros-1km").json()
-    assert j["versao_calculo"] == "tiros_1km@4" and j["reclassificacao_pendente"] is False
+    assert j["versao_calculo"] == "tiros_1km@5" and j["reclassificacao_pendente"] is False
     assert [s["pace_medio"] for s in j["sessoes"]] == ["4:11", "3:57"]
     assert [s["data"] for s in j["sessoes"]] == ["2025-03-04", "2025-03-11"]
     assert [s["pace_melhor"] for s in j["sessoes"]] == ["4:08", "3:54"]

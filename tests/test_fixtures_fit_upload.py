@@ -1,7 +1,7 @@
 """FIT sinteticos do upload (Meta 3, issue #93; ADR 0006). Sem banco, sem dado real.
 
 Os arquivos de tests/fixtures/garmin/fit/ sao gerados por gerar_fixtures.py. Aqui estao os valores esperados,
-com a conta a mao, lidos pelo leitor FIT (ler_fit) e pela deteccao de tiros (tiros_1km@4).
+com a conta a mao, lidos pelo leitor FIT (ler_fit) e pela deteccao de tiros (tiros_1km@5, visao dos esforcos).
 """
 
 import importlib.util
@@ -12,7 +12,8 @@ from pathlib import Path
 import pytest
 from app.ingestao.garmin.fit import FitSemAtividade, ler_fit
 from app.ingestao.garmin.tipos import de_fit
-from app.metricas.tiros_1km import VoltaEntrada, agregar_sessao, detectar_tiros
+from app.metricas import esforcos as ef
+from app.metricas.tiros_1km import BlocoEntrada, VoltaEntrada, agregar_sessao, tiro_de_bloco, tiros_de_blocos
 
 PASTA = Path(__file__).parent / "fixtures" / "garmin"
 FITS = PASTA / "fit"
@@ -30,6 +31,21 @@ def _voltas(fit) -> list[VoltaEntrada]:
     return [
         VoltaEntrada(v.ordem, v.distancia_m, v.duracao_s, v.fc_media, v.intensidade) for v in fit.voltas
     ]
+
+
+def detectar_tiros(fit, modalidade="corrida"):
+    """Voltas do FIT -> blocos (esforcos@1, ritmo habitual sintetico de 330 s/km) -> tiros de 1 km (@5)."""
+    voltas, t = [], 0.0
+    for v in fit.voltas:
+        voltas.append(ef.VoltaTreino(v.ordem, t, v.duracao_s, v.distancia_m, v.fc_media))
+        t += v.duracao_s
+    r = ef.montar_blocos(voltas, "corrida", referencia=330.0)
+    faixas = {e.bloco_ordem: e.faixa for e in ef.esforcos_corrida(r)}
+    blocos = [BlocoEntrada(b.ordem, b.categoria, b.volta_inicial, b.volta_final, b.distancia_m, b.duracao_s,
+                           b.fc_media, faixas.get(b.ordem), b.parada_apos_s) for b in r.blocos]
+    res = tiros_de_blocos(blocos, modalidade)
+    por_ordem = {b.ordem: b for b in blocos}
+    return res, [tiro_de_bloco(por_ordem[o]) for o in res.tiros]
 
 
 def _dist_s(x, y) -> float:
@@ -60,9 +76,8 @@ def test_intervalado_5x1km_entra_na_serie():
     assert len(fit.voltas) == 11
     # distancia: 2000 + 5 x 1000 + 4 x 400 + 1500 = 10100 m; duracao: 720 + 1230 + 600 + 585 = 3135 s
     assert fit.distancia_m == 10100 and fit.duracao_s == 3135
-    res = detectar_tiros(_voltas(fit))
-    assert res.eh_intervalado and res.tiros == (1, 3, 5, 7, 9)
-    tiros = [v for v in _voltas(fit) if v.ordem in res.tiros]
+    res, tiros = detectar_tiros(fit)
+    assert res.eh_intervalado and res.tiros == (1, 3, 5, 7, 9)  # blocos 1,3,5,7,9 (o 0 e o aquecimento)
     p = agregar_sessao(1, fit.inicio.date(), tiros)
     # pace: (250+248+246+244+242) / 5000 x 1000 = 1230 / 5 = 246,0 s/km
     assert p.pace_s_km == pytest.approx(246.0)
@@ -77,7 +92,7 @@ def test_rodagem_nao_entra_na_serie():
     assert len(fit.voltas) == 6
     # 6 x 1000 m = 6000 m; 355+352+350+351+349+348 = 2105 s
     assert fit.distancia_m == 6000 and fit.duracao_s == 2105
-    assert not detectar_tiros(_voltas(fit)).eh_intervalado  # todos os km tem ritmo parecido
+    assert not detectar_tiros(fit)[0].eh_intervalado  # todos os km tem ritmo parecido
 
 
 def test_mesma_atividade_da_exportacao_comeca_30_s_depois():
@@ -121,7 +136,7 @@ def test_esteira_e_corrida_com_subtipo_esteira():
     assert de_fit(fit.sport, fit.sub_sport) == ("corrida", "esteira")  # a serie deixa a esteira de fora
     # 1500 + 4 x 1000 + 3 x 400 + 1000 = 7700 m; 560 + 1028 + 480 + 400 = 2468 s
     assert fit.distancia_m == 7700 and fit.duracao_s == 2468
-    assert detectar_tiros(_voltas(fit)).tiros == (1, 3, 5, 7)  # tiros reais, mas fora da serie por ser esteira
+    assert detectar_tiros(fit)[0].tiros == (1, 3, 5, 7)  # tiros reais, mas fora da serie por ser esteira
 
 
 def test_natacao_entra_no_banco_e_fica_fora_da_serie():
@@ -131,7 +146,7 @@ def test_natacao_entra_no_banco_e_fica_fora_da_serie():
     # 4 x 100 m = 400 m; 108 + 110 + 113 + 116 = 447 s
     assert fit.distancia_m == 400 and fit.duracao_s == 447
     assert len(fit.voltas) == 4
-    assert not detectar_tiros(_voltas(fit), modalidade).eh_intervalado  # so corrida entra na serie
+    assert not detectar_tiros(fit, modalidade)[0].eh_intervalado  # so corrida entra na serie
 
 
 def test_nenhum_fit_tem_gps():
