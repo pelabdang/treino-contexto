@@ -80,6 +80,41 @@ export async function buscarEvolucaoTiros1km(
   return { ok: false, erro: { tipo: "http", status: resposta.status } };
 }
 
+/** `GET /atletas/{atletaId}/atividades/{atividadeId}`: a atividade com campos prontos e o `clima`. Nunca lança. */
+export async function buscarAtividade(
+  atletaId: number,
+  atividadeId: number,
+  opcoes: OpcoesCliente = {},
+): Promise<Resultado<Atividade>> {
+  const base = (opcoes.baseUrl ?? BASE_URL_PADRAO).replace(/\/+$/, "");
+  const url = `${base}/atletas/${encodeURIComponent(String(atletaId))}/atividades/${encodeURIComponent(String(atividadeId))}`;
+
+  let resposta: Response;
+  try {
+    resposta = await (opcoes.fetch ?? fetch)(url, { headers: { Accept: "application/json" } });
+  } catch (e) {
+    return { ok: false, erro: { tipo: "rede", mensagem: e instanceof Error ? e.message : String(e) } };
+  }
+  if (resposta.ok) {
+    try {
+      return { ok: true, dados: (await resposta.json()) as Atividade };
+    } catch {
+      return { ok: false, erro: { tipo: "http", status: resposta.status } };
+    }
+  }
+  if (resposta.status === 404 || resposta.status === 422) {
+    try {
+      const detalhe = await resposta.json();
+      return resposta.status === 404
+        ? { ok: false, erro: { tipo: "nao_encontrado", status: 404, detalhe: detalhe as ErroNaoEncontrado } }
+        : { ok: false, erro: { tipo: "validacao", status: 422, detalhe: detalhe as ErroValidacao } };
+    } catch {
+      // corpo que não é JSON: cai no erro HTTP genérico
+    }
+  }
+  return { ok: false, erro: { tipo: "http", status: resposta.status } };
+}
+
 /** Arquivo para o upload: `File`/`Blob` (web) ou `{uri, name, type}` (React Native). */
 export type ArquivoFit = Blob | { uri: string; name: string; type?: string };
 

@@ -2,14 +2,14 @@
 tipo: modulo
 status: em-uso
 dono: duda
-atualizado: 2026-11-03
+atualizado: 2026-11-06
 links: [[produto/meta-3-como-rodar]], [[modulos/api]], [[modulos/mobile]], [[decisoes/0004-contrato-tela-evolucao]], [[decisoes/0006-upload-de-fit]], [[decisoes/0007-clima-da-atividade]], [[produto/meta-4-como-rodar]]
 ---
 # Módulo: api-client
 
 ## Para que serve
 Pacote TypeScript `@treino/api-client` (`packages/api-client/`) com os tipos gerados do OpenAPI da [[modulos/api]] e
-as funções `buscarEvolucaoTiros1km` e `enviarAtividadeFit`. O [[modulos/mobile]] usa o pacote para ler o JSON dos tiros sem escrever tipo à
+as funções `buscarEvolucaoTiros1km`, `buscarAtividade` e `enviarAtividadeFit`. O [[modulos/mobile]] usa o pacote para ler o JSON dos tiros sem escrever tipo à
 mão. Contrato e decisões em [[decisoes/0004-contrato-tela-evolucao]] (item 6).
 
 ## Entradas e saídas
@@ -18,8 +18,9 @@ mão. Contrato e decisões em [[decisoes/0004-contrato-tela-evolucao]] (item 6).
   - `{ok: false, erro}` com `erro.tipo`: `nao_encontrado` (`404`, `detalhe: {detail}`), `validacao` (`422`, `detalhe` no
     formato do FastAPI), `http` (outro status ou corpo que não é JSON) ou `rede` (falha do `fetch`, com `mensagem`).
 - `baseUrl` padrão `http://localhost:8000`; `fetch` padrão é o global (troque nos testes). O app passa `config.apiUrl`.
-- Também exporta os tipos `EvolucaoTiros1km`, `SessaoTiros`, `TiroSessao`, `Eixos`, `ErroApi` e `Atividade`, `ClimaAtividade` e `EstadoClima` (a atividade do `GET /atletas/{atleta_id}/atividades/{atividade_id}` com o `clima` da [[decisoes/0007-clima-da-atividade]]; só tipos, ainda sem função), `RespostaUploadFit` (alias de `UploadFitOut`, a resposta do `POST /atletas/{atleta_id}/atividades/fit` da [[modulos/api]], [[decisoes/0006-upload-de-fit]]), além de `components` e
+- Também exporta os tipos `EvolucaoTiros1km`, `SessaoTiros`, `TiroSessao`, `Eixos`, `ErroApi` e `Atividade`, `ClimaAtividade` e `EstadoClima` (a atividade do `GET /atletas/{atleta_id}/atividades/{atividade_id}` com o `clima` da [[decisoes/0007-clima-da-atividade]]; use `buscarAtividade`), `RespostaUploadFit` (alias de `UploadFitOut`, a resposta do `POST /atletas/{atleta_id}/atividades/fit` da [[modulos/api]], [[decisoes/0006-upload-de-fit]]), além de `components` e
   `operations` do `schema.d.ts`.
+- `buscarAtividade(atletaId, atividadeId, {baseUrl?, fetch?})` faz o `GET /atletas/{id}/atividades/{id}` (#159) e devolve `Resultado<Atividade>` com os campos prontos (`data_local`, `hora_local`, `duracao`, `pace_medio`, `clima.atribuicao`); `404` vira `nao_encontrado`, `422` vira `validacao`, outros status `http`, falha do `fetch` `rede`. Nunca lança. Testes em `apps/mobile/__tests__/TelaTreino.test.tsx`.
 - `enviarAtividadeFit(atletaId, arquivo, {baseUrl?, fetch?, nome?})` faz o `POST /atletas/{id}/atividades/fit` (multipart, campo `arquivo`; ver [[modulos/api]], "Upload de FIT") e nunca lança. `arquivo` é `ArquivoFit`: `Blob`/`File` (web; `nome` dá o nome do arquivo) ou `{uri, name, type}` (React Native).
   - `{ok: true, dados: {criada, resposta}}`: `criada` é `true` no `201` e `false` no `200`; `resposta` é `RespostaUploadFit`.
   - `{ok: false, erro}`: `404` vira `nao_encontrado`, `422` vira `validacao`; os demais status (`400`, `413`...) viram `http` com `status` e `detail?` (o `detail` string do corpo `Erro`, quando houver); falha do `fetch` vira `rede`.
