@@ -6,6 +6,7 @@ Grava, sem subir servidor:
   packages/api-client/openapi.json                        (`app.openapi()`)
   packages/api-client/exemplos/evolucao-tiros-1km.json    (resposta do TestClient com as fixtures sintéticas, atleta 1)
   packages/api-client/exemplos/atividade-esforcos.json    (a atividade com `esforcos`, FIT sintético da #161)
+  packages/api-client/exemplos/treinos-de-transicao.json  (a listagem de treinos de transição, atividades inventadas, #170)
 Depois gere os tipos: `cd packages/api-client && npm run gerar` (ver docs/modulos/api-client.md).
 O teste `services/api/tests/test_contrato_cliente.py` falha se algum destes arquivos ficar desatualizado.
 """
@@ -22,6 +23,7 @@ OPENAPI = PACOTE / "openapi.json"
 EXEMPLO = PACOTE / "exemplos" / "evolucao-tiros-1km.json"
 EXEMPLO_ESFORCOS = PACOTE / "exemplos" / "atividade-esforcos.json"
 FIT_ESFORCOS = RAIZ / "tests" / "fixtures" / "garmin" / "esforcos" / "esforcos_corrida_1500_lap_automatico.fit"
+EXEMPLO_TRANSICAO = PACOTE / "exemplos" / "treinos-de-transicao.json"
 TIPOS = PACOTE / "src" / "schema.d.ts"
 ZIP_FIXTURES = RAIZ / "tests" / "fixtures" / "garmin" / "exportacao_minima.zip"
 COMANDO = "uv run python services/api/scripts/exportar_openapi.py && (cd packages/api-client && npm run gerar)"
@@ -105,6 +107,47 @@ def texto_exemplo_esforcos() -> str:
     return _json(r.json())
 
 
+def texto_exemplo_transicao() -> str:
+    """A listagem de treinos de transição: dois treinos ciclismo>corrida inventados, rotulados pela regra (#170)."""
+    from app.db import models  # noqa: F401
+    from app.db.base import Base
+    from datetime import datetime, timezone
+
+    from app.db.models import Atividade, Atleta
+    from app.db.session import get_session
+    from app.main import app
+    from app.servicos.transicao import aplicar_sugestao
+    from fastapi.testclient import TestClient
+    from sqlalchemy import create_engine
+    from sqlalchemy.orm import Session
+    from sqlalchemy.pool import StaticPool
+
+    engine = create_engine("sqlite://", poolclass=StaticPool, connect_args={"check_same_thread": False})
+    Base.metadata.create_all(engine)
+    with Session(engine) as session:
+        atleta = Atleta(nome="Atleta Ficticio")
+        session.add(atleta)
+        session.commit()
+        for n, (modalidade, dia, h, m, dur, dist, fc) in enumerate([
+            ("ciclismo", 4, 10, 0, 3600, 30000, 140), ("corrida", 4, 11, 2, 1500, 5000, 160),
+            ("ciclismo", 6, 10, 0, 3300, 25000, 150), ("corrida", 6, 10, 58, 1380, 5000, 170),
+        ]):
+            session.add(Atividade(
+                atleta_id=atleta.id, fonte="teste", fonte_id=str(n), modalidade=modalidade, fuso_min=-180,
+                inicio=datetime(2025, 3, dia, h, m, tzinfo=timezone.utc), duracao_s=float(dur), distancia_m=float(dist),
+                fc_media=float(fc),
+            ))
+        session.commit()
+        aplicar_sugestao(session, atleta.id, agora=datetime(2025, 3, 7, tzinfo=timezone.utc))
+        app.dependency_overrides[get_session] = lambda: session
+        try:
+            r = TestClient(app).get(f"/atletas/{atleta.id}/treinos-de-transicao")
+        finally:
+            app.dependency_overrides.pop(get_session, None)
+    r.raise_for_status()
+    return _json(r.json())
+
+
 def hash_openapi(texto: str) -> str:
     return hashlib.sha256(texto.encode("utf-8")).hexdigest()
 
@@ -114,7 +157,8 @@ def main() -> None:
     EXEMPLO.parent.mkdir(parents=True, exist_ok=True)
     EXEMPLO.write_text(texto_exemplo(), encoding="utf-8")
     EXEMPLO_ESFORCOS.write_text(texto_exemplo_esforcos(), encoding="utf-8")
-    print(f"gravado: {OPENAPI}\ngravado: {EXEMPLO}\ngravado: {EXEMPLO_ESFORCOS}\nagora: cd packages/api-client && npm run gerar")
+    EXEMPLO_TRANSICAO.write_text(texto_exemplo_transicao(), encoding="utf-8")
+    print(f"gravado: {OPENAPI}\ngravado: {EXEMPLO}\ngravado: {EXEMPLO_ESFORCOS}\ngravado: {EXEMPLO_TRANSICAO}\nagora: cd packages/api-client && npm run gerar")
 
 
 if __name__ == "__main__":

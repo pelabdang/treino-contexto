@@ -3,7 +3,7 @@ tipo: modulo
 status: em-uso
 dono: theo
 atualizado: 2026-11-06
-links: [[decisoes/0001-modelo-de-dados-minimo]], [[decisoes/0003-fuso-da-atividade]], [[decisoes/0004-contrato-tela-evolucao]], [[metricas/tiros-1km]], [[modulos/grafico-tiros]], [[modulos/banco]], [[modulos/worker]], [[modulos/infra]], [[modulos/api-client]], [[decisoes/0006-upload-de-fit]], [[produto/meta-2-como-rodar]], [[decisoes/0007-clima-da-atividade]], [[modulos/clima]], [[produto/meta-4-como-rodar]], [[decisoes/0008-deteccao-de-esforcos]], [[metricas/esforcos]]
+links: [[decisoes/0001-modelo-de-dados-minimo]], [[decisoes/0003-fuso-da-atividade]], [[decisoes/0004-contrato-tela-evolucao]], [[metricas/tiros-1km]], [[modulos/grafico-tiros]], [[modulos/banco]], [[modulos/worker]], [[modulos/infra]], [[modulos/api-client]], [[decisoes/0006-upload-de-fit]], [[produto/meta-2-como-rodar]], [[decisoes/0007-clima-da-atividade]], [[modulos/clima]], [[produto/meta-4-como-rodar]], [[decisoes/0008-deteccao-de-esforcos]], [[metricas/esforcos]], [[decisoes/0009-treino-de-transicao]]
 ---
 # Módulo: api
 
@@ -18,6 +18,7 @@ Futuramente recebe a importação Garmin e serve métricas ao [[modulos/mobile]]
 - Saída: `GET /atletas/{atleta_id}/evolucao/tiros-1km` (ver "Endpoint" abaixo).
 - Entrada e saída: `POST /atletas/{atleta_id}/atividades/fit` (ver "Upload de FIT" abaixo).
 - Saída: `GET /atletas/{atleta_id}/atividades/{atividade_id}` (ver "Atividade e clima" abaixo).
+- Entrada e saída: `/atletas/{atleta_id}/treinos-de-transicao` e `PUT`/`DELETE .../atividades/{id}/transicao` (#170, ver "Treino de transição" abaixo).
 
 ## Arquivos principais
 - `services/api/app/main.py`: app FastAPI.
@@ -30,6 +31,7 @@ Futuramente recebe a importação Garmin e serve métricas ao [[modulos/mobile]]
 - `services/api/app/servicos/fuso.py`: `data_local(inicio, fuso_min)`, a data local da sessão ([[decisoes/0003-fuso-da-atividade]]).
 - `services/api/app/ingestao/garmin/`: parser da exportação Garmin e do FIT (`ler_exportacao`, `ler_atividade_fit`), sem banco; o worker importa daqui ([[modulos/ingestao-garmin]], [[decisoes/0006-upload-de-fit]]).
 - `services/api/app/ingestao/importacao.py` e `fit_guardado.py`: gravação da exportação e do upload (`importar`, `importar_fit`) e guarda dos FIT em `FIT_DIR`. O endpoint de upload está em `app/rotas/atividades.py` (#95).
+- `services/api/app/rotas/transicao.py` e `servicos/transicao_grupos.py`: listar, comparar e corrigir treinos de transição (#170). O rótulo e a regra estão em `servicos/transicao.py` ([[modulos/banco]], #157).
 - `services/api/app/servicos/esforcos_leitura.py`: lê os blocos gravados para a resposta da atividade (#167).
 - `services/api/app/servicos/evolucao_tiros.py`: liga as métricas ao banco (ver abaixo).
 - `services/api/app/explicacao/`: pacote reservado.
@@ -37,7 +39,7 @@ Futuramente recebe a importação Garmin e serve métricas ao [[modulos/mobile]]
 ## CORS
 O app web roda em outra porta (`http://localhost:8081`), então a API libera as origens de `CORS_ORIGENS` (lista
 separada por vírgula, lida em `app/config.py`; middleware em `criar_app` de `app/main.py`).
-- Padrão local: `http://localhost:8081`. `GET` e `POST` (o `POST` é o upload de FIT, #95; amplia o item 7 da [[decisoes/0004-contrato-tela-evolucao]]) e o preflight deles; sem cookies nem cabeçalhos extras.
+- Padrão local: `http://localhost:8081`. `GET`, `POST` (upload de FIT, #95), `PUT` e `DELETE` (correção da transição, #170; ampliam o item 7 da [[decisoes/0004-contrato-tela-evolucao]]) e o preflight deles; sem cookies nem cabeçalhos extras.
 - Nunca `*`: com `*` na lista a API não sobe (`ValueError`). Variável vazia não libera nenhuma origem.
 - Origem fora da lista recebe a resposta normal, sem `Access-Control-Allow-Origin` (o navegador bloqueia).
 - Exemplo para mais de uma origem: `CORS_ORIGENS=http://localhost:8081,https://app.exemplo.com`.
@@ -145,7 +147,7 @@ Item 5 da [[decisoes/0007-clima-da-atividade]]. Devolve a atividade (`atividade_
 {"estado": "indoor"}
 ```
 - **Campos prontos para a tela (#158, [[decisoes/0004-contrato-tela-evolucao]], adendo 2):** a regra "a API formata, o app mostra" vale aqui também.
-  `data_local` (`AAAA-MM-DD`) e `hora_local` (`HH:MM`): início no fuso da atividade (`fuso_min`; sem ele, `America/Sao_Paulo`, [[decisoes/0003-fuso-da-atividade]]), por `inicio_local` em `app/servicos/fuso.py`. `duracao` em `h:mm:ss` (horas sem limite; segundos arredondados com meio para cima). `pace_medio` em `m:ss` (`formatar_pace` sobre duração / km, sem arredondar antes): só para `corrida` com distância e duração maiores que zero, senão `null`. `distancia` (#216, adendo 3 da ADR 0004): texto pronto; `natacao` em metros arredondados com ponto de milhar ("1.800 m"), as outras modalidades em km com 2 casas e vírgula ("10,00 km"); `null` sem distância ou com zero (`distancia_da_atividade`). `clima.atribuicao` = "Weather data by Open-Meteo.com" só quando `estado` é `ok` (ADR 0007, item 4); nos outros estados a chave nem vem. `inicio` em UTC e os campos numéricos continuam. A `carga` (#142) entra na mesma resposta quando sair.
+  `data_local` (`AAAA-MM-DD`) e `hora_local` (`HH:MM`): início no fuso da atividade (`fuso_min`; sem ele, `America/Sao_Paulo`, [[decisoes/0003-fuso-da-atividade]]), por `inicio_local` em `app/servicos/fuso.py`. `duracao` em `h:mm:ss` (horas sem limite; segundos arredondados com meio para cima). `pace_medio` em `m:ss` (`formatar_pace` sobre duração / km, sem arredondar antes): só para `corrida` com distância e duração maiores que zero, senão `null`. `distancia` (#216, adendo 3 da ADR 0004): texto pronto; `natacao` em metros arredondados com ponto de milhar ("1.800 m"), as outras modalidades em km com 2 casas e vírgula ("10,00 km"); `null` sem distância ou com zero (`distancia_da_atividade`, em `app/servicos/distancia_texto.py`, que a lista de treinos de transição também usa). `clima.atribuicao` = "Weather data by Open-Meteo.com" só quando `estado` é `ok` (ADR 0007, item 4); nos outros estados a chave nem vem. `inicio` em UTC e os campos numéricos continuam. A `carga` (#142) entra na mesma resposta quando sair.
 - **`esforcos` (#167, [[decisoes/0008-deteccao-de-esforcos]]):** objeto opcional (`null` fora de corrida e ciclismo) com os blocos que
   `detectar_esforcos` gravou. A API **não detecta** na leitura (`servicos/esforcos_leitura.py`). Campos: `versao` (`esforcos@1`, a gravada; sem
   blocos, a atual), `referencia_da_atividade` (`true` quando não havia histórico e a referência foi a da própria atividade: a tela avisa),
@@ -169,6 +171,22 @@ Item 5 da [[decisoes/0007-clima-da-atividade]]. Devolve a atividade (`atividade_
   ([[decisoes/0004-contrato-tela-evolucao]]) não mudou, então o app e o exemplo de contrato continuam iguais.
   Se a tela precisar do clima por sessão, basta acrescentar um `clima` opcional em `SessaoOut`.
 - Testes: `services/api/tests/rotas/test_atividade_clima.py` (um por estado, os `404`, a posição fora da resposta, os campos prontos e o OpenAPI).
+
+## Treino de transição (#170, [[decisoes/0009-treino-de-transicao]])
+Listar, comparar e corrigir o rótulo. O grupo **não é guardado**: sai dos rótulos finais (`transicao = true`, por linha `sugerido` ou
+`atleta`) em `servicos/transicao_grupos.py`: atividades rotuladas em sequência, cada uma começando até `INTERVALO_MAX_S` (30 min) depois do
+fim da anterior. O **fim** e o **intervalo** são **estimados** (`inicio + duracao_s` é tempo em movimento; o intervalo real pode ser menor).
+Textos prontos pela [[decisoes/0004-contrato-tela-evolucao]] (a API formata, o app mostra).
+- `GET /atletas/{id}/treinos-de-transicao?inicio=&fim=` (`listarTreinosDeTransicao`): `grupos`, mais recentes primeiro; `inicio`/`fim` (AAAA-MM-DD) são datas locais da primeira parte, inclusivas; `422` se `inicio` > `fim`. Cada grupo: `grupo_id` (o `id` da primeira atividade; **derivado**, muda quando uma correção parte ou junta o grupo, o app não deve guardá-lo), `forma` (`ciclismo>corrida`), `incompleto` (uma parte só: o atleta marcou "sim" avulso), `inicio`/`fim_estimado` (UTC), `data_local`, `hora_local`, `partes` e `transicoes`.
+  - parte: `ordem`, `atividade_id`, `modalidade`, `duracao_s`/`duracao` (`h:mm:ss`), `distancia_m`/`distancia` (natação em metros, o resto em km, igual ao da atividade), `fc_media`, `ritmo_valor`/`ritmo_unidade`/`ritmo`: corrida `s/km` ("5:00 /km"), natação `s/100m` ("1:40 /100 m"), ciclismo `km/h` ("30,0 km/h"); ritmo `null` sem distância. A distância não se soma entre partes.
+  - `transicoes[]` (uma a menos que as partes): `de_atividade_id`, `para_atividade_id`, `intervalo_estimado_s`/`intervalo_estimado` (`m:ss`, mínimo 0: a diferença do início da seguinte para o maior fim já visto).
+  - totais: `soma_duracoes`, `soma_intervalos_estimados`, `tempo_total` (início da primeira ao fim estimado da última) com o `_s` ao lado, e `fc_media` ponderada pela duração só entre as partes com FC.
+- `GET /atletas/{id}/treinos-de-transicao/comparar?a=&b=` (`compararTreinosDeTransicao`): `a` e `b` são `grupo_id` da listagem. Só compara a **mesma sequência de modalidades**: `400` com `detail` dizendo a forma de cada um; `404` para grupo inexistente, de outro atleta ou um `id` que é parte e não o início do grupo. Devolve `forma`, os dois grupos e a diferença **B menos A**, sem nota e sem "melhor": por parte (`duracao_dif`, `ritmo_dif` e texto, `fc_dif` e texto, `null` se faltar distância ou FC em um dos lados) e no total (`soma_duracoes_dif`, `soma_intervalos_estimados_dif`, `tempo_total_dif`, `fc_dif`). O intervalo estimado aparece mas **não ranqueia**.
+- `PUT /atletas/{id}/atividades/{atividade_id}/transicao` (`corrigirTransicao`), corpo `{"transicao": true|false}`: grava (ou troca) a linha `origem = atleta`, `versao_regra` nulo; devolve `{"valor", "origem": "atleta"}`. Vale para qualquer atividade do atleta, sugerida ou não. A regra (`worker.sugerir_transicao`) nunca mexe nela.
+- `DELETE` no mesmo caminho (`desfazerCorrecaoDeTransicao`): apaga só a linha `atleta`, roda `aplicar_sugestao` para o atleta (a mesma regra do `worker.sugerir_transicao`) e devolve `200` com `{valor, origem}` reais: `sugerido` se a regra sugere a atividade, senão `valor = false`, `origem = null`. Sem correção só devolve o estado; nunca apaga uma linha `sugerido`.
+- `AtividadeOut.transicao` = `{"valor": bool, "origem": "sugerido"|"atleta"|null}`; sem linha é `valor = false`, `origem = null`.
+- `404` (atleta ou atividade, inclusive de outro atleta) e `422` (corpo inválido) como nas outras rotas.
+- Testes: `services/api/tests/rotas/test_treinos_de_transicao.py` (dois treinos inventados com contas à mão: intervalos de 120 s e 180 s, ritmos, FC ponderada 145,9, diferenças; corrigir para "não" e rodar a regra de novo; sim avulso `incompleto`; formas diferentes; 404/422). Exemplo de contrato: `packages/api-client/exemplos/treinos-de-transicao.json` ([[modulos/api-client]]).
 
 ## Rodar localmente com as fixtures
 Passo a passo de ponta a ponta (Postgres, migrações, fixtures, API com `CORS_ORIGENS` e app web) em [[produto/meta-2-como-rodar]]; o do upload de FIT, com como forçar cada status, em [[produto/meta-3-como-rodar]]; o do clima (`GET` da atividade em cada estado), em [[produto/meta-4-como-rodar]]. Resumo: a API demora alguns segundos para subir; `docker compose` sem `-p` reusa o volume `treino-contexto_pgdata`.

@@ -3,7 +3,7 @@ tipo: modulo
 status: em-uso
 dono: duda
 atualizado: 2026-11-06
-links: [[produto/meta-3-como-rodar]], [[modulos/api]], [[modulos/mobile]], [[decisoes/0004-contrato-tela-evolucao]], [[decisoes/0006-upload-de-fit]], [[decisoes/0007-clima-da-atividade]], [[produto/meta-4-como-rodar]], [[decisoes/0008-deteccao-de-esforcos]]
+links: [[decisoes/0009-treino-de-transicao]], [[produto/meta-3-como-rodar]], [[modulos/api]], [[modulos/mobile]], [[decisoes/0004-contrato-tela-evolucao]], [[decisoes/0006-upload-de-fit]], [[decisoes/0007-clima-da-atividade]], [[produto/meta-4-como-rodar]], [[decisoes/0008-deteccao-de-esforcos]]
 ---
 # Módulo: api-client
 
@@ -18,7 +18,7 @@ mão. Contrato e decisões em [[decisoes/0004-contrato-tela-evolucao]] (item 6).
   - `{ok: false, erro}` com `erro.tipo`: `nao_encontrado` (`404`, `detalhe: {detail}`), `validacao` (`422`, `detalhe` no
     formato do FastAPI), `http` (outro status ou corpo que não é JSON) ou `rede` (falha do `fetch`, com `mensagem`).
 - `baseUrl` padrão `http://localhost:8000`; `fetch` padrão é o global (troque nos testes). O app passa `config.apiUrl`.
-- Também exporta `EsforcosAtividade` e `BlocoEsforco` (o objeto `esforcos` da atividade, #167, [[decisoes/0008-deteccao-de-esforcos]]) e os tipos `EvolucaoTiros1km`, `SessaoTiros`, `TiroSessao`, `Eixos`, `ErroApi` e `Atividade`, `ClimaAtividade` e `EstadoClima` (a atividade do `GET /atletas/{atleta_id}/atividades/{atividade_id}` com o `clima` da [[decisoes/0007-clima-da-atividade]]; use `buscarAtividade`), `RespostaUploadFit` (alias de `UploadFitOut`, a resposta do `POST /atletas/{atleta_id}/atividades/fit` da [[modulos/api]], [[decisoes/0006-upload-de-fit]]), além de `components` e
+- Também exporta `EsforcosAtividade` e `BlocoEsforco` (o objeto `esforcos` da atividade, #167, [[decisoes/0008-deteccao-de-esforcos]]) e os tipos `EvolucaoTiros1km`, `SessaoTiros`, `TiroSessao`, `Eixos`, `ErroApi` e `TransicaoAtividade`, `TreinosDeTransicao`, `GrupoTransicao`, `ParteTransicao` e `ComparacaoTransicao` (treino de transição, #170: só tipos, sem função; a tela vem depois), `Atividade`, `ClimaAtividade` e `EstadoClima` (a atividade do `GET /atletas/{atleta_id}/atividades/{atividade_id}` com o `clima` da [[decisoes/0007-clima-da-atividade]]; use `buscarAtividade`), `RespostaUploadFit` (alias de `UploadFitOut`, a resposta do `POST /atletas/{atleta_id}/atividades/fit` da [[modulos/api]], [[decisoes/0006-upload-de-fit]]), além de `components` e
   `operations` do `schema.d.ts`.
 - `buscarAtividade(atletaId, atividadeId, {baseUrl?, fetch?})` faz o `GET /atletas/{id}/atividades/{id}` (#159) e devolve `Resultado<Atividade>` com os campos prontos (`data_local`, `hora_local`, `duracao`, `pace_medio`, `distancia`, `clima.atribuicao`); `404` vira `nao_encontrado`, `422` vira `validacao`, outros status `http`, falha do `fetch` `rede`. Nunca lança. Testes em `apps/mobile/__tests__/TelaTreino.test.tsx`.
 - `enviarAtividadeFit(atletaId, arquivo, {baseUrl?, fetch?, nome?})` faz o `POST /atletas/{id}/atividades/fit` (multipart, campo `arquivo`; ver [[modulos/api]], "Upload de FIT") e nunca lança. `arquivo` é `ArquivoFit`: `Blob`/`File` (web; `nome` dá o nome do arquivo) ou `{uri, name, type}` (React Native).
@@ -34,6 +34,7 @@ mão. Contrato e decisões em [[decisoes/0004-contrato-tela-evolucao]] (item 6).
 - `packages/api-client/src/index.ts`: as funções e os tipos de erro e de upload (escritos à mão).
 - `packages/api-client/exemplos/evolucao-tiros-1km.json`: resposta real do endpoint com as fixtures sintéticas (atleta 1), gerada por script.
 - `packages/api-client/exemplos/atividade-esforcos.json`: a atividade com `esforcos` (FIT sintético da #161 mais uma corrida de histórico), gerada pelo mesmo script.
+- `packages/api-client/exemplos/treinos-de-transicao.json`: a listagem de treinos de transição (#170), com quatro atividades inventadas (dois treinos ciclismo>corrida), gerada pelo mesmo script.
 - `packages/api-client/scripts/carimbar.mjs`: grava o carimbo no `schema.d.ts`.
 - `services/api/scripts/exportar_openapi.py`: exporta `openapi.json` (`app.openapi()`, sem servidor) e o exemplo (`TestClient`, SQLite em memória).
 - `services/api/tests/test_contrato_cliente.py`: falha se algo estiver desatualizado.
@@ -45,7 +46,7 @@ uv run python services/api/scripts/exportar_openapi.py
 cd packages/api-client && npm install && npm run gerar
 ```
 O primeiro comando grava `openapi.json` e o exemplo; o segundo gera `src/schema.d.ts` e o carimbo. Faça commit dos
-mesmos arquivos (`openapi.json`, os dois exemplos e `schema.d.ts`). O `npm install` só é preciso na primeira vez (o `node_modules` do pacote fica fora do git).
+mesmos arquivos (`openapi.json`, os três exemplos e `schema.d.ts`). O `npm install` só é preciso na primeira vez (o `node_modules` do pacote fica fora do git).
 
 ## Depende de
 - [[modulos/api]] (schema e fixtures). O [[modulos/mobile]] depende deste pacote: `"@treino/api-client": "file:../../packages/api-client"` em `apps/mobile/package.json`.
@@ -53,7 +54,7 @@ mesmos arquivos (`openapi.json`, os dois exemplos e `schema.d.ts`). O `npm insta
 
 ## Como testar
 - `uv run pytest -q`: `test_contrato_cliente.py` falha com a mensagem "desatualizado... Regere com: <comando>" se
-  `openapi.json`, o exemplo ou o carimbo do `schema.d.ts` não batem com o `app.main`.
+  `openapi.json`, os exemplos ou o carimbo do `schema.d.ts` não batem com o `app.main`.
 - `cd apps/mobile && npm test`: `__tests__/api-client.test.ts` cobre o cliente com `fetch` falso (`200`, `404`, `422`, rede, outros erros) e o upload (`201`, `200`, `400`, `404`, `413`, `422`, rede).
 
 ## Pendências

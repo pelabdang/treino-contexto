@@ -17,6 +17,8 @@ from app.ingestao.importacao import (
     importar_fit,
 )
 from app.rotas.evolucao import Erro
+from app.servicos.distancia_texto import distancia_da_atividade
+from app.rotas.transicao import TransicaoOut, transicao_da_atividade
 from fastapi import APIRouter, Depends, File, HTTPException, Response, UploadFile
 from app.metricas.tiros_1km import formatar_pace
 from app.servicos.fuso import inicio_local
@@ -91,6 +93,7 @@ class AtividadeOut(BaseModel):
     fc_media: float | None
     clima: ClimaOut | None = None  # campo novo e opcional
     esforcos: EsforcosOut | None = None  # so corrida e ciclismo (ADR 0008); null nas outras modalidades
+    transicao: TransicaoOut = Field(default_factory=lambda: TransicaoOut(valor=False))  # ADR 0009; sem linha = false/null
     # Campos prontos para a tela (#158): a API formata, o app mostra (ADR 0004, adendo 2).
     data_local: str  # AAAA-MM-DD, pelo fuso da atividade (ADR 0003)
     hora_local: str  # HH:MM, pelo fuso da atividade
@@ -125,15 +128,6 @@ def _distancia_texto(m: float | None) -> str | None:
         return None
     if m < 1000:
         return f"{int(m + 0.5)} m"
-    return f"{m / 1000:.2f}".replace(".", ",") + " km"
-
-
-def distancia_da_atividade(modalidade: str, m: float | None) -> str | None:
-    """Texto da distancia da atividade (#216): natacao em metros com ponto de milhar, o resto em km com 2 casas."""
-    if m is None or m <= 0:
-        return None
-    if modalidade == "natacao":
-        return f"{int(m + 0.5):,}".replace(",", ".") + " m"
     return f"{m / 1000:.2f}".replace(".", ",") + " km"
 
 
@@ -279,6 +273,7 @@ def buscar_atividade(
         fc_media=a.fc_media,
         clima=None if clima is None else _clima_out(clima),
         esforcos=_esforcos_out(session, a),
+        transicao=transicao_da_atividade(session, a.id),
         data_local=local.date().isoformat(),
         hora_local=local.strftime("%H:%M"),
         duracao=_duracao_hms(a.duracao_s),

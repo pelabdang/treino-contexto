@@ -3,7 +3,7 @@ tipo: decisao
 status: em-uso
 dono: theo
 atualizado: 2026-11-06
-links: [[modulos/api]], [[modulos/grafico-tiros]], [[modulos/mobile]], [[modulos/worker]], [[metricas/tiros-1km]], [[decisoes/0002-segmento-intensidade-e-versao]], [[decisoes/0003-fuso-da-atividade]], [[decisoes/0005-serie-de-tiros-o-que-entra]], [[decisoes/0006-upload-de-fit]], [[decisoes/0007-clima-da-atividade]], [[produto/roadmap]], [[design/telas/treino]]
+links: [[modulos/api]], [[modulos/grafico-tiros]], [[modulos/mobile]], [[modulos/worker]], [[metricas/tiros-1km]], [[decisoes/0002-segmento-intensidade-e-versao]], [[decisoes/0003-fuso-da-atividade]], [[decisoes/0005-serie-de-tiros-o-que-entra]], [[decisoes/0006-upload-de-fit]], [[decisoes/0007-clima-da-atividade]], [[produto/roadmap]], [[design/telas/treino]], [[decisoes/0009-treino-de-transicao]]
 ---
 # ADR: 0004 Contrato da tela de evolução dos tiros (Meta 2)
 
@@ -180,3 +180,8 @@ da distância já na unidade da modalidade, como pede [[design/telas/treino]]: c
 vírgula ("10,00 km"); natação em metros arredondados, com ponto de milhar ("1.800 m"); `null` quando a atividade não tem
 distância (ausente ou zero). `distancia_m` continua. A decisão da unidade é da API; o app só mostra. A troca no app, o
 alinhamento do "Ver treino" e as capturas de natação ficam com o app (#216, parte do app). Detalhes em [[modulos/api]].
+
+## Adendo 4 (2026-11-06): CORS libera também PUT e DELETE (#170)
+**Status: aceito (Theo, 06/11).** Estende o item 7 (CORS): além de `GET` e `POST`, a API libera `PUT` e `DELETE` para as origens
+de `CORS_ORIGENS`, para o app web corrigir e desfazer o rótulo de transição ([[decisoes/0009-treino-de-transicao]]). Nada mais muda
+no CORS (sem `*`, sem cookies). Detalhes em [[modulos/api]].

@@ -107,6 +107,9 @@
               }
             ],
             "title": "Subtipo"
+          },
+          "transicao": {
+            "$ref": "#/components/schemas/TransicaoOut"
           }
         },
         "required": [
@@ -389,6 +392,191 @@
         "title": "ClimaOut",
         "type": "object"
       },
+      "ComparacaoOut": {
+        "properties": {
+          "a": {
+            "$ref": "#/components/schemas/GrupoOut"
+          },
+          "b": {
+            "$ref": "#/components/schemas/GrupoOut"
+          },
+          "forma": {
+            "title": "Forma",
+            "type": "string"
+          },
+          "partes": {
+            "items": {
+              "$ref": "#/components/schemas/DiferencaParteOut"
+            },
+            "title": "Partes",
+            "type": "array"
+          },
+          "total": {
+            "$ref": "#/components/schemas/DiferencaTotalOut"
+          }
+        },
+        "required": [
+          "forma",
+          "a",
+          "b",
+          "partes",
+          "total"
+        ],
+        "title": "ComparacaoOut",
+        "type": "object"
+      },
+      "CorrecaoIn": {
+        "properties": {
+          "transicao": {
+            "title": "Transicao",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "transicao"
+        ],
+        "title": "CorrecaoIn",
+        "type": "object"
+      },
+      "DiferencaParteOut": {
+        "description": "B menos A. Sem nota e sem \"melhor\".",
+        "properties": {
+          "duracao_dif": {
+            "title": "Duracao Dif",
+            "type": "string"
+          },
+          "duracao_dif_s": {
+            "title": "Duracao Dif S",
+            "type": "number"
+          },
+          "fc_dif": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Fc Dif"
+          },
+          "fc_dif_texto": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Fc Dif Texto"
+          },
+          "modalidade": {
+            "title": "Modalidade",
+            "type": "string"
+          },
+          "ordem": {
+            "title": "Ordem",
+            "type": "integer"
+          },
+          "ritmo_dif": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Ritmo Dif"
+          },
+          "ritmo_dif_texto": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Ritmo Dif Texto"
+          }
+        },
+        "required": [
+          "ordem",
+          "modalidade",
+          "duracao_dif_s",
+          "duracao_dif",
+          "ritmo_dif",
+          "ritmo_dif_texto",
+          "fc_dif",
+          "fc_dif_texto"
+        ],
+        "title": "DiferencaParteOut",
+        "type": "object"
+      },
+      "DiferencaTotalOut": {
+        "properties": {
+          "fc_dif": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Fc Dif"
+          },
+          "fc_dif_texto": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Fc Dif Texto"
+          },
+          "soma_duracoes_dif": {
+            "title": "Soma Duracoes Dif",
+            "type": "string"
+          },
+          "soma_duracoes_dif_s": {
+            "title": "Soma Duracoes Dif S",
+            "type": "number"
+          },
+          "soma_intervalos_estimados_dif": {
+            "title": "Soma Intervalos Estimados Dif",
+            "type": "string"
+          },
+          "soma_intervalos_estimados_dif_s": {
+            "title": "Soma Intervalos Estimados Dif S",
+            "type": "number"
+          },
+          "tempo_total_dif": {
+            "title": "Tempo Total Dif",
+            "type": "string"
+          },
+          "tempo_total_dif_s": {
+            "title": "Tempo Total Dif S",
+            "type": "number"
+          }
+        },
+        "required": [
+          "soma_duracoes_dif_s",
+          "soma_duracoes_dif",
+          "soma_intervalos_estimados_dif_s",
+          "soma_intervalos_estimados_dif",
+          "tempo_total_dif_s",
+          "tempo_total_dif",
+          "fc_dif",
+          "fc_dif_texto"
+        ],
+        "title": "DiferencaTotalOut",
+        "type": "object"
+      },
       "EixoFc": {
         "properties": {
           "marcas": {
@@ -584,6 +772,110 @@
         "title": "EvolucaoTiros1km",
         "type": "object"
       },
+      "GrupoOut": {
+        "properties": {
+          "data_local": {
+            "format": "date",
+            "title": "Data Local",
+            "type": "string"
+          },
+          "fc_media": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Fc Media"
+          },
+          "fim_estimado": {
+            "format": "date-time",
+            "title": "Fim Estimado",
+            "type": "string"
+          },
+          "forma": {
+            "title": "Forma",
+            "type": "string"
+          },
+          "grupo_id": {
+            "title": "Grupo Id",
+            "type": "integer"
+          },
+          "hora_local": {
+            "title": "Hora Local",
+            "type": "string"
+          },
+          "incompleto": {
+            "title": "Incompleto",
+            "type": "boolean"
+          },
+          "inicio": {
+            "format": "date-time",
+            "title": "Inicio",
+            "type": "string"
+          },
+          "partes": {
+            "items": {
+              "$ref": "#/components/schemas/ParteOut"
+            },
+            "title": "Partes",
+            "type": "array"
+          },
+          "soma_duracoes": {
+            "title": "Soma Duracoes",
+            "type": "string"
+          },
+          "soma_duracoes_s": {
+            "title": "Soma Duracoes S",
+            "type": "number"
+          },
+          "soma_intervalos_estimados": {
+            "title": "Soma Intervalos Estimados",
+            "type": "string"
+          },
+          "soma_intervalos_estimados_s": {
+            "title": "Soma Intervalos Estimados S",
+            "type": "number"
+          },
+          "tempo_total": {
+            "title": "Tempo Total",
+            "type": "string"
+          },
+          "tempo_total_s": {
+            "title": "Tempo Total S",
+            "type": "number"
+          },
+          "transicoes": {
+            "items": {
+              "$ref": "#/components/schemas/IntervaloOut"
+            },
+            "title": "Transicoes",
+            "type": "array"
+          }
+        },
+        "required": [
+          "grupo_id",
+          "forma",
+          "incompleto",
+          "inicio",
+          "fim_estimado",
+          "data_local",
+          "hora_local",
+          "partes",
+          "transicoes",
+          "soma_duracoes_s",
+          "soma_duracoes",
+          "soma_intervalos_estimados_s",
+          "soma_intervalos_estimados",
+          "tempo_total_s",
+          "tempo_total",
+          "fc_media"
+        ],
+        "title": "GrupoOut",
+        "type": "object"
+      },
       "HTTPValidationError": {
         "properties": {
           "detail": {
@@ -595,6 +887,35 @@
           }
         },
         "title": "HTTPValidationError",
+        "type": "object"
+      },
+      "IntervaloOut": {
+        "description": "Intervalo ESTIMADO entre duas partes seguidas: `duracao_s` e tempo em movimento, entao o real pode ser menor.",
+        "properties": {
+          "de_atividade_id": {
+            "title": "De Atividade Id",
+            "type": "integer"
+          },
+          "intervalo_estimado": {
+            "title": "Intervalo Estimado",
+            "type": "string"
+          },
+          "intervalo_estimado_s": {
+            "title": "Intervalo Estimado S",
+            "type": "number"
+          },
+          "para_atividade_id": {
+            "title": "Para Atividade Id",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "de_atividade_id",
+          "para_atividade_id",
+          "intervalo_estimado_s",
+          "intervalo_estimado"
+        ],
+        "title": "IntervaloOut",
         "type": "object"
       },
       "MarcaFc": {
@@ -631,6 +952,127 @@
           "rotulo"
         ],
         "title": "MarcaPace",
+        "type": "object"
+      },
+      "ParteOut": {
+        "properties": {
+          "atividade_id": {
+            "title": "Atividade Id",
+            "type": "integer"
+          },
+          "distancia": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Distancia"
+          },
+          "distancia_m": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Distancia M"
+          },
+          "duracao": {
+            "title": "Duracao",
+            "type": "string"
+          },
+          "duracao_s": {
+            "title": "Duracao S",
+            "type": "number"
+          },
+          "fc_media": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Fc Media"
+          },
+          "hora_local": {
+            "title": "Hora Local",
+            "type": "string"
+          },
+          "inicio": {
+            "format": "date-time",
+            "title": "Inicio",
+            "type": "string"
+          },
+          "modalidade": {
+            "title": "Modalidade",
+            "type": "string"
+          },
+          "ordem": {
+            "title": "Ordem",
+            "type": "integer"
+          },
+          "ritmo": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Ritmo"
+          },
+          "ritmo_unidade": {
+            "anyOf": [
+              {
+                "enum": [
+                  "s/km",
+                  "s/100m",
+                  "km/h"
+                ],
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Ritmo Unidade"
+          },
+          "ritmo_valor": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Ritmo Valor"
+          }
+        },
+        "required": [
+          "ordem",
+          "atividade_id",
+          "modalidade",
+          "inicio",
+          "hora_local",
+          "duracao_s",
+          "duracao",
+          "distancia_m",
+          "distancia",
+          "fc_media",
+          "ritmo_valor",
+          "ritmo_unidade",
+          "ritmo"
+        ],
+        "title": "ParteOut",
         "type": "object"
       },
       "Periodo": {
@@ -818,6 +1260,61 @@
           "fc_media"
         ],
         "title": "TiroOut",
+        "type": "object"
+      },
+      "TransicaoOut": {
+        "description": "Rotulo \"treino de transicao\" da atividade. Sem linha no banco e `valor = false`, `origem = null`.",
+        "properties": {
+          "origem": {
+            "anyOf": [
+              {
+                "enum": [
+                  "sugerido",
+                  "atleta"
+                ],
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Origem"
+          },
+          "valor": {
+            "title": "Valor",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "valor"
+        ],
+        "title": "TransicaoOut",
+        "type": "object"
+      },
+      "TreinosDeTransicaoOut": {
+        "properties": {
+          "grupos": {
+            "items": {
+              "$ref": "#/components/schemas/GrupoOut"
+            },
+            "title": "Grupos",
+            "type": "array"
+          },
+          "periodo": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Periodo"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "required": [
+          "grupos"
+        ],
+        "title": "TreinosDeTransicaoOut",
         "type": "object"
       },
       "Unidades": {
@@ -1082,6 +1579,138 @@
         ]
       }
     },
+    "/atletas/{atleta_id}/atividades/{atividade_id}/transicao": {
+      "delete": {
+        "description": "Apaga a correção do atleta e roda a regra (`sugerir_transicao`) para ele; devolve o estado real da atividade\n(`sugerido` se a regra a sugere, senão `valor = false`). Sem correção, só devolve o estado e nunca apaga uma linha `sugerido`.",
+        "operationId": "desfazerCorrecaoDeTransicao",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "atleta_id",
+            "required": true,
+            "schema": {
+              "title": "Atleta Id",
+              "type": "integer"
+            }
+          },
+          {
+            "in": "path",
+            "name": "atividade_id",
+            "required": true,
+            "schema": {
+              "title": "Atividade Id",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TransicaoOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Erro"
+                }
+              }
+            },
+            "description": "Atleta ou atividade não encontrados (atividade de outro atleta também)"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Desfazer Correcao De Transicao",
+        "tags": [
+          "treino de transição"
+        ]
+      },
+      "put": {
+        "description": "O atleta marca \"sim\" ou \"não\" na atividade, tenha a regra sugerido ou não. Grava `origem = atleta`; a regra nunca mexe nela.",
+        "operationId": "corrigirTransicao",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "atleta_id",
+            "required": true,
+            "schema": {
+              "title": "Atleta Id",
+              "type": "integer"
+            }
+          },
+          {
+            "in": "path",
+            "name": "atividade_id",
+            "required": true,
+            "schema": {
+              "title": "Atividade Id",
+              "type": "integer"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CorrecaoIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TransicaoOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Erro"
+                }
+              }
+            },
+            "description": "Atleta ou atividade não encontrados (atividade de outro atleta também)"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Corrigir Transicao",
+        "tags": [
+          "treino de transição"
+        ]
+      }
+    },
     "/atletas/{atleta_id}/evolucao/tiros-1km": {
       "get": {
         "description": "Melhor tiro (principal) e média dos tiros de 1 km por sessão. `inicio` e `fim` (AAAA-MM-DD) são datas locais, inclusivas.",
@@ -1249,6 +1878,167 @@
         "summary": "Evolucao Tiros 1Km Png",
         "tags": [
           "evolução"
+        ]
+      }
+    },
+    "/atletas/{atleta_id}/treinos-de-transicao": {
+      "get": {
+        "description": "Os grupos de atividades rotuladas como transição, mais recentes primeiro. `inicio` e `fim` (AAAA-MM-DD) são datas\nlocais da primeira parte, inclusivas. O intervalo entre partes é estimado.",
+        "operationId": "listarTreinosDeTransicao",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "atleta_id",
+            "required": true,
+            "schema": {
+              "title": "Atleta Id",
+              "type": "integer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "inicio",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "format": "date",
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Inicio"
+            }
+          },
+          {
+            "in": "query",
+            "name": "fim",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "format": "date",
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Fim"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TreinosDeTransicaoOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Erro"
+                }
+              }
+            },
+            "description": "Atleta não encontrado"
+          },
+          "422": {
+            "description": "Período inválido (`inicio` depois de `fim`)"
+          }
+        },
+        "summary": "Listar Treinos De Transicao",
+        "tags": [
+          "treino de transição"
+        ]
+      }
+    },
+    "/atletas/{atleta_id}/treinos-de-transicao/comparar": {
+      "get": {
+        "description": "Compara dois grupos (`a`, `b` = `grupo_id`) da mesma sequência de modalidades, parte a parte e no total (B menos A).\nO `grupo_id` é derivado: pegue-o da listagem. `404` se não existe ou é de outro atleta; `400` se as formas diferem.",
+        "operationId": "compararTreinosDeTransicao",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "atleta_id",
+            "required": true,
+            "schema": {
+              "title": "Atleta Id",
+              "type": "integer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "a",
+            "required": true,
+            "schema": {
+              "title": "A",
+              "type": "integer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "b",
+            "required": true,
+            "schema": {
+              "title": "B",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ComparacaoOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Erro"
+                }
+              }
+            },
+            "description": "Grupos com sequências de modalidades diferentes"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Erro"
+                }
+              }
+            },
+            "description": "Atleta não encontrado"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Comparar Treinos De Transicao",
+        "tags": [
+          "treino de transição"
         ]
       }
     },
