@@ -355,3 +355,15 @@ def test_pasta_padrao_esta_no_gitignore_e_fora_do_codigo():
 def test_pasta_fit_relativa_conta_da_raiz_e_absoluta_fica(tmp_path):
     assert pasta_fit("outra/pasta") == RAIZ_REPOSITORIO / "outra" / "pasta"
     assert pasta_fit(tmp_path) == tmp_path
+
+
+def test_falha_na_deteccao_de_esforcos_nao_derruba_a_importacao(session, atleta, pasta, monkeypatch, caplog):
+    """#168: um unico ponto de deteccao (classificar_atividades), tolerante a erro: a atividade entra, fica o aviso."""
+    def quebra(*a, **k):
+        raise RuntimeError("falha simulada")
+
+    monkeypatch.setattr("app.servicos.evolucao_tiros.detectar_esforcos", quebra)
+    r = importar_fit(session, atleta.id, _fit("upload_intervalado_5x1km.fit"), pasta)
+    assert r.resultado == "inserida"
+    assert session.get(Atividade, r.atividade_id) is not None
+    assert "esforcos nao detectados" in caplog.text

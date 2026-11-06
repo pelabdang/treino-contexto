@@ -46,23 +46,23 @@ separada por vírgula, lida em `app/config.py`; middleware em `criar_app` de `ap
 - Testes: `services/api/tests/test_cors.py`. Variável em [[modulos/infra]].
 
 ## Série de tiros no banco (`servicos/evolucao_tiros.py`)
-- `classificar_atividades(session, atleta_id)`: para cada corrida roda a detecção ([[metricas/tiros-1km]]) e marca
-  os segmentos como `tiro`, `recuperacao` ou `volta`, gravando `versao_deteccao` (ex.: `tiros_1km@4`) em todos os
+- `classificar_atividades(session, atleta_id)`: primeiro roda `detectar_esforcos` (blocos em `bloco_atividade`, [[metricas/esforcos]]); depois, para cada corrida, aplica a visão de tiros de 1 km ([[metricas/tiros-1km]], `tiros_1km@5`) e marca
+  os segmentos como `tiro`, `recuperacao` ou `volta`, gravando `versao_deteccao` (ex.: `tiros_1km@5`) em todos os
   segmentos da corrida. Idempotente. A importação ([[modulos/ingestao-garmin]]) chama no fim.
 - **Tipo do treino:** se a corrida é intervalada, grava `tipo_treino = "intervalado"` e `tipo_origem = "sugestao"`.
   Nunca sobrescreve `tipo_origem` `professor` ou `trainingpeaks`, nem tipo com `tipo_confirmado`. Se uma sugestão
   `intervalado` anterior deixa de valer (a regra mudou ou as voltas mudaram), `tipo_treino` e `tipo_origem` voltam
   para `NULL`; tipo do professor, do TrainingPeaks ou confirmado nunca volta.
-- `sessoes_tiros_1km(session, atleta_id, inicio=None, fim=None)`: o que a rota usa. Por sessão, o `PontoSessao`, o `inicio` em UTC e os tiros (`ordem`, `distancia_m`, `duracao_s`, `fc_media`). `distancia_m` do tiro é `None` quando o segmento não tem distância (nunca `0`).
-- `reclassificacao_pendente(session, atleta_id, inicio=None, fim=None)`: `True` se algum segmento das corridas da série (fora a esteira, dentro do período) tem `versao_deteccao` diferente de `VERSAO`, inclusive `NULL` (nunca classificado). Só lê.
+- `sessoes_tiros_1km(session, atleta_id, inicio=None, fim=None)`: o que a rota usa. Por sessão, o `PontoSessao`, o `inicio` em UTC e os tiros (`ordem`, `distancia_m`, `duracao_s`, `fc_media`). Desde a `@5` lê `bloco_atividade`: o tiro é um bloco `esforco` `d1000` e `ordem` é a `segmento.ordem` da primeira volta dele. `distancia_m` `None` segue possível no contrato, mas um bloco sem distância não é tiro.
+- `reclassificacao_pendente(session, atleta_id, inicio=None, fim=None)`: `True` se algum segmento das corridas da série (fora a esteira, dentro do período) tem `versao_deteccao` diferente de `VERSAO`, inclusive `NULL` (nunca classificado), ou se algum bloco foi gravado por outra versão dos esforços. Só lê.
 - `serie_tiros_1km(session, atleta_id, inicio=None, fim=None)` (só os pontos, sobre a mesma consulta): um `PontoSessao` por sessão intervalada
-  (3 ou mais tiros), por data crescente. Lê os segmentos já classificados (precisa de `classificar_atividades`
-  antes). Uma sessão do professor marcada com outro tipo continua na série se tiver 3 ou mais tiros: a série
+  (2 ou mais tiros), por data crescente. Lê os blocos já gravados (precisa de `classificar_atividades` ou
+  `detectar_esforcos` antes). Uma sessão do professor marcada com outro tipo continua na série se tiver 2 ou mais tiros: a série
   segue a detecção, não o rótulo.
   Desde a `tiros_1km@3`, a série só aceita a sessão cujo pace médio dos tiros é pelo menos 10% (desde a `@4`; era 5% na `@3`) mais rápido que o ritmo
   habitual do atleta (mediana das corridas de mais de 3 km, sem esteira, das 12 semanas anteriores; ver [[metricas/tiros-1km]]).
-  O histórico usa todas as corridas do atleta, mesmo fora de `inicio`/`fim`. A `@4` mudou a detecção: é preciso rodar `classificar_atividades` para regravar `tipo` e `versao_deteccao` dos segmentos já gravados.
-- **O que entra na série:** corridas com 3 ou mais tiros. Atividades de `subtipo = "esteira"` ficam **de fora** da série, do JSON, do PNG e do CSV (decisão do Angelo, issue #51), mas continuam no banco e são classificadas normalmente. A regra está em `SUBTIPOS_FORA_DA_SERIE`, usada por `sessoes_tiros_1km` e `serie_tiros_1km`.
+  O histórico usa todas as corridas do atleta, mesmo fora de `inicio`/`fim`. A `@5` mudou a fonte e a regra: é preciso rodar `classificar_atividades` (ou `worker.reclassificar`) para recriar os blocos e regravar `tipo` e `versao_deteccao` dos segmentos já gravados.
+- **O que entra na série:** corridas com 2 ou mais tiros de 1 km. Atividades de `subtipo = "esteira"` ficam **de fora** da série, do JSON, do PNG e do CSV (decisão do Angelo, issue #51), mas continuam no banco e são classificadas normalmente. A regra está em `SUBTIPOS_FORA_DA_SERIE`, usada por `sessoes_tiros_1km` e `serie_tiros_1km`.
 - **Data da sessão:** a data local do início (`inicio + fuso_min`, ou `America/Sao_Paulo` se `fuso_min` é `NULL`).
   `inicio` e `fim` do filtro também são datas locais, inclusivas.
 - Testes: `services/api/tests/servicos/test_evolucao_tiros.py` (com as tabelas das fixtures e o oráculo da #30) e `test_serie_pace_habitual.py` (filtro do ritmo habitual).
@@ -84,7 +84,7 @@ Usa só `sessoes_tiros_1km` (serviço acima). Exemplo (ids e valores das fixture
 curl "http://localhost:8000/atletas/1/evolucao/tiros-1km?inicio=2025-03-01"
 ```
 ```json
-{"atleta_id": 1, "metrica": "tiros_1km", "versao_calculo": "tiros_1km@4", "reclassificacao_pendente": false,
+{"atleta_id": 1, "metrica": "tiros_1km", "versao_calculo": "tiros_1km@5", "reclassificacao_pendente": false,
  "unidades": {"pace": "s/km", "fc": "bpm", "distancia": "m", "duracao": "s"},
  "periodo": {"inicio": "2025-03-01", "fim": null},
  "eixos": {"pace": {"min_s_km": 226.0, "max_s_km": 256.0, "invertido": true,
@@ -147,7 +147,7 @@ Item 5 da [[decisoes/0007-clima-da-atividade]]. Devolve a atividade (`atividade_
 {"estado": "indoor"}
 ```
 - **Campos prontos para a tela (#158, [[decisoes/0004-contrato-tela-evolucao]], adendo 2):** a regra "a API formata, o app mostra" vale aqui também.
-  `data_local` (`AAAA-MM-DD`) e `hora_local` (`HH:MM`): início no fuso da atividade (`fuso_min`; sem ele, `America/Sao_Paulo`, [[decisoes/0003-fuso-da-atividade]]), por `inicio_local` em `app/servicos/fuso.py`. `duracao` em `h:mm:ss` (horas sem limite; segundos arredondados com meio para cima). `pace_medio` em `m:ss` (`formatar_pace` sobre duração / km, sem arredondar antes): só para `corrida` com distância e duração maiores que zero, senão `null`. `clima.atribuicao` = "Weather data by Open-Meteo.com" só quando `estado` é `ok` (ADR 0007, item 4); nos outros estados a chave nem vem. `inicio` em UTC e os campos numéricos continuam. A `carga` (#142) entra na mesma resposta quando sair.
+  `data_local` (`AAAA-MM-DD`) e `hora_local` (`HH:MM`): início no fuso da atividade (`fuso_min`; sem ele, `America/Sao_Paulo`, [[decisoes/0003-fuso-da-atividade]]), por `inicio_local` em `app/servicos/fuso.py`. `duracao` em `h:mm:ss` (horas sem limite; segundos arredondados com meio para cima). `pace_medio` em `m:ss` (`formatar_pace` sobre duração / km, sem arredondar antes): só para `corrida` com distância e duração maiores que zero, senão `null`. `distancia` (#216, adendo 3 da ADR 0004): texto pronto; `natacao` em metros arredondados com ponto de milhar ("1.800 m"), as outras modalidades em km com 2 casas e vírgula ("10,00 km"); `null` sem distância ou com zero (`distancia_da_atividade`). `clima.atribuicao` = "Weather data by Open-Meteo.com" só quando `estado` é `ok` (ADR 0007, item 4); nos outros estados a chave nem vem. `inicio` em UTC e os campos numéricos continuam. A `carga` (#142) entra na mesma resposta quando sair.
 - **`esforcos` (#167, [[decisoes/0008-deteccao-de-esforcos]]):** objeto opcional (`null` fora de corrida e ciclismo) com os blocos que
   `detectar_esforcos` gravou. A API **não detecta** na leitura (`servicos/esforcos_leitura.py`). Campos: `versao` (`esforcos@1`, a gravada; sem
   blocos, a atual), `referencia_da_atividade` (`true` quando não havia histórico e a referência foi a da própria atividade: a tela avisa),
@@ -160,7 +160,7 @@ Item 5 da [[decisoes/0007-clima-da-atividade]]. Devolve a atividade (`atividade_
 - `ref_origem` não é gravado ([[decisoes/0008-deteccao-de-esforcos]], decisões da #166): `origem_da_referencia` recalcula na leitura com
   `pace_habitual` / `velocidade_habitual` (uma consulta leve ao histórico da modalidade; só colunas, sem blocos). Limite: atividade antiga importada
   depois da detecção pode mudar a origem recalculada em relação à usada; `detectar_esforcos` não regrava sozinho nesse caso.
-- Exemplo de contrato: `packages/api-client/exemplos/atividade-esforcos.json` ([[modulos/api-client]]). Testes: `services/api/tests/rotas/test_atividade_esforcos.py`
+- Exemplo de contrato: `packages/api-client/exemplos/atividade-esforcos.json` ([[modulos/api-client]]). Testes: `services/api/tests/rotas/test_atividade_distancia.py` (`distancia` por modalidade, #216) e `services/api/tests/rotas/test_atividade_esforcos.py`
   (oráculo da #161, textos, aviso de referência, lista vazia com a versão, `404`, modalidade sem detecção, a leitura não detecta, OpenAPI).
 - `estado` é `ok`, `indoor`, `sem_posicao`, `pendente` ou `falha`. Os quatro valores só aparecem em `ok`; nos outros estados
   a chave nem vem. O texto do erro da consulta (`erro` da tabela) nunca sai.

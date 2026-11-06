@@ -1,37 +1,37 @@
-"""Tiros de 1 km: detecção (issues #11 e #48) e agregação por sessão (issue #12).
+"""Tiros de 1 km: visão sobre os esforços (issue #168, ADR 0008 item 8) e agregação por sessão (issue #12).
 
 Funções puras: sem banco, sem IA. A regra completa e os limites estão em
 docs/metricas/tiros-1km.md. Qualquer mudança de regra ou de constante exige
 subir ``VERSAO`` (a versão é gravada junto do resultado).
 
-Fonte: regra própria do projeto (não há artigo). Um tiro de 1 km é uma volta
-de ~1 km mais rápida que as voltas vizinhas e separada delas por recuperação,
-isto é, a estrutura "esforço, pausa, esforço" de um treino intervalado. O
-limiar de 8% de pace é decisão do projeto.
+Fonte: regra própria do projeto (não há artigo). Desde a ``tiros_1km@5`` a série não lê mais voltas: lê os
+**blocos** que ``app.metricas.esforcos`` (``esforcos@1``) já separou em aquecimento, esforço, recuperação e
+desaquecimento. Um tiro de 1 km é um bloco ``esforco`` da faixa ``d1000`` (950 a 1050 m) que não é continuação de
+um progressivo ou fartlek. Os limites de 20% (ritmo parecido), 15% (bloco contínuo) e 10% (ritmo habitual) são
+decisão do projeto.
 """
 
 from __future__ import annotations
 
 import math
+from collections.abc import Iterable, Sequence
 from dataclasses import dataclass
-from collections.abc import Iterable
 from datetime import date, timedelta
 from statistics import median
 
-VERSAO = "tiros_1km@4"
+from app.metricas import esforcos as ef
 
-DISTANCIA_ALVO_M = 1000.0
-# Tolerância de GPS/auto-lap: volta de 950 a 1050 m (inclusive) é candidata.
-TOLERANCIA_M = 50.0
-# Um tiro precisa ser pelo menos 8% mais rápido que a volta vizinha de recuperação.
-GANHO_MINIMO_PACE = 0.08
-# Volta vizinha mais curta que isto é pausa (parado/andando): sem comparação de pace.
-PAUSA_MAX_M = 200.0
-# Atividade é intervalado com pelo menos 3 tiros.
-MIN_TIROS_INTERVALADO = 3
-# Volta "curta" (tiro de outra distância): de 150 a 700 m.
-CURTA_MIN_M = 150.0
-CURTA_MAX_M = 700.0
+VERSAO = "tiros_1km@5"
+
+# Faixa de esforço de corrida que vale como tiro de 1 km (ADR 0008, item 5): 950 a 1050 m. Um esforço de 1500 m
+# (``d1500``) ou de 2000 m (dois km seguidos no mesmo ritmo) não é tiro de 1 km.
+FAIXA_TIRO = "d1000"
+# Sessão com pelo menos 2 tiros entra na série (decisão do Angelo, 04/11; era 3 até a @4).
+MIN_TIROS_INTERVALADO = 2
+# O ritmo parecido (abaixo) só olha sessões com 3 ou mais tiros: com 2, a mediana é a média dos dois e não diz nada.
+MIN_TIROS_RITMO_PARECIDO = 3
+# Bloco vizinho "de corrida" para o teste do bloco contínuo: pelo menos 950 m (um km, ou vários km juntados).
+VIZINHO_MIN_M = 950.0
 
 MODALIDADE_CORRIDA = "corrida"
 
@@ -45,179 +45,115 @@ HABITUAL_MIN_CORRIDAS_JANELA = 10
 HABITUAL_GANHO_MINIMO = 0.10
 
 # @4, ritmo parecido: com 3 ou mais tiros, um tiro mais de 20% mais lento que a mediana dos
-# tiros da sessão não é tiro (desaquecimento de 1 km que o relógio marcou como volta).
+# tiros da sessão não é tiro (desaquecimento de 1 km que virou esforço por estar abaixo do ritmo habitual).
 RITMO_PARECIDO_TOLERANCIA = 0.20
-# @4, bloco contínuo: uma volta de ~1 km de corrida ao lado do tiro (olhando por cima das
-# pausas) que seja menos de 15% mais lenta que ele indica progressivo ou fartlek, não tiro.
+# @4, bloco contínuo: um bloco de corrida ao lado do tiro, que seja menos de 15% mais lento que ele, indica
+# progressivo ou fartlek, não tiro.
 BLOCO_CONTINUO_GANHO_MINIMO = 0.15
-
-# Intensidades do FIT que nunca são tiro (e valem como fronteira do treino).
-INTENSIDADES_NUNCA_TIRO = frozenset({"rest", "recovery", "warmup", "cooldown"})
-INTENSIDADES_FRONTEIRA = frozenset({"warmup", "cooldown"})
-INTENSIDADES_CONHECIDAS = INTENSIDADES_NUNCA_TIRO | {"active", "interval"}
 
 
 @dataclass(frozen=True)
 class VoltaEntrada:
+    """Um tiro como a agregação o recebe: ``ordem`` é a ``segmento.ordem`` da primeira volta do bloco."""
+
     ordem: int
     distancia_m: float
     duracao_s: float
     fc_media: float | None = None
-    intensidade: str | None = None  # active/interval/rest/recovery/warmup/cooldown/...
+    intensidade: str | None = None  # só informativa; a regra não usa
+
+
+@dataclass(frozen=True)
+class BlocoEntrada:
+    """Um bloco como ``bloco_atividade`` o guarda (ADR 0008, item 9), só com o que a visão usa."""
+
+    ordem: int
+    categoria: str
+    volta_inicial: int
+    volta_final: int
+    distancia_m: float | None
+    duracao_s: float
+    fc_media: float | None = None
+    faixa: str | None = None
+    parada_apos_s: float | None = None
 
 
 @dataclass(frozen=True)
 class ResultadoTiros:
-    tiros: tuple[int, ...]  # ordens das voltas que são tiros
-    recuperacoes: tuple[int, ...]  # voltas não-tiro entre o primeiro e o último tiro
+    tiros: tuple[int, ...]  # ``ordem`` dos blocos que são tiros
+    recuperacoes: tuple[int, ...]  # ``ordem`` dos blocos não-tiro entre o primeiro e o último tiro
     eh_intervalado: bool
     versao: str = VERSAO
 
 
-def _pace_s_km(volta: VoltaEntrada) -> float | None:
-    if volta.distancia_m <= 0 or volta.duracao_s <= 0:
+def _pace_s_km(b: BlocoEntrada) -> float | None:
+    if not b.distancia_m or b.distancia_m <= 0 or b.duracao_s <= 0:
         return None
-    return volta.duracao_s / volta.distancia_m * 1000.0
+    return b.duracao_s / b.distancia_m * 1000.0
 
 
-def eh_candidata(volta: VoltaEntrada) -> bool:
-    """Distância entre 950 e 1050 m, inclusive."""
-    return abs(volta.distancia_m - DISTANCIA_ALVO_M) <= TOLERANCIA_M
+def _vizinho_corta(blocos: list[BlocoEntrada], i: int, candidatos: set[int]) -> bool:
+    """O tiro ``blocos[i]`` é continuação de um bloco de corrida vizinho (progressivo, fartlek)?
 
-
-def _intensidade(volta: VoltaEntrada) -> str | None:
-    if volta.intensidade is None:
-        return None
-    valor = volta.intensidade.strip().lower()
-    return valor if valor in INTENSIDADES_CONHECIDAS else None
-
-
-def _pode_ser_tiro(volta: VoltaEntrada) -> bool:
-    return (
-        eh_candidata(volta)
-        and _intensidade(volta) not in INTENSIDADES_NUNCA_TIRO
-        and _pace_s_km(volta) is not None
-    )
-
-
-def _separa(tiro: VoltaEntrada, vizinha: VoltaEntrada | None) -> bool:
-    """A volta vizinha separa o tiro do resto do treino?
-
-    Separa: não existir vizinha (início ou fim da atividade); ser warmup/cooldown
-    (fronteira do treino); ser uma pausa (< 200 m); ou ser uma recuperação, isto é,
-    uma volta que não pode ser tiro (outra distância, rest/recovery) ou que é pelo menos
-    8% mais lenta que o tiro. Uma vizinha de 1 km no mesmo ritmo (auto-lap de
-    rodagem ou de bloco contínuo) não separa.
+    Olha o bloco anterior e o seguinte. Um vizinho conta quando tem pelo menos 950 m, não é aquecimento nem
+    desaquecimento e o tiro é menos de 15% mais rápido que ele (``pace do tiro > pace do vizinho x 0,85``; vizinho
+    mais lento que isso deixa o tiro de pé). Fica de fora o vizinho que é ele mesmo um tiro candidato **separado
+    por uma pausa** (parada de pelo menos 15 s): são repetições com descanso parado, não bloco contínuo.
     """
-    if vizinha is None or _intensidade(vizinha) in INTENSIDADES_FRONTEIRA:
-        return True
-    if vizinha.distancia_m < PAUSA_MAX_M:
-        return True
-    pace_vizinha = _pace_s_km(vizinha)
-    if pace_vizinha is None:
-        return True
-    return _pace_s_km(tiro) <= pace_vizinha * (1.0 - GANHO_MINIMO_PACE)
-
-
-def _vizinha_de_corrida(voltas: list[VoltaEntrada], i: int, passo: int) -> VoltaEntrada | None:
-    """Primeira volta de corrida ao lado de ``voltas[i]``, pulando as pausas (< 200 m)."""
-    j = i + passo
-    while 0 <= j < len(voltas) and voltas[j].distancia_m < PAUSA_MAX_M:
-        j += passo
-    return voltas[j] if 0 <= j < len(voltas) else None
-
-
-def _em_bloco_continuo(voltas: list[VoltaEntrada], i: int, ordens_tiros: set[int]) -> bool:
-    """O tiro ``voltas[i]`` está colado, por cima de uma pausa, a um km de corrida quase tão rápido?
-
-    Olha a primeira volta de corrida de cada lado (pulando pausas). Se for uma volta de ~1 km
-    que não é tiro nem aquecimento/desaquecimento e o tiro for menos de 15% mais rápido que
-    ela (``pace do tiro > pace da vizinha x 0,85``), o tiro é parte de um bloco contínuo.
-    """
-    tiro = voltas[i]
-    for passo in (-1, 1):
-        viz = _vizinha_de_corrida(voltas, i, passo)
-        if viz is None or viz.ordem in ordens_tiros or not eh_candidata(viz):
+    pace = _pace_s_km(blocos[i])
+    for j in (i - 1, i + 1):
+        if not 0 <= j < len(blocos):
             continue
-        if _intensidade(viz) in INTENSIDADES_FRONTEIRA:
+        viz = blocos[j]
+        if viz.categoria in (ef.AQUECIMENTO, ef.DESAQUECIMENTO):
+            continue
+        if (viz.distancia_m or 0.0) < VIZINHO_MIN_M:
             continue
         pace_viz = _pace_s_km(viz)
-        if pace_viz is not None and _pace_s_km(tiro) > pace_viz * (1.0 - BLOCO_CONTINUO_GANHO_MINIMO):
+        if pace_viz is None:
+            continue
+        parada = (blocos[min(i, j)].parada_apos_s or 0.0)
+        if viz.ordem in candidatos and parada >= ef.PAUSA_SEPARA_S_CORRIDA - 1e-9:
+            continue
+        if pace > pace_viz * (1.0 - BLOCO_CONTINUO_GANHO_MINIMO):
             return True
     return False
 
 
-def _bloco_principal_e_1km(voltas: list[VoltaEntrada], tiros: list[VoltaEntrada]) -> bool:
-    """O bloco principal do treino são os tiros de 1 km?
+def tiros_de_blocos(blocos: Sequence[BlocoEntrada], modalidade: str = MODALIDADE_CORRIDA) -> ResultadoTiros:
+    """Os tiros de 1 km de uma atividade, lidos dos blocos (``esforcos@1``).
 
-    Compara o volume (distância) dos tiros de 1 km com o das voltas curtas (150 a
-    700 m) que não são tiro de 1 km e não estão rotuladas rest/recovery/warmup/
-    cooldown: tiros curtos e também recuperações sem rótulo. Os tiros de 1 km valem
-    se o volume deles for maior ou igual ao das voltas curtas. Cada recuperação sem
-    rótulo pesa no máximo 70% de um tiro de 1 km, então num treino de 1 km elas somam
-    bem menos que os tiros.
+    1. Candidato: bloco de categoria ``esforco`` e faixa ``d1000``. Aquecimento, desaquecimento, recuperação e
+       rodagem (``leve``) ficam de fora pela própria categoria; um esforço de 1500 m ou de 2000 m, também.
+    2. Ritmo parecido: com 3 ou mais candidatos, sai o mais de 20% mais lento que a mediana deles.
+    3. Bloco contínuo: sai o candidato que é menos de 15% mais rápido que um bloco vizinho de corrida (ver
+       ``_vizinho_corta``).
+    4. ``eh_intervalado`` = pelo menos 2 tiros. Sem o volume do bloco principal da @4: o aquecimento e o
+       desaquecimento já saem por categoria, e os esforços curtos (``d400`` etc.) simplesmente não são de 1 km.
     """
-    ordens = {t.ordem for t in tiros}
-    curtas = sum(
-        v.distancia_m
-        for v in voltas
-        if v.ordem not in ordens
-        and CURTA_MIN_M <= v.distancia_m <= CURTA_MAX_M
-        and _intensidade(v) not in INTENSIDADES_NUNCA_TIRO
-    )
-    return sum(t.distancia_m for t in tiros) >= curtas
-
-
-def detectar_tiros(
-    voltas: list[VoltaEntrada], modalidade: str = MODALIDADE_CORRIDA
-) -> ResultadoTiros:
-    """Classifica as voltas de uma atividade em tiros e recuperações.
-
-    Tiro = volta de 950 a 1050 m, que não seja rest/recovery/warmup/cooldown, com as
-    duas vizinhas separando-a (ver ``_separa``); com 3 ou mais, tira os de ritmo muito
-    diferente e os colados a um bloco contínuo (@4). A intensidade só veta e marca
-    fronteira: nunca basta para dizer que uma volta é tiro, o pace e a estrutura
-    esforço-pausa decidem sempre.
-    """
-    if modalidade != MODALIDADE_CORRIDA or not voltas:
+    if modalidade != MODALIDADE_CORRIDA or not blocos:
         return ResultadoTiros((), (), False)
+    blocos = sorted(blocos, key=lambda b: b.ordem)
+    cand = [b for b in blocos if b.categoria == ef.ESFORCO and b.faixa == FAIXA_TIRO and _pace_s_km(b) is not None]
 
-    voltas = sorted(voltas, key=lambda v: v.ordem)
-    tiros = []
-    for i, volta in enumerate(voltas):
-        if not _pode_ser_tiro(volta):
-            continue
-        anterior = voltas[i - 1] if i > 0 else None
-        seguinte = voltas[i + 1] if i + 1 < len(voltas) else None
-        if _separa(volta, anterior) and _separa(volta, seguinte):
-            tiros.append(volta)
+    if len(cand) >= MIN_TIROS_RITMO_PARECIDO:
+        mediana = median(_pace_s_km(b) for b in cand)
+        cand = [b for b in cand if _pace_s_km(b) <= mediana * (1.0 + RITMO_PARECIDO_TOLERANCIA)]
 
-    if len(tiros) >= MIN_TIROS_INTERVALADO and not _bloco_principal_e_1km(voltas, tiros):
-        tiros = []  # treino misto em que os tiros curtos pesam mais: não é de 1 km
+    posicao = {b.ordem: i for i, b in enumerate(blocos)}
+    ordens_cand = {b.ordem for b in cand}
+    tiros = [b for b in cand if not _vizinho_corta(blocos, posicao[b.ordem], ordens_cand)]
 
-    if len(tiros) >= MIN_TIROS_INTERVALADO:
-        # Ritmo parecido (@4): tira o tiro bem mais lento que os outros (desaquecimento).
-        mediana = median(_pace_s_km(t) for t in tiros)
-        tiros = [t for t in tiros if _pace_s_km(t) <= mediana * (1.0 + RITMO_PARECIDO_TOLERANCIA)]
-        # Bloco contínuo (@4): tiro colado a um km de corrida quase tão rápido.
-        ordens = {t.ordem for t in tiros}
-        posicao = {v.ordem: i for i, v in enumerate(voltas)}
-        tiros = [t for t in tiros if not _em_bloco_continuo(voltas, posicao[t.ordem], ordens)]
-
-    ordens_tiros = tuple(v.ordem for v in tiros)
+    ordens = tuple(b.ordem for b in tiros)
     recuperacoes: tuple[int, ...] = ()
-    if len(ordens_tiros) >= 2:
-        primeiro, ultimo = ordens_tiros[0], ordens_tiros[-1]
-        recuperacoes = tuple(
-            v.ordem
-            for v in voltas
-            if primeiro < v.ordem < ultimo and v.ordem not in ordens_tiros
-        )
-    return ResultadoTiros(
-        tiros=ordens_tiros,
-        recuperacoes=recuperacoes,
-        eh_intervalado=len(ordens_tiros) >= MIN_TIROS_INTERVALADO,
-    )
+    if len(ordens) >= 2:
+        recuperacoes = tuple(b.ordem for b in blocos if ordens[0] < b.ordem < ordens[-1] and b.ordem not in ordens)
+    return ResultadoTiros(ordens, recuperacoes, len(ordens) >= MIN_TIROS_INTERVALADO)
+
+
+def tiro_de_bloco(b: BlocoEntrada) -> VoltaEntrada:
+    """O bloco de um tiro no formato da agregação (``ordem`` = primeira volta do bloco)."""
+    return VoltaEntrada(b.volta_inicial, b.distancia_m or 0.0, b.duracao_s, b.fc_media)
 
 
 # ---------------------------------------------------------------------------
@@ -227,7 +163,7 @@ def detectar_tiros(
 
 @dataclass(frozen=True)
 class SessaoTiros:
-    """Uma atividade já classificada: os tiros (voltas) e se é intervalado."""
+    """Uma atividade já classificada: os tiros e se é intervalado."""
 
     atividade_id: int | str
     data: date  # data local do início da atividade
@@ -254,16 +190,16 @@ class PontoSessao:
     versao: str = VERSAO
 
 
-def sessao_de_voltas(
+def sessao_de_blocos(
     atividade_id: int | str,
     data: date,
-    voltas: list[VoltaEntrada],
+    blocos: Sequence[BlocoEntrada],
     modalidade: str = MODALIDADE_CORRIDA,
 ) -> SessaoTiros:
-    """Detecta os tiros (#11) e monta a sessão pronta para agregar."""
-    resultado = detectar_tiros(voltas, modalidade)
+    """Detecta os tiros nos blocos (#168) e monta a sessão pronta para agregar."""
+    resultado = tiros_de_blocos(blocos, modalidade)
     ordens = set(resultado.tiros)
-    tiros = tuple(v for v in sorted(voltas, key=lambda v: v.ordem) if v.ordem in ordens)
+    tiros = tuple(tiro_de_bloco(b) for b in sorted(blocos, key=lambda b: b.ordem) if b.ordem in ordens)
     return SessaoTiros(atividade_id, data, resultado.eh_intervalado, tiros, resultado.versao)
 
 

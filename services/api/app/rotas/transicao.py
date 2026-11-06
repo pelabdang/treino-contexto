@@ -9,6 +9,7 @@ from app.db.models import Atividade, Atleta, RotuloTransicao
 from app.db.session import get_session
 from app.metricas.tiros_1km import formatar_pace
 from app.rotas.evolucao import Erro, Periodo, _periodo_valido
+from app.servicos.distancia_texto import distancia_da_atividade
 from app.servicos.fuso import data_local, inicio_local
 from app.servicos.transicao import ORIGEM_ATLETA, aplicar_sugestao
 from app.servicos.transicao_grupos import Grupo, Parte, grupos_do_atleta, ritmo
@@ -122,15 +123,6 @@ def _hms(s: float) -> str:
     return f"{h}:{m:02d}:{seg:02d}"
 
 
-def _distancia(modalidade: str, m: float | None) -> str | None:
-    """Mesma regra da `distancia` da atividade (ADR 0004, adendo 3): natacao em metros, o resto em km."""
-    if m is None or m <= 0:
-        return None
-    if modalidade == "natacao":
-        return f"{int(m + 0.5):,}".replace(",", ".") + " m"
-    return f"{m / 1000:.2f}".replace(".", ",") + " km"
-
-
 def _virgula(x: float, casas: int = 1, sinal: bool = False) -> str:
     return f"{x:+.{casas}f}".replace(".", ",") if sinal else f"{x:.{casas}f}".replace(".", ",")
 
@@ -173,7 +165,7 @@ def _parte_out(ordem: int, p: Parte) -> ParteOut:
         duracao_s=_r1(p.duracao_s),
         duracao=_hms(p.duracao_s),
         distancia_m=_r1(p.distancia_m),
-        distancia=_distancia(p.modalidade, p.distancia_m),
+        distancia=distancia_da_atividade(p.modalidade, p.distancia_m),
         fc_media=_r1(p.fc_media),
         ritmo_valor=None if r is None else _r1(r[0]),
         ritmo_unidade=None if r is None else r[1],

@@ -58,6 +58,20 @@ def test_reclassifica_e_limpa_o_pendente(session, atleta):
     assert {s.versao_deteccao for s in corridas} == {VERSAO}
 
 
+def test_bloco_com_versao_velha_de_esforcos_tambem_pede_reclassificar(session, atleta):
+    # #168: a série lê bloco_atividade; bloco gravado por outra versão dos esforços também deixa a série pendente.
+    from app.db.models import BlocoAtividade
+
+    assert session.query(BlocoAtividade).count() > 0
+    for b in session.query(BlocoAtividade):
+        b.versao_deteccao = "esforcos@0"
+    session.commit()
+    assert reclassificacao_pendente(session, atleta.id)
+    reclassificar(session, atleta.id)
+    assert not reclassificacao_pendente(session, atleta.id)
+    assert {b.versao_deteccao for b in session.query(BlocoAtividade)} == {"esforcos@1"}
+
+
 def test_idempotente(session, atleta):
     antes = sorted((s.id, s.tipo, s.versao_deteccao) for s in session.query(Segmento))
     assert reclassificar(session, atleta.id) == reclassificar(session, atleta.id)

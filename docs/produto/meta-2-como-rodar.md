@@ -2,7 +2,7 @@
 tipo: guia
 status: em-uso
 dono: nina
-atualizado: 2026-11-03
+atualizado: 2026-11-06
 links: [[produto/metas/meta-2-evolucao-tiros-app]], [[produto/meta-1-como-reproduzir]], [[modulos/api]], [[modulos/mobile]], [[modulos/infra]], [[modulos/worker]], [[modulos/api-client]], [[decisoes/0004-contrato-tela-evolucao]]
 ---
 # Meta 2: como rodar a API e o app
@@ -73,7 +73,7 @@ O passo 7 (ver a tela) foi verificado na web pela Bia (#72).
    ```
    Esperado, na ordem:
    - `{"status":"ok"}`;
-   - JSON com `"versao_calculo":"tiros_1km@4"`, `"reclassificacao_pendente":false`, bloco `eixos` e 2 sessões;
+   - JSON com `"versao_calculo":"tiros_1km@5"`, `"reclassificacao_pendente":false`, bloco `eixos` e 2 sessões;
    - `HTTP/1.1 200 OK` e `access-control-allow-origin: http://localhost:8081` (origem liberada);
    - `HTTP/1.1 200 OK` **sem** `access-control-allow-origin` (origem fora da lista: o navegador bloqueia);
    - `{"detail":"atleta não encontrado"}` (404).
@@ -93,7 +93,7 @@ O passo 7 (ver a tela) foi verificado na web pela Bia (#72).
 7. **Ver a tela** em `http://localhost:8081`: "Evolução dos tiros de 1 km" com as 2 sessões (04/03/25 e 11/03/25).
    Valores: 6 x 1 km, `4:11`, 170,3 bpm; 5 x 1 km, `3:57`, 171,8 bpm ([[produto/meta-1-como-reproduzir]]).
    **Verificado na #72 (Bia), na web:** a tela mostra as 2 sessões, os rótulos de pace (`3:50`, `4:00` e `4:10`, passo de 10 s/km desde a #87) e de FC
-   (169 a 173), todos vindos do bloco `eixos` da API, o clique no ponto abre o detalhe e o rodapé diz `cálculo: tiros_1km@4`.
+   (169 a 173), todos vindos do bloco `eixos` da API, o clique no ponto abre o detalhe e o rodapé diz `cálculo: tiros_1km@5`.
    Com a API desligada aparece "Não foi possível falar com o servidor" e "Tentar de novo" recupera ao religar; com
    `EXPO_PUBLIC_ATLETA_ID=99` aparece "Atleta não encontrado". O aviso vermelho do modo dev
    (`Unknown event handler property onResponderTerminate`, do `react-native-svg` na web) foi corrigido na #86 e o

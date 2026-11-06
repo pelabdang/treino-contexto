@@ -151,9 +151,10 @@ Sem rede por padrão; `--com-clima` busca o clima das atividades que mudaram ([[
   das corridas como `tiro`/`recuperacao`/`volta`, grava `versao_deteccao` e sugere `tipo_treino = intervalado`
   (sem sobrescrever professor/TrainingPeaks/confirmado). É idempotente e refaz a classificação quando as voltas
   foram substituídas. A comparação "mudou" das voltas considera segmentos de todos os tipos.
-- **Blocos e esforços no fim (#166):** em seguida chama `detectar_esforcos` ([[modulos/api]]) só para as atividades que
-  entraram ou mudaram (exportação e upload de FIT): grava `bloco_atividade` ([[modulos/banco]]). Erro aí vira aviso no log
-  e não derruba a importação; `worker.detectar_esforcos` refaz ([[modulos/worker]]).
+- **Blocos e esforços (#166, #168):** a importação não chama `detectar_esforcos` direto: quem chama é o `classificar_atividades`
+  acima ([[modulos/api]]), que roda a detecção primeiro e grava `bloco_atividade` ([[modulos/banco]]) antes de marcar os tiros.
+  É o único ponto de detecção da importação (exportação e upload de FIT). Erro na detecção vira aviso no log e não derruba a
+  importação; `worker.detectar_esforcos` refaz ([[modulos/worker]]).
 - **Rótulo de transição no fim (#157):** por último chama `aplicar_sugestao` ([[modulos/api]]) para o **atleta inteiro** (não só
   para as atividades alteradas), porque uma atividade nova pode formar par com uma antiga; só roda se alguma atividade entrou ou
   mudou. Roda na importação, como a detecção de esforços, porque a regra é pura, sem rede e custa uma leitura leve das
