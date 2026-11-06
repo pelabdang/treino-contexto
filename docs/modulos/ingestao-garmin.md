@@ -3,7 +3,7 @@ tipo: modulo
 status: em-uso
 dono: duda
 atualizado: 2026-11-06
-links: [[produto/meta-3-como-rodar]], [[modulos/worker]], [[modulos/banco]], [[decisoes/0006-upload-de-fit]], [[decisoes/0007-clima-da-atividade]], [[produto/roadmap]], [[diario/2026-11-03]], [[produto/meta-4-como-rodar]], [[decisoes/0008-deteccao-de-esforcos]], [[modulos/api]]
+links: [[produto/meta-3-como-rodar]], [[modulos/worker]], [[modulos/banco]], [[decisoes/0006-upload-de-fit]], [[decisoes/0007-clima-da-atividade]], [[produto/roadmap]], [[diario/2026-11-03]], [[produto/meta-4-como-rodar]], [[decisoes/0008-deteccao-de-esforcos]], [[decisoes/0009-treino-de-transicao]], [[modulos/api]]
 ---
 # Módulo: ingestão Garmin
 
@@ -154,6 +154,11 @@ Sem rede por padrão; `--com-clima` busca o clima das atividades que mudaram ([[
 - **Blocos e esforços no fim (#166):** em seguida chama `detectar_esforcos` ([[modulos/api]]) só para as atividades que
   entraram ou mudaram (exportação e upload de FIT): grava `bloco_atividade` ([[modulos/banco]]). Erro aí vira aviso no log
   e não derruba a importação; `worker.detectar_esforcos` refaz ([[modulos/worker]]).
+- **Rótulo de transição no fim (#157):** por último chama `aplicar_sugestao` ([[modulos/api]]) para o **atleta inteiro** (não só
+  para as atividades alteradas), porque uma atividade nova pode formar par com uma antiga; só roda se alguma atividade entrou ou
+  mudou. Escolhi rodar na importação, como a detecção de esforços, porque a regra é pura, sem rede e custa uma leitura leve das
+  atividades do atleta; sem isso o rótulo ficaria desatualizado até alguém lembrar do comando. É idempotente, nunca toca
+  correção do atleta e um erro vira aviso no log, sem derrubar a importação; `worker.sugerir_transicao` refaz ([[modulos/worker]]).
 - Atividade sem duração (nem soma de voltas) é ignorada com aviso, porque `duracao_s` é obrigatório.
 - Testes: `services/worker/tests/test_importar_garmin.py` (SQLite local; Postgres via `TEST_DATABASE_URL`).
 
@@ -273,6 +278,25 @@ uv run python -m worker.grafico_tiros_1km --atleta-id <id>
 ```
 Se a porta 5432 já estiver ocupada por um Postgres nativo, o container não é alcançado (erro de papel `treino`
 inexistente): confira com `lsof -iTCP:5432 -sTCP:LISTEN` e use a porta padrão do container (5433) em `DATABASE_URL`; detalhes em [[modulos/infra]]. A importação completa leva alguns minutos.
+
+## Treino multiesporte: atividade-pai e atividade de troca (proposta da #157, ainda não implementada)
+Um relógio pode gravar um treino multiesporte como uma atividade **pai**, que agrupa as partes, mais uma atividade por parte e, às
+vezes, atividades próprias para a **troca** entre elas. Hoje qualquer tipo que `tipos.py` não reconhece vira `outra`, então pai e
+troca entram na tabela como `outra` e **ficam fora da regra** de transição ([[decisoes/0009-treino-de-transicao]]). O problema é a
+carga da Meta 6: o pai repete a distância e o tempo das partes, e somar tudo conta o treino duas vezes. Hoje nada distingue esse `outra`
+de outros `outra` legítimos.
+
+**Proposta (aguarda o Theo):**
+1. **Importar como hoje, sem descartar nada** (o pai e a troca continuam no banco, a identidade e a reimportação não mudam).
+2. **Marcar no `subtipo`**, que já é texto livre e não exige migração: `multiesporte_pai` para o agrupador e `troca` para a atividade de
+   troca, ambos com `modalidade = outra`. O mapeamento sai de `tipos.py` (JSON e FIT), com fixtures sintéticas.
+3. **A carga (Meta 6) ignora os dois subtipos**: cada parte conta uma vez, como já diz a ADR 0009 (item 6). O tempo da troca não é treino.
+4. A regra de transição continua só com corrida, natação e ciclismo; pai e troca não entram nem atrapalham a vizinhança.
+5. Banco já importado: um passo no estilo de `worker.reclassificar_subtipo` aplica o subtipo sem reimportar.
+
+Alternativas descartadas: **não importar** pai e troca (perde dado e muda a contagem de atividades) e **nova coluna ou modalidade**
+(migração e mudança de `CHECK` para algo que o subtipo resolve). Antes de implementar, falta confirmar com o Caio, sem expor dado do
+histórico, quais valores de tipo o relógio grava para pai e troca nos dois formatos (JSON e FIT).
 
 ## Pendências
 - Corrigir a regra de tiros em rodagens com intensidade mista (#48).

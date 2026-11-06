@@ -22,6 +22,7 @@ from app.ingestao.garmin.leitor import TOLERANCIA_S
 from app.ingestao.garmin.posicao import e_indoor
 from app.ingestao.garmin.unidades import para_utc
 from app.servicos.esforcos import detectar_esforcos
+from app.servicos.transicao import aplicar_sugestao
 from app.servicos.evolucao_tiros import classificar_atividades
 from sqlalchemy import select
 from sqlalchemy.exc import IntegrityError
@@ -250,6 +251,16 @@ def _detectar_esforcos(session: Session, atleta_id: int, atividade_ids: list[int
         log.warning("esforcos nao detectados; rode worker.detectar_esforcos", exc_info=True)
 
 
+def _sugerir_transicao(session: Session, atleta_id: int) -> None:
+    """Rotulo de transicao (#157) do atleta inteiro: uma atividade nova pode formar par com uma antiga. Um erro aqui
+    nunca derruba a importacao: fica o aviso no log e `python -m worker.sugerir_transicao` refaz."""
+    try:
+        aplicar_sugestao(session, atleta_id)
+    except Exception:  # noqa: BLE001
+        session.rollback()
+        log.warning("transicao nao sugerida; rode worker.sugerir_transicao", exc_info=True)
+
+
 def importar(session: Session, caminho: str | Path, atleta_nome: str) -> RelatorioImportacao:
     """Le a exportacao e grava atividades e voltas. Reimportar nao duplica nada.
 
@@ -292,6 +303,8 @@ def importar(session: Session, caminho: str | Path, atleta_nome: str) -> Relator
     session.commit()
     classificar_atividades(session, atleta.id)  # tiros/recuperacoes e tipo do treino (#14); idempotente
     _detectar_esforcos(session, atleta.id, rel.ids_alterados)  # blocos e esforcos (#166); idempotente
+    if rel.ids_alterados:
+        _sugerir_transicao(session, atleta.id)  # rotulo de transicao (#157); idempotente
     return rel
 
 
@@ -353,5 +366,6 @@ def importar_fit(session: Session, atleta_id: int, conteudo: bytes, fit_dir: Pat
     atividade_id = ativ.id
     classificar_atividades(session, atleta_id)
     _detectar_esforcos(session, atleta_id, [atividade_id])
+    _sugerir_transicao(session, atleta_id)
     return ResultadoUpload(resultado, atividade_id, avisos)
 
