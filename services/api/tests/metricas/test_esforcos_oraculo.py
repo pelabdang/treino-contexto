@@ -124,9 +124,10 @@ E6.append(Bloco(DE, 11, 11, 4000, 600, 24.0, 135, None, 0))
 # 450 s, os dois a 24,0 km/h (5000 / 750 x 3,6 = 24), sem parada: 8000 m, 1200 s, 8000 / 1200 x 3,6 = 24,0 >= 23,
 # faixa t20 (1104 a 1296 s). FC (150 x 750 + 156 x 450) / 1200 = 182700 / 1200 = 152,25.
 # Desaquecimento 3000 m em 600 s = 18,0 km/h.
+# Treino-chave contínuo (#165, ADR item 6): 1200 s >= 1200 s e 24,0 >= 23,0 km/h durante os 20 min (limite inclusivo).
 E7 = [
     Bloco(AQ, 0, 0, 3000, 600, 18.0, 120, None, 0),
-    Bloco(ES, 1, 2, 8000, 1200, 24.0, 152.25, "t20", 0),
+    Bloco(ES, 1, 2, 8000, 1200, 24.0, 152.25, "t20", 0, treino_chave=True),
     Bloco(DE, 3, 3, 3000, 600, 18.0, 125, None, 0),
 ]
 
@@ -258,7 +259,8 @@ def test_valores_a_mao_citados_nas_notas():
     assert sum(b.distancia_m for b in E1 if b.categoria == ES) == 4000
     assert E2[1].intensidade == pytest.approx(240.6667, abs=1e-4)  # 361 / 1500 x 1000
     assert [b.treino_chave for b in E3] == [True] and 1 - E3[0].intensidade / 330 == pytest.approx(0.1818, abs=1e-4)
-    assert [b.treino_chave for b in E1 + E2 + E4 + E5 + E6 + E7] == [False] * (12 + 5 + 1 + 27 + 12 + 3)
+    assert [b.treino_chave for b in E1 + E2 + E4 + E5 + E6] == [False] * (12 + 5 + 1 + 27 + 12)
+    assert [b.treino_chave for b in E7] == [False, True, False]
     # visão de tiros de 1 km (regressão, caso 4): 5 esforços d1000, pace 250 s/km
     mil = [b for b in E5 if b.faixa == "d1000"]
     assert len(mil) == 5 and sum(b.duracao_s for b in mil) / sum(b.distancia_m for b in mil) * 1000 == 250

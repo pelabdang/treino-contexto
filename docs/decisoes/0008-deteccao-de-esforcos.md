@@ -2,7 +2,7 @@
 tipo: decisao
 status: aceita
 dono: caio
-atualizado: 2026-11-04
+atualizado: 2026-11-06
 links: [[metricas/tiros-1km]], [[decisoes/0001-modelo-de-dados-minimo]], [[decisoes/0002-segmento-intensidade-e-versao]], [[decisoes/0005-serie-de-tiros-o-que-entra]], [[modulos/banco]], [[modulos/ingestao-garmin]], [[produto/roadmap]], [[glossario]]
 ---
 # ADR: 0008 Detecção de esforços (corrida por distância, ciclismo por duração)
@@ -173,6 +173,10 @@ Exemplo 3 (corrida): 8 km a 270 s/km = 2160 s (36 min), ritmo habitual 330 s/km.
 Esse esforço fica sem faixa (8000 m passa de `d5000`).
 Fartlek moderado e progressivo forte podem cair aqui como contínuo forte (os blocos têm 10% ou mais de ganho
 sobre o habitual); a visão da série de 1 km ainda os exclui (item 8).
+
+**Decisão do Angelo (06/11, #165)**: uma parada de 15 s ou mais na corrida (30 s ou mais no ciclismo) entre dois
+esforços conta como recuperação e corta a sequência contínua. Sem isso, 5 x 1 km com 90 s parados somariam 20 min e
+virariam "contínuo".
 
 ### 7. Calibração pelos recordes pessoais
 **Só o desenho**; fica fora da Meta 5. Os recordes pessoais chegam ao banco na Meta 6 (#174). Desenho: no lugar de

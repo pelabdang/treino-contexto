@@ -22,7 +22,12 @@ type Eixo = {
   marcas: { valor: number; rotulo: string }[];
 };
 
-type Props = { dados: EvolucaoTiros1km };
+type Props = {
+  dados: EvolucaoTiros1km;
+  /** Sessão selecionada (atividade_id), controlada por quem usa o gráfico. Sem ela, o gráfico guarda a seleção sozinho. */
+  selecionadaId?: number | null;
+  aoSelecionar?: (atividadeId: number) => void;
+};
 
 // "2025-03-04" -> "04/03/25" (só recorte de texto da data local da API).
 export function dataCurta(data: string): string {
@@ -147,12 +152,16 @@ function Painel(props: {
   );
 }
 
-export function GraficoTiros({ dados }: Props) {
+export function GraficoTiros({ dados, selecionadaId, aoSelecionar }: Props) {
   const tema = useTema();
   const styles = useMemo(() => criarEstilos(tema), [tema]);
   const [largura, setLargura] = useState(LARGURA_PADRAO);
-  const [selecionada, setSelecionada] = useState<SessaoTiros | null>(null);
+  const [propria, setPropria] = useState<number | null>(null);
   const { eixos, sessoes } = dados;
+  const controlado = selecionadaId !== undefined;
+  const idSelecionado = controlado ? selecionadaId : propria;
+  const selecionada = sessoes.find((s) => s.atividade_id === idSelecionado) ?? null;
+  const setSelecionada = (s: SessaoTiros) => (controlado ? aoSelecionar?.(s.atividade_id) : setPropria(s.atividade_id));
 
   if (!eixos || sessoes.length === 0) {
     return <Text style={styles.texto}>Sem sessões de tiros no período.</Text>;

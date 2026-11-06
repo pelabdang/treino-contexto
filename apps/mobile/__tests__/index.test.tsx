@@ -6,6 +6,12 @@ import exemplo from "../../../packages/api-client/exemplos/evolucao-tiros-1km.js
 import Inicio from "../src/app/index";
 import { TelaEvolucao } from "../src/componentes/TelaEvolucao";
 
+// Os ícones carregam a fonte de forma assíncrona (não existe no Jest): vira um texto com o nome e o tamanho.
+jest.mock("@expo/vector-icons", () => {
+  const { Text } = require("react-native");
+  return { MaterialIcons: ({ name, size }: { name: string; size: number }) => <Text testID={`icone-${name}`}>{`${name}:${size}`}</Text> };
+});
+
 const base = exemplo as unknown as EvolucaoTiros1km;
 const copia = (): EvolucaoTiros1km => JSON.parse(JSON.stringify(base));
 
@@ -17,7 +23,18 @@ const fetchCom = (status: number, corpo: unknown) =>
 
 const tela = (f: typeof fetch) => <TelaEvolucao apiUrl="http://api.teste" atletaId={1} fetchFn={f} />;
 
+const larguraTela = (width: number) =>
+  jest.spyOn(require("react-native"), "useWindowDimensions").mockReturnValue({ width, height: 800, scale: 2, fontScale: 1 });
+
 describe("tela de evolução", () => {
+  // Celular por padrão; os testes de web larga trocam a largura.
+  beforeEach(() => {
+    larguraTela(360);
+  });
+  afterEach(() => {
+    jest.restoreAllMocks();
+  });
+
   it("mostra o título (rota inicial)", async () => {
     const original = globalThis.fetch;
     globalThis.fetch = fetchCom(200, base);
@@ -56,7 +73,81 @@ describe("tela de evolução", () => {
     d.sessoes = [];
     d.eixos = null;
     await render(tela(fetchCom(200, d)));
-    expect(await screen.findByText("Ainda não há treinos de tiros de 1 km.")).toBeTruthy();
+    expect(await screen.findByText("Ainda não há treinos de tiros de 1 km")).toBeTruthy();
+    expect(screen.getByText("Envie o arquivo FIT de um treino com tiros para ver a evolução aqui.")).toBeTruthy();
+    expect(within(screen.getByTestId("estado-vazio")).getByText("insert-chart-outlined:40")).toBeTruthy();
+  });
+
+  it("botão de enviar: secundário com dados, primário no vazio", async () => {
+    const fundo = () => {
+      const botao = screen.getByRole("button", { name: "Enviar arquivo FIT" });
+      return StyleSheet.flatten(botao.props.style).backgroundColor;
+    };
+    const { unmount } = await render(tela(fetchCom(200, base)));
+    await screen.findByTestId("lista-sessoes");
+    expect(fundo()).toBe("#FFFFFF");
+    await unmount();
+    const d = copia();
+    d.sessoes = [];
+    d.eixos = null;
+    await render(tela(fetchCom(200, d)));
+    await screen.findByTestId("estado-vazio");
+    expect(fundo()).toBe("#0B6A6E");
+  });
+
+  it("carregando: esqueleto dos cartões e o texto", async () => {
+    const f = jest.fn(() => new Promise<Response>(() => {})) as unknown as typeof fetch;
+    await render(tela(f));
+    expect(screen.getByTestId("esqueleto-evolucao", { includeHiddenElements: true })).toBeTruthy();
+    expect(screen.getByText("Carregando seus tiros...")).toBeTruthy();
+  });
+
+  it("erro de rede: ícone wifi-off; 404 e outros: error-outline", async () => {
+    const { unmount } = await render(tela(jest.fn().mockRejectedValue(new Error("x")) as unknown as typeof fetch));
+    const rede = await screen.findByTestId("estado-erro");
+    expect(within(rede).getByText("wifi-off:40")).toBeTruthy();
+    await unmount();
+    await render(tela(fetchCom(404, { detail: "atleta não encontrado" })));
+    const nf = await screen.findByTestId("estado-erro");
+    expect(within(nf).getByText("error-outline:40")).toBeTruthy();
+  });
+
+  it("tocar na linha da lista seleciona a sessão e mostra o detalhe do gráfico", async () => {
+    await render(tela(fetchCom(200, base)));
+    await screen.findByTestId("lista-sessoes");
+    expect(screen.queryByTestId("detalhe-sessao")).toBeNull();
+    const id = base.sessoes[0].atividade_id;
+    const linha = screen.getByTestId(`linha-sessao-${id}`);
+    expect(StyleSheet.flatten(linha.props.style).minHeight).toBe(56);
+    await fireEvent.press(linha);
+    const detalhe = screen.getByTestId("detalhe-sessao");
+    expect(within(detalhe).getByText(/^04\/03\/25 · \d tiros$/)).toBeTruthy();
+    expect(screen.getByTestId(`linha-sessao-${id}`).props.accessibilityState.selected).toBe(true);
+    expect(screen.getByTestId(`ponto-pace-${id}`).props.r).toBe(7);
+  });
+
+  it("tocar no ponto do gráfico marca a mesma linha da lista", async () => {
+    await render(tela(fetchCom(200, base)));
+    await screen.findByTestId("lista-sessoes");
+    const id = base.sessoes[1].atividade_id;
+    await fireEvent.press(screen.getByTestId(`toque-pace-${id}`));
+    expect(screen.getByTestId(`linha-sessao-${id}`).props.accessibilityState.selected).toBe(true);
+    expect(screen.getByTestId(`linha-sessao-${base.sessoes[0].atividade_id}`).props.accessibilityState.selected).toBe(false);
+  });
+
+  it("web larga: coluna 'Média dos tiros' com cabeçalho; celular não tem", async () => {
+    larguraTela(900);
+    await render(tela(fetchCom(200, base)));
+    await screen.findByTestId("lista-sessoes");
+    const cab = screen.getByTestId("cabecalho-lista");
+    expect(within(cab).getByText("Média dos tiros")).toBeTruthy();
+    expect(within(screen.getByTestId("lista-sessoes")).getByText("4:11 min/km · 6 tiros")).toBeTruthy();
+  });
+
+  it("celular: sem cabeçalho de colunas", async () => {
+    await render(tela(fetchCom(200, base)));
+    await screen.findByTestId("lista-sessoes");
+    expect(screen.queryByTestId("cabecalho-lista")).toBeNull();
   });
 
   it("erro 404: atleta não encontrado", async () => {

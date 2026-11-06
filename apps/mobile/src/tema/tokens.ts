@@ -81,6 +81,7 @@ export const borda = { fina: 1, foco: 2 } as const;
 export const tamanho = {
   alvoMinimo: 44,
   botaoAltura: 48,
+  listaLinhaAltura: 56,
   iconePequeno: 16,
   iconeMedio: 20,
   iconeGrande: 24,
