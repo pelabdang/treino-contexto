@@ -41,7 +41,9 @@
     "web": "expo start --web",
     "test": "jest",
     "lint": "expo lint",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "verificar:web": "node scripts/verificar-web.mjs",
+    "api-falsa": "node scripts/api-falsa.mjs"
   },
   "private": true,
   "jest": {
