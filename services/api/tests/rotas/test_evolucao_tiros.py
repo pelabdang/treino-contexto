@@ -149,6 +149,12 @@ def test_png_no_openapi(client):
     assert "image/png" in j["paths"]["/atletas/{atleta_id}/evolucao/tiros-1km.png"]["get"]["responses"]["200"]["content"]
 
 
+def _reclassificar(session, atleta):
+    """Os blocos são derivados das voltas: depois de mudar uma volta no banco, o worker os recalcula."""
+    from app.servicos.evolucao_tiros import classificar_atividades
+    classificar_atividades(session, atleta.id)
+
+
 def test_esteira_sintetica_fora_do_json_e_do_png(client, importar_fixtures, session):
     from datetime import datetime, timezone
 
@@ -176,20 +182,23 @@ def test_tiro_com_tudo_em_uma_casa_e_pace_do_valor_cru(client, importar_fixtures
     seg = next(s for s in a.segmentos if s.ordem == 1)
     seg.distancia_m, seg.duracao_s, seg.fc_media = 1000.04, 239.46 * 1.00004, 165.46
     session.commit()
+    _reclassificar(session, importar_fixtures)  # a série lê os blocos (#168): refazê-los depois de mexer na volta
     t = client.get(_url(importar_fixtures)).json()["sessoes"][0]["tiros"][0]
     assert (t["pace_s_km"], t["pace"]) == (239.5, "3:59")
     assert (t["distancia_m"], t["fc_media"]) == (1000.0, 165.5)
     assert t["duracao_s"] == round(239.46 * 1.00004, 1)
 
 
-def test_segmento_sem_distancia_vira_null_nunca_zero(client, importar_fixtures, session):
+def test_volta_sem_distancia_nao_e_tiro_nem_vira_zero(client, importar_fixtures, session):
+    """Desde a @5 a série lê blocos: uma volta sem distância é pausa (não vira bloco), então o 1o tiro some. Nada de 0."""
     a = session.query(Atividade).filter_by(fonte_id="1000000001").one()
     seg = next(s for s in a.segmentos if s.ordem == 1)
     seg.distancia_m = None
     session.commit()
-    t = client.get(_url(importar_fixtures)).json()["sessoes"][0]["tiros"]
-    assert t[0]["distancia_m"] is None and t[0]["pace_s_km"] is None and t[0]["pace"] is None
-    assert t[1]["distancia_m"] == 1000.0
+    _reclassificar(session, importar_fixtures)
+    s0 = client.get(_url(importar_fixtures)).json()["sessoes"][0]
+    assert s0["n_tiros"] == 5 and [t["ordem"] for t in s0["tiros"]] == [3, 5, 7, 9, 11]
+    assert all(t["distancia_m"] == 1000.0 for t in s0["tiros"])
 
 
 def test_reclassificacao_pendente_com_versao_velha_sem_escrever_e_comando_limpa(client, importar_fixtures, session):
@@ -287,6 +296,7 @@ def test_melhor_tiro_sem_fc_fica_sem_fc_e_nao_troca_de_tiro(client, importar_fix
     seg = session.query(Segmento).filter_by(atividade_id=1, ordem=11).one()
     seg.fc_media = None
     session.commit()
+    _reclassificar(session, importar_fixtures)
     j = client.get(_url(importar_fixtures)).json()
     a, b = j["sessoes"]
     assert (a["ordem_melhor_tiro"], a["pace_melhor_s_km"], a["fc_melhor_tiro"]) == (11, 248.0, None)
@@ -300,6 +310,7 @@ def test_eixos_fc_null_sem_fc(client, importar_fixtures, session):
     for seg in session.query(Segmento):
         seg.fc_media = None
     session.commit()
+    _reclassificar(session, importar_fixtures)
     j = client.get(_url(importar_fixtures)).json()
     assert j["sessoes"] and all(x["fc_media"] is None for x in j["sessoes"])
     assert j["eixos"]["fc"] is None and j["eixos"]["pace"] is not None

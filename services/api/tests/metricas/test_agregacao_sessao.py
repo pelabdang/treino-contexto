@@ -15,7 +15,7 @@ from app.metricas.tiros_1km import (
     formatar_pace,
     para_apresentacao,
     serie_por_sessao,
-    sessao_de_voltas,
+    sessao_de_blocos,
 )
 
 
@@ -88,26 +88,36 @@ def test_serie_fora_de_ordem_sai_ordenada_por_data():
     assert [p.fc_media for p in serie] == pytest.approx([160, 165, 170])
 
 
+def _blocos(specs):
+    """Voltas sintéticas (dist, dur) -> blocos pelo esforcos@1, ritmo habitual de 330 s/km."""
+    from app.metricas import esforcos as ef
+    from app.metricas.tiros_1km import BlocoEntrada
+
+    voltas, t = [], 0.0
+    for i, (d, du, parada) in enumerate(specs):
+        voltas.append(ef.VoltaTreino(i, t, du, d))
+        t += du + parada
+    r = ef.montar_blocos(voltas, "corrida", referencia=330.0)
+    faixas = {e.bloco_ordem: e.faixa for e in ef.esforcos_corrida(r)}
+    return [BlocoEntrada(b.ordem, b.categoria, b.volta_inicial, b.volta_final, b.distancia_m, b.duracao_s,
+                         b.fc_media, faixas.get(b.ordem), b.parada_apos_s) for b in r.blocos]
+
+
 def test_rodagem_leve_nao_entra_na_serie():
-    # 8 voltas de 1000 m a ~333 s/km: nenhum tiro (ver test_tiros_1km).
+    # 8 voltas de 1000 m a ~333 s/km: um bloco leve, nenhum tiro (ver test_tiros_1km).
     duracoes = [330, 335, 328, 340, 332, 336, 331, 334]
-    leve = sessao_de_voltas(
-        "leve", date(2026, 3, 5), [VoltaEntrada(i + 1, 1000, d, 140) for i, d in enumerate(duracoes)]
-    )
+    leve = sessao_de_blocos("leve", date(2026, 3, 5), _blocos([(1000, d, 0) for d in duracoes]))
     assert leve.eh_intervalado is False and leve.tiros == ()
     # 4 tiros: 1000 m/240 s, intercalados com 400 m/180 s.
-    voltas = []
-    o = 1
+    specs = []
     for _ in range(4):
-        voltas += [VoltaEntrada(o, 1000, 240, 170, "active"), VoltaEntrada(o + 1, 400, 180, 130, "recovery")]
-        o += 2
-    inter = sessao_de_voltas("int", date(2026, 3, 8), voltas)
+        specs += [(1000, 240, 0), (400, 180, 0)]
+    inter = sessao_de_blocos("int", date(2026, 3, 8), _blocos(specs))
     serie = serie_por_sessao([leve, inter])
     assert [p.atividade_id for p in serie] == ["int"]
-    # pace = 4 x 240 / 4000 x 1000 = 240 s/km; FC = 170 (todos iguais).
+    # pace = 4 x 240 / 4000 x 1000 = 240 s/km (os 4 tiros de 1000 m a 240 s).
     assert serie[0].n_tiros == 4
     assert serie[0].pace_s_km == pytest.approx(240.0)
-    assert serie[0].fc_media == pytest.approx(170.0)
 
 
 def test_serie_vazia():
@@ -115,20 +125,14 @@ def test_serie_vazia():
 
 
 def test_versao_da_deteccao_chega_ao_ponto_da_serie():
-    # 3 tiros de 1000 m com contraste de intensidade: a sessão é intervalada e
-    # a versão da regra (tiros_1km@3) viaja da detecção até o ponto agregado.
-    voltas = [
-        VoltaEntrada(0, 1000, 250, 160, "active"),
-        VoltaEntrada(1, 400, 150, 140, "rest"),
-        VoltaEntrada(2, 1000, 250, 162, "active"),
-        VoltaEntrada(3, 400, 150, 141, "rest"),
-        VoltaEntrada(4, 1000, 250, 164, "active"),
-    ]
-    sessao = sessao_de_voltas("a1", date(2025, 3, 4), voltas)
-    assert sessao.versao == "tiros_1km@4"
+    # 3 tiros de 1000 m com recuperação de 400 m: a sessão é intervalada e a versão da regra
+    # (tiros_1km@5) viaja da detecção até o ponto agregado.
+    sessao = sessao_de_blocos("a1", date(2025, 3, 4), _blocos(
+        [(1000, 250, 0), (400, 150, 0), (1000, 250, 0), (400, 150, 0), (1000, 250, 0)]))
+    assert sessao.versao == "tiros_1km@5" and len(sessao.tiros) == 3
     (ponto,) = serie_por_sessao([sessao])
-    assert ponto.versao == "tiros_1km@4"
-    assert agregar_sessao("a1", date(2025, 3, 4), sessao.tiros).versao == "tiros_1km@4"
+    assert ponto.versao == "tiros_1km@5"
+    assert agregar_sessao("a1", date(2025, 3, 4), sessao.tiros).versao == "tiros_1km@5"
 
 
 def test_melhor_tiro_do_exemplo_da_issue_151():
