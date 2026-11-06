@@ -158,7 +158,7 @@ Item 5 da [[decisoes/0007-clima-da-atividade]]. Devolve a atividade (`atividade_
 - `ref_origem` não é gravado ([[decisoes/0008-deteccao-de-esforcos]], decisões da #166): `origem_da_referencia` recalcula na leitura com
   `pace_habitual` / `velocidade_habitual` (uma consulta leve ao histórico da modalidade; só colunas, sem blocos). Limite: atividade antiga importada
   depois da detecção pode mudar a origem recalculada em relação à usada; `detectar_esforcos` não regrava sozinho nesse caso.
-- Exemplo de contrato: `packages/api-client/exemplos/atividade-esforcos.json` ([[modulos/api-client]]). Testes: `services/api/tests/rotas/test_atividade_esforcos.py`
+- Exemplo de contrato: `packages/api-client/exemplos/atividade-esforcos.json` ([[modulos/api-client]]). Testes: `services/api/tests/rotas/test_atividade_distancia.py` (`distancia` por modalidade, #216) e `services/api/tests/rotas/test_atividade_esforcos.py`
   (oráculo da #161, textos, aviso de referência, lista vazia com a versão, `404`, modalidade sem detecção, a leitura não detecta, OpenAPI).
 - `estado` é `ok`, `indoor`, `sem_posicao`, `pendente` ou `falha`. Os quatro valores só aparecem em `ok`; nos outros estados
   a chave nem vem. O texto do erro da consulta (`erro` da tabela) nunca sai.

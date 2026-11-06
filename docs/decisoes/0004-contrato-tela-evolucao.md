@@ -3,7 +3,7 @@ tipo: decisao
 status: em-uso
 dono: theo
 atualizado: 2026-11-06
-links: [[modulos/api]], [[modulos/grafico-tiros]], [[modulos/mobile]], [[modulos/worker]], [[metricas/tiros-1km]], [[decisoes/0002-segmento-intensidade-e-versao]], [[decisoes/0003-fuso-da-atividade]], [[decisoes/0005-serie-de-tiros-o-que-entra]], [[decisoes/0006-upload-de-fit]], [[decisoes/0007-clima-da-atividade]], [[produto/roadmap]]
+links: [[modulos/api]], [[modulos/grafico-tiros]], [[modulos/mobile]], [[modulos/worker]], [[metricas/tiros-1km]], [[decisoes/0002-segmento-intensidade-e-versao]], [[decisoes/0003-fuso-da-atividade]], [[decisoes/0005-serie-de-tiros-o-que-entra]], [[decisoes/0006-upload-de-fit]], [[decisoes/0007-clima-da-atividade]], [[produto/roadmap]], [[design/telas/treino]]
 ---
 # ADR: 0004 Contrato da tela de evolução dos tiros (Meta 2)
 
@@ -173,7 +173,6 @@ ganha campos prontos, para o app não formatar pace nem converter fuso: `data_lo
 (`HH:MM`) pelo fuso da atividade ([[decisoes/0003-fuso-da-atividade]]), `duracao` (`h:mm:ss`), `pace_medio` (`m:ss` de
 `formatar_pace`, só para corrida com distância; `null` nas outras modalidades) e `clima.atribuicao` (só com clima `ok`,
 [[decisoes/0007-clima-da-atividade]], item 4). Os campos antigos continuam. Detalhes em [[modulos/api]].
-
 
 ## Adendo 3 (2026-11-06): `distancia` pronta na tela de um treino (#216)
 **Status: aceito (Theo, 06/11).** Não muda o modelo de dados. `GET /atletas/{id}/atividades/{id}` ganha `distancia`, o texto
