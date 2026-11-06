@@ -62,11 +62,17 @@ os atletas (ADR 0005, item 2): nada de dia da semana, nome de treino nem critér
 Duas atividades **vizinhas** (ordenadas por `inicio`) do mesmo atleta formam um **par de transição** quando:
 1. as duas têm modalidade em `MODALIDADES_DE_TRANSICAO = {corrida, natacao, ciclismo}` (`outra` fica fora: não se sabe o que é);
 2. as **modalidades são diferentes**;
-3. o **intervalo** `inicio_seguinte - (inicio + duracao_s)` fica entre `-SOBREPOSICAO_MAX_S` e `INTERVALO_MAX_S`.
+3. o **intervalo estimado** `inicio_seguinte - fim_anterior` fica entre `-SOBREPOSICAO_MAX_S` e `INTERVALO_MAX_S`, onde `fim_anterior` é o **maior fim já
+   visto** entre as atividades anteriores (`inicio + duracao_s`), e não só o da vizinha imediata. Assim uma atividade aninhada ou duplicada dentro de outra não esconde
+   a transição real. O Caio testa isso na #156.
 
-Valores: os 30 min foram aceitos pelo Angelo (06/11) e o Caio pode calibrar em #156; a sobreposição de 60 s é proposta: `INTERVALO_MAX_S = 1800` (30 min) e `SOBREPOSICAO_MAX_S = 60`.
-A sobreposição pequena cobre relógios que começam a parte seguinte antes de fechar a anterior e o fim estimado do aviso acima; sobreposição maior é
-registro duplicado ou dois aparelhos, não transição.
+Valores: `INTERVALO_MAX_S = 1800` (30 min), decisão do Angelo (06/11), e `SOBREPOSICAO_MAX_S = 60`. O intervalo é **estimado**: como `duracao_s` é tempo em
+movimento, o fim estimado é igual ou anterior ao real, então o intervalo estimado é **maior ou igual** ao real. Por isso o -60 s **não** compensa essa
+diferença; ele cobre o relógio que abre a parte seguinte antes de fechar a anterior e a resolução de 1 s dos horários. Sobreposição maior é registro duplicado
+ou dois aparelhos, não transição.
+
+A #156 pode propor revisão do `INTERVALO_MAX_S` pela **distribuição dos intervalos** do histórico, sempre com um valor único para todos os atletas (ADR 0005,
+item 2). Falsos positivos e negativos esperados ficam listados na nota da regra (#156).
 
 Toda atividade que está em algum par é **sugerida** (uma vez só, mesmo estando em dois pares). A cadeia sai transitiva por construção: ciclismo, corrida e
 natação seguidas sugerem as três. Duas atividades vizinhas da **mesma modalidade** não formam par (o relógio cortou, ou o atleta pausou e retomou); se
@@ -107,12 +113,12 @@ O grupo **não é guardado**: é calculado na leitura, a partir dos rótulos fin
   depois do fim da anterior.** O limite é o mesmo da regra, para não haver duas definições. Uma atividade que o atleta marcou "sim" sozinha vira grupo de uma
   parte, e a listagem a marca como `incompleto`.
 - Cada grupo tem: `inicio` (da primeira parte), `fim` (da última, estimado), as **partes em ordem** (`atividade_id`, `modalidade`, `inicio`, `duracao_s`,
-  `distancia_m`, `fc_media`, ritmo da parte) e as **transições** (o intervalo entre cada duas partes, em segundos, com mínimo 0).
+  `distancia_m`, `fc_media`, ritmo da parte) e as **transições** (o intervalo **estimado** entre cada duas partes, em segundos, com mínimo 0; o campo se chama `intervalo_estimado_s`).
 - **Forma** do grupo = a sequência de modalidades, ex. `ciclismo>corrida`. **Só se comparam grupos da mesma forma.** Formas diferentes podem aparecer na mesma
   listagem, mas a comparação parte a parte não faz sentido e a API recusa (400, dizendo a forma de cada um).
 - **O que se compara**, parte a parte e no total:
-  - **duração** de cada parte (`duracao_s`), a soma das partes, o **tempo de transição** de cada par e a soma das transições, e o tempo total (início da
-    primeira ao fim da última, com o aviso do fim estimado);
+  - **duração** de cada parte (`duracao_s`), a soma das partes, o **intervalo estimado** de cada par e a soma deles, e o tempo total (início da
+    primeira ao fim estimado da última). O intervalo é mostrado ao lado, mas **não ranqueia** grupos nem entra em nota ou "melhor": ele é uma estimativa;
   - **ritmo** de cada parte, como na métrica de esforços ([[metricas/esforcos]]): corrida em s/km (`duração / distância x 1000`), natação em s/100 m,
     ciclismo em km/h (`distância / duração x 3,6`); vazio quando falta a distância;
   - **FC** da parte (`fc_media`) e FC do treino (média das partes ponderada pela duração, só entre as partes com FC; vazia se nenhuma tiver);
@@ -121,7 +127,7 @@ O grupo **não é guardado**: é calculado na leitura, a partir dos rótulos fin
 
 ### 5. Contrato da API (esboço; os detalhes saem em #170, com cliente regerado)
 - `GET /atletas/{id}/treinos-de-transicao?inicio=&fim=`: lista os grupos no período (data local, ADR 0003), mais recentes primeiro, com `grupo_id`
-  (o `id` da primeira atividade do grupo), partes, transições, forma e `incompleto`.
+  (o `id` da primeira atividade do grupo), partes, `intervalo_estimado_s` entre elas, forma e `incompleto`.
 - `GET /atletas/{id}/treinos-de-transicao/comparar?a=<grupo_id>&b=<grupo_id>`: item 4. `400` para formas diferentes; `404` para grupo inexistente ou de outro atleta.
 - `PUT /atletas/{id}/atividades/{atividade_id}/transicao` com `{"transicao": true|false}` corrige (item 3). `DELETE` no mesmo caminho desfaz a correção.
 - `AtividadeOut` ganha `transicao`: `{"valor": true|false, "origem": "sugerido"|"atleta"|null}` (campo novo e opcional; sem linha é `valor = false`, `origem = null`).
@@ -170,7 +176,10 @@ O Angelo aceitou as recomendações ("ok para todas"):
 5. **Esteira e piscina contam como partes**, sem tratamento especial (o subtipo não entra na regra).
 
 ## Seguimento (não bloqueia)
-- **Multiesporte gravado como uma atividade só (`outra`):** o Caio confere no histórico real (fora do repositório) e responde só sim ou não no PR da #156. Se sim, essa atividade já é "um treino" e a regra não se aplica a ela; se as partes vêm separadas, tudo acima vale.
+- **Atividade-pai e atividades de transição do multiesporte (para a #157):** exportações Garmin de treino multiesporte trazem uma atividade-pai
+  (`multi_sport`) e as partes como atividades separadas, mais atividades de transição (`transition_v2`). Hoje as duas viram `outra` (`tipos.py`). A regra
+  continua pegando as partes, porque `outra` fica fora dela. A #157 decide o que fazer com o pai (distância e tempo duplicam as partes, o que importa para a
+  carga da Meta 6) e com a atividade de transição. O Caio confirma na #156 que as partes aparecem separadas, sem expor dado do histórico.
 
 ## Aprovação do Theo (06/11)
 Aprovados: a tabela `rotulo_transicao` (item 1; migração só em #157, sem tocar `atividade`), o esboço das rotas e de `AtividadeOut.transicao` (item 5; o detalhe volta ao Theo na #170) e a regra `transicao@1` sem a condição de mesmo dia local (item 2).
