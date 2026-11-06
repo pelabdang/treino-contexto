@@ -3,7 +3,7 @@ tipo: modulo
 status: em-uso
 dono: theo
 atualizado: 2026-11-06
-links: [[decisoes/0001-modelo-de-dados-minimo]], [[decisoes/0003-fuso-da-atividade]], [[decisoes/0004-contrato-tela-evolucao]], [[metricas/tiros-1km]], [[modulos/grafico-tiros]], [[modulos/banco]], [[modulos/worker]], [[modulos/infra]], [[modulos/api-client]], [[decisoes/0006-upload-de-fit]], [[produto/meta-2-como-rodar]], [[decisoes/0007-clima-da-atividade]], [[modulos/clima]], [[produto/meta-4-como-rodar]]
+links: [[decisoes/0001-modelo-de-dados-minimo]], [[decisoes/0003-fuso-da-atividade]], [[decisoes/0004-contrato-tela-evolucao]], [[metricas/tiros-1km]], [[modulos/grafico-tiros]], [[modulos/banco]], [[modulos/worker]], [[modulos/infra]], [[modulos/api-client]], [[decisoes/0006-upload-de-fit]], [[produto/meta-2-como-rodar]], [[decisoes/0007-clima-da-atividade]], [[modulos/clima]], [[produto/meta-4-como-rodar]], [[decisoes/0008-deteccao-de-esforcos]], [[metricas/esforcos]]
 ---
 # Módulo: api
 
@@ -63,6 +63,16 @@ separada por vírgula, lida em `app/config.py`; middleware em `criar_app` de `ap
 - **Data da sessão:** a data local do início (`inicio + fuso_min`, ou `America/Sao_Paulo` se `fuso_min` é `NULL`).
   `inicio` e `fim` do filtro também são datas locais, inclusivas.
 - Testes: `services/api/tests/servicos/test_evolucao_tiros.py` (com as tabelas das fixtures e o oráculo da #30) e `test_serie_pace_habitual.py` (filtro do ritmo habitual).
+
+## Blocos e esforços no banco (`servicos/esforcos.py`)
+- `detectar_esforcos(session, atleta_id, atividade_ids=None)` (#166, [[decisoes/0008-deteccao-de-esforcos]]): para cada corrida e
+  pedalada monta os blocos com `app.metricas.esforcos` ([[metricas/esforcos]]) e grava em `bloco_atividade` ([[modulos/banco]]),
+  com a faixa de cada esforço e o `treino_chave` (os esforços da sequência contínua). Idempotente: só regrava a atividade
+  cujos blocos mudaram (ou cuja `versao_deteccao` é outra). Devolve um `RelatorioEsforcos`. Sem rede, nada exposto pela API ainda (#167).
+- `velocidade_habitual(historico, data)`: a referência do ciclismo (mediana da velocidade das pedaladas de mais de 30 min,
+  fora do trainer e do `virtual`, nas 12 semanas antes; todo o histórico anterior com menos de 10). A da corrida é a `pace_habitual`.
+- A importação e o upload de FIT chamam `detectar_esforcos` para as atividades que entraram ou mudaram. Comando: `worker.detectar_esforcos` ([[modulos/worker]]).
+- Testes: `services/api/tests/servicos/test_esforcos_banco.py` (oráculo da #161 no banco, idempotência, versão nova, voltas que mudam, relatório).
 
 ## Endpoint: `GET /atletas/{atleta_id}/evolucao/tiros-1km`
 Query opcional `inicio` e `fim` (`AAAA-MM-DD`, datas **locais**, inclusivas; ver [[decisoes/0003-fuso-da-atividade]]).

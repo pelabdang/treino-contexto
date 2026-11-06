@@ -2,8 +2,8 @@
 tipo: modulo
 status: em-uso
 dono: duda
-atualizado: 2026-11-04
-links: [[produto/meta-3-como-rodar]], [[modulos/worker]], [[modulos/banco]], [[decisoes/0006-upload-de-fit]], [[decisoes/0007-clima-da-atividade]], [[produto/roadmap]], [[diario/2026-11-03]], [[produto/meta-4-como-rodar]]
+atualizado: 2026-11-06
+links: [[produto/meta-3-como-rodar]], [[modulos/worker]], [[modulos/banco]], [[decisoes/0006-upload-de-fit]], [[decisoes/0007-clima-da-atividade]], [[produto/roadmap]], [[diario/2026-11-03]], [[produto/meta-4-como-rodar]], [[decisoes/0008-deteccao-de-esforcos]], [[modulos/api]]
 ---
 # Módulo: ingestão Garmin
 
@@ -151,6 +151,9 @@ Sem rede por padrão; `--com-clima` busca o clima das atividades que mudaram ([[
   das corridas como `tiro`/`recuperacao`/`volta`, grava `versao_deteccao` e sugere `tipo_treino = intervalado`
   (sem sobrescrever professor/TrainingPeaks/confirmado). É idempotente e refaz a classificação quando as voltas
   foram substituídas. A comparação "mudou" das voltas considera segmentos de todos os tipos.
+- **Blocos e esforços no fim (#166):** em seguida chama `detectar_esforcos` ([[modulos/api]]) só para as atividades que
+  entraram ou mudaram (exportação e upload de FIT): grava `bloco_atividade` ([[modulos/banco]]). Erro aí vira aviso no log
+  e não derruba a importação; `worker.detectar_esforcos` refaz ([[modulos/worker]]).
 - Atividade sem duração (nem soma de voltas) é ignorada com aviso, porque `duracao_s` é obrigatório.
 - Testes: `services/worker/tests/test_importar_garmin.py` (SQLite local; Postgres via `TEST_DATABASE_URL`).
 
