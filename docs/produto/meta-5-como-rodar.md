@@ -74,7 +74,9 @@ ponta é da #172 (Bia).
    ```
    Esperado: atividade 6, aquecimento, dez `esforco` `d400` e desaquecimento (12 blocos); atividade 7, aquecimento, três `d1500`
    e desaquecimento (5 blocos). A atividade 8 (8 km contínuos) tem 1 esforço e `treino_chave = t`: é o treino-chave contínuo
-   ([[metricas/esforcos]], item 6 da ADR 0008). A 11 é o pedal de blocos de 4 min (cinco `t4`).
+   ([[metricas/esforcos]], item 6 da ADR 0008). A 11 é o pedal de blocos de 4 min (cinco `t4`). A 12 (pedal com lap cortado) **não** tem esforço neste banco: a referência de ciclismo vem do histórico (a 11,
+   cerca de 26 km/h), e o bloco de 20 min a 24 km/h não passa do limiar. O oráculo da #161 usa 20 km/h de referência; importada
+   sozinha, a 12 dá o esforço do oráculo (coberto por `tests/test_e2e_meta5.py`).
 5. **Série de tiros pelos esforços: `tiros_1km@5` e `worker.reclassificar`.** A série passou a ser uma visão dos esforços
    (faixa `d1000`; 2 ou mais tiros; treino misto conta). Suba a API em outro terminal, com a mesma `DATABASE_URL`:
    ```
@@ -131,7 +133,7 @@ ponta é da #172 (Bia).
    `tempo_total_dif` `+1:00`, `fc_dif_texto` `+2 bpm`. O `grupo_id` é derivado: não o guarde.
    | Ação | Comando | Resultado |
    |---|---|---|
-   | Discordar da regra | `curl -s -X PUT -H 'content-type: application/json' -d '{"transicao": false}' localhost:8045/atletas/1/atividades/14/transicao` | `{"valor":false,"origem":"atleta"}`; `sugerir_transicao` de novo mostra `correcoes do atleta (nao tocadas): 1 (em 1 delas a regra sugere sim)` |
+   | Discordar da regra | `curl -s -X PUT -H 'content-type: application/json' -d '{"transicao": false}' localhost:8045/atletas/1/atividades/14/transicao` | `{"valor":false,"origem":"atleta"}`; `sugerir_transicao` de novo mostra `correcoes do atleta (nao tocadas): 1 (em 1 delas a regra sugere sim)`; o grupo 15 fica, e o pedal 13 sobra como grupo `ciclismo` com `incompleto: true` |
    | Desfazer a correção | `curl -s -X DELETE localhost:8045/atletas/1/atividades/14/transicao` | `{"valor":true,"origem":"sugerido"}` (o estado real, depois de rodar a regra) |
    | "Sim" numa atividade que a regra não sugeriu | `PUT` com `{"transicao": true}` na atividade 9 | `{"valor":true,"origem":"atleta"}`; vira grupo `corrida` com `incompleto: true` |
    | Comparar formas diferentes | `.../comparar?a=13&b=9` | `400` "só se comparam treinos da mesma sequência de modalidades: a é ciclismo>corrida e b é corrida" |
@@ -155,7 +157,7 @@ ponta é da #172 (Bia).
    Esperado: o `--dry-run` imprime `NULL -> multiesporte_pai: 1`, `NULL -> troca: 2` e
    `atividades que mudariam (dry-run, nada gravado): 3` (e `P -t -c "select count(*) ... subtipo in ('troca','multiesporte_pai')"`
    continua `0`); a 2ª linha grava (`atividades que mudaram: 3`) e a 3ª não muda nada (`0`). Depois
-   `uv run python -m worker.sugerir_transicao --atleta-id 2` dá `elegiveis: 4` e `sugeridas pela regra: 3`: pai e troca (`outra`)
+   `uv run python -m worker.sugerir_transicao --atleta-id 2` dá `elegiveis: 4` e `sugeridas pela regra: 3` (com `inseridas: 0 ... sem mudanca: 3`, porque a importação já sugeriu): pai e troca (`outra`)
    ficam fora, e as partes viram um grupo `natacao>ciclismo>corrida`. Os valores de tipo reconhecidos e a fonte pública estão em
    [[modulos/ingestao-garmin]]. A carga (Meta 6) vai ignorar os dois subtipos.
 9. **O app sem backend: `npm run api-falsa` e `npm run verificar:web`.** Em `apps/mobile`:
