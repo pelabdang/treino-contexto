@@ -30,6 +30,12 @@ def test_exemplo_de_contrato_em_dia():
     )
 
 
+def test_exemplo_de_esforcos_em_dia():
+    assert exportar.EXEMPLO_ESFORCOS.read_text(encoding="utf-8") == exportar.texto_exemplo_esforcos(), _msg(
+        "packages/api-client/exemplos/atividade-esforcos.json"
+    )
+
+
 def test_tipos_gerados_do_openapi_atual():
     """`schema.d.ts` leva o sha256 do openapi.json de onde saiu (carimbo do `npm run gerar`)."""
     primeira = exportar.TIPOS.read_text(encoding="utf-8").splitlines()[0]
