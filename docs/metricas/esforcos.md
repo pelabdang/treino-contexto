@@ -122,8 +122,7 @@ própria do projeto, sem artigo (a ADR cita Daniels só como inspiração para o
 30 s no ciclismo) conta como recuperação e corta a sequência. Sem isso, 5 x 1 km a 240 s/km com 90 s parados somariam
 1200 s e seriam "contínuos". Dois esforços vizinhos separados só por diferença de ritmo (mais de 5%, parada menor) seguem
 na mesma sequência: é o progressivo forte.
-A ADR 0008 aprovou os 15 s e 30 s só para separar blocos na junção de laps (item 2 de "A confirmar"); usá-los para cortar a
-sequência do treino-chave ainda precisa do aval do Angelo. Até lá a regra vale como premissa e o resultado pode mudar.
+Antes da decisão de 06/11, a ADR 0008 só tinha aprovado esses 15 s e 30 s para separar blocos na junção de laps (item 2 de "A confirmar").
 
 Exemplos à mão (sintéticos, habitual de 330 s/km, limiar 297 s/km):
 - **8 km a 270 s/km**: 8 x 1000 m em 270 s, 2160 s >= 1200 s, 270 <= 297, margem 1 - 270/330 = 18,2%, 0 esforços fora:
