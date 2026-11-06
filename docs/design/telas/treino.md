@@ -92,11 +92,8 @@ Hoje a tela só abre digitando a URL (#217). Proposta, sem quebrar a seleção c
 - Alvos de toque de 44 ou mais; contraste conforme [[design/tokens]]. Ícone nunca sozinho: sempre há texto.
 
 ## Como gerar capturas sintéticas
-Com `web.output: "static"` no `app.json`, o servidor de dev e o export da web entregam o HTML **sem o `<script>` do
-bundle**: a página fica só no fundo de "carregando fonte" (visto na revisão do #211, reproduzido no #215). Enquanto a
-#218 não decide, para capturar: trocar localmente para `"single"` (sem commitar), subir `npx expo start --web`, usar
-uma API falsa com as fixtures sintéticas e fotografar em 390 de largura, tema claro e escuro. Nunca use o banco real
-do Angelo; só dado sintético em captura, no repositório público.
+Passo a passo em [[modulos/mobile]]: `npm run api-falsa` e `EXPO_PUBLIC_API_URL`, sem trocar config. Só dado sintético
+em captura (repositório público); 390 de largura, tema claro e escuro.
 
 ## O que muda em relação ao app de hoje
 | hoje | proposta | issue |

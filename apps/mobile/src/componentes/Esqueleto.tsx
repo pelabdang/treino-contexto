@@ -41,14 +41,45 @@ function usePulso(reduzir: boolean): Animated.Value {
   return opacidade;
 }
 
-/** Esqueleto dos três cartões da tela de evolução (último treino, gráfico, lista). Só decorativo: o texto "Carregando" fica fora. */
-export function EsqueletoEvolucao() {
+/** Base dos esqueletos: pulso e fora da leitura (o texto "Carregando" fica fora, na tela). */
+function useBase() {
   const tema = useTema();
   const styles = useMemo(() => criarEstilos(tema), [tema]);
   const opacidade = usePulso(useReduzirMovimento());
   const barra = (largura: number | `${number}%`, altura: number, chave?: string) => (
     <View key={chave} style={[styles.barra, { width: largura, height: altura }]} />
   );
+  return { styles, opacidade, barra };
+}
+
+/** Esqueleto dos dois cartões da tela de um treino (resumo e clima). Só decorativo. */
+export function EsqueletoTreino() {
+  const { styles, opacidade, barra } = useBase();
+  return (
+    <Animated.View
+      testID="esqueleto-treino"
+      accessibilityElementsHidden
+      importantForAccessibility="no-hide-descendants"
+      style={{ opacity: opacidade }}
+    >
+      <View style={styles.cartao}>
+        {barra("30%", 16)}
+        {barra("40%", 44)}
+        {barra("50%", 20)}
+        {barra("60%", 20)}
+        {barra("40%", 16)}
+      </View>
+      <View style={styles.cartao}>
+        {barra("30%", 20)}
+        {[0, 1, 2, 3].map((i) => barra("100%", 44, `l${i}`))}
+      </View>
+    </Animated.View>
+  );
+}
+
+/** Esqueleto dos três cartões da tela de evolução (último treino, gráfico, lista). Só decorativo: o texto "Carregando" fica fora. */
+export function EsqueletoEvolucao() {
+  const { styles, opacidade, barra } = useBase();
   return (
     <Animated.View
       testID="esqueleto-evolucao"
