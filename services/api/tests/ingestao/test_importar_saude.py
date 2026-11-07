@@ -5,12 +5,12 @@ test_saude_garmin.py). Retrato das zonas: dia da importacao informado nos testes
 """
 
 import socket
-from datetime import date
+from datetime import date, datetime, timezone
 from pathlib import Path
 
 import pytest
-from app.db.models import Atleta, LimiarAtleta, ZonaFcAtleta
-from app.ingestao.saude import importar_saude, limiar_vigente, zonas_vigentes
+from app.db.models import Atleta, CargaGarminDia, LimiarAtleta, RecordePessoal, ZonaFcAtleta
+from app.ingestao.saude import apagar_saude_do_atleta, importar_saude, limiar_vigente, zonas_vigentes
 from sqlalchemy import func, select
 from sqlalchemy.exc import IntegrityError
 
@@ -205,3 +205,142 @@ def test_unicidade_do_limiar(session):
                      LimiarAtleta(grandeza="fc_bpm", valor=2, origem="garmin_export", **base)])
     with pytest.raises(IntegrityError):
         session.flush()
+
+
+# ----- #174: recordes pessoais e carga do Garmin -----
+UTC = timezone.utc
+
+
+def _recordes(session):
+    return [(r.modalidade, r.categoria, r.valor, r.unidade, r.alcancado_em.replace(tzinfo=None), r.atividade_fonte_id)
+            for r in session.scalars(select(RecordePessoal).order_by(RecordePessoal.alcancado_em, RecordePessoal.categoria))]
+
+
+def _carga(session):
+    return [(c.dia, c.carga_aguda, c.carga_cronica, c.razao) for c in
+            session.scalars(select(CargaGarminDia).order_by(CargaGarminDia.dia))]
+
+
+def test_grava_recordes_e_carga_das_fixtures(session):
+    rel = importar_saude(session, ZIP_SAUDE, "Ana", dia_retrato=HOJE)
+    assert (rel.recordes.inseridas, rel.recordes.atualizadas, rel.recordes.ignoradas) == (6, 0, 0)
+    assert (rel.carga.inseridas, rel.carga.atualizadas, rel.carga.ignoradas) == (25, 0, 0)
+    assert _recordes(session)[0] == ("corrida", "Best 1km Run", 248.0, "s", datetime(2025, 3, 4, 10, 0), "1000000001")
+    assert ("outra", "Most Steps in a Day", 9000.0, "passos", datetime(2025, 3, 9, 0, 0), None) in _recordes(session)
+    c = _carga(session)
+    assert c[0] == (D(2025, 2, 24), 34.0, 54.0, None) and c[-1][0] == D(2025, 3, 20)
+    assert next(x for x in c if x[0] == D(2025, 3, 4)) == (D(2025, 3, 4), 79.0, 48.0, 1.6)
+    assert {r.origem for r in session.scalars(select(RecordePessoal))} == {"garmin_export"}
+    assert {r.versao_leitura for r in session.scalars(select(CargaGarminDia))} == {"saude_garmin@1"}
+
+
+def test_recordes_e_carga_importados_duas_vezes_dao_as_mesmas_linhas(session):
+    importar_saude(session, ZIP_SAUDE, "Ana", dia_retrato=HOJE)
+    antes = (_recordes(session), _carga(session))
+    ids = (set(session.scalars(select(RecordePessoal.id))), set(session.scalars(select(CargaGarminDia.id))))
+    rel = importar_saude(session, ZIP_SAUDE, "Ana", dia_retrato=HOJE)
+    assert (rel.recordes.inseridas, rel.recordes.atualizadas, rel.recordes.ignoradas) == (0, 0, 6)
+    assert (rel.carga.inseridas, rel.carga.atualizadas, rel.carga.ignoradas) == (0, 0, 25)
+    assert (_recordes(session), _carga(session)) == antes
+    assert (set(session.scalars(select(RecordePessoal.id))), set(session.scalars(select(CargaGarminDia.id)))) == ids
+
+
+def test_recorde_melhorado_fica_como_duas_linhas_com_as_datas_certas(session):
+    importar_saude(session, ZIP_SAUDE, "Ana", dia_retrato=HOJE)
+    km = session.scalars(select(RecordePessoal).where(RecordePessoal.categoria == "Best 1km Run")
+                         .order_by(RecordePessoal.alcancado_em)).all()
+    assert [(r.alcancado_em.replace(tzinfo=None), r.valor, r.atividade_fonte_id) for r in km] == [
+        (datetime(2025, 3, 4, 10, 0), 248.0, "1000000001"), (datetime(2025, 3, 11, 9, 5), 234.0, "1000000002")]
+
+
+def test_recorde_novo_entra_sem_apagar_os_anteriores(session):
+    importar_saude(session, ZIP_SAUDE, "Ana", dia_retrato=HOJE)
+    # simula um banco que so tinha o recorde antigo: a importacao completa nao mexe nele e acrescenta o novo
+    novo = session.scalars(select(RecordePessoal).where(RecordePessoal.categoria == "Best 1km Run")
+                           .order_by(RecordePessoal.alcancado_em.desc())).first()
+    session.delete(novo)
+    session.commit()
+    rel = importar_saude(session, ZIP_SAUDE, "Ana", dia_retrato=HOJE)
+    assert (rel.recordes.inseridas, rel.recordes.ignoradas) == (1, 5)
+    assert _linhas(session, RecordePessoal) == 6
+
+
+def test_correcao_da_fonte_em_recorde_e_carga_atualiza_com_aviso(session):
+    importar_saude(session, ZIP_SAUDE, "Ana", dia_retrato=HOJE)
+    r = session.scalars(select(RecordePessoal).where(RecordePessoal.categoria == "Farthest Run")).one()
+    r.valor = 1.0
+    c = session.scalars(select(CargaGarminDia).where(CargaGarminDia.dia == D(2025, 3, 4))).one()
+    c.carga_aguda = 5.0
+    session.commit()
+    rel = importar_saude(session, ZIP_SAUDE, "Ana", dia_retrato=HOJE)
+    assert (rel.recordes.atualizadas, rel.recordes.ignoradas) == (1, 5)
+    assert (rel.carga.atualizadas, rel.carga.ignoradas) == (1, 24)
+    assert sum("corrigid" in a for a in rel.avisos) == 2
+    assert session.get(RecordePessoal, r.id).valor == 8000.0 and session.get(CargaGarminDia, c.id).carga_aguda == 79.0
+    assert not any("8000" in a or "79" in a for a in rel.avisos)
+
+
+def test_exportacao_mais_curta_nao_apaga_recordes_nem_carga(session):
+    importar_saude(session, ZIP_SAUDE, "Ana", dia_retrato=HOJE)
+    antes = (_recordes(session), _carga(session))
+    importar_saude(session, ZIP_SEM, "Ana", dia_retrato=HOJE)
+    assert (_recordes(session), _carga(session)) == antes
+
+
+def test_dois_atletas_tem_recordes_e_carga_separados(session):
+    importar_saude(session, ZIP_SAUDE, "Ana", dia_retrato=HOJE)
+    importar_saude(session, ZIP_SAUDE, "Beto", dia_retrato=HOJE)
+    assert _linhas(session, RecordePessoal) == 12 and _linhas(session, CargaGarminDia) == 50
+
+
+@pytest.mark.parametrize("unidade", ["s", "m", "W", "passos", None])
+def test_unidade_do_recorde_aceita_as_quatro_e_nulo(session, unidade):
+    session.add(Atleta(nome="Ana"))
+    session.flush()
+    session.add(RecordePessoal(atleta_id=1, origem="garmin_export", modalidade="outra", categoria="x", valor=1.0,
+                               unidade=unidade, alcancado_em=datetime(2025, 1, 1, tzinfo=UTC), versao_leitura="x"))
+    session.flush()
+
+
+@pytest.mark.parametrize("campos", [dict(unidade="km"), dict(modalidade="triathlon"), dict(origem="strava")])
+def test_check_do_recorde(session, campos):
+    base = dict(atleta_id=1, origem="garmin_export", modalidade="outra", categoria="x", valor=1.0, unidade="s",
+                alcancado_em=datetime(2025, 1, 1, tzinfo=UTC), versao_leitura="x") | campos
+    session.add(Atleta(nome="Ana"))
+    session.flush()
+    session.add(RecordePessoal(**base))
+    with pytest.raises(IntegrityError):
+        session.flush()
+
+
+def test_unicidade_do_recorde(session):
+    session.add(Atleta(nome="Ana"))
+    session.flush()
+    quando = datetime(2025, 1, 1, tzinfo=UTC)
+    session.add_all([RecordePessoal(atleta_id=1, origem="garmin_export", modalidade="outra", categoria="x", valor=v,
+                                    alcancado_em=quando, versao_leitura="x") for v in (1.0, 2.0)])
+    with pytest.raises(IntegrityError):
+        session.flush()
+
+
+def test_unicidade_da_carga_e_campos_anulaveis(session):
+    session.add(Atleta(nome="Ana"))
+    session.flush()
+    session.add(CargaGarminDia(atleta_id=1, origem="garmin_export", dia=D(2025, 1, 1), carga_cronica=20.0,
+                               versao_leitura="x"))
+    session.flush()
+    c = session.scalars(select(CargaGarminDia)).one()
+    assert (c.carga_aguda, c.carga_cronica, c.razao) == (None, 20.0, None)
+    session.add(CargaGarminDia(atleta_id=1, origem="garmin_export", dia=D(2025, 1, 1), versao_leitura="x"))
+    with pytest.raises(IntegrityError):
+        session.flush()
+
+
+def test_apagar_saude_apaga_as_quatro_tabelas_so_do_atleta(session):
+    importar_saude(session, ZIP_SAUDE, "Ana", dia_retrato=HOJE)
+    importar_saude(session, ZIP_SAUDE, "Beto", dia_retrato=HOJE)
+    ana = session.scalars(select(Atleta).where(Atleta.nome == "Ana")).one().id
+    assert apagar_saude_do_atleta(session, ana) == {"limiar": 5, "zonas": 6, "recordes": 6, "carga": 25}
+    assert [_linhas(session, m) for m in (LimiarAtleta, ZonaFcAtleta, RecordePessoal, CargaGarminDia)] == [5, 6, 6, 25]
+    assert session.get(Atleta, ana) is not None
+    assert apagar_saude_do_atleta(session, ana) == {"limiar": 0, "zonas": 0, "recordes": 0, "carga": 0}

@@ -356,7 +356,7 @@ def test_13_nada_do_trajeto_no_banco(ctx):
     clima_cols = {r[1] for r in _sql(ctx, "pragma table_info(clima_atividade)")}
     assert not {c for c in clima_cols if "lat" in c or "lon" in c or "pos" in c or "trajeto" in c}
     tabelas = {r[0] for r in _sql(ctx, "select name from sqlite_master where type='table'")}
-    assert not {t for t in tabelas if "ponto" in t or "trajeto" in t or "track" in t or "record" in t}
+    assert not {t for t in tabelas if "ponto" in t or "trajeto" in t or "track" in t or "record" in t.replace("recorde_pessoal", "")}
     for lat, lon in _sql(ctx, "select inicio_lat, inicio_lon from atividade where inicio_lat is not null"):
         assert round(lat, 2) == lat and round(lon, 2) == lon  # 2 casas, nunca a posicao exata
 

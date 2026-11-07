@@ -100,7 +100,7 @@ por zonas e para `segmento.zona`, em versão futura. A decisão de guardar é do
 |---|---|
 | `modalidade` | texto (20), mesmos valores de `atividade.modalidade` |
 | `categoria` | texto (60): o código do recorde **como a fonte traz** (distância ou duração); o mapeamento para `d1000`, `t20` etc. é da calibração futura |
-| `valor` | float, não nulo; `unidade` texto (10): `s` ou `m`, conforme a categoria |
+| `valor` | float, não nulo; `unidade` texto (10): `s`, `m`, `W`, `passos` ou nulo (ver o adendo), conforme a categoria |
 | `alcancado_em` | datetime com fuso: data em que o recorde foi batido |
 | `atividade_fonte_id` | texto (100), anulável: id da atividade na fonte, **sem FK** (a atividade pode não estar importada) |
 
@@ -422,6 +422,11 @@ Conferido com busca e leitura de páginas em 07/11; o que não pôde ser aberto 
   (<https://groups.google.com/g/golden-cheetah-users/c/h_KSL1oUmLI>, tau 7 e 42). Fontes de divulgação descrevem `1/tau`; qual das duas o
   TrainingPeaks usa por dentro **não ficou confirmado**. Mantida a forma exata (diferença no item 6).
 - **TSB:** confirmado, TrainingPeaks e Golden Cheetah usam CTL e ATL do **dia anterior**. A ADR mantém o do mesmo dia (glossário) e agora diz a diferença no item 6.
+
+## Adendo (07/11, #174)
+Aprovado pelo Theo no PR #244. `recorde_pessoal.unidade` aceita `s`, `m`, `W`, `passos` **ou nulo** (tipo de recorde que o leitor não
+reconhece), com `CHECK`; o item 2 dizia só `s` ou `m`. Implementado na migração 0009, com `carga_garmin_dia`. O comando
+`worker.apagar_saude --atleta "<nome>"` apaga as quatro tabelas de saúde do atleta e imprime só contagens.
 
 ## Data e quem decidiu
 2026-11-07. Proposta do Caio (ciência), com revisão da Duda (dados e ingestão) pedida no PR. **Modelo de dados aprovado pelo Theo em

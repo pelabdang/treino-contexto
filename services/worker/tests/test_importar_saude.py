@@ -7,11 +7,12 @@ from pathlib import Path
 import pytest
 from app.db import models  # noqa: F401
 from app.db.base import Base
-from app.db.models import Atividade, LimiarAtleta, ZonaFcAtleta
+from app.db.models import Atividade, Atleta, CargaGarminDia, LimiarAtleta, RecordePessoal, ZonaFcAtleta
 from sqlalchemy import create_engine, func, select
 from sqlalchemy.orm import Session, sessionmaker
 
 from worker import importar_garmin
+from worker import apagar_saude
 from worker.importar_saude import main
 
 RAIZ = Path(__file__).resolve().parents[3]
@@ -48,17 +49,21 @@ def test_comando_grava_e_reexecutar_nao_duplica(fabrica, capsys):
     saida = capsys.readouterr().out
     assert "saude limiar: inseridas=5 atualizadas=0 ignoradas=0" in saida
     assert "saude zonas: inseridas=6 atualizadas=0 ignoradas=0" in saida
+    assert "saude recordes: inseridas=6 atualizadas=0 ignoradas=0" in saida
+    assert "saude carga: inseridas=25 atualizadas=0 ignoradas=0" in saida
     assert main([str(ZIP_SAUDE), "--atleta", "Ana"]) == 0
     saida = capsys.readouterr().out
     assert "saude limiar: inseridas=0 atualizadas=0 ignoradas=5" in saida
     assert "saude zonas: inseridas=0 atualizadas=0 ignoradas=6" in saida
+    assert "saude recordes: inseridas=0 atualizadas=0 ignoradas=6" in saida
+    assert "saude carga: inseridas=0 atualizadas=0 ignoradas=25" in saida
     assert _conta(fabrica, LimiarAtleta) == 5 and _conta(fabrica, ZonaFcAtleta) == 6
 
 
 def test_comando_nao_imprime_valores(fabrica, capsys):
     main([str(ZIP_SAUDE), "--atleta", "Ana"])
     saida = capsys.readouterr().out
-    for valor in ("158", "159", "163", "3.7", "190"):
+    for valor in ("158", "159", "163", "3.7", "190", "1750", "8000", "248", "79.0"):
         assert valor not in saida
 
 
@@ -97,6 +102,7 @@ def test_importar_garmin_sem_dados_de_saude_importa_so_as_atividades(fabrica, ca
     saida = capsys.readouterr()
     assert "inseridas=5" in saida.out and "saude limiar: inseridas=0" in saida.out
     assert _conta(fabrica, Atividade) == 5 and _conta(fabrica, LimiarAtleta) == 0
+    assert _conta(fabrica, RecordePessoal) == _conta(fabrica, CargaGarminDia) == 0
 
 
 def test_erro_na_saude_vira_aviso_e_nao_derruba_as_atividades(fabrica, monkeypatch, capsys):
@@ -122,3 +128,22 @@ def test_importar_garmin_sem_rede_com_saude(fabrica, monkeypatch):
     assert importar_garmin.main([str(ZIP_SAUDE), "--atleta", "Ana"]) == 0
     with Session(fabrica.kw["bind"]) as s:
         assert s.scalar(select(func.count()).select_from(LimiarAtleta)) == 5
+
+
+def test_apagar_saude_apaga_so_as_tabelas_de_saude_do_atleta(fabrica, capsys):
+    main([str(ZIP_SAUDE), "--atleta", "Ana"])
+    main([str(ZIP_SAUDE), "--atleta", "Beto"])
+    capsys.readouterr()
+    assert apagar_saude.main(["--atleta", "Ana"]) == 0
+    saida = capsys.readouterr().out
+    for linha in ("limiar: apagadas=5", "zonas: apagadas=6", "recordes: apagadas=6", "carga: apagadas=25"):
+        assert f"saude {linha}" in saida
+    assert [_conta(fabrica, m) for m in (LimiarAtleta, ZonaFcAtleta, RecordePessoal, CargaGarminDia)] == [5, 6, 6, 25]
+    assert _conta(fabrica, Atleta) == 2  # o atleta fica
+    assert apagar_saude.main(["--atleta", "Ana"]) == 0  # idempotente
+    assert "carga: apagadas=0" in capsys.readouterr().out
+
+
+def test_apagar_saude_com_atleta_inexistente(fabrica, capsys):
+    assert apagar_saude.main(["--atleta", "Ninguem"]) == 1
+    assert "erro" in capsys.readouterr().err

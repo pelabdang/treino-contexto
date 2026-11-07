@@ -44,7 +44,7 @@ def clima_do_que_mudou(rel: RelatorioImportacao, cliente=None, session_factory=N
 
 
 def saude_do_arquivo(caminho: str, atleta: str, session_factory=None) -> None:
-    """Limiar e zonas de FC, no fim (ADR 0010, item 3). Sem rede. Erro vira aviso e nunca derruba a importacao."""
+    """Dados de saude (limiar, zonas, recordes e carga do Garmin), no fim (ADR 0010, item 3). Sem rede. Erro vira aviso e nunca derruba a importacao."""
     try:
         from app.db.session import SessionLocal
         from app.ingestao.saude import importar_saude
