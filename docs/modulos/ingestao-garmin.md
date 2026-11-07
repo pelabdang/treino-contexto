@@ -3,7 +3,7 @@ tipo: modulo
 status: em-uso
 dono: duda
 atualizado: 2026-11-07
-links: [[produto/meta-3-como-rodar]], [[modulos/worker]], [[modulos/banco]], [[decisoes/0006-upload-de-fit]], [[decisoes/0007-clima-da-atividade]], [[produto/roadmap]], [[diario/2026-11-03]], [[produto/meta-4-como-rodar]], [[decisoes/0008-deteccao-de-esforcos]], [[decisoes/0009-treino-de-transicao]], [[modulos/api]]
+links: [[decisoes/0010-carga-de-treino]], [[produto/meta-3-como-rodar]], [[modulos/worker]], [[modulos/banco]], [[decisoes/0006-upload-de-fit]], [[decisoes/0007-clima-da-atividade]], [[produto/roadmap]], [[diario/2026-11-03]], [[produto/meta-4-como-rodar]], [[decisoes/0008-deteccao-de-esforcos]], [[decisoes/0009-treino-de-transicao]], [[modulos/api]]
 ---
 # Módulo: ingestão Garmin
 
@@ -291,7 +291,7 @@ pode somar tudo (contaria o treino duas vezes).
 2. **`subtipo`** (texto livre) recebe `multiesporte_pai` (agrupador) ou `troca` (transição entre as partes). Constantes e mapeamento em
    `tipos.py` (`SUBTIPO_PAI`, `SUBTIPO_TROCA`, `SUBTIPOS_MULTIESPORTE`), para JSON e FIT.
 3. **A carga (Meta 6) ignora os dois subtipos**: cada parte conta uma vez, como diz a ADR 0009 (item 6). O tempo da troca não é treino.
-   Aviso para a ADR 0010 (carga, #134): ela ainda não existe no `main`; quem escrever a ADR deve registrar que a carga exclui
+   Aviso para a [[decisoes/0010-carga-de-treino]] (carga, #134): a ADR registra que a carga exclui
    `subtipo in (multiesporte_pai, troca)`.
 4. A regra `transicao@1` não muda: continua só com corrida, natação e ciclismo; pai e troca (`outra`) não entram nem atrapalham a
    vizinhança (teste em `services/api/tests/ingestao/test_multiesporte.py`).
@@ -364,7 +364,7 @@ cronológica**: ordene por `metaData.calendarDate` (empate: `metaData.sequence`)
 Como vem o histórico:
 - Há registros com **FC e velocidade** (limiar detectado) e registros **só com FC** (ajuste manual ou `0`); a velocidade não aparece sem a FC.
 - **Período sem limiar:** antes do primeiro registro com `lactateThresholdHearRate > 0` não há limiar. Um registro com `0` volta o atleta a "sem limiar".
-- O limiar vigente num dia é o do **último registro com data menor ou igual ao dia** (qual dia vale para a atividade, local ou UTC, é da ADR 0010).
+- O limiar vigente num dia é o do **último registro com data menor ou igual ao dia** (qual dia vale para a atividade, local ou UTC, é da [[decisoes/0010-carga-de-treino]]).
 - Atividades anteriores ao primeiro limiar ficam "sem carga".
 
 ### Zonas de FC: `*_heartRateZones.json` e FIT
