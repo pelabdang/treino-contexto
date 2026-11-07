@@ -2,7 +2,7 @@
 tipo: decisao
 status: aceita
 dono: caio
-atualizado: 2026-11-06
+atualizado: 2026-11-07
 links: [[metricas/tiros-1km]], [[decisoes/0001-modelo-de-dados-minimo]], [[decisoes/0002-segmento-intensidade-e-versao]], [[decisoes/0005-serie-de-tiros-o-que-entra]], [[modulos/banco]], [[modulos/ingestao-garmin]], [[produto/roadmap]], [[glossario]]
 ---
 # ADR: 0008 Detecção de esforços (corrida por distância, ciclismo por duração)
@@ -294,8 +294,8 @@ Itens 1 a 4 aprovados. Em aberto, sem bloquear: 5 e 6 (Caio, com dado real). Os 
 5. **Caio com dado real**: o campo `total_timer_time` do lap e o `start_time` do lap são mesmo coerentes em
    exportações com pausa automática ligada e desligada (premissa do item 3). Se o relógio não grava `start_time`
    do lap, `inicio_offset_s` vem 0 (código em `fit.py`) e o tempo parado não é computável: cair para a volta de pausa.
-6. **Caio**: velocidade habitual do ciclismo (janela de 12 semanas e mínimo de 30 min por pedalada) e se a
-   referência por atividade (reserva) é aceitável para atleta novo.
+6. ~~**Caio**: velocidade habitual do ciclismo (janela de 12 semanas e mínimo de 30 min por pedalada) e se a
+   referência por atividade (reserva) é aceitável para atleta novo.~~ Janela, mínimo de 30 min e mínimo de 10 pedais confirmados pelo Angelo em 07/11 (adendo).
 7. **Caio**: as referências bibliográficas: abrir os textos e conferir o que sustentam antes de a nota da métrica citá-las.
 8. ~~**Theo, na #168**: numeração final da versão da `tiros_1km`.~~ Definida: **`tiros_1km@5`** (#168, 06/11); as #149 e #150 foram absorvidas.
 9. Fartlek por tempo na corrida (proposta, fora da Meta 5) e teto de duração do aquecimento.
@@ -309,6 +309,49 @@ Tomadas no PR #222. Nenhuma muda o modelo do item 9.
 3. **Quando detectar.** A detecção roda na importação da exportação e no upload de FIT, só para as atividades que entraram
    ou mudaram, além do comando `worker.detectar_esforcos`. Erro na detecção vira aviso e não derruba a importação.
 (Janela de 12 semanas e mínimo de 30 min da velocidade habitual seguem em "A confirmar", item 6, com o Caio na #169.)
+
+## Adendo (07/11, #243): pausa dentro do tiro e confirmações
+
+Rascunho do Caio, **a aprovar pelo Theo no PR**. Nenhuma linha do modelo de dados muda; os blocos (`esforcos@1`) ficam
+como estão.
+
+**Decisão de produto (Angelo, 07/11).** Uma pausa de 15 s ou mais **dentro** de um tiro de 1 km deixa de cortá-lo: o
+tiro conta o tempo em movimento. Hoje a parada de 15 s ou mais separa os blocos (item 2), e um tiro parado no meio chega
+como dois pedaços (600 m + 400 m), nenhum de 1 km.
+
+**Onde a regra mora.** Na visão de tiros de 1 km (`tiros_1km@6`, item 8), não na detecção de esforços. A junção de
+laps do item 2 (15 s na corrida, 30 s no ciclismo) e o treino-chave contínuo do item 6 **não mudam**: a decisão de 06/11
+(#165) segue valendo, parada de 15 s ou mais entre esforços corta a sequência contínua. A mudança do tiro não a afeta,
+porque a visão só lê os blocos e junta pedaços **para a série de 1 km**; um 5 x 1 km com 90 s parados continua
+sendo cinco esforços, não um contínuo de 20 min.
+
+**Limite proposto: o tiro continua enquanto a parada for menor que 60 s** (`PAUSA_NO_TIRO_MAX_S`). Por quê, de forma
+geral: paradas no meio de um esforço são acidentes do percurso ou do equipamento (semáforo, travessia, amarrar o tênis,
+um gole d'água, o relógio pausando); costumam durar de segundos a cerca de um minuto. Descanso de série, o que
+separa uma repetição da outra, é planejado e tende a durar um minuto ou mais. O ponto de corte em 1 minuto fica
+entre os dois usos e é um número redondo. Não vem de artigo; é decisão do projeto, como os demais limites desta ADR.
+
+**Guardas, para a regra não inventar tiros** (todas em `_juntar_pedacos`):
+1. só se juntam blocos de **esforço** vizinhos, sem recuperação entre eles, cada um com menos de 950 m;
+2. o pace de cada pedaço fica a até 5% do pace acumulado (a mesma tolerância do item 2);
+3. a soma cai na faixa `d1000` (950 a 1050 m);
+4. a cadeia tem **2 ou 3** pedaços: uma cadeia maior é série de repetições curtas com descanso curto (4 x 500 m com
+   30 s), não um tiro parado.
+Conta à mão: 600 m em 150 s + 400 m em 100 s, com 20 s parados: pace 250 / 1000 m = 250 s/km, soma 1000 m, um tiro.
+
+**Limitação assumida.** Duas repetições de 500 m com descanso de menos de 60 s valem como um tiro só; sozinhas não
+formam uma sessão (mínimo de 2 tiros), mas junto de outros tiros de 1 km contam como um. O mesmo vale para uma pausa
+de 60 s ou mais dentro do tiro: ele continua partido.
+
+**Confirmações do Angelo (07/11).**
+- Mínimo de **2 tiros** por sessão: mantido (item 8).
+- Velocidade habitual do ciclismo (item 5, "A confirmar", item 6): **12 semanas, pedais de 30 minutos ou mais, mínimo
+  de 10 pedais** (menos que isso, todo o histórico), confirmada. Sai da lista "a confirmar".
+
+**Pergunta aberta (Theo).** O vizinho de 950 m ou mais que não é candidato (por exemplo um esforço de 1500 m) ainda corta o
+tiro de 1 km mesmo com descanso parado entre eles (nota da métrica, "Limitações"). Esta decisão trata da pausa
+**dentro** do tiro; se a pausa **entre** o tiro e um vizinho de outra distância também deve deixar de cortá-lo, é outra
+mudança de regra, em issue própria.
 
 ## Data e quem decidiu
 2026-11-04. Pedido de produto: Angelo (04/11). Rascunho: Caio (ciência). Aprovação do Theo no PR desta ADR

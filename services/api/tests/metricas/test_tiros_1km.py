@@ -33,7 +33,7 @@ def paces_dos_tiros(specs, ref=330.0):
 
 
 def test_versao():
-    assert VERSAO == "tiros_1km@5"
+    assert VERSAO == "tiros_1km@6"
     assert tiros([(1000, 250), (400, 168, 0)] * 2).versao == VERSAO
 
 
@@ -359,3 +359,83 @@ def test_tiro_colado_a_um_km_so_um_pouco_mais_lento_perde_a_separacao_por_pausa(
     # 1 km a 240 e 1 km a 280 ficam juntos (parada 0): fartlek. Igual à @4. (Sem pausa, sem repetição.)
     specs = [(1000, 240), (1000, 280), (1000, 240), (1000, 280)]
     assert tiros(specs).tiros == ()
+
+
+# ---------------------------------------------------------------------------
+# @6: pausa dentro do tiro (issue #243; ADR 0008, adendo). Valores à mão, ref 330 s/km (limiar 297).
+# ---------------------------------------------------------------------------
+
+REC = (400, 168, 0)  # recuperação de 400 m a 420 s/km entre os tiros (420 > 297: não é esforço)
+
+
+def test_tiro_com_pausa_de_20_s_no_meio_conta_como_um_tiro():
+    # Tiro = 600 m em 150 s (250 s/km), parada de 20 s, 400 m em 100 s (250 s/km). Duas vezes, com REC no meio.
+    # Com a regra @5: a parada de 20 s (>= 15 s) separa os blocos: d600 + d400 em cada tiro, nenhum d1000 -> 0 tiros.
+    specs = [(600, 150, 20), (400, 100, 0), REC, (600, 150, 20), (400, 100, 0)]
+    blocos = blocos_de(specs)
+    assert [b.faixa for b in blocos if b.categoria == "esforco"] == ["d600", "d400", "d600", "d400"]  # o que a @5 via
+    r = tiros_de_blocos(blocos)
+    # @6: 600 + 400 = 1000 m em 250 s (tempo em movimento, sem os 20 s parados) = 250 s/km; 2 tiros.
+    assert r.eh_intervalado and len(r.blocos_tiro) == 2
+    assert [(b.distancia_m, b.duracao_s, b.volta_inicial, b.volta_final) for b in r.blocos_tiro] == [
+        (1000.0, 250.0, 0, 1), (1000.0, 250.0, 3, 4)
+    ]
+    assert r.tiros == (0, 3) and r.recuperacoes == (2,)
+
+
+def test_pedacos_com_fc_ponderada_pela_duracao():
+    # FC 160 em 150 s e 170 em 100 s: (160 x 150 + 170 x 100) / 250 = 41000 / 250 = 164 bpm.
+    specs = [(600, 150, 20, 160), (400, 100, 0, 170), REC, (600, 150, 20, 160), (400, 100, 0, 170)]
+    r = tiros_de_blocos(blocos_de(specs))
+    assert r.blocos_tiro[0].fc_media == pytest.approx(164.0)
+    assert tiro_de_bloco(r.blocos_tiro[0]).ordem == 0  # ordem = primeira volta do tiro
+
+
+def test_sessao_com_um_tiro_cortado_continua_fora_e_com_dois_entra():
+    um = [(600, 150, 20), (400, 100, 0), REC, (1000, 330)]  # 1 tiro (o 1000 m a 330 s/km não é esforço)
+    assert tiros_de_blocos(blocos_de(um)).eh_intervalado is False
+    dois = [(600, 150, 20), (400, 100, 0), REC, (1000, 250)]  # 1 tiro cortado + 1 tiro inteiro
+    r = tiros_de_blocos(blocos_de(dois))
+    assert r.eh_intervalado and len(r.blocos_tiro) == 2
+
+
+def test_tres_pedacos_somando_1_km():
+    # 400 m + 300 m + 300 m a 250 s/km (100 + 75 + 75 s), paradas de 30 s: 1000 m, 250 s.
+    specs = [(400, 100, 30), (300, 75, 30), (300, 75, 0), REC, (1000, 250)]
+    r = tiros_de_blocos(blocos_de(specs))
+    assert r.eh_intervalado and r.blocos_tiro[0].distancia_m == 1000.0 and r.blocos_tiro[0].duracao_s == 250.0
+
+
+def test_limite_da_pausa_59_junta_e_60_nao():
+    def base(p):
+        return [(600, 150, p), (400, 100, 0), REC, (1000, 250)]
+
+    assert tiros_de_blocos(blocos_de(base(59))).eh_intervalado is True  # 59 < 60: um tiro cortado + um inteiro
+    assert tiros_de_blocos(blocos_de(base(60))).eh_intervalado is False  # 60 >= 60: descanso de série, 1 tiro só
+
+
+def test_pedacos_de_ritmo_diferente_nao_juntam():
+    # 600 m a 250 s/km e 400 m a 280 s/km (112 s): 280 / 250 = 12% de diferença > 5%. Os dois são esforço (< 297).
+    specs = [(600, 150, 20), (400, 112, 0), REC, (1000, 250)]
+    assert tiros_de_blocos(blocos_de(specs)).eh_intervalado is False
+
+
+def test_pedacos_que_nao_somam_1_km_nao_juntam():
+    # 600 + 300 = 900 m (fora de 950 a 1050) e 600 + 500 = 1100 m (fora).
+    for segundo in (300, 500):
+        specs = [(600, 150, 20), (segundo, segundo * 0.25, 0), REC, (1000, 250)]
+        assert tiros_de_blocos(blocos_de(specs)).eh_intervalado is False
+
+
+def test_repeticoes_curtas_com_descanso_curto_nao_viram_tiros():
+    # 4 x 500 m a 250 s/km com 30 s parado: cadeia de 4 pedaços = série de 500 m, não 2 tiros de 1 km.
+    specs = [(500, 125, 30)] * 3 + [(500, 125, 0)]
+    r = tiros_de_blocos(blocos_de(specs))
+    assert r.tiros == () and r.eh_intervalado is False
+
+
+def test_tiro_inteiro_continua_igual_e_descanso_longo_separa():
+    specs = [(600, 150, 90), (400, 100, 90), (600, 150, 0)]  # 90 s >= 60 em todo lugar: nenhum tiro de 1 km
+    assert tiros_de_blocos(blocos_de(specs)).tiros == ()
+    r = tiros_de_blocos(blocos_de([(1000, 250, 90), (1000, 250)]))
+    assert r.tiros == (0, 1)

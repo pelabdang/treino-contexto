@@ -72,7 +72,7 @@ def test_serie_bate_com_o_oraculo(session, atleta):
         assert ponto.n_tiros == n
         assert ponto.pace_s_km == pytest.approx(pace, abs=0.01)
         assert ponto.fc_media == pytest.approx(fc, abs=0.01)
-        assert ponto.versao == "tiros_1km@5"
+        assert ponto.versao == "tiros_1km@6"
     assert [p.data for p in serie] == [date(2025, 3, 4), date(2025, 3, 11)]
     assert para_apresentacao(serie[0].pace_s_km) == 250.8 and para_apresentacao(serie[0].fc_media) == 170.3
 
@@ -82,7 +82,7 @@ def test_marca_segmentos_e_tipo_do_treino(session, atleta):
     a = _ativ(session, "1000000001")
     assert [s.tipo for s in a.segmentos] == (
         ["volta"] + ["tiro", "recuperacao"] * 5 + ["tiro", "volta"])
-    assert {s.versao_deteccao for s in a.segmentos} == {"tiros_1km@5"}
+    assert {s.versao_deteccao for s in a.segmentos} == {"tiros_1km@6"}
     assert (a.tipo_treino, a.tipo_origem) == ("intervalado", "sugestao")
     leve = _ativ(session, "1000000003")
     assert {s.tipo for s in leve.segmentos} == {"volta"} and leve.tipo_treino is None
@@ -199,3 +199,31 @@ def test_mesma_corrida_sem_subtipo_entra_na_serie(session, atleta):
     plana = _esteira_sintetica(session, atleta, subtipo=None)
     classificar_atividades(session, atleta.id)
     assert plana.id in [p.atividade_id for p in serie_tiros_1km(session, atleta.id)]
+
+
+def test_tiro_cortado_por_pausa_marca_todas_as_voltas_dele(session):
+    """@6 (#243): 600 m + 400 m com 20 s parados no meio são um tiro; as voltas dos dois pedaços viram `tiro`."""
+    at = Atleta(nome="Ficticio pausa")
+    session.add(at)
+    session.flush()
+    # (distância m, duração s, parada depois s). Aquecimento e desaquecimento de 3000 m a 330 s/km dão a referência
+    # da atividade (sem histórico): 330 s/km, limiar 297. Tiros a 250 s/km, recuperação de 400 m a 420 s/km.
+    voltas = [(3000, 990, 0), (600, 150, 20), (400, 100, 0), (400, 168, 0), (600, 150, 20), (400, 100, 0), (3000, 990, 0)]
+    ativ = Atividade(atleta_id=at.id, fonte="garmin_export", fonte_id="9990001", modalidade="corrida",
+                     inicio=datetime(2026, 3, 1, 9, 0, tzinfo=timezone.utc), fuso_min=0,
+                     duracao_s=sum(v[1] for v in voltas), distancia_m=sum(v[0] for v in voltas))  # fmt: skip
+    t = 0.0
+    for i, (d, du, parada) in enumerate(voltas):
+        ativ.segmentos.append(Segmento(ordem=i, tipo="volta", inicio_offset_s=t, duracao_s=du, distancia_m=d,
+                                       pace_s_km=du / d * 1000))
+        t += du + parada
+    session.add(ativ)
+    session.commit()
+    classificar_atividades(session, at.id)
+    session.refresh(ativ)
+    assert [s.tipo for s in sorted(ativ.segmentos, key=lambda s: s.ordem)] == [
+        "volta", "tiro", "tiro", "recuperacao", "tiro", "tiro", "volta"
+    ]
+    assert ativ.tipo_treino == "intervalado"
+    sessoes = sessoes_tiros_1km(session, at.id)
+    assert [(t.distancia_m, t.duracao_s) for t in sessoes[0].tiros] == [(1000.0, 250.0), (1000.0, 250.0)]

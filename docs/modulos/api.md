@@ -46,8 +46,8 @@ separada por vírgula, lida em `app/config.py`; middleware em `criar_app` de `ap
 - Testes: `services/api/tests/test_cors.py`. Variável em [[modulos/infra]].
 
 ## Série de tiros no banco (`servicos/evolucao_tiros.py`)
-- `classificar_atividades(session, atleta_id)`: primeiro roda `detectar_esforcos` (blocos em `bloco_atividade`, [[metricas/esforcos]]); depois, para cada corrida, aplica a visão de tiros de 1 km ([[metricas/tiros-1km]], `tiros_1km@5`) e marca
-  os segmentos como `tiro`, `recuperacao` ou `volta`, gravando `versao_deteccao` (ex.: `tiros_1km@5`) em todos os
+- `classificar_atividades(session, atleta_id)`: primeiro roda `detectar_esforcos` (blocos em `bloco_atividade`, [[metricas/esforcos]]); depois, para cada corrida, aplica a visão de tiros de 1 km ([[metricas/tiros-1km]], `tiros_1km@6`) e marca
+  os segmentos como `tiro`, `recuperacao` ou `volta`, gravando `versao_deteccao` (ex.: `tiros_1km@6`) em todos os
   segmentos da corrida. Idempotente. A importação ([[modulos/ingestao-garmin]]) chama no fim.
 - **Tipo do treino:** se a corrida é intervalada, grava `tipo_treino = "intervalado"` e `tipo_origem = "sugestao"`.
   Nunca sobrescreve `tipo_origem` `professor` ou `trainingpeaks`, nem tipo com `tipo_confirmado`. Se uma sugestão
@@ -84,7 +84,7 @@ Usa só `sessoes_tiros_1km` (serviço acima). Exemplo (ids e valores das fixture
 curl "http://localhost:8000/atletas/1/evolucao/tiros-1km?inicio=2025-03-01"
 ```
 ```json
-{"atleta_id": 1, "metrica": "tiros_1km", "versao_calculo": "tiros_1km@5", "reclassificacao_pendente": false,
+{"atleta_id": 1, "metrica": "tiros_1km", "versao_calculo": "tiros_1km@6", "reclassificacao_pendente": false,
  "unidades": {"pace": "s/km", "fc": "bpm", "distancia": "m", "duracao": "s"},
  "periodo": {"inicio": "2025-03-01", "fim": null},
  "eixos": {"pace": {"min_s_km": 226.0, "max_s_km": 256.0, "invertido": true,

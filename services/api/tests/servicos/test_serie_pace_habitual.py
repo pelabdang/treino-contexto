@@ -1,4 +1,4 @@
-"""Filtro do ritmo habitual na série de tiros (issue #53, tiros_1km@5). Dados sintéticos, contas à mão.
+"""Filtro do ritmo habitual na série de tiros (issue #53, tiros_1km@6). Dados sintéticos, contas à mão.
 
 Ritmo habitual: mediana do pace das corridas de mais de 3 km (sem esteira) anteriores à sessão, 84 dias;
 < 10 na janela usa todo o histórico; sem histórico não filtra. Os tiros valem se pace <= habitual x 0,90.
@@ -70,7 +70,7 @@ def test_tiros_reais_ficam_dentro(session, atleta):
     serie = _serie(session, atleta)
     assert len(serie) == 1
     assert serie[0].pace_s_km == pytest.approx(270.0)
-    assert serie[0].versao == "tiros_1km@5"
+    assert serie[0].versao == "tiros_1km@6"
 
 
 def test_rodagem_com_voltas_separadas_por_paradas_fica_fora(session, atleta):

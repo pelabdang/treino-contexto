@@ -1,7 +1,7 @@
 """FIT sinteticos do upload (Meta 3, issue #93; ADR 0006). Sem banco, sem dado real.
 
 Os arquivos de tests/fixtures/garmin/fit/ sao gerados por gerar_fixtures.py. Aqui estao os valores esperados,
-com a conta a mao, lidos pelo leitor FIT (ler_fit) e pela deteccao de tiros (tiros_1km@5, visao dos esforcos).
+com a conta a mao, lidos pelo leitor FIT (ler_fit) e pela deteccao de tiros (tiros_1km@6, visao dos esforcos).
 """
 
 import importlib.util

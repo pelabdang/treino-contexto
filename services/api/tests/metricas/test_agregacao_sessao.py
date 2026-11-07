@@ -126,13 +126,13 @@ def test_serie_vazia():
 
 def test_versao_da_deteccao_chega_ao_ponto_da_serie():
     # 3 tiros de 1000 m com recuperação de 400 m: a sessão é intervalada e a versão da regra
-    # (tiros_1km@5) viaja da detecção até o ponto agregado.
+    # (tiros_1km@6) viaja da detecção até o ponto agregado.
     sessao = sessao_de_blocos("a1", date(2025, 3, 4), _blocos(
         [(1000, 250, 0), (400, 150, 0), (1000, 250, 0), (400, 150, 0), (1000, 250, 0)]))
-    assert sessao.versao == "tiros_1km@5" and len(sessao.tiros) == 3
+    assert sessao.versao == "tiros_1km@6" and len(sessao.tiros) == 3
     (ponto,) = serie_por_sessao([sessao])
-    assert ponto.versao == "tiros_1km@5"
-    assert agregar_sessao("a1", date(2025, 3, 4), sessao.tiros).versao == "tiros_1km@5"
+    assert ponto.versao == "tiros_1km@6"
+    assert agregar_sessao("a1", date(2025, 3, 4), sessao.tiros).versao == "tiros_1km@6"
 
 
 def test_melhor_tiro_do_exemplo_da_issue_151():

@@ -87,7 +87,7 @@ ponta é da #172 (Bia).
    P -c "update segmento set versao_deteccao='tiros_1km@4'"
    curl -s localhost:8045/atletas/1/evolucao/tiros-1km
    ```
-   Esperado: `"versao_calculo": "tiros_1km@5"` e `"reclassificacao_pendente": true` (a API avisa que as voltas guardam outra versão).
+   Esperado: `"versao_calculo": "tiros_1km@6"` e `"reclassificacao_pendente": true` (a API avisa que as voltas guardam outra versão).
    Reclassifique e consulte de novo:
    ```
    uv run python -m worker.reclassificar --atleta-id 1

@@ -2,7 +2,7 @@
 tipo: metrica
 status: em-uso
 dono: caio
-atualizado: 2026-11-06
+atualizado: 2026-11-07
 links: [[modulos/grafico-tiros]], [[metricas/esforcos]], [[decisoes/0008-deteccao-de-esforcos]], [[produto/meta-1-como-reproduzir]], [[produto/roadmap]], [[decisoes/0001-modelo-de-dados-minimo]], [[decisoes/0002-segmento-intensidade-e-versao]], [[glossario]]
 ---
 # Tiros de 1 km
@@ -12,7 +12,7 @@ Quais blocos de uma corrida são tiros de 1 km e se a atividade é um treino int
 "pace e FC médios dos tiros por sessão" da Meta 1. Cálculo determinístico, em código, sem banco e sem IA.
 
 ## Fórmula
-Versão do cálculo: `tiros_1km@5` (#168; as anteriores foram substituídas, ver "Histórico"). Constantes e funções em
+Versão do cálculo: `tiros_1km@6` (#243; as anteriores foram substituídas, ver "Histórico"). Constantes e funções em
 `services/api/app/metricas/tiros_1km.py` (`tiros_de_blocos`). Desde a `@5` a série **não lê mais voltas**: é uma
 **visão dos esforços** ([[metricas/esforcos]], ADR [[decisoes/0008-deteccao-de-esforcos]], item 8), lida de
 `bloco_atividade` (`esforcos@1`, gravado pelo `worker.detectar_esforcos`).
@@ -23,6 +23,16 @@ Versão do cálculo: `tiros_1km@5` (#168; as anteriores foram substituídas, ver
    relógio cortou em 500 + 500 já chega como um bloco. Um esforço de **1500 m** (`d1500`), de 2000 m ou de 400 m
    **não é** tiro de 1 km. Aquecimento, desaquecimento, recuperação e rodagem (`leve`) saem pela própria categoria.
    A intensidade do FIT não é lida (é dica, ADR 0002).
+2a. **Pausa dentro do tiro** (`@6`, #243; ADR 0008, adendo). É feita logo após ler os blocos e vale para todos os passos seguintes. Um tiro que o atleta parou no meio (semáforo, bebida,
+   cronômetro parado) chega dos esforços como 2 ou 3 pedaços, porque a parada de 15 s ou mais separa os blocos. Os pedaços de **esforço** vizinhos (sem recuperação entre eles, cada um com menos de 950 m) viram **um
+   bloco** quando: a parada entre cada par é **menor que 60 s** (`PAUSA_NO_TIRO_MAX_S`); o pace de cada pedaço fica a
+   até 5% do pace acumulado (o mesmo `JUNTAR_TOLERANCIA` dos esforços); e a soma cai em 950 a 1050 m. A cadeia
+   precisa ter **2 ou 3 pedaços**: uma cadeia maior é série de repetições curtas com descanso curto (4 x 500 m com 30 s),
+   que não se confunde com um tiro de 1 km cortado. O tiro conta o **tempo em movimento** (soma das durações; o tempo
+   parado não entra no pace). Exemplo: 600 m em 150 s, parado 20 s, 400 m em 100 s, ambos a 250 s/km: 1000 m em
+   250 s, pace 250 s/km, um tiro (na `@5` eram `d600` + `d400`, nenhum tiro). Com parada de 59 s junta; com 60 s, não.
+   Esta regra **não muda** os esforços (`esforcos@1`) nem o treino-chave contínuo (parada de 15 s ou mais corta a
+   sequência, decisão de 06/11): só a leitura da série de tiros.
 3. **Ritmo parecido** (igual à `@4`): com 3 ou mais candidatos, sai o que é **mais de 20% mais lento** que a mediana
    deles (`pace > mediana x 1,20`; o limite entra).
 4. **Bloco contínuo** (a regra de 15% da `@4`, agora sobre blocos): sai o candidato que é **menos de 15% mais rápido**
@@ -184,6 +194,12 @@ Regra própria do projeto; não há artigo.
   que agora também recria os blocos (`detectar_esforcos`) e regrava `tipo` e `versao_deteccao` dos segmentos. A API traz
   `reclassificacao_pendente: true` até lá. O contrato (campos) não mudou; só `versao_calculo` passa a `tiros_1km@5`.
 
+- `tiros_1km@6` (#243): pausa dentro do tiro (item 2a): pedaços de esforço cortados por parada de 15 s a menos de 60 s
+  valem como um tiro de 1 km, que conta o tempo em movimento. Mínimo de 2 tiros mantido; velocidade habitual do ciclismo
+  (12 semanas, pedais de 30 min ou mais, mínimo de 10) confirmada (ADR 0008, adendo). Os blocos (`esforcos@1`) não
+  mudam; **reclassificar** (`python -m worker.reclassificar --atleta-id <id>`) recalcula as linhas `@5` e regrava
+  `tipo` e `versao_deteccao`. `ResultadoTiros.blocos_tiro` traz os tiros já juntados (distância, duração, voltas).
+
 ## Código e teste
 - Melhor tiro (#151): sem mudança de versão, ver "Agregação por sessão".
 - Código: `services/api/app/metricas/tiros_1km.py` (`tiros_de_blocos`, `agregar_sessao`, `serie_por_sessao`); `services/api/app/servicos/evolucao_tiros.py` (leitura dos blocos); escala dos eixos em `services/api/app/graficos/escala.py`
@@ -206,6 +222,9 @@ Regra própria do projeto; não há artigo.
 - O filtro do ritmo habitual (agora 10%) e a janela de 12 semanas também só foram vistos com **um atleta**. Atleta novo, sem corridas anteriores, não é filtrado na série (mas a detecção usa a referência da atividade, ver acima; e com menos de 10 corridas na janela o
   histórico todo é a referência, que é menos preciso). Um treino de tiros leve, mais lento que 10% abaixo do ritmo
   habitual (por exemplo, volta à corrida depois de lesão), não entra na série de tiros.
+- **Pausa dentro do tiro** (`@6`): o limite de 60 s é decisão do projeto, sem artigo. Duas repetições curtas que
+  somam 1 km com descanso de menos de 60 s (2 x 500 m com 30 s) valem como um tiro só; a sessão precisa de pelo menos 2
+  tiros, então 2 x 500 m sozinho não entra. Pausa de 60 s ou mais dentro do tiro ainda o parte em pedaços.
 - **Vizinho separado por pausa corta o tiro** (conferência local, #169): o vizinho de 950 m ou mais só é ignorado
   quando ele próprio é candidato a tiro e há parada de 15 s ou mais entre os dois. Um vizinho que não é candidato (por
   exemplo um esforço de 1500 m) corta o tiro de 1 km como continuação mesmo com descanso parado entre eles; séries
