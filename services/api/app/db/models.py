@@ -37,6 +37,8 @@ ORIGENS_ROTULO = ("sugerido", "atleta")  # ADR 0009, item 1
 GRANDEZAS_LIMIAR = ("fc_bpm", "velocidade_ms")  # ADR 0010, item 1
 ORIGENS_LIMIAR = ("garmin_export", "informado")
 ORIGENS_ZONA = ("garmin_export", "garmin_fit")
+ORIGENS_SAUDE = ("garmin_export",)  # recorde_pessoal e carga_garmin_dia (ADR 0010, item 2)
+UNIDADES_RECORDE = ("s", "m", "W", "passos")  # ou nulo: tipo desconhecido (adendo da ADR 0010)
 
 ESTADOS_CLIMA = ("ok", "pendente", "falha")  # indoor e sem_posicao sao calculados na leitura (ADR 0007)
 
@@ -289,5 +291,57 @@ class ZonaFcAtleta(Base):
     zona4_min_bpm: Mapped[int] = mapped_column(Integer)
     zona5_min_bpm: Mapped[int] = mapped_column(Integer)
     zona5_max_bpm: Mapped[int] = mapped_column(Integer)
+    versao_leitura: Mapped[str] = mapped_column(String(40))
+    importado_em: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+
+
+class RecordePessoal(Base):
+    """Recorde pessoal (ADR 0010, item 2): uma linha por (modalidade, categoria, data em que foi batido).
+
+    Um recorde melhorado entra como linha nova, sem apagar o anterior. `categoria` e o tipo como a fonte traz.
+    `unidade` (`s`, `m`, `W`, `passos` ou nulo se o tipo e desconhecido) depende da categoria. `atividade_fonte_id`
+    nao tem FK: a atividade pode nao estar importada. Dado fisiologico (LGPD): so no banco local, nunca em log.
+    """
+
+    __tablename__ = "recorde_pessoal"
+    __table_args__ = (
+        UniqueConstraint("atleta_id", "origem", "modalidade", "categoria", "alcancado_em", name="uq_recorde_pessoal_chave"),
+        CheckConstraint(_in("modalidade", MODALIDADES), name="modalidade"),
+        CheckConstraint(_in("origem", ORIGENS_SAUDE), name="origem"),
+        CheckConstraint(f"unidade IS NULL OR {_in('unidade', UNIDADES_RECORDE)}", name="unidade"),
+    )
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    atleta_id: Mapped[int] = mapped_column(ForeignKey("atleta.id", ondelete="CASCADE"), index=True)
+    origem: Mapped[str] = mapped_column(String(20))
+    modalidade: Mapped[str] = mapped_column(String(20))
+    categoria: Mapped[str] = mapped_column(String(60))
+    valor: Mapped[float] = mapped_column(Float)
+    unidade: Mapped[str | None] = mapped_column(String(10))
+    alcancado_em: Mapped[datetime] = mapped_column(DateTime(timezone=True))
+    atividade_fonte_id: Mapped[str | None] = mapped_column(String(100))
+    versao_leitura: Mapped[str] = mapped_column(String(40))
+    importado_em: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+
+
+class CargaGarminDia(Base):
+    """Carga aguda e cronica do Garmin, um valor por dia (ADR 0010, item 2). Na escala do Garmin, nao a do TSS.
+
+    So a conferencia (item 8) usa; nunca entra na nossa carga. Dado fisiologico (LGPD): so no banco local.
+    """
+
+    __tablename__ = "carga_garmin_dia"
+    __table_args__ = (
+        UniqueConstraint("atleta_id", "origem", "dia", name="uq_carga_garmin_dia_chave"),
+        CheckConstraint(_in("origem", ORIGENS_SAUDE), name="origem"),
+    )
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    atleta_id: Mapped[int] = mapped_column(ForeignKey("atleta.id", ondelete="CASCADE"), index=True)
+    origem: Mapped[str] = mapped_column(String(20))
+    dia: Mapped[date] = mapped_column(Date)
+    carga_aguda: Mapped[float | None] = mapped_column(Float)
+    carga_cronica: Mapped[float | None] = mapped_column(Float)
+    razao: Mapped[float | None] = mapped_column(Float)
     versao_leitura: Mapped[str] = mapped_column(String(40))
     importado_em: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())

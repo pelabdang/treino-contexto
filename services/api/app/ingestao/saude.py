@@ -1,8 +1,9 @@
-"""Gravacao dos dados de saude da exportacao Garmin: limiar e zonas de FC (Meta 6, #140; ADR 0010, itens 1 a 3).
+"""Gravacao dos dados de saude da exportacao Garmin (Meta 6, #140 e #174; ADR 0010, itens 1 a 3).
 
-`importar_saude` usa o leitor puro (`garmin.saude.ler_saude`) e grava em `limiar_atleta` e `zona_fc_atleta`. Sem rede.
-Idempotente pela chave de cada tabela; uma mudanca nova entra como nova vigencia, sem apagar o historico; uma reimportacao
-mais curta nunca apaga linhas. Recordes e carga do Garmin ficam na #174.
+`importar_saude` usa o leitor puro (`garmin.saude.ler_saude`) e grava em `limiar_atleta`, `zona_fc_atleta`,
+`recorde_pessoal` e `carga_garmin_dia`. Sem rede. Idempotente pela chave de cada tabela; uma mudanca nova entra como
+nova linha (vigencia, recorde ou dia), sem apagar o historico; uma reimportacao mais curta nunca apaga linhas.
+`apagar_saude_do_atleta` (LGPD) apaga as quatro tabelas do atleta.
 
 So devolve contagens e avisos do leitor (sem valor fisiologico): nada aqui escreve valor em log.
 """
@@ -13,15 +14,17 @@ from dataclasses import dataclass, field
 from datetime import date
 from pathlib import Path
 
-from app.db.models import Atleta, LimiarAtleta, ZonaFcAtleta
+from app.db.models import Atleta, CargaGarminDia, LimiarAtleta, RecordePessoal, ZonaFcAtleta
 from app.ingestao.garmin.modelos_saude import (
     ORIGEM_EXPORT,
     VERSAO_LEITURA,
+    CargaGarminDia as CargaRegistro,
     LimiarRegistro,
+    RecordePessoal as RecordeRegistro,
     ZonaFc,
 )
 from app.ingestao.garmin.saude import ler_saude
-from sqlalchemy import select
+from sqlalchemy import delete, select
 from sqlalchemy.orm import Session
 
 
@@ -36,11 +39,13 @@ class Contagem:
 class RelatorioSaude:
     limiar: Contagem = field(default_factory=Contagem)
     zonas: Contagem = field(default_factory=Contagem)
+    recordes: Contagem = field(default_factory=Contagem)
+    carga: Contagem = field(default_factory=Contagem)
     avisos: list[str] = field(default_factory=list)
 
     @property
     def gravou_algo(self) -> bool:
-        return any(c.inseridas or c.atualizadas for c in (self.limiar, self.zonas))
+        return any(c.inseridas or c.atualizadas for c in (self.limiar, self.zonas, self.recordes, self.carga))
 
 
 _CAMPOS_ZONA = ("metodo", "fc_max_bpm", "fc_repouso_bpm", "zona1_min_bpm", "zona2_min_bpm", "zona3_min_bpm",
@@ -96,9 +101,44 @@ def _gravar_zona(session: Session, atleta_id: int, z: ZonaFc, cont: Contagem, av
         cont.ignoradas += 1
 
 
+def _gravar_recorde(session: Session, atleta_id: int, r: RecordeRegistro, cont: Contagem, avisos: list[str]) -> None:
+    atual = session.scalars(select(RecordePessoal).where(
+        RecordePessoal.atleta_id == atleta_id, RecordePessoal.origem == r.origem,
+        RecordePessoal.modalidade == r.modalidade, RecordePessoal.categoria == r.categoria,
+        RecordePessoal.alcancado_em == r.alcancado_em)).first()
+    if atual is None:
+        session.add(RecordePessoal(atleta_id=atleta_id, origem=r.origem, modalidade=r.modalidade, categoria=r.categoria,
+                                   valor=r.valor, unidade=r.unidade, alcancado_em=r.alcancado_em,
+                                   atividade_fonte_id=r.atividade_fonte_id, versao_leitura=VERSAO_LEITURA))
+        cont.inseridas += 1
+    elif (atual.valor, atual.unidade, atual.atividade_fonte_id) != (r.valor, r.unidade, r.atividade_fonte_id):
+        atual.valor, atual.unidade, atual.atividade_fonte_id = r.valor, r.unidade, r.atividade_fonte_id
+        atual.versao_leitura = VERSAO_LEITURA
+        cont.atualizadas += 1
+        avisos.append(f"recorde pessoal ({r.modalidade}) de {r.alcancado_em.date().isoformat()} corrigido pela fonte")
+    else:
+        cont.ignoradas += 1
+
+
+def _gravar_carga(session: Session, atleta_id: int, c: CargaRegistro, cont: Contagem, avisos: list[str]) -> None:
+    atual = session.scalars(select(CargaGarminDia).where(
+        CargaGarminDia.atleta_id == atleta_id, CargaGarminDia.origem == c.origem, CargaGarminDia.dia == c.dia)).first()
+    if atual is None:
+        session.add(CargaGarminDia(atleta_id=atleta_id, origem=c.origem, dia=c.dia, carga_aguda=c.carga_aguda,
+                                   carga_cronica=c.carga_cronica, razao=c.razao, versao_leitura=VERSAO_LEITURA))
+        cont.inseridas += 1
+    elif (atual.carga_aguda, atual.carga_cronica, atual.razao) != (c.carga_aguda, c.carga_cronica, c.razao):
+        atual.carga_aguda, atual.carga_cronica, atual.razao = c.carga_aguda, c.carga_cronica, c.razao
+        atual.versao_leitura = VERSAO_LEITURA
+        cont.atualizadas += 1
+        avisos.append(f"carga do Garmin de {c.dia.isoformat()} corrigida pela fonte")
+    else:
+        cont.ignoradas += 1
+
+
 def importar_saude(session: Session, caminho: str | Path, atleta_nome: str,
                    dia_retrato: date | None = None) -> RelatorioSaude:
-    """Le a exportacao e grava limiar e zonas de FC do atleta. Reimportar nao duplica nada.
+    """Le a exportacao e grava limiar, zonas de FC, recordes e carga do Garmin do atleta. Reimportar nao duplica nada.
 
     `dia_retrato` (padrao: hoje) e o `vigente_desde` das zonas do JSON, que e so um retrato sem data. Exportacao sem
     dados de saude: nada e gravado (nem o atleta e criado) e os motivos vem em `avisos`. Faz `commit` ao fim.
@@ -107,7 +147,7 @@ def importar_saude(session: Session, caminho: str | Path, atleta_nome: str,
     dia = dia_retrato or date.today()
     saude = ler_saude(caminho, dia_retrato=dia)
     rel = RelatorioSaude(avisos=list(saude.avisos))
-    if not saude.limiares and not saude.zonas:
+    if not (saude.limiares or saude.zonas or saude.recordes or saude.carga_dia):
         return rel
 
     atleta = session.scalars(select(Atleta).where(Atleta.nome == atleta_nome).order_by(Atleta.id)).first()
@@ -123,8 +163,26 @@ def importar_saude(session: Session, caminho: str | Path, atleta_nome: str,
         if z.vigente_desde is not None:
             _gravar_zona(session, atleta.id, z, rel.zonas, rel.avisos)
             session.flush()
+    for r in saude.recordes:
+        _gravar_recorde(session, atleta.id, r, rel.recordes, rel.avisos)
+    session.flush()
+    for c in saude.carga_dia:
+        _gravar_carga(session, atleta.id, c, rel.carga, rel.avisos)
     session.commit()
     return rel
+
+
+def apagar_saude_do_atleta(session: Session, atleta_id: int) -> dict[str, int]:
+    """Apaga as quatro tabelas de saude do atleta (LGPD): limiar, zonas, recordes e carga do Garmin.
+
+    Nao apaga o atleta, as atividades nem os FIT. Idempotente. Devolve so contagens por tabela. Faz `commit`.
+    """
+    contagens = {}
+    for nome, modelo in (("limiar", LimiarAtleta), ("zonas", ZonaFcAtleta), ("recordes", RecordePessoal),
+                         ("carga", CargaGarminDia)):
+        contagens[nome] = session.execute(delete(modelo).where(modelo.atleta_id == atleta_id)).rowcount
+    session.commit()
+    return contagens
 
 
 def limiar_vigente(session: Session, atleta_id: int, grandeza: str, dia: date) -> LimiarAtleta | None:

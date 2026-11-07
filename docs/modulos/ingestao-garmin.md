@@ -462,20 +462,27 @@ faixa 0, ou seja o piso da zona 1; e os limites do FIT são crescentes e têm a 
 FC máxima, e a FC máxima como teto; nas fixtures, 95 a 190 no FIT e 94 a 188 no JSON). Essa parte é **inferência confirmada por consistência, não texto do Profile**. O
 leitor rejeita FIT cujos 6 limites não sejam positivos e em ordem não decrescente.
 
-### Gravação no banco (#140)
+### Gravação no banco (#140 e #174)
 `app/ingestao/saude.py`: `importar_saude(session, caminho, atleta_nome, dia_retrato=None)` (`dia_retrato` padrão: hoje) lê com
-`ler_saude` e grava em `limiar_atleta` e `zona_fc_atleta` ([[modulos/banco]], [[decisoes/0010-carga-de-treino]]). Sem rede. Devolve
-`RelatorioSaude` (contagens `inseridas`, `atualizadas`, `ignoradas` para o limiar e para as zonas, mais os avisos do leitor; nunca valor).
-- **Chaves:** limiar `(atleta, grandeza, origem, vigente_desde)`; zonas `(atleta, esporte, origem, vigente_desde)`. Chave nova = linha nova
+`ler_saude` e grava em `limiar_atleta`, `zona_fc_atleta`, `recorde_pessoal` e `carga_garmin_dia` ([[modulos/banco]], [[decisoes/0010-carga-de-treino]]). Sem rede. Devolve
+`RelatorioSaude` (contagens `inseridas`, `atualizadas`, `ignoradas` por tabela: limiar, zonas, recordes e carga, mais os avisos do leitor; nunca valor).
+- **Chaves:** limiar `(atleta, grandeza, origem, vigente_desde)`; zonas `(atleta, esporte, origem, vigente_desde)`; recordes `(atleta, origem, modalidade, categoria, alcancado_em)`; carga do Garmin
+  `(atleta, origem, dia)`. Chave nova = linha nova
   (histórico). Mesma chave com valor diferente = correção da fonte: atualiza, conta `atualizadas` e dá aviso (o único caso de sobrescrita).
 - **Retrato das zonas** (`garmin_export`): `vigente_desde` = dia da importação. Se as zonas são iguais às vigentes do esporte, nada é gravado
   (reimportar em outro dia não duplica); se diferem, abre uma vigência nova. Zonas do FIT (`garmin_fit`): uma linha por mudança, no dia local da sessão.
-- **Exportação mais curta nunca apaga linhas.** Sem dados de saúde (nem limiar nem zonas): nada é gravado, nem o atleta é criado; os motivos
+- **Recordes (#174):** um recorde melhorado tem outra data (`prStartTimeGMT`), logo é **linha nova**, e o anterior fica (nas fixtures,
+  `Best 1km Run` fica com duas linhas, 04/03 e 11/03). A flag `current` do leitor não é gravada: o vigente de cada tipo é o de maior
+  `alcancado_em`. `unidade` é `s`, `m`, `W`, `passos` ou nula (tipo que o leitor não reconhece); `atividade_fonte_id` nulo quando o
+  `activityId` é 0; sem FK, porque a atividade pode não estar importada. **Carga do Garmin:** uma linha por dia (já resolvida pelo leitor);
+  aguda, crônica e razão aceitam nulo. Correção da fonte na mesma chave atualiza (aviso sem valor).
+- **Exportação mais curta nunca apaga linhas.** Sem dados de saúde (nem limiar, zonas, recordes nem carga): nada é gravado, nem o atleta é criado; os motivos
   vêm em `avisos` ("sem carga" com motivo é da #141).
 - `limiar_vigente(session, atleta_id, grandeza, dia)` e `zonas_vigentes(session, atleta_id, esporte, dia, origem=None)` aplicam a regra de
   vigência (maior `vigente_desde <= dia`; antes da primeira, `None`; no mesmo dia `informado` vence `garmin_export`). A #141 usa a primeira.
 - Comando: `uv run python -m worker.importar_saude <caminho> --atleta "<nome>"` ([[modulos/worker]]); o `importar_garmin` chama a mesma função no
-  fim, e erro ali vira aviso. **Recordes e carga do Garmin não são gravados aqui** (#174).
+  fim, e erro ali vira aviso. `uv run python -m worker.apagar_saude --atleta "<nome>"` (LGPD) apaga as quatro tabelas de saúde do atleta
+  (`apagar_saude_do_atleta`); o atleta, as atividades e os FIT ficam. Imprime só contagens.
 - Testes: `services/api/tests/ingestao/test_importar_saude.py` e `services/worker/tests/test_importar_saude.py`.
 
 ### Atleta sem dados de saúde

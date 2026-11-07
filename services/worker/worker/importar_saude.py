@@ -1,9 +1,9 @@
-"""Importa os dados de saude (limiar e zonas de FC) da exportacao Garmin para o banco (issue #140, ADR 0010).
+"""Importa os dados de saude (limiar, zonas de FC, recordes e carga do Garmin) da exportacao Garmin para o banco (issues #140 e #174, ADR 0010).
 
     uv run python -m worker.importar_saude <caminho> --atleta "<nome>"
 
 Sem rede. Idempotente. Serve a quem importou so o FIT ou importou a exportacao antes da Meta 6; o `importar_garmin` chama a
-mesma funcao no fim. Imprime so contagens e avisos, nunca os valores (dado fisiologico, LGPD). Recordes e carga do Garmin: #174.
+mesma funcao no fim. Imprime so contagens e avisos, nunca os valores (dado fisiologico, LGPD).
 """
 
 from __future__ import annotations
@@ -17,7 +17,8 @@ __all__ = ["RelatorioSaude", "importar_saude", "imprimir", "main"]
 
 
 def imprimir(rel: RelatorioSaude) -> None:
-    for nome, c in (("limiar", rel.limiar), ("zonas", rel.zonas)):
+    for nome, c in (("limiar", rel.limiar), ("zonas", rel.zonas), ("recordes", rel.recordes),
+                    ("carga", rel.carga)):
         print(f"saude {nome}: inseridas={c.inseridas} atualizadas={c.atualizadas} ignoradas={c.ignoradas}")
     for aviso in rel.avisos:
         print(f"  aviso: {aviso}")
@@ -25,7 +26,7 @@ def imprimir(rel: RelatorioSaude) -> None:
 
 def main(argv: list[str] | None = None) -> int:
     p = argparse.ArgumentParser(prog="python -m worker.importar_saude",
-                                description="Importa limiar e zonas de FC da exportacao Garmin (zip ou pasta).")
+                                description="Importa limiar, zonas de FC, recordes e carga do Garmin da exportacao Garmin (zip ou pasta).")
     p.add_argument("caminho")
     p.add_argument("--atleta", required=True, help="nome do atleta (criado se houver dados de saude)")
     args = p.parse_args(argv)
