@@ -390,8 +390,7 @@ não lê); logo, o histórico de zonas só existe para atividades com FIT:
 | | `time_in_hr_zone` | lista em segundos (7 itens; `fitdecode` já converte a escala) | tempo em cada faixa; índice 0 = abaixo do primeiro limite |
 | `zones_target` | `max_heart_rate`, `threshold_heart_rate`, `hr_calc_type` | bpm, enum | mesma informação, sem as listas |
 
-A correspondência exata entre os 6 limites, os 7 tempos e as zonas 1 a 5 fica para a #136 (conferir com o Profile do FIT SDK,
-<https://developer.garmin.com/fit/>). Campos como `threshold_heart_rate` podem faltar. O `summarizedActivities.json` traz o **tempo em
+A correspondência entre os 6 limites, os 7 tempos e as zonas 1 a 5 está em "Conferência com o Profile do FIT SDK (#140)", abaixo. Campos como `threshold_heart_rate` podem faltar. O `summarizedActivities.json` traz o **tempo em
 cada zona** por atividade (`hrTimeInZone_0` ... `hrTimeInZone_6`, em **milissegundos**, somando cerca de `duration`), mas não os limites.
 
 ### Recordes pessoais: `*_personalRecord.json`
@@ -443,7 +442,41 @@ caminho não existe). Os avisos não trazem nome de arquivo, id nem valor.
 | Carga (`CargaGarminDia`) | um valor por dia (`calendarDate` em ms → dia UTC): vale o item de maior `timestamp`; a razão pode faltar (`None`) |
 
 Testes: `services/api/tests/ingestao/test_saude_garmin.py` (tabelas escritas à mão a partir da linha do tempo das fixtures).
-**Fora desta issue:** `bioMetrics_latest.json` (o histórico do `userBioMetrics` o cobre), o tempo em cada zona e a gravação no banco (#140).
+**Fora do leitor:** `bioMetrics_latest.json` (o histórico do `userBioMetrics` o cobre) e o tempo em cada zona.
+
+#### Conferência com o Profile do FIT SDK (#140)
+Fonte pública: o Profile do SDK da Garmin (pacote `garmin-fit-sdk` 21.221.0, repositório <https://github.com/garmin/fit-python-sdk>, arquivo
+`profile.py`), conferido em 07/11/2026. Mensagem `time_in_zone`:
+
+| Campo | O que o Profile diz |
+|---|---|
+| `hr_zone_high_boundary` | `uint8`, lista, bpm |
+| `time_in_hr_zone` | `uint32`, lista, escala 1000, segundos |
+| `hr_calc_type` | enum `hr_zone_calc`: `custom`, `percent_max_hr`, `percent_hrr`, `percent_lthr` |
+| `max_heart_rate`, `resting_heart_rate`, `threshold_heart_rate` | bpm |
+
+**O que o Profile não diz:** quantos itens a lista tem e que o primeiro é o piso da zona 1. O nome "high boundary" quer dizer limite
+**superior** de cada faixa de `time_in_hr_zone`. A leitura dos 6 limites como piso das zonas 1 a 5 e teto da 5 vem de duas conferências:
+`time_in_hr_zone` tem 7 faixas (índice 0 = abaixo do primeiro limite), logo 6 limites separam as 7 faixas e o primeiro é o limite superior da
+faixa 0, ou seja o piso da zona 1; e os limites do FIT são crescentes e têm a mesma forma do retrato do JSON (`zone1Floor` ... `zone5Floor` em 50, 60, 70, 80 e 90 % da
+FC máxima, e a FC máxima como teto; nas fixtures, 95 a 190 no FIT e 94 a 188 no JSON). Essa parte é **inferência confirmada por consistência, não texto do Profile**. O
+leitor rejeita FIT cujos 6 limites não sejam positivos e em ordem não decrescente.
+
+### Gravação no banco (#140)
+`app/ingestao/saude.py`: `importar_saude(session, caminho, atleta_nome, dia_retrato=None)` (`dia_retrato` padrão: hoje) lê com
+`ler_saude` e grava em `limiar_atleta` e `zona_fc_atleta` ([[modulos/banco]], [[decisoes/0010-carga-de-treino]]). Sem rede. Devolve
+`RelatorioSaude` (contagens `inseridas`, `atualizadas`, `ignoradas` para o limiar e para as zonas, mais os avisos do leitor; nunca valor).
+- **Chaves:** limiar `(atleta, grandeza, origem, vigente_desde)`; zonas `(atleta, esporte, origem, vigente_desde)`. Chave nova = linha nova
+  (histórico). Mesma chave com valor diferente = correção da fonte: atualiza, conta `atualizadas` e dá aviso (o único caso de sobrescrita).
+- **Retrato das zonas** (`garmin_export`): `vigente_desde` = dia da importação. Se as zonas são iguais às vigentes do esporte, nada é gravado
+  (reimportar em outro dia não duplica); se diferem, abre uma vigência nova. Zonas do FIT (`garmin_fit`): uma linha por mudança, no dia local da sessão.
+- **Exportação mais curta nunca apaga linhas.** Sem dados de saúde (nem limiar nem zonas): nada é gravado, nem o atleta é criado; os motivos
+  vêm em `avisos` ("sem carga" com motivo é da #141).
+- `limiar_vigente(session, atleta_id, grandeza, dia)` e `zonas_vigentes(session, atleta_id, esporte, dia, origem=None)` aplicam a regra de
+  vigência (maior `vigente_desde <= dia`; antes da primeira, `None`; no mesmo dia `informado` vence `garmin_export`). A #141 usa a primeira.
+- Comando: `uv run python -m worker.importar_saude <caminho> --atleta "<nome>"` ([[modulos/worker]]); o `importar_garmin` chama a mesma função no
+  fim, e erro ali vira aviso. **Recordes e carga do Garmin não são gravados aqui** (#174).
+- Testes: `services/api/tests/ingestao/test_importar_saude.py` e `services/worker/tests/test_importar_saude.py`.
 
 ### Atleta sem dados de saúde
 Os arquivos acima são opcionais. Um atleta sem eles tem a exportação com atividades e FIT e nenhuma das pastas de saúde e métricas

@@ -2,8 +2,8 @@
 tipo: modulo
 status: em-uso
 dono: theo
-atualizado: 2026-11-06
-links: [[decisoes/0001-modelo-de-dados-minimo]], [[decisoes/0002-segmento-intensidade-e-versao]], [[decisoes/0003-fuso-da-atividade]], [[decisoes/0007-clima-da-atividade]], [[decisoes/0008-deteccao-de-esforcos]], [[decisoes/0009-treino-de-transicao]], [[modulos/api]], [[modulos/infra]], [[produto/meta-4-como-rodar]]
+atualizado: 2026-11-07
+links: [[decisoes/0001-modelo-de-dados-minimo]], [[decisoes/0002-segmento-intensidade-e-versao]], [[decisoes/0003-fuso-da-atividade]], [[decisoes/0007-clima-da-atividade]], [[decisoes/0008-deteccao-de-esforcos]], [[decisoes/0009-treino-de-transicao]], [[decisoes/0010-carga-de-treino]], [[modulos/ingestao-garmin]], [[modulos/api]], [[modulos/infra]], [[produto/meta-4-como-rodar]]
 ---
 # Módulo: banco
 
@@ -12,7 +12,7 @@ Guarda atleta, atividades importadas e segmentos (voltas, tiros, recuperações)
 Motivos da escolha em [[decisoes/0001-modelo-de-dados-minimo]].
 
 ## Entradas e saídas
-- Tabelas: `assessoria`, `professor`, `atleta`, `vinculo_professor_atleta`, `atividade`, `segmento`, `clima_atividade`, `bloco_atividade`, `rotulo_transicao`.
+- Tabelas: `assessoria`, `professor`, `atleta`, `vinculo_professor_atleta`, `atividade`, `segmento`, `clima_atividade`, `bloco_atividade`, `rotulo_transicao`, `limiar_atleta`, `zona_fc_atleta`.
 - `atividade` é única por `(atleta_id, fonte, fonte_id)`: reimportar não duplica.
 - `segmento` tem `intensidade` (valor do FIT, com `CHECK`) e `versao_deteccao` (ex.: `tiros_1km@1`), ambos anuláveis. Ver [[decisoes/0002-segmento-intensidade-e-versao]].
 - `atividade.fuso_min` (int, anulável, `CHECK` de -720 a 840): deslocamento do fuso em minutos; a data local da sessão é a de `inicio + fuso_min`, ou `America/Sao_Paulo` se for `NULL`. Ver [[decisoes/0003-fuso-da-atividade]].
@@ -20,6 +20,8 @@ Motivos da escolha em [[decisoes/0001-modelo-de-dados-minimo]].
 - `clima_atividade` (migração 0005, [[decisoes/0007-clima-da-atividade]]): uma linha por atividade **consultada** (`atividade_id` único, `ON DELETE CASCADE`). `estado` (`ok`, `pendente`, `falha`, com `CHECK`), `temperatura_c`, `sensacao_c`, `umidade_pct`, `vento_kmh` (nulos fora de `ok`), `fonte` (`open-meteo-archive`), `entrada` (SHA-256 de `inicio` em UTC e segundos, `duracao_s` inteiro, `inicio_lat` e `inicio_lon` com 2 casas), `tentativas` (rodadas), `erro` (até 200 caracteres, sem coordenada) e `consultado_em`. **Não há linha** para `indoor` nem `sem_posicao`: esses estados são calculados na leitura (`app.servicos.clima.clima_da_atividade`).
 - `bloco_atividade` (migração 0006, [[decisoes/0008-deteccao-de-esforcos]], item 9): uma linha por **bloco** de cada corrida e pedalada, de todas as categorias; `segmento` não muda. Colunas: `atividade_id` (FK, `ON DELETE CASCADE`, indexada), `ordem` (`UNIQUE (atividade_id, ordem)`), `categoria` (`esforco`, `recuperacao`, `aquecimento`, `desaquecimento`, `leve`, com `CHECK`), `volta_inicial` e `volta_final` (`segmento.ordem` das voltas juntadas), `inicio_offset_s`, `duracao_s` (tempo em movimento), `parada_apos_s`, `distancia_m`, `fc_media` (ponderada pela duração), `pace_s_km` (a velocidade em km/h se calcula na leitura: `distancia_m / duracao_s x 3,6`), `faixa` (`d400`, `t4`...; `NULL` fora de qualquer faixa e em tudo que não é esforço), `treino_chave` (só em `esforco`) e `versao_deteccao` (`esforcos@1`). A modalidade vem de `atividade.modalidade`. Quem grava é `app.servicos.esforcos.detectar_esforcos` ([[modulos/worker]]): cada atividade tem os blocos apagados e recriados numa transação, e só quando mudam. Não guarda a referência de intensidade usada (`ref_origem`).
 - `rotulo_transicao` (migração 0007, [[decisoes/0009-treino-de-transicao]], item 1): o rótulo "treino de transição" da atividade; **sem linha = "não"**. Colunas: `atividade_id` (FK única, `ON DELETE CASCADE`), `transicao` (booleano), `origem` (`sugerido` ou `atleta`, com `CHECK`), `versao_regra` (`transicao@1`; nula em `atleta`) e `definido_em` (com fuso). Um `CHECK` amarra origem e versão: `sugerido` exige `transicao = true` e versão (a regra só grava "sim"); `atleta` não tem versão. A linha `atleta` é a correção (sim ou não) e a regra nunca a toca. Quem grava a sugestão é `app.servicos.transicao.aplicar_sugestao` ([[modulos/worker]]); a correção do atleta sai pela API na #170. A `atividade` não ganha coluna, e reimportar a atividade (mesmo `id`) não apaga a correção.
+- `limiar_atleta` (migração 0008, [[decisoes/0010-carga-de-treino]], item 1): uma linha por (grandeza, início de vigência). `atleta_id` (FK, `ON DELETE CASCADE`, indexada), `grandeza` (`fc_bpm` em bpm ou `velocidade_ms` em m/s, com `CHECK`), `valor` (`CHECK valor > 0`), `vigente_desde` (data, dia do calendário sem fuso), `origem` (`garmin_export` ou `informado`, com `CHECK`; só a primeira é gravada hoje), `versao_leitura` (`saude_garmin@1`) e `importado_em`. `UNIQUE (atleta_id, grandeza, origem, vigente_desde)`. Vale a linha de maior `vigente_desde` menor ou igual ao dia; antes da primeira não há limiar. **Dado fisiológico (LGPD): só no banco local, nunca em log nem pela API.**
+- `zona_fc_atleta` (migração 0008, item 2): zonas de FC com vigência. `atleta_id` (FK, cascata, indexada), `esporte` (`padrao`, `corrida`, `ciclismo`), `vigente_desde` (data), `origem` (`garmin_export` = retrato datado pelo dia da importação; `garmin_fit` = uma linha por mudança vista nos FIT, no dia local da sessão; `CHECK`), `metodo` (como a fonte traz, sem `CHECK`), `fc_max_bpm` e `fc_repouso_bpm` (anuláveis), `zona1_min_bpm` ... `zona5_min_bpm` e `zona5_max_bpm`, `versao_leitura`, `importado_em`. `UNIQUE (atleta_id, esporte, origem, vigente_desde)`. Nenhuma métrica da `carga@1` usa. Quem grava as duas tabelas é `app.ingestao.saude.importar_saude` ([[modulos/ingestao-garmin]], "Gravação no banco"); reimportar não duplica e uma exportação mais curta não apaga linhas. As outras três tabelas da ADR 0010 (`recorde_pessoal`, `carga_garmin_dia`, `carga_atividade`) vêm em migrações próprias (#174, #141).
 - `arquivo_bruto` guarda o caminho do original (princípio "guardar o dado bruto").
 - Domínios fixos (modalidade, tipo de treino, origem do tipo, tipo de segmento) são texto com `CHECK`.
 
@@ -32,6 +34,7 @@ Motivos da escolha em [[decisoes/0001-modelo-de-dados-minimo]].
 - `services/api/alembic/versions/0005_clima_atividade.py`: tabela `clima_atividade`, `CHECK` do estado, FK com cascata e unicidade de `atividade_id`. Testada com upgrade, downgrade e upgrade num Postgres isolado.
 - `services/api/alembic/versions/0006_bloco_atividade.py`: tabela `bloco_atividade`, `CHECK` da categoria, FK com cascata, `UNIQUE (atividade_id, ordem)` e índice de `atividade_id`. Sobe e desce no SQLite e no Postgres (`test_migracoes.py`).
 - `services/api/alembic/versions/0007_rotulo_transicao.py`: tabela `rotulo_transicao`, os dois `CHECK`, FK com cascata e unicidade de `atividade_id`. Sobe e desce no SQLite e no Postgres (`test_migracoes.py`).
+- `services/api/alembic/versions/0008_limiar_zona_fc_atleta.py`: tabelas `limiar_atleta` e `zona_fc_atleta`, `CHECK`s, FKs com cascata, as duas `UNIQUE` e os índices de `atleta_id`. Sobe e desce no SQLite e no Postgres (`test_migracoes.py`).
 - `services/api/tests/test_migracoes.py`: garante que a migração gera o esquema dos modelos.
 
 ## Depende de

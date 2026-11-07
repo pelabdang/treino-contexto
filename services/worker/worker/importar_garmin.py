@@ -43,6 +43,21 @@ def clima_do_que_mudou(rel: RelatorioImportacao, cliente=None, session_factory=N
         print(f"aviso: clima nao preenchido ({e.__class__.__name__}); rode worker.preencher_clima", file=sys.stderr)
 
 
+def saude_do_arquivo(caminho: str, atleta: str, session_factory=None) -> None:
+    """Limiar e zonas de FC, no fim (ADR 0010, item 3). Sem rede. Erro vira aviso e nunca derruba a importacao."""
+    try:
+        from app.db.session import SessionLocal
+        from app.ingestao.saude import importar_saude
+
+        from worker.importar_saude import imprimir
+
+        with (session_factory or SessionLocal)() as session:
+            imprimir(importar_saude(session, caminho, atleta))
+    except Exception as e:  # noqa: BLE001
+        print(f"aviso: dados de saude nao importados ({e.__class__.__name__}); rode worker.importar_saude",
+              file=sys.stderr)
+
+
 def main(argv: list[str] | None = None, cliente=None) -> int:
     p = argparse.ArgumentParser(prog="python -m worker.importar_garmin",
                                 description="Importa a exportacao Garmin (zip, pasta, JSON ou FIT) no banco.")
@@ -62,6 +77,7 @@ def main(argv: list[str] | None = None, cliente=None) -> int:
           f"avisos={len(rel.avisos)}")
     for aviso in rel.avisos:
         print(f"  aviso: {aviso}")
+    saude_do_arquivo(args.caminho, args.atleta)
     if args.com_clima:
         clima_do_que_mudou(rel, cliente=cliente)
     else:

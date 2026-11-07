@@ -2,8 +2,8 @@
 tipo: modulo
 status: em-uso
 dono: theo
-atualizado: 2026-11-06
-links: [[decisoes/0006-upload-de-fit]], [[modulos/api]], [[modulos/grafico-tiros]], [[modulos/infra]], [[modulos/ingestao-garmin]], [[modulos/banco]], [[modulos/clima]], [[decisoes/0008-deteccao-de-esforcos]], [[decisoes/0009-treino-de-transicao]], [[metricas/transicao]], [[metricas/esforcos]], [[decisoes/0007-clima-da-atividade]], [[produto/meta-4-como-rodar]]
+atualizado: 2026-11-07
+links: [[decisoes/0006-upload-de-fit]], [[modulos/api]], [[modulos/grafico-tiros]], [[modulos/infra]], [[modulos/ingestao-garmin]], [[modulos/banco]], [[modulos/clima]], [[decisoes/0008-deteccao-de-esforcos]], [[decisoes/0009-treino-de-transicao]], [[decisoes/0010-carga-de-treino]], [[metricas/transicao]], [[metricas/esforcos]], [[decisoes/0007-clima-da-atividade]], [[produto/meta-4-como-rodar]]
 ---
 # Módulo: worker
 
@@ -15,6 +15,7 @@ da importação e do cálculo de métricas, fora da [[modulos/api]].
 - Saída: `GET /health` devolve `{"status": "ok"}`.
 - Parser (na API desde a #92, [[decisoes/0006-upload-de-fit]]): `app.ingestao.garmin.ler_exportacao(caminho)` lê zip, pasta, `summarizedActivities.json` ou `.fit` e devolve atividades com voltas. Detalhes em [[modulos/ingestao-garmin]].
 - Importação: `uv run python -m worker.importar_garmin <caminho> --atleta "<nome>" [--com-clima]` grava atividades e voltas no banco ([[modulos/banco]]), de forma idempotente. **Sem rede por padrão** (#132): sem `--com-clima` nenhuma conexão é aberta e o fim da importação imprime `clima: nao buscado` com o comando a rodar.
+- Saúde (#140, [[decisoes/0010-carga-de-treino]]): `uv run python -m worker.importar_saude <caminho> --atleta "<nome>"` grava o limiar e as zonas de FC da exportação no banco, idempotente e **sem rede**; imprime só contagens por tabela (`saude limiar: inseridas=... atualizadas=... ignoradas=...`) e avisos, nunca valores (dado fisiológico). O `importar_garmin` chama a mesma função no fim das atividades; erro ali vira aviso em stderr e **não derruba** a importação (rode `worker.importar_saude` depois). Exportação sem dados de saúde: nada gravado. Recordes e carga do Garmin: #174. Detalhes em [[modulos/ingestao-garmin]].
 - Gráfico: `uv run python -m worker.grafico_tiros_1km --atleta-id <id> [--inicio AAAA-MM-DD] [--fim AAAA-MM-DD] [--saida <pasta>]`
   lê a série do banco e grava `entregas/meta-1/tiros-1km-atleta-<id>.png` e `.csv` (pasta criada se faltar; fora do
   git). Atleta inexistente: mensagem em stderr e código de saída 1. Formato em [[modulos/grafico-tiros]].
@@ -69,6 +70,7 @@ da importação e do cálculo de métricas, fora da [[modulos/api]].
 - `services/worker/worker/main.py`
 - O parser (`leitor.py`, `fit.py`, `tipos.py`, `unidades.py`, `modelos.py`) está em `services/api/app/ingestao/garmin/`; o worker importa de lá
 - `services/worker/worker/importar_garmin.py` (importação no banco, CLI `python -m worker.importar_garmin`)
+- `services/worker/worker/importar_saude.py` (limiar e zonas de FC no banco, CLI `python -m worker.importar_saude`)
 - `services/worker/worker/grafico_tiros_1km.py` (gráfico e CSV, CLI `python -m worker.grafico_tiros_1km`)
 - `services/worker/worker/apagar_fit.py` (CLI `python -m worker.apagar_fit`)
 - `services/worker/worker/reclassificar.py` (CLI `python -m worker.reclassificar`)
