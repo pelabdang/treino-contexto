@@ -88,8 +88,8 @@ em memória, até 3 níveis. Na pasta e no zip só entram `*summarizedActivities
 | `unidades.py` | ms para s, cm para m, epoch ms para datetime UTC |
 
 ### Regras
-- **Casamento JSON x FIT:** pelo horário de início, tolerância de 60 s (vale o FIT mais próximo, cada FIT casa
-  uma vez). O `inicio` da atividade é o do JSON; `inicio_offset_s` das voltas é relativo ao início da sessão no FIT.
+- **Casamento JSON x FIT:** pelo horário de início, tolerância de 60 s (vale o par mais próximo primeiro, cada FIT casa
+  uma vez: a troca de um triatlo, que começa 60 s antes da parte seguinte, não leva o FIT dela). O `inicio` da atividade é o do JSON; `inicio_offset_s` das voltas é relativo ao início da sessão no FIT.
 - **`fonte_id`:** `activityId` do JSON quando existe. FIT sem JSON usa `fit-<serial_number>-<time_created em epoch>`
   do `file_id`; sem esses campos, `fit-` + 16 primeiros caracteres do SHA-1 do arquivo. O id é estável entre
   leituras (a importação idempotente, #13, depende disso).

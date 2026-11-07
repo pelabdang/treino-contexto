@@ -175,18 +175,28 @@ def ler_exportacao(caminho: str | Path) -> list[AtividadeImportada]:
                     jsons[ativ.fonte_id] = ativ
 
     log.info("FIT: %d lidos, %d repetidos, %d que nao sao atividade", len(fits), repetidos, nao_atividade)
-    for ativ in sorted(jsons.values(), key=lambda a: (a.inicio, a.fonte_id)):
-        candidatos = [f for f in fits if not f.usado
-                      and abs((f.lido.inicio - ativ.inicio).total_seconds()) <= TOLERANCIA_S]
-        if not candidatos:
-            log.warning("atividade %s sem FIT correspondente: entra sem voltas", ativ.fonte_id)
+    # Pareia o par mais proximo primeiro (empate: ordem por inicio e id). Na ordem simples do JSON, o FIT de uma
+    # parte de triatlo seria tomado pela troca que a antecede (a ate 60 s), so por comecar antes.
+    ordenadas = sorted(jsons.values(), key=lambda a: (a.inicio, a.fonte_id))
+    pares = sorted(
+        ((abs((f.lido.inicio - ativ.inicio).total_seconds()), i, j)
+         for i, ativ in enumerate(ordenadas) for j, f in enumerate(fits)
+         if abs((f.lido.inicio - ativ.inicio).total_seconds()) <= TOLERANCIA_S),
+    )
+    com_fit: set[int] = set()
+    for _, i, j in pares:
+        ativ, f = ordenadas[i], fits[j]
+        if i in com_fit or f.usado:
             continue
-        f = min(candidatos, key=lambda f: abs((f.lido.inicio - ativ.inicio).total_seconds()))
+        com_fit.add(i)
         f.usado = True
         ativ.voltas = list(f.lido.voltas)
         ativ.arquivo_bruto = f.caminho
         if ativ.inicio_lat is None and not e_indoor(ativ.subtipo):  # o JSON vale; sem posicao nele, a do FIT
             ativ.inicio_lat, ativ.inicio_lon = f.lido.inicio_lat, f.lido.inicio_lon
+    for i, ativ in enumerate(ordenadas):
+        if i not in com_fit:
+            log.warning("atividade %s sem FIT correspondente: entra sem voltas", ativ.fonte_id)
 
     resultado = list(jsons.values()) + [_de_fit(f) for f in fits if not f.usado]
     return sorted(resultado, key=lambda a: (a.inicio, a.fonte_id))

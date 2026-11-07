@@ -87,3 +87,16 @@ def test_transicao_1_nao_muda_com_pai_e_troca(session):
     # mesmo resultado se os subtipos fossem nulos (como antes do #230)
     session.query(Atividade).filter(Atividade.modalidade == "outra").update({"subtipo": None})
     assert sugerir_transicao(_leves(session)) == com
+
+
+def test_fit_da_parte_do_triatlo_nao_e_tomado_pela_troca_que_a_antecede():
+    """Na fixture da carga, a troca 1 comeca 60 s antes do ciclismo e a troca 2, 60 s antes da corrida: cada FIT fica
+    com a parte mais proxima, e nao com o JSON que vem antes na ordem de inicio."""
+    from pathlib import Path
+
+    from app.ingestao.garmin import ler_exportacao
+
+    zip_ = Path(__file__).parents[4] / "tests" / "fixtures" / "garmin" / "carga" / "exportacao_carga.zip"
+    por_id = {a.fonte_id: a for a in ler_exportacao(zip_)}
+    assert len(por_id["4000000016"].voltas) == 2 and len(por_id["4000000018"].voltas) == 3
+    assert not por_id["4000000015"].voltas and not por_id["4000000017"].voltas

@@ -12,7 +12,7 @@ Guarda atleta, atividades importadas e segmentos (voltas, tiros, recuperações)
 Motivos da escolha em [[decisoes/0001-modelo-de-dados-minimo]].
 
 ## Entradas e saídas
-- Tabelas: `assessoria`, `professor`, `atleta`, `vinculo_professor_atleta`, `atividade`, `segmento`, `clima_atividade`, `bloco_atividade`, `rotulo_transicao`, `limiar_atleta`, `zona_fc_atleta`, `recorde_pessoal`, `carga_garmin_dia`.
+- Tabelas: `assessoria`, `professor`, `atleta`, `vinculo_professor_atleta`, `atividade`, `segmento`, `clima_atividade`, `bloco_atividade`, `rotulo_transicao`, `limiar_atleta`, `zona_fc_atleta`, `recorde_pessoal`, `carga_garmin_dia`, `carga_atividade`.
 - `atividade` é única por `(atleta_id, fonte, fonte_id)`: reimportar não duplica.
 - `segmento` tem `intensidade` (valor do FIT, com `CHECK`) e `versao_deteccao` (ex.: `tiros_1km@1`), ambos anuláveis. Ver [[decisoes/0002-segmento-intensidade-e-versao]].
 - `atividade.fuso_min` (int, anulável, `CHECK` de -720 a 840): deslocamento do fuso em minutos; a data local da sessão é a de `inicio + fuso_min`, ou `America/Sao_Paulo` se for `NULL`. Ver [[decisoes/0003-fuso-da-atividade]].
@@ -26,6 +26,7 @@ Motivos da escolha em [[decisoes/0001-modelo-de-dados-minimo]].
 - `carga_garmin_dia` (migração 0009, item 2): carga aguda e crônica do Garmin, um valor por dia, **na escala do Garmin** (não a do TSS). `atleta_id` (FK, cascata, indexada), `origem` (`garmin_export`), `dia` (data; a fonte entrega meia-noite UTC), `carga_aguda`, `carga_cronica`, `razao` (floats anuláveis), `versao_leitura`, `importado_em`. `UNIQUE (atleta_id, origem, dia)`. Só a conferência com a nossa carga (#144) usa. **Dado fisiológico (LGPD).** `worker.apagar_saude` apaga as quatro tabelas de saúde de um atleta.
 - `arquivo_bruto` guarda o caminho do original (princípio "guardar o dado bruto").
 - Domínios fixos (modalidade, tipo de treino, origem do tipo, tipo de segmento) são texto com `CHECK`.
+- `carga_atividade` (migração 0010, [[decisoes/0010-carga-de-treino]], item 5): a carga de treino de cada atividade **elegível**; `multiesporte_pai` e `troca` não têm linha. Colunas: `atividade_id` (FK única, `ON DELETE CASCADE`), `estado` (`calculada` ou `sem_carga`), `carga` (a do método vencedor), `metodo` (`rtss` ou `hrtss`), `carga_rtss` e `carga_hrtss` (cada uma só se o seu método valeu), `motivo` (um dos seis da ADR: `sem_dados_saude`, `sem_limiar_na_data`, `sem_fc`, `sem_pace`, `cobertura_insuficiente`, `modalidade_sem_carga`), `cobertura_pct`, `granularidade` (`volta` ou `atividade`), `limiar_fc_bpm`, `limiar_velocidade_ms` e `limiar_vigente_desde` (o limiar **usado**, para auditoria; a vigência é a do método vencedor), `entrada` (SHA-256 de modalidade, subtipo, voltas e limiares do caminho da modalidade), `versao` (`carga@1`) e `calculado_em`. `CHECK`s de estado, método, motivo e granularidade, e um que amarra o estado aos campos (`calculada` exige carga, método e cobertura e proíbe motivo; `sem_carga` exige motivo e proíbe carga, método e as duas cargas por método). Quem grava é `app.servicos.carga.calcular_carga_do_atleta` ([[modulos/worker]]), que só regrava a linha quando `entrada` ou `versao` mudam. **Dado fisiológico (LGPD)**: os limiares ficam só no banco local, nunca em log nem pela API.
 
 ## Arquivos principais
 - `services/api/app/db/models.py`: modelos SQLAlchemy. Mudança só com aprovação do Theo.
@@ -36,6 +37,7 @@ Motivos da escolha em [[decisoes/0001-modelo-de-dados-minimo]].
 - `services/api/alembic/versions/0005_clima_atividade.py`: tabela `clima_atividade`, `CHECK` do estado, FK com cascata e unicidade de `atividade_id`. Testada com upgrade, downgrade e upgrade num Postgres isolado.
 - `services/api/alembic/versions/0006_bloco_atividade.py`: tabela `bloco_atividade`, `CHECK` da categoria, FK com cascata, `UNIQUE (atividade_id, ordem)` e índice de `atividade_id`. Sobe e desce no SQLite e no Postgres (`test_migracoes.py`).
 - `services/api/alembic/versions/0007_rotulo_transicao.py`: tabela `rotulo_transicao`, os dois `CHECK`, FK com cascata e unicidade de `atividade_id`. Sobe e desce no SQLite e no Postgres (`test_migracoes.py`).
+- `services/api/alembic/versions/0010_carga_atividade.py`: tabela `carga_atividade`, os cinco `CHECK`, FK com cascata e unicidade de `atividade_id`. Sobe e desce no SQLite e no Postgres (`test_migracoes.py`).
 - `services/api/alembic/versions/0009_recorde_pessoal_carga_garmin_dia.py`: tabelas `recorde_pessoal` e `carga_garmin_dia`, `CHECK`s, FKs com cascata, as duas `UNIQUE` e os índices de `atleta_id`. Sobe e desce no SQLite e no Postgres.
 - `services/api/alembic/versions/0008_limiar_zona_fc_atleta.py`: tabelas `limiar_atleta` e `zona_fc_atleta`, `CHECK`s, FKs com cascata, as duas `UNIQUE` e os índices de `atleta_id`. Sobe e desce no SQLite e no Postgres (`test_migracoes.py`).
 - `services/api/tests/test_migracoes.py`: garante que a migração gera o esquema dos modelos.

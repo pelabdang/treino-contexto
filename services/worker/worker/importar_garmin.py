@@ -58,6 +58,23 @@ def saude_do_arquivo(caminho: str, atleta: str, session_factory=None) -> None:
               file=sys.stderr)
 
 
+def carga_do_atleta(atleta: str, session_factory=None) -> None:
+    """Carga de treino por atividade (#141), depois dos dados de saude (ADR 0010, item 3). Sem rede. Erro vira aviso."""
+    try:
+        from app.db.models import Atleta
+        from app.db.session import SessionLocal
+        from sqlalchemy import select
+
+        from worker.calcular_carga import calcular, formatar
+
+        with (session_factory or SessionLocal)() as session:
+            atleta_id = session.scalar(select(Atleta.id).where(Atleta.nome == atleta))
+            if atleta_id is not None:
+                print(formatar(calcular(session, atleta_id), atleta_id))
+    except Exception as e:  # noqa: BLE001
+        print(f"aviso: carga nao calculada ({e.__class__.__name__}); rode worker.calcular_carga", file=sys.stderr)
+
+
 def main(argv: list[str] | None = None, cliente=None) -> int:
     p = argparse.ArgumentParser(prog="python -m worker.importar_garmin",
                                 description="Importa a exportacao Garmin (zip, pasta, JSON ou FIT) no banco.")
@@ -78,6 +95,7 @@ def main(argv: list[str] | None = None, cliente=None) -> int:
     for aviso in rel.avisos:
         print(f"  aviso: {aviso}")
     saude_do_arquivo(args.caminho, args.atleta)
+    carga_do_atleta(args.atleta)
     if args.com_clima:
         clima_do_que_mudou(rel, cliente=cliente)
     else:
