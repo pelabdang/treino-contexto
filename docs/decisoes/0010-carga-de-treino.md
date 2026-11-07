@@ -7,9 +7,9 @@ links: [[decisoes/0001-modelo-de-dados-minimo]], [[decisoes/0002-segmento-intens
 ---
 # ADR: 0010 Carga de treino (rTSS, hrTSS, CTL, ATL e TSB)
 
-> Proposta de 07/11 (issue #134), para o Theo aprovar (modelo de dados) e o Angelo responder à lista "A confirmar".
-> **Nenhuma linha de código nem migração muda neste PR.** Todos os números são sintéticos. Os nomes concretos de arquivo e de campo
-> da exportação ficam fora desta ADR: dependem da #135 (Duda) e estão na lista "A confirmar".
+> Proposta de 07/11 (issue #134), para o Theo aprovar o modelo de dados. O Angelo respondeu "sim" às sete propostas de produto em 07/11
+> (seção "A confirmar"). **Nenhuma linha de código nem migração muda neste PR.** Todos os números são sintéticos. Os nomes concretos
+> de arquivo e de campo da exportação ficam na nota [[modulos/ingestao-garmin]] (#135), não nesta ADR.
 > Dá base para #136, #137, #138, #139, #140, #141, #142, #144 e #174.
 
 ## Contexto
@@ -51,7 +51,7 @@ Tabela nova **`limiar_atleta`**: uma linha por (grandeza, início de vigência).
 | `atleta_id` | FK `atleta.id` | indexada |
 | `grandeza` | texto (20), `CHECK` | `fc_bpm` (FC de limiar, bpm) ou `velocidade_ms` (velocidade de limiar, m/s) |
 | `valor` | float, não nulo | `CHECK valor > 0` |
-| `vigente_desde` | datetime com fuso | instante em que o valor passou a valer (UTC) |
+| `vigente_desde` | date | dia (do calendário, sem fuso) em que o valor passou a valer; é o que a fonte entrega |
 | `origem` | texto (20), `CHECK` | `garmin_export` agora; `informado` reservado (o atleta digitar o valor, fora da Meta 6) |
 | `versao_leitura` | texto (40) | versão do leitor que gravou, ex. `saude_garmin@1`; mesmo formato da ADR 0002 |
 | `importado_em` | datetime com fuso | |
@@ -61,11 +61,12 @@ Tabela nova **`limiar_atleta`**: uma linha por (grandeza, início de vigência).
 **Por que uma linha por grandeza, e não uma linha com as duas colunas:** a fonte pode registrar a FC e a velocidade de limiar em datas
 diferentes. Uma linha por grandeza deixa cada série ter o seu próprio histórico, sem linhas com metade `NULL`.
 
-**Qual limiar vale para uma atividade.** Para a grandeza `g` e a atividade com `inicio` = `t`: a linha de maior `vigente_desde` com
-`vigente_desde <= t`. Se há linhas de duas origens para o mesmo instante, `informado` vence `garmin_export` (só `garmin_export` existe na
-Meta 6). A vigência termina quando a próxima começa; **não há** `vigente_ate` nem prazo de validade. A comparação é por instante
-(`inicio` já é UTC), sem fuso. Se não existe linha com `vigente_desde <= t`: **não há limiar na data**, e **nunca** se olha para a linha
-seguinte.
+**Qual limiar vale para uma atividade.** Para a grandeza `g` e a atividade com data local `t` (`data_local(inicio, fuso_min)`, ADR 0003):
+a linha de maior `vigente_desde` com `vigente_desde <= t`. Se há linhas de duas origens para o mesmo dia, `informado` vence
+`garmin_export` (só `garmin_export` existe na Meta 6). Um limiar registrado no dia da atividade já vale para ela. A vigência termina
+quando a próxima começa; **não há** `vigente_ate` nem prazo de validade. Se não existe linha com `vigente_desde <= t`: **não há limiar
+na data**, e **nunca** se olha para a linha seguinte. O leitor guarda uma linha por grandeza e dia, com o último valor de cada campo
+(os registros da fonte trazem só o que mudou).
 
 **Pace de limiar** = `1000 / velocidade_ms` s/km. Guardamos velocidade porque é a grandeza em que o IF é linear e (a confirmar na #135)
 o que a fonte traz.
@@ -80,10 +81,15 @@ Todas têm `atleta_id` (FK `atleta.id`), `origem` (`CHECK`, `garmin_export`), `v
 | Coluna | Observação |
 |---|---|
 | `esporte` | texto (20): perfil de esporte a que as zonas se aplicam (`padrao`, `corrida`, `ciclismo`...); valores a confirmar na #135 |
-| `vigente_desde` | datetime com fuso |
+| `vigente_desde` | date: o dia do retrato (dia da importação) na origem `garmin_export`; o dia local da sessão na origem `garmin_fit` |
 | `metodo` | texto (40): como a fonte calcula as zonas (por % da FC máxima, da reserva, do limiar...); **guardado como veio**, sem `CHECK` (a lista real é a confirmar) |
 | `fc_max_bpm`, `fc_repouso_bpm` | inteiros, anuláveis: os usados no cálculo das zonas |
 | `zona1_min_bpm` ... `zona5_min_bpm`, `zona5_max_bpm` | inteiros: limites inferiores das cinco zonas e o teto da quinta (a confirmar que são cinco) |
+
+**Origem das zonas (achado da #135).** A exportação só tem o retrato atual, sem data; o histórico existe apenas nos FIT, por sessão.
+Proposta: `origem` das zonas aceita `garmin_export` (o retrato, datado pelo dia da importação, só para exibir "as zonas de hoje") e
+`garmin_fit` (uma linha por mudança de zonas vista nos FIT importados; só há histórico para atividades com FIT). A `carga@1` não depende
+disso. Se o Theo preferir, a tabela fica só com o retrato ou sai da Meta 6 (decisão em "A confirmar").
 
 Chave: `UNIQUE (atleta_id, esporte, origem, vigente_desde)`. **Quem usa:** nenhuma métrica da `carga@1`. Ficam guardadas para o hrTSS
 por zonas e para `segmento.zona`, em versão futura. A decisão de guardar é do Angelo (04/11).
@@ -218,7 +224,7 @@ sem existir.
 | `motivo` | texto (30), anulável, `CHECK` | só em `sem_carga` (item 7) |
 | `cobertura_pct` | float, anulável | do método vencedor (ou do mais próximo de valer, em `sem_carga` por cobertura) |
 | `granularidade` | texto (10), `CHECK` | `volta` ou `atividade` |
-| `limiar_fc_bpm`, `limiar_velocidade_ms`, `limiar_vigente_desde` | anuláveis | os valores de limiar **usados** (auditoria; a API não os devolve) |
+| `limiar_fc_bpm`, `limiar_velocidade_ms`, `limiar_vigente_desde` (date) | anuláveis | os valores de limiar **usados** (auditoria; a API não os devolve) |
 | `entrada` | texto (64) | SHA-256 do que entrou na conta: modalidade, subtipo, voltas (duração, distância, FC) e os limiares usados |
 | `versao` | texto (40) | `carga@1` |
 | `calculado_em` | datetime com fuso | |
@@ -310,7 +316,7 @@ confirmar"). Por isso **não se compara igualdade nem valor absoluto**. Compara-
 **Fixtures (CI):** uma série do Garmin sintética, construída para ter relação conhecida com a nossa, serve para testar o **código** da
 conferência, não a fisiologia. **Histórico real: só local**, por script da #144, com os números **só em `entregas/meta-6/`** (fora do git,
 `.gitignore`). No repositório, nota e PR dizem apenas que a conferência foi feita e o que se aprendeu em termos gerais, sem valores nem
-datas. Não há limiar de aprovação inventado aqui: a faixa aceita como "andam juntas" é uma pergunta em "A confirmar".
+datas. A conferência é **só descritiva** (decisão do Angelo, 07/11): não há faixa de aprovação; o resultado diz o que se observou, com a cobertura.
 
 ### 9. Limitações assumidas (repetidas na nota da métrica)
 - **Sem ajuste de subida nem de calor** no rTSS: a subida deixa o pace lento e subestima a carga; a descida faz o contrário.
@@ -348,32 +354,35 @@ datas. Não há limiar de aprovação inventado aqui: a faixa aceita como "andam
   constantes.
 
 ## A confirmar
-**Pela #135 (Duda): nomes concretos da exportação.** Esta ADR não nomeia arquivo nem campo.
-- Em que arquivo(s) e em que campos estão o limiar de FC e o de velocidade, e as datas de vigência (instante ou só dia? em que fuso?).
-- A unidade da velocidade de limiar (m/s, km/h, outra) e se vem com histórico de alterações ou só o valor atual.
-- Se há **limiar por esporte** (corrida, ciclismo) ou um só.
-- Zonas de FC: arquivo, campos, quantas zonas, os valores possíveis de `metodo`, se há perfil por esporte e como vem a vigência.
-- FC máxima e de repouso: onde estão (zonas, perfil do usuário ou série diária) e se têm data.
-- Recordes pessoais: arquivo, código de categoria, unidade, data e se traz o id da atividade.
-- Carga aguda/crônica do Garmin: arquivo, campos, o dia (local ou UTC), se traz a razão e se há dias sem valor.
-- Se a exportação não traz o histórico completo: a primeira data de limiar é a do primeiro ajuste ou a do início da conta?
-- Como o registro de saúde identifica o atleta (para casar com o `--atleta` do comando).
+**Achados da #135 (Duda), incorporados.** Os nomes concretos de arquivo e de campo ficam na nota
+[[modulos/ingestao-garmin]] (PR #242), não nesta ADR. O que mudou aqui:
+- **Limiar:** os registros trazem só o que mudou e vêm fora de ordem; o leitor ordena pela data do calendário (um **dia, sem fuso**) e
+  guarda o último valor de **cada campo separadamente**. FC igual a 0 significa "sem limiar" (não vira linha). A velocidade vem numa
+  escala própria da fonte e o leitor converte para m/s. Por isso `vigente_desde` do limiar é **data**, e a comparação é com a data
+  local da atividade (itens 1 e 5).
+- **Zonas de FC:** a exportação traz só o **retrato atual**, sem data e sem histórico. O histórico de zonas (método, FC máxima e de
+  repouso, limite das zonas) só existe nos FIT, por sessão. Ver `zona_fc_atleta` no item 2.
+- **Recordes:** o tipo vem como nome e a unidade do valor depende do tipo; id de atividade zero significa recorde sem atividade
+  (`atividade_fonte_id` fica `NULL`).
+- **Carga do Garmin:** o dia é a meia-noite UTC; pode haver vários itens por dia e vale o de maior carimbo de tempo; a razão pode faltar.
+- Ainda em aberto: se há limiar **por esporte** ou um só (a nota da #135 diz o que a exportação traz).
 
 **Pelo Theo:**
 - Aprovar as cinco tabelas e a escolha da tabela própria no lugar de `metrica_derivada` (item 5).
 - Aprovar CTL/ATL/TSB **calculados na leitura**, com `serie_carga@1` na resposta (item 5).
+- Zonas de FC (achado da #135): manter `zona_fc_atleta` com as origens `garmin_export` (retrato) e `garmin_fit` (histórico só dos FIT), só com o retrato, ou deixar fora da Meta 6 (a `carga@1` não usa).
 - Aprovar `importar_garmin` chamar `importar_saude` e `calcular_carga` no fim, com erro virando aviso (item 3).
 - Aprovar que `multiesporte_pai` e `troca` ficam **sem linha** e saem na contagem `ignoradas_multiesporte`, e não como "sem carga" (item 5).
 - `worker.apagar_saude` (LGPD) como comando da #174.
 
-**Pelo Angelo:**
-- **Esteira só por hrTSS** e **ciclismo só por hrTSS** (item 4): vale?
-- **rTSS preferido ao hrTSS** quando há os dois (item 4).
-- **Cobertura mínima de 95%** e volta sem dado contando 0 (item 4).
-- **"Aprendendo" = menos de 42 dias** (item 6) e a série começar no primeiro dia com carga, sem semente.
-- **Série termina na última atividade importada**, não em hoje (item 6).
-- **Natação sem carga** na Meta 6, mesmo com FC (item 4).
-- Que faixa de correlação aceitar como "a nossa carga anda com a do Garmin" (item 8), ou se o resultado é só descritivo.
+**Decididas pelo Angelo (07/11, "sim" às sete propostas):**
+- Esteira e ciclismo só por hrTSS (item 4).
+- rTSS preferido ao hrTSS quando há os dois (item 4).
+- Cobertura mínima de 95%, com volta sem dado contando 0 (item 4).
+- "Aprendendo" = menos de 42 dias, e a série começa no primeiro dia com carga, sem semente (item 6).
+- A série termina na última atividade importada, não em hoje (item 6).
+- Natação sem carga na Meta 6, mesmo com FC (item 4).
+- Conferência com o Garmin **só descritiva**, sem faixa de aprovação (item 8).
 
 **Pelo Caio (verificações que esta ADR não fez):**
 - As citações (Coggan e Allen 2010; Skiba 2006; Banister e colegas 1975 e 1991; ajuda do TrainingPeaks) foram escritas de memória
