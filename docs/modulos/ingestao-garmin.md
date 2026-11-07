@@ -322,7 +322,7 @@ Alternativas descartadas: **não importar** pai e troca (perde dado e muda a con
 A carga de treino da Meta 6 usa o que o Garmin já calculou: limiar de lactato (FC e velocidade) com histórico de alterações, zonas de
 FC, recordes pessoais e carga aguda/crônica diária. Esta seção descreve **só o formato** (pastas, nomes de campo, unidades, datas),
 conferido com uma exportação real em 2026-11-07 (fica em `dados-teste/`, fora do git); nenhum valor, data ou identificador real está
-aqui. O leitor (#136) ainda não existe: hoje o parser ignora esses arquivos (teste em `tests/test_fixtures_saude.py`). Decisão de produto
+aqui. O leitor (#136) está descrito em "Leitor de saúde (#136)", abaixo; o parser de atividades (`ler_exportacao`) continua ignorando esses arquivos (teste em `tests/test_fixtures_saude.py`). Decisão de produto
 (04/11): tudo pode ser guardado no banco local; atleta sem esses dados fica "sem carga", com o motivo, e o limiar nunca é estimado.
 
 ### Como achar os arquivos (sem identificador do usuário)
@@ -425,6 +425,25 @@ Lista de itens por dia, um arquivo por período.
 
 Como vem o histórico: **pode haver vários itens para o mesmo `calendarDate`** (atualizações ao longo do dia, com valores diferentes); vale
 o de **maior `timestamp`**. Dia sem item = sem dado do Garmin naquele dia.
+
+### Leitor de saúde (#136)
+`app/ingestao/garmin/saude.py` (`ler_saude(caminho, dia_retrato=None)`), mais `modelos_saude.py` (objetos devolvidos) e `zonas_fit.py`
+(zonas de um FIT). Função pura: sem banco e sem rede. Aceita a mesma entrada de `ler_exportacao` (zip, pasta, zip dentro de zip) e
+devolve `SaudeGarmin` (`limiares`, `zonas`, `recordes`, `carga_dia`, `avisos`). Achar os arquivos: pasta + sufixo, qualquer
+profundidade; a árvore repetida (pasta, `DI_CONNECT/`, zip interno) é lida uma vez por conteúdo (hash). Arquivo ausente, ilegível ou
+campo inválido: lista vazia (ou item ignorado) e um aviso em `avisos` e no log, sem exceção (só `FileNotFoundError` se o próprio
+caminho não existe). Os avisos não trazem nome de arquivo, id nem valor.
+
+| Dado | Regra do leitor ([[decisoes/0010-carga-de-treino]]) |
+|---|---|
+| Limiar (`LimiarRegistro`) | uma série por grandeza (`fc_bpm`, `velocidade_ms`); registros ordenados por `calendarDate` e `sequence`; `vigente_desde` é o dia; por dia e por campo vale o último valor; valor igual ao vigente da mesma grandeza não abre vigência nova. FC `0` = sem limiar: não vira registro (e não cancela um limiar anterior). FC fora de 30 a 250 bpm e velocidade fora de 0,5 a 10 m/s: ignoradas com aviso |
+| Velocidade e pace | m/s = valor da fonte × 10 (0,370 → 3,70 m/s); pace s/km = 1000 / m/s = 100 / valor da fonte (0,370 → 270,27 s/km). `LimiarRegistro.pace_s_km` |
+| Zonas (`ZonaFc`) | `garmin_export`: retrato do `heartRateZones.json`, um por esporte (`DEFAULT` → `padrao`, `RUNNING` → `corrida`, `CYCLING` → `ciclismo`), `vigente_desde` = `dia_retrato` (o JSON não tem data); teto da zona 5 = FC máxima. `garmin_fit`: `time_in_zone` da sessão, dia local da sessão, uma linha por mudança de zonas por esporte (`corrida`, `ciclismo` ou `padrao`); os 6 limites de `hr_zone_high_boundary` são o piso das zonas 1 a 5 e o teto da 5. `metodo` fica como a fonte traz (`HR_MAX` no JSON, `percent_max_hr` no FIT) |
+| Recordes (`RecordePessoal`) | `activityId` 0 → id nulo; `prStartTimeGMT` lido sem depender de locale; modalidade e unidade (`s`, `m`, `W`, `passos`) deduzidas do nome do tipo (tipo desconhecido: unidade nula); `current` guardado em `atual` |
+| Carga (`CargaGarminDia`) | um valor por dia (`calendarDate` em ms → dia UTC): vale o item de maior `timestamp`; a razão pode faltar (`None`) |
+
+Testes: `services/api/tests/ingestao/test_saude_garmin.py` (tabelas escritas à mão a partir da linha do tempo das fixtures).
+**Fora desta issue:** `bioMetrics_latest.json` (o histórico do `userBioMetrics` o cobre), o tempo em cada zona e a gravação no banco (#140).
 
 ### Atleta sem dados de saúde
 Os arquivos acima são opcionais. Um atleta sem eles tem a exportação com atividades e FIT e nenhuma das pastas de saúde e métricas
