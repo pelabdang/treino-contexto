@@ -3,7 +3,7 @@
 Segue o guia `docs/produto/meta-5-como-rodar.md`: migracoes (alembic, ate a 0007) -> importacao das fixtures da Meta 1,
 dos sete FIT de esforcos e da exportacao multiesporte (CLI `worker.importar_garmin`, sem `--com-clima`, portanto sem
 rede) -> `worker.detectar_esforcos` -> API (TestClient) conferida contra o oraculo de `esforcos-oraculo.md` ->
-`worker.reclassificar` (`tiros_1km@5`), JSON, PNG e CSV -> treino de transicao (`worker.sugerir_transicao` e as rotas,
+`worker.reclassificar` (`tiros_1km@6`), JSON, PNG e CSV -> treino de transicao (`worker.sugerir_transicao` e as rotas,
 com PUT, DELETE, 400 e 404) -> `worker.reclassificar_multiesporte`. Num SQLite temporario; so dado sintetico.
 
 Os testes seguem a ordem do arquivo e dividem o mesmo banco (como os e2e das Metas 2 a 4), entao a ordem importa.
@@ -275,7 +275,7 @@ def test_7_natacao_sem_esforcos_404_e_versao_nova_redetecta(ctx):
 def test_8_reclassificar_tiros_1km_arroba_5(ctx):
     _sql(ctx, "update segmento set versao_deteccao='tiros_1km@4'")
     antes = _get(ctx, "/atletas/1/evolucao/tiros-1km").json()
-    assert antes["versao_calculo"] == "tiros_1km@5" and antes["reclassificacao_pendente"] is True
+    assert antes["versao_calculo"] == "tiros_1km@6" and antes["reclassificacao_pendente"] is True
     assert "reclassificadas 9 corridas do atleta 1" in _worker(ctx, "reclassificar", "--atleta-id", "1")
     j = _get(ctx, "/atletas/1/evolucao/tiros-1km").json()
     assert j["reclassificacao_pendente"] is False

@@ -21,7 +21,7 @@ from statistics import median
 
 from app.metricas import esforcos as ef
 
-VERSAO = "tiros_1km@5"
+VERSAO = "tiros_1km@6"
 
 # Faixa de esforço de corrida que vale como tiro de 1 km (ADR 0008, item 5): 950 a 1050 m. Um esforço de 1500 m
 # (``d1500``) ou de 2000 m (dois km seguidos no mesmo ritmo) não é tiro de 1 km.
@@ -92,13 +92,14 @@ def _pace_s_km(b: BlocoEntrada) -> float | None:
     return b.duracao_s / b.distancia_m * 1000.0
 
 
-def _vizinho_corta(blocos: list[BlocoEntrada], i: int, candidatos: set[int]) -> bool:
+def _vizinho_corta(blocos: list[BlocoEntrada], i: int) -> bool:
     """O tiro ``blocos[i]`` é continuação de um bloco de corrida vizinho (progressivo, fartlek)?
 
     Olha o bloco anterior e o seguinte. Um vizinho conta quando tem pelo menos 950 m, não é aquecimento nem
     desaquecimento e o tiro é menos de 15% mais rápido que ele (``pace do tiro > pace do vizinho x 0,85``; vizinho
-    mais lento que isso deixa o tiro de pé). Fica de fora o vizinho que é ele mesmo um tiro candidato **separado
-    por uma pausa** (parada de pelo menos 15 s): são repetições com descanso parado, não bloco contínuo.
+    mais lento que isso deixa o tiro de pé). Fica de fora (@6, #243) **qualquer** vizinho separado do tiro por uma
+    parada de pelo menos 15 s (``PAUSA_SEPARA_S_CORRIDA``), seja ou não candidato a tiro: com descanso parado entre
+    eles não há corrida contínua. Parada menor que 15 s continua cortando.
     """
     pace = _pace_s_km(blocos[i])
     for j in (i - 1, i + 1):
@@ -113,7 +114,7 @@ def _vizinho_corta(blocos: list[BlocoEntrada], i: int, candidatos: set[int]) -> 
         if pace_viz is None:
             continue
         parada = (blocos[min(i, j)].parada_apos_s or 0.0)
-        if viz.ordem in candidatos and parada >= ef.PAUSA_SEPARA_S_CORRIDA - 1e-9:
+        if parada >= ef.PAUSA_SEPARA_S_CORRIDA - 1e-9:
             continue
         if pace > pace_viz * (1.0 - BLOCO_CONTINUO_GANHO_MINIMO):
             return True
@@ -141,8 +142,7 @@ def tiros_de_blocos(blocos: Sequence[BlocoEntrada], modalidade: str = MODALIDADE
         cand = [b for b in cand if _pace_s_km(b) <= mediana * (1.0 + RITMO_PARECIDO_TOLERANCIA)]
 
     posicao = {b.ordem: i for i, b in enumerate(blocos)}
-    ordens_cand = {b.ordem for b in cand}
-    tiros = [b for b in cand if not _vizinho_corta(blocos, posicao[b.ordem], ordens_cand)]
+    tiros = [b for b in cand if not _vizinho_corta(blocos, posicao[b.ordem])]
 
     ordens = tuple(b.ordem for b in tiros)
     recuperacoes: tuple[int, ...] = ()

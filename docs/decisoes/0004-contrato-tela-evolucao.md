@@ -78,7 +78,7 @@ Mostra o formato final. Os valores dos `eixos` ilustram a forma; o passo e as ma
 {
   "atleta_id": 1,
   "metrica": "tiros_1km",
-  "versao_calculo": "tiros_1km@5",
+  "versao_calculo": "tiros_1km@6",
   "reclassificacao_pendente": false,
   "unidades": {"pace": "s/km", "fc": "bpm", "distancia": "m", "duracao": "s"},
   "periodo": {"inicio": "2025-03-01", "fim": null},

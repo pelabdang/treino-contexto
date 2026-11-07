@@ -33,7 +33,7 @@ def paces_dos_tiros(specs, ref=330.0):
 
 
 def test_versao():
-    assert VERSAO == "tiros_1km@5"
+    assert VERSAO == "tiros_1km@6"
     assert tiros([(1000, 250), (400, 168, 0)] * 2).versao == VERSAO
 
 
@@ -213,10 +213,14 @@ def _blocos_com_parada(ritmo):
     return specs
 
 
-def test_progressivo_com_paradas_nao_e_tiro():
-    # Blocos de 2000 m a 305 s/km (310 e 300, não são esforço) ao lado do km de 275: 275 > 305 x 0,85 = 259,25,
-    # continua a rodagem por cima da parada. Nenhum tiro, como na @4.
-    assert tiros(_blocos_com_parada(310)).tiros == ()
+def test_progressivo_com_paradas_de_90_s_passa_a_ter_tiros_na_arroba_6():
+    # Blocos de 2000 m a 305 s/km (310 e 300; 305 > 297, não são esforço) ao lado do km de 275 (275 <= 297, esforço).
+    # @4 e @5: 275 > 305 x 0,85 = 259,25, o bloco de rodagem "continua por cima da parada" e nenhum km era tiro.
+    # @6 (#243): a parada de 90 s >= 15 s entre o km e o vizinho tira o vizinho da conta; os 3 km de 275 são tiros.
+    # É a limitação (c) da nota (série moderada com paradas, mesma estrutura de tiros), agora aceita como regra.
+    r = tiros(_blocos_com_parada(310))
+    assert len(r.tiros) == 3 and r.eh_intervalado is True
+    assert paces_dos_tiros(_blocos_com_parada(310)) == [275.0] * 3
 
 
 def test_km_forte_depois_de_rodagem_lenta_com_parada_e_tiro():
@@ -359,3 +363,30 @@ def test_tiro_colado_a_um_km_so_um_pouco_mais_lento_perde_a_separacao_por_pausa(
     # 1 km a 240 e 1 km a 280 ficam juntos (parada 0): fartlek. Igual à @4. (Sem pausa, sem repetição.)
     specs = [(1000, 240), (1000, 280), (1000, 240), (1000, 280)]
     assert tiros(specs).tiros == ()
+
+
+
+# ---------------------------------------------------------------------------
+# @6: vizinho separado por parada de 15 s ou mais não corta o tiro (issue #243). Ref 330 s/km (limiar 297).
+# ---------------------------------------------------------------------------
+
+
+def test_piramide_1_3_2_1_km_com_descanso_parado_tem_dois_tiros_de_1_km():
+    # 1 km a 250 s/km (250 s), 3 km a 250 (750 s), 2 km a 250 (500 s), 1 km a 250, com 90 s parados entre eles.
+    # Todos são esforço; os de 3 e 2 km são vizinhos de 950 m ou mais, e 250 > 250 x 0,85 = 212,5 os cortaria na @5
+    # (nenhum dos dois é d1000). Na @6 a parada de 90 s >= 15 s tira o vizinho da conta: os dois km são tiros.
+    specs = [(1000, 250, 90), (3000, 750, 90), (2000, 500, 90), (1000, 250)]
+    blocos = blocos_de(specs)
+    assert [b.faixa for b in blocos] == ["d1000", "d3000", "d2000", "d1000"]
+    r = tiros_de_blocos(blocos)
+    assert r.tiros == (0, 3) and r.eh_intervalado is True
+    assert r.recuperacoes == (1, 2)
+
+
+def test_vizinho_colado_com_parada_menor_que_15_s_continua_cortando():
+    # 1 km a 250 s/km, 10 s parados, 2 km a 275 s/km (550 s): 275 / 250 = 10% > 5%, não junta; ambos são esforço (< 297).
+    # 250 > 275 x 0,85 = 233,75: o tiro é continuação do bloco de 2 km e sai. Com 15 s parados passa a valer.
+    # O último km vem depois de 90 s parados: o vizinho de 2 km não o corta, nos dois casos.
+    for parada, tiros_esperados in ((10, (2,)), (15, (0, 2))):
+        blocos = blocos_de([(1000, 250, parada), (2000, 550, 90), (1000, 250)])
+        assert tiros_de_blocos(blocos).tiros == tiros_esperados, parada

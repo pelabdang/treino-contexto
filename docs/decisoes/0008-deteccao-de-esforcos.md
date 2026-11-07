@@ -2,7 +2,7 @@
 tipo: decisao
 status: aceita
 dono: caio
-atualizado: 2026-11-06
+atualizado: 2026-11-07
 links: [[metricas/tiros-1km]], [[decisoes/0001-modelo-de-dados-minimo]], [[decisoes/0002-segmento-intensidade-e-versao]], [[decisoes/0005-serie-de-tiros-o-que-entra]], [[modulos/banco]], [[modulos/ingestao-garmin]], [[produto/roadmap]], [[glossario]]
 ---
 # ADR: 0008 Detecção de esforços (corrida por distância, ciclismo por duração)
@@ -294,8 +294,8 @@ Itens 1 a 4 aprovados. Em aberto, sem bloquear: 5 e 6 (Caio, com dado real). Os 
 5. **Caio com dado real**: o campo `total_timer_time` do lap e o `start_time` do lap são mesmo coerentes em
    exportações com pausa automática ligada e desligada (premissa do item 3). Se o relógio não grava `start_time`
    do lap, `inicio_offset_s` vem 0 (código em `fit.py`) e o tempo parado não é computável: cair para a volta de pausa.
-6. **Caio**: velocidade habitual do ciclismo (janela de 12 semanas e mínimo de 30 min por pedalada) e se a
-   referência por atividade (reserva) é aceitável para atleta novo.
+6. ~~**Caio**: velocidade habitual do ciclismo (janela de 12 semanas e mínimo de 30 min por pedalada) e se a
+   referência por atividade (reserva) é aceitável para atleta novo.~~ Janela, mínimo de 30 min e mínimo de 10 pedais confirmados pelo Angelo em 07/11 (adendo).
 7. **Caio**: as referências bibliográficas: abrir os textos e conferir o que sustentam antes de a nota da métrica citá-las.
 8. ~~**Theo, na #168**: numeração final da versão da `tiros_1km`.~~ Definida: **`tiros_1km@5`** (#168, 06/11); as #149 e #150 foram absorvidas.
 9. Fartlek por tempo na corrida (proposta, fora da Meta 5) e teto de duração do aquecimento.
@@ -309,6 +309,32 @@ Tomadas no PR #222. Nenhuma muda o modelo do item 9.
 3. **Quando detectar.** A detecção roda na importação da exportação e no upload de FIT, só para as atividades que entraram
    ou mudaram, além do comando `worker.detectar_esforcos`. Erro na detecção vira aviso e não derruba a importação.
 (Janela de 12 semanas e mínimo de 30 min da velocidade habitual seguem em "A confirmar", item 6, com o Caio na #169.)
+
+## Adendo (07/11, #243): vizinho separado por parada e confirmações
+
+**Decisão de produto (Angelo, 07/11).** Na visão de tiros de 1 km (item 8), o bloco vizinho de 950 m ou mais
+separado do tiro por uma **parada de 15 s ou mais** deixa de cortá-lo, seja ou não ele mesmo candidato a tiro. Parada
+menor que 15 s continua cortando (corrida contínua com tropeço). Até a `tiros_1km@5` a exceção valia só para o vizinho
+candidato; séries de distâncias misturadas (1500 m e 1000 m) e pirâmides (1-3-2-1 km) perdiam os tiros de 1 km.
+Versão `tiros_1km@6`. Exemplo (sintético): 1 km, 3 km, 2 km e 1 km a 250 s/km com 90 s parados entre eles: os dois blocos
+de 1 km são tiros.
+
+**O que não muda.** Os blocos (`esforcos@1`), a junção de laps do item 2 (15 s na corrida, 30 s no ciclismo) e o treino-
+chave contínuo do item 6 (parada de 15 s ou mais entre esforços corta a sequência, decisão de 06/11, #165). A mudança só
+altera quais vizinhos a visão de tiros considera; nada nos blocos. A consequência aceita é que uma série moderada com
+paradas (km no ritmo de tiro entre blocos de rodagem separados por parada) passa a valer como tiro, sujeita ainda ao ritmo
+habitual (10%) e ao ritmo parecido (20%).
+
+**Confirmações do Angelo (07/11).**
+- Mínimo de **2 tiros** por sessão: mantido (item 8).
+- Velocidade habitual do ciclismo (item 5; "A confirmar", item 6): **12 semanas, pedais de 30 minutos ou mais, mínimo
+  de 10 pedais** (menos que isso, todo o histórico). Sai da lista "a confirmar".
+
+**Proposta futura, sem código: pausa dentro do tiro.** Um tiro de 1 km parado no meio por 15 s ou mais (semáforo,
+bebida) chega dos esforços como dois pedaços e não conta. Uma regra possível seria juntar, na visão de tiros, os
+pedaços de esforço vizinhos de ritmo parecido cuja soma cai na faixa `d1000`, com parada abaixo de um limite (da ordem de
+um minuto, a decidir), contando o tempo em movimento. Cuidado: duas repetições de 500 m com descanso curto teriam a mesma
+forma. Não decidida; precisa de decisão de produto e de issue própria.
 
 ## Data e quem decidiu
 2026-11-04. Pedido de produto: Angelo (04/11). Rascunho: Caio (ciência). Aprovação do Theo no PR desta ADR
