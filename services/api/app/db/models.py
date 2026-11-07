@@ -5,11 +5,12 @@ segmentos (voltas/tiros) de cada atividade. O resto do modelo do plano
 (check-in, clima, métricas derivadas...) entra por novas migrações, com ADR.
 """
 
-from datetime import datetime
+from datetime import date, datetime
 
 from sqlalchemy import (
     Boolean,
     CheckConstraint,
+    Date,
     DateTime,
     Float,
     ForeignKey,
@@ -32,6 +33,10 @@ INTENSIDADES = ("active", "rest", "warmup", "cooldown", "recovery", "interval", 
 
 
 ORIGENS_ROTULO = ("sugerido", "atleta")  # ADR 0009, item 1
+
+GRANDEZAS_LIMIAR = ("fc_bpm", "velocidade_ms")  # ADR 0010, item 1
+ORIGENS_LIMIAR = ("garmin_export", "informado")
+ORIGENS_ZONA = ("garmin_export", "garmin_fit")
 
 ESTADOS_CLIMA = ("ok", "pendente", "falha")  # indoor e sem_posicao sao calculados na leitura (ADR 0007)
 
@@ -230,3 +235,59 @@ class RotuloTransicao(Base):
     definido_em: Mapped[datetime] = mapped_column(DateTime(timezone=True))
 
     atividade: Mapped[Atividade] = relationship(back_populates="rotulo_transicao")
+
+
+class LimiarAtleta(Base):
+    """Limiar do atleta com vigencia (ADR 0010, item 1): uma linha por (grandeza, inicio de vigencia).
+
+    Dado fisiologico (LGPD): so no banco local, nunca em log nem pela API. Vale a linha de maior `vigente_desde`
+    menor ou igual ao dia; antes da primeira nao ha limiar. Quem grava e `app.ingestao.saude.importar_saude`.
+    """
+
+    __tablename__ = "limiar_atleta"
+    __table_args__ = (
+        UniqueConstraint("atleta_id", "grandeza", "origem", "vigente_desde", name="uq_limiar_atleta_chave"),
+        CheckConstraint(_in("grandeza", GRANDEZAS_LIMIAR), name="grandeza"),
+        CheckConstraint(_in("origem", ORIGENS_LIMIAR), name="origem"),
+        CheckConstraint("valor > 0", name="valor"),
+    )
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    atleta_id: Mapped[int] = mapped_column(ForeignKey("atleta.id", ondelete="CASCADE"), index=True)
+    grandeza: Mapped[str] = mapped_column(String(20))  # fc_bpm (bpm) ou velocidade_ms (m/s)
+    valor: Mapped[float] = mapped_column(Float)
+    vigente_desde: Mapped[date] = mapped_column(Date)  # dia do calendario, sem fuso
+    origem: Mapped[str] = mapped_column(String(20))
+    versao_leitura: Mapped[str] = mapped_column(String(40))  # ex.: saude_garmin@1
+    importado_em: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+
+
+class ZonaFcAtleta(Base):
+    """Zonas de FC com vigencia (ADR 0010, item 2). `metodo` guardado como a fonte traz, sem CHECK.
+
+    `garmin_export`: retrato do JSON, datado pelo dia da importacao. `garmin_fit`: uma linha por mudanca de zonas
+    vista nos FIT, datada pelo dia local da sessao. Nenhuma metrica da `carga@1` usa estas linhas.
+    """
+
+    __tablename__ = "zona_fc_atleta"
+    __table_args__ = (
+        UniqueConstraint("atleta_id", "esporte", "origem", "vigente_desde", name="uq_zona_fc_atleta_chave"),
+        CheckConstraint(_in("origem", ORIGENS_ZONA), name="origem"),
+    )
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    atleta_id: Mapped[int] = mapped_column(ForeignKey("atleta.id", ondelete="CASCADE"), index=True)
+    esporte: Mapped[str] = mapped_column(String(20))  # padrao, corrida, ciclismo
+    vigente_desde: Mapped[date] = mapped_column(Date)
+    origem: Mapped[str] = mapped_column(String(20))
+    metodo: Mapped[str | None] = mapped_column(String(40))
+    fc_max_bpm: Mapped[int | None] = mapped_column(Integer)
+    fc_repouso_bpm: Mapped[int | None] = mapped_column(Integer)
+    zona1_min_bpm: Mapped[int] = mapped_column(Integer)
+    zona2_min_bpm: Mapped[int] = mapped_column(Integer)
+    zona3_min_bpm: Mapped[int] = mapped_column(Integer)
+    zona4_min_bpm: Mapped[int] = mapped_column(Integer)
+    zona5_min_bpm: Mapped[int] = mapped_column(Integer)
+    zona5_max_bpm: Mapped[int] = mapped_column(Integer)
+    versao_leitura: Mapped[str] = mapped_column(String(40))
+    importado_em: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
