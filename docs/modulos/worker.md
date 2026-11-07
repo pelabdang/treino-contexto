@@ -33,6 +33,7 @@ da importação e do cálculo de métricas, fora da [[modulos/api]].
   pode formar par com uma antiga. Imprime atividades (elegíveis), sugeridas, inseridas, atualizadas, removidas, sem mudança e
   quantas correções do atleta existem (e em quantas a regra sugere "sim"). Atleta inexistente: stderr e saída 1. A importação
   e o upload de FIT já chamam a mesma função (ver [[modulos/ingestao-garmin]]); o comando serve para o histórico e para uma versão nova da regra.
+- Carga: `uv run python -m worker.calcular_carga --atleta-id <id>` (#141, [[decisoes/0010-carga-de-treino]], [[metricas/carga-treino]]) calcula a carga (rTSS/hrTSS por volta) de cada atividade do atleta e grava em `carga_atividade` ([[modulos/banco]]). **Sem rede.** O limiar de cada atividade é o vigente no **dia local** dela (`limiar_vigente`, ADR 0003). **Idempotente:** calcula a `entrada` (SHA-256 do que entra na conta) e a `versao` e só regrava a linha quando um dos dois mudou; subir a `VERSAO` de `app.metricas.carga` recalcula tudo, e um limiar novo recalcula só as atividades cujo limiar usado mudou. `multiesporte_pai` e `troca` não têm linha (e perdem a que tinham, se a atividade foi reclassificada). Relatório só com contagens: processadas, gravadas, já atualizadas, calculadas, sem carga por motivo e ignoradas. O `importar_garmin` chama o mesmo cálculo depois dos dados de saúde; erro ali vira aviso em stderr e não derruba a importação (rode `worker.calcular_carga` depois). Atleta sem dados de saúde: tudo `sem_dados_saude` (natação e `outra`: `modalidade_sem_carga`), nada estimado.
 - Esforços: `uv run python -m worker.detectar_esforcos --atleta-id <id>` (#166, [[decisoes/0008-deteccao-de-esforcos]]) lê as voltas
   de cada corrida e pedalada do atleta, monta os blocos ([[metricas/esforcos]]) e grava em `bloco_atividade` ([[modulos/banco]]).
   **Sem rede.** Idempotente: calcula os blocos de cada atividade e só regrava os que mudaram (valores ou
@@ -77,6 +78,8 @@ da importação e do cálculo de métricas, fora da [[modulos/api]].
 - `services/worker/worker/reclassificar.py` (CLI `python -m worker.reclassificar`)
 - `services/worker/worker/reclassificar_subtipo.py` (CLI `python -m worker.reclassificar_subtipo`)
 - `services/worker/worker/reclassificar_multiesporte.py` (CLI `python -m worker.reclassificar_multiesporte`)
+- `services/worker/worker/calcular_carga.py` (CLI `python -m worker.calcular_carga`); a lógica está em `services/api/app/servicos/carga.py`
+- `services/worker/tests/test_calcular_carga.py` (ponta a ponta com as fixtures de `tests/fixtures/garmin/carga/` contra o oráculo [[metricas/carga-oraculo]])
 - `services/worker/worker/detectar_esforcos.py` (CLI `python -m worker.detectar_esforcos`); a lógica está em `services/api/app/servicos/esforcos.py`
 - `services/worker/tests/test_detectar_esforcos.py`
 - `services/worker/worker/sugerir_transicao.py` (CLI `python -m worker.sugerir_transicao`); a lógica está em `services/api/app/servicos/transicao.py`

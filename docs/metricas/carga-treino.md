@@ -3,7 +3,7 @@ tipo: metrica
 status: rascunho
 dono: caio
 atualizado: 2026-11-07
-links: [[decisoes/0010-carga-de-treino]], [[metricas/carga-oraculo]], [[decisoes/0002-segmento-intensidade-e-versao]], [[decisoes/0003-fuso-da-atividade]], [[decisoes/0009-treino-de-transicao]], [[glossario]], [[produto/roadmap]]
+links: [[decisoes/0010-carga-de-treino]], [[metricas/carga-oraculo]], [[decisoes/0002-segmento-intensidade-e-versao]], [[decisoes/0003-fuso-da-atividade]], [[decisoes/0009-treino-de-transicao]], [[glossario]], [[produto/roadmap]], [[metricas/serie-carga]], [[modulos/worker]], [[modulos/banco]]
 ---
 # Carga de treino: rTSS e hrTSS por volta (`carga@1`)
 
@@ -12,7 +12,7 @@ Quanto uma atividade custou ao corpo, numa escala única em que **1 hora no limi
 Cada volta é comparada com o limiar do atleta **vigente na data** da atividade; a carga da atividade é a soma das voltas. Corrida usa o
 pace (rTSS) ou a FC (hrTSS); ciclismo e esteira, só a FC. Natação e `outra` ficam sem carga. Sem dado suficiente, a atividade fica
 "sem carga" **com o motivo**, e nunca com um número inventado. Cálculo determinístico, em código, sem banco e sem IA.
-Esta nota cobre a carga **por atividade** (#138). A série diária (CTL, ATL, TSB) tem a seção própria abaixo.
+Esta nota cobre a carga **por atividade** (#138 e #141). A série diária (CTL, ATL, TSB) tem nota própria: [[metricas/serie-carga]].
 
 ## Fórmula
 Função pura `calcular_carga` em `services/api/app/metricas/carga.py`; `VERSAO = "carga@1"`. Constantes iguais para todos os atletas.
@@ -32,8 +32,11 @@ carga   = soma das voltas (todos os tipos: volta, tiro e recuperação)
 - **Motivo** (ordem da ADR 0010, item 7): `modalidade_sem_carga`; nenhum caminho com limiar na data: `sem_dados_saude` (o atleta não tem
   nenhuma linha da grandeza) ou `sem_limiar_na_data` (todas começam depois); senão o do **primeiro caminho disponível**:
   `sem_fc`, `sem_pace` ou `cobertura_insuficiente` (`cobertura_pct` só aí).
-- **Limiar** entra já resolvido (`Limiares`); quem resolve a vigência por data local é a #141. Limiar nunca é estimado nem tomado de data
+- **Limiar** entra já resolvido (`Limiares`); quem resolve a vigência por data local é `app/servicos/carga.py` (#141). Limiar nunca é estimado nem tomado de data
   posterior.
+
+## Onde fica e como recalcula (#141)
+A carga de cada atividade fica em `carga_atividade` ([[modulos/banco]]), uma linha por atividade elegível. `worker.calcular_carga` ([[modulos/worker]]) resolve o limiar vigente no **dia local** da atividade, calcula e grava a `entrada` (SHA-256 de modalidade, subtipo, voltas e limiares do caminho da modalidade, com a vigência) e a `versao`. Só regrava quando um dos dois mudou: reexecutar não muda nada, subir `VERSAO` recalcula tudo e um limiar novo recalcula só as atividades da nova vigência. Em `calculada`, `limiar_vigente_desde` é a vigência do limiar do método vencedor.
 
 ## Dados de entrada
 Por atividade: `modalidade`, `subtipo`; por volta: `duracao_s` (tempo em movimento), `distancia_m`, `fc_media`; limiares vigentes
@@ -48,6 +51,8 @@ Por atividade: `modalidade`, `subtipo`; por volta: `duracao_s` (tempo em movimen
 
 ## Código e teste
 - Código: `services/api/app/metricas/carga.py`
+- Banco: `services/api/app/servicos/carga.py`; comando `services/worker/worker/calcular_carga.py`
+- Teste do banco: `services/worker/tests/test_calcular_carga.py` (confere as 20 linhas do oráculo, `TOTAIS` e o atleta sem saúde)
 - Teste: `services/api/tests/metricas/test_carga.py` (valores à mão nos comentários; confere todas as atividades do oráculo
   [[metricas/carga-oraculo]], `ESPERADO` e `SEM_SAUDE`)
 
@@ -68,5 +73,5 @@ Exemplos à mão (sintéticos), limiar de 270 s/km (3,7037 m/s) ou FC de limiar 
 - hrTSS pela razão direta ignora FC de repouso e deriva cardíaca; a FC de limiar da fonte pode ser de corrida e subestimar o ciclismo.
 - Esteira só por FC; natação e `outra` sem carga. `duracao_s` é tempo em movimento: a pausa do cronômetro não conta.
 
-## Série diária: CTL, ATL e TSB (#139)
-_Seção a completar no PR da #139 (`app/metricas/serie_carga.py`, `serie_carga@1`). Referência: ADR 0010, item 6._
+## Série diária: CTL, ATL e TSB
+A série diária tem nota própria: [[metricas/serie-carga]] (`serie_carga@1`, `app/metricas/serie_carga.py`, #139).

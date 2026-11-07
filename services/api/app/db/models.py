@@ -40,6 +40,13 @@ ORIGENS_ZONA = ("garmin_export", "garmin_fit")
 ORIGENS_SAUDE = ("garmin_export",)  # recorde_pessoal e carga_garmin_dia (ADR 0010, item 2)
 UNIDADES_RECORDE = ("s", "m", "W", "passos")  # ou nulo: tipo desconhecido (adendo da ADR 0010)
 
+ESTADOS_CARGA = ("calculada", "sem_carga")  # ADR 0010, item 5
+METODOS_CARGA = ("rtss", "hrtss")
+GRANULARIDADES_CARGA = ("volta", "atividade")
+MOTIVOS_CARGA = (
+    "sem_dados_saude", "sem_limiar_na_data", "sem_fc", "sem_pace", "cobertura_insuficiente", "modalidade_sem_carga",
+)
+
 ESTADOS_CLIMA = ("ok", "pendente", "falha")  # indoor e sem_posicao sao calculados na leitura (ADR 0007)
 
 FUSO_MIN_MIN, FUSO_MIN_MAX = -720, 840  # minutos: UTC-12 a UTC+14
@@ -130,6 +137,9 @@ class Atividade(Base):
         back_populates="atividade", cascade="all, delete-orphan", order_by="BlocoAtividade.ordem"
     )
     rotulo_transicao: Mapped["RotuloTransicao | None"] = relationship(
+        back_populates="atividade", cascade="all, delete-orphan", uselist=False
+    )
+    carga: Mapped["CargaAtividade | None"] = relationship(
         back_populates="atividade", cascade="all, delete-orphan", uselist=False
     )
 
@@ -345,3 +355,46 @@ class CargaGarminDia(Base):
     razao: Mapped[float | None] = mapped_column(Float)
     versao_leitura: Mapped[str] = mapped_column(String(40))
     importado_em: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+
+
+class CargaAtividade(Base):
+    """Carga de treino de uma atividade elegivel (ADR 0010, item 5): `calculada` ou `sem_carga` com motivo.
+
+    Sem linha para `multiesporte_pai` e `troca`. So guarda o que a conta produz (`app.metricas.carga`); quem grava,
+    pela `entrada` e pela `versao`, e `app.servicos.carga.calcular_carga_do_atleta`. Os limiares sao os usados
+    (auditoria): dado fisiologico (LGPD), so no banco local, nunca em log nem pela API.
+    """
+
+    __tablename__ = "carga_atividade"
+    __table_args__ = (
+        CheckConstraint(_in("estado", ESTADOS_CARGA), name="estado"),
+        CheckConstraint(f"metodo IS NULL OR {_in('metodo', METODOS_CARGA)}", name="metodo"),
+        CheckConstraint(f"motivo IS NULL OR {_in('motivo', MOTIVOS_CARGA)}", name="motivo"),
+        CheckConstraint(_in("granularidade", GRANULARIDADES_CARGA), name="granularidade"),
+        CheckConstraint(
+            "(estado = 'calculada' AND carga IS NOT NULL AND metodo IS NOT NULL AND cobertura_pct IS NOT NULL "
+            "AND motivo IS NULL) OR "
+            "(estado = 'sem_carga' AND motivo IS NOT NULL AND carga IS NULL AND metodo IS NULL "
+            "AND carga_rtss IS NULL AND carga_hrtss IS NULL)",
+            name="estado_campos",
+        ),
+    )
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    atividade_id: Mapped[int] = mapped_column(ForeignKey("atividade.id", ondelete="CASCADE"), unique=True)
+    estado: Mapped[str] = mapped_column(String(20))
+    carga: Mapped[float | None] = mapped_column(Float)  # a do metodo vencedor
+    metodo: Mapped[str | None] = mapped_column(String(10))
+    carga_rtss: Mapped[float | None] = mapped_column(Float)
+    carga_hrtss: Mapped[float | None] = mapped_column(Float)
+    motivo: Mapped[str | None] = mapped_column(String(30))
+    cobertura_pct: Mapped[float | None] = mapped_column(Float)
+    granularidade: Mapped[str] = mapped_column(String(10))
+    limiar_fc_bpm: Mapped[float | None] = mapped_column(Float)
+    limiar_velocidade_ms: Mapped[float | None] = mapped_column(Float)
+    limiar_vigente_desde: Mapped[date | None] = mapped_column(Date)  # vigencia do limiar do metodo vencedor
+    entrada: Mapped[str] = mapped_column(String(64))  # SHA-256 do que entrou na conta
+    versao: Mapped[str] = mapped_column(String(40))  # ex.: carga@1
+    calculado_em: Mapped[datetime] = mapped_column(DateTime(timezone=True))
+
+    atividade: Mapped[Atividade] = relationship(back_populates="carga")
