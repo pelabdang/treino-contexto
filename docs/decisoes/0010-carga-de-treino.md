@@ -1,13 +1,13 @@
 ---
 tipo: decisao
-status: proposta
+status: aceita
 dono: caio
 atualizado: 2026-11-07
 links: [[decisoes/0001-modelo-de-dados-minimo]], [[decisoes/0002-segmento-intensidade-e-versao]], [[decisoes/0003-fuso-da-atividade]], [[decisoes/0004-contrato-tela-evolucao]], [[decisoes/0006-upload-de-fit]], [[decisoes/0008-deteccao-de-esforcos]], [[decisoes/0009-treino-de-transicao]], [[modulos/banco]], [[modulos/ingestao-garmin]], [[produto/roadmap]], [[glossario]]
 ---
 # ADR: 0010 Carga de treino (rTSS, hrTSS, CTL, ATL e TSB)
 
-> Proposta de 07/11 (issue #134), para o Theo aprovar o modelo de dados. O Angelo respondeu "sim" às sete propostas de produto em 07/11
+> Aceita em 07/11 (issue #134): modelo de dados aprovado pelo Theo e citações conferidas. O Angelo respondeu "sim" às sete propostas de produto em 07/11
 > (seção "A confirmar"). **Nenhuma linha de código nem migração muda neste PR.** Todos os números são sintéticos. Os nomes concretos
 > de arquivo e de campo da exportação ficam na nota [[modulos/ingestao-garmin]] (#135), não nesta ADR.
 > Dá base para #136, #137, #138, #139, #140, #141, #142, #144 e #174.
@@ -140,9 +140,9 @@ Nenhum registro é apagado por uma reimportação que não o traz (uma exportaç
 
 ### 4. Fórmula por volta, método por modalidade e a versão `carga@1`
 **Unidade comum.** Todas as fórmulas usam a forma do Training Stress Score: `TSS = horas x IF^2 x 100`, em que `IF` (fator de
-intensidade) é a razão entre a intensidade e a de limiar. **Uma hora no limiar vale 100.** Fonte: Coggan, A. & Allen, H. (2010),
-*Training and Racing with a Power Meter*, 2a ed., VeloPress: `TSS = (s x NP x IF) / (FTP x 3600) x 100`, que com `NP = IF x FTP` é
-`horas x IF^2 x 100`.
+intensidade) é a razão entre a intensidade e a de limiar. **Uma hora no limiar vale 100.** Fonte: Coggan, A. & Allen, H.,
+*Training and Racing with a Power Meter* (VeloPress), e o artigo "The Development of the Training Stress Score" do TrainingPeaks:
+`TSS = (s x NP x IF) / (FTP x 3600) x 100`, que com `NP = IF x FTP` é `horas x IF^2 x 100` (ver "Fontes conferidas").
 
 **rTSS por volta** (corrida, pace). Para a volta `i` com `duracao_s > 0` e `distancia_m > 0`:
 ```
@@ -150,18 +150,22 @@ v_i  = distancia_m_i / duracao_s_i                 (m/s)
 IF_i = v_i / velocidade_limiar                     (= pace_limiar / pace_i)
 rTSS_i = (duracao_s_i / 3600) x IF_i^2 x 100
 ```
-Fontes: o rTSS do TrainingPeaks (*Running Training Stress Score*, ajuda do TrainingPeaks), que usa o pace ajustado à subida (NGP) contra
-o pace de limiar; e Skiba, P. F. (2006), *Calculation of Power Output and Quantification of Training Stress in Distance Runners: The
-Evolution of the GOVSS Algorithm*. **Aqui não há ajuste de subida**: usa-se a velocidade bruta da volta (limitação declarada, item 9).
+Fontes: o rTSS do TrainingPeaks (*Running Training Stress Score (rTSS) Explained*), que usa o pace ajustado à subida (NGP) contra o
+pace de limiar; e, como origem da ideia "100 = o esforço de teste na velocidade de limiar", Skiba, P. F. (2006), *Calculation of Power
+Output and Quantification of Training Stress in Distance Runners: The Development of the GOVSS Algorithm* (GOVSS não é a fórmula do
+rTSS do TrainingPeaks; só contexto). **Aqui não há ajuste de subida**: usa-se a velocidade bruta da volta (limitação declarada, item 9).
 
 **hrTSS por volta** (corrida e ciclismo, FC). Para a volta `i` com `duracao_s > 0` e `fc_media` presente:
 ```
 IF_i = fc_media_i / fc_limiar
 hrTSS_i = (duracao_s_i / 3600) x IF_i^2 x 100
 ```
-Fonte: a ideia do hrTSS do TrainingPeaks (carga pela FC relativa à FC de limiar, na escala do TSS). Esta é a **versão simples por razão
-direta**, sem usar as zonas nem a FC de repouso; a variante pela reserva de FC e o TRIMP de Banister (Banister, E. W. (1991), *Modeling
-elite athletic performance*, em *Physiological Testing of Elite Athletes*, Human Kinetics) ficam como alternativa (`carga@2`).
+**Atenção: este hrTSS não é o do TrainingPeaks.** O do TrainingPeaks é por **tempo em zona de FC** (zonas a partir da FC de limiar, com
+uma tabela de pontos), e não por razão ao quadrado. O nosso é uma **adaptação**: a mesma forma do TSS (`horas x IF^2 x 100`) com o IF
+tirado da FC, análogo ao hrTSS "estilo potência" descrito na literatura de divulgação. Mantém a escala (100 = 1 h no limiar), mas os
+valores não são comparáveis aos do TrainingPeaks. Usa só a FC de limiar, sem zonas nem FC de repouso. O hrTSS por zonas, a variante
+pela reserva de FC e o TRIMP de Banister (Banister, E. W. (1991), "Modeling elite athletic performance", em MacDougall, Wenger & Green
+(eds.), *Physiological Testing of the High-Performance Athlete*, 2a ed., Human Kinetics, p. 403-425) ficam como alternativa (`carga@2`).
 
 **Carga da atividade** = soma da carga das voltas (`segmento`, **de todos os `tipo`**: `volta`, `tiro` e `recuperacao`, pois a
 recuperação também é carga). Usa as **voltas e não os blocos** da ADR 0008, por três motivos: (a) blocos existem só para corrida e
@@ -254,8 +258,9 @@ do dia). Se o custo virar problema, grava-se depois como cache, sem mudar o cont
 **Dia da atividade** = data local pela ADR 0003 (`data_local(inicio, fuso_min)`, com `America/Sao_Paulo` se `fuso_min` é `NULL`).
 
 ### 6. CTL, ATL e TSB
-- **Janelas:** `TAU_CTL = 42` dias e `TAU_ATL = 7` dias (Coggan, *Performance Manager*; base: Banister, Calvert, Savage e Bach (1975),
-  *A systems model of training for athletic performance*, Australian Journal of Sports Medicine 7:57-61). Todo atleta usa as mesmas.
+- **Janelas:** `TAU_CTL = 42` dias e `TAU_ATL = 7` dias (padrão do *Performance Management Chart* do TrainingPeaks; base teórica: modelo
+  de impulso-resposta de Banister, Calvert, Savage e Bach, IEEE Trans. Syst. Man Cybern. SMC-6(2):94-102, 1976; ver "Fontes conferidas").
+  Todo atleta usa as mesmas.
 - **Recursão** (média móvel exponencial, na forma exata de decaimento), por dia `d`, com `L_d` a soma das cargas `calculada` do dia local:
   ```
   k_ctl = 1 - exp(-1/42)   (0,023528)       k_atl = 1 - exp(-1/7)   (0,133122)
@@ -263,6 +268,10 @@ do dia). Se o custo virar problema, grava-se depois como cache, sem mudar o cont
   ATL_d = ATL_(d-1) + (L_d - ATL_(d-1)) x k_atl
   TSB_d = CTL_d - ATL_d                          (como no glossário)
   ```
+  Duas escolhas conscientes, conferidas nas fontes: (a) a forma exata `1 - exp(-1/tau)` (planilha do Golden Cheetah) em vez da
+  aproximação `1/tau`, que dá 1,2% a mais no CTL e 7% a mais no ATL por passo; (b) o **TSB do TrainingPeaks é CTL e ATL do dia anterior**
+  (a "forma da manhã"), enquanto o nosso é o do **fim do mesmo dia**, como no glossário. Os números do TSB, portanto, **não batem dia a
+  dia** com os do TrainingPeaks; CTL e ATL batem a menos do item (a).
 - **Dia sem treino:** `L_d = 0`; a série tem **todos os dias** entre o primeiro e o último, e CTL e ATL decaem.
 - **Valor inicial:** `CTL = ATL = 0` **antes do primeiro dia com carga calculada**; a série começa nesse dia. Não se usa a carga do
   Garmin para semear (escala diferente) nem se estima um histórico anterior.
@@ -384,14 +393,39 @@ datas. A conferência é **só descritiva** (decisão do Angelo, 07/11): não h�
 - Natação sem carga na Meta 6, mesmo com FC (item 4).
 - Conferência com o Garmin **só descritiva**, sem faixa de aprovação (item 8).
 
-**Pelo Caio (verificações que esta ADR não fez):**
-- As citações (Coggan e Allen 2010; Skiba 2006; Banister e colegas 1975 e 1991; ajuda do TrainingPeaks) foram escritas de memória
-  nesta sessão, **sem abrir as fontes**. Conferir página, edição e fórmula exata antes de promover a ADR de `proposta` a `aceita`, em
-  particular se o rTSS usa `IF^2` e a forma exata `1 - exp(-1/tau)` do CTL/ATL.
-- Se o TSB é CTL e ATL do mesmo dia (glossário, adotado) ou do dia anterior (como o TrainingPeaks costuma mostrar).
-- A descrição pública do modelo da carga aguda/crônica do Garmin.
+**Ainda em aberto (não bloqueia):**
+- A descrição pública do modelo da carga aguda/crônica do Garmin (para a nota da conferência).
 - Se `IF^2` é adequado para pace perto do limiar (a relação entre pace e custo energético não é linear).
+- A forma do rTSS do TrainingPeaks aparece só em imagem na página oficial; o `IF^2` do rTSS segue da identidade do TSS, mas o texto não o afirma.
+- O hrTSS é adaptação própria (item 4); a comparação com o do TrainingPeaks fica descartada.
+
+## Fontes conferidas (07/11)
+Conferido com busca e leitura de páginas em 07/11; o que não pôde ser aberto está dito.
+- **TSS = (s x NP x IF) / (FTP x 3600) x 100** e IF = NP/FTP: confirmado em páginas secundárias que reproduzem a fórmula e em
+  <https://trainingpeaks.com/blog/the-development-of-the-training-stress-score> (atribui TSS e IF a Coggan e Allen). **Não** abri o
+  livro: edição e páginas de Coggan & Allen, *Training and Racing with a Power Meter* (VeloPress), não conferidas.
+- **rTSS (TrainingPeaks):** <https://www.trainingpeaks.com/learn/articles/running-training-stress-score-rtss-explained/>. Confirmado: usa
+  NGP contra o pace de limiar ("fastest pace sustainable for one hour") e a duração; IF = NGP / pace de limiar. A fórmula só aparece em
+  imagem; a página não menciona Skiba nem GOVSS. **Correção:** a versão anterior da ADR citava Skiba como fonte do rTSS; passou a contexto.
+- **Skiba 2006:** o título é *...: The Development of the GOVSS Algorithm* (não "Evolution", como estava). Confirmado por fontes
+  secundárias (<https://topofusion.com/govss.php>): em GOVSS, 100 = o esforço de teste na velocidade de limiar. O artigo original não foi aberto.
+- **hrTSS (TrainingPeaks):** <https://help.trainingpeaks.com/hc/en-us/articles/204071944>. Confirmado: é por **tempo em zonas de FC**
+  (a partir da FC de limiar), com tabela, e menos preciso que o TSS por potência e o rTSS. **Correção:** a ADR dizia "a ideia do hrTSS do
+  TrainingPeaks"; agora diz que o nosso é uma adaptação por razão ao quadrado (item 4).
+- **Banister 1975:** não localizei o artigo de 1975 (*Aust J Sports Med*, v. 7, p. 57-61); uma lista de referências o dá como "Aust J Sci
+  Med Sport, v. 7, p. 57", sem título. **Correção:** a base verificada é Calvert, T. W., Banister, E. W., Savage, M. V. & Bach, T. (1976),
+  "A systems model of the effects of training on physical performance", *IEEE Transactions on Systems, Man, and Cybernetics*,
+  SMC-6(2):94-102. A citação de 1975 fica como "citada por outras fontes, não verificada".
+- **Banister 1991:** o livro é *Physiological Testing of the High-Performance Athlete* (2a ed., Human Kinetics, p. 403-425), e não
+  "...of Elite Athletes", como estava. **Correção feita.** Não confirmei que o capítulo usa a sigla TRIMP.
+- **CTL/ATL:** a forma `1 - exp(-1/tau)` está nas planilhas da lista do Golden Cheetah
+  (<https://groups.google.com/g/golden-cheetah-users/c/h_KSL1oUmLI>, tau 7 e 42). Fontes de divulgação descrevem `1/tau`; qual das duas o
+  TrainingPeaks usa por dentro **não ficou confirmado**. Mantida a forma exata (diferença no item 6).
+- **TSB:** confirmado, TrainingPeaks e Golden Cheetah usam CTL e ATL do **dia anterior**. A ADR mantém o do mesmo dia (glossário) e agora diz a diferença no item 6.
 
 ## Data e quem decidiu
-2026-11-07. Proposta do Caio (ciência), com revisão da Duda (dados e ingestão) pedida no PR. Aprovação do modelo de dados pelo Theo
-neste PR. Issue #134.
+2026-11-07. Proposta do Caio (ciência), com revisão da Duda (dados e ingestão) pedida no PR. **Modelo de dados aprovado pelo Theo em
+07/11**: as cinco tabelas e a tabela própria no lugar de `metrica_derivada`; `zona_fc_atleta` com as duas origens (`garmin_export` e
+`garmin_fit`); CTL/ATL/TSB na leitura com `serie_carga@1`; `importar_garmin` chamando `importar_saude` e `calcular_carga` no fim, com erro
+virando aviso; `multiesporte_pai` e `troca` sem linha, em `ignoradas_multiesporte`; `worker.apagar_saude` na #174. Decisões de produto
+do Angelo em 07/11 (seção "A confirmar"). Citações conferidas em 07/11 (seção "Fontes conferidas"). Issue #134.
