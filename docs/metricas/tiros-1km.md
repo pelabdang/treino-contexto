@@ -23,24 +23,18 @@ Versão do cálculo: `tiros_1km@6` (#243; as anteriores foram substituídas, ver
    relógio cortou em 500 + 500 já chega como um bloco. Um esforço de **1500 m** (`d1500`), de 2000 m ou de 400 m
    **não é** tiro de 1 km. Aquecimento, desaquecimento, recuperação e rodagem (`leve`) saem pela própria categoria.
    A intensidade do FIT não é lida (é dica, ADR 0002).
-2a. **Pausa dentro do tiro** (`@6`, #243; ADR 0008, adendo). É feita logo após ler os blocos e vale para todos os passos seguintes. Um tiro que o atleta parou no meio (semáforo, bebida,
-   cronômetro parado) chega dos esforços como 2 ou 3 pedaços, porque a parada de 15 s ou mais separa os blocos. Os pedaços de **esforço** vizinhos (sem recuperação entre eles, cada um com menos de 950 m) viram **um
-   bloco** quando: a parada entre cada par é **menor que 60 s** (`PAUSA_NO_TIRO_MAX_S`); o pace de cada pedaço fica a
-   até 5% do pace acumulado (o mesmo `JUNTAR_TOLERANCIA` dos esforços); e a soma cai em 950 a 1050 m. A cadeia
-   precisa ter **2 ou 3 pedaços**: uma cadeia maior é série de repetições curtas com descanso curto (4 x 500 m com 30 s),
-   que não se confunde com um tiro de 1 km cortado. O tiro conta o **tempo em movimento** (soma das durações; o tempo
-   parado não entra no pace). Exemplo: 600 m em 150 s, parado 20 s, 400 m em 100 s, ambos a 250 s/km: 1000 m em
-   250 s, pace 250 s/km, um tiro (na `@5` eram `d600` + `d400`, nenhum tiro). Com parada de 59 s junta; com 60 s, não.
-   Esta regra **não muda** os esforços (`esforcos@1`) nem o treino-chave contínuo (parada de 15 s ou mais corta a
-   sequência, decisão de 06/11): só a leitura da série de tiros.
 3. **Ritmo parecido** (igual à `@4`): com 3 ou mais candidatos, sai o que é **mais de 20% mais lento** que a mediana
    deles (`pace > mediana x 1,20`; o limite entra).
 4. **Bloco contínuo** (a regra de 15% da `@4`, agora sobre blocos): sai o candidato que é **menos de 15% mais rápido**
    que um **bloco vizinho** (anterior ou seguinte) de corrida, isto é, `pace do tiro > pace do vizinho x 0,85`. Conta
    como vizinho o bloco de **950 m ou mais** que não seja aquecimento nem desaquecimento (o km moderado de um
-   fartlek, a rodagem de 2 km de um progressivo). **Exceção**: o vizinho que é ele mesmo candidato **e** está separado
-   do tiro por uma **parada de 15 s ou mais** (`PAUSA_SEPARA_S`) não conta, porque são repetições com descanso parado,
-   não corrida contínua. Dois km colados (parada menor que 15 s) em ritmos até 5% diferentes já viram um só esforço
+   fartlek, a rodagem de 2 km de um progressivo). **Exceção (`@6`, #243)**: o vizinho separado
+   do tiro por uma **parada de 15 s ou mais** (`PAUSA_SEPARA_S`) **não conta**, seja ou não candidato a tiro (na `@5`
+   só valia para o vizinho candidato): com descanso parado entre eles não há corrida contínua. Parada menor que 15 s
+   continua cortando. Assim, em séries de distâncias misturadas (1500 m e 1000 m) e em pirâmides (1-3-2-1 km) com
+   descanso parado, os blocos de 1 km contam como tiros. Exemplo: 1 km, 3 km, 2 km, 1 km, todos a 250 s/km com 90 s
+   parados entre eles: os dois km são tiros (`250 > 250 x 0,85 = 212,5` os cortaria sem a exceção); com 10 s
+   parados e o vizinho de 2 km a 275 s/km, `250 > 275 x 0,85 = 233,75`, o tiro sai. Dois km colados (parada menor que 15 s) em ritmos até 5% diferentes já viram um só esforço
    (`d2000`); entre 5% e 15% ficam como dois blocos e o item cobra a diferença.
 5. **Recuperações**: blocos que não são tiro entre o primeiro e o último tiro (com 2 ou mais).
 6. **Sessão** (`eh_intervalado`) = **pelo menos 2 tiros** (era 3 na `@4`; decisão do Angelo, 04/11). Não há mais a
@@ -194,11 +188,10 @@ Regra própria do projeto; não há artigo.
   que agora também recria os blocos (`detectar_esforcos`) e regrava `tipo` e `versao_deteccao` dos segmentos. A API traz
   `reclassificacao_pendente: true` até lá. O contrato (campos) não mudou; só `versao_calculo` passa a `tiros_1km@5`.
 
-- `tiros_1km@6` (#243): pausa dentro do tiro (item 2a): pedaços de esforço cortados por parada de 15 s a menos de 60 s
-  valem como um tiro de 1 km, que conta o tempo em movimento. Mínimo de 2 tiros mantido; velocidade habitual do ciclismo
-  (12 semanas, pedais de 30 min ou mais, mínimo de 10) confirmada (ADR 0008, adendo). Os blocos (`esforcos@1`) não
-  mudam; **reclassificar** (`python -m worker.reclassificar --atleta-id <id>`) recalcula as linhas `@5` e regrava
-  `tipo` e `versao_deteccao`. `ResultadoTiros.blocos_tiro` traz os tiros já juntados (distância, duração, voltas).
+- `tiros_1km@6` (#243): o vizinho de 950 m ou mais separado do tiro por parada de 15 s ou mais deixa de cortá-lo, seja ou
+  não candidato (item 4). Mínimo de 2 tiros mantido e velocidade habitual do ciclismo (12 semanas, pedais de 30 min ou
+  mais, mínimo de 10) confirmada (ADR 0008, adendo). Os blocos (`esforcos@1`) não mudam; **reclassificar**
+  (`python -m worker.reclassificar --atleta-id <id>`) recalcula as linhas `@5` e regrava `tipo` e `versao_deteccao`.
 
 ## Código e teste
 - Melhor tiro (#151): sem mudança de versão, ver "Agregação por sessão".
@@ -213,7 +206,7 @@ Regra própria do projeto; não há artigo.
 - **Validado com um atleta.** Os limites da `@4` (15% de bloco contínuo, 20% de ritmo parecido, 10% do ritmo habitual)
   foram calibrados com uma amostra pequena e ainda não foram testados com outros perfis. Atleta que faz progressivo com km final bem mais rápido que os anteriores (mais de 15%) ou que treina tiros
   em ritmo próximo ao de rodagem pode ser classificado diferente do que espera.
-- Ficam como limitação, sem critério geral encontrado: (a) progressivo ou série moderada em que o km forte é mais de
+- Ficam como limitação, sem critério geral encontrado (a `@6` aceitou o caso (c)): (a) progressivo ou série moderada em que o km forte é mais de
   15% mais rápido que o km vizinho e há recuperação curta (parece tiro de verdade); (b) fartlek de 1 km forte e 500 m
   moderados, que não se distingue estruturalmente de tiros com trote de 500 m; (c) séries de 1 km em ritmo moderado com
   paradas de cerca de 1 min, que têm a mesma estrutura de tiros. A regra não usa dia da semana nem nada específico do atleta.
@@ -222,13 +215,11 @@ Regra própria do projeto; não há artigo.
 - O filtro do ritmo habitual (agora 10%) e a janela de 12 semanas também só foram vistos com **um atleta**. Atleta novo, sem corridas anteriores, não é filtrado na série (mas a detecção usa a referência da atividade, ver acima; e com menos de 10 corridas na janela o
   histórico todo é a referência, que é menos preciso). Um treino de tiros leve, mais lento que 10% abaixo do ritmo
   habitual (por exemplo, volta à corrida depois de lesão), não entra na série de tiros.
-- **Pausa dentro do tiro** (`@6`): o limite de 60 s é decisão do projeto, sem artigo. Duas repetições curtas que
-  somam 1 km com descanso de menos de 60 s (2 x 500 m com 30 s) valem como um tiro só; a sessão precisa de pelo menos 2
-  tiros, então 2 x 500 m sozinho não entra. Pausa de 60 s ou mais dentro do tiro ainda o parte em pedaços.
-- **Vizinho separado por pausa corta o tiro** (conferência local, #169): o vizinho de 950 m ou mais só é ignorado
-  quando ele próprio é candidato a tiro e há parada de 15 s ou mais entre os dois. Um vizinho que não é candidato (por
-  exemplo um esforço de 1500 m) corta o tiro de 1 km como continuação mesmo com descanso parado entre eles; séries
-  mistas (1500 m e 1000 m) e pirâmides perdem tiros de 1 km. Mudar isso é mudança de regra (nova versão), em issue própria.
+- **Série moderada com paradas** (`@6`): como a parada de 15 s ou mais tira o vizinho da conta, um km no ritmo de
+  tiro entre blocos de rodagem separados por paradas passa a valer como tiro (caso (c) acima, agora aceito como regra).
+  O limite de ritmo habitual (10%) e o ritmo parecido continuam filtrando.
+- **Pausa dentro do tiro não é tratada**: um tiro de 1 km parado no meio por 15 s ou mais chega como dois pedaços de
+  esforço e não conta (proposta futura no adendo da ADR 0008).
 - Só detecta tiros de 1 km; 400 m, 2 km e outras distâncias ficam fora da Meta 1. Num treino misto, os
   tiros de 1 km contam e os curtos não (`@5`).
 - Uma volta solta de ~1 km, sem rótulo, no fim do treino (por exemplo, um desaquecimento de 1 km) vale como tiro se

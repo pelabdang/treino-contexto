@@ -35,15 +35,6 @@ VIZINHO_MIN_M = 950.0
 
 MODALIDADE_CORRIDA = "corrida"
 
-# @6: pausa dentro do tiro. Um tiro cortado por uma parada (semáforo, bebida, cronômetro parado) chega dos esforços
-# como 2 ou 3 pedaços separados; os pedaços de esforço vizinhos, de ritmo parecido (5%, ``JUNTAR_TOLERANCIA`` dos
-# esforços), com parada menor que isto entre eles e somando 950 a 1050 m, valem como um tiro só, que conta o tempo
-# em movimento. Parada de ``PAUSA_NO_TIRO_MAX_S`` ou mais é descanso de série e continua separando. Decisão do
-# projeto (proposta do Caio, a aprovar; ADR 0008, adendo), não vem de artigo.
-PAUSA_NO_TIRO_MAX_S = 60.0
-PEDACOS_TIRO_MIN = 2
-PEDACOS_TIRO_MAX = 3
-
 # Ritmo habitual do atleta (@3): mediana do pace das corridas de mais de 3 km (sem esteira),
 # anteriores à sessão, nas últimas 12 semanas; com menos de 10 na janela, todo o histórico.
 HABITUAL_DISTANCIA_MIN_M = 3000.0
@@ -93,9 +84,6 @@ class ResultadoTiros:
     recuperacoes: tuple[int, ...]  # ``ordem`` dos blocos não-tiro entre o primeiro e o último tiro
     eh_intervalado: bool
     versao: str = VERSAO
-    # Os tiros como blocos (``ordem`` = a do primeiro pedaço), já com os pedaços cortados por pausa juntados (@6).
-    # Quem precisa de distância, duração ou voltas de cada tiro lê daqui, não da lista original de blocos.
-    blocos_tiro: tuple[BlocoEntrada, ...] = ()
 
 
 def _pace_s_km(b: BlocoEntrada) -> float | None:
@@ -104,13 +92,14 @@ def _pace_s_km(b: BlocoEntrada) -> float | None:
     return b.duracao_s / b.distancia_m * 1000.0
 
 
-def _vizinho_corta(blocos: list[BlocoEntrada], i: int, candidatos: set[int]) -> bool:
+def _vizinho_corta(blocos: list[BlocoEntrada], i: int) -> bool:
     """O tiro ``blocos[i]`` é continuação de um bloco de corrida vizinho (progressivo, fartlek)?
 
     Olha o bloco anterior e o seguinte. Um vizinho conta quando tem pelo menos 950 m, não é aquecimento nem
     desaquecimento e o tiro é menos de 15% mais rápido que ele (``pace do tiro > pace do vizinho x 0,85``; vizinho
-    mais lento que isso deixa o tiro de pé). Fica de fora o vizinho que é ele mesmo um tiro candidato **separado
-    por uma pausa** (parada de pelo menos 15 s): são repetições com descanso parado, não bloco contínuo.
+    mais lento que isso deixa o tiro de pé). Fica de fora (@6, #243) **qualquer** vizinho separado do tiro por uma
+    parada de pelo menos 15 s (``PAUSA_SEPARA_S_CORRIDA``), seja ou não candidato a tiro: com descanso parado entre
+    eles não há corrida contínua. Parada menor que 15 s continua cortando.
     """
     pace = _pace_s_km(blocos[i])
     for j in (i - 1, i + 1):
@@ -125,65 +114,11 @@ def _vizinho_corta(blocos: list[BlocoEntrada], i: int, candidatos: set[int]) -> 
         if pace_viz is None:
             continue
         parada = (blocos[min(i, j)].parada_apos_s or 0.0)
-        if viz.ordem in candidatos and parada >= ef.PAUSA_SEPARA_S_CORRIDA - 1e-9:
+        if parada >= ef.PAUSA_SEPARA_S_CORRIDA - 1e-9:
             continue
         if pace > pace_viz * (1.0 - BLOCO_CONTINUO_GANHO_MINIMO):
             return True
     return False
-
-
-def _juntar_pedacos(blocos: list[BlocoEntrada]) -> list[BlocoEntrada]:
-    """@6: junta os pedaços de um tiro de 1 km que uma pausa cortou (ver ``PAUSA_NO_TIRO_MAX_S``).
-
-    Cadeia = esforços de menos de 950 m, consecutivos na ordem dos blocos (nenhuma recuperação entre eles), cada um
-    separado do seguinte por parada menor que o limite. Só uma cadeia de 2 ou 3 pedaços, de ritmo parecido (cada
-    pedaço a até 5% do pace acumulado) e somando 950 a 1050 m vira um bloco. Cadeia maior é série de repetições
-    curtas com descanso curto (8 x 500 m com 30 s, por exemplo), não um tiro cortado: não se junta.
-    """
-    resultado: list[BlocoEntrada] = []
-    i = 0
-    while i < len(blocos):
-        cadeia = [blocos[i]]
-        if blocos[i].categoria == ef.ESFORCO and (blocos[i].distancia_m or 0.0) < VIZINHO_MIN_M:
-            while i + len(cadeia) < len(blocos):
-                ult, prox = cadeia[-1], blocos[i + len(cadeia)]
-                if (
-                    prox.categoria != ef.ESFORCO
-                    or (prox.distancia_m or 0.0) >= VIZINHO_MIN_M
-                    or (ult.parada_apos_s or 0.0) >= PAUSA_NO_TIRO_MAX_S - 1e-9
-                ):
-                    break
-                cadeia.append(prox)
-        junto = _bloco_de_pedacos(cadeia) if PEDACOS_TIRO_MIN <= len(cadeia) <= PEDACOS_TIRO_MAX else None
-        if junto is not None:
-            resultado.append(junto)
-        else:
-            resultado.extend(cadeia)
-        i += len(cadeia)
-    return resultado
-
-
-def _bloco_de_pedacos(cadeia: list[BlocoEntrada]) -> BlocoEntrada | None:
-    """O bloco de 1 km que os pedaços formam, ou ``None`` se a soma não cai na faixa ou o ritmo não é parecido."""
-    dist = dur = 0.0
-    for b in cadeia:
-        pace_b = _pace_s_km(b)
-        if pace_b is None:
-            return None
-        if dist > 0 and abs(pace_b - dur / dist * 1000.0) / (dur / dist * 1000.0) > ef.JUNTAR_TOLERANCIA + 1e-9:
-            return None
-        dist += b.distancia_m or 0.0
-        dur += b.duracao_s
-    if ef.faixa_de_distancia(dist) != FAIXA_TIRO:
-        return None
-    com_fc = [b for b in cadeia if b.fc_media is not None]
-    dur_fc = sum(b.duracao_s for b in com_fc)
-    fc = sum(b.fc_media * b.duracao_s for b in com_fc) / dur_fc if dur_fc > 0 else None  # type: ignore[operator]
-    primeiro, ultimo = cadeia[0], cadeia[-1]
-    return BlocoEntrada(
-        primeiro.ordem, ef.ESFORCO, primeiro.volta_inicial, ultimo.volta_final, dist, dur, fc, FAIXA_TIRO,
-        ultimo.parada_apos_s,
-    )  # fmt: skip
 
 
 def tiros_de_blocos(blocos: Sequence[BlocoEntrada], modalidade: str = MODALIDADE_CORRIDA) -> ResultadoTiros:
@@ -192,7 +127,6 @@ def tiros_de_blocos(blocos: Sequence[BlocoEntrada], modalidade: str = MODALIDADE
     1. Candidato: bloco de categoria ``esforco`` e faixa ``d1000``. Aquecimento, desaquecimento, recuperação e
        rodagem (``leve``) ficam de fora pela própria categoria; um esforço de 1500 m ou de 2000 m, também.
     2. Ritmo parecido: com 3 ou mais candidatos, sai o mais de 20% mais lento que a mediana deles.
-    0. (@6) Pedaços de esforço cortados por uma pausa curta valem como um bloco só (``_juntar_pedacos``).
     3. Bloco contínuo: sai o candidato que é menos de 15% mais rápido que um bloco vizinho de corrida (ver
        ``_vizinho_corta``).
     4. ``eh_intervalado`` = pelo menos 2 tiros. Sem o volume do bloco principal da @4: o aquecimento e o
@@ -200,7 +134,7 @@ def tiros_de_blocos(blocos: Sequence[BlocoEntrada], modalidade: str = MODALIDADE
     """
     if modalidade != MODALIDADE_CORRIDA or not blocos:
         return ResultadoTiros((), (), False)
-    blocos = _juntar_pedacos(sorted(blocos, key=lambda b: b.ordem))
+    blocos = sorted(blocos, key=lambda b: b.ordem)
     cand = [b for b in blocos if b.categoria == ef.ESFORCO and b.faixa == FAIXA_TIRO and _pace_s_km(b) is not None]
 
     if len(cand) >= MIN_TIROS_RITMO_PARECIDO:
@@ -208,14 +142,13 @@ def tiros_de_blocos(blocos: Sequence[BlocoEntrada], modalidade: str = MODALIDADE
         cand = [b for b in cand if _pace_s_km(b) <= mediana * (1.0 + RITMO_PARECIDO_TOLERANCIA)]
 
     posicao = {b.ordem: i for i, b in enumerate(blocos)}
-    ordens_cand = {b.ordem for b in cand}
-    tiros = [b for b in cand if not _vizinho_corta(blocos, posicao[b.ordem], ordens_cand)]
+    tiros = [b for b in cand if not _vizinho_corta(blocos, posicao[b.ordem])]
 
     ordens = tuple(b.ordem for b in tiros)
     recuperacoes: tuple[int, ...] = ()
     if len(ordens) >= 2:
         recuperacoes = tuple(b.ordem for b in blocos if ordens[0] < b.ordem < ordens[-1] and b.ordem not in ordens)
-    return ResultadoTiros(ordens, recuperacoes, len(ordens) >= MIN_TIROS_INTERVALADO, VERSAO, tuple(tiros))
+    return ResultadoTiros(ordens, recuperacoes, len(ordens) >= MIN_TIROS_INTERVALADO)
 
 
 def tiro_de_bloco(b: BlocoEntrada) -> VoltaEntrada:
@@ -265,7 +198,8 @@ def sessao_de_blocos(
 ) -> SessaoTiros:
     """Detecta os tiros nos blocos (#168) e monta a sessão pronta para agregar."""
     resultado = tiros_de_blocos(blocos, modalidade)
-    tiros = tuple(tiro_de_bloco(b) for b in resultado.blocos_tiro)
+    ordens = set(resultado.tiros)
+    tiros = tuple(tiro_de_bloco(b) for b in sorted(blocos, key=lambda b: b.ordem) if b.ordem in ordens)
     return SessaoTiros(atividade_id, data, resultado.eh_intervalado, tiros, resultado.versao)
 
 

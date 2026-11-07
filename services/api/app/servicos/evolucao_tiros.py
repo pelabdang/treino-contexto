@@ -49,11 +49,12 @@ def _classificar(ativ: Atividade) -> None:
     """Marca os segmentos a partir dos blocos já gravados: voltas dos tiros, recuperações entre eles, o resto."""
     blocos = [_bloco(b) for b in sorted(ativ.blocos, key=lambda b: b.ordem)]
     resultado = tiros_de_blocos(blocos, ativ.modalidade)
+    por_ordem = {b.ordem: b for b in blocos}
     voltas_tiro: set[int] = set()
-    for b in resultado.blocos_tiro:  # @6: um tiro cortado por pausa já vem como um bloco só
-        voltas_tiro.update(range(b.volta_inicial, b.volta_final + 1))
-    primeira = min((b.volta_inicial for b in resultado.blocos_tiro), default=None)
-    ultima = max((b.volta_final for b in resultado.blocos_tiro), default=None)
+    for o in resultado.tiros:
+        voltas_tiro.update(range(por_ordem[o].volta_inicial, por_ordem[o].volta_final + 1))
+    primeira = min((por_ordem[o].volta_inicial for o in resultado.tiros), default=None)
+    ultima = max((por_ordem[o].volta_final for o in resultado.tiros), default=None)
     for s in ativ.segmentos:
         if s.ordem in voltas_tiro:
             s.tipo = "tiro"
@@ -149,7 +150,8 @@ def sessoes_tiros_1km(
             continue
         blocos = [_bloco(b) for b in sorted(a.blocos, key=lambda b: b.ordem)]
         resultado = tiros_de_blocos(blocos, a.modalidade)
-        tiros = tuple(tiro_de_bloco(b) for b in resultado.blocos_tiro)
+        por_ordem = {b.ordem: b for b in blocos}
+        tiros = tuple(tiro_de_bloco(por_ordem[o]) for o in resultado.tiros)
         sessoes.append(SessaoTiros(a.id, dia, resultado.eh_intervalado, tiros, resultado.versao))
         por_id[a.id] = (a, tiros)
     resultado = []
