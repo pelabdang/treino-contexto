@@ -376,7 +376,7 @@ datas. A conferência é **só descritiva** (decisão do Angelo, 07/11): não h�
 - **Carga do Garmin:** o dia é a meia-noite UTC; pode haver vários itens por dia e vale o de maior carimbo de tempo; a razão pode faltar.
 - Ainda em aberto: se há limiar **por esporte** ou um só (a nota da #135 diz o que a exportação traz).
 
-**Pelo Theo:**
+**Pelo Theo (aprovadas em 07/11, ver "Data e quem decidiu"):**
 - Aprovar as cinco tabelas e a escolha da tabela própria no lugar de `metrica_derivada` (item 5).
 - Aprovar CTL/ATL/TSB **calculados na leitura**, com `serie_carga@1` na resposta (item 5).
 - Zonas de FC (achado da #135): manter `zona_fc_atleta` com as origens `garmin_export` (retrato) e `garmin_fit` (histórico só dos FIT), só com o retrato, ou deixar fora da Meta 6 (a `carga@1` não usa).
