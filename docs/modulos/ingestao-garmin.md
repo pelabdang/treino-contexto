@@ -2,7 +2,7 @@
 tipo: modulo
 status: em-uso
 dono: duda
-atualizado: 2026-11-06
+atualizado: 2026-11-07
 links: [[produto/meta-3-como-rodar]], [[modulos/worker]], [[modulos/banco]], [[decisoes/0006-upload-de-fit]], [[decisoes/0007-clima-da-atividade]], [[produto/roadmap]], [[diario/2026-11-03]], [[produto/meta-4-como-rodar]], [[decisoes/0008-deteccao-de-esforcos]], [[decisoes/0009-treino-de-transicao]], [[modulos/api]]
 ---
 # Módulo: ingestão Garmin
@@ -229,6 +229,7 @@ a função é `importar_fit(session, atleta_id, conteudo)` em `services/api/app/
 - `tests/fixtures/garmin/gerar_fixtures.py` e `tests/fixtures/garmin/exportacao_minima.zip`
 - `tests/test_fixtures_garmin.py`
 - `tests/fixtures/garmin/fit/` e `tests/test_fixtures_fit_upload.py` (FIT do upload)
+- `tests/fixtures/garmin/gerar_fixtures_saude.py`, `tests/fixtures/garmin/saude/` e `tests/test_fixtures_saude.py` (saúde e métricas, #135)
 
 ## Depende de
 - [[modulos/api]] (onde fica o parser, `app/ingestao/`), [[modulos/worker]] (importação no banco e CLI) e [[modulos/banco]] (destino).
@@ -316,6 +317,134 @@ esses subtipos; o novo comando é o caminho estreito (só `outra` sem subtipo, n
 
 Alternativas descartadas: **não importar** pai e troca (perde dado e muda a contagem de atividades) e **nova coluna ou modalidade**
 (migração e mudança de `CHECK` para algo que o subtipo resolve).
+
+## Dados de saúde e métricas da exportação (Meta 6, #135)
+A carga de treino da Meta 6 usa o que o Garmin já calculou: limiar de lactato (FC e velocidade) com histórico de alterações, zonas de
+FC, recordes pessoais e carga aguda/crônica diária. Esta seção descreve **só o formato** (pastas, nomes de campo, unidades, datas),
+conferido com uma exportação real em 2026-11-07 (fica em `dados-teste/`, fora do git); nenhum valor, data ou identificador real está
+aqui. O leitor (#136) ainda não existe: hoje o parser ignora esses arquivos (teste em `tests/test_fixtures_saude.py`). Decisão de produto
+(04/11): tudo pode ser guardado no banco local; atleta sem esses dados fica "sem carga", com o motivo, e o limiar nunca é estimado.
+
+### Como achar os arquivos (sem identificador do usuário)
+Procure por **nome da pasta + padrão do nome do arquivo**, em qualquer profundidade do caminho (a raiz varia: `DI_CONNECT/` na pasta
+descompactada, nenhuma no `Arquivo.zip`; a mesma árvore pode aparecer duas vezes, ver "A árvore tem cópias": leia cada conteúdo uma
+vez). O identificador do usuário (número no meio ou e-mail no começo do nome) **nunca** entra na busca.
+
+| Dado | Pasta | Padrão do nome (`*` = identificador do usuário) | Quantos |
+|---|---|---|---|
+| Limiar de lactato, com histórico | `DI-Connect-Wellness/` | `*_userBioMetrics.json` | 1 |
+| Zonas de FC, método, FC máxima e de repouso | `DI-Connect-Wellness/` | `*_heartRateZones.json` | 1 |
+| Limiar mais recente (retrato) | `DI-Connect-Wellness/` | `*_bioMetrics_latest.json` | 1 |
+| Recordes pessoais | `DI-Connect-Fitness/` | `*_personalRecord.json` | 1 |
+| Carga aguda/crônica diária | `DI-Connect-Metrics/` | `MetricsAcuteTrainingLoad_<AAAAMMDD>_<AAAAMMDD>_*.json` | vários, um por período |
+
+Os nomes em `DI-Connect-Metrics/` começam com o tipo da métrica (`MetricsAcuteTrainingLoad_`; há outros tipos na pasta, não usados).
+Os dois `AAAAMMDD` do nome são o período do arquivo (o fim de um arquivo é o começo do seguinte); não use o nome para saber o dia de um
+item, use o campo `calendarDate`. Todos são JSON com **lista na raiz**. Arquivo ausente ou lista vazia = atleta sem aquele dado.
+
+### Limiar de lactato: `*_userBioMetrics.json`
+É o **histórico de alterações**: uma lista de registros, cada um um evento de mudança do perfil biométrico (a maioria só de VO2 max).
+Um registro traz **só os campos que mudaram**; para saber o limiar vigente num dia, ande pelos registros em ordem de data e guarde o
+último valor de **cada campo separadamente** (um registro pode mudar a FC e não a velocidade). **O arquivo não está em ordem
+cronológica**: ordene por `metaData.calendarDate` (empate: `metaData.sequence`).
+
+| Campo | Tipo e unidade | Observação |
+|---|---|---|
+| `metaData.calendarDate` | texto `AAAA-MM-DDTHH:MM:SS.f` (1 a 3 casas decimais), **sem fuso** | quando a mudança foi registrada. Comparado com `firstbeatRunningLtTimestamp`, indica hora local de parede, não UTC; o que importa é o dia |
+| `metaData.sequence` | inteiro | desempate |
+| `metaData.userProfilePK` | inteiro | identificador do usuário: **ignorar e não gravar** |
+| `version` | inteiro (ms desde 1970) | versão do registro; não usar como data |
+| `lactateThresholdHearRate` | inteiro, bpm | FC de limiar. **O nome tem erro de grafia da Garmin ("Hear")**. `0` é sentinela de **sem limiar** (não é 0 bpm) |
+| `lactateThresholdSpeed` | decimal, **m/s dividido por 10** | velocidade de limiar (multiplique por 10 para m/s; pace em s/km = 100 / valor). Conferido por plausibilidade, não por documentação da Garmin |
+| `thresholdHeartRateAutoDetected` | bool | `true` detectado pelo relógio, `false` ajustado à mão |
+| `firstbeatRunningLtTimestamp` | inteiro, segundos desde 1989-12-31 UTC (época Garmin) | quando o relógio detectou o limiar de corrida; acompanha a velocidade |
+| `vo2MaxRunning`, `vo2MaxCycling`, `functionalThresholdPower`, `sportId`, `height`, `weight.*`, `activityClass` | vários | não usados na Meta 6 |
+| `userSetNullFor*` | bool | marcam campo apagado pelo usuário; `true` aparece em registros sem o valor correspondente (leitura a confirmar) |
+
+Como vem o histórico:
+- Há registros com **FC e velocidade** (limiar detectado) e registros **só com FC** (ajuste manual ou `0`); a velocidade não aparece sem a FC.
+- **Período sem limiar:** antes do primeiro registro com `lactateThresholdHearRate > 0` não há limiar. Um registro com `0` volta o atleta a "sem limiar".
+- O limiar vigente num dia é o do **último registro com data menor ou igual ao dia** (qual dia vale para a atividade, local ou UTC, é da ADR 0010).
+- Atividades anteriores ao primeiro limiar ficam "sem carga".
+
+### Zonas de FC: `*_heartRateZones.json` e FIT
+`*_heartRateZones.json` é **só o retrato atual** (sem data, sem histórico): uma entrada por esporte.
+
+| Campo | Tipo e unidade | Observação |
+|---|---|---|
+| `sport` | enum texto | `DEFAULT`, `RUNNING`, `CYCLING` |
+| `trainingMethod` | enum texto | método das zonas (visto: `HR_MAX`, percentual da FC máxima) |
+| `maxHeartRateUsed`, `restingHeartRateUsed`, `lactateThresholdHeartRateUsed` | inteiro, bpm | FC máxima, de repouso e de limiar usadas |
+| `zone1Floor` ... `zone5Floor` | inteiro, bpm | piso de cada zona |
+| `restingHrAutoUpdateUsed` | bool | repouso atualizado automaticamente |
+| `changeState` | enum texto | estado da última alteração |
+
+**O histórico de zonas não está nesse JSON.** O que vigorava em cada atividade está nos **FIT originais** (mensagens que o parser de hoje
+não lê); logo, o histórico de zonas só existe para atividades com FIT:
+
+| Mensagem FIT | Campo | Unidade | Observação |
+|---|---|---|---|
+| `time_in_zone` com `reference_mesg = session` (as de `lap`, `split` e `set` são outras) | `hr_calc_type` | enum (`percent_max_hr`, `percent_hrr`, `percent_lthr`, `custom`) | método das zonas na atividade |
+| | `max_heart_rate`, `resting_heart_rate`, `threshold_heart_rate` | bpm | FC máxima, de repouso e de limiar **vigentes na atividade** |
+| | `hr_zone_high_boundary` | lista de bpm (6 itens) | limites superiores das zonas |
+| | `time_in_hr_zone` | lista em segundos (7 itens; `fitdecode` já converte a escala) | tempo em cada faixa; índice 0 = abaixo do primeiro limite |
+| `zones_target` | `max_heart_rate`, `threshold_heart_rate`, `hr_calc_type` | bpm, enum | mesma informação, sem as listas |
+
+A correspondência exata entre os 6 limites, os 7 tempos e as zonas 1 a 5 fica para a #136 (conferir com o Profile do FIT SDK,
+<https://developer.garmin.com/fit/>). Campos como `threshold_heart_rate` podem faltar. O `summarizedActivities.json` traz o **tempo em
+cada zona** por atividade (`hrTimeInZone_0` ... `hrTimeInZone_6`, em **milissegundos**, somando cerca de `duration`), mas não os limites.
+
+### Recordes pessoais: `*_personalRecord.json`
+Lista na raiz com **um** objeto que tem a lista `personalRecords`.
+
+| Campo | Tipo e unidade | Observação |
+|---|---|---|
+| `personalRecordId` | inteiro | |
+| `activityId` | inteiro | mesmo `activityId` do resumo de atividades; `0` quando o recorde não vem de uma atividade (passos, sequência de metas) |
+| `personalRecordType` | texto | nome em inglês: `Best 1km Run`, `Best 5km Run`, `Best Half Marathon`, `Farthest Run`, `Best 400m Pool Swim`, `Max Avg Power (20 min)`, `Most Steps in a Day`... |
+| `value` | decimal | **segundos** nos `Best ...`; **metros** nos `Farthest ...` e `Longest ...`; watts, metros ou contagem nos demais: a unidade depende do tipo |
+| `prStartTimeGMT` | texto estilo Java `Dia Mês DD HH:MM:SS GMT AAAA` (nomes em inglês, UTC) | início do recorde |
+| `createdDate` | texto `AAAA-MM-DD` | dia em que o recorde foi gravado |
+| `current` | bool | `true` no recorde vigente de cada tipo; os outros são recordes superados (histórico) |
+| `confirmed` | bool | |
+
+### Carga aguda/crônica: `MetricsAcuteTrainingLoad_*.json`
+Lista de itens por dia, um arquivo por período.
+
+| Campo | Tipo e unidade | Observação |
+|---|---|---|
+| `calendarDate` | inteiro, **ms desde 1970, sempre meia-noite UTC** | o **dia** do item (não é `AAAAMMDD`) |
+| `timestamp` | inteiro, ms desde 1970 | momento da atualização |
+| `dailyTrainingLoadAcute` | inteiro | carga aguda do dia (unidade de carga do Garmin) |
+| `dailyTrainingLoadChronic` | inteiro | carga crônica do dia |
+| `dailyAcuteChronicWorkloadRatio` | decimal | razão calculada pelo Garmin; nem sempre bate com `aguda / crônica` (outro arredondamento): use o campo. **Pode faltar** |
+| `acwrPercent` | inteiro, 0 a 100 | posição da razão na faixa do Garmin. Pode faltar |
+| `acwrStatus` | enum texto | `LOW`, `OPTIMAL`, `HIGH`, `VERY_HIGH` ou `NONE` (sem razão) |
+| `acwrStatusFeedback` | enum texto | `FEEDBACK_1` ... `FEEDBACK_5` ou `NONE` |
+| `deviceId`, `userProfilePK` | inteiro | identificadores: **ignorar e não gravar** |
+
+Como vem o histórico: **pode haver vários itens para o mesmo `calendarDate`** (atualizações ao longo do dia, com valores diferentes); vale
+o de **maior `timestamp`**. Dia sem item = sem dado do Garmin naquele dia.
+
+### Atleta sem dados de saúde
+Os arquivos acima são opcionais. Um atleta sem eles tem a exportação com atividades e FIT e nenhuma das pastas de saúde e métricas
+(ou os arquivos com lista vazia). Fica "sem carga", com o motivo; o limiar não é estimado. Nas fixtures: `saude/exportacao_sem_saude.zip`
+(e `exportacao_minima.zip`, o mesmo caso).
+
+### Fixtures de saúde (`tests/fixtures/garmin/saude/`)
+Geradas por `tests/fixtures/garmin/gerar_fixtures_saude.py` (saída determinística; `tests/test_fixtures_saude.py` falha se estiverem
+desatualizadas). Valores, identificador de usuário (`7000001`), dispositivo e nome (`atleta-ficticio`) inventados. A linha do tempo
+(limiares, FC máxima e atividades) está no topo do script.
+
+| Arquivo | Conteúdo |
+|---|---|
+| `exportacao_saude.zip` | as mesmas 5 atividades de `exportacao_minima.zip` mais os 5 tipos de arquivo acima (carga em 2 arquivos); os FIT trazem `time_in_zone` e `zones_target` |
+| `exportacao_sem_saude.zip` | só atividades e FIT comuns, nenhuma pasta de saúde |
+
+Cobertura: período **sem limiar** no começo (registros de VO2 max e um registro de FC `0`); **1º limiar** entre as atividades A e C;
+**limiar de FC ajustado à mão** (só FC) e **FC máxima alterada** (zonas novas) entre D e B; **2º limiar** entre D e B; registro fora de
+ordem no arquivo; carga diária de 25 dias, com dias de mais de um item e o primeiro dia sem razão; 6 recordes (um tipo com recorde
+superado e vigente; um sem atividade, `activityId = 0`).
 
 ## Pendências
 - Corrigir a regra de tiros em rodagens com intensidade mista (#48).
