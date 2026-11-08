@@ -42,6 +42,12 @@ def test_exemplo_de_transicao_em_dia():
     )
 
 
+def test_exemplo_de_carga_em_dia():
+    assert exportar.EXEMPLO_CARGA.read_text(encoding="utf-8") == exportar.texto_exemplo_carga(), _msg(
+        "packages/api-client/exemplos/carga.json"
+    )
+
+
 def test_tipos_gerados_do_openapi_atual():
     """`schema.d.ts` leva o sha256 do openapi.json de onde saiu (carimbo do `npm run gerar`)."""
     primeira = exportar.TIPOS.read_text(encoding="utf-8").splitlines()[0]

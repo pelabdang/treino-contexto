@@ -8,6 +8,16 @@
             "title": "Atividade Id",
             "type": "integer"
           },
+          "carga": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/CargaAtividadeOut"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
           "clima": {
             "anyOf": [
               {
@@ -316,6 +326,144 @@
         "title": "Body_enviarAtividadeFit",
         "type": "object"
       },
+      "CargaAtividadeOut": {
+        "description": "Carga de treino da atividade (ADR 0010, item 7). So carga, metodo, motivo e cobertura: nunca limiar nem zonas.",
+        "properties": {
+          "carga": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Carga"
+          },
+          "cobertura_pct": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Cobertura Pct"
+          },
+          "estado": {
+            "enum": [
+              "calculada",
+              "sem_carga"
+            ],
+            "title": "Estado",
+            "type": "string"
+          },
+          "metodo": {
+            "anyOf": [
+              {
+                "enum": [
+                  "rtss",
+                  "hrtss"
+                ],
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Metodo"
+          },
+          "motivo": {
+            "anyOf": [
+              {
+                "enum": [
+                  "sem_dados_saude",
+                  "sem_limiar_na_data",
+                  "sem_fc",
+                  "sem_pace",
+                  "cobertura_insuficiente",
+                  "modalidade_sem_carga"
+                ],
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Motivo"
+          },
+          "versao": {
+            "title": "Versao",
+            "type": "string"
+          }
+        },
+        "required": [
+          "estado",
+          "versao"
+        ],
+        "title": "CargaAtividadeOut",
+        "type": "object"
+      },
+      "CargaSerieOut": {
+        "properties": {
+          "atleta_id": {
+            "title": "Atleta Id",
+            "type": "integer"
+          },
+          "aviso": {
+            "anyOf": [
+              {
+                "const": "sem_carga_calculada",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Aviso"
+          },
+          "dias": {
+            "items": {
+              "$ref": "#/components/schemas/DiaCargaOut"
+            },
+            "title": "Dias",
+            "type": "array"
+          },
+          "periodo": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Periodo"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "totais": {
+            "$ref": "#/components/schemas/TotaisCargaOut"
+          },
+          "versao": {
+            "title": "Versao",
+            "type": "string"
+          },
+          "versao_carga": {
+            "title": "Versao Carga",
+            "type": "string"
+          }
+        },
+        "required": [
+          "atleta_id",
+          "versao",
+          "versao_carga",
+          "periodo",
+          "aviso",
+          "dias",
+          "totais"
+        ],
+        "title": "CargaSerieOut",
+        "type": "object"
+      },
       "ClimaOut": {
         "description": "Clima da atividade (ADR 0007, item 5). Os quatro valores so existem em `ok`; nos outros estados nem aparecem.",
         "properties": {
@@ -436,6 +584,60 @@
           "transicao"
         ],
         "title": "CorrecaoIn",
+        "type": "object"
+      },
+      "DiaCargaOut": {
+        "properties": {
+          "aprendendo": {
+            "title": "Aprendendo",
+            "type": "boolean"
+          },
+          "atividades": {
+            "title": "Atividades",
+            "type": "integer"
+          },
+          "atl": {
+            "title": "Atl",
+            "type": "number"
+          },
+          "calculadas": {
+            "title": "Calculadas",
+            "type": "integer"
+          },
+          "carga": {
+            "title": "Carga",
+            "type": "number"
+          },
+          "ctl": {
+            "title": "Ctl",
+            "type": "number"
+          },
+          "data": {
+            "format": "date",
+            "title": "Data",
+            "type": "string"
+          },
+          "sem_carga": {
+            "title": "Sem Carga",
+            "type": "integer"
+          },
+          "tsb": {
+            "title": "Tsb",
+            "type": "number"
+          }
+        },
+        "required": [
+          "data",
+          "carga",
+          "ctl",
+          "atl",
+          "tsb",
+          "aprendendo",
+          "atividades",
+          "calculadas",
+          "sem_carga"
+        ],
+        "title": "DiaCargaOut",
         "type": "object"
       },
       "DiferencaParteOut": {
@@ -1262,6 +1464,58 @@
         "title": "TiroOut",
         "type": "object"
       },
+      "TotaisCargaOut": {
+        "description": "Contam todas as atividades do atleta, nao so as do periodo pedido.",
+        "properties": {
+          "atividades_importadas": {
+            "title": "Atividades Importadas",
+            "type": "integer"
+          },
+          "calculadas": {
+            "title": "Calculadas",
+            "type": "integer"
+          },
+          "ignoradas_multiesporte": {
+            "title": "Ignoradas Multiesporte",
+            "type": "integer"
+          },
+          "pendentes": {
+            "title": "Pendentes",
+            "type": "integer"
+          },
+          "por_motivo": {
+            "additionalProperties": {
+              "type": "integer"
+            },
+            "propertyNames": {
+              "enum": [
+                "sem_dados_saude",
+                "sem_limiar_na_data",
+                "sem_fc",
+                "sem_pace",
+                "cobertura_insuficiente",
+                "modalidade_sem_carga"
+              ]
+            },
+            "title": "Por Motivo",
+            "type": "object"
+          },
+          "sem_carga_total": {
+            "title": "Sem Carga Total",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "atividades_importadas",
+          "calculadas",
+          "sem_carga_total",
+          "por_motivo",
+          "ignoradas_multiesporte",
+          "pendentes"
+        ],
+        "title": "TotaisCargaOut",
+        "type": "object"
+      },
       "TransicaoOut": {
         "description": "Rotulo \"treino de transicao\" da atividade. Sem linha no banco e `valor = false`, `origem = null`.",
         "properties": {
@@ -1708,6 +1962,93 @@
         "summary": "Corrigir Transicao",
         "tags": [
           "treino de transição"
+        ]
+      }
+    },
+    "/atletas/{atleta_id}/carga": {
+      "get": {
+        "description": "Série diária do primeiro dia com carga até o dia da última atividade, calculada na leitura sobre a carga gravada\npelo comando `calcular_carga`. `inicio` e `fim` (AAAA-MM-DD, datas locais, inclusivas) só recortam `dias`.",
+        "operationId": "cargaDoAtleta",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "atleta_id",
+            "required": true,
+            "schema": {
+              "title": "Atleta Id",
+              "type": "integer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "inicio",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "format": "date",
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Inicio"
+            }
+          },
+          {
+            "in": "query",
+            "name": "fim",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "format": "date",
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Fim"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CargaSerieOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Erro"
+                }
+              }
+            },
+            "description": "Atleta não encontrado"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Carga Do Atleta",
+        "tags": [
+          "carga"
         ]
       }
     },
