@@ -3,7 +3,7 @@ tipo: modulo
 status: em-uso
 dono: theo
 atualizado: 2026-11-07
-links: [[decisoes/0006-upload-de-fit]], [[modulos/api]], [[modulos/grafico-tiros]], [[modulos/infra]], [[modulos/ingestao-garmin]], [[modulos/banco]], [[modulos/clima]], [[decisoes/0008-deteccao-de-esforcos]], [[decisoes/0009-treino-de-transicao]], [[decisoes/0010-carga-de-treino]], [[metricas/transicao]], [[metricas/esforcos]], [[decisoes/0007-clima-da-atividade]], [[produto/meta-4-como-rodar]]
+links: [[decisoes/0006-upload-de-fit]], [[modulos/api]], [[modulos/grafico-tiros]], [[modulos/grafico-carga]], [[modulos/infra]], [[modulos/ingestao-garmin]], [[modulos/banco]], [[modulos/clima]], [[decisoes/0008-deteccao-de-esforcos]], [[decisoes/0009-treino-de-transicao]], [[decisoes/0010-carga-de-treino]], [[metricas/transicao]], [[metricas/esforcos]], [[decisoes/0007-clima-da-atividade]], [[produto/meta-4-como-rodar]]
 ---
 # Módulo: worker
 
@@ -20,6 +20,7 @@ da importação e do cálculo de métricas, fora da [[modulos/api]].
   lê a série do banco e grava `entregas/meta-1/tiros-1km-atleta-<id>.png` e `.csv` (pasta criada se faltar; fora do
   git). Atleta inexistente: mensagem em stderr e código de saída 1. Formato em [[modulos/grafico-tiros]].
   Exemplo com as fixtures: ![[_anexos/tiros-1km-atleta-fixtures.png]]
+- Gráfico da carga: `uv run python -m worker.grafico_carga --atleta-id <id> [--inicio ..] [--fim ..] [--saida <pasta>]` (#143) grava `entregas/meta-6/carga-atleta-<id>.png` e `.csv` (CTL, ATL, TSB e carga do dia; estimativa). Só lê o banco, sem rede. Formato em [[modulos/grafico-carga]].
 
 - Apagar FIT enviados: `uv run python -m worker.apagar_fit --atleta-id <id>` apaga os arquivos de `FIT_DIR/<id>/` e limpa `arquivo_bruto`, sem apagar as atividades ([[decisoes/0006-upload-de-fit]]; uso na prática em [[produto/meta-3-como-rodar]]).
 - Reclassificação: `uv run python -m worker.reclassificar --atleta-id <id>` roda `classificar_atividades` e mostra
@@ -74,6 +75,7 @@ da importação e do cálculo de métricas, fora da [[modulos/api]].
 - `services/worker/worker/importar_saude.py` (limiar, zonas, recordes e carga do Garmin no banco, CLI `python -m worker.importar_saude`)
 - `services/worker/worker/apagar_saude.py` (apaga os dados de saúde de um atleta, CLI `python -m worker.apagar_saude`)
 - `services/worker/worker/grafico_tiros_1km.py` (gráfico e CSV, CLI `python -m worker.grafico_tiros_1km`)
+- `services/worker/worker/grafico_carga.py` (gráfico e CSV da carga, CLI `python -m worker.grafico_carga`); teste `services/worker/tests/test_grafico_carga.py`
 - `services/worker/worker/apagar_fit.py` (CLI `python -m worker.apagar_fit`)
 - `services/worker/worker/reclassificar.py` (CLI `python -m worker.reclassificar`)
 - `services/worker/worker/reclassificar_subtipo.py` (CLI `python -m worker.reclassificar_subtipo`)
