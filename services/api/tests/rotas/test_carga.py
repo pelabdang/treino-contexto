@@ -9,7 +9,7 @@ from datetime import datetime, timezone
 from pathlib import Path
 
 import pytest
-from app.db.models import Atividade, Atleta
+from app.db.models import Atividade, Atleta, CargaAtividade
 from app.db.session import get_session
 from app.ingestao.importacao import importar
 from app.ingestao.saude import importar_saude
@@ -134,7 +134,7 @@ def test_atividade_traz_a_carga_do_oraculo(session, client):
         assert client.get(f"/atletas/{atleta_id}/atividades/{por_fonte[fonte]}").json()["carga"] is None
 
 
-def test_atividade_sem_carga_calculada_tem_carga_nula(session, client):
+def test_atividade_elegivel_sem_linha_e_pendente(session, client):
     a = Atleta(nome="Ana")
     session.add(a)
     session.commit()
@@ -142,7 +142,21 @@ def test_atividade_sem_carga_calculada_tem_carga_nula(session, client):
                    inicio=datetime(2025, 3, 5, 9, tzinfo=timezone.utc))
     session.add(at)
     session.commit()
-    assert client.get(f"/atletas/{a.id}/atividades/{at.id}").json()["carga"] is None
+    assert client.get(f"/atletas/{a.id}/atividades/{at.id}").json()["carga"] == {
+        "estado": "pendente", "carga": None, "metodo": None, "cobertura_pct": None, "motivo": None, "versao": None}
+
+
+def test_versao_antiga_e_pendente_na_atividade_e_na_serie(session, client):
+    atleta_id = _atleta(session)
+    antes = client.get(f"/atletas/{atleta_id}/carga").json()
+    linha = session.scalars(select(CargaAtividade).where(CargaAtividade.estado == "calculada")).first()
+    linha.versao = "carga@0"
+    session.commit()
+    assert client.get(f"/atletas/{atleta_id}/atividades/{linha.atividade_id}").json()["carga"]["estado"] == "pendente"
+    depois = client.get(f"/atletas/{atleta_id}/carga").json()["totais"]
+    assert depois["pendentes"] == 1 and depois["calculadas"] == antes["totais"]["calculadas"] - 1
+    soma = depois["calculadas"] + depois["sem_carga_total"] + depois["pendentes"] + depois["ignoradas_multiesporte"]
+    assert soma == depois["atividades_importadas"]
 
 
 def test_resposta_nao_vaza_saude(session, client):

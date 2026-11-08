@@ -212,12 +212,12 @@ passa `ignoradas_multiesporte`.
   (`sem_carga_calculada` quando `dias` está vazio) e `dias`: `data` (dia local), `carga`, `ctl`, `atl`, `tsb`, `aprendendo`,
   `atividades`, `calculadas`, `sem_carga` (dia com `sem_carga > 0` não é descanso).
 - `totais` (do atleta todo, não do período): `atividades_importadas`, `calculadas`, `sem_carga_total`, `por_motivo` (os seis
-  motivos, sempre todos), `ignoradas_multiesporte` e `pendentes` (elegíveis ainda sem linha: o comando não rodou para elas).
+  motivos, sempre todos), `ignoradas_multiesporte` e `pendentes` (elegíveis sem linha **ou com linha de `versao` diferente da `carga@` atual**: desatualizadas até o `calcular_carga` rodar; ficam fora da série, e `atividades_importadas` fecha com a soma).
 - `inicio` e `fim` (datas locais, inclusivas) só recortam `dias`; CTL e ATL partem sempre do primeiro dia com carga. `inicio` > `fim`
   é `422`; atleta inexistente é `404` (`Erro`). Atleta sem carga calculada: `dias` vazio com `aviso`.
 - **Sem arredondar**: `carga`, `ctl`, `atl` e `tsb` saem com a precisão do cálculo; a tela mostra 1 casa (proposta do Caio).
 - `GET .../atividades/{id}` ganha `carga`: `{estado, carga, metodo, cobertura_pct, motivo, versao}` (`calculada` traz carga e método;
-  `sem_carga` traz o motivo). `null` para atividade ignorada (`multiesporte_pai`, `troca`) ou ainda não calculada.
+  `sem_carga` traz o motivo). `estado: "pendente"` (demais campos `null`, `versao: null`) para atividade elegível sem linha ou com versão antiga; `carga: null` só para `multiesporte_pai` e `troca`.
 - **Privacidade:** a API nunca devolve limiar, zonas, recordes nem a carga do Garmin: só carga, método, motivo e cobertura.
 - Testes: `tests/rotas/test_carga.py` (oráculo da #137: `SERIE`, `TOTAIS`, `ESPERADO`). Exemplo: `packages/api-client/exemplos/carga.json`.
 

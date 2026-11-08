@@ -20,43 +20,46 @@ from app.servicos.fuso import data_local
 
 @dataclass(frozen=True)
 class CargaLida:
-    estado: str  # calculada | sem_carga
+    estado: str  # calculada | sem_carga | pendente
     carga: float | None
     metodo: str | None
     motivo: str | None
     cobertura_pct: float | None
-    versao: str
+    versao: str | None  # None em pendente
 
 
 @dataclass(frozen=True)
 class SerieLida:
     serie: sc.SerieCarga
-    pendentes: int  # elegiveis sem linha em carga_atividade (o comando ainda nao rodou para elas)
+    pendentes: int  # elegiveis sem linha em carga_atividade ou com linha de versao antiga (o comando precisa rodar)
     atividades_importadas: int
 
 
-def carga_da_atividade(session: Session, atividade_id: int) -> CargaLida | None:
-    """None: sem linha (atividade ignorada, como `multiesporte_pai` e `troca`, ou carga ainda nao calculada)."""
-    c = session.scalar(select(CargaAtividade).where(CargaAtividade.atividade_id == atividade_id))
-    if c is None:
+def carga_da_atividade(session: Session, a: Atividade) -> CargaLida | None:
+    """None: atividade ignorada (`multiesporte_pai`, `troca`). Elegivel sem linha, ou com linha de versao antiga
+    (desatualizada ate o worker rodar), e `pendente`."""
+    if cg.ignorada(a.subtipo):
         return None
+    c = session.scalar(select(CargaAtividade).where(CargaAtividade.atividade_id == a.id))
+    if c is None or c.versao != cg.VERSAO:
+        return CargaLida("pendente", None, None, None, None, None)
     return CargaLida(c.estado, c.carga, c.metodo, c.motivo, c.cobertura_pct, c.versao)
 
 
 def serie_do_atleta(session: Session, atleta_id: int) -> SerieLida:
     q = (
         select(Atividade.inicio, Atividade.fuso_min, Atividade.subtipo, CargaAtividade.estado, CargaAtividade.carga,
-               CargaAtividade.motivo)
+               CargaAtividade.motivo, CargaAtividade.versao)
         .outerjoin(CargaAtividade, CargaAtividade.atividade_id == Atividade.id)
         .where(Atividade.atleta_id == atleta_id)
     )
     entradas: list[sc.AtividadeCarga] = []
     ignoradas = pendentes = total = 0
-    for inicio, fuso_min, subtipo, estado, carga, motivo in session.execute(q):
+    for inicio, fuso_min, subtipo, estado, carga, motivo, versao in session.execute(q):
         total += 1
         if cg.ignorada(subtipo):
             ignoradas += 1
-        elif estado is None:
+        elif estado is None or versao != cg.VERSAO:
             pendentes += 1
         else:
             dia = data_local(inicio, fuso_min)

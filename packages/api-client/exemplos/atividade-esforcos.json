@@ -105,7 +105,14 @@
     "valor": false,
     "origem": null
   },
-  "carga": null,
+  "carga": {
+    "estado": "pendente",
+    "carga": null,
+    "metodo": null,
+    "cobertura_pct": null,
+    "motivo": null,
+    "versao": null
+  },
   "data_local": "2025-05-07",
   "hora_local": "06:00",
   "duracao": "0:34:51",

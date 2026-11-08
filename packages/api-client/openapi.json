@@ -354,7 +354,8 @@
           "estado": {
             "enum": [
               "calculada",
-              "sem_carga"
+              "sem_carga",
+              "pendente"
             ],
             "title": "Estado",
             "type": "string"
@@ -394,13 +395,19 @@
             "title": "Motivo"
           },
           "versao": {
-            "title": "Versao",
-            "type": "string"
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Versao"
           }
         },
         "required": [
-          "estado",
-          "versao"
+          "estado"
         ],
         "title": "CargaAtividadeOut",
         "type": "object"

@@ -41,7 +41,7 @@ class TotaisCargaOut(BaseModel):
     sem_carga_total: int
     por_motivo: dict[Motivo, int]  # os seis motivos, sempre todos presentes
     ignoradas_multiesporte: int  # multiesporte_pai e troca: nao contam como sem carga
-    pendentes: int  # ainda sem linha: o comando `calcular_carga` nao rodou para elas
+    pendentes: int  # sem linha ou com linha de versao antiga: o comando `calcular_carga` precisa rodar; ficam fora da serie
 
 
 class CargaSerieOut(BaseModel):
