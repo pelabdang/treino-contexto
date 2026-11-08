@@ -13,11 +13,12 @@ App de análise de treinos com contexto (corrida, natação, ciclismo) para atle
 - Meta 2 feita: evolução dos tiros no app, vista na web com as fixtures ([[produto/metas/meta-2-evolucao-tiros-app]])
 - Meta 3 feita: upload de arquivo FIT pelo botão no app, vista na web com FIT sintéticos ([[produto/metas/meta-3-upload-fit]]). 
 - Meta 4 feita: clima de cada atividade na API, visto com fixtures e a resposta gravada, sem rede ([[produto/metas/meta-4-clima-atividade]])
-- Meta 5 feita: detecção de esforços na API e série de tiros pelos esforços, vistas com fixtures num clone limpo ([[produto/metas/meta-5-deteccao-esforcos]]). Atual: Meta 6, carga de treino (desde 06/11). Ver [[produto/roadmap]]
+- Meta 5 feita: detecção de esforços na API e série de tiros pelos esforços, vistas com fixtures num clone limpo ([[produto/metas/meta-5-deteccao-esforcos]])
+- Meta 6 feita: carga de treino (rTSS, hrTSS, CTL, ATL e TSB) na API, no gráfico e na conferência com o Garmin, vista com fixtures num clone limpo ([[produto/metas/meta-6-carga-treino]]). Próxima: Meta 7, linha de base pessoal e tipo de treino sugerido. Ver [[produto/roadmap]]
 - Como reproduzir: [[produto/meta-1-como-reproduzir]] (Meta 1) e [[produto/meta-2-como-rodar]] (API e app), [[produto/meta-3-como-rodar]] (upload de FIT), [[produto/meta-4-como-rodar]] (clima), [[produto/meta-5-como-rodar]] (esforços, transição e multiesporte), [[produto/meta-6-como-rodar]] (carga de treino)
 - Meta 5, parte técnica no `main` (06/11): detecção de esforços ([[metricas/esforcos]]) no banco, no worker e na API, série de tiros pelos esforços (`tiros_1km@5`, [[metricas/tiros-1km]]), treino de transição ([[metricas/transicao]], [[decisoes/0009-treino-de-transicao]]), multiesporte e a tela de um treino no app. QA (#172) e resultado da meta (#173) feitos
 - Time e papéis: [[time]]. A Lia (design) é dona de `docs/design/`; o guia visual, o tema do app e a tela com o melhor tiro estão no main (#192, #195 e #154)
-- Meta 6, parte técnica no `main` (08/11): carga de treino (rTSS e hrTSS por volta, `carga@2`; CTL, ATL e TSB, `serie_carga@1`), dados de saúde da exportação Garmin no banco, `GET /atletas/{id}/carga`, gráfico e conferência com o Garmin ([[decisoes/0010-carga-de-treino]], [[metricas/carga-treino]], [[metricas/serie-carga]], [[metricas/conferencia-carga]], [[modulos/grafico-carga]]). QA (#146) e resultado da meta (#147) em aberto
+- Meta 6, parte técnica no `main` (08/11): carga de treino (rTSS e hrTSS por volta, `carga@2`; CTL, ATL e TSB, `serie_carga@1`), dados de saúde da exportação Garmin no banco, `GET /atletas/{id}/carga`, gráfico e conferência com o Garmin ([[decisoes/0010-carga-de-treino]], [[metricas/carga-treino]], [[metricas/serie-carga]], [[metricas/conferencia-carga]], [[modulos/grafico-carga]]). QA (#146) e resultado da meta (#147) feitos
 - Último diário: [[diario/2026-11-08]] (anteriores: [[diario/2026-11-07]] e [[diario/2026-11-06]])
 
 ## Produto
@@ -33,6 +34,7 @@ App de análise de treinos com contexto (corrida, natação, ciclismo) para atle
 - [[produto/metas/meta-3-upload-fit]]: nota da Meta 3 (upload de FIT): resultado, não verificados, achados e propostas
 - [[produto/metas/meta-4-clima-atividade]]: nota da Meta 4 (clima da atividade): resultado, não verificados, conclusão genérica da série de tiros, achados e propostas
 - [[produto/metas/meta-5-deteccao-esforcos]]: nota da Meta 5 (detecção de esforços): resultado, não verificados, limitações, achados e pendências
+- [[produto/metas/meta-6-carga-treino]]: nota da Meta 6 (carga de treino): resultado, decisões, não verificados, limitações, achados e pendências
 
 ## Como o sistema funciona
 - Módulos: [[modulos/api]], [[modulos/api-client]], [[modulos/banco]], [[modulos/worker]], [[modulos/mobile]], [[modulos/infra]], [[modulos/grafico-tiros]], [[modulos/ingestao-garmin]] (índice em [[modulos]])
