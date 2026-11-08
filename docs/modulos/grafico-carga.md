@@ -17,7 +17,7 @@ comando que lê o banco e grava em `entregas/meta-6/` (fora do git). Não calcul
 - `render_png(dias, atleta_nome) -> bytes`: PNG 1600 x 1200 px, fundo branco, três painéis com o mesmo eixo X (data
   `dd/mm/aa`, "Data do treino"): barras da carga do dia (TSS estimado); CTL (azul) e ATL (laranja); TSB (verde, linha em 0).
   Título e legendas dizem "estimativa". Os dias "ainda aprendendo" (menos de 42 dias desde o primeiro dia da série) ficam
-  sombreados nos três painéis, com legenda. Dia com treino sem carga (falta dado: `sem_carga > 0`) leva um triângulo vermelho
+  sombreados nos três painéis, com legenda. Dia com treino sem carga (natação e outra, que não têm carga, ou falta de dado: `sem_carga > 0`) leva um triângulo vermelho
   na base do painel das barras: não é dia de descanso. Série vazia: PNG com "Sem carga calculada no período".
 - `linhas_csv(dias) -> list[dict]`: colunas `dia, carga, ctl, atl, tsb, aprendendo (sim/nao), atividades, calculadas,
   sem_carga`, um dia por linha (inclusive os sem treino), números com 6 casas (as do oráculo [[metricas/carga-oraculo]]).

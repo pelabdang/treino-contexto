@@ -96,7 +96,7 @@ def render_png(dias: Sequence[DiaCarga], atleta_nome: str) -> bytes:
             sem = [d for d in dias if d.sem_carga > 0]
             if sem:
                 ax_c.plot([d.dia for d in sem], [0] * len(sem), linestyle="", marker="^", color="#B91C1C",
-                          markersize=6, clip_on=False, label="Dia com treino sem carga (falta dado)")
+                          markersize=6, clip_on=False, label="Dia com treino sem carga (natação, outra ou falta de dado)")
             ax_c.set_title("Carga do dia (TSS estimado)", loc="left", fontsize=13)
             _eixo(ax_c, escala_eixo([d.carga for d in dias], AMPLITUDE_MIN_CARGA, PASSO_EIXO, max_marcas=8), zero=True)
 
