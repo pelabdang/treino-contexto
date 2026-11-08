@@ -2,7 +2,7 @@
 tipo: decisao
 status: aceita
 dono: caio
-atualizado: 2026-11-07
+atualizado: 2026-11-08
 links: [[decisoes/0001-modelo-de-dados-minimo]], [[decisoes/0002-segmento-intensidade-e-versao]], [[decisoes/0003-fuso-da-atividade]], [[decisoes/0004-contrato-tela-evolucao]], [[decisoes/0006-upload-de-fit]], [[decisoes/0008-deteccao-de-esforcos]], [[decisoes/0009-treino-de-transicao]], [[modulos/banco]], [[modulos/ingestao-garmin]], [[produto/roadmap]], [[glossario]]
 ---
 # ADR: 0010 Carga de treino (rTSS, hrTSS, CTL, ATL e TSB)
@@ -88,10 +88,10 @@ Todas têm `atleta_id` (FK `atleta.id`), `origem` (`CHECK`, `garmin_export`), `v
 
 **Origem das zonas (achado da #135).** A exportação só tem o retrato atual, sem data; o histórico existe apenas nos FIT, por sessão.
 Proposta: `origem` das zonas aceita `garmin_export` (o retrato, datado pelo dia da importação, só para exibir "as zonas de hoje") e
-`garmin_fit` (uma linha por mudança de zonas vista nos FIT importados; só há histórico para atividades com FIT). A `carga@1` não depende
+`garmin_fit` (uma linha por mudança de zonas vista nos FIT importados; só há histórico para atividades com FIT). A `carga` não depende
 disso. Se o Theo preferir, a tabela fica só com o retrato ou sai da Meta 6 (decisão em "A confirmar").
 
-Chave: `UNIQUE (atleta_id, esporte, origem, vigente_desde)`. **Quem usa:** nenhuma métrica da `carga@1`. Ficam guardadas para o hrTSS
+Chave: `UNIQUE (atleta_id, esporte, origem, vigente_desde)`. **Quem usa:** nenhuma métrica da `carga`. Ficam guardadas para o hrTSS
 por zonas e para `segmento.zona`, em versão futura. A decisão de guardar é do Angelo (04/11).
 
 **`recorde_pessoal`**: recordes pessoais.
@@ -105,7 +105,7 @@ por zonas e para `segmento.zona`, em versão futura. A decisão de guardar é do
 | `atividade_fonte_id` | texto (100), anulável: id da atividade na fonte, **sem FK** (a atividade pode não estar importada) |
 
 Chave: `UNIQUE (atleta_id, origem, modalidade, categoria, alcancado_em)`. **Quem usa:** a detecção de esforços, numa calibração futura
-(ADR 0008, item 7, `esforcos@2`). A `carga@1` não usa.
+(ADR 0008, item 7, `esforcos@2`). A `carga` não usa.
 
 **`carga_garmin_dia`**: carga aguda e crônica calculadas pelo Garmin, um valor por dia.
 
@@ -203,7 +203,7 @@ rTSS = 240/3600 x 1,265625 x 100 = **8,4375**. Atividade = **15,1875**. Sanidade
 **Exemplo 3 (cobertura).** 10 voltas de 100 s (1000 s), 9 com FC e uma sem: cobertura 90% < 95%, o hrTSS não vale
 (`cobertura_insuficiente`). Com 20 voltas de 50 s e uma sem FC, a cobertura é 95% e vale: a volta sem FC conta 0.
 
-**Versão `carga@1`.** Constante `VERSAO = "carga@1"` em `services/api/app/metricas/carga.py`, no formato `<regra>@<n>` da ADR 0002.
+**Versão `carga@1`** (hoje `carga@2`, ver o adendo de 08/11). Constante `VERSAO = "carga@1"` em `services/api/app/metricas/carga.py`, no formato `<regra>@<n>` da ADR 0002.
 **Sobe** quando mudar: a fórmula; o método preferido; `COBERTURA_MIN`; a lista de motivos ou a regra que escolhe o motivo; a tabela de
 modalidade e subtipo; ou a regra de qual limiar vale. Subindo a versão, `worker.calcular_carga` recalcula todas as linhas de versão
 antiga. As janelas de CTL/ATL (item 6) não fazem parte da `carga@1`.
@@ -230,7 +230,7 @@ sem existir.
 | `granularidade` | texto (10), `CHECK` | `volta` ou `atividade` |
 | `limiar_fc_bpm`, `limiar_velocidade_ms`, `limiar_vigente_desde` (date) | anuláveis | os valores de limiar **usados** (auditoria; a API não os devolve) |
 | `entrada` | texto (64) | SHA-256 do que entrou na conta: modalidade, subtipo, voltas (duração, distância, FC) e os limiares usados |
-| `versao` | texto (40) | `carga@1` |
+| `versao` | texto (40) | `carga@2` (a `carga@1` até 08/11) |
 | `calculado_em` | datetime com fuso | |
 
 `CHECK`: `estado = 'calculada'` implica `carga`, `metodo` e `cobertura_pct` preenchidos e `motivo` nulo; `estado = 'sem_carga'` implica
@@ -379,7 +379,7 @@ datas. A conferência é **só descritiva** (decisão do Angelo, 07/11): não h�
 **Pelo Theo (aprovadas em 07/11, ver "Data e quem decidiu"):**
 - Aprovar as cinco tabelas e a escolha da tabela própria no lugar de `metrica_derivada` (item 5).
 - Aprovar CTL/ATL/TSB **calculados na leitura**, com `serie_carga@1` na resposta (item 5).
-- Zonas de FC (achado da #135): manter `zona_fc_atleta` com as origens `garmin_export` (retrato) e `garmin_fit` (histórico só dos FIT), só com o retrato, ou deixar fora da Meta 6 (a `carga@1` não usa).
+- Zonas de FC (achado da #135): manter `zona_fc_atleta` com as origens `garmin_export` (retrato) e `garmin_fit` (histórico só dos FIT), só com o retrato, ou deixar fora da Meta 6 (a `carga` não usa).
 - Aprovar `importar_garmin` chamar `importar_saude` e `calcular_carga` no fim, com erro virando aviso (item 3).
 - Aprovar que `multiesporte_pai` e `troca` ficam **sem linha** e saem na contagem `ignoradas_multiesporte`, e não como "sem carga" (item 5).
 - `worker.apagar_saude` (LGPD) como comando da #174.
@@ -427,6 +427,17 @@ Conferido com busca e leitura de páginas em 07/11; o que não pôde ser aberto 
 Aprovado pelo Theo no PR #244. `recorde_pessoal.unidade` aceita `s`, `m`, `W`, `passos` **ou nulo** (tipo de recorde que o leitor não
 reconhece), com `CHECK`; o item 2 dizia só `s` ou `m`. Implementado na migração 0009, com `carga_garmin_dia`. O comando
 `worker.apagar_saude --atleta "<nome>"` apaga as quatro tabelas de saúde do atleta e imprime só contagens.
+
+## Adendo (08/11, #255): `carga@2`, FC média da atividade
+Decisão do Angelo (opção a). Há arquivos FIT cuja mensagem de volta não traz FC, embora a sessão e o resumo da atividade tragam a FC
+média. Na `carga@1` (item 4) esses pedais ficavam `sem_fc`. **Regra nova, só no hrTSS:** se há voltas, **nenhuma** tem FC e a atividade
+tem `fc_media` (e duração), a atividade entra como **volta única** (`duracao_s` e `fc_media` da atividade), com cobertura 100% e
+`granularidade = 'atividade'` quando o hrTSS é o método vencedor. FC em **parte** das voltas segue a cobertura de 95%, sem mudança (a FC
+da atividade não completa voltas que faltam). O rTSS não muda. Na corrida em que o rTSS vence, a `granularidade` continua `volta` (é a
+do método vencedor) e o `carga_hrtss` gravado ao lado vem da atividade.
+**Limitação:** a volta única ignora a variação de ritmo dentro da atividade e, por `IF^2` ser convexo, **subestima** a carga em relação ao
+hrTSS por volta (precisão menor, como na atividade sem voltas). `VERSAO = "carga@2"`; `worker.calcular_carga` recalcula as linhas `@1`. A
+`entrada` (hash) inclui a duração e a FC média da atividade **somente** quando esta regra a usa, para não recalcular à toa.
 
 ## Data e quem decidiu
 2026-11-07. Proposta do Caio (ciência), com revisão da Duda (dados e ingestão) pedida no PR. **Modelo de dados aprovado pelo Theo em

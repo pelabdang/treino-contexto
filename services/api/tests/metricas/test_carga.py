@@ -32,7 +32,7 @@ SO_VEL = Limiares(velocidade_ms=V_LIMIAR, atleta_tem_fc=True, atleta_tem_velocid
 
 
 def test_versao_e_constantes():
-    assert carga.VERSAO == "carga@1"
+    assert carga.VERSAO == "carga@2"
     assert carga.COBERTURA_MIN == 0.95
     assert set(carga.MOTIVOS) == MOTIVOS_ORACULO
 
@@ -130,6 +130,40 @@ def test_atividade_sem_voltas_e_volta_unica():
     """5 km em 1500 s: v = 3,3333, IF = 3,3333/3,7037 = 0,9; 1500/3600 x 0,81 x 100 = 33,75."""
     r = calcular_carga("corrida", None, [], SO_VEL, atividade=Volta(1500, 5000, 150))
     assert r.granularidade == "atividade" and r.carga == pytest.approx(33.75, abs=1e-9)
+
+
+def test_carga2_voltas_sem_fc_usam_a_fc_media_da_atividade():
+    """carga@2 (#255). Pedal com 3 voltas sem FC e atividade de 1800 s a 153 bpm, FC de limiar 170: IF = 0,9;
+    1800/3600 x 0,81 x 100 = 40,5. Duração e FC vêm da atividade, não da soma das voltas."""
+    voltas = [Volta(600, 5000, None), Volta(600, 5000, None), Volta(600, 5000, None)]
+    r = calcular_carga("ciclismo", None, voltas, SO_FC, atividade=Volta(1800, 15000, 153))
+    assert r.estado == "calculada" and r.metodo == "hrtss" and r.granularidade == "atividade"
+    assert r.carga == pytest.approx(40.5, abs=1e-9) and r.carga_hrtss == r.carga and r.cobertura_pct == 100.0
+    assert carga.usa_fc_da_atividade(voltas, Volta(1800, 15000, 153))
+
+
+def test_carga2_sem_fc_na_atividade_continua_sem_fc():
+    voltas = [Volta(600, 5000, None)] * 3
+    for ativ in (Volta(1800, 15000, None), None):
+        r = calcular_carga("ciclismo", None, voltas, SO_FC, atividade=ativ)
+        assert r.estado == "sem_carga" and r.motivo == "sem_fc" and r.granularidade == "volta"
+
+
+def test_carga2_fc_em_parte_das_voltas_segue_a_cobertura():
+    """Uma volta com FC (10% da duração) e a atividade com FC: a atividade NÃO entra; cobertura 10% < 95%."""
+    voltas = [Volta(100, 1000, 153)] + [Volta(100, 1000, None)] * 9
+    r = calcular_carga("ciclismo", None, voltas, SO_FC, atividade=Volta(1000, 10000, 153))
+    assert r.estado == "sem_carga" and r.motivo == "cobertura_insuficiente" and r.cobertura_pct == pytest.approx(10.0)
+    assert not carga.usa_fc_da_atividade(voltas, Volta(1000, 10000, 153))
+
+
+def test_carga2_rtss_nao_muda_e_granularidade_e_a_do_metodo_vencedor():
+    """Corrida com pace e voltas sem FC: rTSS por volta vence (15,1875, granularidade volta); o hrTSS da atividade
+    (540 s a 153 bpm: 540/3600 x 0,81 x 100 = 12,15) fica gravado."""
+    voltas = [Volta(300, 1000, None), Volta(240, 1000, None)]
+    r = calcular_carga("corrida", None, voltas, COM_TUDO, atividade=Volta(540, 2000, 153))
+    assert r.metodo == "rtss" and r.granularidade == "volta" and r.carga == pytest.approx(15.1875, abs=1e-9)
+    assert r.carga_hrtss == pytest.approx(12.15, abs=1e-9)
 
 
 def test_sem_voltas_e_sem_atividade_nao_inventa():

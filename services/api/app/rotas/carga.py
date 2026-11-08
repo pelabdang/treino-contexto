@@ -47,7 +47,7 @@ class TotaisCargaOut(BaseModel):
 class CargaSerieOut(BaseModel):
     atleta_id: int
     versao: str  # serie_carga@1
-    versao_carga: str  # carga@1, a da carga por atividade
+    versao_carga: str  # carga@2, a da carga por atividade
     periodo: Periodo | None  # o filtro pedido (so recorta `dias`; CTL e ATL sempre partem do primeiro dia com carga)
     aviso: Literal["sem_carga_calculada"] | None  # a serie esta vazia porque nenhuma atividade tem carga calculada
     dias: list[DiaCargaOut]

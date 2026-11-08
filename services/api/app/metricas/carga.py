@@ -13,6 +13,9 @@ vale 100.
 O rTSS segue a ideia do rTSS do TrainingPeaks, mas sem ajuste de subida (NGP). O hrTSS é adaptação própria, NÃO é o
 hrTSS por zonas do TrainingPeaks. Carga da atividade = soma das voltas; volta sem o dado do método conta 0 e o método
 só vale com cobertura >= ``COBERTURA_MIN`` da soma das durações.
+
+``carga@2`` (issue #255): no hrTSS, se nenhuma volta tem FC mas a atividade tem ``fc_media``, a atividade entra como
+volta única (``granularidade = 'atividade'`` quando o hrTSS é o método vencedor). Precisão menor que a por volta.
 """
 
 from __future__ import annotations
@@ -21,7 +24,7 @@ import math
 from collections.abc import Sequence
 from dataclasses import dataclass
 
-VERSAO = "carga@1"
+VERSAO = "carga@2"
 
 COBERTURA_MIN = 0.95
 SUBTIPOS_IGNORADOS = frozenset({"multiesporte_pai", "troca"})
@@ -90,6 +93,13 @@ def _tem_dado(metodo: str, v: Volta) -> bool:
     return v.fc_media is not None and v.fc_media > 0
 
 
+def usa_fc_da_atividade(voltas: Sequence[Volta], atividade: Volta | None) -> bool:
+    """``carga@2``: há voltas, nenhuma tem FC e a atividade tem ``fc_media`` (e duração): o hrTSS usa a atividade."""
+    return bool(voltas) and atividade is not None and _tem_dado("hrtss", atividade) and not any(
+        _tem_dado("hrtss", v) for v in voltas
+    )
+
+
 def _carga_do_metodo(metodo: str, voltas: Sequence[Volta], limiar: float) -> tuple[float, float, float]:
     """(carga, duração coberta, duração total). Volta sem dado conta 0."""
     total = sum(max(v.duracao_s, 0.0) for v in voltas)
@@ -117,7 +127,8 @@ def calcular_carga(
     """Carga de uma atividade, ou ``None`` se ela é ignorada (``multiesporte_pai``/``troca``).
 
     ``voltas`` são os segmentos importados (todos os tipos). Sem voltas, usa-se ``atividade`` (totais) como volta
-    única, com ``granularidade = 'atividade'``. Ordem do motivo (ADR 0010, item 7): modalidade sem carga; nenhum
+    única, com ``granularidade = 'atividade'``. Com voltas sem nenhuma FC, o hrTSS usa a FC média da atividade
+    (``carga@2``; ``granularidade`` é a do método vencedor). Ordem do motivo (ADR 0010, item 7): modalidade sem carga; nenhum
     caminho com limiar na data (``sem_dados_saude`` ou ``sem_limiar_na_data``); senão o do primeiro caminho
     disponível (``sem_fc``, ``sem_pace`` ou ``cobertura_insuficiente``). Nunca devolve carga aproximada.
     """
@@ -146,8 +157,10 @@ def calcular_carga(
 
     validos: dict[str, tuple[float, float]] = {}  # método -> (carga, cobertura em %)
     primeiro: tuple[str, float, float] | None = None  # método, cobertura, coberto (do primeiro disponível)
+    fc_da_atividade = usa_fc_da_atividade(voltas, atividade)
     for metodo, lim in disponiveis:
-        carga, coberto, total = _carga_do_metodo(metodo, entrada, lim)
+        base = [atividade] if metodo == "hrtss" and fc_da_atividade else entrada
+        carga, coberto, total = _carga_do_metodo(metodo, base, lim)
         cobertura = coberto / total if total > 0 else 0.0
         if primeiro is None:
             primeiro = (metodo, cobertura, coberto)
@@ -161,6 +174,8 @@ def calcular_carga(
         return _sem_carga("cobertura_insuficiente", granularidade, cobertura * 100)
 
     vencedor = next(m for m, _ in disponiveis if m in validos)
+    if vencedor == "hrtss" and fc_da_atividade:
+        granularidade = "atividade"
     carga_rtss = validos["rtss"][0] if "rtss" in validos else None
     carga_hrtss = validos["hrtss"][0] if "hrtss" in validos else None
     return ResultadoCarga(

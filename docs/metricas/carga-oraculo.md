@@ -12,7 +12,7 @@ O resultado esperado da **carga** (rTSS e hrTSS por volta, carga da atividade, m
 **série diária** (CTL, ATL e TSB) para 23 atividades sintéticas de 03/03 a 16/04/2025, com o histórico de limiar da
 fixture de saúde (#135). É o **oráculo** que a função de carga (#138), a série (#139), o comando (#141), a API (#142)
 e o QA reaproveitam. Cada conta está escrita abaixo; nenhum número vem de IA nem de dado real. As regras são as da
-[[decisoes/0010-carga-de-treino]] (`carga@1` e `serie_carga@1`). Sempre estimativa, nunca medida.
+[[decisoes/0010-carga-de-treino]] (`carga@1`/`carga@2` e `serie_carga@1`). Sempre estimativa, nunca medida.
 
 ## Fórmula
 Forma do TSS, `TSS = horas x IF^2 x 100`: uma hora no limiar vale 100 (Coggan & Allen, *Training and Racing with a
@@ -604,3 +604,6 @@ sem_carga): 05/03 (1, 1, 0); 06/03 (1, 0, 1: só natação, carga 0); 08/03 (2, 
 - A forma `1 - exp(-1/tau)` e o TSB do mesmo dia **não batem** com o TrainingPeaks (ADR, item 6): não compare estes números
   com os de lá. O hrTSS aqui é adaptação própria.
 - Valores do atleta sintético; um atleta real terá outros limiares.
+
+## Nota da `carga@2` (#255)
+O oráculo não muda: nenhuma atividade das fixtures tem voltas sem FC com FC média na atividade (a esteira `4000000007` segue `sem_fc`). O caso novo é coberto por testes sintéticos em `test_carga.py` e `test_calcular_carga.py`.
