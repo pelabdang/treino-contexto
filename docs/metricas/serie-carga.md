@@ -1,8 +1,8 @@
 ---
 tipo: metrica
-status: rascunho
+status: em-uso
 dono: caio
-atualizado: 2026-11-07
+atualizado: 2026-11-08
 links: [[decisoes/0010-carga-de-treino]], [[decisoes/0003-fuso-da-atividade]], [[metricas/carga-treino]], [[metricas/carga-oraculo]], [[metricas/conferencia-carga]], [[produto/roadmap]], [[glossario]]
 ---
 # Série de carga: CTL, ATL e TSB diários (`serie_carga@1`)

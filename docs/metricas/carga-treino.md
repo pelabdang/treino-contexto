@@ -1,6 +1,6 @@
 ---
 tipo: metrica
-status: rascunho
+status: em-uso
 dono: caio
 atualizado: 2026-11-08
 links: [[decisoes/0010-carga-de-treino]], [[metricas/carga-oraculo]], [[decisoes/0002-segmento-intensidade-e-versao]], [[decisoes/0003-fuso-da-atividade]], [[decisoes/0009-treino-de-transicao]], [[glossario]], [[produto/roadmap]], [[metricas/serie-carga]], [[modulos/worker]], [[modulos/banco]]
