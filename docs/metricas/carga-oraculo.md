@@ -1,8 +1,8 @@
 ---
 tipo: metrica
-status: rascunho
+status: em-uso
 dono: caio
-atualizado: 2026-11-07
+atualizado: 2026-11-08
 links: [[decisoes/0010-carga-de-treino]], [[metricas/esforcos-oraculo]], [[modulos/ingestao-garmin]], [[produto/roadmap]], [[glossario]]
 ---
 # Carga de treino: fixtures de algumas semanas e oráculo

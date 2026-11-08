@@ -3,7 +3,7 @@ tipo: decisao
 status: aceita
 dono: caio
 atualizado: 2026-11-08
-links: [[decisoes/0001-modelo-de-dados-minimo]], [[decisoes/0002-segmento-intensidade-e-versao]], [[decisoes/0003-fuso-da-atividade]], [[decisoes/0004-contrato-tela-evolucao]], [[decisoes/0006-upload-de-fit]], [[decisoes/0008-deteccao-de-esforcos]], [[decisoes/0009-treino-de-transicao]], [[modulos/banco]], [[modulos/ingestao-garmin]], [[produto/roadmap]], [[glossario]]
+links: [[decisoes/0001-modelo-de-dados-minimo]], [[decisoes/0002-segmento-intensidade-e-versao]], [[decisoes/0003-fuso-da-atividade]], [[decisoes/0004-contrato-tela-evolucao]], [[decisoes/0006-upload-de-fit]], [[decisoes/0008-deteccao-de-esforcos]], [[decisoes/0009-treino-de-transicao]], [[modulos/banco]], [[modulos/ingestao-garmin]], [[produto/roadmap]], [[glossario]], [[metricas/carga-treino]], [[metricas/serie-carga]], [[metricas/conferencia-carga]], [[metricas/carga-oraculo]], [[modulos/grafico-carga]], [[modulos/api]], [[produto/meta-6-como-rodar]]
 ---
 # ADR: 0010 Carga de treino (rTSS, hrTSS, CTL, ATL e TSB)
 
@@ -11,6 +11,10 @@ links: [[decisoes/0001-modelo-de-dados-minimo]], [[decisoes/0002-segmento-intens
 > (seção "A confirmar"). **Nenhuma linha de código nem migração muda neste PR.** Todos os números são sintéticos. Os nomes concretos
 > de arquivo e de campo da exportação ficam na nota [[modulos/ingestao-garmin]] (#135), não nesta ADR.
 > Dá base para #136, #137, #138, #139, #140, #141, #142, #144 e #174.
+
+**Status atual: implementada na Meta 6 (#134 a #144, #174 e #255).** Código: [[metricas/carga-treino]] (`carga@2`), [[metricas/serie-carga]] (`serie_carga@1`),
+[[metricas/conferencia-carga]], [[modulos/grafico-carga]] e a API ([[modulos/api]], "Carga"). O oráculo é a [[metricas/carga-oraculo]]. Passo a passo:
+[[produto/meta-6-como-rodar]]. O texto abaixo é o da decisão; a `carga@2` está no adendo de 08/11.
 
 ## Contexto
 A Meta 6 entrega a primeira métrica derivada de carga: a carga de cada atividade (**rTSS** pelo pace, **hrTSS** pela FC) e, dia a
