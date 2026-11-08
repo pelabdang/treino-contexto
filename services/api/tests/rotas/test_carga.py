@@ -50,7 +50,7 @@ def test_serie_bate_com_o_oraculo(session, client):
     r = client.get(f"/atletas/{atleta_id}/carga")
     assert r.status_code == 200
     j = r.json()
-    assert j["versao"] == "serie_carga@1" and j["versao_carga"] == "carga@1"
+    assert j["versao"] == "serie_carga@1" and j["versao_carga"] == "carga@2"
     assert j["aviso"] is None and j["periodo"] is None
     assert len(j["dias"]) == 43 and j["dias"][0]["data"] == "2025-03-05" and j["dias"][-1]["data"] == "2025-04-16"
     por_dia = {d["data"]: d for d in j["dias"]}
@@ -119,7 +119,7 @@ def test_atividade_traz_a_carga_do_oraculo(session, client):
     vistos = set()
     for fonte, e in ESPERADO.items():
         j = client.get(f"/atletas/{atleta_id}/atividades/{por_fonte[fonte]}").json()["carga"]
-        assert j["estado"] == e.estado and j["versao"] == "carga@1"
+        assert j["estado"] == e.estado and j["versao"] == "carga@2"
         assert set(j) == {"estado", "carga", "metodo", "cobertura_pct", "motivo", "versao"}  # nada de limiar
         assert j["motivo"] == e.motivo and j["metodo"] == e.metodo
         if e.estado == "calculada":

@@ -92,7 +92,7 @@ class CargaAtividadeOut(BaseModel):
     motivo: Literal[
         "sem_dados_saude", "sem_limiar_na_data", "sem_fc", "sem_pace", "cobertura_insuficiente", "modalidade_sem_carga"
     ] | None = None  # so em `sem_carga`
-    versao: str | None = None  # carga@1; null em `pendente`
+    versao: str | None = None  # carga@2; null em `pendente`
 
 
 class AtividadeOut(BaseModel):
