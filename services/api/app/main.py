@@ -2,7 +2,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from app.config import lista_origens, settings
-from app.rotas import atividades, evolucao, transicao
+from app.rotas import atividades, carga, evolucao, transicao
 
 
 def criar_app(cors_origens: str | None = None) -> FastAPI:
@@ -18,6 +18,7 @@ def criar_app(cors_origens: str | None = None) -> FastAPI:
     app.include_router(evolucao.router)
     app.include_router(atividades.router)
     app.include_router(transicao.router)
+    app.include_router(carga.router)
 
     @app.get("/health")
     def health() -> dict[str, str]:

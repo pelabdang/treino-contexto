@@ -22,6 +22,11 @@ export type TreinosDeTransicao = components["schemas"]["TreinosDeTransicaoOut"];
 export type GrupoTransicao = components["schemas"]["GrupoOut"];
 export type ParteTransicao = components["schemas"]["ParteOut"];
 export type ComparacaoTransicao = components["schemas"]["ComparacaoOut"];
+export type CargaAtividade = components["schemas"]["CargaAtividadeOut"];
+export type SerieCarga = components["schemas"]["CargaSerieOut"];
+export type DiaCarga = components["schemas"]["DiaCargaOut"];
+export type TotaisCarga = components["schemas"]["TotaisCargaOut"];
+export type MotivoSemCarga = NonNullable<CargaAtividade["motivo"]>;
 export type Eixos =components["schemas"]["Eixos"];
 export type ErroNaoEncontrado = components["schemas"]["Erro"];
 export type ErroValidacao = components["schemas"]["HTTPValidationError"];
@@ -108,6 +113,45 @@ export async function buscarAtividade(
   if (resposta.ok) {
     try {
       return { ok: true, dados: (await resposta.json()) as Atividade };
+    } catch {
+      return { ok: false, erro: { tipo: "http", status: resposta.status } };
+    }
+  }
+  if (resposta.status === 404 || resposta.status === 422) {
+    try {
+      const detalhe = await resposta.json();
+      return resposta.status === 404
+        ? { ok: false, erro: { tipo: "nao_encontrado", status: 404, detalhe: detalhe as ErroNaoEncontrado } }
+        : { ok: false, erro: { tipo: "validacao", status: 422, detalhe: detalhe as ErroValidacao } };
+    } catch {
+      // corpo que não é JSON: cai no erro HTTP genérico
+    }
+  }
+  return { ok: false, erro: { tipo: "http", status: resposta.status } };
+}
+
+/** `GET /atletas/{atletaId}/carga`: série diária de CTL, ATL e TSB. `inicio`/`fim` só recortam `dias`. Nunca lança. */
+export async function buscarCarga(
+  atletaId: number,
+  filtro: FiltroPeriodo = {},
+  opcoes: OpcoesCliente = {},
+): Promise<Resultado<SerieCarga>> {
+  const base = (opcoes.baseUrl ?? BASE_URL_PADRAO).replace(/\/+$/, "");
+  const consulta = new URLSearchParams();
+  if (filtro.inicio) consulta.set("inicio", filtro.inicio);
+  if (filtro.fim) consulta.set("fim", filtro.fim);
+  const texto = consulta.toString();
+  const url = `${base}/atletas/${encodeURIComponent(String(atletaId))}/carga${texto ? `?${texto}` : ""}`;
+
+  let resposta: Response;
+  try {
+    resposta = await (opcoes.fetch ?? fetch)(url, { headers: { Accept: "application/json" } });
+  } catch (e) {
+    return { ok: false, erro: { tipo: "rede", mensagem: e instanceof Error ? e.message : String(e) } };
+  }
+  if (resposta.ok) {
+    try {
+      return { ok: true, dados: (await resposta.json()) as SerieCarga };
     } catch {
       return { ok: false, erro: { tipo: "http", status: resposta.status } };
     }

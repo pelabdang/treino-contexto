@@ -2,8 +2,8 @@
 tipo: modulo
 status: em-uso
 dono: theo
-atualizado: 2026-11-06
-links: [[decisoes/0001-modelo-de-dados-minimo]], [[decisoes/0003-fuso-da-atividade]], [[decisoes/0004-contrato-tela-evolucao]], [[metricas/tiros-1km]], [[modulos/grafico-tiros]], [[modulos/banco]], [[modulos/worker]], [[modulos/infra]], [[modulos/api-client]], [[decisoes/0006-upload-de-fit]], [[produto/meta-2-como-rodar]], [[decisoes/0007-clima-da-atividade]], [[modulos/clima]], [[produto/meta-4-como-rodar]], [[decisoes/0008-deteccao-de-esforcos]], [[metricas/esforcos]], [[decisoes/0009-treino-de-transicao]]
+atualizado: 2026-11-08
+links: [[metricas/serie-carga]], [[decisoes/0010-carga-de-treino]], [[decisoes/0001-modelo-de-dados-minimo]], [[decisoes/0003-fuso-da-atividade]], [[decisoes/0004-contrato-tela-evolucao]], [[metricas/tiros-1km]], [[modulos/grafico-tiros]], [[modulos/banco]], [[modulos/worker]], [[modulos/infra]], [[modulos/api-client]], [[decisoes/0006-upload-de-fit]], [[produto/meta-2-como-rodar]], [[decisoes/0007-clima-da-atividade]], [[modulos/clima]], [[produto/meta-4-como-rodar]], [[decisoes/0008-deteccao-de-esforcos]], [[metricas/esforcos]], [[decisoes/0009-treino-de-transicao]]
 ---
 # Módulo: api
 
@@ -19,6 +19,7 @@ Futuramente recebe a importação Garmin e serve métricas ao [[modulos/mobile]]
 - Entrada e saída: `POST /atletas/{atleta_id}/atividades/fit` (ver "Upload de FIT" abaixo).
 - Saída: `GET /atletas/{atleta_id}/atividades/{atividade_id}` (ver "Atividade e clima" abaixo).
 - Entrada e saída: `/atletas/{atleta_id}/treinos-de-transicao` e `PUT`/`DELETE .../atividades/{id}/transicao` (#170, ver "Treino de transição" abaixo).
+- Saída: `GET /atletas/{atleta_id}/carga` e o objeto `carga` da atividade (#142, ver "Carga" abaixo).
 
 ## Arquivos principais
 - `services/api/app/main.py`: app FastAPI.
@@ -147,7 +148,7 @@ Item 5 da [[decisoes/0007-clima-da-atividade]]. Devolve a atividade (`atividade_
 {"estado": "indoor"}
 ```
 - **Campos prontos para a tela (#158, [[decisoes/0004-contrato-tela-evolucao]], adendo 2):** a regra "a API formata, o app mostra" vale aqui também.
-  `data_local` (`AAAA-MM-DD`) e `hora_local` (`HH:MM`): início no fuso da atividade (`fuso_min`; sem ele, `America/Sao_Paulo`, [[decisoes/0003-fuso-da-atividade]]), por `inicio_local` em `app/servicos/fuso.py`. `duracao` em `h:mm:ss` (horas sem limite; segundos arredondados com meio para cima). `pace_medio` em `m:ss` (`formatar_pace` sobre duração / km, sem arredondar antes): só para `corrida` com distância e duração maiores que zero, senão `null`. `distancia` (#216, adendo 3 da ADR 0004): texto pronto; `natacao` em metros arredondados com ponto de milhar ("1.800 m"), as outras modalidades em km com 2 casas e vírgula ("10,00 km"); `null` sem distância ou com zero (`distancia_da_atividade`, em `app/servicos/distancia_texto.py`, que a lista de treinos de transição também usa). `clima.atribuicao` = "Weather data by Open-Meteo.com" só quando `estado` é `ok` (ADR 0007, item 4); nos outros estados a chave nem vem. `inicio` em UTC e os campos numéricos continuam. A `carga` (#142) entra na mesma resposta quando sair.
+  `data_local` (`AAAA-MM-DD`) e `hora_local` (`HH:MM`): início no fuso da atividade (`fuso_min`; sem ele, `America/Sao_Paulo`, [[decisoes/0003-fuso-da-atividade]]), por `inicio_local` em `app/servicos/fuso.py`. `duracao` em `h:mm:ss` (horas sem limite; segundos arredondados com meio para cima). `pace_medio` em `m:ss` (`formatar_pace` sobre duração / km, sem arredondar antes): só para `corrida` com distância e duração maiores que zero, senão `null`. `distancia` (#216, adendo 3 da ADR 0004): texto pronto; `natacao` em metros arredondados com ponto de milhar ("1.800 m"), as outras modalidades em km com 2 casas e vírgula ("10,00 km"); `null` sem distância ou com zero (`distancia_da_atividade`, em `app/servicos/distancia_texto.py`, que a lista de treinos de transição também usa). `clima.atribuicao` = "Weather data by Open-Meteo.com" só quando `estado` é `ok` (ADR 0007, item 4); nos outros estados a chave nem vem. `inicio` em UTC e os campos numéricos continuam. O objeto `carga` (#142) vem na mesma resposta (ver "Carga" abaixo).
 - **`esforcos` (#167, [[decisoes/0008-deteccao-de-esforcos]]):** objeto opcional (`null` fora de corrida e ciclismo) com os blocos que
   `detectar_esforcos` gravou. A API **não detecta** na leitura (`servicos/esforcos_leitura.py`). Campos: `versao` (`esforcos@1`, a gravada; sem
   blocos, a atual), `referencia_da_atividade` (`true` quando não havia histórico e a referência foi a da própria atividade: a tela avisa),
@@ -201,6 +202,24 @@ uv run python -m worker.reclassificar --atleta-id 1
 O comando chama `classificar_atividades` e imprime `reclassificadas N corridas do atleta 1` (atleta inexistente: erro
 em stderr e saída 1). É idempotente: rodar de novo dá o mesmo resultado. Depois, `reclassificacao_pendente` volta a
 `false`. Reimportar a exportação Garmin ([[modulos/ingestao-garmin]]) tem o mesmo efeito. Ver [[modulos/worker]].
+
+## Carga: `GET /atletas/{atleta_id}/carga` e `carga` na atividade (#142, [[decisoes/0010-carga-de-treino]] itens 5 a 7)
+`operationId`: `cargaDoAtleta`. Código: `app/rotas/carga.py` e `app/servicos/carga_leitura.py`. A API **não calcula carga por
+atividade**: lê `carga_atividade`, gravada por `worker.calcular_carga` (#141). A série ([[metricas/serie-carga]],
+`serie_carga@1`) é calculada na leitura por `calcular_serie`; o serviço faz o dia local ([[decisoes/0003-fuso-da-atividade]]) e
+passa `ignoradas_multiesporte`.
+- Resposta: `versao` (`serie_carga@1`), `versao_carga` (`carga@1`), `periodo` (o filtro pedido, ou `null`), `aviso`
+  (`sem_carga_calculada` quando `dias` está vazio) e `dias`: `data` (dia local), `carga`, `ctl`, `atl`, `tsb`, `aprendendo`,
+  `atividades`, `calculadas`, `sem_carga` (dia com `sem_carga > 0` não é descanso).
+- `totais` (do atleta todo, não do período): `atividades_importadas`, `calculadas`, `sem_carga_total`, `por_motivo` (os seis
+  motivos, sempre todos), `ignoradas_multiesporte` e `pendentes` (elegíveis sem linha **ou com linha de `versao` diferente da `carga@` atual**: desatualizadas até o `calcular_carga` rodar; ficam fora da série, e `atividades_importadas` fecha com a soma).
+- `inicio` e `fim` (datas locais, inclusivas) só recortam `dias`; CTL e ATL partem sempre do primeiro dia com carga. `inicio` > `fim`
+  é `422`; atleta inexistente é `404` (`Erro`). Atleta sem carga calculada: `dias` vazio com `aviso`.
+- **Sem arredondar**: `carga`, `ctl`, `atl` e `tsb` saem com a precisão do cálculo; a tela mostra 1 casa (proposta do Caio).
+- `GET .../atividades/{id}` ganha `carga`: `{estado, carga, metodo, cobertura_pct, motivo, versao}` (`calculada` traz carga e método;
+  `sem_carga` traz o motivo). `estado: "pendente"` (demais campos `null`, `versao: null`) para atividade elegível sem linha ou com versão antiga; `carga: null` só para `multiesporte_pai` e `troca`.
+- **Privacidade:** a API nunca devolve limiar, zonas, recordes nem a carga do Garmin: só carga, método, motivo e cobertura.
+- Testes: `tests/rotas/test_carga.py` (oráculo da #137: `SERIE`, `TOTAIS`, `ESPERADO`). Exemplo: `packages/api-client/exemplos/carga.json`.
 
 ## Contrato da tela de evolução (Meta 2)
 O contrato que o app consome está em [[decisoes/0004-contrato-tela-evolucao]], com a lista "antes e depois".

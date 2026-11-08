@@ -1,7 +1,9 @@
-import { buscarEvolucaoTiros1km, enviarAtividadeFit, type EvolucaoTiros1km } from "@treino/api-client";
+import { buscarCarga, buscarEvolucaoTiros1km, enviarAtividadeFit, type EvolucaoTiros1km } from "@treino/api-client";
 
 // Exemplo gerado pelo TestClient com as fixtures sintéticas (services/api/scripts/exportar_openapi.py).
 import exemplo from "../../../packages/api-client/exemplos/evolucao-tiros-1km.json";
+
+import exemploCarga from "../../../packages/api-client/exemplos/carga.json";
 
 function respostaJson(corpo: unknown, status = 200): Response {
   return new Response(JSON.stringify(corpo), { status, headers: { "Content-Type": "application/json" } });
@@ -132,5 +134,25 @@ describe("enviarAtividadeFit", () => {
     const falso = jest.fn().mockRejectedValue(new Error("Network request failed"));
     const r = await enviarAtividadeFit(1, arquivo, { fetch: falso });
     expect(r).toEqual({ ok: false, erro: { tipo: "rede", mensagem: "Network request failed" } });
+  });
+});
+
+describe("buscarCarga", () => {
+  it("200: devolve a série tipada e monta a URL com o período", async () => {
+    const falso = jest.fn().mockResolvedValue(respostaJson(exemploCarga));
+    const r = await buscarCarga(1, { inicio: "2025-03-01", fim: "2025-03-31" }, { baseUrl: "http://api.local:8000/", fetch: falso });
+    expect(falso.mock.calls[0][0]).toBe("http://api.local:8000/atletas/1/carga?inicio=2025-03-01&fim=2025-03-31");
+    expect(r.ok).toBe(true);
+    if (r.ok) {
+      expect(r.dados.versao).toBe("serie_carga@1");
+      expect(r.dados.dias.length).toBeGreaterThan(0);
+      expect(Object.keys(r.dados.totais.por_motivo)).toHaveLength(6);
+    }
+  });
+
+  it("404 vira nao_encontrado", async () => {
+    const falso = jest.fn().mockResolvedValue(respostaJson({ detail: "atleta não encontrado" }, 404));
+    const r = await buscarCarga(9, {}, { fetch: falso });
+    expect(r).toEqual({ ok: false, erro: { tipo: "nao_encontrado", status: 404, detalhe: { detail: "atleta não encontrado" } } });
   });
 });
