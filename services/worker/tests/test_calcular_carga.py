@@ -153,11 +153,11 @@ def test_versao_nova_recalcula_tudo(session, monkeypatch):
     atleta_id = _carrega(session)
     calcular_carga_do_atleta(session, atleta_id)
     antes = _snapshot(session)
-    monkeypatch.setattr(cg, "VERSAO", "carga@2")
+    monkeypatch.setattr(cg, "VERSAO", "carga@3")
     rel = calcular_carga_do_atleta(session, atleta_id)
     depois = _linhas(session)
-    assert rel.versao == "carga@2" and rel.gravadas == len(ESPERADO) and rel.inalteradas == 0
-    assert all(c.versao == "carga@2" for c in depois.values())
+    assert rel.versao == "carga@3" and rel.gravadas == len(ESPERADO) and rel.inalteradas == 0
+    assert all(c.versao == "carga@3" for c in depois.values())
     assert {f: v[0] for f, v in antes.items()} == {f: c.id for f, c in depois.items()}  # atualiza no lugar
     assert all(c.carga == antes[f][4] for f, c in depois.items())  # mesma conta, mesmo número
 
@@ -231,7 +231,7 @@ def test_apagar_atividade_apaga_a_carga(session):
 
 def _base(atividade_id, **kw):
     v = dict(atividade_id=atividade_id, estado="sem_carga", motivo="sem_fc", granularidade="volta", entrada="x" * 64,
-             versao="carga@1", calculado_em=datetime(2025, 1, 1, tzinfo=timezone.utc))
+             versao="carga@2", calculado_em=datetime(2025, 1, 1, tzinfo=timezone.utc))
     v.update(kw)
     return CargaAtividade(**v)
 
@@ -274,7 +274,7 @@ def test_comando_imprime_relatorio_so_com_contagens(fabrica, capsys):
         atleta_id = _carrega(s)
     assert calcular_carga.main(["--atleta-id", str(atleta_id)]) == 0
     saida = capsys.readouterr().out
-    assert f"carga carga@1 do atleta {atleta_id}" in saida
+    assert f"carga carga@2 do atleta {atleta_id}" in saida
     assert "calculadas: 13" in saida and "sem carga: 7" in saida
     assert "sem_limiar_na_data: 2" in saida and "modalidade_sem_carga: 2" in saida
     assert "ignoradas (multiesporte e troca, sem linha): 3" in saida
@@ -305,7 +305,7 @@ def test_comando_nao_abre_rede(fabrica, monkeypatch):
 def test_importar_garmin_calcula_a_carga_depois_da_saude(fabrica, capsys):
     assert importar_garmin.main([str(ZIP), "--atleta", "Ana"]) == 0
     saida = capsys.readouterr().out
-    assert saida.index("saude limiar") < saida.index("carga carga@1") and "calculadas: 13" in saida
+    assert saida.index("saude limiar") < saida.index("carga carga@2") and "calculadas: 13" in saida
     with fabrica() as s:
         assert s.scalar(select(func.count()).select_from(CargaAtividade)) == len(ESPERADO)
 
@@ -322,3 +322,35 @@ def test_erro_na_carga_vira_aviso_e_nao_derruba_a_importacao(fabrica, monkeypatc
     with fabrica() as s:
         assert s.scalar(select(func.count()).select_from(Atividade)) > 0
         assert s.scalar(select(func.count()).select_from(CargaAtividade)) == 0
+
+
+# ---------------------------------------------------------------------------------------------
+# carga@2 (#255): FC média da atividade quando nenhuma volta tem FC
+# ---------------------------------------------------------------------------------------------
+def test_carga2_fc_da_atividade_so_entra_na_entrada_quando_usada(session):
+    atleta_id = _carrega(session)
+    calcular_carga_do_atleta(session, atleta_id)
+    alvo = next(i for i, e in ESPERADO.items() if e.modalidade == "ciclismo" and e.estado == "calculada"
+                and e.granularidade == "volta")
+    a = session.scalars(select(Atividade).where(Atividade.fonte_id == str(alvo))).one()
+    antes = _linhas(session)[alvo].entrada
+    # Mudar a FC média da atividade, que tem FC nas voltas, não recalcula nada.
+    a.fc_media = (a.fc_media or 140.0) + 1
+    session.commit()
+    rel = calcular_carga_do_atleta(session, atleta_id)
+    assert rel.gravadas == 0 and _linhas(session)[alvo].entrada == antes
+    # Sem FC em nenhuma volta, a FC média da atividade passa a valer e a entrada muda.
+    for s in a.segmentos:
+        s.fc_media = None
+    a.fc_media = 150.0
+    session.commit()
+    rel = calcular_carga_do_atleta(session, atleta_id)
+    linha = _linhas(session)[alvo]
+    assert rel.gravadas == 1 and linha.entrada != antes
+    assert linha.estado == "calculada" and linha.metodo == "hrtss" and linha.granularidade == "atividade"
+    # Outra FC média da atividade recalcula; a conta é duração da atividade x (150/limiar)^2.
+    antiga = linha.entrada
+    a.fc_media = 155.0
+    session.commit()
+    calcular_carga_do_atleta(session, atleta_id)
+    assert _linhas(session)[alvo].entrada != antiga

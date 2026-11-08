@@ -278,7 +278,7 @@ class ZonaFcAtleta(Base):
     """Zonas de FC com vigencia (ADR 0010, item 2). `metodo` guardado como a fonte traz, sem CHECK.
 
     `garmin_export`: retrato do JSON, datado pelo dia da importacao. `garmin_fit`: uma linha por mudanca de zonas
-    vista nos FIT, datada pelo dia local da sessao. Nenhuma metrica da `carga@1` usa estas linhas.
+    vista nos FIT, datada pelo dia local da sessao. Nenhuma metrica da `carga@2` usa estas linhas.
     """
 
     __tablename__ = "zona_fc_atleta"
@@ -394,7 +394,7 @@ class CargaAtividade(Base):
     limiar_velocidade_ms: Mapped[float | None] = mapped_column(Float)
     limiar_vigente_desde: Mapped[date | None] = mapped_column(Date)  # vigencia do limiar do metodo vencedor
     entrada: Mapped[str] = mapped_column(String(64))  # SHA-256 do que entrou na conta
-    versao: Mapped[str] = mapped_column(String(40))  # ex.: carga@1
+    versao: Mapped[str] = mapped_column(String(40))  # ex.: carga@2
     calculado_em: Mapped[datetime] = mapped_column(DateTime(timezone=True))
 
     atividade: Mapped[Atividade] = relationship(back_populates="carga")

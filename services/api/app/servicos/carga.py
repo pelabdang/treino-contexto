@@ -46,10 +46,12 @@ def _num(x: float | None) -> str:
     return "-" if x is None else repr(float(x))
 
 
-def entrada_de(a: Atividade, voltas: list[cg.Volta], limiares: cg.Limiares, desde: dict[str, date | None]) -> str:
+def entrada_de(a: Atividade, voltas: list[cg.Volta], limiares: cg.Limiares, desde: dict[str, date | None],
+               fc_da_atividade: cg.Volta | None = None) -> str:
     """SHA-256 do que entra na conta: modalidade, subtipo, voltas (ou totais) e os limiares das grandezas do
     caminho da modalidade, com a vigência e se o atleta tem a grandeza (muda o motivo). Limiar de grandeza que a
-    atividade não usa (ex.: velocidade na natação ou na esteira) não entra: não recalcula à toa."""
+    atividade não usa (ex.: velocidade na natação ou na esteira) não entra: não recalcula à toa. A duração e a FC média
+    da atividade (``fc_da_atividade``) entram só quando a ``carga@2`` as usa (voltas sem nenhuma FC)."""
     if a.modalidade in cg.MODALIDADES_SEM_CARGA:
         grandezas: tuple[str, ...] = ()
     elif a.modalidade == "corrida" and a.subtipo != "esteira":
@@ -60,6 +62,8 @@ def entrada_de(a: Atividade, voltas: list[cg.Volta], limiares: cg.Limiares, desd
                "velocidade_ms": (limiares.velocidade_ms, limiares.atleta_tem_velocidade)}
     partes = [a.modalidade, a.subtipo or "-"]
     partes += [f"{_num(v.duracao_s)},{_num(v.distancia_m)},{_num(v.fc_media)}" for v in voltas]
+    if fc_da_atividade is not None:
+        partes.append(f"atividade={_num(fc_da_atividade.duracao_s)},{_num(fc_da_atividade.fc_media)}")
     for g in grandezas:
         valor, tem = valores[g]
         d = desde.get(g)
@@ -98,7 +102,8 @@ def calcular_carga_do_atleta(session: Session, atleta_id: int, agora: datetime |
         voltas = [cg.Volta(s.duracao_s, s.distancia_m, s.fc_media) for s in a.segmentos]
         totais = cg.Volta(a.duracao_s, a.distancia_m, a.fc_media)
         limiares, desde = _limiares(session, atleta_id, data_local(a.inicio, a.fuso_min), tem)
-        entrada = entrada_de(a, voltas or [totais], limiares, desde)
+        usa_atividade = cg.usa_fc_da_atividade(voltas, totais)
+        entrada = entrada_de(a, voltas or [totais], limiares, desde, totais if usa_atividade else None)
         rel.processadas += 1
         linha = a.carga
         if linha is None or linha.entrada != entrada or linha.versao != cg.VERSAO:

@@ -2,10 +2,10 @@
 tipo: metrica
 status: rascunho
 dono: caio
-atualizado: 2026-11-07
+atualizado: 2026-11-08
 links: [[decisoes/0010-carga-de-treino]], [[metricas/carga-oraculo]], [[decisoes/0002-segmento-intensidade-e-versao]], [[decisoes/0003-fuso-da-atividade]], [[decisoes/0009-treino-de-transicao]], [[glossario]], [[produto/roadmap]], [[metricas/serie-carga]], [[modulos/worker]], [[modulos/banco]]
 ---
-# Carga de treino: rTSS e hrTSS por volta (`carga@1`)
+# Carga de treino: rTSS e hrTSS por volta (`carga@2`)
 
 ## O que mede
 Quanto uma atividade custou ao corpo, numa escala única em que **1 hora no limiar vale 100**. É sempre **estimativa**, nunca medida.
@@ -15,7 +15,7 @@ pace (rTSS) ou a FC (hrTSS); ciclismo e esteira, só a FC. Natação e `outra` f
 Esta nota cobre a carga **por atividade** (#138 e #141). A série diária (CTL, ATL, TSB) tem nota própria: [[metricas/serie-carga]].
 
 ## Fórmula
-Função pura `calcular_carga` em `services/api/app/metricas/carga.py`; `VERSAO = "carga@1"`. Constantes iguais para todos os atletas.
+Função pura `calcular_carga` em `services/api/app/metricas/carga.py`; `VERSAO = "carga@2"`. Constantes iguais para todos os atletas.
 
 ```
 rTSS_i  = (duracao_i / 3600) x IF_i^2 x 100,   IF_i = (distancia_i / duracao_i) / velocidade_limiar   (m/s)
@@ -26,6 +26,9 @@ carga   = soma das voltas (todos os tipos: volta, tiro e recuperação)
 - **Volta sem o dado** do método (sem FC no hrTSS; sem distância ou duração no rTSS) conta 0. O método só vale se as voltas com dado
   cobrem **pelo menos 95%** da soma das durações (`COBERTURA_MIN = 0,95`).
 - **Atividade sem voltas** (JSON sem FIT) é uma volta única (`duracao_s`, `distancia_m`, `fc_media`), com `granularidade = 'atividade'`.
+- **FC média da atividade (`carga@2`, #255):** se há voltas mas **nenhuma** tem FC e a atividade tem `fc_media`, o hrTSS usa a atividade
+  como volta única (`granularidade = 'atividade'` quando o hrTSS vence). FC em parte das voltas segue a cobertura de 95%. O rTSS não muda.
+  Precisão menor (a volta única subestima treinos variáveis). A `entrada` só inclui a FC da atividade quando ela é usada.
 - **Qual método vale:** corrida fora da esteira: rTSS, depois hrTSS (o rTSS vence quando os dois valem; ambos ficam em `carga_rtss` e
   `carga_hrtss`). Corrida em esteira e ciclismo: só hrTSS. Natação e `outra`: `modalidade_sem_carga`. `multiesporte_pai` e `troca`:
   **ignoradas** (a função devolve `None`: não há linha nem motivo).
@@ -66,6 +69,7 @@ Exemplos à mão (sintéticos), limiar de 270 s/km (3,7037 m/s) ou FC de limiar 
 | 1 h no limiar | IF 1 | 100 |
 | 20 voltas de 50 s, uma sem FC | cobertura 950/1000 = 95%; 19 x 1,125 | vale, 21,375 |
 | 10 voltas de 100 s, uma sem FC | cobertura 90% | `cobertura_insuficiente` |
+| 3 voltas de 600 s sem FC; atividade de 1800 s a 153 bpm | IF 0,9; 1800/3600 x 0,81 x 100 | 40,5 (`granularidade = 'atividade'`) |
 
 ## Limitações e quando não usar
 - **Por volta, sem ajuste de subida nem de calor** (estimativa): a subida deixa o pace lento e subestima a carga; a descida faz o contrário.
