@@ -19,7 +19,7 @@ Ao fechar uma meta, o Paulo registra o resultado em `docs/produto/metas/` e revi
 | 4 | Clima de cada atividade | feita (fixtures e resposta gravada, sem rede; [[produto/metas/meta-4-clima-atividade]]) |
 | 5 | Detecção de esforços (corrida por distância, ciclismo por duração) e série de tiros com o melhor tiro | feita (fixtures, sem rede; conferência local com o histórico real; [[produto/metas/meta-5-deteccao-esforcos]]) |
 | 6 | Carga de treino (rTSS, hrTSS, CTL, ATL, TSB) | feita (fixtures, sem rede; conferência local com o histórico real; [[produto/metas/meta-6-carga-treino]]) |
-| **7** | **Linha de base pessoal e tipo de treino sugerido** | **próxima** (issues propostas na #147; abertas depois do ok do Theo) |
+| **7** | **Linha de base pessoal e tipo de treino sugerido** | **próxima** (issues propostas na #147; abertas depois da resposta do Angelo) |
 | 8 | Check-in pós-treino | esboço |
 | 9 | Feedback automático por treino | esboço |
 | 10 | Caixa do dia do professor | esboço |
@@ -411,8 +411,9 @@ Revisadas ao fim de cada meta com o que se aprendeu. Ordem tirada da "Fundação
   Caminho crítico: #135 → #136 → #140 → #141 → #142 / #144 → #145 → #146 → #147, com a #134 liberando a #140 e a #174.
   Enquanto a ADR não entra, a Duda faz a #135 e a #136, e o Caio adianta o oráculo à mão sobre o formato da #135.
 - **Paralelas na Meta 6:** #243, `tiros_1km@6` (PR #250, fora do critério de pronto), e #255, `carga@2` (PR #256).
-- **Pendências fora da meta:** tela da carga no app, as duas observações da Bia sobre o guia, #213, #237 e #74; ver
-  "Candidatas sem número" e [[produto/metas/meta-6-carga-treino]]. Não entram na Meta 7.
+- **Pendências fora da meta:** as duas observações da Bia sobre o guia viram paralela pequena da Meta 7 (nina-docs); tela
+  da carga no app, #213, #237 e #74 ficam em "Candidatas sem número" ([[produto/metas/meta-6-carga-treino]]) e não entram na
+  Meta 7.
 - **Aprendido na Meta 6:** propostas de produto numa lista "A confirmar" da ADR deixaram o Angelo responder todas de uma vez;
   a regra do dado fisiológico (só banco local, nunca log nem API, comando para apagar) escrita na ADR evitou discussão em cada
   PR; duas trilhas com um único ponto de encontro (#141) fecharam a meta em três dias; um caso de origem fora do oráculo
@@ -456,7 +457,7 @@ Revisadas ao fim de cada meta com o que se aprendeu. Ordem tirada da "Fundação
   treino-chave. A carga está em `carga_atividade` e a série de CTL/ATL/TSB é calculada na leitura. Não há versão gravada da
   regra do tipo: a ADR diz se a linha de base e a regra do tipo cabem sem migração (proposta: linha de base calculada na
   leitura, como a `serie_carga@1`) ou se a próxima é a 0011.
-- **Issues propostas (abertas só com o ok do Theo):**
+- **Issues propostas (abertas só depois que o Angelo responder as propostas de "PRECISA DO ANGELO"):**
 
   | Ordem | Issue | Dono | Depende de |
   |---|---|---|---|
@@ -474,6 +475,9 @@ Revisadas ao fim de cada meta com o que se aprendeu. Ordem tirada da "Fundação
   **Ordem:** A e B em paralelo na largada (o Caio adianta o oráculo à mão; a Duda ajuda na ADR e confere o código); C e D em
   paralelo depois da ADR; E (precisa de C) e F (precisa de D e E) são o encontro das trilhas; G, H, I e J no fechamento.
   Caminho crítico: A → C → E → F → G → H → I → J.
+- **Paralela pequena (fora do critério de pronto):** as duas observações da Bia sobre o guia da Meta 6 (nina-docs, sem
+  dependência): dizer no passo 9 do [[produto/meta-6-como-rodar]] que a importação de saúde cria um segundo atleta e que o
+  `--atleta-id 1` continua sendo o primeiro; citar o prefixo `env DATABASE_URL=...` como alternativa ao `export`.
 - **Quem:** caio-ciencia (ADR, regras, oráculo, conferência), duda-dados (banco, comando, API, cliente), nina-docs, bia-qa,
   Theo (ADR 0011 e adendo da ADR 0004).
 - **Fora:** motor de explicação (fatores do desvio); início frio com valores da literatura (proposta: fica de fora, ver
@@ -512,9 +516,6 @@ Revisadas ao fim de cada meta com o que se aprendeu. Ordem tirada da "Fundação
 - **Tela da carga no app** (rafa-app, com a Lia): a Meta 6 entregou a carga só na API e no gráfico em `entregas/`. Spec da Lia
   antes (CTL, ATL e TSB como estimativa, o aviso "aprendendo" e os dias sem carga), depois a tela; a API já devolve a série sem
   arredondar e a proposta é 1 casa na tela (Theo, #142). Natural junto da tela dos esforços, depois da Meta 7.
-- **Duas observações da Bia sobre o guia da Meta 6** (nina-docs, pequena, opcional): dizer no passo 9 que a importação de
-  saúde cria um segundo atleta e que o `--atleta-id 1` continua sendo o primeiro; citar o prefixo `env DATABASE_URL=...` como
-  alternativa ao `export`. Pode entrar como paralela da Meta 7, se o Theo quiser.
 - **#213** (rafa-app, revisão da Lia): acessibilidade e visual da tela de evolução. **#237** (rafa-app, com a Lia): mesma
   aparência para distância e pace na tela de um treino; pode tocar o contrato (ADR 0004). As duas vão com a tela dos esforços
   ou da carga.
@@ -559,6 +560,7 @@ stack Expo). A chave do provedor de LLM foi entregue e está no `.env` (fora do 
 - **Decisões de 07/11 e 08/11: resolvidas.** "Sim" às sete propostas da ADR 0010; `tiros_1km@6`, mínimo de 2 tiros mantido e
   velocidade habitual do ciclismo confirmada (#243); `carga@2` (#255). Ver [[diario/2026-11-07]], [[diario/2026-11-08]] e
   [[produto/metas/meta-6-carga-treino]].
+- **Decisões da conferência local da Meta 5 (#169): todas respondidas em 07/11** (#243 e o multiesporte). Nenhuma pendente.
 
 Em aberto:
 1. **Meta 7, linha de base (propostas para a seção "A confirmar" da ADR 0011).** O time segue com as propostas abaixo como
@@ -571,7 +573,5 @@ Em aberto:
      a ADR propõe); treino-chave contínuo, `moderado` e `fartlek` ficam sem sugestão nesta meta; a sugestão nunca sobrescreve
      o professor nem o TrainingPeaks.
    - **"Fora do normal":** o limite do desvio que o atleta vê como fora do normal (proposto na ADR, com o texto do aviso).
-2. **Meta 5:** se restar alguma decisão da conferência local (#169) além das tomadas em 07/11, os detalhes ficam em
-   `entregas/`, fora do repositório. Nenhuma bloqueia a Meta 7.
-3. **Próximas metas, sem pressa:** CNPJ e pedido da API da Garmin; pedido da API do TrainingPeaks com a assessoria;
+2. **Próximas metas, sem pressa:** CNPJ e pedido da API da Garmin; pedido da API do TrainingPeaks com a assessoria;
    plano comercial do Open-Meteo para produção; limite de tamanho do upload no proxy, obrigatório na meta de deploy.

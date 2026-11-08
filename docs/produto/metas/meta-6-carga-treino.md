@@ -111,7 +111,7 @@ segundo; TSS por potência; sTSS e carga por PSE na natação (o check-in é a M
 
 **Pendências fora da meta** (abertas ou a abrir, sem prioridade sobre a Meta 7; ver [[produto/roadmap]], "Candidatas"):
 - **Tela da carga no app** (rafa-app, com a Lia): sem issue.
-- **Duas observações da Bia sobre o guia** (nina-docs, opcionais, sem issue): o passo 9 cria um segundo atleta na importação de
+- **Duas observações da Bia sobre o guia** (nina-docs; entram como paralela pequena da Meta 7): o passo 9 cria um segundo atleta na importação de
   saúde, e o texto não diz que o `--atleta-id 1` continua sendo o primeiro; o `export DATABASE_URL` pode virar prefixo
   `env DATABASE_URL=...` para quem não quer exportar.
 - **#213** e **#237** (rafa-app, com a Lia): visual e acessibilidade da tela de evolução e da tela de um treino.
@@ -155,7 +155,7 @@ em texto genérico, sem nada do histórico.
 - **A conferência com o dado real em paralelo, com só o genérico no repositório,** funcionou pela terceira vez.
 
 ## PRECISA DO ANGELO
-- Nenhuma decisão da Meta 6 em aberto.
+- Nenhuma decisão da Meta 6 em aberto. As decisões da conferência local da Meta 5 (#169) foram todas respondidas em 07/11.
 - Para a Meta 7 (linha de base), três decisões de produto entram como propostas na ADR, como na Meta 6; ver
   [[produto/roadmap]], "PRECISA DO ANGELO".
 
