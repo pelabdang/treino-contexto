@@ -7,6 +7,7 @@ Grava, sem subir servidor:
   packages/api-client/exemplos/evolucao-tiros-1km.json    (resposta do TestClient com as fixtures sintéticas, atleta 1)
   packages/api-client/exemplos/atividade-esforcos.json    (a atividade com `esforcos`, FIT sintético da #161)
   packages/api-client/exemplos/treinos-de-transicao.json  (a listagem de treinos de transição, atividades inventadas, #170)
+  packages/api-client/exemplos/carga.json                 (a serie de carga das fixtures sinteticas da #137, #142)
 Depois gere os tipos: `cd packages/api-client && npm run gerar` (ver docs/modulos/api-client.md).
 O teste `services/api/tests/test_contrato_cliente.py` falha se algum destes arquivos ficar desatualizado.
 """
@@ -24,6 +25,8 @@ EXEMPLO = PACOTE / "exemplos" / "evolucao-tiros-1km.json"
 EXEMPLO_ESFORCOS = PACOTE / "exemplos" / "atividade-esforcos.json"
 FIT_ESFORCOS = RAIZ / "tests" / "fixtures" / "garmin" / "esforcos" / "esforcos_corrida_1500_lap_automatico.fit"
 EXEMPLO_TRANSICAO = PACOTE / "exemplos" / "treinos-de-transicao.json"
+EXEMPLO_CARGA = PACOTE / "exemplos" / "carga.json"
+ZIP_CARGA = RAIZ / "tests" / "fixtures" / "garmin" / "carga" / "exportacao_carga.zip"
 TIPOS = PACOTE / "src" / "schema.d.ts"
 ZIP_FIXTURES = RAIZ / "tests" / "fixtures" / "garmin" / "exportacao_minima.zip"
 COMANDO = "uv run python services/api/scripts/exportar_openapi.py && (cd packages/api-client && npm run gerar)"
@@ -148,6 +151,37 @@ def texto_exemplo_transicao() -> str:
     return _json(r.json())
 
 
+def texto_exemplo_carga() -> str:
+    """A serie de carga das fixtures sinteticas de algumas semanas (#137), calculada pelo comando da #141."""
+    from app.db import models  # noqa: F401
+    from app.db.base import Base
+    from app.db.models import Atleta
+    from app.db.session import get_session
+    from app.ingestao.importacao import importar
+    from app.ingestao.saude import importar_saude
+    from app.main import app
+    from app.servicos.carga import calcular_carga_do_atleta
+    from fastapi.testclient import TestClient
+    from sqlalchemy import create_engine
+    from sqlalchemy.orm import Session
+    from sqlalchemy.pool import StaticPool
+
+    engine = create_engine("sqlite://", poolclass=StaticPool, connect_args={"check_same_thread": False})
+    Base.metadata.create_all(engine)
+    with Session(engine) as session:
+        importar(session, str(ZIP_CARGA), "Atleta Ficticio")
+        importar_saude(session, str(ZIP_CARGA), "Atleta Ficticio")
+        atleta = session.query(Atleta).one()
+        calcular_carga_do_atleta(session, atleta.id)
+        app.dependency_overrides[get_session] = lambda: session
+        try:
+            r = TestClient(app).get(f"/atletas/{atleta.id}/carga")
+        finally:
+            app.dependency_overrides.pop(get_session, None)
+    r.raise_for_status()
+    return _json(r.json())
+
+
 def hash_openapi(texto: str) -> str:
     return hashlib.sha256(texto.encode("utf-8")).hexdigest()
 
@@ -158,7 +192,8 @@ def main() -> None:
     EXEMPLO.write_text(texto_exemplo(), encoding="utf-8")
     EXEMPLO_ESFORCOS.write_text(texto_exemplo_esforcos(), encoding="utf-8")
     EXEMPLO_TRANSICAO.write_text(texto_exemplo_transicao(), encoding="utf-8")
-    print(f"gravado: {OPENAPI}\ngravado: {EXEMPLO}\ngravado: {EXEMPLO_ESFORCOS}\ngravado: {EXEMPLO_TRANSICAO}\nagora: cd packages/api-client && npm run gerar")
+    EXEMPLO_CARGA.write_text(texto_exemplo_carga(), encoding="utf-8")
+    print(f"gravado: {OPENAPI}\ngravado: {EXEMPLO}\ngravado: {EXEMPLO_ESFORCOS}\ngravado: {EXEMPLO_TRANSICAO}\ngravado: {EXEMPLO_CARGA}\nagora: cd packages/api-client && npm run gerar")
 
 
 if __name__ == "__main__":

@@ -22,6 +22,7 @@ from app.rotas.transicao import TransicaoOut, transicao_da_atividade
 from fastapi import APIRouter, Depends, File, HTTPException, Response, UploadFile
 from app.metricas.tiros_1km import formatar_pace
 from app.servicos.fuso import inicio_local
+from app.servicos.carga_leitura import CargaLida, carga_da_atividade
 from app.servicos.clima import ClimaDaAtividade, EstadoClima, clima_da_atividade
 from app.servicos.esforcos_leitura import esforcos_da_atividade
 from app.metricas import esforcos as ef
@@ -81,6 +82,19 @@ class EsforcosOut(BaseModel):
     blocos: list[BlocoOut]  # em ordem; vazio se nao ha blocos
 
 
+class CargaAtividadeOut(BaseModel):
+    """Carga de treino da atividade (ADR 0010, item 7). So carga, metodo, motivo e cobertura: nunca limiar nem zonas."""
+
+    estado: Literal["calculada", "sem_carga", "pendente"]  # pendente: o comando calcular_carga ainda nao rodou (ou a versao mudou)
+    carga: float | None = None  # so em `calculada`; sem arredondar
+    metodo: Literal["rtss", "hrtss"] | None = None  # so em `calculada`
+    cobertura_pct: float | None = None  # % da duracao com dado, do metodo usado; pode vir em `cobertura_insuficiente`
+    motivo: Literal[
+        "sem_dados_saude", "sem_limiar_na_data", "sem_fc", "sem_pace", "cobertura_insuficiente", "modalidade_sem_carga"
+    ] | None = None  # so em `sem_carga`
+    versao: str | None = None  # carga@1; null em `pendente`
+
+
 class AtividadeOut(BaseModel):
     """A atividade como a API mostra. A posicao de inicio nunca sai (ADR 0007)."""
 
@@ -94,6 +108,7 @@ class AtividadeOut(BaseModel):
     clima: ClimaOut | None = None  # campo novo e opcional
     esforcos: EsforcosOut | None = None  # so corrida e ciclismo (ADR 0008); null nas outras modalidades
     transicao: TransicaoOut = Field(default_factory=lambda: TransicaoOut(valor=False))  # ADR 0009; sem linha = false/null
+    carga: CargaAtividadeOut | None = None  # null so em multiesporte_pai e troca; elegivel nao calculada vem `pendente`
     # Campos prontos para a tela (#158): a API formata, o app mostra (ADR 0004, adendo 2).
     data_local: str  # AAAA-MM-DD, pelo fuso da atividade (ADR 0003)
     hora_local: str  # HH:MM, pelo fuso da atividade
@@ -184,6 +199,11 @@ def _clima_out(c: ClimaDaAtividade) -> ClimaOut:
     )
 
 
+def _carga_out(c: CargaLida) -> CargaAtividadeOut:
+    return CargaAtividadeOut(estado=c.estado, carga=c.carga, metodo=c.metodo, cobertura_pct=c.cobertura_pct,
+                             motivo=c.motivo, versao=c.versao)
+
+
 def get_fit_dir() -> Path | None:
     """Pasta dos FIT guardados; `None` = `FIT_DIR` da configuração. Os testes trocam por um diretório temporário."""
     return None
@@ -263,6 +283,7 @@ def buscar_atividade(
         raise HTTPException(status_code=404, detail="atividade não encontrada")
     clima = clima_da_atividade(session, atividade_id)
     local = inicio_local(a.inicio, a.fuso_min)
+    carga = carga_da_atividade(session, a)
     return AtividadeOut(
         atividade_id=a.id,
         modalidade=a.modalidade,
@@ -274,6 +295,7 @@ def buscar_atividade(
         clima=None if clima is None else _clima_out(clima),
         esforcos=_esforcos_out(session, a),
         transicao=transicao_da_atividade(session, a.id),
+        carga=None if carga is None else _carga_out(carga),
         data_local=local.date().isoformat(),
         hora_local=local.strftime("%H:%M"),
         duracao=_duracao_hms(a.duracao_s),
