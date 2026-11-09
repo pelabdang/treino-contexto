@@ -1,6 +1,31 @@
 {
   "components": {
     "schemas": {
+      "AtalhoOut": {
+        "properties": {
+          "chave": {
+            "enum": [
+              "dor",
+              "cansaco",
+              "sono_ruim",
+              "calor",
+              "trabalho_estresse"
+            ],
+            "title": "Chave",
+            "type": "string"
+          },
+          "texto": {
+            "title": "Texto",
+            "type": "string"
+          }
+        },
+        "required": [
+          "chave",
+          "texto"
+        ],
+        "title": "AtalhoOut",
+        "type": "object"
+      },
       "AtividadeOut": {
         "description": "A atividade como a API mostra. A posicao de inicio nunca sai (ADR 0007).",
         "properties": {
@@ -529,6 +554,135 @@
           "totais"
         ],
         "title": "CargaSerieOut",
+        "type": "object"
+      },
+      "CheckinIn": {
+        "properties": {
+          "atalhos": {
+            "items": {
+              "enum": [
+                "dor",
+                "cansaco",
+                "sono_ruim",
+                "calor",
+                "trabalho_estresse"
+              ],
+              "type": "string"
+            },
+            "title": "Atalhos",
+            "type": "array"
+          },
+          "nada_a_relatar": {
+            "title": "Nada A Relatar",
+            "type": "boolean"
+          },
+          "pse": {
+            "maximum": 10.0,
+            "minimum": 0.0,
+            "title": "Pse",
+            "type": "integer"
+          },
+          "sensacao": {
+            "maximum": 5.0,
+            "minimum": 1.0,
+            "title": "Sensacao",
+            "type": "integer"
+          },
+          "texto": {
+            "anyOf": [
+              {
+                "maxLength": 500,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Texto"
+          }
+        },
+        "required": [
+          "pse",
+          "sensacao",
+          "nada_a_relatar"
+        ],
+        "title": "CheckinIn",
+        "type": "object"
+      },
+      "CheckinOut": {
+        "description": "O check-in do próprio atleta. Dado pessoal e de saúde: só nestas rotas, nunca em lista, série ou exportação.",
+        "properties": {
+          "atalhos": {
+            "items": {
+              "$ref": "#/components/schemas/AtalhoOut"
+            },
+            "title": "Atalhos",
+            "type": "array"
+          },
+          "atividade_id": {
+            "title": "Atividade Id",
+            "type": "integer"
+          },
+          "atualizado_em": {
+            "format": "date-time",
+            "title": "Atualizado Em",
+            "type": "string"
+          },
+          "nada_a_relatar": {
+            "title": "Nada A Relatar",
+            "type": "boolean"
+          },
+          "pse": {
+            "title": "Pse",
+            "type": "integer"
+          },
+          "pse_texto": {
+            "title": "Pse Texto",
+            "type": "string"
+          },
+          "registrado_em": {
+            "format": "date-time",
+            "title": "Registrado Em",
+            "type": "string"
+          },
+          "sensacao": {
+            "title": "Sensacao",
+            "type": "integer"
+          },
+          "sensacao_texto": {
+            "title": "Sensacao Texto",
+            "type": "string"
+          },
+          "texto": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Texto"
+          },
+          "versao": {
+            "title": "Versao",
+            "type": "string"
+          }
+        },
+        "required": [
+          "atividade_id",
+          "pse",
+          "pse_texto",
+          "sensacao",
+          "sensacao_texto",
+          "nada_a_relatar",
+          "atalhos",
+          "texto",
+          "versao",
+          "registrado_em",
+          "atualizado_em"
+        ],
+        "title": "CheckinOut",
         "type": "object"
       },
       "ClimaOut": {
@@ -2415,6 +2569,177 @@
         "summary": "Buscar Atividade",
         "tags": [
           "atividades"
+        ]
+      }
+    },
+    "/atletas/{atleta_id}/atividades/{atividade_id}/checkin": {
+      "delete": {
+        "description": "Remove o check-in (a linha, não só os campos), sem prazo. `204` também quando já não havia (idempotente).",
+        "operationId": "apagarCheckin",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "atleta_id",
+            "required": true,
+            "schema": {
+              "title": "Atleta Id",
+              "type": "integer"
+            }
+          },
+          {
+            "in": "path",
+            "name": "atividade_id",
+            "required": true,
+            "schema": {
+              "title": "Atividade Id",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Erro"
+                }
+              }
+            },
+            "description": "Atleta, atividade ou (no GET) check-in não encontrados (atividade de outro atleta também)"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Apagar Checkin",
+        "tags": [
+          "check-in"
+        ]
+      },
+      "get": {
+        "description": "O check-in da atividade, ou `404` (\"sem check-in\") se a atividade existe e não tem.",
+        "operationId": "checkinDaAtividade",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "atleta_id",
+            "required": true,
+            "schema": {
+              "title": "Atleta Id",
+              "type": "integer"
+            }
+          },
+          {
+            "in": "path",
+            "name": "atividade_id",
+            "required": true,
+            "schema": {
+              "title": "Atividade Id",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CheckinOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Erro"
+                }
+              }
+            },
+            "description": "Atleta, atividade ou (no GET) check-in não encontrados (atividade de outro atleta também)"
+          },
+          "422": {
+            "description": "Entrada inválida, atividade que não pede check-in ou fora do prazo. Nunca repete o que foi enviado: só `loc`, `msg` e `type`"
+          }
+        },
+        "summary": "Checkin Da Atividade",
+        "tags": [
+          "check-in"
+        ]
+      },
+      "put": {
+        "description": "Cria ou substitui o check-in da atividade (um por atividade; `200` nos dois casos). O `PUT` substitui tudo: atalho que não\nvier fica desligado. Criar vale até `PRAZO_DIAS` (7) depois do treino; editar não tem prazo.",
+        "operationId": "registrarCheckin",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "atleta_id",
+            "required": true,
+            "schema": {
+              "title": "Atleta Id",
+              "type": "integer"
+            }
+          },
+          {
+            "in": "path",
+            "name": "atividade_id",
+            "required": true,
+            "schema": {
+              "title": "Atividade Id",
+              "type": "integer"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CheckinIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CheckinOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Erro"
+                }
+              }
+            },
+            "description": "Atleta, atividade ou (no GET) check-in não encontrados (atividade de outro atleta também)"
+          },
+          "422": {
+            "description": "Entrada inválida, atividade que não pede check-in ou fora do prazo. Nunca repete o que foi enviado: só `loc`, `msg` e `type`"
+          }
+        },
+        "summary": "Registrar Checkin",
+        "tags": [
+          "check-in"
         ]
       }
     },
