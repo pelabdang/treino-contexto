@@ -113,6 +113,21 @@
     "motivo": null,
     "versao": null
   },
+  "tipo_treino": null,
+  "tipo_origem": null,
+  "tipo_confirmado": false,
+  "tipo_divergencia": null,
+  "linha_base": {
+    "versao": "linha_base@1",
+    "estado": "sem_linha_base",
+    "motivo": "sem_tipo",
+    "texto": "Sem linha de base: o treino não tem tipo.",
+    "modalidade": "corrida",
+    "tipo_treino": null,
+    "janela_semanas": 8,
+    "minimo_treinos": 8,
+    "metricas": []
+  },
   "data_local": "2025-05-07",
   "hora_local": "06:00",
   "duracao": "0:34:51",

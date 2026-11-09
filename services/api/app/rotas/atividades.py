@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from dataclasses import asdict
 from datetime import datetime
 from pathlib import Path
 from typing import Literal
@@ -25,6 +26,7 @@ from app.servicos.fuso import inicio_local
 from app.servicos.carga_leitura import CargaLida, carga_da_atividade
 from app.servicos.clima import ClimaDaAtividade, EstadoClima, clima_da_atividade
 from app.servicos.esforcos_leitura import esforcos_da_atividade
+from app.servicos.linha_base_leitura import linha_base_da_atividade, texto_divergencia
 from app.metricas import esforcos as ef
 from pydantic import BaseModel, Field
 from sqlalchemy.orm import Session
@@ -95,6 +97,48 @@ class CargaAtividadeOut(BaseModel):
     versao: str | None = None  # carga@2; null em `pendente`
 
 
+class DivergenciaOut(BaseModel):
+    """O formato do treino contradiz o plano da semana-padrao (ADR 0011, item 4). So dado: o tipo do plano nao muda."""
+
+    motivo: Literal["sem_esforco", "tem_tiros"]
+    texto: str  # pronto, ex.: "O plano diz intervalado, mas o treino nao teve esforco detectado."
+
+
+class MetricaBaseOut(BaseModel):
+    """Uma metrica da linha de base. Os numeros brutos (`valor`, `mediana`, `desvio`, `z`) saem sem arredondar, para o app ordenar
+    e para o motor de explicacao; o texto e so da API. Em `aprendendo` e `sem_valor` nao ha mediana, desvio nem z."""
+
+    chave: Literal["pace_medio", "melhor_pace", "fc_media", "fc_melhor_tiro", "carga"]
+    rotulo: str
+    unidade: Literal["s/km", "bpm", "pontos"]
+    estado: Literal["fora", "dentro", "aprendendo", "sem_valor"]
+    motivo: str | None = None  # so em `sem_valor`: esteira, sem_tiros, sem_fc, carga_pendente, ...
+    valor: float | None = None
+    valor_texto: str | None = None
+    mediana: float | None = None
+    mediana_texto: str | None = None
+    desvio: float | None = None
+    z: float | None = None
+    n: int  # treinos da janela que tem a metrica
+    diferenca_texto: str | None = None  # so em `fora`
+    texto: str
+
+
+class LinhaBaseOut(BaseModel):
+    """Linha de base da atividade contra o proprio historico, so no mesmo tipo de treino (`linha_base@1`, ADR 0011).
+    Calculada na leitura. Compara com o historico do atleta; nao diz se o treino foi bom ou ruim."""
+
+    versao: str
+    estado: Literal["ok", "sem_linha_base"]
+    motivo: Literal["multiesporte", "modalidade_sem_metricas", "sem_tipo", "divergente", "transicao"] | None = None
+    texto: str | None = None  # so em `sem_linha_base`: "Sem linha de base: ..."
+    modalidade: str
+    tipo_treino: str | None
+    janela_semanas: int
+    minimo_treinos: int
+    metricas: list[MetricaBaseOut]  # [] em `sem_linha_base`
+
+
 class AtividadeOut(BaseModel):
     """A atividade como a API mostra. A posicao de inicio nunca sai (ADR 0007)."""
 
@@ -109,6 +153,11 @@ class AtividadeOut(BaseModel):
     esforcos: EsforcosOut | None = None  # so corrida e ciclismo (ADR 0008); null nas outras modalidades
     transicao: TransicaoOut = Field(default_factory=lambda: TransicaoOut(valor=False))  # ADR 0009; sem linha = false/null
     carga: CargaAtividadeOut | None = None  # null so em multiesporte_pai e troca; elegivel nao calculada vem `pendente`
+    tipo_treino: Literal["leve", "moderado", "longo", "intervalado", "fartlek"] | None = None  # ADR 0011 (#266)
+    tipo_origem: Literal["sugestao", "professor", "trainingpeaks", "semana_padrao"] | None = None
+    tipo_confirmado: bool = False
+    tipo_divergencia: DivergenciaOut | None = None
+    linha_base: LinhaBaseOut | None = None
     # Campos prontos para a tela (#158): a API formata, o app mostra (ADR 0004, adendo 2).
     data_local: str  # AAAA-MM-DD, pelo fuso da atividade (ADR 0003)
     hora_local: str  # HH:MM, pelo fuso da atividade
@@ -284,6 +333,7 @@ def buscar_atividade(
     clima = clima_da_atividade(session, atividade_id)
     local = inicio_local(a.inicio, a.fuso_min)
     carga = carga_da_atividade(session, a)
+    div = texto_divergencia(a)
     return AtividadeOut(
         atividade_id=a.id,
         modalidade=a.modalidade,
@@ -296,6 +346,11 @@ def buscar_atividade(
         esforcos=_esforcos_out(session, a),
         transicao=transicao_da_atividade(session, a.id),
         carga=None if carga is None else _carga_out(carga),
+        tipo_treino=a.tipo_treino,
+        tipo_origem=a.tipo_origem,
+        tipo_confirmado=bool(a.tipo_confirmado),
+        tipo_divergencia=None if div is None else DivergenciaOut(motivo=div[0], texto=div[1]),
+        linha_base=LinhaBaseOut.model_validate(asdict(linha_base_da_atividade(session, a))),
         data_local=local.date().isoformat(),
         hora_local=local.strftime("%H:%M"),
         duracao=_duracao_hms(a.duracao_s),

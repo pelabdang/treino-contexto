@@ -92,6 +92,16 @@
             "title": "Inicio",
             "type": "string"
           },
+          "linha_base": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/LinhaBaseOut"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
           "modalidade": {
             "title": "Modalidade",
             "type": "string"
@@ -117,6 +127,56 @@
               }
             ],
             "title": "Subtipo"
+          },
+          "tipo_confirmado": {
+            "default": false,
+            "title": "Tipo Confirmado",
+            "type": "boolean"
+          },
+          "tipo_divergencia": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/DivergenciaOut"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "tipo_origem": {
+            "anyOf": [
+              {
+                "enum": [
+                  "sugestao",
+                  "professor",
+                  "trainingpeaks",
+                  "semana_padrao"
+                ],
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Tipo Origem"
+          },
+          "tipo_treino": {
+            "anyOf": [
+              {
+                "enum": [
+                  "leve",
+                  "moderado",
+                  "longo",
+                  "intervalado",
+                  "fartlek"
+                ],
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Tipo Treino"
           },
           "transicao": {
             "$ref": "#/components/schemas/TransicaoOut"
@@ -786,6 +846,29 @@
         "title": "DiferencaTotalOut",
         "type": "object"
       },
+      "DivergenciaOut": {
+        "description": "O formato do treino contradiz o plano da semana-padrao (ADR 0011, item 4). So dado: o tipo do plano nao muda.",
+        "properties": {
+          "motivo": {
+            "enum": [
+              "sem_esforco",
+              "tem_tiros"
+            ],
+            "title": "Motivo",
+            "type": "string"
+          },
+          "texto": {
+            "title": "Texto",
+            "type": "string"
+          }
+        },
+        "required": [
+          "motivo",
+          "texto"
+        ],
+        "title": "DivergenciaOut",
+        "type": "object"
+      },
       "EixoFc": {
         "properties": {
           "marcas": {
@@ -1215,6 +1298,93 @@
         "title": "ItemOut",
         "type": "object"
       },
+      "LinhaBaseOut": {
+        "description": "Linha de base da atividade contra o proprio historico, so no mesmo tipo de treino (`linha_base@1`, ADR 0011).\nCalculada na leitura. Compara com o historico do atleta; nao diz se o treino foi bom ou ruim.",
+        "properties": {
+          "estado": {
+            "enum": [
+              "ok",
+              "sem_linha_base"
+            ],
+            "title": "Estado",
+            "type": "string"
+          },
+          "janela_semanas": {
+            "title": "Janela Semanas",
+            "type": "integer"
+          },
+          "metricas": {
+            "items": {
+              "$ref": "#/components/schemas/MetricaBaseOut"
+            },
+            "title": "Metricas",
+            "type": "array"
+          },
+          "minimo_treinos": {
+            "title": "Minimo Treinos",
+            "type": "integer"
+          },
+          "modalidade": {
+            "title": "Modalidade",
+            "type": "string"
+          },
+          "motivo": {
+            "anyOf": [
+              {
+                "enum": [
+                  "multiesporte",
+                  "modalidade_sem_metricas",
+                  "sem_tipo",
+                  "divergente",
+                  "transicao"
+                ],
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Motivo"
+          },
+          "texto": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Texto"
+          },
+          "tipo_treino": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Tipo Treino"
+          },
+          "versao": {
+            "title": "Versao",
+            "type": "string"
+          }
+        },
+        "required": [
+          "versao",
+          "estado",
+          "modalidade",
+          "tipo_treino",
+          "janela_semanas",
+          "minimo_treinos",
+          "metricas"
+        ],
+        "title": "LinhaBaseOut",
+        "type": "object"
+      },
       "MarcaFc": {
         "properties": {
           "rotulo": {
@@ -1249,6 +1419,151 @@
           "rotulo"
         ],
         "title": "MarcaPace",
+        "type": "object"
+      },
+      "MetricaBaseOut": {
+        "description": "Uma metrica da linha de base. Os numeros brutos (`valor`, `mediana`, `desvio`, `z`) saem sem arredondar, para o app ordenar\ne para o motor de explicacao; o texto e so da API. Em `aprendendo` e `sem_valor` nao ha mediana, desvio nem z.",
+        "properties": {
+          "chave": {
+            "enum": [
+              "pace_medio",
+              "melhor_pace",
+              "fc_media",
+              "fc_melhor_tiro",
+              "carga"
+            ],
+            "title": "Chave",
+            "type": "string"
+          },
+          "desvio": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Desvio"
+          },
+          "diferenca_texto": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Diferenca Texto"
+          },
+          "estado": {
+            "enum": [
+              "fora",
+              "dentro",
+              "aprendendo",
+              "sem_valor"
+            ],
+            "title": "Estado",
+            "type": "string"
+          },
+          "mediana": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Mediana"
+          },
+          "mediana_texto": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Mediana Texto"
+          },
+          "motivo": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Motivo"
+          },
+          "n": {
+            "title": "N",
+            "type": "integer"
+          },
+          "rotulo": {
+            "title": "Rotulo",
+            "type": "string"
+          },
+          "texto": {
+            "title": "Texto",
+            "type": "string"
+          },
+          "unidade": {
+            "enum": [
+              "s/km",
+              "bpm",
+              "pontos"
+            ],
+            "title": "Unidade",
+            "type": "string"
+          },
+          "valor": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Valor"
+          },
+          "valor_texto": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Valor Texto"
+          },
+          "z": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Z"
+          }
+        },
+        "required": [
+          "chave",
+          "rotulo",
+          "unidade",
+          "estado",
+          "n",
+          "texto"
+        ],
+        "title": "MetricaBaseOut",
         "type": "object"
       },
       "ParteOut": {

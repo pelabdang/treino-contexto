@@ -195,3 +195,15 @@ adendo 2 ("a API formata, o app mostra"): o item traz `dia_semana_texto` pronto 
 `packages/api-client` (`SemanaPadrao`, `SemanaPadraoGravada` e afins); ainda sem função de busca (a tela é a #267).
 O que a ADR 0011 prevê para a atividade (`tipo_origem` com `semana_padrao`, `tipo_divergencia` e `linha_base` no `GET .../atividades/{id}`)
 **não entra aqui**: é a #266, com outro adendo. Detalhes em [[modulos/api]].
+
+## Adendo 6 (2026-11-09): tipo, divergência e `linha_base` no `GET` da atividade (#266)
+**Status: aceito (Theo, 09/11, [[decisoes/0011-linha-de-base-e-semana-padrao]] item 9).** `GET /atletas/{atleta_id}/atividades/{atividade_id}`
+ganha campos, sem remover nenhum: `tipo_treino`, `tipo_origem` (agora também `semana_padrao`), `tipo_confirmado`, `tipo_divergencia`
+(`null` ou `{motivo, texto}` com `motivo` `sem_esforco` ou `tem_tiros` e o texto pronto) e `linha_base`. Vale o adendo 2: a API formata e
+o app mostra. `linha_base` traz `versao` (`linha_base@1`), `estado` (`ok` ou `sem_linha_base`, com `motivo` e `texto` pronto, e
+`metricas: []`), `modalidade`, `tipo_treino`, `janela_semanas` (8), `minimo_treinos` (8) e `metricas`: por métrica `chave`, `rotulo`,
+`unidade`, `estado` (`fora`, `dentro`, `aprendendo`, `sem_valor`), `motivo` (só em `sem_valor`), `valor`, `valor_texto`, `mediana`,
+`mediana_texto`, `desvio`, `z`, `n`, `diferenca_texto` (só em `fora`) e `texto`. `valor`, `mediana`, `desvio` e `z` saem **sem
+arredondar** (o exemplo da ADR 0011 mostrava 8,9 e -2,7 como ilustração), para o app ordenar e para o motor de explicação; em
+`aprendendo` e `sem_valor` não há mediana, desvio nem z. O texto nunca julga o treino: compara com o histórico do atleta. Calculada na
+leitura, nada é gravado. Detalhes em [[modulos/api]].

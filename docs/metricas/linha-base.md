@@ -40,4 +40,4 @@ em [[metricas/tipo-linha-base-oraculo]].
 
 ## Limitações
 Tipo feito menos de uma vez por semana fica sempre `aprendendo`. O piso de 2% é proposta, a calibrar na #269. O texto do aviso e a
-formatação são da API (#266).
+formatação são da API (`servicos/linha_base_leitura.py`, #266; contrato em [[modulos/api]]).
