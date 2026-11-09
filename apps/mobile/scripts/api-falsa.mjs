@@ -96,6 +96,64 @@ const natacao = (id) => ({
   fc_media: null,
   clima: { estado: "indoor" },
 });
+// Semana-padrão sintética (#268): segunda fartlek + natação, terça ciclismo intervalado, quarta corrida
+// intervalado + natação; duas vigências. O PUT guarda em memória e devolve `atividades_reaplicadas: 0`.
+const NOMES_DIA = ["segunda", "terça", "quarta", "quinta", "sexta", "sábado", "domingo"];
+const comTexto = (itens) =>
+  itens.map((i) => ({ dia_semana_texto: NOMES_DIA[i.dia_semana - 1], tipo_treino: null, ...i }));
+const planoPadrao = () => [
+  {
+    vigente_desde: "2026-03-02",
+    definido_por: "atleta",
+    definido_em: "2026-03-01T21:10:00-03:00",
+    itens: comTexto([
+      { dia_semana: 1, modalidade: "corrida", tipo_treino: "fartlek" },
+      { dia_semana: 1, modalidade: "natacao" },
+      { dia_semana: 2, modalidade: "ciclismo", tipo_treino: "intervalado" },
+      { dia_semana: 3, modalidade: "corrida", tipo_treino: "intervalado" },
+      { dia_semana: 3, modalidade: "natacao" },
+    ]),
+  },
+  {
+    vigente_desde: "2026-02-02",
+    definido_por: "professor",
+    definido_em: "2026-02-01T10:00:00-03:00",
+    itens: comTexto([
+      { dia_semana: 2, modalidade: "corrida", tipo_treino: "leve" },
+      { dia_semana: 4, modalidade: "ciclismo", tipo_treino: "longo" },
+    ]),
+  },
+];
+// Atleta de teste para forçar estados da tela da semana-padrão (EXPO_PUBLIC_ATLETA_ID=<id>); os demais ids usam o plano do atleta 1:
+//   2 = sem plano (estado vazio)            3 = GET derruba a conexão (erro de rede ao carregar)
+//   4 = PUT responde 422                    5 = GET responde 404 (atleta não encontrado)
+//   6 = PUT derruba a conexão (erro de rede ao salvar)
+const semanas = new Map();
+const vigenciasDe = (id) => {
+  if (!semanas.has(id)) semanas.set(id, id === 2 ? [] : planoPadrao());
+  return semanas.get(id);
+};
+const dataLocal = (d) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+const semanaPadrao = (id, em) => {
+  const dia = em ?? dataLocal(new Date());
+  const ordenadas = [...vigenciasDe(id)].sort((a, b) => b.vigente_desde.localeCompare(a.vigente_desde));
+  return {
+    atleta_id: 1,
+    em: dia,
+    vigente: ordenadas.find((v) => v.vigente_desde <= dia) ?? null,
+    vigencias: ordenadas.map((v) => ({ vigente_desde: v.vigente_desde, definido_por: v.definido_por, total_itens: v.itens.length })),
+  };
+};
+const gravarSemana = (id, corpo) => {
+  const nova = {
+    vigente_desde: corpo.vigente_desde,
+    definido_por: corpo.definido_por,
+    definido_em: new Date().toISOString(),
+    itens: comTexto([...corpo.itens].sort((a, b) => a.dia_semana - b.dia_semana || a.modalidade.localeCompare(b.modalidade))),
+  };
+  semanas.set(id, [...vigenciasDe(id).filter((v) => v.vigente_desde !== nova.vigente_desde), nova]);
+  return { ...nova, atividades_reaplicadas: 0 };
+};
 const atividade = (id) => (id === 106 ? natacao(id) : corrida(id));
 
 createServer((req, res) => {
@@ -103,10 +161,28 @@ createServer((req, res) => {
     "content-type": "application/json",
     "access-control-allow-origin": "*",
     "access-control-allow-headers": "*",
+    "access-control-allow-methods": "*",
   };
   if (req.method === "OPTIONS") return res.writeHead(204, cabecalhos).end();
-  const { pathname } = new URL(req.url, "http://x");
+  const { pathname, searchParams } = new URL(req.url, "http://x");
   let corpo = null;
+  const sp = pathname.match(/^\/atletas\/(\d+)\/semana-padrao$/);
+  if (sp) {
+    const id = Number(sp[1]);
+    if (req.method === "PUT") {
+      if (id === 6) return req.destroy();
+      let texto = "";
+      req.on("data", (c) => (texto += c));
+      req.on("end", () => {
+        if (id === 4) return res.writeHead(422, cabecalhos).end(JSON.stringify({ detail: [{ loc: ["body", "itens"], msg: "sintético", type: "value_error" }] }));
+        res.writeHead(200, cabecalhos).end(JSON.stringify(gravarSemana(id, JSON.parse(texto))));
+      });
+      return;
+    }
+    if (id === 3) return req.destroy();
+    if (id === 5) return res.writeHead(404, cabecalhos).end(JSON.stringify({ detail: "atleta não encontrado" }));
+    return res.writeHead(200, cabecalhos).end(JSON.stringify(semanaPadrao(id, searchParams.get("em"))));
+  }
   if (/^\/atletas\/\d+\/evolucao\/tiros-1km$/.test(pathname)) corpo = evolucao;
   const m = pathname.match(/^\/atletas\/\d+\/atividades\/(\d+)$/);
   if (m) corpo = atividade(Number(m[1]));

@@ -9,6 +9,7 @@ export default function Inicio() {
       apiUrl={config.apiUrl}
       atletaId={config.atletaId}
       aoAbrirTreino={(id) => router.push(`/treino/${id}`)}
+      aoAbrirSemanaPadrao={() => router.push("/semana-padrao")}
     />
   );
 }

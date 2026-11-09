@@ -24,6 +24,8 @@ type Props = {
   atletaId: number;
   /** Abre a tela do treino. Sem ele, o botão "Ver treino" não aparece. */
   aoAbrirTreino?: (atividadeId: number) => void;
+  /** Abre a tela da semana-padrão. Sem ele, o botão "Semana-padrão" não aparece. */
+  aoAbrirSemanaPadrao?: () => void;
   /** Troque nos testes. Padrão: o fetch global. */
   fetchFn?: typeof fetch;
 };
@@ -44,7 +46,7 @@ function mensagemErro(erro: ErroApi): string {
   }
 }
 
-export function TelaEvolucao({ apiUrl, atletaId, aoAbrirTreino, fetchFn }: Props) {
+export function TelaEvolucao({ apiUrl, atletaId, aoAbrirTreino, aoAbrirSemanaPadrao, fetchFn }: Props) {
   const tema = useTema();
   const margem = useMargemTela();
   const styles = useMemo(() => criarEstilos(tema, margem), [tema, margem]);
@@ -76,6 +78,19 @@ export function TelaEvolucao({ apiUrl, atletaId, aoAbrirTreino, fetchFn }: Props
       <Text accessibilityRole="header" style={styles.titulo}>
         Evolução dos tiros de 1 km
       </Text>
+      {aoAbrirSemanaPadrao && (
+        <Pressable
+          testID="abrir-semana-padrao"
+          accessibilityRole="button"
+          accessibilityLabel="Semana-padrão"
+          onPress={aoAbrirSemanaPadrao}
+          style={({ pressed }) => [styles.verTreino, styles.semanaPadrao, pressed && { backgroundColor: tema.cor["destaque-suave"] }]}
+        >
+          <MaterialIcons name="event" size={tamanho.iconeMedio} color={tema.cor.destaque} accessible={false} />
+          <Text style={styles.verTreinoTexto}>Semana-padrão</Text>
+          <MaterialIcons name="chevron-right" size={tamanho.iconeMedio} color={tema.cor.destaque} accessible={false} />
+        </Pressable>
+      )}
       <BotaoEnviarFit
         apiUrl={apiUrl}
         atletaId={atletaId}
@@ -265,6 +280,7 @@ function criarEstilos({ cor }: Tema, margem: number = espaco[4]) {
       borderRadius: raio.medio,
     },
     verTreinoTexto: { ...fonte.botao, color: cor.destaque },
+    semanaPadrao: { gap: espaco[2], marginBottom: espaco[2] },
     cartao: {
       marginTop: espaco[4],
       padding: espaco[4],
