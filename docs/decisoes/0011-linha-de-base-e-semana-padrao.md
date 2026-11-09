@@ -93,7 +93,7 @@ vigência seguinte. Isso é o que impede a mudança de plano de reescrever o pas
 | `tipo_divergencia` | texto (20), anulável, `CHECK` | `sem_esforco` ou `tem_tiros` (item 4); só existe com `tipo_origem = 'semana_padrao'` |
 
 São **dois** `CHECK` com nomes diferentes em `atividade`: `tipo_divergencia` (os valores `sem_esforco` e `tem_tiros`, ou nulo) e
-`tipo_divergencia_origem` (`tipo_divergencia IS NULL OR tipo_origem = 'semana_padrao'`). Tipo confirmado, `professor` e
+`tipo_divergencia_origem` (`tipo_divergencia IS NULL OR (tipo_origem IS NOT NULL AND tipo_origem = 'semana_padrao')`; sem o `IS NOT NULL` a expressão vira NULL com `tipo_origem` nulo e o `CHECK` aceitaria a divergência). Tipo confirmado, `professor` e
 `trainingpeaks` nunca têm divergência.
 
 **Notas da migração `0011` (revisão da Duda).**
@@ -354,7 +354,7 @@ em 2026-03-10, só as atividades com data local de 2026-03-02 em diante são rea
 
 ### 9. Contrato da API (esboço; os detalhes saem em #264 e #266, com cliente regerado e adendo da ADR 0004)
 **`GET /atletas/{atleta_id}/semana-padrao?em=AAAA-MM-DD`** devolve a semana **vigente em `em`** (padrão: hoje, data local de
-`America/Sao_Paulo`) e o histórico de vigências. `404` para atleta inexistente. Sem plano na data: `vigente = null`.
+`America/Sao_Paulo`) e o histórico de vigências. `404` para atleta inexistente. `vigente` é `null` só quando nenhuma vigência começou até `em`; uma vigência com `itens: []` volta como objeto com `itens: []`, mantendo quem definiu e quando.
 ```json
 {
   "atleta_id": 1,
@@ -509,7 +509,6 @@ Para o Angelo. Cada item traz **o padrão que o time segue enquanto não houver 
 5. **Parte de treino de transição na linha de base.** **Padrão:** fica fora da linha de base e não recebe uma (motivo `transicao`),
    para não misturar a corrida pós-pedal com a corrida isolada.
 6. **Dois treinos da mesma modalidade no dia.** **Padrão:** o plano vale para o de **maior duração**; o outro cai na regra de reserva.
-
 7. **`PUT` da semana-padrão sem autenticação.** Hoje não há login, então qualquer cliente da API reescreve o tipo das atividades do
    atleta inteiro a partir de `vigente_desde`. **Padrão:** aceitar no piloto local (a API não é exposta); exigir identidade quando
    houver login (Meta 10).
