@@ -55,14 +55,15 @@ Uma tabela nova, **`checkin_treino`**, na migração **`0012`**, **um check-in p
 | `dor`, `cansaco`, `sono_ruim`, `calor`, `trabalho_estresse` | booleanos, não nulos, padrão falso | os cinco atalhos da observação |
 | `texto` | texto, anulável | texto livre opcional; `CHECK texto IS NULL OR length(texto) BETWEEN 1 AND 500`; a API apara espaços e grava vazio como `NULL` |
 | `versao` | texto (20), não nulo | versão do formulário, `checkin@1` (escala CR-10 de inteiros, sensação em 5 níveis, os 5 atalhos); formato da ADR 0002 |
-| `registrado_em` | datetime com fuso, não nulo | `server_default now()`: quando o atleta fez o check-in |
-| `atualizado_em` | datetime com fuso, não nulo | igual a `registrado_em` na criação; atualizado a cada `PUT` |
+| `registrado_em` | datetime com fuso, não nulo | quando o atleta fez o check-in; **definido pela aplicação** (`datetime.now(UTC)`), não por `server_default` |
+| `atualizado_em` | datetime com fuso, não nulo | igual a `registrado_em` na criação; a aplicação o atualiza a cada `PUT` (o `server_default` do SQLite é `CURRENT_TIMESTAMP` sem fuso e não há `onupdate` no banco) |
 
 **`CHECK` de coerência** (um só, nome `observacao_coerente`): ou é "nada a relatar" **sem** atalho e **sem** texto, ou não é e há **ao menos
 um** atalho **ou** texto:
-`(nada_a_relatar AND NOT (dor OR cansaco OR sono_ruim OR calor OR trabalho_estresse) AND texto IS NULL) OR (NOT nada_a_relatar AND (dor OR cansaco OR sono_ruim OR calor OR trabalho_estresse OR texto IS NOT NULL))`.
+`(nada_a_relatar = TRUE AND dor = FALSE AND cansaco = FALSE AND sono_ruim = FALSE AND calor = FALSE AND trabalho_estresse = FALSE AND texto IS NULL) OR (nada_a_relatar = FALSE AND (dor = TRUE OR cansaco = TRUE OR sono_ruim = TRUE OR calor = TRUE OR trabalho_estresse = TRUE OR texto IS NOT NULL))`.
+Comparações **explícitas** com `TRUE`/`FALSE` (valem no Postgres e no SQLite 3.23 ou mais novo, versão a conferir no CI); nada de booleano solto nem de soma de booleanos.
 Todas as colunas envolvidas são `NOT NULL`, exceto `texto`, que só aparece em comparação com `IS [NOT] NULL`: a expressão nunca vira `NULL`
-(o `CHECK` aceitaria uma expressão `NULL`). A sintaxe exata para SQLite e Postgres é da Duda (#296); a lógica é esta.
+(o `CHECK` aceitaria uma expressão `NULL`). Os cinco atalhos têm `server_default` falso. `texto` só aparece em `IS [NOT] NULL`, sem outro uso na expressão.
 
 **Por que booleanos e não JSON ou tabela filha para os atalhos.** São cinco atalhos fixos, consultáveis por coluna (o motor de explicação
 da Meta 9 pergunta "teve dor?" sem abrir JSON) e com os `CHECK` acima. Um sexto atalho vira migração própria, o que é aceitável e deixa
@@ -73,7 +74,9 @@ a mudança visível. A `versao` registra com qual formulário a linha foi respon
 nada a relatar). Salvar só a PSE não é permitido ("A confirmar" 3).
 
 **Migração `0012`.** Só cria `checkin_treino` com seus `CHECK` e o `UNIQUE`; não edita tabelas anteriores. O `downgrade` apaga a tabela
-(e, com ela, os check-ins: dado do atleta, sem cópia). Nomes de constraint no padrão do repo (`ck_checkin_treino_<nome>`).
+(e, com ela, os check-ins: dado do atleta, sem cópia). Nomes pela naming convention do repo: no modelo, só `pse`, `sensacao`, `texto_tamanho` e `observacao_coerente`; na migração, `op.f('ck_checkin_treino_<nome>')` (o mais longo tem 34 caracteres, abaixo do limite de 63 do Postgres). **Sem índice a mais:** o `UNIQUE` de `atividade_id` já indexa a busca. Testes de migração subindo e descendo nos dois bancos, como nas anteriores.
+
+**Cascata e reimportação.** `atleta` -> `atividade` -> `checkin_treino` depende de `PRAGMA foreign_keys` no SQLite: teste de que apagar a atividade apaga o check-in. A importação **atualiza a atividade no lugar** (mesma chave `(atleta_id, fonte, fonte_id)`, ADR 0006) e nunca apaga e recria; teste de que **reimportar mantém o check-in**, pois recriar a atividade o apagaria em silêncio pela cascata.
 
 ### 2. Escalas e textos
 **PSE, CR-10 (0 a 10, inteiros).** A API devolve o número e o texto da âncora. Âncoras (a conferir nas fontes):
@@ -105,16 +108,22 @@ atalhos ou sozinho. **"Nada a relatar"** é um botão do terceiro toque; escolh�
 e o `PUT` sai no fim, com as três respostas. O texto livre é opcional e **não** conta como toque.
 
 ### 3. Prazo, edição e apagar
-- **Quando dá para criar:** até **7 dias** depois do dia do treino: a data local da atividade (ADR 0003) precisa ser `>= hoje - 7 dias`,
-  com "hoje" na data de `America/Sao_Paulo` do servidor. Depois disso o `PUT` de uma atividade **sem** check-in responde `422` com
+- **Quando dá para criar:** até **7 dias** depois do dia do treino: a data local da atividade (ADR 0003: `inicio` + `fuso_min`; sem `fuso_min`,
+  `America/Sao_Paulo`) precisa ser `>= hoje - 7 dias`, com "hoje" na data de `America/Sao_Paulo` (relógio injetável nos testes; bordas
+  23:59 e 00:01 locais). A janela é **[hoje - 7, hoje]** e vem de **uma única função** (`dias_ate_hoje(N)`: `data_local >= hoje - N`) usada
+  pela criação (N = 7) e pela lista de pendentes (`dias=N`). Depois disso o `PUT` de uma atividade **sem** check-in responde `422` com
   o código `fora_do_prazo`. Motivo: o esforço lembrado semanas depois deixa de ser PSE do treino ("A confirmar" 1).
 - **Editar:** sem prazo. O `PUT` em atividade que já tem check-in **substitui** o registro inteiro (atualiza `atualizado_em`; `registrado_em`
   e `id` ficam). Não se guarda histórico das edições: só o último valor (menos dado pessoal guardado).
 - **Apagar:** `DELETE` de um check-in, sem prazo, **remove a linha** (não só limpa campos). Idempotente.
-- **Pendentes:** atividades do atleta **sem check-in**, com data local nos últimos **7 dias** (a mesma janela do prazo de criar), de
-  toda modalidade, **menos** `multiesporte_pai` e `troca` (item 4). Mais recentes primeiro.
-- **Uma atividade nunca tem dois check-ins** (`UNIQUE`); duas requisições simultâneas do mesmo `PUT` (clique duplo) caem no `UNIQUE` e a
-  segunda vira atualização, sem erro.
+- **Pendentes:** atividades do atleta **sem check-in**, com data local na janela acima (`dias` de 1 a 7), de toda modalidade, **menos**
+  `multiesporte_pai` e `troca` (item 4). Mais recentes primeiro. Consulta: `atividade LEFT JOIN checkin_treino ... WHERE checkin_treino.id IS NULL`,
+  com a exclusão escrita `subtipo IS NULL OR subtipo NOT IN (...)` (um `NOT IN` solto exclui os subtipos nulos, que são quase todos);
+  a #296 e a #298 precisam de fixture com subtipo nulo. A data local não sai em SQL: filtra-se por `inicio >= hoje - (dias + 1) dias` e confere-se a data local em Python.
+- **Uma atividade nunca tem dois check-ins** (`UNIQUE`); duas requisições simultâneas do mesmo `PUT` (clique duplo): `INSERT` dentro de
+  savepoint, captura de `IntegrityError`, releitura e `UPDATE` (portável, sem `on_conflict_do_update`). O `UPDATE` não toca `id` nem `registrado_em`.
+  O `PUT` **substitui** tudo: os atalhos que não vierem na lista ficam **desligados** (teste: `PUT` com dor e sono ruim, depois só calor, deixa só calor).
+  `200` na criação e na edição (não `201`).
 
 ### 4. Multiesporte e atividades elegíveis
 - **Elegível** = toda atividade, de qualquer modalidade (inclui `outra`, como força), **menos** `subtipo` em (`multiesporte_pai`, `troca`):
@@ -127,14 +136,22 @@ e o `PUT` sai no fim, com as três respostas. O texto livre é opcional e **não
 O check-in inteiro é dado pessoal e de saúde (a observação é o mais sensível: dor, estresse, sono). Vale o que a ADR 0010 fixou:
 1. **Só no banco local.** Nada de check-in em fixture real, captura, log ou arquivo versionado. Os backups do banco herdam a regra.
 2. **Nunca em log.** Nenhum valor (PSE, sensação, atalhos, texto) em log, em mensagem de exceção ou em saída de comando. Os comandos
-   imprimem só contagens. O `422` do check-in **não repete o que foi enviado**: a resposta de erro sai sem o campo `input` do Pydantic
-   (o texto livre nunca volta num erro). Teste com `caplog` e com um texto marcador.
+   imprimem só contagens. O `422` do check-in **não repete o que foi enviado**: a resposta traz só `loc`, `msg` e `type` (nem `input`, nem `ctx`,
+   que também carrega o valor em erros de tamanho e de enum); o validador de coerência usa **mensagem fixa**, sem f-string com o valor. O
+   handler vale só para as rotas de check-in (uma `APIRoute` própria no router do check-in; aplicar a toda a API mudaria as respostas das outras
+   rotas). O schema 422 do OpenAPI não muda (`HTTPValidationError` só declara `loc`, `msg`, `type`). **Formato único** para o check-in: os 422 de
+   domínio (`fora_do_prazo`, `atividade_sem_checkin`) saem como `{"detail": [{"loc": [...], "msg": "...", "type": "fora_do_prazo"}]}`, com o
+   código no `type`. Teste com um texto marcador sintético (`MARCADOR-SINTETICO-123`) em vários cenários (texto longo demais, tipo errado, atalho
+   desconhecido, `nada_a_relatar` com texto, erro 500 forçado): o marcador não aparece em `response.text` nem em `caplog.text` (nível DEBUG); nenhum
+   middleware ou log de acesso registra corpo ou query. O `PUT` feliz loga só ids e contagens.
 3. **Devolvido só ao próprio atleta.** O check-in só sai nas rotas do item 7, sob `/atletas/{atleta_id}/...` do dono da atividade
    (outro atleta responde `404`). **Não entra** em listas, na série de carga, em exportação, no pacote de fatos do feedback nem em
    qualquer rota de professor nesta meta. A lista de pendentes **não traz** nenhum campo do check-in.
 4. **Comando para apagar:** `uv run python -m worker.apagar_checkin --atleta "<nome>"` apaga **todos** os check-ins do atleta
    (`checkin_treino` pelas atividades dele), idempotente, imprime só `checkins: apagados=N`. O atleta e as atividades ficam. Mesma convenção
-   do `worker.apagar_saude` (nome repetido: o de menor id). `DELETE` por atividade cobre o apagar pontual.
+   do `worker.apagar_saude` (nome repetido: o de menor id, com aviso de que os outros ficam; nome inexistente: código 1). Implementação:
+   `DELETE FROM checkin_treino WHERE atividade_id IN (SELECT id FROM atividade WHERE atleta_id = :id)` com `synchronize_session=False`. Teste: dois
+   atletas, só o escolhido perde os check-ins; uma segunda rodada dá 0. `DELETE` por atividade cobre o apagar pontual.
 5. **O que é derivado** (`carga_pse`) é calculado na leitura e não guarda a observação.
 
 ### 6. `carga_pse@1`: carga pela PSE
@@ -168,7 +185,7 @@ edição do check-in ou reimportação. A resposta traz `versao = "carga_pse@1"`
 de elegibilidade.
 
 ### 7. API (esboço; os detalhes saem em #296 e #298, com cliente regerado e adendo da ADR 0004)
-Todas sob `/atletas/{atleta_id}`. Atleta ou atividade inexistente, ou de outro atleta, responde `404` (`Erro`).
+Todas sob `/atletas/{atleta_id}`. Atleta ou atividade inexistente, ou de outro atleta, responde `404` (`Erro`), nas **três** rotas, inclusive no `DELETE` (que não devolve `204` para atividade de outro atleta). A validação do corpo roda antes do handler: um `PUT` inválido numa atividade inexistente dá `422`, não `404` (sem vazamento).
 
 **`PUT /atletas/{atleta_id}/atividades/{atividade_id}/checkin`** (`registrarCheckin`): cria ou substitui o check-in.
 ```json
@@ -222,6 +239,10 @@ existe e não tem.
 ```
 `estado`: `calculada`, `sem_checkin` (`valor: null`, texto "Sem check-in: a carga pela PSE precisa da PSE do treino.") ou `sem_duracao`.
 Com `estado = calculada`, `valor_texto` e o texto trazem 1 casa quando não é inteiro ("272,5 UA"). O objeto não traz a observação.
+`checkin` é carregado com `LEFT JOIN` na mesma consulta da atividade (sem consulta extra); listas de atividades que não precisam dele não o carregam nem o
+devolvem. O `datetime` sai sempre com fuso (o SQLite devolve sem `tzinfo`; a API o completa). `operationId`s únicos: `registrarCheckin`, `checkinDaAtividade`,
+`apagarCheckin`, `listarCheckinsPendentes`; cliente regerado e `test_contrato_cliente.py` verde. A lista de pendentes devolve só `titulo` (modalidade e minutos),
+que não é dado de saúde, e `dias` fora de 1 a 7 dá `422` pelo mesmo handler.
 
 ### 8. Por onde segue
 - **#294 (Caio, à mão):** fixtures sintéticas de check-in (completos, "nada a relatar", só texto, PSE 0, fora do prazo, multiesporte) e o oráculo da `carga_pse@1`.
@@ -280,6 +301,8 @@ Para o Angelo; só o que é de produto e ainda não está decidido. Cada item tr
    3 toques, e um registro incompleto deixa a observação ambígua.
 4. **Nome da carga pela PSE na tela.** **Padrão:** "Carga pela PSE", em **UA** (unidades arbitrárias), diferente de "pontos" da carga
    do relógio, para não misturar as duas escalas.
+5. **Check-in sem login.** Hoje o "só ao próprio atleta" é o `atleta_id` do caminho: quem conhece o id lê, grava e apaga o check-in. **Padrão:**
+   aceitar no piloto local (a API não é exposta); exigir identidade quando houver login (Meta 10). Mesma decisão do `PUT` da semana-padrão (ADR 0011).
 
 ## Data e quem decidiu
 2026-11-09. Proposta do Caio (ciência), com revisão da Duda (modelo de dados e API) pedida no PR. Decisões do Angelo de 09/11 ("ok para as
