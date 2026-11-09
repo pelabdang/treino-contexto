@@ -120,8 +120,10 @@ e o `PUT` sai no fim, com as três respostas. O texto livre é opcional e **não
   `multiesporte_pai` e `troca` (item 4). Mais recentes primeiro. Consulta: `atividade LEFT JOIN checkin_treino ... WHERE checkin_treino.id IS NULL`,
   com a exclusão escrita `subtipo IS NULL OR subtipo NOT IN (...)` (um `NOT IN` solto exclui os subtipos nulos, que são quase todos);
   a #296 e a #298 precisam de fixture com subtipo nulo. A data local não sai em SQL: filtra-se por `inicio >= hoje - (dias + 1) dias` e confere-se a data local em Python.
-- **Uma atividade nunca tem dois check-ins** (`UNIQUE`); duas requisições simultâneas do mesmo `PUT` (clique duplo): `INSERT` dentro de
-  savepoint, captura de `IntegrityError`, releitura e `UPDATE` (portável, sem `on_conflict_do_update`). O `UPDATE` não toca `id` nem `registrado_em`.
+- **Uma atividade nunca tem dois check-ins** (`UNIQUE`); duas requisições simultâneas do mesmo `PUT` (clique duplo): busca a linha; se não há, `INSERT ... ON CONFLICT DO NOTHING`
+  (por dialeto, SQLite e Postgres) em `atividade_id`, nova busca (acha a linha do outro `PUT`) e `UPDATE`. **Sem savepoint**, como o upsert da semana-padrão
+  (ADR 0011, #282): o `SAVEPOINT` do pysqlite commita a transação externa no `RELEASE`. No Postgres o `INSERT` do segundo espera o commit do primeiro.
+  O `UPDATE` não toca `id` nem `registrado_em`.
   O `PUT` **substitui** tudo: os atalhos que não vierem na lista ficam **desligados** (teste: `PUT` com dor e sono ruim, depois só calor, deixa só calor).
   `200` na criação e na edição (não `201`).
 
