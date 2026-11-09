@@ -2,8 +2,8 @@
 tipo: modulo
 status: em-uso
 dono: theo
-atualizado: 2026-11-08
-links: [[metricas/serie-carga]], [[decisoes/0010-carga-de-treino]], [[decisoes/0001-modelo-de-dados-minimo]], [[decisoes/0003-fuso-da-atividade]], [[decisoes/0004-contrato-tela-evolucao]], [[metricas/tiros-1km]], [[modulos/grafico-tiros]], [[modulos/banco]], [[modulos/worker]], [[modulos/infra]], [[modulos/api-client]], [[decisoes/0006-upload-de-fit]], [[produto/meta-2-como-rodar]], [[decisoes/0007-clima-da-atividade]], [[modulos/clima]], [[produto/meta-4-como-rodar]], [[decisoes/0008-deteccao-de-esforcos]], [[metricas/esforcos]], [[decisoes/0009-treino-de-transicao]]
+atualizado: 2026-11-09
+links: [[decisoes/0011-linha-de-base-e-semana-padrao]], [[metricas/serie-carga]], [[decisoes/0010-carga-de-treino]], [[decisoes/0001-modelo-de-dados-minimo]], [[decisoes/0003-fuso-da-atividade]], [[decisoes/0004-contrato-tela-evolucao]], [[metricas/tiros-1km]], [[modulos/grafico-tiros]], [[modulos/banco]], [[modulos/worker]], [[modulos/infra]], [[modulos/api-client]], [[decisoes/0006-upload-de-fit]], [[produto/meta-2-como-rodar]], [[decisoes/0007-clima-da-atividade]], [[modulos/clima]], [[produto/meta-4-como-rodar]], [[decisoes/0008-deteccao-de-esforcos]], [[metricas/esforcos]], [[decisoes/0009-treino-de-transicao]]
 ---
 # Módulo: api
 
@@ -20,6 +20,7 @@ Futuramente recebe a importação Garmin e serve métricas ao [[modulos/mobile]]
 - Saída: `GET /atletas/{atleta_id}/atividades/{atividade_id}` (ver "Atividade e clima" abaixo).
 - Entrada e saída: `/atletas/{atleta_id}/treinos-de-transicao` e `PUT`/`DELETE .../atividades/{id}/transicao` (#170, ver "Treino de transição" abaixo).
 - Saída: `GET /atletas/{atleta_id}/carga` e o objeto `carga` da atividade (#142, ver "Carga" abaixo).
+- Entrada e saída: `GET` e `PUT /atletas/{atleta_id}/semana-padrao` (#264, ver "Semana-padrão" abaixo).
 
 ## Arquivos principais
 - `services/api/app/main.py`: app FastAPI.
@@ -220,6 +221,15 @@ passa `ignoradas_multiesporte`.
   `sem_carga` traz o motivo). `estado: "pendente"` (demais campos `null`, `versao: null`) para atividade elegível sem linha ou com versão antiga; `carga: null` só para `multiesporte_pai` e `troca`.
 - **Privacidade:** a API nunca devolve limiar, zonas, recordes nem a carga do Garmin: só carga, método, motivo e cobertura.
 - Testes: `tests/rotas/test_carga.py` (oráculo da #137: `SERIE`, `TOTAIS`, `ESPERADO`). Exemplo: `packages/api-client/exemplos/carga.json`.
+
+## Semana-padrão: `GET` e `PUT /atletas/{atleta_id}/semana-padrao` (#264, [[decisoes/0011-linha-de-base-e-semana-padrao]] itens 1, 8 e 9)
+`operationId`: `semanaPadraoDoAtleta` e `gravarSemanaPadrao`. Código: `app/rotas/semana_padrao.py` e `app/servicos/semana_padrao.py`. Tabelas em [[modulos/banco]].
+- **`GET ?em=AAAA-MM-DD`** (padrão: hoje em `America/Sao_Paulo`): `{atleta_id, em, vigente, vigencias}`. `vigente` é a linha de maior `vigente_desde <= em`, com `vigente_desde`, `definido_por`, `definido_em` (em `America/Sao_Paulo`) e `itens` (`dia_semana` 1 a 7, `dia_semana_texto`, `modalidade`, `tipo_treino` ou `null`), em ordem de dia e modalidade. **`vigente` é `null` só quando nenhuma vigência começou até `em`**; uma vigência vazia (encerra o plano) vem com `itens: []`. `vigencias` traz todas, da mais nova para a mais antiga, com `total_itens`. `404` atleta inexistente; `422` para `em` inválido.
+- **`PUT`** `{vigente_desde, definido_por, itens}` cria ou substitui a vigência numa transação (reenviar é idempotente, `itens: []` é válido, `vigente_desde` no futuro é aceito, não há `DELETE`). Resposta `200`: o objeto `vigente` mais `atividades_reaplicadas`. `422` para `dia_semana` fora de 1 a 7, modalidade fora de `corrida`/`natacao`/`ciclismo`, tipo fora dos cinco, `definido_por` fora de `atleta`/`professor` ou ausente, `vigente_desde` inválido ou ausente, `itens` ausente ou repetindo (`dia_semana`, `modalidade`); `404` atleta inexistente.
+- **Concorrência:** o upsert do cabeçalho usa `INSERT ... ON CONFLICT DO NOTHING` seguido de busca (dois `PUT` da mesma vigência, como um clique duplo, viram um insert e uma atualização, sem `500`), e atualiza o cabeçalho antes de trocar os itens para serializar os dois. Sem savepoint de propósito (no pysqlite o `RELEASE` commita a transação externa).
+- **Reaplicação do tipo: ainda não (é da #265).** Hoje o `PUT` só grava e devolve `atividades_reaplicadas: 0`. O ponto de extensão é `servicos.semana_padrao.reaplicar_tipos(session, atleta_id, vigente_desde) -> int`, chamado dentro da transação do `PUT` (se levantar, a vigência também não fica gravada). A #265 o implementa com a `tipo_treino@1` (item 8: atividades com data local >= `vigente_desde`, sem tocar tipo confirmado, `professor` nem `trainingpeaks`).
+- `definido_por` é rótulo declarado, não verificado: não há login (ADR 0011, "A confirmar" 1 e 7). Plano de treino é dado pessoal: não vai para log.
+- Testes: `tests/rotas/test_semana_padrao.py` (vigência no dia, vigência vazia, antes da primeira vigência, `em` padrão em São Paulo, `422`/`404`, rollback, concorrência simulada e, no Postgres, duas sessões de verdade) e `tests/test_migracoes.py`.
 
 ## Contrato da tela de evolução (Meta 2)
 O contrato que o app consome está em [[decisoes/0004-contrato-tela-evolucao]], com a lista "antes e depois".
