@@ -20,7 +20,7 @@ Ao fechar uma meta, o Paulo registra o resultado em `docs/produto/metas/` e revi
 | 5 | Detecção de esforços (corrida por distância, ciclismo por duração) e série de tiros com o melhor tiro | feita (fixtures, sem rede; conferência local com o histórico real; [[produto/metas/meta-5-deteccao-esforcos]]) |
 | 6 | Carga de treino (rTSS, hrTSS, CTL, ATL, TSB) | feita (fixtures, sem rede; conferência local com o histórico real; [[produto/metas/meta-6-carga-treino]]) |
 | 7 | Linha de base pessoal e semana-padrão (tipo de treino pelo plano, regra como reserva) | feita (fixtures, sem rede; conferência local com o histórico real; [[produto/metas/meta-7-linha-de-base-semana-padrao]]) |
-| **8** | **Check-in pós-treino** | **próxima** (issues propostas na #272; abertas depois da resposta do Angelo) |
+| **8** | **Check-in pós-treino** | **atual** (issues #293 a #302; paralela #303) |
 | 9 | Feedback automático por treino | esboço |
 | 10 | Caixa do dia do professor | esboço |
 | 11 | Agente do atleta (primeiras perguntas) | esboço |
@@ -498,7 +498,7 @@ Revisadas ao fim de cada meta com o que se aprendeu. Ordem tirada da "Fundação
   literatura; tela da linha de base no app; `moderado` e `fartlek` pela regra; linha de base de CTL/ATL/TSB e da semana. As
   pendências da meta estão em "Candidatas sem número".
 
-### Meta 8: check-in pós-treino (próxima)
+### Meta 8: check-in pós-treino (atual)
 - **Objetivo:** o atleta registra, em **3 toques**, como foi o treino: PSE (esforço percebido), sensação e observação, com
   "nada a relatar" como resposta válida. É o "check-in é o produto" do [[produto/plano-mvp-execucao]] (seções 3.1 e 6) e o
   dado que falta para o motor de explicação (trabalho, estresse, dor) e para o feedback (Meta 9).
@@ -506,40 +506,45 @@ Revisadas ao fim de cada meta com o que se aprendeu. Ordem tirada da "Fundação
   - a tela de check-in no app (web e celular), aberta a partir da tela de um treino, com no máximo uma pergunta por vez;
   - a lista dos treinos recentes sem check-in, para o atleta não perder nenhum;
   - `PUT`, `GET` e `DELETE` do check-in de uma atividade na API, e o check-in no `GET` da atividade;
-  - se o Angelo aprovar (pergunta 3), a carga pela PSE (PSE × minutos) de cada atividade com check-in, separada da `carga@2`,
-    o que dá uma carga também à natação.
-- **Critério de pronto (proposta):**
+  - a carga pela PSE (`carga_pse@1`, PSE × minutos) de cada atividade com check-in, separada da `carga@2` e sem série
+    diária, o que dá uma carga também à natação.
+- **Critério de pronto:**
   - ADR 0012 aprovada pelo Theo antes da migração: tabela do check-in (um por atividade), escalas, observação, "nada a
-    relatar", edição e prazo, regra de dado sensível, versão da carga pela PSE se entrar; propostas de produto em "A confirmar";
+    relatar", edição e prazo, regra de dado sensível, versão da `carga_pse@1`; propostas de produto em "A confirmar";
   - check-in completo em 3 toques (teste de componente que conta os toques); "nada a relatar" válido; editar e apagar
     funcionam; uma atividade nunca tem dois check-ins;
   - a observação segue a regra do dado de saúde da Meta 6: só no banco local, nunca em log, devolvida só ao próprio atleta,
     com comando para apagar;
-  - nota em `docs/metricas/` e teste de valor à mão para a carga pela PSE, se entrar;
+  - nota em `docs/metricas/` e teste de valor à mão para a `carga_pse@1`;
   - endpoints no OpenAPI, adendo da ADR 0004 e cliente regerado; tela com teste e revisão da Lia; aberta pelo menos uma vez
-    num celular (pergunta 4); QA com fixtures num clone limpo, seguindo só o guia.
-- **Issues propostas (abertas só depois do "ok" do Angelo às perguntas de "PRECISA DO ANGELO"):**
+    num celular pelo Angelo, no fim da meta; QA com fixtures num clone limpo, seguindo só o guia.
+- **Decisões de 09/11 (Angelo, "ok para as cinco"):** abrir as issues e começar; 3 toques com PSE de 0 a 10 (CR-10), sensação
+  em 5 níveis e observação por atalhos com texto livre opcional e "nada a relatar"; `carga_pse@1` por atividade, sem série
+  diária; ele abre a tela de check-in no celular uma vez no fim da meta; a observação segue a regra dos dados de saúde da
+  Meta 6 (só no banco local, nunca em log, devolvida só ao próprio atleta, comando para apagar).
+- **Issues e ordem:**
 
-  | Ordem | Issue | Dono | Depende de |
-  |---|---|---|---|
-  | A | ADR 0012, check-in pós-treino (modelo, escalas, prazo, dado sensível, "A confirmar") | caio-ciencia com duda-dados (aprovação do Theo) | nenhuma |
-  | B | Fixtures sintéticas de check-in e oráculo (inclui a carga pela PSE, se entrar) | caio-ciencia | A (adianta à mão) |
-  | C | Desenho da tela de check-in e da lista de treinos sem check-in | lia-design | A (pode rascunhar pelo plano) |
-  | D | Check-in no banco (migração 0012), `PUT`/`GET`/`DELETE`, comando para apagar, cliente regerado | duda-dados | A |
-  | E | Check-in no `GET` da atividade e lista de treinos sem check-in na API | duda-dados | D |
-  | F | Carga pela PSE (`carga_pse@1`), função pura, nota e gravação ou leitura como a ADR decidir (só se o Angelo aprovar) | caio-ciencia | A, B |
-  | G | Tela de check-in no app, a partir da tela de um treino, e lista de pendentes | rafa-app (revisão da Lia) | C, D, E |
-  | H | Documentação, guia `meta-8-como-rodar` e diário | nina-docs | E, F, G |
-  | I | QA de ponta a ponta com fixtures (e o celular, se houver) | bia-qa | H |
-  | J | Resultado da meta e roteiro | paulo-planejador | I |
+  | # | Issue | Dono | Depende de | Situação |
+  |---|---|---|---|---|
+  | #293 | ADR 0012, check-in pós-treino (modelo, escalas, prazo, dado sensível, `carga_pse@1`) | caio-ciencia com duda-dados (aprovação do Theo) | nenhuma | aberta |
+  | #294 | Fixtures sintéticas de check-in e oráculo (inclui `carga_pse@1`) | caio-ciencia | #293 (adianta à mão) | aberta |
+  | #295 | Desenho da tela de check-in e da lista de treinos sem check-in | lia-design | #293 (pode rascunhar pelo plano) | aberta |
+  | #296 | Check-in no banco (migração 0012), `PUT`/`GET`/`DELETE`, comando para apagar, cliente regerado | duda-dados | #293 | aberta |
+  | #297 | `carga_pse@1`, carga pela PSE por atividade | caio-ciencia | #293 (oráculo #294) | aberta |
+  | #298 | Check-in no `GET` da atividade e lista de treinos sem check-in | duda-dados | #296 (fixtures #294) | aberta |
+  | #299 | Tela de check-in no app | rafa-app (revisão da Lia) | #295, #296, #298 | aberta |
+  | #300 | Documentação, guia `meta-8-como-rodar` e diário | nina-docs | #298, #297, #299 | aberta |
+  | #301 | QA de ponta a ponta com fixtures e o celular (o Angelo abre a tela uma vez) | bia-qa | #300 | aberta |
+  | #302 | Resultado da meta e roteiro | paulo-planejador | #301 | aberta |
 
-  **Ordem:** A na largada (Caio, com a Duda no modelo); B e C adiantam em paralelo. Depois da ADR, D (Duda) e F (Caio) em
-  paralelo; E depois de D; G é o encontro (precisa de C, D e E). H, I e J no fechamento. Caminho crítico: A → D → E → G → H →
-  I → J. Não há conferência com o histórico real: o check-in é dado novo.
-- **Paralela pequena proposta (fora do critério de pronto):** hífen sem quebra em "semana-padrão" no estado vazio da tela
+  **Ordem:** #293 na largada (Caio, com a Duda no modelo); #294 e #295 adiantam em paralelo. Depois da ADR, #296 (Duda) e
+  #297 (Caio) em paralelo; #298 depois da #296; #299 é o encontro (precisa da #295, da #296 e da #298). #300, #301 e #302 no
+  fechamento. Caminho crítico: #293 → #296 → #298 → #299 → #300 → #301 → #302. Não há conferência com o histórico real: o
+  check-in é dado novo. A coluna "Situação" só muda no fechamento.
+- **Paralela pequena (fora do critério de pronto):** #303, hífen sem quebra em "semana-padrão" no estado vazio da tela
   da semana-padrão (rafa-app, sem dependência), já que o Rafa mexe no app nesta meta.
 - **Quem:** caio-ciencia (ADR, escalas, carga pela PSE, oráculo), duda-dados (banco, API, cliente, comando para apagar),
-  lia-design (desenho), rafa-app (tela), nina-docs, bia-qa, Theo (ADR 0012 e adendo da ADR 0004), Angelo (celular, se aceitar).
+  lia-design (desenho), rafa-app (tela), nina-docs, bia-qa, Theo (ADR 0012 e adendo da ADR 0004), Angelo (celular, no fim).
 - **Fora:** lembrete por WhatsApp ou e-mail (conta ou serviço novo, "PRECISA DO ANGELO" quando chegar a vez); check-in
   semanal; motivo de falta para o treino planejado que não aconteceu (a semana-padrão já permite saber o que faltou; candidata);
   equipamento e zona no check-in; série diária e CTL/ATL pela PSE; o check-in no motor de explicação e no feedback (Meta 9); o
@@ -581,8 +586,8 @@ Revisadas ao fim de cada meta com o que se aprendeu. Ordem tirada da "Fundação
 - **Esforço curto no `intervalado` sem série de 1 km** (caio-ciencia): hoje o treino compara só pela FC média e pela carga por
   hora; falta uma métrica do melhor esforço curto (depende da detecção, ADR 0008).
 - **Motivo de falta** (Meta 8 ou depois): com a semana-padrão já dá para saber qual treino planejado não aconteceu.
-- **Hífen sem quebra no estado vazio da tela da semana-padrão** (rafa-app): proposta como paralela da Meta 8.
-- **App em celular:** nenhuma tela foi aberta num iOS ou Android até a Meta 7; proposta como critério da Meta 8.
+- **Hífen sem quebra no estado vazio da tela da semana-padrão** (rafa-app): virou a #303, paralela da Meta 8.
+- **App em celular:** nenhuma tela foi aberta num iOS ou Android até a Meta 7; entrou no critério da Meta 8 (#301).
 - **#213** (rafa-app, revisão da Lia): acessibilidade e visual da tela de evolução. **#237** (rafa-app, com a Lia): mesma
   aparência para distância e pace na tela de um treino; pode tocar o contrato (ADR 0004). As duas vão com a tela dos esforços,
   da carga ou da linha de base.
@@ -642,17 +647,12 @@ stack Expo). A chave do provedor de LLM foi entregue e está no `.env` (fora do 
   (`linha_base@2`); a semana-padrão do Angelo foi cadastrada no banco local para a conferência (#269). Ver
   [[diario/2026-11-09]].
 
+- **Meta 8: respondida em 09/11 ("ok para as cinco").** Abrir e começar (issues #293 a #303); 3 toques com CR-10, sensação
+  em 5 níveis, atalhos com texto livre e "nada a relatar"; `carga_pse@1` por atividade, sem série diária; o Angelo abre a
+  tela de check-in no celular uma vez no fim da meta (#301); a observação segue a regra dos dados de saúde da Meta 6.
+
 Em aberto:
-1. **Meta 8, check-in pós-treino (antes de abrir as issues A a J).** O time segue com as propostas abaixo como padrão; o que
-   for detalhe vai para "A confirmar" da ADR 0012:
-   1. **Abrir as issues e começar:** pode?
-   2. **Os 3 toques:** PSE de 0 a 10 (escala CR-10), sensação em 5 níveis e observação por atalhos (por exemplo dor, cansaço,
-      sono ruim, calor, trabalho ou estresse) com texto livre opcional; "nada a relatar" vale como resposta. Ok?
-   3. **Carga pela PSE:** a PSE vezes os minutos do treino entra nesta meta como métrica separada (não muda a `carga@2`), o
-      que dá uma carga também à natação? Proposta: sim, só por atividade; série diária e CTL/ATL pela PSE ficam fora.
-   4. **Celular:** o Angelo abre a tela de check-in no celular dele (Expo Go, na rede local) uma vez no fim da meta? Se não, o
-      celular fica de novo como não verificado.
-   5. **Dado sensível:** a observação (dor, sono, estresse) segue a regra dos dados de saúde da Meta 6: só no banco local,
-      nunca em log, devolvida só ao próprio atleta, com comando para apagar. Ok?
+1. **Meta 8, o celular (#301):** o Angelo abre a tela de check-in no celular dele (Expo Go, rede local, dado sintético) uma
+   vez no fim da meta, como combinado.
 2. **Próximas metas, sem pressa:** CNPJ e pedido da API da Garmin; pedido da API do TrainingPeaks com a assessoria;
    plano comercial do Open-Meteo para produção; limite de tamanho do upload no proxy, obrigatório na meta de deploy.

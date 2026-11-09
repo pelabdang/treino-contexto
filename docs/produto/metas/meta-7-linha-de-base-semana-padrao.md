@@ -102,9 +102,9 @@ sem velocidade média e natação sem pace por 100 m na linha de base; linha de 
 - **Limite de "fora do normal" ou métrica por tipo** (caio-ciencia): rever se a taxa de sessões "fora" ficar acima do esperado.
 - **Janela maior para tipo raro** (caio-ciencia): tipo quinzenal ou mais raro segue em "aprendendo".
 - **Esforço curto no `intervalado` sem série de 1 km** (caio-ciencia).
-- **Hífen sem quebra** em "semana-padrão" no estado vazio da tela (rafa-app): hoje quebra em "semana-" e "padrão". Proposto
-  como paralela da Meta 8.
-- **App em celular:** proposto como critério da Meta 8.
+- **Hífen sem quebra** em "semana-padrão" no estado vazio da tela (rafa-app): hoje quebra em "semana-" e "padrão". Virou
+  como paralela da Meta 8 (#303).
+- **App em celular:** entrou no critério da Meta 8 (#301).
 - **Tela da linha de base no app**, **#213**, **#237** (rafa-app, com a Lia) e **#74** (vault do Graphify).
 
 ## Limitações conhecidas
@@ -140,7 +140,8 @@ Detalhes em [[metricas/tipo-treino]], [[metricas/linha-base]] e na ADR 0011, se�
 ## PRECISA DO ANGELO
 - Nenhuma decisão da Meta 7 em aberto: as cinco perguntas, as sete do "A confirmar" e as quatro do adendo 2 foram respondidas
   em 09/11, e a semana-padrão dele foi cadastrada no banco local.
-- Para a Meta 8 (check-in pós-treino), cinco perguntas antes de abrir as issues; ver [[produto/roadmap]], "PRECISA DO ANGELO".
+- Para a Meta 8 (check-in pós-treino), as cinco perguntas foram respondidas em 09/11 ("ok para as cinco"); issues #293 a #303.
+  Ver [[produto/roadmap]], "PRECISA DO ANGELO".
 
 ## Resultado
 **Meta 7 feita.** Com fixtures sintéticas, o atleta ou o treinador definem a semana-padrão pela tela ou pela API, cada atividade
