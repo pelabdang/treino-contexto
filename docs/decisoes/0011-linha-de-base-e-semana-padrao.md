@@ -1,6 +1,6 @@
 ---
 tipo: decisao
-status: aceita
+status: implementada
 dono: caio
 atualizado: 2026-11-09
 links: [[decisoes/0002-segmento-intensidade-e-versao]], [[decisoes/0003-fuso-da-atividade]], [[decisoes/0004-contrato-tela-evolucao]], [[decisoes/0005-serie-de-tiros-o-que-entra]], [[decisoes/0008-deteccao-de-esforcos]], [[decisoes/0009-treino-de-transicao]], [[decisoes/0010-carga-de-treino]], [[metricas/tiros-1km]], [[metricas/carga-treino]], [[modulos/banco]], [[modulos/api]], [[produto/roadmap]], [[produto/plano-mvp-execucao]], [[glossario]]
@@ -11,6 +11,10 @@ links: [[decisoes/0002-segmento-intensidade-e-versao]], [[decisoes/0003-fuso-da-
 > **Nenhuma linha de código nem migração muda neste PR.** Todos os números e exemplos são sintéticos.
 > Dá base para #261 (fixtures e oráculo), #262 (`tipo_treino@1`), #263 (`linha_base@1`), #264 (banco e API da semana-padrão),
 > #265 (`classificar_atividades`), #266 (`linha_base` no `GET` da atividade) e #267 (desenho da tela).
+
+**Status atual: implementada na Meta 7 (#260 a #266, #268, #288; conferência local feita na #269, com números só em `entregas/`).** Código: [[metricas/tipo-treino]] (`tipo_treino@1`),
+[[metricas/linha-base]] (`linha_base@2`, adendo 2), o banco e a API ([[modulos/banco]], [[modulos/api]]), o cliente ([[modulos/api-client]]) e a tela ([[modulos/mobile]], [[design/telas/semana-padrao]]).
+O oráculo é o [[metricas/tipo-linha-base-oraculo]]. Passo a passo: [[produto/meta-7-como-rodar]].
 
 ## Contexto
 A Meta 7 compara cada treino com o **normal do próprio atleta**, só na **mesma modalidade e no mesmo tipo de treino**: uma linha de
