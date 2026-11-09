@@ -2,7 +2,7 @@
 tipo: guia
 status: em-uso
 dono: nina
-atualizado: 2026-11-08
+atualizado: 2026-11-09
 links: [[produto/meta-5-como-rodar]], [[produto/meta-4-como-rodar]], [[produto/roadmap]], [[decisoes/0010-carga-de-treino]], [[decisoes/0003-fuso-da-atividade]], [[metricas/carga-treino]], [[metricas/serie-carga]], [[metricas/carga-oraculo]], [[metricas/conferencia-carga]], [[modulos/grafico-carga]], [[modulos/banco]], [[modulos/worker]], [[modulos/api]], [[modulos/api-client]], [[modulos/ingestao-garmin]], [[diario/2026-11-07]], [[diario/2026-11-08]]
 ---
 # Meta 6: como rodar a carga de treino
@@ -39,6 +39,8 @@ não tem tela de carga), `npm test` e `uv run pytest -q` completo. A QA de ponta
    docker compose -p treino-meta6 -f infra/docker-compose.yml -f /caminho/porta.yml up -d
    export DATABASE_URL="postgresql+psycopg://treino:treino@localhost:5446/treino"
    ```
+   Se preferir não exportar, ponha o prefixo em cada comando:
+   `env DATABASE_URL="postgresql+psycopg://treino:treino@localhost:5446/treino" uv run python -m worker.calcular_carga --atleta-id 1`.
    Esperado: `treino-meta6-postgres-1` `healthy`.
 2. **Instalar e migrar:**
    ```
@@ -125,6 +127,8 @@ não tem tela de carga), `npm test` e `uv run pytest -q` completo. A QA de ponta
    descartados, 38 comparados). A conferência é só descritiva: não há faixa de aprovação (ADR 0010, item 8). O terminal mostra só
    contagens.
 9. **Atleta sem dados de saúde.** Duas formas:
+   Atenção: a importação cria um **segundo atleta** ("Atleta Sem Saúde"). O `--atleta-id 1` continua sendo o primeiro
+   atleta, o das etapas anteriores. O segundo tem outro id (num banco limpo, 2).
    ```
    uv run python -m worker.importar_garmin tests/fixtures/garmin/carga/exportacao_carga_sem_saude.zip --atleta "Atleta Sem Saúde"
    uv run python -m worker.apagar_saude --atleta "Atleta Fictício"
@@ -143,7 +147,7 @@ não tem tela de carga), `npm test` e `uv run pytest -q` completo. A QA de ponta
 
 ## Problemas comuns
 - **Porta ocupada no `up`:** escolha outra porta no override e ajuste a `DATABASE_URL`.
-- **Tudo cai no banco errado:** faltou o `-p treino-meta6` ou o `export DATABASE_URL` neste terminal.
+- **Tudo cai no banco errado:** faltou o `-p treino-meta6` ou o `export DATABASE_URL` (ou o prefixo `env DATABASE_URL=...`) neste terminal.
 - **`uv` avisa que `VIRTUAL_ENV` não bate com o ambiente do projeto:** é só um aviso (você tem outro ambiente ativo); rode
   `unset VIRTUAL_ENV` ou ignore.
 - **`"aviso": "sem_carga_calculada"` e `dias` vazio:** nenhuma atividade tem carga. Veja `totais.por_motivo`: `sem_dados_saude` pede
