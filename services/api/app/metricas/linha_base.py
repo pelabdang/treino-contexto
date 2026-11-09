@@ -9,8 +9,9 @@ Fórmulas e fontes:
   Mediana e MAD no lugar de média e desvio padrão: Leys, C. et al. (2013), "Detecting outliers: do not use standard
   deviation around the mean, use absolute deviation around the median", J. Exp. Soc. Psychol. 49(4):764-766 (limite 2,5
   "moderadamente conservador"). Constante 1,4826: Rousseeuw, P. J. e Croux, C. (1993), JASA 88(424):1273-1283.
-  (Citações ainda a conferir nos textos, ADR 0011 "Fontes".) O piso de 2% da mediana e a janela de 8 semanas com mínimo
-  de 8 treinos são regra própria do projeto (Angelo, 09/11).
+  (Citações ainda a conferir nos textos, ADR 0011 "Fontes".) O piso de 2% da mediana, a janela e o mínimo de 8 treinos
+  são regra própria do projeto (Angelo, 09/11). ``linha_base@2`` (Angelo, 09/11, issue #288, adendo 2 da ADR 0011): janela de
+  12 semanas, partes de treino de transição com base própria e carga por hora no lugar da carga absoluta.
 """
 
 from __future__ import annotations
@@ -20,18 +21,17 @@ from collections.abc import Hashable, Mapping, Sequence
 from dataclasses import dataclass, field
 from datetime import date, datetime, timedelta
 
-VERSAO = "linha_base@1"
+VERSAO = "linha_base@2"
 
 
 @dataclass(frozen=True)
 class Parametros:
-    janela_dias: int = 56  # 8 semanas (Angelo, 09/11)
+    janela_dias: int = 84  # 12 semanas (@2; era 56 na @1)
     minimo_treinos: int = 8  # (Angelo, 09/11)
     limite_fora: float = 2.5  # ADR 0011 "A confirmar" 3
     piso_rel: float = 0.02  # calibração #269
     mad_escala: float = 1.4826
     divergente_fora_da_base: bool = True  # "A confirmar" 2
-    transicao_fora_da_base: bool = True  # "A confirmar" 5
 
 
 PADRAO = Parametros()
@@ -40,13 +40,13 @@ SUBTIPOS_MULTIESPORTE = frozenset({"multiesporte_pai", "troca"})
 
 # Métricas por modalidade e tipo (ADR 0011, item 7). Corrida depende do tipo; ciclismo e natação, não.
 _CORRIDA = {
-    "intervalado": ("melhor_pace", "fc_melhor_tiro", "carga"),
-    "leve": ("pace_medio", "fc_media", "carga"),
-    "longo": ("pace_medio", "fc_media", "carga"),
-    "moderado": ("pace_medio", "fc_media", "carga"),
-    "fartlek": ("fc_media", "carga"),
+    "intervalado": ("melhor_pace", "fc_melhor_tiro", "fc_media", "carga_hora"),
+    "leve": ("pace_medio", "fc_media", "carga_hora"),
+    "longo": ("pace_medio", "fc_media", "carga_hora"),
+    "moderado": ("pace_medio", "fc_media", "carga_hora"),
+    "fartlek": ("fc_media", "carga_hora"),
 }
-_CICLISMO = ("fc_media", "carga")
+_CICLISMO = ("fc_media", "carga_hora")
 _NATACAO = ("fc_media",)
 
 
@@ -95,7 +95,9 @@ class LinhaBase:
 
 
 def motivo_sem_linha_base(t: Treino, p: Parametros = PADRAO) -> str | None:
-    """Primeiro motivo da ordem da ADR 0011 (item 7): multiesporte, modalidade_sem_metricas, sem_tipo, divergente, transicao."""
+    """Primeiro motivo da ordem da ADR 0011 (item 7): multiesporte, modalidade_sem_metricas, sem_tipo, divergente.
+
+    Na ``linha_base@2`` a parte de treino de transição não é motivo: tem base própria (``linha_base``)."""
     if t.subtipo in SUBTIPOS_MULTIESPORTE:
         return "multiesporte"
     if t.modalidade == "outra":
@@ -104,8 +106,6 @@ def motivo_sem_linha_base(t: Treino, p: Parametros = PADRAO) -> str | None:
         return "sem_tipo"
     if p.divergente_fora_da_base and t.divergente:
         return "divergente"
-    if p.transicao_fora_da_base and t.transicao:
-        return "transicao"
     return None
 
 
@@ -130,7 +130,8 @@ def _metrica(chave: str, valor: float | None, janela: Sequence[float], p: Parame
 def linha_base(sessao: Treino, historico: Sequence[Treino], p: Parametros = PADRAO) -> LinhaBase:
     """Linha de base de cada métrica do tipo da sessão (ADR 0011, item 6).
 
-    Entram na janela: mesma modalidade e mesmo tipo; ``inicio`` anterior ao da sessão; data local de ``sessao.dia - janela_dias``
+    Entram na janela: mesma modalidade e mesmo tipo; **mesmo grupo** (parte de transição só com parte de transição,
+    isolada só com isolada, ``Treino.transicao``); ``inicio`` anterior ao da sessão; data local de ``sessao.dia - janela_dias``
     em diante; sem motivo para ficar fora da base (``motivo_sem_linha_base``). A sessão nunca entra na própria linha de base
     (mesmo ``id``, ou ``inicio`` igual ou posterior). Cada métrica conta só os treinos que têm o valor.
     """
@@ -141,6 +142,7 @@ def linha_base(sessao: Treino, historico: Sequence[Treino], p: Parametros = PADR
     janela = [
         t for t in historico
         if t.id != sessao.id and t.modalidade == sessao.modalidade and t.tipo_treino == sessao.tipo_treino
+        and t.transicao == sessao.transicao
         and t.inicio < sessao.inicio and t.dia >= desde and motivo_sem_linha_base(t, p) is None
     ]
     metricas = []

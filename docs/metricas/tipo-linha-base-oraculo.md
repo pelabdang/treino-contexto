@@ -35,7 +35,7 @@ Vigência A (desde 05/01, `definido_por` atleta) e B (desde 02/03, `professor`).
 |---|---|---|
 | E1 plano e formato coerentes | 27/01 corrida com 6 tiros | `intervalado`, `semana_padrao` |
 | E2 duas corridas no dia | 20/01: 15 min solta e 50 min com tiros | a de 50 min leva o plano; a solta fica sem tipo (abaixo de 20 min) |
-| E3 plano diverge, empate de duração | 13/01: duas de 30 min sem esforço | a das 07:30: `intervalado` + `sem_esforco`; a das 18:00: `leve` por reserva |
+| E3 plano diverge, empate de duração | 13/01: duas de 28 min sem esforço | a das 07:30: `intervalado` + `sem_esforco`; a das 18:00: `leve` por reserva |
 | E4 item sem tipo (natação) | segundas até 23/02 | sem tipo |
 | E5 item de corrida sem tipo | 11/01 corrida 40 min sem esforço | `leve`, `sugestao` |
 | E6 dia sem item | sextas | `leve`, `sugestao` |
@@ -50,28 +50,30 @@ Vigência A (desde 05/01, `definido_por` atleta) e B (desde 02/03, `professor`).
 | E15 troca de vigência | quintas: `fartlek` até 26/02, `moderado` de 05/03 | cada uma usa a vigência da sua data |
 | divergência `tem_tiros` | 28/03 sábado com 6 tiros | `longo` por plano, divergência `tem_tiros` |
 
-## Linha de base nas sessões-alvo
-Janela de 56 dias, só treinos anteriores à sessão, mínimo de 8; `desvio = max(1,4826 x MAD, 0,02 x mediana)`; `z = (valor - mediana) / desvio`;
-fora quando `|z| >= 2,5`. As contas estão comentadas em `oraculo.py`.
+## Linha de base nas sessões-alvo (`linha_base@2`)
+Janela de 84 dias, só treinos anteriores à sessão, mínimo de 8, mesmo grupo (isolada x parte de transição); `desvio = max(1,4826 x MAD, 0,02 x mediana)`;
+`z = (valor - mediana) / desvio`; fora quando `|z| >= 2,5`. A carga é por hora (as pedaladas das fixtures têm 1 h, então carga por hora = carga).
+As contas estão comentadas em `oraculo.py`.
 
 | Sessão | Métrica | n | Mediana | Desvio | z | Estado |
 |---|---|---|---|---|---|---|
-| 13/03 corrida `leve` (306 s/km) | pace médio | 8 | 330 | 8,8956 | -2,698 | fora |
-| 13/03 corrida `leve` | FC média | 5 | | | | aprendendo |
-| 20/03 corrida `leve` (330 s/km) | pace médio | 8 | 330 | 8,8956 | 0 | dentro |
-| 14/03 corrida `longo` (324 s/km) | pace médio | 8 | 334,5 | 6,69 (piso) | -1,570 | dentro |
-| 21/03 corrida `longo` (315 s/km) | pace médio | 8 | 333 | 6,66 (piso) | -2,703 | fora |
-| 17/03 `intervalado` (249 s/km) | melhor pace | 8 | 262,5 | 5,25 (piso) | -2,571 | fora |
-| 17/03 `intervalado` | FC do melhor tiro | 7 | | | | aprendendo |
-| 10/03 `intervalado` | melhor pace | 7 | | | | aprendendo (a de 13/01 é divergente) |
-| 18/03 ciclismo `leve` (carga 55) | carga | 8 | 43 | 2,9652 | 4,047 | fora |
-| 18/03 ciclismo `leve` (FC 133) | FC média | 8 | 130 | 2,6 (piso) | 1,154 | dentro |
+| 13/03 corrida `leve` (306 s/km) | pace médio | 11 | 330 | 8,8956 | -2,698 | fora |
+| 13/03 corrida `leve` (FC 160) | FC média | 8 | 149 | 2,98 (piso) | 3,691 | fora |
+| 20/03 corrida `leve` (330 s/km, FC 150) | pace médio / FC média | 12 / 9 | 330 / 150 | 8,8956 / 3,0 (piso) | 0 / 0 | dentro |
+| 14/03 corrida `longo` (324 s/km) | pace médio | 9 | 335 | 6,7 (piso) | -1,642 | dentro |
+| 21/03 corrida `longo` (315 s/km) | pace médio | 10 | 334 | 6,68 (piso) | -2,844 | fora |
+| 17/03 `intervalado` (249 s/km) | melhor pace | 9 | 264 | 5,28 (piso) | -2,841 | fora |
+| 17/03 `intervalado` | FC do melhor tiro / FC média | 9 / 10 | 172 / 160 | 3,44 / 3,2 (piso) | 0 / 0 | dentro |
+| 10/03 `intervalado` (255 s/km) | melhor pace | 8 | 264 | 5,28 (piso) | -1,705 | dentro (a de 13/01 é divergente) |
+| 18/03 ciclismo `leve` (carga 55 em 1 h) | carga por hora | 10 | 42 | 2,9652 | 4,384 | fora |
+| 18/03 ciclismo `leve` (FC 133) | FC média | 10 | 130 | 2,6 (piso) | 1,154 | dentro |
 | 16/03 natação `leve` | FC média | 2 | | | | aprendendo |
-| 19/03 corrida `moderado` | pace médio e FC | 3 | | | | aprendendo |
+| 19/03 corrida `moderado` | pace médio e FC | 4 | | | | aprendendo |
 | 06/01 esteira `intervalado` | melhor pace | 0 | | | | sem valor (esteira) |
+| 10/01 brick: ciclismo `moderado` e corrida `longo` | todas | 0 | | | | aprendendo (base própria, sem parte anterior) |
 
 Sem linha de base (com motivo): multiesporte (pai e trocas de 10/01), `sem_tipo` (natação das segundas até 23/02, a corrida solta
-de 20/01 e a natação de 10/01), `divergente` (13/01 e 28/03), `transicao` (ciclismo e corrida de 10/01).
+de 20/01 e a natação de 10/01), `divergente` (13/01 e 28/03). O motivo `transicao` não existe mais na `@2`: o brick de 10/01 tem linha de base própria.
 
 ## Como conferir
 `uv run pytest tests/test_fixtures_meta7.py` (sem rede).

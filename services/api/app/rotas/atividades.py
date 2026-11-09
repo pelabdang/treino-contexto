@@ -7,6 +7,10 @@ from datetime import datetime
 from pathlib import Path
 from typing import Literal
 
+from fastapi import APIRouter, Depends, File, HTTPException, Response, UploadFile
+from pydantic import BaseModel, Field
+from sqlalchemy.orm import Session
+
 from app.db.models import Atividade, Atleta
 from app.db.session import get_session
 from app.ingestao.fit_guardado import AtletaInexistente
@@ -17,19 +21,16 @@ from app.ingestao.importacao import (
     FitNaoEAtividade,
     importar_fit,
 )
-from app.rotas.evolucao import Erro
-from app.servicos.distancia_texto import distancia_da_atividade
-from app.rotas.transicao import TransicaoOut, transicao_da_atividade
-from fastapi import APIRouter, Depends, File, HTTPException, Response, UploadFile
+from app.metricas import esforcos as ef
 from app.metricas.tiros_1km import formatar_pace
-from app.servicos.fuso import inicio_local
+from app.rotas.evolucao import Erro
+from app.rotas.transicao import TransicaoOut, transicao_da_atividade
 from app.servicos.carga_leitura import CargaLida, carga_da_atividade
 from app.servicos.clima import ClimaDaAtividade, EstadoClima, clima_da_atividade
+from app.servicos.distancia_texto import distancia_da_atividade
 from app.servicos.esforcos_leitura import esforcos_da_atividade
+from app.servicos.fuso import inicio_local
 from app.servicos.linha_base_leitura import linha_base_da_atividade, texto_divergencia
-from app.metricas import esforcos as ef
-from pydantic import BaseModel, Field
-from sqlalchemy.orm import Session
 
 router = APIRouter(prefix="/atletas/{atleta_id}/atividades", tags=["atividades"])
 
@@ -108,9 +109,9 @@ class MetricaBaseOut(BaseModel):
     """Uma metrica da linha de base. Os numeros brutos (`valor`, `mediana`, `desvio`, `z`) saem sem arredondar, para o app ordenar
     e para o motor de explicacao; o texto e so da API. Em `aprendendo` e `sem_valor` nao ha mediana, desvio nem z."""
 
-    chave: Literal["pace_medio", "melhor_pace", "fc_media", "fc_melhor_tiro", "carga"]
+    chave: Literal["pace_medio", "melhor_pace", "fc_media", "fc_melhor_tiro", "carga_hora"]
     rotulo: str
-    unidade: Literal["s/km", "bpm", "pontos"]
+    unidade: Literal["s/km", "bpm", "pontos/h"]
     estado: Literal["fora", "dentro", "aprendendo", "sem_valor"]
     motivo: str | None = None  # so em `sem_valor`: esteira, sem_tiros, sem_fc, carga_pendente, ...
     valor: float | None = None
@@ -125,12 +126,12 @@ class MetricaBaseOut(BaseModel):
 
 
 class LinhaBaseOut(BaseModel):
-    """Linha de base da atividade contra o proprio historico, so no mesmo tipo de treino (`linha_base@1`, ADR 0011).
+    """Linha de base da atividade contra o proprio historico, so no mesmo tipo de treino (`linha_base@2`, ADR 0011).
     Calculada na leitura. Compara com o historico do atleta; nao diz se o treino foi bom ou ruim."""
 
     versao: str
     estado: Literal["ok", "sem_linha_base"]
-    motivo: Literal["multiesporte", "modalidade_sem_metricas", "sem_tipo", "divergente", "transicao"] | None = None
+    motivo: Literal["multiesporte", "modalidade_sem_metricas", "sem_tipo", "divergente"] | None = None
     texto: str | None = None  # so em `sem_linha_base`: "Sem linha de base: ..."
     modalidade: str
     tipo_treino: str | None

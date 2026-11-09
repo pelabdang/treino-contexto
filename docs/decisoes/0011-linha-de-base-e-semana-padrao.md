@@ -226,7 +226,7 @@ a regra de encaixe ou a escolha da atividade do dia; as constantes `LEVE_MIN_S` 
 de divergência. Subindo a versão, `worker.reclassificar` regrava as linhas de versão antiga. Mudar a versão de `tiros_1km` ou de
 `esforcos` também reclassifica (é o que `reclassificar` já faz), mas **não** sobe a `tipo_treino`.
 
-### 6. Linha de base `linha_base@1`
+### 6. Linha de base `linha_base@1` (substituída pela `linha_base@2`, ver o adendo 2 no fim)
 **Definição.** Para a sessão `S` (atleta, modalidade `M`, tipo `T`, métrica `k`), a linha de base é calculada sobre os **valores da
 métrica `k` das atividades** que cumprem **todas** estas condições:
 - mesmo atleta, **mesma modalidade `M` e mesmo `tipo_treino = T`** (qualquer origem; tipos e modalidades diferentes nunca se misturam);
@@ -289,7 +289,7 @@ maior para o tipo raro seria `linha_base@2` ("A confirmar" 4).
 (`JANELA_DIAS = 56`); `MINIMO_TREINOS`; a medida (mediana, MAD, constante, `PISO_REL`); `LIMITE_FORA`; a lista de condições de
 entrada; ou a lista de métricas por modalidade e tipo.
 
-### 7. Métricas por modalidade e tipo
+### 7. Métricas por modalidade e tipo (`linha_base@1`; a `@2` troca `carga` por `carga_hora`, ver o adendo 2)
 A linha de base é por **métrica**, e cada atividade com tipo mostra as métricas do seu tipo.
 
 | Modalidade | Tipo | Métricas | De onde vêm |
@@ -504,9 +504,9 @@ O Angelo aceitou os sete padrões abaixo em 09/11 ("ok para as sete"). Eles vale
    (nem recebe uma), porque o tipo dele é duvidoso. A alternativa é o formato vencer e o tipo ser o que a regra achar.
 3. **Limite "fora do normal" e o texto do aviso (item 6).** **Padrão:** `|z| >= 2,5` (mediana e MAD, piso de 2%) e os textos do item 6, sem
    juízo de valor ("compara com o seu histórico; não diz se o treino foi bom ou ruim").
-4. **Tipo feito menos de uma vez por semana.** Com 8 semanas e mínimo de 8 treinos, um tipo quinzenal fica sempre "ainda aprendendo".
+4. **Tipo feito menos de uma vez por semana.** *(Substituído pelo adendo 2: janela de 12 semanas na `linha_base@2`.)* Com 8 semanas e mínimo de 8 treinos, um tipo quinzenal fica sempre "ainda aprendendo".
    **Padrão:** manter a regra de 09/11 e olhar os números reais na #269 antes de propor outra janela para o tipo raro.
-5. **Parte de treino de transição na linha de base.** **Padrão:** fica fora da linha de base e não recebe uma (motivo `transicao`),
+5. **Parte de treino de transição na linha de base.** *(Substituído pelo adendo 2: base própria na `linha_base@2`.)* **Padrão:** fica fora da linha de base e não recebe uma (motivo `transicao`),
    para não misturar a corrida pós-pedal com a corrida isolada.
 6. **Dois treinos da mesma modalidade no dia.** **Padrão:** o plano vale para o de **maior duração**; o outro cai na regra de reserva.
 7. **`PUT` da semana-padrão sem autenticação.** Hoje não há login, então qualquer cliente da API reescreve o tipo das atividades do
@@ -519,3 +519,33 @@ Calibração que **não** precisa do Angelo: `LEVE_MIN_S`, `LONGO_MIN_S` e `PISO
 2026-11-09. Proposta do Caio (ciência), com revisão da Duda (modelo de dados e API) pedida no PR. Decisões de produto do Angelo e do
 Theo de 09/11 listadas no Contexto. Issue #260. Modelo de dados aprovado pelo Theo (PR #277, 09/11); "A confirmar" respondido pelo
 Angelo em 09/11 com os sete padrões.
+
+## Adendo 2 (2026-11-09): `linha_base@2` (issue #288)
+**Status: decidido pelo Angelo em 09/11 ("ok para as quatro").** Sobe `linha_base@1` para `linha_base@2`. A `tipo_treino@1`, o modelo de dados e
+a semana-padrão **não mudam**. Substitui os itens 4 e 5 do "A confirmar" e muda os itens 6 e 7.
+
+1. **Janela de 84 dias (12 semanas), mínimo de 8 treinos mantido** (`JANELA_DIAS = 84`). Com 56 dias a regra pede 8 treinos de 8 semanas
+   seguidas: um treino perdido manda o tipo semanal de volta a "ainda aprendendo" por 8 semanas. Com 84 dias há folga para uma ou mais
+   faltas. Tipos quinzenais ou mais raros seguem perto de "aprendendo" (limitação aceita).
+2. **Parte de treino de transição tem base própria.** A parte (`rotulo_transicao.transicao = true`) compara só com **outras partes de
+   transição da mesma modalidade e do mesmo tipo**; a atividade isolada compara só com isoladas. O motivo `transicao` de "sem linha de
+   base" **deixa de existir**; sem parte anterior, a métrica fica `aprendendo` com `n = 0`. Nos textos o tipo aparece como
+   "treino moderado (parte de transição)". Ordem dos motivos de "sem linha de base": `multiesporte`, `modalidade_sem_metricas`,
+   `sem_tipo`, `divergente`. O parâmetro `TRANSICAO_FORA_DA_BASE` some; entra a regra fixa da base própria.
+3. **`carga` vira `carga_hora`** (carga da atividade, `carga@2`, dividida pelas horas de `duracao_s`). A carga absoluta cresce com a duração e
+   acaba medindo volume; por hora ela mede intensidade. Chave `carga_hora`, rótulo "Carga por hora", unidade `pontos/h`, textos
+   "55,0 pontos/h" e diferença "13,0 pontos/h maior". `sem_duracao` é o novo motivo de métrica sem valor.
+4. **Intervalado sem série de 1 km.** O melhor esforço curto (por faixa de distância) **fica fora**: limitação registrada. Sem série de 1 km,
+   `melhor_pace` e `fc_melhor_tiro` ficam `sem_valor` com `sem_tiros`, e o intervalado passa a ter também a **FC média** da atividade
+   (`fc_media`) e a `carga_hora`.
+
+**Métricas da `linha_base@2`.** Corrida `intervalado`: `melhor_pace`, `fc_melhor_tiro`, `fc_media`, `carga_hora`; `leve`, `longo`, `moderado`:
+`pace_medio`, `fc_media`, `carga_hora`; `fartlek`: `fc_media`, `carga_hora`. Ciclismo: `fc_media`, `carga_hora`. Natação: `fc_media`. O resto do
+item 7 (esteira fora do pace, motivos de métrica sem valor) vale como está.
+
+**Contrato (adendo 7 da ADR 0004).** `MetricaBaseOut.chave`: `carga` sai e `carga_hora` entra; `unidade`: `pontos` sai e `pontos/h` entra;
+`LinhaBaseOut.motivo` perde `transicao`; `janela_semanas` passa a 12 e `versao` a `linha_base@2`. O app ainda não lê o objeto `linha_base`.
+Cliente regerado.
+
+**Efeito nos dados.** Nada é gravado: a linha de base é calculada na leitura, então a `@2` vale na hora.
+

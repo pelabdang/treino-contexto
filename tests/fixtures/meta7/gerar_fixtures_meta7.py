@@ -79,8 +79,8 @@ def gerar() -> dict:
     ter = {"01-20": 270, "01-27": 264, "02-03": 267, "02-10": 261, "02-17": 264, "02-24": 258,
            "03-03": 261, "03-10": 255, "03-17": 249, "03-24": 252}
     add(d("01-06"), "07:30", "corrida", 3000, 9000, 160, subtipo="esteira", estrutura="tiros", tiros=tiros(6, 276, 172))
-    add(d("01-13"), "07:30", "corrida", 1800, 5000, 150, estrutura="sem_esforco")  # plano intervalado, sem esforço
-    add(d("01-13"), "18:00", "corrida", 1800, 5000, 150, estrutura="sem_esforco")  # segunda do dia, mesma duração
+    add(d("01-13"), "07:30", "corrida", 1680, 5000, 150, estrutura="sem_esforco")  # plano intervalado, sem esforço
+    add(d("01-13"), "18:00", "corrida", 1680, 5000, 150, estrutura="sem_esforco")  # segunda do dia, mesma duração
     add(d("01-20"), "07:00", "corrida", 900, 2500, 130, estrutura="sem_esforco")  # solta, antes da sessão
     for m_d, pace in ter.items():
         hora = "23:10" if m_d == "02-24" else "07:30"
@@ -94,14 +94,14 @@ def gerar() -> dict:
         add(d(m_d), "06:00", "ciclismo", 3600, 25000, 133 if m_d == "03-18" else 130, carga=float(carga),
             subtipo="virtual" if m_d == "01-14" else None)
 
-    # Quinta: corrida com esforço que não é série de tiros (333 s/km). Tipos prévios em três datas; 02-12 sem fuso.
+    # Quinta: corrida com esforço que não é série de tiros (335 s/km). Tipos prévios em três datas; 02-12 sem fuso.
     previo = {
         "01-08": {"tipo": "longo", "origem": "professor"},
         "01-15": {"tipo": "moderado", "confirmado": True},
         "01-29": {"tipo": "moderado", "origem": "trainingpeaks"},
     }
     for m_d in ["01-08", "01-15", "01-22", "01-29", "02-05", "02-12", "02-19", "02-26", "03-05", "03-12", "03-19", "03-26"]:
-        add(d(m_d), "07:00", "corrida", 3000, 9000, 155, estrutura="esforco", inicial=previo.get(m_d),
+        add(d(m_d), "07:00", "corrida", 3015, 9000, 155, estrutura="esforco", inicial=previo.get(m_d),
             fuso=None if m_d == "02-12" else FUSO_SP)
 
     # Sexta: corrida de 8 km sem esforço, sem item no plano. 01-09 é série de tiros (reserva: intervalado).
@@ -125,9 +125,9 @@ def gerar() -> dict:
         add(d(m_d), "07:00", "corrida", pace * 15, 15000, 145, estrutura="sem_esforco")
     add(d("03-28"), "07:00", "corrida", 5400, 15000, 150, estrutura="tiros", tiros=tiros(6, 300, 170))
 
-    # Domingo: 40 min sem esforço; 01-04 é antes da primeira vigência, 01-11 tem item sem tipo.
-    add(d("01-04"), "08:00", "corrida", 2400, 7000, 148, estrutura="sem_esforco")
-    add(d("01-11"), "08:00", "corrida", 2400, 7000, 148, estrutura="sem_esforco")
+    # Domingo: ~40 min sem esforço; 01-04 é antes da primeira vigência, 01-11 tem item sem tipo.
+    add(d("01-04"), "08:00", "corrida", 2436, 7000, 148, estrutura="sem_esforco")  # 348 s/km
+    add(d("01-11"), "08:00", "corrida", 2226, 7000, 148, estrutura="sem_esforco")  # 318 s/km
 
     # ids estáveis: data/sigla+n, com n na ordem do horário local do dia
     _regs.sort(key=lambda r: (r["_local"], r["modalidade"]))

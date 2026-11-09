@@ -1299,7 +1299,7 @@
         "type": "object"
       },
       "LinhaBaseOut": {
-        "description": "Linha de base da atividade contra o proprio historico, so no mesmo tipo de treino (`linha_base@1`, ADR 0011).\nCalculada na leitura. Compara com o historico do atleta; nao diz se o treino foi bom ou ruim.",
+        "description": "Linha de base da atividade contra o proprio historico, so no mesmo tipo de treino (`linha_base@2`, ADR 0011).\nCalculada na leitura. Compara com o historico do atleta; nao diz se o treino foi bom ou ruim.",
         "properties": {
           "estado": {
             "enum": [
@@ -1335,8 +1335,7 @@
                   "multiesporte",
                   "modalidade_sem_metricas",
                   "sem_tipo",
-                  "divergente",
-                  "transicao"
+                  "divergente"
                 ],
                 "type": "string"
               },
@@ -1430,7 +1429,7 @@
               "melhor_pace",
               "fc_media",
               "fc_melhor_tiro",
-              "carga"
+              "carga_hora"
             ],
             "title": "Chave",
             "type": "string"
@@ -1516,7 +1515,7 @@
             "enum": [
               "s/km",
               "bpm",
-              "pontos"
+              "pontos/h"
             ],
             "title": "Unidade",
             "type": "string"

@@ -207,3 +207,10 @@ o app mostra. `linha_base` traz `versao` (`linha_base@1`), `estado` (`ok` ou `se
 arredondar** (o exemplo da ADR 0011 mostrava 8,9 e -2,7 como ilustração), para o app ordenar e para o motor de explicação; em
 `aprendendo` e `sem_valor` não há mediana, desvio nem z. O texto nunca julga o treino: compara com o histórico do atleta. Calculada na
 leitura, nada é gravado. Detalhes em [[modulos/api]].
+
+## Adendo 7 (2026-11-09): `linha_base@2` no `GET` da atividade (#288)
+**Status: aceito (decisão do Angelo, 09/11; [[decisoes/0011-linha-de-base-e-semana-padrao]], adendo 2).** Muda o objeto `linha_base` do adendo 6 sem
+mudar o modelo de dados: `versao` passa a `linha_base@2` e `janela_semanas` a 12; em cada métrica, `chave` troca `carga` por `carga_hora`
+e `unidade` troca `pontos` por `pontos/h` (rótulo "Carga por hora"); `motivo` de `linha_base` perde `transicao` (a parte de treino de transição
+tem base própria) e o `sem_valor` ganha `sem_duracao`. O `intervalado` ganha a métrica `fc_media`. O app ainda não lê o objeto. Detalhes em [[modulos/api]].
+
