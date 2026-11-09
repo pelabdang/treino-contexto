@@ -83,11 +83,16 @@ def test_marca_segmentos_e_tipo_do_treino(session, atleta):
     assert [s.tipo for s in a.segmentos] == (
         ["volta"] + ["tiro", "recuperacao"] * 5 + ["tiro", "volta"])
     assert {s.versao_deteccao for s in a.segmentos} == {"tiros_1km@6"}
-    assert (a.tipo_treino, a.tipo_origem) == ("intervalado", "sugestao")
+    # sem plano: o `intervalado` por tiros segue igual (agora vindo da tipo_treino@1, com a versao gravada)
+    assert (a.tipo_treino, a.tipo_origem, a.tipo_versao, a.tipo_divergencia) == (
+        "intervalado", "sugestao", "tipo_treino@1", None)
     leve = _ativ(session, "1000000003")
-    assert {s.tipo for s in leve.segmentos} == {"volta"} and leve.tipo_treino is None
+    assert {s.tipo for s in leve.segmentos} == {"volta"}
+    # corrida sem esforco: a regra de reserva da tipo_treino@1 (nao existia antes da #265) a chama de `leve`
+    assert (leve.tipo_treino, leve.tipo_origem) == ("leve", "sugestao")
     nat = _ativ(session, "1000000004")
     assert {s.tipo for s in nat.segmentos} == {"volta"} and {s.versao_deteccao for s in nat.segmentos} == {None}
+    assert (nat.tipo_treino, nat.tipo_origem) == (None, None)  # natacao sem plano: sem tipo
 
 
 def test_classificar_duas_vezes_nao_muda(session, atleta):

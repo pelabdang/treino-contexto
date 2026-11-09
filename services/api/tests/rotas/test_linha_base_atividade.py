@@ -143,6 +143,13 @@ def test_sem_valor_explica_o_motivo(client, banco):
     assert ms["carga"]["texto"] == "Sem carga neste treino: a carga ainda não foi calculada."
 
 
+def test_carga_com_a_mesma_unidade_no_valor_e_na_diferenca(client, banco):
+    m = {m["chave"]: m for m in _get(client, banco, "2026-03-18/cic1")["linha_base"]["metricas"]}["carga"]
+    assert m["estado"] == "fora"
+    assert (m["valor_texto"], m["mediana_texto"], m["diferenca_texto"]) == ("55,0 pontos", "43,0 pontos", "12,0 pontos maior")
+    assert m["texto"].startswith("Carga fora do seu normal para treino leve: 55,0 pontos, 12,0 pontos maior que a mediana de 43,0 pontos (")
+
+
 def test_esteira_nao_entra_no_pace_mas_a_fc_segue(client, banco):
     ms = {m["chave"]: m for m in _get(client, banco, "2026-01-06/cor1")["linha_base"]["metricas"]}
     assert ms["melhor_pace"]["estado"] == "sem_valor" and ms["melhor_pace"]["motivo"] == "esteira"
@@ -155,7 +162,7 @@ def test_sem_fc_na_sessao_e_sem_valor(client, banco, session):
     session.commit()
     ms = {m["chave"]: m for m in _get(client, banco, "2026-03-20/cor1")["linha_base"]["metricas"]}
     assert ms["fc_media"]["estado"] == "sem_valor" and ms["fc_media"]["motivo"] == "sem_fc"
-    assert ms["fc_media"]["texto"] == "Sem fc média neste treino: o treino não tem frequência cardíaca."
+    assert ms["fc_media"]["texto"] == "Sem FC média neste treino: o treino não tem frequência cardíaca."
 
 
 def test_divergencias_com_texto_pronto(client, banco):

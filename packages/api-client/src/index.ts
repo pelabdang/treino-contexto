@@ -27,7 +27,7 @@ export type SerieCarga = components["schemas"]["CargaSerieOut"];
 export type DiaCarga = components["schemas"]["DiaCargaOut"];
 export type TotaisCarga = components["schemas"]["TotaisCargaOut"];
 export type MotivoSemCarga = NonNullable<CargaAtividade["motivo"]>;
-// Semana-padrão (#264, ADR 0011): GET e PUT /atletas/{id}/semana-padrao. `atividades_reaplicadas` é 0 até a #265.
+// Semana-padrão (#264, ADR 0011): GET e PUT /atletas/{id}/semana-padrao. `atividades_reaplicadas` conta as atividades que mudaram de tipo (#265).
 export type SemanaPadrao = components["schemas"]["SemanaPadraoOut"];
 export type SemanaPadraoVigente = components["schemas"]["VigenteOut"];
 export type SemanaPadraoItem = components["schemas"]["ItemOut"];

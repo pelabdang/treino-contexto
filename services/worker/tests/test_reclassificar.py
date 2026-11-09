@@ -91,3 +91,18 @@ def test_cli(engine, atleta, session, capsys, monkeypatch):
     assert capsys.readouterr().out.strip() == f"reclassificadas 4 corridas do atleta {atleta.id}"
     assert cmd.main(["--atleta-id", "9999"]) == 1
     assert "não encontrado" in capsys.readouterr().err
+
+
+def test_reclassificar_regrava_o_tipo_antigo_e_limpa_o_pendente(session, atleta):
+    """Sugestao gravada antes da 0011 (sem `tipo_versao`) fica pendente; o comando a regrava com `tipo_treino@1`."""
+    reclassificar(session, atleta.id)
+    sugeridas = session.query(Atividade).filter(Atividade.tipo_origem == "sugestao").all()
+    assert sugeridas and all(a.tipo_versao == "tipo_treino@1" for a in sugeridas)
+    for a in sugeridas:
+        a.tipo_versao = None
+    session.commit()
+    assert reclassificacao_pendente(session, atleta.id) is True
+    reclassificar(session, atleta.id)
+    session.expire_all()
+    assert reclassificacao_pendente(session, atleta.id) is False
+    assert all(a.tipo_versao == "tipo_treino@1" for a in session.query(Atividade).filter(Atividade.tipo_origem == "sugestao"))

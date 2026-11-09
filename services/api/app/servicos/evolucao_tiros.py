@@ -29,10 +29,13 @@ from app.metricas.tiros_1km import (
 )
 from app.servicos.esforcos import detectar_esforcos
 from app.servicos.fuso import data_local
+from app.servicos.tipo_treino import aplicar_tipos
+from app.metricas import tipo_treino as tt
 
 log = logging.getLogger(__name__)
 
 ORIGENS_PROTEGIDAS = ("professor", "trainingpeaks")
+ORIGENS_DA_REGRA = ("sugestao", "semana_padrao")  # as que a `tipo_treino@1` escreve (e regrava)
 # Fora da série (continuam guardadas e classificadas): decisão do Angelo, issue #51.
 SUBTIPOS_FORA_DA_SERIE = ("esteira",)
 
@@ -63,22 +66,18 @@ def _classificar(ativ: Atividade) -> None:
         else:
             s.tipo = "volta"
         s.versao_deteccao = resultado.versao
-
-    if ativ.tipo_origem in ORIGENS_PROTEGIDAS or ativ.tipo_confirmado:
-        return
-    if resultado.eh_intervalado:
-        ativ.tipo_treino, ativ.tipo_origem = "intervalado", "sugestao"
-    elif ativ.tipo_origem == "sugestao" and ativ.tipo_treino == "intervalado":
-        ativ.tipo_treino = ativ.tipo_origem = None  # a regra não sugere mais
+    # O tipo do treino (inclusive o `intervalado` por tiros) não é mais decidido aqui: vem da `tipo_treino@1`
+    # (`app.servicos.tipo_treino.aplicar_tipos`, ADR 0011), chamada por `classificar_atividades` logo depois.
 
 
 def classificar_atividades(session: Session, atleta_id: int) -> int:
     """Detecta os esforços e classifica os segmentos de cada corrida do atleta. Idempotente. Devolve quantas corridas.
 
     Primeiro roda `detectar_esforcos` (blocos em `bloco_atividade`, `esforcos@1`); depois marca
-    `tiro`/`recuperacao`/`volta` nos segmentos pela visão de 1 km e grava `versao_deteccao`. Se é intervalado
-    (2 ou mais tiros), sugere `tipo_treino = intervalado` sem sobrescrever o tipo do professor/TrainingPeaks nem
-    um tipo confirmado. É também a reclassificação: uma versão nova da regra regrava tudo.
+    `tiro`/`recuperacao`/`volta` nos segmentos pela visão de 1 km e grava `versao_deteccao`. Depois grava o tipo de
+    todas as atividades do atleta pela `tipo_treino@1` (semana-padrão, depois regra de reserva; `aplicar_tipos`),
+    sem sobrescrever tipo do professor/TrainingPeaks nem confirmado. É também a reclassificação: uma versão nova da
+    regra regrava tudo.
     Falha na detecção de esforços vira aviso no log (não exceção): é o único ponto de detecção da importação.
     """
     try:
@@ -93,6 +92,8 @@ def classificar_atividades(session: Session, atleta_id: int) -> int:
     ).all()
     for a in ativs:
         _classificar(a)
+    session.flush()
+    aplicar_tipos(session, atleta_id)
     session.commit()
     return len(ativs)
 
@@ -182,6 +183,25 @@ def reclassificacao_pendente(
         if any(s.versao_deteccao != VERSAO for s in a.segmentos):
             return True
         if any(b.versao_deteccao != ef.VERSAO for b in a.blocos):
+            return True
+    return _tipo_desatualizado(session, atleta_id, inicio, fim)
+
+
+def _tipo_desatualizado(session: Session, atleta_id: int, inicio: date | None, fim: date | None) -> bool:
+    """Alguma atividade (de qualquer modalidade) tem tipo escrito pela regra (`sugestao` ou `semana_padrao`) com
+    `tipo_versao` diferente de `tipo_treino@1`? Inclui o `sugestao` antigo, de `tipo_versao` nulo (ADR 0011, item 1).
+    Tipo confirmado, `professor` e `trainingpeaks` não contam: a regra nunca os escreve."""
+    candidatas = session.scalars(
+        select(Atividade).where(
+            Atividade.atleta_id == atleta_id,
+            Atividade.tipo_origem.in_(ORIGENS_DA_REGRA),
+            Atividade.tipo_confirmado.is_(False),
+            or_(Atividade.tipo_versao.is_(None), Atividade.tipo_versao != tt.VERSAO),
+        )
+    ).all()
+    for a in candidatas:
+        dia = data_local(a.inicio, a.fuso_min)
+        if not ((inicio and dia < inicio) or (fim and dia > fim)):
             return True
     return False
 

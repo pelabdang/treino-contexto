@@ -2878,7 +2878,7 @@
         ]
       },
       "put": {
-        "description": "Cria ou substitui a vigência `vigente_desde` (reenviar é idempotente). `itens: []` encerra o plano. Não há `DELETE`.\nA reaplicação do tipo nas atividades é da #265: por enquanto `atividades_reaplicadas` é sempre 0.",
+        "description": "Cria ou substitui a vigência `vigente_desde` (reenviar é idempotente). `itens: []` encerra o plano. Não há `DELETE`.\nReaplica o tipo de treino (`tipo_treino@1`) nas atividades com data local >= `vigente_desde`, na mesma transação; `atividades_reaplicadas` é quantas mudaram.",
         "operationId": "gravarSemanaPadrao",
         "parameters": [
           {

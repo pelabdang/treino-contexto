@@ -151,6 +151,12 @@ def _treino(a: Atividade) -> lb.Treino:
     )
 
 
+def _minusculo(rotulo: str) -> str:
+    """Rótulo em minúsculas no meio da frase, mantendo a sigla FC ("FC média" vira "FC média", "Carga" vira "carga")."""
+    palavras = rotulo.split(" ")
+    return " ".join(w if w == "FC" else w.lower() for w in palavras)
+
+
 def _virgula(x: float, casas: int = 1) -> str:
     return f"{x:.{casas}f}".replace(".", ",")
 
@@ -160,7 +166,7 @@ def _texto_valor(tipo: str, x: float) -> str:
         return f"{formatar_pace(x)}/km"
     if tipo == "fc":
         return f"{int(x + 0.5)} bpm"
-    return _virgula(x)
+    return f"{_virgula(x)} pontos"
 
 
 def _diferenca(tipo: str, valor: float, mediana: float) -> str:
@@ -185,7 +191,7 @@ def _metrica_texto(m: lb.MetricaBase, tipo_treino: str, motivos: dict[str, str])
     if m.estado == "sem_valor":
         motivo = motivos.get(m.chave)
         por_que = MOTIVO_SEM_VALOR.get(motivo or "", "sem o dado neste treino")
-        texto = f"Sem {rotulo.lower()} neste treino: {por_que}."
+        texto = f"Sem {_minusculo(rotulo)} neste treino: {por_que}."
     elif m.estado == "aprendendo":
         texto = f"Ainda aprendendo o seu normal em treino {tipo_treino}: {m.n} de {MINIMO_TREINOS} treinos {janela}."
     elif m.estado == "dentro":

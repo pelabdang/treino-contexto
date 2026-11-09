@@ -51,12 +51,15 @@ separada por vírgula, lida em `app/config.py`; middleware em `criar_app` de `ap
 - `classificar_atividades(session, atleta_id)`: primeiro roda `detectar_esforcos` (blocos em `bloco_atividade`, [[metricas/esforcos]]); depois, para cada corrida, aplica a visão de tiros de 1 km ([[metricas/tiros-1km]], `tiros_1km@6`) e marca
   os segmentos como `tiro`, `recuperacao` ou `volta`, gravando `versao_deteccao` (ex.: `tiros_1km@6`) em todos os
   segmentos da corrida. Idempotente. A importação ([[modulos/ingestao-garmin]]) chama no fim.
-- **Tipo do treino:** se a corrida é intervalada, grava `tipo_treino = "intervalado"` e `tipo_origem = "sugestao"`.
-  Nunca sobrescreve `tipo_origem` `professor` ou `trainingpeaks`, nem tipo com `tipo_confirmado`. Se uma sugestão
-  `intervalado` anterior deixa de valer (a regra mudou ou as voltas mudaram), `tipo_treino` e `tipo_origem` voltam
-  para `NULL`; tipo do professor, do TrainingPeaks ou confirmado nunca volta.
+- **Tipo do treino (desde a #265, [[decisoes/0011-linha-de-base-e-semana-padrao]]):** o `_classificar` só marca os segmentos; o tipo de
+  **todas** as atividades do atleta (qualquer modalidade) vem de `servicos/tipo_treino.aplicar_tipos`, que chama a `tipo_treino@1`
+  ([[metricas/tipo-treino]]) no fim de `classificar_atividades`: tipo confirmado, `professor` e `trainingpeaks` não mudam; depois a
+  semana-padrão vigente na data local (`tipo_origem = semana_padrao`, com `tipo_divergencia` quando o formato contradiz o plano); por
+  último a regra de reserva (`sugestao`: `intervalado` por 2 ou mais tiros, como antes, e agora `leve`/`longo` por duração em corrida
+  sem esforço). Grava `tipo_treino`, `tipo_origem`, `tipo_versao` e `tipo_divergencia` só quando mudam; se o plano ou a regra deixam de
+  valer, o tipo cai para a reserva ou `NULL`. A série de tiros (`sessoes_tiros_1km`) continua lendo só os blocos, nunca `tipo_treino`.
 - `sessoes_tiros_1km(session, atleta_id, inicio=None, fim=None)`: o que a rota usa. Por sessão, o `PontoSessao`, o `inicio` em UTC e os tiros (`ordem`, `distancia_m`, `duracao_s`, `fc_media`). Desde a `@5` lê `bloco_atividade`: o tiro é um bloco `esforco` `d1000` e `ordem` é a `segmento.ordem` da primeira volta dele. `distancia_m` `None` segue possível no contrato, mas um bloco sem distância não é tiro.
-- `reclassificacao_pendente(session, atleta_id, inicio=None, fim=None)`: `True` se algum segmento das corridas da série (fora a esteira, dentro do período) tem `versao_deteccao` diferente de `VERSAO`, inclusive `NULL` (nunca classificado), ou se algum bloco foi gravado por outra versão dos esforços. Só lê.
+- `reclassificacao_pendente(session, atleta_id, inicio=None, fim=None)`: `True` se alguma atividade (de qualquer modalidade, no período) tem `tipo_origem` `sugestao` ou `semana_padrao`, não confirmada, com `tipo_versao` diferente de `tipo_treino@1` (inclui o `sugestao` antigo de `tipo_versao` nulo), ou se algum segmento das corridas da série (fora a esteira, dentro do período) tem `versao_deteccao` diferente de `VERSAO`, inclusive `NULL` (nunca classificado), ou se algum bloco foi gravado por outra versão dos esforços. Só lê.
 - `serie_tiros_1km(session, atleta_id, inicio=None, fim=None)` (só os pontos, sobre a mesma consulta): um `PontoSessao` por sessão intervalada
   (2 ou mais tiros), por data crescente. Lê os blocos já gravados (precisa de `classificar_atividades` ou
   `detectar_esforcos` antes). Uma sessão do professor marcada com outro tipo continua na série se tiver 2 ou mais tiros: a série
@@ -227,7 +230,7 @@ passa `ignoradas_multiesporte`.
 - **`GET ?em=AAAA-MM-DD`** (padrão: hoje em `America/Sao_Paulo`): `{atleta_id, em, vigente, vigencias}`. `vigente` é a linha de maior `vigente_desde <= em`, com `vigente_desde`, `definido_por`, `definido_em` (em `America/Sao_Paulo`) e `itens` (`dia_semana` 1 a 7, `dia_semana_texto`, `modalidade`, `tipo_treino` ou `null`), em ordem de dia e modalidade. **`vigente` é `null` só quando nenhuma vigência começou até `em`**; uma vigência vazia (encerra o plano) vem com `itens: []`. `vigencias` traz todas, da mais nova para a mais antiga, com `total_itens`. `404` atleta inexistente; `422` para `em` inválido.
 - **`PUT`** `{vigente_desde, definido_por, itens}` cria ou substitui a vigência numa transação (reenviar é idempotente, `itens: []` é válido, `vigente_desde` no futuro é aceito, não há `DELETE`). Resposta `200`: o objeto `vigente` mais `atividades_reaplicadas`. `422` para `dia_semana` fora de 1 a 7, modalidade fora de `corrida`/`natacao`/`ciclismo`, tipo fora dos cinco, `definido_por` fora de `atleta`/`professor` ou ausente, `vigente_desde` inválido ou ausente, `itens` ausente ou repetindo (`dia_semana`, `modalidade`); `404` atleta inexistente.
 - **Concorrência:** o upsert do cabeçalho usa `INSERT ... ON CONFLICT DO NOTHING` seguido de busca (dois `PUT` da mesma vigência, como um clique duplo, viram um insert e uma atualização, sem `500`), e atualiza o cabeçalho antes de trocar os itens para serializar os dois. Sem savepoint de propósito (no pysqlite o `RELEASE` commita a transação externa).
-- **Reaplicação do tipo: ainda não (é da #265).** Hoje o `PUT` só grava e devolve `atividades_reaplicadas: 0`. O ponto de extensão é `servicos.semana_padrao.reaplicar_tipos(session, atleta_id, vigente_desde) -> int`, chamado dentro da transação do `PUT` (se levantar, a vigência também não fica gravada). A #265 o implementa com a `tipo_treino@1` (item 8: atividades com data local >= `vigente_desde`, sem tocar tipo confirmado, `professor` nem `trainingpeaks`).
+- **Reaplicação do tipo (#265).** Depois de gravar, o `PUT` chama `servicos.semana_padrao.reaplicar_tipos(session, atleta_id, vigente_desde)`, que roda a `tipo_treino@1` ([[metricas/tipo-treino]]) por dia nas atividades com **data local >= `vigente_desde`** (as anteriores não são lidas nem regravadas), usando os blocos já gravados (não roda `detectar_esforcos`), sem tocar tipo confirmado, `professor` nem `trainingpeaks`. `atividades_reaplicadas` é quantas mudaram de tipo, origem, versão ou divergência (reenviar o mesmo `PUT` dá 0). Tudo na mesma transação: se a reaplicação falhar, o `PUT` inteiro volta atrás.
 - `definido_por` é rótulo declarado, não verificado: não há login (ADR 0011, "A confirmar" 1 e 7). Plano de treino é dado pessoal: não vai para log.
 - Testes: `tests/rotas/test_semana_padrao.py` (vigência no dia, vigência vazia, antes da primeira vigência, `em` padrão em São Paulo, `422`/`404`, rollback, concorrência simulada e, no Postgres, duas sessões de verdade) e `tests/test_migracoes.py`.
 
@@ -241,6 +244,17 @@ modelos Pydantic em `app/rotas/atividades.py`. **Calculada na leitura, nada é g
   Por métrica (as do tipo, ADR 0011 item 7): `chave` (`pace_medio`, `melhor_pace`, `fc_media`, `fc_melhor_tiro`, `carga`), `rotulo`, `unidade`, `estado`
   (`fora`, `dentro`, `aprendendo`, `sem_valor`), `motivo` (em `sem_valor`: `esteira`, `sem_tiros`, `sem_fc`, `sem_distancia`, `carga_pendente` ou o motivo da carga), `valor`,
   `valor_texto`, `mediana`, `mediana_texto`, `desvio`, `z`, `n`, `diferenca_texto` (só em `fora`) e `texto` pronto. Os números brutos saem **sem arredondar**; em `aprendendo` e `sem_valor` não há mediana, desvio nem z.
+- Formato dos textos (a API formata, o app só mostra). `pontos` é só o **nome da unidade da carga na tela** (a carga não tem unidade física); aparece igual em `valor_texto`, `mediana_texto` e `diferenca_texto`.
+
+  | `chave` | `rotulo` | `unidade` | `valor_texto` / `mediana_texto` | `diferenca_texto` |
+  |---|---|---|---|---|
+  | `pace_medio` | Pace médio | `s/km` | `5:06/km` | `24 s/km mais rápido` ou `mais lento` |
+  | `melhor_pace` | Pace do melhor tiro | `s/km` | `4:09/km` | `13 s/km mais rápido` ou `mais lento` |
+  | `fc_media` | FC média | `bpm` | `148 bpm` | `5 bpm acima` ou `abaixo` |
+  | `fc_melhor_tiro` | FC do melhor tiro | `bpm` | `172 bpm` | `4 bpm acima` ou `abaixo` |
+  | `carga` | Carga | `pontos` | `55,0 pontos` | `12,0 pontos maior` ou `menor` |
+
+  No texto de `sem_valor` o rótulo vai para minúsculas, mantendo a sigla `FC` ("Sem FC média neste treino: ...").
 - Valores: `pace_medio` = duração / distância (corrida, fora a esteira); `melhor_pace` e `fc_melhor_tiro` = o melhor tiro da série `tiros_1km@6` (a FC dele, sem trocar de tiro; a esteira fica sem `melhor_pace`); `fc_media` = `atividade.fc_media`; `carga` = a `carga@2` calculada (sem linha ou de versão antiga: `carga_pendente`).
 - Janela: mesmo atleta, modalidade e tipo, 56 dias antes da sessão pela data local, só treinos anteriores, sem divergentes, sem partes de treino de transição, sem multiesporte. Uma consulta por atividade, da ordem de dezenas de linhas.
 - Testes: `tests/rotas/test_linha_base_atividade.py` (oráculo das fixtures de `tests/fixtures/meta7/` passando pelo banco e pela rota: `LINHA_BASE_ESPERADA`, `SEM_LINHA_BASE`, textos, esteira, sem FC). Exemplo: `packages/api-client/exemplos/atividade-esforcos.json`.

@@ -77,7 +77,7 @@ class SemanaPadraoOut(BaseModel):
 
 
 class SemanaPadraoGravadaOut(VigenteOut):
-    atividades_reaplicadas: int  # quantas atividades mudaram de tipo, origem ou divergencia (sempre 0 ate a #265)
+    atividades_reaplicadas: int  # quantas atividades mudaram de tipo, origem, versao ou divergencia (so a partir de vigente_desde)
 
 
 def _definido_em(dt: datetime) -> datetime:
@@ -116,7 +116,7 @@ def semana_padrao_do_atleta(atleta_id: int, em: date | None = None, session: Ses
 @router.put("/semana-padrao", response_model=SemanaPadraoGravadaOut, operation_id="gravarSemanaPadrao", responses=_404)
 def gravar_semana_padrao(atleta_id: int, corpo: SemanaPadraoIn, session: Session = Depends(get_session)) -> SemanaPadraoGravadaOut:
     """Cria ou substitui a vigência `vigente_desde` (reenviar é idempotente). `itens: []` encerra o plano. Não há `DELETE`.
-    A reaplicação do tipo nas atividades é da #265: por enquanto `atividades_reaplicadas` é sempre 0."""
+    Reaplica o tipo de treino (`tipo_treino@1`) nas atividades com data local >= `vigente_desde`, na mesma transação; `atividades_reaplicadas` é quantas mudaram."""
     _atleta_existe(session, atleta_id)
     linha, reaplicadas = sp.gravar_vigencia(
         session, atleta_id, corpo.vigente_desde, corpo.definido_por,
