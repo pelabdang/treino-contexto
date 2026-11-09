@@ -233,5 +233,5 @@ a data passa a mostrar o aviso "Já existe uma semana que vale desde esta data. 
 - **Hífen sem quebra em "semana-padrão" no estado vazio:** o título do estado vazio quebra a linha no hífen ("semana-" / "padrão"). Detalhe visual da tela, para o Rafa.
 - **Esforço curto no intervalado:** sem a série de 1 km, o melhor esforço curto (por faixa de distância) fica fora da `linha_base@2`; o intervalado compara por FC média e carga por hora.
 - **Tipos raros ainda em "aprendendo":** tipo feito menos de 8 vezes em 12 semanas (quinzenal ou mais raro).
-- **Taxa de "fora" a revisar:** com o limite `|z| >= 2,5` e o piso de 2%, a proporção de treinos marcados "fora do normal" precisa ser olhada (calibração da #269, com números só em `entregas/`).
+- **Taxa de "fora" a revisar:** com o limite `|z| >= 2,5` e o piso de 2%, a proporção de treinos marcados "fora do normal" precisa ser revista depois da Meta 7.
 - **Conferência com o histórico real (#269):** não entra neste guia (o dado real fica fora do git).

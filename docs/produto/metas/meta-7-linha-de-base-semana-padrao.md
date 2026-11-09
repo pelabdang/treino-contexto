@@ -7,8 +7,8 @@ links: [[produto/roadmap]], [[produto/meta-7-como-rodar]], [[decisoes/0011-linha
 ---
 # Meta 7: linha de base pessoal e semana-padrão
 
-> **Situação: em andamento.** O código e a documentação principais estão no main (PRs #275 a #289, em 09/11). Faltam a conferência local com o
-> histórico real (#269), a QA de ponta a ponta (#271) e o resultado da meta (#272). Esta nota é um retrato de 09/11, escrito junto do guia; o Paulo a
+> **Situação: em andamento.** O código e a documentação principais estão no main (PRs #275 a #289, em 09/11). A conferência local com o
+> histórico real (#269) foi feita. Faltam a QA de ponta a ponta (#271) e o resultado da meta (#272). Esta nota é um retrato de 09/11, escrito junto do guia; o Paulo a
 > completa no fechamento.
 
 ## Objetivo
@@ -45,10 +45,10 @@ e carga por hora, com o esforço curto de fora). Detalhes em [[diario/2026-11-09
 | #270 | Guia [[produto/meta-7-como-rodar]], diário e esta nota | este |
 
 ## O que não foi verificado
-- **Conferência com o histórico real (#269):** depende do dado real, fora do git, e da semana-padrão do Angelo no banco local.
+- **Conferência com o histórico real (#269):** feita no banco local, com a semana-padrão do Angelo; números só em `entregas/`, fora do git.
 - **App em celular:** a tela foi vista só na web, com a API real e com a API falsa (os estados forçados), com testes de componente.
 - **QA de ponta a ponta (#271):** é da Bia.
 
 ## O que ficou de fora
 Como decidido: valores da literatura no início frio; professor com login e vínculo (a `definido_por` é só rótulo declarado); ciclismo sem velocidade média e natação sem pace por 100 m na linha de base;
-o melhor esforço curto do `intervalado` sem série de 1 km; janela maior para o tipo raro; hífen sem quebra no estado vazio da tela; taxa de "fora do normal" a revisar (#269).
+o melhor esforço curto do `intervalado` sem série de 1 km; janela maior para o tipo raro; hífen sem quebra no estado vazio da tela; taxa de "fora do normal" a revisar.
