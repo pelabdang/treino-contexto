@@ -2,7 +2,7 @@
 tipo: glossario
 status: em-uso
 dono: nina
-atualizado: 2026-11-06
+atualizado: 2026-11-09
 ---
 # Glossário
 
@@ -42,3 +42,14 @@ atualizado: 2026-11-06
 - **Grupo de transição**: sequência de atividades rotuladas, cada uma começando até 30 min depois do fim da anterior. Calculado na leitura, nunca guardado; o `grupo_id` muda quando uma correção parte ou junta o grupo. Só se comparam grupos da mesma forma (ex.: `ciclismo>corrida`). Ver [[decisoes/0009-treino-de-transicao]] e [[modulos/api]].
 - **Intervalo estimado**: tempo entre o fim de uma parte e o início da seguinte, com o fim estimado por `inicio + duracao_s` (tempo em movimento). Pode sair maior que o real e não ranqueia nada. Ver [[decisoes/0009-treino-de-transicao]].
 - **Multiesporte (pai e troca)**: treino em que o relógio grava uma atividade que agrupa as partes (`subtipo = multiesporte_pai`) e atividades de troca entre elas (`troca`), ambas com `modalidade = outra`. Ficam fora da regra de transição e, na Meta 6, fora da carga. Ver [[modulos/ingestao-garmin]].
+- **Semana-padrão**: plano semanal do atleta: para cada dia da semana (ISO, 1 = segunda) e modalidade, o tipo de treino esperado. Tem vigência (`vigente_desde`) e `definido_por` (`atleta` ou `professor`, rótulo declarado, sem login). Tabelas `semana_padrao` e `semana_padrao_item`. Ver [[decisoes/0011-linha-de-base-e-semana-padrao]] e [[modulos/banco]].
+- **Vigência (da semana-padrão)**: período em que uma semana-padrão vale. Para uma atividade, vale a de maior `vigente_desde` menor ou igual à data local; nunca a seguinte. Ver [[decisoes/0011-linha-de-base-e-semana-padrao]].
+- **Encaixe (na semana-padrão)**: ligar uma atividade ao item do plano do seu dia e modalidade. O item vale para uma atividade só: a de maior duração. Ver [[metricas/tipo-treino]].
+- **Origem do tipo (`tipo_origem`)**: de onde veio o tipo de treino: `professor`, `trainingpeaks` (confirmados, não mudam), `semana_padrao` (plano) ou `sugestao` (regra de reserva). Ver [[metricas/tipo-treino]].
+- **Regra de reserva**: regra que sugere o tipo da corrida quando o plano não dá um: 2 ou mais tiros = `intervalado`; sem esforço e 75 min ou mais = `longo`; sem esforço e 20 min ou mais = `leve`. `moderado` e `fartlek` nunca saem dela. Ver [[metricas/tipo-treino]].
+- **Divergência (de tipo)**: o formato do treino contradiz o plano (`sem_esforco` ou `tem_tiros`). O tipo do plano fica, o dado é gravado em `tipo_divergencia` e o treino não entra na linha de base. Ver [[metricas/tipo-treino]].
+- **Janela da linha de base**: os 56 dias (8 semanas) anteriores à sessão, no mesmo atleta, modalidade e tipo. Exige pelo menos 8 valores; com menos, o estado é `aprendendo`. Ver [[metricas/linha-base]].
+- **Desvio robusto**: medida de quanto os treinos variam em torno da mediana: `max(1,4826 x MAD, 2% da mediana)`. Não se deixa levar por um treino fora do comum. Ver [[metricas/linha-base]].
+- **MAD**: desvio absoluto mediano: a mediana de `|x - mediana|`. Base do desvio robusto. Ver [[metricas/linha-base]].
+- **Escore z (robusto)**: `(valor - mediana) / desvio robusto`. Com `|z| >= 2,5` a sessão fica `fora` do normal; senão, `dentro`. Compara com o histórico, não diz se o treino foi bom ou ruim. Ver [[metricas/linha-base]].
+- **Estado da linha de base**: `dentro`, `fora`, `aprendendo` (poucos treinos), `sem_valor` (a sessão não tem a métrica) ou sem linha de base, com motivo (`multiesporte`, `sem_tipo`, `divergente`, `transicao`, `modalidade_sem_metricas`). Ver [[metricas/linha-base]].
