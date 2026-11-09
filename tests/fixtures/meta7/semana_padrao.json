@@ -1,0 +1,86 @@
+{
+ "vigencias": [
+  {
+   "vigente_desde": "2026-01-05",
+   "definido_por": "atleta",
+   "itens": [
+    {
+     "dia_semana": 1,
+     "modalidade": "natacao",
+     "tipo_treino": null
+    },
+    {
+     "dia_semana": 2,
+     "modalidade": "corrida",
+     "tipo_treino": "intervalado"
+    },
+    {
+     "dia_semana": 3,
+     "modalidade": "ciclismo",
+     "tipo_treino": "leve"
+    },
+    {
+     "dia_semana": 4,
+     "modalidade": "corrida",
+     "tipo_treino": "fartlek"
+    },
+    {
+     "dia_semana": 6,
+     "modalidade": "corrida",
+     "tipo_treino": "longo"
+    },
+    {
+     "dia_semana": 6,
+     "modalidade": "ciclismo",
+     "tipo_treino": "moderado"
+    },
+    {
+     "dia_semana": 7,
+     "modalidade": "corrida",
+     "tipo_treino": null
+    }
+   ]
+  },
+  {
+   "vigente_desde": "2026-03-02",
+   "definido_por": "professor",
+   "itens": [
+    {
+     "dia_semana": 1,
+     "modalidade": "natacao",
+     "tipo_treino": "leve"
+    },
+    {
+     "dia_semana": 2,
+     "modalidade": "corrida",
+     "tipo_treino": "intervalado"
+    },
+    {
+     "dia_semana": 3,
+     "modalidade": "ciclismo",
+     "tipo_treino": "leve"
+    },
+    {
+     "dia_semana": 4,
+     "modalidade": "corrida",
+     "tipo_treino": "moderado"
+    },
+    {
+     "dia_semana": 6,
+     "modalidade": "corrida",
+     "tipo_treino": "longo"
+    },
+    {
+     "dia_semana": 6,
+     "modalidade": "ciclismo",
+     "tipo_treino": "moderado"
+    },
+    {
+     "dia_semana": 7,
+     "modalidade": "corrida",
+     "tipo_treino": null
+    }
+   ]
+  }
+ ]
+}
