@@ -103,7 +103,7 @@ sem velocidade média e natação sem pace por 100 m na linha de base; linha de 
 - **Janela maior para tipo raro** (caio-ciencia): tipo quinzenal ou mais raro segue em "aprendendo".
 - **Esforço curto no `intervalado` sem série de 1 km** (caio-ciencia).
 - **Hífen sem quebra** em "semana-padrão" no estado vazio da tela (rafa-app): hoje quebra em "semana-" e "padrão". Virou
-  como paralela da Meta 8 (#303).
+  a paralela da Meta 8 (#303).
 - **App em celular:** entrou no critério da Meta 8 (#301).
 - **Tela da linha de base no app**, **#213**, **#237** (rafa-app, com a Lia) e **#74** (vault do Graphify).
 
