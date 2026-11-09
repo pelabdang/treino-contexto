@@ -7,11 +7,17 @@ Dados sinteticos: nenhum dado real.
 import importlib.util
 import json
 import sys
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
 
 import pytest
-from app.db.models import Atividade, Atleta, BlocoAtividade, CargaAtividade, RotuloTransicao
+from app.db.models import (
+    Atividade,
+    Atleta,
+    BlocoAtividade,
+    CargaAtividade,
+    RotuloTransicao,
+)
 from app.db.session import get_session
 from app.main import criar_app
 from app.metricas import carga as cg
@@ -78,10 +84,10 @@ def banco(session):
         if f["carga"] is not None:
             a.carga = CargaAtividade(
                 estado="calculada", carga=f["carga"], metodo="hrtss", cobertura_pct=100.0, granularidade="atividade",
-                entrada="x" * 64, versao=cg.VERSAO, calculado_em=datetime(2026, 4, 1, tzinfo=timezone.utc))
+                entrada="x" * 64, versao=cg.VERSAO, calculado_em=datetime(2026, 4, 1, tzinfo=UTC))
         if f["transicao"]:
             a.rotulo_transicao = RotuloTransicao(
-                transicao=True, origem="atleta", definido_em=datetime(2026, 4, 1, tzinfo=timezone.utc))
+                transicao=True, origem="atleta", definido_em=datetime(2026, 4, 1, tzinfo=UTC))
         ids[f["id"]] = a
     session.commit()
     return atleta.id, {k: v.id for k, v in ids.items()}
@@ -97,8 +103,8 @@ def _get(client, banco, chave):
 @pytest.mark.parametrize("chave", sorted(O.LINHA_BASE_ESPERADA))
 def test_linha_de_base_igual_ao_oraculo(client, banco, chave):
     lb = _get(client, banco, chave)["linha_base"]
-    assert lb["versao"] == "linha_base@1" and lb["estado"] == "ok" and lb["motivo"] is None
-    assert lb["janela_semanas"] == 8 and lb["minimo_treinos"] == 8
+    assert lb["versao"] == "linha_base@2" and lb["estado"] == "ok" and lb["motivo"] is None
+    assert lb["janela_semanas"] == 12 and lb["minimo_treinos"] == 8
     esperado = O.LINHA_BASE_ESPERADA[chave]
     assert sorted(m["chave"] for m in lb["metricas"]) == sorted(esperado)  # as metricas do tipo
     for m in lb["metricas"]:
@@ -125,29 +131,41 @@ def test_texto_de_fora_e_o_da_adr(client, banco):
     assert (m["valor"], m["valor_texto"], m["mediana_texto"], m["diferenca_texto"]) == (306.0, "5:06/km", "5:30/km", "24 s/km mais rápido")
     assert m["texto"] == (
         "Pace médio fora do seu normal para treino leve: 5:06/km, 24 s/km mais rápido que a mediana de 5:30/km "
-        "(8 treinos nas últimas 8 semanas). Isto compara com o seu histórico; não diz se o treino foi bom ou ruim.")
+        "(11 treinos nas últimas 12 semanas). Isto compara com o seu histórico; não diz se o treino foi bom ou ruim.")
 
 
 def test_texto_de_dentro_e_de_aprendendo(client, banco):
     ms = {m["chave"]: m for m in _get(client, banco, "2026-03-20/cor1")["linha_base"]["metricas"]}
     assert ms["pace_medio"]["texto"] == (
-        "Pace médio dentro do seu normal para treino leve: 5:30/km, perto da mediana de 5:30/km (8 treinos nas últimas 8 semanas).")
-    assert ms["fc_media"]["estado"] == "aprendendo" and ms["fc_media"]["mediana"] is None and ms["fc_media"]["z"] is None
-    assert ms["fc_media"]["texto"] == "Ainda aprendendo o seu normal em treino leve: 5 de 8 treinos nas últimas 8 semanas."
-    assert ms["fc_media"]["valor_texto"].endswith(" bpm") and ms["fc_media"]["mediana_texto"] is None
+        "Pace médio dentro do seu normal para treino leve: 5:30/km, perto da mediana de 5:30/km (12 treinos nas últimas 12 semanas).")
+    assert ms["fc_media"]["estado"] == "dentro" and ms["fc_media"]["n"] == 9
+    # aprendendo: a natação leve de 16/03 tem só 2 treinos do tipo na janela
+    nat = _get(client, banco, "2026-03-16/nat1")["linha_base"]["metricas"][0]
+    assert nat["estado"] == "aprendendo" and nat["mediana"] is None and nat["z"] is None and nat["mediana_texto"] is None
+    assert nat["texto"] == "Ainda aprendendo o seu normal em treino leve: 2 de 8 treinos nas últimas 12 semanas."
+    assert nat["valor_texto"].endswith(" bpm")
 
 
 def test_sem_valor_explica_o_motivo(client, banco):
     ms = {m["chave"]: m for m in _get(client, banco, "2026-03-13/cor1")["linha_base"]["metricas"]}
-    assert ms["carga"]["estado"] == "sem_valor" and ms["carga"]["motivo"] == "carga_pendente" and ms["carga"]["valor"] is None
-    assert ms["carga"]["texto"] == "Sem carga neste treino: a carga ainda não foi calculada."
+    assert ms["carga_hora"]["estado"] == "sem_valor" and ms["carga_hora"]["motivo"] == "carga_pendente" and ms["carga_hora"]["valor"] is None
+    assert ms["carga_hora"]["texto"] == "Sem carga por hora neste treino: a carga ainda não foi calculada."
 
 
-def test_carga_com_a_mesma_unidade_no_valor_e_na_diferenca(client, banco):
-    m = {m["chave"]: m for m in _get(client, banco, "2026-03-18/cic1")["linha_base"]["metricas"]}["carga"]
-    assert m["estado"] == "fora"
-    assert (m["valor_texto"], m["mediana_texto"], m["diferenca_texto"]) == ("55,0 pontos", "43,0 pontos", "12,0 pontos maior")
-    assert m["texto"].startswith("Carga fora do seu normal para treino leve: 55,0 pontos, 12,0 pontos maior que a mediana de 43,0 pontos (")
+def test_carga_por_hora_com_a_mesma_unidade_no_valor_e_na_diferenca(client, banco):
+    m = {m["chave"]: m for m in _get(client, banco, "2026-03-18/cic1")["linha_base"]["metricas"]}["carga_hora"]
+    assert m["estado"] == "fora" and m["rotulo"] == "Carga por hora" and m["unidade"] == "pontos/h"
+    assert (m["valor_texto"], m["mediana_texto"], m["diferenca_texto"]) == ("55,0 pontos/h", "42,0 pontos/h", "13,0 pontos/h maior")
+    assert m["texto"].startswith("Carga por hora fora do seu normal para treino leve: 55,0 pontos/h, 13,0 pontos/h maior que a mediana de 42,0 pontos/h (")
+
+
+def test_carga_por_hora_divide_pela_duracao(client, banco):
+    # brick de 10/01: carga 30 em 2700 s (0,75 h) = 40 pontos/h; aprendendo, sem mediana
+    j = _get(client, banco, "2026-01-10/cic1")
+    assert j["linha_base"]["estado"] == "ok"
+    m = {m["chave"]: m for m in j["linha_base"]["metricas"]}["carga_hora"]
+    assert (m["estado"], m["valor"], m["valor_texto"], m["n"]) == ("aprendendo", 40.0, "40,0 pontos/h", 0)
+    assert m["texto"] == "Ainda aprendendo o seu normal em treino moderado (parte de transição): 0 de 8 treinos nas últimas 12 semanas."
 
 
 def test_esteira_nao_entra_no_pace_mas_a_fc_segue(client, banco):

@@ -33,7 +33,7 @@ def _valores(a):
         "melhor_pace": None if esteira or not tiros else tiros["melhor_pace_s_km"],
         "fc_melhor_tiro": tiros["fc_melhor_tiro"] if tiros else None,
         "fc_media": a["fc_media"],
-        "carga": a["carga"],
+        "carga_hora": None if a["carga"] is None else a["carga"] / (a["duracao_s"] / 3600),
     }
 
 
@@ -56,7 +56,7 @@ def test_sessoes_alvo_do_oraculo():
     historico = list(treinos.values())
     for sessao, esperado in orac.LINHA_BASE_ESPERADA.items():
         res = lb.linha_base(treinos[sessao], historico)
-        assert res.estado == "ok" and res.versao == "linha_base@1"
+        assert res.estado == "ok" and res.versao == "linha_base@2"
         assert {m.chave for m in res.metricas} == set(esperado), sessao
         for m in res.metricas:
             estado, n, med, desvio, z = esperado[m.chave]
@@ -135,14 +135,30 @@ def test_limite_fora_inclui_exatamente_2_5():
     assert lb.linha_base(_sessao(346.4), _leves([330] * 8)).metricas[0].estado == "dentro"
 
 
-def test_janela_de_56_dias_inclui_o_primeiro_dia_e_exclui_o_anterior():
-    # sessão em 2026-02-27 (dia 56 depois de 2026-01-02): o treino de 01-02 ainda entra; um de 01-01 não.
+def test_janela_de_84_dias_inclui_o_primeiro_dia_e_exclui_o_anterior():
+    # sessão 84 dias depois de 2026-01-02 (2026-03-27): o treino de 01-02 ainda entra; um de 01-01 não.
     base = _leves([330] * 8)  # 01-02, 01-09, ... 02-20
-    sessao = _sessao(330, dias=56)
+    sessao = _sessao(330, dias=84)
     assert lb.linha_base(sessao, base).metricas[0].n == 8
     velho = lb.Treino(id="v", inicio=base[0].inicio - timedelta(days=1), dia=base[0].dia - timedelta(days=1), modalidade="corrida",
                       tipo_treino="leve", valores={"pace_medio": 330})
     assert lb.linha_base(sessao, [velho, *base[1:]]).metricas[0].n == 7
+    assert lb.PADRAO.janela_dias == 84 and lb.PADRAO.minimo_treinos == 8
+
+
+def test_parte_de_transicao_tem_base_propria_e_as_isoladas_nao_veem_as_partes():
+    isoladas = _leves([330] * 8)
+    partes = [lb.Treino(**{**t.__dict__, "id": f"t{t.id}", "transicao": True, "valores": {"pace_medio": 300}}) for t in _leves([300] * 8)]
+    ini = _sessao(0).inicio
+    parte = lb.Treino(id="p", inicio=ini, dia=ini.date(), modalidade="corrida", tipo_treino="leve", transicao=True, valores={"pace_medio": 300})
+    isolada = _sessao(330)
+    pace_parte = lb.linha_base(parte, [*isoladas, *partes]).metricas[0]
+    assert (pace_parte.estado, pace_parte.n, pace_parte.mediana) == ("dentro", 8, 300)  # só as partes
+    pace_isolada = lb.linha_base(isolada, [*isoladas, *partes]).metricas[0]
+    assert (pace_isolada.estado, pace_isolada.n, pace_isolada.mediana) == ("dentro", 8, 330)  # só as isoladas
+    # sem partes anteriores, a parte fica aprendendo (n = 0), não "sem linha de base"
+    sozinha = lb.linha_base(parte, isoladas)
+    assert sozinha.estado == "ok" and sozinha.metricas[0].estado == "aprendendo" and sozinha.metricas[0].n == 0
 
 
 def test_so_treinos_anteriores_e_a_sessao_nunca_entra():
@@ -171,9 +187,9 @@ def test_metrica_sem_valor_na_sessao_explica_e_conta_n():
 
 
 def test_metricas_por_modalidade_e_tipo():
-    assert lb.metricas_do_tipo("corrida", "intervalado") == ("melhor_pace", "fc_melhor_tiro", "carga")
-    assert lb.metricas_do_tipo("corrida", "fartlek") == ("fc_media", "carga")
-    assert lb.metricas_do_tipo("ciclismo", "leve") == ("fc_media", "carga")
+    assert lb.metricas_do_tipo("corrida", "intervalado") == ("melhor_pace", "fc_melhor_tiro", "fc_media", "carga_hora")
+    assert lb.metricas_do_tipo("corrida", "fartlek") == ("fc_media", "carga_hora")
+    assert lb.metricas_do_tipo("ciclismo", "leve") == ("fc_media", "carga_hora")
     assert lb.metricas_do_tipo("natacao", "leve") == ("fc_media",)
     assert lb.metricas_do_tipo("outra", None) == ()
 
@@ -183,7 +199,6 @@ def test_metricas_por_modalidade_e_tipo():
     ({"modalidade": "outra"}, "modalidade_sem_metricas"),
     ({"tipo_treino": None}, "sem_tipo"),
     ({"divergente": True}, "divergente"),
-    ({"transicao": True}, "transicao"),
     ({"tipo_treino": None, "divergente": True, "transicao": True}, "sem_tipo"),  # ordem da ADR
 ])
 def test_motivos_na_ordem_da_adr(kw, motivo):

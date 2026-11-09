@@ -240,11 +240,11 @@ modelos Pydantic em `app/rotas/atividades.py`. **Calculada na leitura, nada é g
 - `tipo_treino`, `tipo_origem` (`sugestao`, `professor`, `trainingpeaks`, `semana_padrao`), `tipo_confirmado` e `tipo_divergencia` (`null` ou `{motivo, texto}`;
   `sem_esforco`: "O plano diz intervalado, mas o treino não teve esforço detectado."; `tem_tiros`: "O plano diz leve, mas o treino teve 6 tiros de 1 km.").
 - `linha_base`: `versao`, `estado` (`ok` ou `sem_linha_base`), `motivo`, `texto` (só em `sem_linha_base`), `modalidade`, `tipo_treino`, `janela_semanas`, `minimo_treinos` e `metricas`.
-  Sem linha de base, o `motivo` é o primeiro de `multiesporte`, `modalidade_sem_metricas`, `sem_tipo`, `divergente`, `transicao`, com `metricas: []`.
-  Por métrica (as do tipo, ADR 0011 item 7): `chave` (`pace_medio`, `melhor_pace`, `fc_media`, `fc_melhor_tiro`, `carga`), `rotulo`, `unidade`, `estado`
+  Sem linha de base, o `motivo` é o primeiro de `multiesporte`, `modalidade_sem_metricas`, `sem_tipo`, `divergente`, com `metricas: []` (a parte de treino de transição tem base própria desde a `linha_base@2`).
+  Por métrica (as do tipo, ADR 0011 item 7): `chave` (`pace_medio`, `melhor_pace`, `fc_media`, `fc_melhor_tiro`, `carga_hora`), `rotulo`, `unidade`, `estado`
   (`fora`, `dentro`, `aprendendo`, `sem_valor`), `motivo` (em `sem_valor`: `esteira`, `sem_tiros`, `sem_fc`, `sem_distancia`, `carga_pendente` ou o motivo da carga), `valor`,
   `valor_texto`, `mediana`, `mediana_texto`, `desvio`, `z`, `n`, `diferenca_texto` (só em `fora`) e `texto` pronto. Os números brutos saem **sem arredondar**; em `aprendendo` e `sem_valor` não há mediana, desvio nem z.
-- Formato dos textos (a API formata, o app só mostra). `pontos` é só o **nome da unidade da carga na tela** (a carga não tem unidade física); aparece igual em `valor_texto`, `mediana_texto` e `diferenca_texto`.
+- Formato dos textos (a API formata, o app só mostra). `pontos/h` é só o **nome da unidade da carga por hora na tela** (a carga não tem unidade física); aparece igual em `valor_texto`, `mediana_texto` e `diferenca_texto`.
 
   | `chave` | `rotulo` | `unidade` | `valor_texto` / `mediana_texto` | `diferenca_texto` |
   |---|---|---|---|---|
@@ -252,11 +252,11 @@ modelos Pydantic em `app/rotas/atividades.py`. **Calculada na leitura, nada é g
   | `melhor_pace` | Pace do melhor tiro | `s/km` | `4:09/km` | `13 s/km mais rápido` ou `mais lento` |
   | `fc_media` | FC média | `bpm` | `148 bpm` | `5 bpm acima` ou `abaixo` |
   | `fc_melhor_tiro` | FC do melhor tiro | `bpm` | `172 bpm` | `4 bpm acima` ou `abaixo` |
-  | `carga` | Carga | `pontos` | `55,0 pontos` | `12,0 pontos maior` ou `menor` |
+  | `carga_hora` | Carga por hora | `pontos/h` | `55,0 pontos/h` | `13,0 pontos/h maior` ou `menor` |
 
   No texto de `sem_valor` o rótulo vai para minúsculas, mantendo a sigla `FC` ("Sem FC média neste treino: ...").
-- Valores: `pace_medio` = duração / distância (corrida, fora a esteira); `melhor_pace` e `fc_melhor_tiro` = o melhor tiro da série `tiros_1km@6` (a FC dele, sem trocar de tiro; a esteira fica sem `melhor_pace`); `fc_media` = `atividade.fc_media`; `carga` = a `carga@2` calculada (sem linha ou de versão antiga: `carga_pendente`).
-- Janela: mesmo atleta, modalidade e tipo, 56 dias antes da sessão pela data local, só treinos anteriores, sem divergentes, sem partes de treino de transição, sem multiesporte. Uma consulta por atividade, da ordem de dezenas de linhas.
+- Valores: `pace_medio` = duração / distância (corrida, fora a esteira); `melhor_pace` e `fc_melhor_tiro` = o melhor tiro da série `tiros_1km@6` (a FC dele, sem trocar de tiro; a esteira fica sem `melhor_pace`); `fc_media` = `atividade.fc_media`; `carga_hora` = a `carga@2` calculada dividida pelas horas de `duracao_s` (sem linha ou de versão antiga: `carga_pendente`; sem duração: `sem_duracao`).
+- Janela: mesmo atleta, modalidade e tipo, 84 dias (12 semanas) antes da sessão pela data local, só treinos anteriores, sem divergentes e sem multiesporte; a parte de treino de transição compara só com partes de transição e a isolada só com isoladas (`linha_base@2`). Uma consulta por atividade, da ordem de dezenas de linhas.
 - Testes: `tests/rotas/test_linha_base_atividade.py` (oráculo das fixtures de `tests/fixtures/meta7/` passando pelo banco e pela rota: `LINHA_BASE_ESPERADA`, `SEM_LINHA_BASE`, textos, esteira, sem FC). Exemplo: `packages/api-client/exemplos/atividade-esforcos.json`.
 
 ## Contrato da tela de evolução (Meta 2)

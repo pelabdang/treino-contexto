@@ -9,7 +9,7 @@ linguagem. Os motivos de uma métrica sem valor (`esteira`, `sem_tiros`, `sem_fc
 from __future__ import annotations
 
 from dataclasses import dataclass
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
 
 from sqlalchemy import select
 from sqlalchemy.orm import Session, selectinload
@@ -17,7 +17,12 @@ from sqlalchemy.orm import Session, selectinload
 from app.db.models import Atividade
 from app.metricas import carga as cg
 from app.metricas import linha_base as lb
-from app.metricas.tiros_1km import agregar_sessao, formatar_pace, tiro_de_bloco, tiros_de_blocos
+from app.metricas.tiros_1km import (
+    agregar_sessao,
+    formatar_pace,
+    tiro_de_bloco,
+    tiros_de_blocos,
+)
 from app.servicos.evolucao_tiros import SUBTIPOS_FORA_DA_SERIE, _bloco
 from app.servicos.fuso import data_local
 
@@ -30,7 +35,7 @@ METRICAS = {
     "melhor_pace": ("Pace do melhor tiro", "s/km", "pace"),
     "fc_media": ("FC média", "bpm", "fc"),
     "fc_melhor_tiro": ("FC do melhor tiro", "bpm", "fc"),
-    "carga": ("Carga", "pontos", "carga"),
+    "carga_hora": ("Carga por hora", "pontos/h", "carga"),
 }
 
 MOTIVO_SEM_LINHA_BASE = {
@@ -38,7 +43,6 @@ MOTIVO_SEM_LINHA_BASE = {
     "modalidade_sem_metricas": "a modalidade não tem métricas de linha de base",
     "sem_tipo": "o treino não tem tipo",
     "divergente": "treino com formato diferente do plano",
-    "transicao": "parte de treino de transição",
 }
 MOTIVO_SEM_VALOR = {
     "esteira": "esteira, a distância vem do aparelho",
@@ -46,6 +50,7 @@ MOTIVO_SEM_VALOR = {
     "sem_fc": "o treino não tem frequência cardíaca",
     "sem_tiros": "o treino não teve série de tiros",
     "carga_pendente": "a carga ainda não foi calculada",
+    "sem_duracao": "o treino não tem duração para a carga por hora",
     "sem_dados_saude": "sem dados de saúde para a carga",
     "sem_limiar_na_data": "sem limiar na data para a carga",
     "sem_fc_carga": "sem frequência cardíaca para a carga",
@@ -87,7 +92,7 @@ class LinhaBaseTexto:
 
 
 def _utc(dt: datetime) -> datetime:
-    return dt.replace(tzinfo=timezone.utc) if dt.tzinfo is None else dt.astimezone(timezone.utc)
+    return dt.replace(tzinfo=UTC) if dt.tzinfo is None else dt.astimezone(UTC)
 
 
 def _melhor_tiro(a: Atividade) -> tuple[float, float | None] | None:
@@ -119,11 +124,13 @@ def valores_e_motivos(a: Atividade) -> tuple[dict[str, float | None], dict[str, 
         v["fc_media"], m["fc_media"] = None, "sem_fc"
     c = a.carga
     if c is None or c.versao != cg.VERSAO:
-        v["carga"], m["carga"] = None, "carga_pendente"
+        v["carga_hora"], m["carga_hora"] = None, "carga_pendente"
+    elif c.estado == "calculada" and a.duracao_s > 0:
+        v["carga_hora"] = c.carga / (a.duracao_s / 3600.0)  # carga@2 por hora de tempo em movimento (linha_base@2)
     elif c.estado == "calculada":
-        v["carga"] = c.carga
+        v["carga_hora"], m["carga_hora"] = None, "sem_duracao"
     else:
-        v["carga"], m["carga"] = None, "sem_fc_carga" if c.motivo == "sem_fc" else c.motivo
+        v["carga_hora"], m["carga_hora"] = None, "sem_fc_carga" if c.motivo == "sem_fc" else c.motivo
     if a.modalidade == "corrida" and a.tipo_treino == "intervalado":
         melhor = _melhor_tiro(a)
         if melhor is None:
@@ -166,7 +173,7 @@ def _texto_valor(tipo: str, x: float) -> str:
         return f"{formatar_pace(x)}/km"
     if tipo == "fc":
         return f"{int(x + 0.5)} bpm"
-    return f"{_virgula(x)} pontos"
+    return f"{_virgula(x)} pontos/h"
 
 
 def _diferenca(tipo: str, valor: float, mediana: float) -> str:
@@ -175,11 +182,16 @@ def _diferenca(tipo: str, valor: float, mediana: float) -> str:
         return f"{int(d + 0.5)} s/km {'mais rápido' if valor < mediana else 'mais lento'}"
     if tipo == "fc":
         return f"{int(d + 0.5)} bpm {'acima' if valor > mediana else 'abaixo'}"
-    return f"{_virgula(d)} pontos {'maior' if valor > mediana else 'menor'}"
+    return f"{_virgula(d)} pontos/h {'maior' if valor > mediana else 'menor'}"
 
 
 def _treinos(n: int) -> str:
     return f"{n} treino" if n == 1 else f"{n} treinos"
+
+
+def _nome_tipo(t: lb.Treino) -> str:
+    """Tipo como entra nos textos: a parte de treino de transição compara só com partes de transição (linha_base@2)."""
+    return f"{t.tipo_treino} (parte de transição)" if t.transicao else str(t.tipo_treino)
 
 
 def _metrica_texto(m: lb.MetricaBase, tipo_treino: str, motivos: dict[str, str]) -> MetricaTexto:
@@ -220,7 +232,7 @@ def linha_base_da_atividade(session: Session, a: Atividade) -> LinhaBaseTexto:
             Atividade.id != a.id,
             Atividade.modalidade == a.modalidade,
             Atividade.tipo_treino == a.tipo_treino,
-            Atividade.inicio >= datetime(corte.year, corte.month, corte.day, tzinfo=timezone.utc),
+            Atividade.inicio >= datetime(corte.year, corte.month, corte.day, tzinfo=UTC),
             Atividade.inicio <= _utc(a.inicio),
         )
         .options(selectinload(Atividade.blocos), selectinload(Atividade.carga), selectinload(Atividade.rotulo_transicao))
@@ -229,7 +241,7 @@ def linha_base_da_atividade(session: Session, a: Atividade) -> LinhaBaseTexto:
     _, motivos = valores_e_motivos(a)
     return LinhaBaseTexto(
         resultado.versao, resultado.estado, resultado.motivo, None,
-        metricas=tuple(_metrica_texto(m, a.tipo_treino, motivos) for m in resultado.metricas), **base)
+        metricas=tuple(_metrica_texto(m, _nome_tipo(sessao), motivos) for m in resultado.metricas), **base)
 
 
 TEXTO_DIVERGENCIA = {

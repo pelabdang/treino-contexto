@@ -3,7 +3,7 @@
 NÃO roda o código de produção da `tipo_treino@1` nem da `linha_base@1` (que ainda não existem, #262 e #263): confere que as
 fixtures são a saída do gerador, que cobrem cada caso do encaixe (E1 a E16) e que o oráculo escrito à mão é coerente
 com uma referência curta e independente das regras da ADR (`_tipo_referencia`, `_linha_base_referencia`).
-Os valores que dependem do "A confirmar" vêm de `PARAMETROS` em `oraculo.py`.
+Os valores que dependem do "A confirmar" vêm de `PARAMETROS` em `oraculo.py`. Desde a #288 o oráculo é o da `linha_base@2`.
 """
 
 import importlib.util
@@ -98,11 +98,11 @@ def _tipo_referencia():
 
 
 METRICAS = {
-    ("corrida", "intervalado"): ("melhor_pace", "fc_melhor_tiro", "carga"),
-    ("corrida", "leve"): ("pace_medio", "fc_media", "carga"),
-    ("corrida", "longo"): ("pace_medio", "fc_media", "carga"),
-    ("corrida", "moderado"): ("pace_medio", "fc_media", "carga"),
-    ("corrida", "fartlek"): ("fc_media", "carga"),
+    ("corrida", "intervalado"): ("melhor_pace", "fc_melhor_tiro", "fc_media", "carga_hora"),
+    ("corrida", "leve"): ("pace_medio", "fc_media", "carga_hora"),
+    ("corrida", "longo"): ("pace_medio", "fc_media", "carga_hora"),
+    ("corrida", "moderado"): ("pace_medio", "fc_media", "carga_hora"),
+    ("corrida", "fartlek"): ("fc_media", "carga_hora"),
 }
 
 
@@ -117,12 +117,13 @@ def _valor(a, chave):
         return a["tiros"]["fc_melhor_tiro"] if a["tiros"] else None
     if chave == "fc_media":
         return a["fc_media"]
-    return a["carga"]  # carga@2 (corrida e natação sem dados de saúde ficam None)
+    # carga@2 por hora (linha_base@2); corrida e natação sem dados de saúde ficam None
+    return None if a["carga"] is None else a["carga"] / (a["duracao_s"] / 3600)
 
 
 def _chaves(modalidade, tipo):
     if modalidade == "ciclismo":
-        return ("fc_media", "carga")
+        return ("fc_media", "carga_hora")
     if modalidade == "natacao":
         return ("fc_media",)
     return METRICAS[(modalidade, tipo)]
@@ -137,8 +138,6 @@ def _motivo_sem_base(a, tipos):
         return "sem_tipo"
     if P["DIVERGENTE_FORA_DA_BASE"] and tipos[a["id"]][2]:
         return "divergente"
-    if P["TRANSICAO_FORA_DA_BASE"] and a["transicao"]:
-        return "transicao"
     return None
 
 
@@ -149,6 +148,7 @@ def _linha_base_referencia(sessao_id, tipos):
     pool = [
         a for a in ATIVIDADES
         if a["id"] != sessao_id and a["modalidade"] == s["modalidade"] and tipos[a["id"]][0] == tipo
+        and a["transicao"] == s["transicao"]  # linha_base@2: parte de transição só com parte de transição
         and _motivo_sem_base(a, tipos) is None and _inicio(a) < _inicio(s) and _dia(a) >= inicio_dia
     ]
     saida = {}
@@ -282,4 +282,4 @@ def test_a_sessao_nunca_entra_na_propria_linha_de_base_e_tipos_nao_se_misturam()
     # 13/03 (leve, 306) fora da própria janela; ciclismo e natação leves não entram na linha da corrida leve.
     ref = _linha_base_referencia("2026-03-20/cor1", oraculo.TIPO_ESPERADO)
     assert ref["pace_medio"][2] == 330.0  # inclui os 306 de 13/03, não os 330 da própria sessão de 20/03
-    assert _linha_base_referencia("2026-03-13/cor1", oraculo.TIPO_ESPERADO)["pace_medio"][1] == 8
+    assert _linha_base_referencia("2026-03-13/cor1", oraculo.TIPO_ESPERADO)["pace_medio"][1] == 11  # 8 sextas + 2 domingos + a segunda corrida de 13/01

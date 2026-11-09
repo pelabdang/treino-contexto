@@ -118,13 +118,13 @@
   "tipo_confirmado": false,
   "tipo_divergencia": null,
   "linha_base": {
-    "versao": "linha_base@1",
+    "versao": "linha_base@2",
     "estado": "sem_linha_base",
     "motivo": "sem_tipo",
     "texto": "Sem linha de base: o treino não tem tipo.",
     "modalidade": "corrida",
     "tipo_treino": null,
-    "janela_semanas": 8,
+    "janela_semanas": 12,
     "minimo_treinos": 8,
     "metricas": []
   },
