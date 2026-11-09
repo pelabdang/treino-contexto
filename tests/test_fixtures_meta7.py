@@ -10,11 +10,10 @@ import importlib.util
 import json
 import statistics
 import sys
-from datetime import date, datetime, timedelta, timezone
+from datetime import date, datetime, timedelta
 from pathlib import Path
 
 import pytest
-
 from app.servicos.fuso import data_local
 
 PASTA = Path(__file__).parent / "fixtures" / "meta7"
@@ -62,7 +61,7 @@ def _tipo_referencia():
     for a in ATIVIDADES:
         if a["subtipo"] not in IGNORADAS:
             grupos.setdefault((_dia(a), a["modalidade"]), []).append(a)
-    dono = {k: sorted(v, key=lambda a: (-a["duracao_s"], a["inicio"], a["id"]))[0]["id"] for k, v in grupos.items()}
+    dono = {k: min(v, key=lambda a: (-a["duracao_s"], a["inicio"], a["id"]))["id"] for k, v in grupos.items()}
     saida = {}
     for a in ATIVIDADES:
         if a["subtipo"] in IGNORADAS:

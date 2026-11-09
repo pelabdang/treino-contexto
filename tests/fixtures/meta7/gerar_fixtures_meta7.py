@@ -13,7 +13,7 @@ Os valores das séries (pace, FC, carga) são literais escolhidos para a conta �
 from __future__ import annotations
 
 import json
-from datetime import date, datetime, timedelta, timezone
+from datetime import UTC, date, datetime, timedelta
 from pathlib import Path
 
 PASTA = Path(__file__).parent
@@ -53,7 +53,7 @@ def add(dia, hora, modalidade, duracao_s, distancia_m, fc, *, subtipo=None, fuso
     h, mi = map(int, hora.split(":"))
     local = datetime(dia.year, dia.month, dia.day, h, mi)
     deslocamento = fuso if fuso is not None else FUSO_SP
-    utc = (local - timedelta(minutes=deslocamento)).replace(tzinfo=timezone.utc)
+    utc = (local - timedelta(minutes=deslocamento)).replace(tzinfo=UTC)
     ini = inicial or {}
     _regs.append({
         "modalidade": modalidade, "subtipo": subtipo, "inicio": utc.isoformat(), "fuso_min": fuso,
