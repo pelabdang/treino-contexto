@@ -43,6 +43,21 @@
               }
             ]
           },
+          "checkin": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/CheckinOut"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "checkin_aberto": {
+            "default": false,
+            "title": "Checkin Aberto",
+            "type": "boolean"
+          },
           "clima": {
             "anyOf": [
               {
@@ -141,6 +156,17 @@
               }
             ],
             "title": "Pace Medio"
+          },
+          "pse_sugerida": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Pse Sugerida"
           },
           "subtipo": {
             "anyOf": [
@@ -1840,6 +1866,71 @@
         "title": "ParteOut",
         "type": "object"
       },
+      "PendenteOut": {
+        "description": "Um treino recente sem check-in. Nenhum campo do check-in: so o que ja e da atividade (titulo nao e dado de saude).",
+        "properties": {
+          "atividade_id": {
+            "title": "Atividade Id",
+            "type": "integer"
+          },
+          "data_local": {
+            "title": "Data Local",
+            "type": "string"
+          },
+          "duracao": {
+            "title": "Duracao",
+            "type": "string"
+          },
+          "hora_local": {
+            "title": "Hora Local",
+            "type": "string"
+          },
+          "modalidade": {
+            "title": "Modalidade",
+            "type": "string"
+          },
+          "titulo": {
+            "title": "Titulo",
+            "type": "string"
+          }
+        },
+        "required": [
+          "atividade_id",
+          "modalidade",
+          "data_local",
+          "hora_local",
+          "duracao",
+          "titulo"
+        ],
+        "title": "PendenteOut",
+        "type": "object"
+      },
+      "PendentesOut": {
+        "properties": {
+          "dias": {
+            "title": "Dias",
+            "type": "integer"
+          },
+          "pendentes": {
+            "items": {
+              "$ref": "#/components/schemas/PendenteOut"
+            },
+            "title": "Pendentes",
+            "type": "array"
+          },
+          "total": {
+            "title": "Total",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "dias",
+          "total",
+          "pendentes"
+        ],
+        "title": "PendentesOut",
+        "type": "object"
+      },
       "Periodo": {
         "properties": {
           "fim": {
@@ -2959,6 +3050,66 @@
         "summary": "Carga Do Atleta",
         "tags": [
           "carga"
+        ]
+      }
+    },
+    "/atletas/{atleta_id}/checkins/pendentes": {
+      "get": {
+        "description": "Treinos do atleta sem check-in com data local em `[hoje - dias, hoje]` (hoje em America/Sao_Paulo), mais recentes primeiro.\nToda modalidade, menos `multiesporte_pai` e `troca`. Sem nenhum campo do check-in.",
+        "operationId": "listarCheckinsPendentes",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "atleta_id",
+            "required": true,
+            "schema": {
+              "title": "Atleta Id",
+              "type": "integer"
+            }
+          },
+          {
+            "description": "Janela em dias, de 1 ao prazo de criação (7)",
+            "in": "query",
+            "name": "dias",
+            "required": false,
+            "schema": {
+              "default": 7,
+              "description": "Janela em dias, de 1 ao prazo de criação (7)",
+              "maximum": 7,
+              "minimum": 1,
+              "title": "Dias",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PendentesOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Erro"
+                }
+              }
+            },
+            "description": "Atleta não encontrado"
+          },
+          "422": {
+            "description": "Entrada inválida, atividade que não pede check-in ou fora do prazo. Nunca repete o que foi enviado: só `loc`, `msg` e `type`"
+          }
+        },
+        "summary": "Listar Checkins Pendentes",
+        "tags": [
+          "check-in"
         ]
       }
     },

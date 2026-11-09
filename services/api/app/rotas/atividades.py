@@ -9,7 +9,7 @@ from typing import Literal
 
 from fastapi import APIRouter, Depends, File, HTTPException, Response, UploadFile
 from pydantic import BaseModel, Field
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, joinedload
 
 from app.db.models import Atividade, Atleta
 from app.db.session import get_session
@@ -23,8 +23,10 @@ from app.ingestao.importacao import (
 )
 from app.metricas import esforcos as ef
 from app.metricas.tiros_1km import formatar_pace
+from app.rotas.checkin import CheckinOut, checkin_out
 from app.rotas.evolucao import Erro
 from app.rotas.transicao import TransicaoOut, transicao_da_atividade
+from app.servicos import checkin as checkin_svc
 from app.servicos.carga_leitura import CargaLida, carga_da_atividade
 from app.servicos.clima import ClimaDaAtividade, EstadoClima, clima_da_atividade
 from app.servicos.distancia_texto import distancia_da_atividade
@@ -159,6 +161,10 @@ class AtividadeOut(BaseModel):
     tipo_confirmado: bool = False
     tipo_divergencia: DivergenciaOut | None = None
     linha_base: LinhaBaseOut | None = None
+    # Check-in pos-treino (ADR 0012, #298): dado de saude, so do proprio atleta; nunca nas listas.
+    checkin: CheckinOut | None = None  # null: sem check-in ou atividade que nao pede (multiesporte_pai e troca)
+    checkin_aberto: bool = False  # false em pai/troca e quando o prazo de criacao passou sem check-in; true se ja existe (editar nao tem prazo)
+    pse_sugerida: int | None = None  # numa parte de multiesporte: a PSE do check-in da parte anterior, se houver
     # Campos prontos para a tela (#158): a API formata, o app mostra (ADR 0004, adendo 2).
     data_local: str  # AAAA-MM-DD, pelo fuso da atividade (ADR 0003)
     hora_local: str  # HH:MM, pelo fuso da atividade
@@ -172,10 +178,7 @@ MODALIDADES_COM_PACE = ("corrida",)
 
 
 def _duracao_hms(duracao_s: float) -> str:
-    total = int(duracao_s + 0.5)
-    h, resto = divmod(total, 3600)
-    m, s = divmod(resto, 60)
-    return f"{h}:{m:02d}:{s:02d}"
+    return checkin_svc.duracao_hms(duracao_s)
 
 
 def _pace_medio(a: Atividade) -> str | None:
@@ -328,7 +331,7 @@ def buscar_atividade(
     """A atividade com o `clima` (ADR 0007). `indoor`, `sem_posicao`, `pendente` e `falha` dizem por que não há valores."""
     if session.get(Atleta, atleta_id) is None:
         raise HTTPException(status_code=404, detail="atleta não encontrado")
-    a = session.get(Atividade, atividade_id)
+    a = session.get(Atividade, atividade_id, options=[joinedload(Atividade.checkin)])  # LEFT JOIN: sem consulta extra
     if a is None or a.atleta_id != atleta_id:
         raise HTTPException(status_code=404, detail="atividade não encontrada")
     clima = clima_da_atividade(session, atividade_id)
@@ -352,6 +355,9 @@ def buscar_atividade(
         tipo_confirmado=bool(a.tipo_confirmado),
         tipo_divergencia=None if div is None else DivergenciaOut(motivo=div[0], texto=div[1]),
         linha_base=LinhaBaseOut.model_validate(asdict(linha_base_da_atividade(session, a))),
+        checkin=None if a.checkin is None else checkin_out(a.checkin),
+        checkin_aberto=checkin_svc.checkin_aberto(a, a.checkin is not None),
+        pse_sugerida=checkin_svc.pse_sugerida(session, a),
         data_local=local.date().isoformat(),
         hora_local=local.strftime("%H:%M"),
         duracao=_duracao_hms(a.duracao_s),

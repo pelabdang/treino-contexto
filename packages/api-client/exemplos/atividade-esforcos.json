@@ -128,6 +128,9 @@
     "minimo_treinos": 8,
     "metricas": []
   },
+  "checkin": null,
+  "checkin_aberto": false,
+  "pse_sugerida": null,
   "data_local": "2025-05-07",
   "hora_local": "06:00",
   "duracao": "0:34:51",

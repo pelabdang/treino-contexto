@@ -20,6 +20,7 @@ def criar_app(cors_origens: str | None = None) -> FastAPI:
     app.include_router(transicao.router)
     app.include_router(carga.router)
     app.include_router(checkin.router)
+    app.include_router(checkin.router_pendentes)
     app.include_router(semana_padrao.router)
 
     @app.get("/health")

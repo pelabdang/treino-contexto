@@ -10,7 +10,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from datetime import date, datetime, timedelta, timezone
 
-from sqlalchemy import delete, select
+from sqlalchemy import delete, or_, select
 from sqlalchemy.dialects.postgresql import insert as _insert_pg
 from sqlalchemy.dialects.sqlite import insert as _insert_sqlite
 from sqlalchemy.orm import Session
@@ -120,3 +120,75 @@ def apagar_checkins_do_atleta(session: Session, atleta_id: int) -> int:
     ).rowcount
     session.commit()
     return n
+
+
+def duracao_hms(duracao_s: float) -> str:
+    """h:mm:ss, segundos arredondados com meio para cima (adendo 2 da ADR 0004)."""
+    total = int(duracao_s + 0.5)
+    h, resto = divmod(total, 3600)
+    m, s = divmod(resto, 60)
+    return f"{h}:{m:02d}:{s:02d}"
+
+
+def checkin_aberto(a: Atividade, tem_checkin: bool, hoje: date | None = None) -> bool:
+    """O app deve oferecer o check-in? Falso em `multiesporte_pai`/`troca` e quando o prazo de criacao passou sem check-in;
+    verdadeiro se ja existe (editar nao tem prazo). Decide a tela (#299); a API continua recusando o que nao vale."""
+    if not elegivel(a):
+        return False
+    return tem_checkin or no_prazo(a, hoje)
+
+
+def _utc(dt: datetime) -> datetime:
+    return dt if dt.tzinfo else dt.replace(tzinfo=timezone.utc)
+
+
+def pse_sugerida(session: Session, a: Atividade) -> int | None:
+    """Numa parte de multiesporte, a PSE do check-in da parte anterior do mesmo multiesporte, se houver (ADR 0012, item 4;
+    pedido do desenho da tela, #295). A parte e uma atividade elegivel que comeca dentro do intervalo do `multiesporte_pai`
+    do atleta (`inicio` ate `inicio + duracao_s`); a anterior e a elegivel de `inicio` imediatamente menor no mesmo pai.
+    Fora de multiesporte, ou sem check-in na anterior: `None`."""
+    if not elegivel(a):
+        return None
+    pais = session.scalars(select(Atividade).where(
+        Atividade.atleta_id == a.atleta_id, Atividade.subtipo == "multiesporte_pai", Atividade.inicio <= a.inicio)
+        .order_by(Atividade.inicio.desc())).all()
+    for pai in pais:
+        if _utc(a.inicio) > _utc(pai.inicio) + timedelta(seconds=pai.duracao_s):
+            continue
+        anterior = session.scalars(select(Atividade).where(
+            Atividade.atleta_id == a.atleta_id, Atividade.id != a.id, Atividade.inicio >= pai.inicio, Atividade.inicio < a.inicio,
+            or_(Atividade.subtipo.is_(None), Atividade.subtipo.not_in(tuple(SUBTIPOS_SEM_CHECKIN))))
+            .order_by(Atividade.inicio.desc(), Atividade.id.desc())).first()
+        if anterior is None:
+            return None
+        c = _buscar(session, anterior.id)
+        return None if c is None else c.pse
+    return None
+
+
+TITULO_MODALIDADE = {"corrida": "Corrida", "natacao": "Natação", "ciclismo": "Ciclismo", "outra": "Treino"}
+
+
+def titulo(a: Atividade) -> str:
+    """"Corrida, 45 min": modalidade e minutos arredondados. Nao e dado de saude."""
+    return f"{TITULO_MODALIDADE.get(a.modalidade, 'Treino')}, {int(a.duracao_s / 60 + 0.5)} min"
+
+
+def pendentes(session: Session, atleta_id: int, dias: int, hoje: date | None = None) -> list[Atividade]:
+    """Atividades elegiveis do atleta SEM check-in com data local em `[hoje - dias, hoje]`, mais recentes primeiro.
+    `atividade LEFT JOIN checkin_treino WHERE checkin_treino.id IS NULL`, com `subtipo IS NULL OR subtipo NOT IN (...)`
+    (um `NOT IN` solto excluiria os subtipos nulos). A data local nao sai em SQL: filtra-se por `inicio` com um dia de folga
+    e confere-se a data local em Python."""
+    hoje = hoje or hoje_local()
+    corte = hoje - timedelta(days=dias + 1)
+    linhas = session.scalars(
+        select(Atividade)
+        .outerjoin(CheckinTreino, CheckinTreino.atividade_id == Atividade.id)
+        .where(
+            Atividade.atleta_id == atleta_id, CheckinTreino.id.is_(None),
+            or_(Atividade.subtipo.is_(None), Atividade.subtipo.not_in(tuple(SUBTIPOS_SEM_CHECKIN))),
+            Atividade.inicio >= datetime(corte.year, corte.month, corte.day, tzinfo=timezone.utc),
+        )
+        .order_by(Atividade.inicio.desc(), Atividade.id.desc())
+    ).all()
+    return [a for a in linhas if dias_ate_hoje(data_local(a.inicio, a.fuso_min), hoje, dias) and data_local(a.inicio, a.fuso_min) <= hoje]

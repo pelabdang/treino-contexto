@@ -13,7 +13,7 @@ from collections.abc import Callable
 from datetime import datetime, timezone
 from typing import Literal
 
-from fastapi import APIRouter, Depends, HTTPException, Request, Response
+from fastapi import APIRouter, Depends, HTTPException, Query, Request, Response
 from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
 from fastapi.routing import APIRoute
@@ -24,7 +24,7 @@ from app.db.models import CHECKIN_ATALHOS, CHECKIN_TEXTO_MAX, Atividade, Atleta,
 from app.db.session import get_session
 from app.rotas.evolucao import Erro
 from app.servicos import checkin as svc
-from app.servicos.fuso import FUSO_PADRAO
+from app.servicos.fuso import FUSO_PADRAO, inicio_local
 
 log = logging.getLogger(__name__)
 
@@ -170,3 +170,45 @@ def apagar_checkin(atleta_id: int, atividade_id: int, session: Session = Depends
     svc.apagar_checkin(session, atividade_id)
     log.info("checkin apagado: atleta=%s atividade=%s", atleta_id, atividade_id)
     return Response(status_code=204)
+
+
+class PendenteOut(BaseModel):
+    """Um treino recente sem check-in. Nenhum campo do check-in: so o que ja e da atividade (titulo nao e dado de saude)."""
+
+    atividade_id: int
+    modalidade: str
+    data_local: str  # AAAA-MM-DD (ADR 0003)
+    hora_local: str  # HH:MM
+    duracao: str  # h:mm:ss
+    titulo: str  # pronto: "Corrida, 45 min"
+
+
+class PendentesOut(BaseModel):
+    dias: int
+    total: int
+    pendentes: list[PendenteOut]  # mais recentes primeiro
+
+
+router_pendentes = APIRouter(prefix="/atletas/{atleta_id}/checkins", tags=["check-in"], route_class=RotaCheckin)
+
+
+@router_pendentes.get(
+    "/pendentes", response_model=PendentesOut, operation_id="listarCheckinsPendentes",
+    responses={404: {"model": Erro, "description": "Atleta não encontrado"}, 422: _RESPOSTAS[422]},
+)
+def listar_checkins_pendentes(
+    atleta_id: int,
+    dias: int = Query(svc.PRAZO_DIAS, ge=1, le=svc.PRAZO_DIAS, description="Janela em dias, de 1 ao prazo de criação (7)"),
+    session: Session = Depends(get_session),
+) -> PendentesOut:
+    """Treinos do atleta sem check-in com data local em `[hoje - dias, hoje]` (hoje em America/Sao_Paulo), mais recentes primeiro.
+    Toda modalidade, menos `multiesporte_pai` e `troca`. Sem nenhum campo do check-in."""
+    if session.get(Atleta, atleta_id) is None:
+        raise HTTPException(status_code=404, detail="atleta não encontrado")
+    itens = []
+    for a in svc.pendentes(session, atleta_id, dias):
+        local = inicio_local(a.inicio, a.fuso_min)
+        itens.append(PendenteOut(
+            atividade_id=a.id, modalidade=a.modalidade, data_local=local.date().isoformat(), hora_local=local.strftime("%H:%M"),
+            duracao=svc.duracao_hms(a.duracao_s), titulo=svc.titulo(a)))
+    return PendentesOut(dias=dias, total=len(itens), pendentes=itens)
