@@ -7,11 +7,10 @@ os casos de borda com valores escritos aqui.
 import importlib.util
 import json
 import sys
-from datetime import date, datetime, timezone
+from datetime import UTC, date, datetime
 from pathlib import Path
 
 import pytest
-
 from app.metricas import tipo_treino as tt
 from app.servicos.fuso import data_local
 
@@ -77,7 +76,7 @@ def test_vigencia_nunca_olha_a_seguinte():
 
 
 def _corrida(id, dia, duracao, estrutura=tt.SEM_ESFORCO, n_tiros=0, hora=7, **kw):
-    return tt.Atividade(id=id, dia=dia, modalidade="corrida", inicio=datetime(dia.year, dia.month, dia.day, hora, tzinfo=timezone.utc),
+    return tt.Atividade(id=id, dia=dia, modalidade="corrida", inicio=datetime(dia.year, dia.month, dia.day, hora, tzinfo=UTC),
                         duracao_s=duracao, estrutura=estrutura, n_tiros=n_tiros, **kw)
 
 
@@ -99,7 +98,7 @@ def test_reserva_nao_inventa_moderado_nem_fartlek_nem_tipa_outras_modalidades():
     esforco = _corrida(1, date(2026, 2, 6), 3000, estrutura=tt.ESFORCO)
     sem_blocos = _corrida(2, date(2026, 2, 7), 3000, estrutura=None)
     um_tiro = _corrida(3, date(2026, 2, 8), 3000, estrutura=tt.TIROS, n_tiros=1)
-    bike = tt.Atividade(id=4, dia=date(2026, 2, 9), modalidade="ciclismo", inicio=datetime(2026, 2, 9, tzinfo=timezone.utc), duracao_s=3600)
+    bike = tt.Atividade(id=4, dia=date(2026, 2, 9), modalidade="ciclismo", inicio=datetime(2026, 2, 9, tzinfo=UTC), duracao_s=3600)
     res = tt.classificar([esforco, sem_blocos, um_tiro, bike], [])
     assert all(r == tt.SEM_TIPO for r in res.values())
 
@@ -155,3 +154,10 @@ def test_tipo_protegido_nunca_muda(protegida):
     a = _corrida(1, TERCA, 3000, tipo_treino="longo", **protegida)
     r = tt.classificar([a], PLANO)[1]
     assert r.tipo_treino == "longo" and r.divergencia is None and r.versao is None
+
+
+def test_desempate_por_menor_id_ordena_inteiros_como_numeros():
+    dez = _corrida(10, TERCA, 1800)
+    nove = _corrida(9, TERCA, 1800)  # mesma duração e mesmo início
+    res = tt.classificar([dez, nove], PLANO)
+    assert res[9].tipo_origem == "semana_padrao" and res[10].tipo_origem == "sugestao"

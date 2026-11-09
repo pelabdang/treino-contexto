@@ -76,6 +76,11 @@ def vigencia_na_data(vigencias: Iterable[Vigencia], dia: date) -> Vigencia | Non
     return max(candidatas, key=lambda v: v.vigente_desde) if candidatas else None
 
 
+def _chave_id(id_: Hashable) -> tuple[int, int | str]:
+    """Menor id: inteiros ordenam como números (9 antes de 10); os demais, como texto, depois dos inteiros."""
+    return (0, id_) if isinstance(id_, int) else (1, str(id_))
+
+
 def _protegida(a: Atividade) -> bool:
     return a.tipo_confirmado or a.tipo_origem in ORIGENS_PROTEGIDAS
 
@@ -121,7 +126,7 @@ def classificar(atividades: Sequence[Atividade], vigencias: Sequence[Vigencia]) 
     """
     elegiveis = [a for a in atividades if a.subtipo not in SUBTIPOS_IGNORADOS]
     dono: dict[tuple[date, str], Atividade] = {}
-    for a in sorted(elegiveis, key=lambda a: (-a.duracao_s, a.inicio, str(a.id))):
+    for a in sorted(elegiveis, key=lambda a: (-a.duracao_s, a.inicio, _chave_id(a.id))):
         dono.setdefault((a.dia, a.modalidade), a)
 
     saida: dict[Hashable, Resultado] = {}
