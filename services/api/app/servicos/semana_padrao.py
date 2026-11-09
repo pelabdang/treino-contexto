@@ -7,6 +7,7 @@ from datetime import date, datetime, timezone
 
 from app.db.models import SemanaPadrao, SemanaPadraoItem
 from app.servicos.fuso import FUSO_PADRAO
+from app.servicos.tipo_treino import aplicar_tipos
 from sqlalchemy import func, select
 from sqlalchemy.dialects.postgresql import insert as _insert_pg
 from sqlalchemy.dialects.sqlite import insert as _insert_sqlite
@@ -92,10 +93,12 @@ def reaplicar_tipos(session: Session, atleta_id: int, vigente_desde: date) -> in
     """PONTO DE EXTENSAO da #265: reaplica o tipo das atividades do atleta com data local >= `vigente_desde`
     (ADR 0011, item 8) e devolve quantas mudaram de tipo, origem ou divergencia.
 
-    TODO(#265): chamar a `tipo_treino@1` (#262) por dia, via `classificar_atividades`. Roda dentro da transacao do PUT:
-    se levantar, a vigencia tambem nao fica gravada. Hoje nao reaplica nada e devolve 0.
+    Roda a `tipo_treino@1` por dia (`aplicar_tipos`) nas atividades com data local >= `vigente_desde`; as anteriores
+    nao sao lidas nem regravadas. Nao roda `detectar_esforcos` (usa os blocos ja gravados), nao toca tipo confirmado,
+    `professor` nem `trainingpeaks` e nao faz commit: dentro da transacao do PUT, se levantar, a vigencia tambem nao
+    fica gravada.
     """
-    return 0
+    return aplicar_tipos(session, atleta_id, vigente_desde)
 
 
 def gravar_vigencia(

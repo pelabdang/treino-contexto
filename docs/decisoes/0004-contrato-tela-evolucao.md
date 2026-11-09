@@ -191,7 +191,7 @@ no CORS (sem `*`, sem cookies). Detalhes em [[modulos/api]].
 nenhuma existente: `GET` e `PUT /atletas/{atleta_id}/semana-padrao` (`semanaPadraoDoAtleta` e `gravarSemanaPadrao`). Valem a regra do
 adendo 2 ("a API formata, o app mostra"): o item traz `dia_semana_texto` pronto (`segunda`, `terça`...) e `definido_em` já em
 `America/Sao_Paulo`; o app não monta texto de dia. Erros no formato de sempre: `404` com `Erro` (`detail` string) e `422` do FastAPI
-(`detail` lista). O `PUT` devolve `atividades_reaplicadas`, que vale `0` até a #265 reaplicar o tipo. Os tipos entram em
+(`detail` lista). O `PUT` devolve `atividades_reaplicadas` (quantas atividades mudaram de tipo; a #265 reaplica o tipo). Os tipos entram em
 `packages/api-client` (`SemanaPadrao`, `SemanaPadraoGravada` e afins); ainda sem função de busca (a tela é a #267).
 O que a ADR 0011 prevê para a atividade (`tipo_origem` com `semana_padrao`, `tipo_divergencia` e `linha_base` no `GET .../atividades/{id}`)
 **não entra aqui**: é a #266, com outro adendo. Detalhes em [[modulos/api]].
