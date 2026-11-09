@@ -1,13 +1,13 @@
 ---
 tipo: decisao
-status: proposta
+status: aceita
 dono: caio
 atualizado: 2026-11-09
 links: [[decisoes/0002-segmento-intensidade-e-versao]], [[decisoes/0003-fuso-da-atividade]], [[decisoes/0004-contrato-tela-evolucao]], [[decisoes/0005-serie-de-tiros-o-que-entra]], [[decisoes/0008-deteccao-de-esforcos]], [[decisoes/0009-treino-de-transicao]], [[decisoes/0010-carga-de-treino]], [[metricas/tiros-1km]], [[metricas/carga-treino]], [[modulos/banco]], [[modulos/api]], [[produto/roadmap]], [[produto/plano-mvp-execucao]], [[glossario]]
 ---
 # ADR: 0011 Linha de base pessoal, semana-padrão e tipo de treino
 
-> Proposta de 09/11 (issue #260). Fica "aceita" quando o Theo aprovar o modelo de dados no PR e o Angelo responder a seção "A confirmar".
+> Aceita em 09/11 (issue #260): modelo de dados aprovado pelo Theo no PR #277 e os sete itens de "A confirmar" respondidos pelo Angelo ("ok para as sete": valem os padrões).
 > **Nenhuma linha de código nem migração muda neste PR.** Todos os números e exemplos são sintéticos.
 > Dá base para #261 (fixtures e oráculo), #262 (`tipo_treino@1`), #263 (`linha_base@1`), #264 (banco e API da semana-padrão),
 > #265 (`classificar_atividades`), #266 (`linha_base` no `GET` da atividade) e #267 (desenho da tela).
@@ -494,8 +494,8 @@ Citações **ainda não conferidas nos textos**; o Caio abre cada uma antes de a
   88(424), 1273-1283. A constante 1,4826 como fator de consistência com o desvio padrão normal.
 - Regra própria do projeto, sem artigo: janela de 8 semanas e mínimo de 8 treinos (decisão do Angelo, 09/11), `PISO_REL`, `LEVE_MIN_S` e `LONGO_MIN_S`.
 
-## A confirmar
-Para o Angelo. Cada item traz **o padrão que o time segue enquanto não houver resposta**.
+## A confirmar (respondido em 09/11)
+O Angelo aceitou os sete padrões abaixo em 09/11 ("ok para as sete"). Eles valem como decisão.
 
 1. **`definido_por` sem login.** A tela pergunta "Quem definiu" (atleta ou treinador) ou grava sempre "atleta"?
    **Padrão:** a tela pergunta, com "atleta" já marcado. O rótulo é declarado, não dá permissão a ninguém.
@@ -517,4 +517,5 @@ Calibração que **não** precisa do Angelo: `LEVE_MIN_S`, `LONGO_MIN_S` e `PISO
 
 ## Data e quem decidiu
 2026-11-09. Proposta do Caio (ciência), com revisão da Duda (modelo de dados e API) pedida no PR. Decisões de produto do Angelo e do
-Theo de 09/11 listadas no Contexto. Issue #260. Aprovação do Theo e respostas do Angelo ainda pendentes.
+Theo de 09/11 listadas no Contexto. Issue #260. Modelo de dados aprovado pelo Theo (PR #277, 09/11); "A confirmar" respondido pelo
+Angelo em 09/11 com os sete padrões.
