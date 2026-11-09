@@ -1,3 +1,4 @@
+import { StyleSheet } from "react-native";
 import { fireEvent, render, screen, waitFor, within } from "@testing-library/react-native";
 
 import { TelaSemanaPadrao } from "../src/componentes/TelaSemanaPadrao";
@@ -181,6 +182,43 @@ describe("tela da semana-padrão", () => {
       expect(screen.getByRole("radio", { name: "Treinador" }).props.accessibilityState.checked).toBe(true);
       expect(screen.getByRole("radio", { name: "Eu" }).props.accessibilityState.checked).toBe(false);
       expect(screen.getByTestId("salvar").props.accessibilityState.disabled).toBe(false);
+    });
+  });
+
+  describe("layout", () => {
+    it("a folha de opções fecha com o ícone close", async () => {
+      await render(tela(comPlano()));
+      await screen.findByTestId("formulario");
+      await fireEvent.press(screen.getByTestId("adicionar-1"));
+      expect(screen.getByText("[close]")).toBeTruthy();
+      await fireEvent.press(screen.getByRole("button", { name: "Fechar" }));
+      expect(screen.queryByText("Qual modalidade?")).toBeNull();
+    });
+
+    it("o chip de cada modalidade tem a mesma largura mínima (seletores alinhados)", async () => {
+      await render(tela(comPlano()));
+      await screen.findByTestId("formulario");
+      const larg = (id: string) => StyleSheet.flatten(screen.getByTestId(id).props.style).minWidth;
+      expect(larg("chip-1-natacao")).toBe(larg("chip-2-corrida"));
+      expect(larg("chip-2-corrida")).toBeGreaterThanOrEqual(96);
+    });
+
+    it("com fonte grande o seletor desce de linha: a linha do item quebra e o seletor tem largura mínima", async () => {
+      await render(tela(comPlano()));
+      await screen.findByTestId("formulario");
+      const item = screen.getByTestId("tipo-2-corrida").parent!;
+      expect(StyleSheet.flatten(item.props.style).flexWrap).toBe("wrap");
+      const seletor = StyleSheet.flatten(screen.getByTestId("tipo-2-corrida").props.style) as { minWidth: number; flex: number };
+      expect(seletor.minWidth).toBe(120);
+      expect(seletor.flex).toBe(1);
+    });
+
+    it("a barra de salvar tem a largura da coluna do conteúdo, centralizada", async () => {
+      await render(tela(comPlano()));
+      await screen.findByTestId("formulario");
+      const barra = StyleSheet.flatten(screen.getByTestId("barra-salvar").props.style);
+      expect([720 + 2 * 16, 720 + 2 * 24]).toContain(barra.maxWidth);
+      expect(barra.alignSelf).toBe("center");
     });
   });
 

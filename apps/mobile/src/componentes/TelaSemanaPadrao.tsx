@@ -475,7 +475,7 @@ export function TelaSemanaPadrao({ apiUrl, atletaId, aoVoltar, fetchFn, hojeFn }
                           }`}
                           style={styles.item}
                         >
-                          <View style={styles.chip}>
+                          <View testID={`chip-${dia}-${item.modalidade}`} style={styles.chip}>
                             <MaterialIcons name={mod.icone} size={tamanho.iconePequeno} color={tema.cor[mod.cor]} accessible={false} />
                             <Text style={styles.chipTexto}>{mod.nome}</Text>
                           </View>
@@ -564,7 +564,7 @@ export function TelaSemanaPadrao({ apiUrl, atletaId, aoVoltar, fetchFn, hojeFn }
       </ScrollView>
 
       {mostrarForm && (
-        <View style={styles.barra}>
+        <View testID="barra-salvar" style={styles.barra}>
           <View style={styles.barraInterna}>
             {aviso && (
               <View
@@ -726,6 +726,15 @@ function Opcoes({
   styles: Estilos;
   tema: Tema;
 }) {
+  // Esc fecha na web (o Modal do react-native-web também o faz; fechar duas vezes é inofensivo).
+  useEffect(() => {
+    if (!aberta || Platform.OS !== "web" || typeof document === "undefined") return;
+    const tecla = (e: KeyboardEvent) => {
+      if (e.key === "Escape") fechar();
+    };
+    document.addEventListener("keydown", tecla);
+    return () => document.removeEventListener("keydown", tecla);
+  }, [aberta, fechar]);
   return (
     <Modal visible={aberta} transparent animationType="slide" onRequestClose={fechar}>
       <Pressable accessibilityLabel="Fechar" style={styles.fundoModal} onPress={fechar}>
@@ -735,7 +744,7 @@ function Opcoes({
               {titulo}
             </Text>
             <Pressable accessibilityRole="button" accessibilityLabel="Fechar" onPress={fechar} style={styles.fechar}>
-              <MaterialIcons name="expand-more" size={tamanho.iconeGrande} color={tema.cor["texto-2"]} accessible={false} />
+              <MaterialIcons name="close" size={tamanho.iconeGrande} color={tema.cor["texto-2"]} accessible={false} />
             </Pressable>
           </View>
           {apoio && <Text style={styles.legenda}>{apoio}</Text>}
@@ -841,13 +850,13 @@ function criarEstilos({ cor }: Tema, margem: number = espaco[4]) {
       alignItems: "center",
       gap: espaco[1],
       minHeight: tamanho.botaoAltura,
-      minWidth: 108,
+      minWidth: 100,
       paddingHorizontal: espaco[2],
     },
     chipTexto: { ...fonte.rotulo, color: cor.texto },
     seletor: {
       flex: 1,
-      minWidth: 140,
+      minWidth: 120,
       flexDirection: "row",
       alignItems: "center",
       justifyContent: "space-between",
@@ -891,11 +900,17 @@ function criarEstilos({ cor }: Tema, margem: number = espaco[4]) {
       borderWidth: borda.fina,
       borderColor: cor.destaque,
     },
-    barra: { borderTopWidth: borda.fina, borderTopColor: cor.borda, backgroundColor: cor.superficie },
-    barraInterna: {
+    // Na web larga a barra acompanha a coluna do conteúdo (720 mais as margens), centralizada.
+    barra: {
       width: "100%",
       maxWidth: larguraConteudoMax + 2 * margem,
       alignSelf: "center",
+      borderTopWidth: borda.fina,
+      borderTopColor: cor.borda,
+      backgroundColor: cor.superficie,
+    },
+    barraInterna: {
+      width: "100%",
       padding: margem,
       gap: espaco[2],
     },
