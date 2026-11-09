@@ -3,7 +3,7 @@ tipo: roteiro
 status: em-uso
 dono: paulo
 atualizado: 2026-11-09
-links: [[produto/plano-mvp-execucao]], [[decisoes/0001-modelo-de-dados-minimo]], [[decisoes/0005-serie-de-tiros-o-que-entra]], [[produto/metas/meta-1-tiros-1km]], [[produto/metas/meta-2-evolucao-tiros-app]], [[produto/metas/meta-3-upload-fit]], [[decisoes/0004-contrato-tela-evolucao]], [[decisoes/0006-upload-de-fit]], [[decisoes/0003-fuso-da-atividade]], [[diario/2026-11-03]], [[00-inicio]], [[produto/metas/meta-4-clima-atividade]], [[decisoes/0007-clima-da-atividade]], [[produto/meta-4-como-rodar]], [[metricas/tiros-1km]], [[decisoes/0008-deteccao-de-esforcos]], [[diario/2026-11-04]], [[produto/metas/meta-5-deteccao-esforcos]], [[produto/meta-5-como-rodar]], [[decisoes/0009-treino-de-transicao]], [[metricas/esforcos]], [[metricas/transicao]], [[modulos/ingestao-garmin]], [[diario/2026-11-06]], [[produto/metas/meta-6-carga-treino]], [[produto/meta-6-como-rodar]], [[decisoes/0010-carga-de-treino]], [[metricas/carga-treino]], [[metricas/serie-carga]], [[metricas/conferencia-carga]], [[diario/2026-11-07]], [[diario/2026-11-08]]
+links: [[produto/plano-mvp-execucao]], [[decisoes/0001-modelo-de-dados-minimo]], [[decisoes/0005-serie-de-tiros-o-que-entra]], [[produto/metas/meta-1-tiros-1km]], [[produto/metas/meta-2-evolucao-tiros-app]], [[produto/metas/meta-3-upload-fit]], [[decisoes/0004-contrato-tela-evolucao]], [[decisoes/0006-upload-de-fit]], [[decisoes/0003-fuso-da-atividade]], [[diario/2026-11-03]], [[00-inicio]], [[produto/metas/meta-4-clima-atividade]], [[decisoes/0007-clima-da-atividade]], [[produto/meta-4-como-rodar]], [[metricas/tiros-1km]], [[decisoes/0008-deteccao-de-esforcos]], [[diario/2026-11-04]], [[produto/metas/meta-5-deteccao-esforcos]], [[produto/meta-5-como-rodar]], [[decisoes/0009-treino-de-transicao]], [[metricas/esforcos]], [[metricas/transicao]], [[modulos/ingestao-garmin]], [[diario/2026-11-06]], [[produto/metas/meta-6-carga-treino]], [[produto/meta-6-como-rodar]], [[decisoes/0010-carga-de-treino]], [[metricas/carga-treino]], [[metricas/serie-carga]], [[metricas/conferencia-carga]], [[diario/2026-11-07]], [[diario/2026-11-08]], [[diario/2026-11-09]], [[produto/metas/meta-7-linha-de-base-semana-padrao]], [[produto/meta-7-como-rodar]], [[decisoes/0011-linha-de-base-e-semana-padrao]], [[metricas/linha-base]], [[metricas/tipo-treino]], [[design/tokens]]
 ---
 # Roteiro de metas
 
@@ -19,8 +19,8 @@ Ao fechar uma meta, o Paulo registra o resultado em `docs/produto/metas/` e revi
 | 4 | Clima de cada atividade | feita (fixtures e resposta gravada, sem rede; [[produto/metas/meta-4-clima-atividade]]) |
 | 5 | Detecção de esforços (corrida por distância, ciclismo por duração) e série de tiros com o melhor tiro | feita (fixtures, sem rede; conferência local com o histórico real; [[produto/metas/meta-5-deteccao-esforcos]]) |
 | 6 | Carga de treino (rTSS, hrTSS, CTL, ATL, TSB) | feita (fixtures, sem rede; conferência local com o histórico real; [[produto/metas/meta-6-carga-treino]]) |
-| **7** | **Linha de base pessoal e semana-padrão (tipo de treino pelo plano, regra como reserva)** | **atual** (issues #260 a #272; paralela #273) |
-| 8 | Check-in pós-treino | esboço |
+| 7 | Linha de base pessoal e semana-padrão (tipo de treino pelo plano, regra como reserva) | feita (fixtures, sem rede; conferência local com o histórico real; [[produto/metas/meta-7-linha-de-base-semana-padrao]]) |
+| **8** | **Check-in pós-treino** | **atual** (issues #293 a #302; paralela #303) |
 | 9 | Feedback automático por treino | esboço |
 | 10 | Caixa do dia do professor | esboço |
 | 11 | Agente do atleta (primeiras perguntas) | esboço |
@@ -426,107 +426,129 @@ Revisadas ao fim de cada meta com o que se aprendeu. Ordem tirada da "Fundação
   segundo; TSS por potência; sTSS e carga por PSE na natação (o check-in é a Meta 8); ajuste por calor com o clima da
   Meta 4; tela de carga no app; motor de explicação.
 
-### Meta 7: linha de base pessoal e semana-padrão (atual)
+### Meta 7: linha de base pessoal e semana-padrão (feita)
 - **Objetivo:** cada treino comparado com o normal do próprio atleta, **só na mesma modalidade e no mesmo tipo de treino**:
   uma linha de base móvel (mediana da janela) e uma medida robusta de quanto a sessão fugiu do normal. O tipo de treino vem
   da **semana-padrão** que o atleta ou o treinador definem (para cada dia da semana, uma ou mais modalidades com o tipo); a
   regra automática (`leve`/`longo` na corrida) fica só como reserva para dia sem plano. É a camada 2 do
-  [[produto/plano-mvp-execucao]] (seção 4.2), com os passos 1 e 2 da seção 3.1 (semana-padrão e tipo sugerido pelo dia e pelo
-  formato), e a base do motor de explicação e do feedback (Meta 9).
-- **Entrega visível:**
-  - uma tela no app para ler e editar a semana-padrão (dias da semana, modalidades, tipo opcional, data a partir da qual
-    vale), sobre `GET` e `PUT` da semana-padrão na API;
-  - o tipo de cada atividade com a origem: confirmado / `professor` / `trainingpeaks`, depois a semana-padrão (origem nova),
-    depois a regra (`sugestao`, `tipo_treino@1`), gravado pelo `classificar_atividades` (importação, upload,
-    `worker.reclassificar` e ao gravar uma semana-padrão nova); a atividade cujo formato contradiz o plano fica marcada como
-    divergente, só como dado;
-  - o objeto `linha_base` em `GET /atletas/{atleta_id}/atividades/{atividade_id}`: para cada métrica do tipo da atividade,
-    o valor da sessão, a linha de base, o desvio, quantos treinos do tipo entraram e o aviso "ainda aprendendo", com textos
-    prontos (a API formata, o app mostra);
-  - métricas da corrida: no `intervalado` da série de tiros, o melhor pace e a FC do melhor tiro (`tiros_1km@6`); no `leve` e
-    no `longo`, o pace médio e a FC média; em todo tipo, a carga da atividade (`carga@2`). Bike e natação por tipo, como a
-    ADR 0011 propuser (no mínimo carga e FC média), ou fora com motivo.
-- **Critério de pronto:**
-  - ADR 0011 aprovada pelo Theo antes de qualquer migração: semana-padrão (itens por dia, `vigente_desde`, `definido_por`),
-    precedência do tipo, encaixe e casos ambíguos, divergência, regra de reserva, janela, medida robusta, limite "fora do
-    normal", métricas por modalidade, versões (`linha_base@1`, `tipo_treino@1`) e migração 0011; as propostas de produto na
-    seção "A confirmar";
-  - nota em `docs/metricas/` para a linha de base e para o tipo de treino, cada uma com teste de valor à mão (oráculo sobre
-    fixtures sintéticas de 10 a 12 semanas, com uma semana-padrão que muda de vigência);
+  [[produto/plano-mvp-execucao]] (seção 4.2), com os passos 1 e 2 da seção 3.1, e a base do motor de explicação e do
+  feedback (Meta 9).
+- **Entrega visível:** a tela da semana-padrão no app (web), sobre `GET` e `PUT /atletas/{atleta_id}/semana-padrao`; o tipo
+  de cada atividade com a origem (`professor`, `trainingpeaks`, `semana_padrao`, `sugestao`) e a divergência quando o formato
+  contradiz o plano; o objeto `linha_base` (`linha_base@2`) em `GET /atletas/{atleta_id}/atividades/{atividade_id}`, com
+  valor, mediana, desvio, `z`, quantos treinos entraram, estado e texto pronto.
+- **Critério de pronto (como ficou, com o adendo 2 da ADR 0011):**
+  - ADR 0011 aprovada pelo Theo antes de qualquer migração (semana-padrão com `vigente_desde` e `definido_por`, precedência,
+    encaixe, divergência, regra de reserva, medida robusta, limite "fora do normal", métricas por modalidade, versões
+    `tipo_treino@1` e `linha_base@2`, migração 0011), com a seção "A confirmar" respondida pelo Angelo;
+  - nota em `docs/metricas/` para a linha de base e para o tipo de treino, com teste de valor à mão (oráculo sobre fixtures
+    sintéticas de 12 semanas, com uma semana-padrão que muda de vigência);
   - a semana-padrão é gravada e lida pela API e pela tela; mudar a semana-padrão não reescreve o tipo de atividades
     anteriores a `vigente_desde`;
   - o tipo nunca sobrescreve um tipo confirmado, do professor ou do TrainingPeaks; a semana-padrão vence a regra; dia sem
-    plano cai na regra; a divergência fica gravada ou calculada como a ADR decidir; idempotente e versionado; a série de tiros
-    continua igual (regressão);
-  - "ainda aprendendo" abaixo de 8 treinos do tipo nas últimas 8 semanas; tipos e modalidades diferentes nunca se misturam;
-    atividade sem tipo fica sem linha de base, com o motivo; a sessão nunca entra na própria linha de base;
-  - endpoints no OpenAPI, adendo da ADR 0004 e cliente regerado; tela com teste e revisão da Lia; QA com fixtures num clone
+    plano cai na regra; divergência só como dado; idempotente e versionado; a série de tiros continua igual (regressão);
+  - "ainda aprendendo" abaixo de **8 treinos do mesmo tipo nas últimas 12 semanas**; tipos e modalidades diferentes nunca se
+    misturam; atividade sem tipo fica sem linha de base, com o motivo; a sessão nunca entra na própria linha de base;
+  - endpoints no OpenAPI, adendos da ADR 0004 e cliente regerado; tela com teste e revisão da Lia; QA com fixtures num clone
     limpo, seguindo só o guia;
-  - conferência local com o histórico real (origem do tipo, divergências, linha de base), números só em `entregas/`.
-- **Decisões de 09/11 (Angelo):** abrir as issues; início frio só com "ainda aprendendo", sem literatura; janela de 8
-  semanas com mínimo de 8 treinos do mesmo tipo; limite "fora do normal" proposto na ADR 0011, trazido para aprovação.
-  **Mudou:** "tudo bem o app sugerir", mas o tipo de treino vem do atleta ou do treinador, apontando os tipos por dia da
-  semana (a semana-padrão do plano, seção 3.1).
-- **Decisões do Theo (09/11; o que for de produto vai para "A confirmar" da ADR 0011):** semana-padrão por atleta, zero ou
-  mais itens por dia (modalidade, `tipo_treino` opcional), com `vigente_desde` e `definido_por` (atleta ou professor); grupo
-  de atletas fora (não há professor nem assessoria no banco); precedência confirmado / `professor` / `trainingpeaks` >
-  semana-padrão > regra; encaixe pela data local (ADR 0003) e pela modalidade; formato que contradiz o plano mantém o tipo do
-  plano e marca a atividade como divergente; sem login de professor, a tela grava `definido_por` como a ADR decidir.
-- **Conferido no código (08/11, `a82c35a`):** `atividade.tipo_treino` já aceita `leve`, `moderado`, `longo`, `intervalado` e
-  `fartlek`; `tipo_origem` aceita `sugestao`, `professor` e `trainingpeaks`; `tipo_confirmado` existe. Hoje só a série de
-  tiros sugere (`intervalado`, `classificar_atividades` em `servicos/evolucao_tiros.py`). Os blocos da detecção
-  (`bloco_atividade`, ADR 0008) dizem se a corrida teve esforço. Não há semana-padrão no banco: a próxima migração é a 0011.
+  - conferência local com o histórico real, números só em `entregas/`.
+- **Decisões de 09/11 (Angelo):** as cinco perguntas da #147 (a quarta mudou o rumo para a semana-padrão); "ok para as
+  sete" da seção "A confirmar" da ADR 0011; "ok para as quatro" do adendo 2 (`linha_base@2`: janela de 12 semanas com mínimo
+  de 8; a parte de treino de transição com base própria; carga por hora no lugar da carga absoluta; no `intervalado` sem série
+  de 1 km, FC média e carga por hora, com o esforço curto de fora). Lista completa em [[diario/2026-11-09]] e em
+  [[produto/metas/meta-7-linha-de-base-semana-padrao]].
+- **Decisões do Theo (09/11):** modelo de dados da ADR 0011 (semana-padrão por atleta com vigência, `tipo_versao` e
+  `tipo_divergencia` em `atividade`); o `PUT` reaplica o tipo só de `vigente_desde` em diante; linha de base calculada na
+  leitura e nunca gravada; textos prontos na API.
 - **Issues e ordem:**
 
   | # | Issue | Dono | Depende de | Situação |
   |---|---|---|---|---|
-  | #260 | ADR 0011: linha de base, semana-padrão e tipo de treino (com "A confirmar") | caio-ciencia com duda-dados (aprovação do Theo) | nenhuma | aberta |
-  | #261 | Fixtures de 10 a 12 semanas com semana-padrão e oráculo | caio-ciencia | #260 (adianta à mão) | aberta |
-  | #262 | `tipo_treino@1`: encaixe na semana-padrão e regra de reserva (funções puras) | caio-ciencia | #260 (oráculo #261) | aberta |
-  | #263 | `linha_base@1`: linha de base e desvio robusto (função pura) | caio-ciencia | #260 (oráculo #261) | aberta |
-  | #264 | Semana-padrão no banco (migração 0011) e API de leitura e gravação, adendo da ADR 0004, cliente regerado | duda-dados | #260 | aberta |
-  | #265 | `classificar_atividades` com a semana-padrão e a precedência do tipo | duda-dados | #262, #264 | aberta |
-  | #266 | `linha_base` no `GET` da atividade, adendo da ADR 0004 e cliente regerado | duda-dados | #263, #265 | aberta |
-  | #267 | Desenho da tela da semana-padrão | lia-design | #260 | aberta |
-  | #268 | Tela da semana-padrão no app | rafa-app (revisão da Lia) | #267, #264 | aberta |
-  | #269 | Conferência local com o histórico real (tipo e linha de base), números só em `entregas/` | caio-ciencia com duda-dados | #265, #266; **PRECISA DO ANGELO:** cadastrar a própria semana-padrão | aberta |
-  | #270 | Documentação, guia `meta-7-como-rodar` e diário | nina-docs | #266, #269, #268 | aberta |
-  | #271 | QA de ponta a ponta com fixtures | bia-qa | #270 | aberta |
-  | #272 | Resultado da meta e roteiro | paulo-planejador | #271 | aberta |
+  | #274 | Roteiro com a Meta 7 replanejada | paulo-planejador | nenhuma | feita (PR #275) |
+  | #260 | ADR 0011: linha de base, semana-padrão e tipo de treino | caio-ciencia com duda-dados (aprovação do Theo) | nenhuma | feita (PR #277) |
+  | #261 | Fixtures de 12 semanas com semana-padrão e oráculo | caio-ciencia | #260 | feita (PR #278) |
+  | #262 | `tipo_treino@1`: encaixe na semana-padrão e regra de reserva | caio-ciencia | #260, #261 | feita (PR #280) |
+  | #263 | `linha_base@1`: linha de base e desvio robusto | caio-ciencia | #260, #261 | feita (PR #281) |
+  | #264 | Semana-padrão no banco (migração 0011), `GET`/`PUT`, cliente regerado | duda-dados | #260 | feita (PR #282) |
+  | #265 | `classificar_atividades` com a semana-padrão e a precedência | duda-dados | #262, #264 | feita (PR #284) |
+  | #266 | `linha_base`, tipo e divergência no `GET` da atividade | duda-dados | #263, #265 | feita (PR #286) |
+  | #267 | Desenho da tela da semana-padrão | lia-design | #260 | feita (PR #279) |
+  | #268 | Tela da semana-padrão no app | rafa-app (revisão da Lia) | #267, #264 | feita (PR #285) |
+  | #288 | `linha_base@2` (adendo 2 da ADR 0011) | caio-ciencia | #266 | feita (PR #289) |
+  | #269 | Conferência local com o histórico real | caio-ciencia com duda-dados | #265, #266 e a semana-padrão do Angelo | feita (só local; números em `entregas/`) |
+  | #270 | Documentação, guia `meta-7-como-rodar` e diário | nina-docs | #266, #268, #269 | feita (PR #290) |
+  | #271 | QA de ponta a ponta com fixtures | bia-qa | #270 | feita (PR #291) |
+  | #272 | Resultado da meta e roteiro | paulo-planejador | #271 | esta |
 
-  A coluna "Situação" só muda no fechamento da meta; o andamento do dia a dia fica no GitHub (label `meta-7`).
+  Paralelas: #273 (guia da Meta 6, PR #276), glossário (PR #283) e ícones em [[design/tokens]] (PR #287).
+- **Resultado:** feita. Com fixtures sintéticas, a Bia conferiu o critério de pronto com `tests/test_e2e_meta7.py` (42
+  testes) e seguiu o [[produto/meta-7-como-rodar]] do zero, passos 1 a 10 iguais ao guia, sem bug (#271 / PR #291). A
+  conferência com o histórico real foi local (#269), com os números só em `entregas/`. Não verificados: o app em celular
+  (só a web) e o que depende do dado real. Resultado completo em [[produto/metas/meta-7-linha-de-base-semana-padrao]].
+- **Aprendido na Meta 7:** uma resposta do Angelo que muda o rumo antes da largada custa pouco se o roteiro é refeito no
+  mesmo dia, antes de qualquer issue de código; a seção "A confirmar" funcionou de novo (sete respostas de uma vez, e mais
+  quatro no adendo); a linha de base calculada na leitura deixou a `linha_base@2` sair sem migração; quando um adendo muda um
+  número do critério de pronto, o PR do adendo atualiza também o roteiro (a QA achou o roteiro com 8 semanas e `linha_base@1`);
+  fixtures sem voltas não servem para o `worker.reclassificar`, que refaz os blocos pelas voltas (o guia usa um segundo atleta
+  com FIT sintéticos).
+- **Quem:** caio-ciencia, duda-dados, lia-design, rafa-app, nina-docs, bia-qa, Theo (ADR 0011 e adendos da ADR 0004), Angelo
+  (a semana-padrão dele no banco local).
+- **Fora:** semana-padrão por grupo; login de professor e vínculo; confirmação em lote e a caixa das divergências (Meta 10);
+  treino planejado com duração, zona ou equipamento; TrainingPeaks; motor de explicação; início frio com valores da
+  literatura; tela da linha de base no app; `moderado` e `fartlek` pela regra; linha de base de CTL/ATL/TSB e da semana. As
+  pendências da meta estão em "Candidatas sem número".
 
-  **Ordem:**
-  1. **Largada:** #260 (Caio, com a Duda no modelo de dados e na API). O Caio adianta a #261 à mão sobre o rascunho; a Lia
-     pode rascunhar a #267 a partir do plano e fecha quando o contrato da ADR estiver aceito.
-  2. **Depois da ADR, três trilhas em paralelo:** funções puras (#262 e #263, Caio), semana-padrão no banco e na API (#264,
-     Duda) e desenho (#267, Lia).
-  3. **Encontros:** #265 (precisa da #262 e da #264) e #268 (precisa da #267 e da #264).
-  4. **Linha de base na API:** #266 (precisa da #263 e da #265).
-  5. **Conferência real:** #269, assim que o Angelo cadastrar a semana dele (pela tela da #268, se pronta, ou pela API da
-     #264). O cadastro fica só no banco local.
-  6. **Fechamento:** #270 → #271 → #272.
+### Meta 8: check-in pós-treino (atual)
+- **Objetivo:** o atleta registra, em **3 toques**, como foi o treino: PSE (esforço percebido), sensação e observação, com
+  "nada a relatar" como resposta válida. É o "check-in é o produto" do [[produto/plano-mvp-execucao]] (seções 3.1 e 6) e o
+  dado que falta para o motor de explicação (trabalho, estresse, dor) e para o feedback (Meta 9).
+- **Entrega visível:**
+  - a tela de check-in no app (web e celular), aberta a partir da tela de um treino, com no máximo uma pergunta por vez;
+  - a lista dos treinos recentes sem check-in, para o atleta não perder nenhum;
+  - `PUT`, `GET` e `DELETE` do check-in de uma atividade na API, e o check-in no `GET` da atividade;
+  - a carga pela PSE (`carga_pse@1`, PSE × minutos) de cada atividade com check-in, separada da `carga@2` e sem série
+    diária, o que dá uma carga também à natação.
+- **Critério de pronto:**
+  - ADR 0012 aprovada pelo Theo antes da migração: tabela do check-in (um por atividade), escalas, observação, "nada a
+    relatar", edição e prazo, regra de dado sensível, versão da `carga_pse@1`; propostas de produto em "A confirmar";
+  - check-in completo em 3 toques (teste de componente que conta os toques); "nada a relatar" válido; editar e apagar
+    funcionam; uma atividade nunca tem dois check-ins;
+  - a observação segue a regra do dado de saúde da Meta 6: só no banco local, nunca em log, devolvida só ao próprio atleta,
+    com comando para apagar;
+  - nota em `docs/metricas/` e teste de valor à mão para a `carga_pse@1`;
+  - endpoints no OpenAPI, adendo da ADR 0004 e cliente regerado; tela com teste e revisão da Lia; aberta pelo menos uma vez
+    num celular pelo Angelo, no fim da meta; QA com fixtures num clone limpo, seguindo só o guia.
+- **Decisões de 09/11 (Angelo, "ok para as cinco"):** abrir as issues e começar; 3 toques com PSE de 0 a 10 (CR-10), sensação
+  em 5 níveis e observação por atalhos com texto livre opcional e "nada a relatar"; `carga_pse@1` por atividade, sem série
+  diária; ele abre a tela de check-in no celular uma vez no fim da meta; a observação segue a regra dos dados de saúde da
+  Meta 6 (só no banco local, nunca em log, devolvida só ao próprio atleta, comando para apagar).
+- **Issues e ordem:**
 
-  Caminho crítico: #260 → #264 → #265 → #266 → #269 → #270 → #271 → #272, com a #262 chegando antes da #265. A #269 depende
-  também do cadastro do Angelo: se ele demorar, a #270 e a #271 seguem com fixtures e a conferência real fica registrada como
-  não verificada no fechamento.
-- **Paralela pequena (fora do critério de pronto):** #273, as duas observações da Bia sobre o guia da Meta 6 (nina-docs, sem
-  dependência): dizer no passo 9 do [[produto/meta-6-como-rodar]] que a importação de saúde cria um segundo atleta e que o
-  `--atleta-id 1` continua sendo o primeiro; citar o prefixo `env DATABASE_URL=...` como alternativa ao `export`.
-- **Quem:** caio-ciencia (ADR, regras, oráculo, conferência), duda-dados (banco, comando, API, cliente), lia-design (desenho
-  da tela), rafa-app (tela), nina-docs, bia-qa, Theo (ADR 0011 e adendos da ADR 0004), Angelo (a semana-padrão dele no banco
-  local, para a conferência).
-- **Fora:** semana-padrão por grupo de atletas; login de professor e vínculo professor↔atleta; confirmação ou correção do
-  tipo em lote e a caixa das divergências (Meta 10); treino planejado com duração, zona ou equipamento; TrainingPeaks;
-  motor de explicação (fatores do desvio); início frio com valores da literatura; tela da linha de base no app; `moderado` e
-  `fartlek` pela regra (só pela semana-padrão); linha de base de CTL/ATL/TSB e da semana.
+  | # | Issue | Dono | Depende de | Situação |
+  |---|---|---|---|---|
+  | #293 | ADR 0012, check-in pós-treino (modelo, escalas, prazo, dado sensível, `carga_pse@1`) | caio-ciencia com duda-dados (aprovação do Theo) | nenhuma | aberta |
+  | #294 | Fixtures sintéticas de check-in e oráculo (inclui `carga_pse@1`) | caio-ciencia | #293 (adianta à mão) | aberta |
+  | #295 | Desenho da tela de check-in e da lista de treinos sem check-in | lia-design | #293 (pode rascunhar pelo plano) | aberta |
+  | #296 | Check-in no banco (migração 0012), `PUT`/`GET`/`DELETE`, comando para apagar, cliente regerado | duda-dados | #293 | aberta |
+  | #297 | `carga_pse@1`, carga pela PSE por atividade | caio-ciencia | #293 (oráculo #294) | aberta |
+  | #298 | Check-in no `GET` da atividade e lista de treinos sem check-in | duda-dados | #296 (fixtures #294) | aberta |
+  | #299 | Tela de check-in no app | rafa-app (revisão da Lia) | #295, #296, #298 | aberta |
+  | #300 | Documentação, guia `meta-8-como-rodar` e diário | nina-docs | #298, #297, #299 | aberta |
+  | #301 | QA de ponta a ponta com fixtures e o celular (o Angelo abre a tela uma vez) | bia-qa | #300 | aberta |
+  | #302 | Resultado da meta e roteiro | paulo-planejador | #301 | aberta |
 
-### Meta 8: check-in pós-treino
-- **Objetivo:** o atleta registra PSE, sensação e observação em 3 toques.
-- **Entrega visível:** tela de check-in no app e dado gravado.
-- **Critério de pronto:** 3 toques; "nada a relatar" válido; ADR das tabelas de check-in.
-- **Quem:** rafa-app, duda-dados, bia-qa.
-- **Fora:** lembrete por WhatsApp, check-in semanal.
+  **Ordem:** #293 na largada (Caio, com a Duda no modelo); #294 e #295 adiantam em paralelo. Depois da ADR, #296 (Duda) e
+  #297 (Caio) em paralelo; #298 depois da #296; #299 é o encontro (precisa da #295, da #296 e da #298). #300, #301 e #302 no
+  fechamento. Caminho crítico: #293 → #296 → #298 → #299 → #300 → #301 → #302. Não há conferência com o histórico real: o
+  check-in é dado novo. A coluna "Situação" só muda no fechamento.
+- **Paralela pequena (fora do critério de pronto):** #303, hífen sem quebra em "semana-padrão" no estado vazio da tela
+  da semana-padrão (rafa-app, sem dependência), já que o Rafa mexe no app nesta meta.
+- **Quem:** caio-ciencia (ADR, escalas, carga pela PSE, oráculo), duda-dados (banco, API, cliente, comando para apagar),
+  lia-design (desenho), rafa-app (tela), nina-docs, bia-qa, Theo (ADR 0012 e adendo da ADR 0004), Angelo (celular, no fim).
+- **Fora:** lembrete por WhatsApp ou e-mail (conta ou serviço novo, "PRECISA DO ANGELO" quando chegar a vez); check-in
+  semanal; motivo de falta para o treino planejado que não aconteceu (a semana-padrão já permite saber o que faltou; candidata);
+  equipamento e zona no check-in; série diária e CTL/ATL pela PSE; o check-in no motor de explicação e no feedback (Meta 9); o
+  professor vendo o check-in (Meta 10).
 
 ### Meta 9: feedback automático por treino
 - **Objetivo:** 3 a 5 linhas por treino, a partir de um pacote de fatos calculado.
@@ -554,10 +576,21 @@ Revisadas ao fim de cada meta com o que se aprendeu. Ordem tirada da "Fundação
   As pendências do app (#213 e #237) podem vir junto.
 - **Tela da carga no app** (rafa-app, com a Lia): a Meta 6 entregou a carga só na API e no gráfico em `entregas/`. Spec da Lia
   antes (CTL, ATL e TSB como estimativa, o aviso "aprendendo" e os dias sem carga), depois a tela; a API já devolve a série sem
-  arredondar e a proposta é 1 casa na tela (Theo, #142). Natural junto da tela dos esforços, depois da Meta 7.
+  arredondar e a proposta é 1 casa na tela (Theo, #142).
+- **Tela da linha de base no app** (rafa-app, com a Lia): a Meta 7 entregou a `linha_base` só na API; o lugar natural é a tela
+  de um treino, junto do tipo e da divergência.
+- **Revisar o limite de "fora do normal" ou a métrica por tipo** (caio-ciencia): se a taxa de sessões "fora" ficar acima do
+  esperado para um limite de `|z| >= 2,5`, rever o limite, o piso ou a métrica de cada tipo (`linha_base@3`).
+- **Janela maior para tipo raro** (caio-ciencia): tipo feito a cada duas semanas ou menos segue em "aprendendo" com 12
+  semanas e mínimo de 8; uma janela por tipo resolveria.
+- **Esforço curto no `intervalado` sem série de 1 km** (caio-ciencia): hoje o treino compara só pela FC média e pela carga por
+  hora; falta uma métrica do melhor esforço curto (depende da detecção, ADR 0008).
+- **Motivo de falta** (Meta 8 ou depois): com a semana-padrão já dá para saber qual treino planejado não aconteceu.
+- **Hífen sem quebra no estado vazio da tela da semana-padrão** (rafa-app): virou a #303, paralela da Meta 8.
+- **App em celular:** nenhuma tela foi aberta num iOS ou Android até a Meta 7; entrou no critério da Meta 8 (#301).
 - **#213** (rafa-app, revisão da Lia): acessibilidade e visual da tela de evolução. **#237** (rafa-app, com a Lia): mesma
-  aparência para distância e pace na tela de um treino; pode tocar o contrato (ADR 0004). As duas vão com a tela dos esforços
-  ou da carga.
+  aparência para distância e pace na tela de um treino; pode tocar o contrato (ADR 0004). As duas vão com a tela dos esforços,
+  da carga ou da linha de base.
 - **#74** (vault do Graphify, `docs/_grafo/`): quando o Theo pedir o grafo de novo.
 - **Calibração da detecção de esforços pelos recordes pessoais** (caio-ciencia): os recordes já estão no banco (#174, Meta 6);
   falta mapear a categoria da fonte para as faixas (`d1000`, `t20`...) e decidir a regra (`esforcos@2`).
@@ -604,18 +637,22 @@ stack Expo). A chave do provedor de LLM foi entregue e está no `.env` (fora do 
 - **Meta 7: respondida em 09/11.** As cinco perguntas da #147:
   1. abrir as issues e começar: ok (abertas #260 a #273);
   2. início frio só com "ainda aprendendo", sem valores da literatura: ok;
-  3. janela de 8 semanas, mínimo de 8 treinos do mesmo tipo: ok;
+  3. janela de 8 semanas, mínimo de 8 treinos do mesmo tipo: ok (no adendo 2 a janela virou 12 semanas, `linha_base@2`);
   4. **mudou:** "tudo bem o app sugerir", mas o tipo de treino vem do atleta ou do treinador, apontando os tipos por dia da
      semana (ex. genérico do plano: "terça intervalado, quinta fartlek, sábado longo", natação sem tipo). Virou a
      semana-padrão da Meta 7, com a regra (`leve`/`longo` na corrida) só como reserva para dia sem plano;
   5. limite "fora do normal" proposto na ADR 0011 e trazido para aprovação: ok.
 
+- **Meta 7, seção "A confirmar" e adendo 2 da ADR 0011: resolvidos em 09/11.** "Ok para as sete" e "ok para as quatro"
+  (`linha_base@2`); a semana-padrão do Angelo foi cadastrada no banco local para a conferência (#269). Ver
+  [[diario/2026-11-09]].
+
+- **Meta 8: respondida em 09/11 ("ok para as cinco").** Abrir e começar (issues #293 a #303); 3 toques com CR-10, sensação
+  em 5 níveis, atalhos com texto livre e "nada a relatar"; `carga_pse@1` por atividade, sem série diária; o Angelo abre a
+  tela de check-in no celular uma vez no fim da meta (#301); a observação segue a regra dos dados de saúde da Meta 6.
+
 Em aberto:
-1. **Meta 7, a semana-padrão do Angelo (#269).** Para conferir com o histórico real, o Angelo cadastra a própria
-   semana-padrão no banco local (pela tela da #268 ou pela API da #264). O dado fica só no banco local. Enquanto isso, o
-   time segue com fixtures; sem o cadastro, a conferência real fica como não verificada no fechamento.
-2. **Meta 7, seção "A confirmar" da ADR 0011 (#260).** Virá com a ADR: o limite "fora do normal" e as propostas de produto
-   da semana-padrão (casos ambíguos do encaixe, quem aparece como `definido_por` sem login, bike e natação na linha de base).
-   O time segue com o padrão de cada item.
-3. **Próximas metas, sem pressa:** CNPJ e pedido da API da Garmin; pedido da API do TrainingPeaks com a assessoria;
+1. **Meta 8, o celular (#301):** o Angelo abre a tela de check-in no celular dele (Expo Go, rede local, dado sintético) uma
+   vez no fim da meta, como combinado.
+2. **Próximas metas, sem pressa:** CNPJ e pedido da API da Garmin; pedido da API do TrainingPeaks com a assessoria;
    plano comercial do Open-Meteo para produção; limite de tamanho do upload no proxy, obrigatório na meta de deploy.
