@@ -106,6 +106,35 @@ export function EsqueletoEvolucao() {
   );
 }
 
+/** Esqueleto da semana-padrão: cartão da data, cartão de "quem definiu" e dois dias. Só decorativo. */
+export function EsqueletoSemanaPadrao() {
+  const { styles, opacidade, barra } = useBase();
+  return (
+    <Animated.View
+      testID="esqueleto-semana-padrao"
+      accessibilityElementsHidden
+      importantForAccessibility="no-hide-descendants"
+      style={{ opacity: opacidade }}
+    >
+      <View style={styles.cartao}>
+        {barra("40%", 20)}
+        {barra("100%", 48)}
+        {barra("60%", 44)}
+      </View>
+      <View style={styles.cartao}>
+        {barra("40%", 20)}
+        {barra("100%", 48)}
+      </View>
+      <View style={styles.cartao}>
+        {barra("40%", 20)}
+        {[0, 1].map((i) => barra("100%", 48, `d${i}`))}
+        {barra("40%", 20)}
+        {barra("100%", 48)}
+      </View>
+    </Animated.View>
+  );
+}
+
 function criarEstilos({ cor }: Tema) {
   return StyleSheet.create({
     cartao: {

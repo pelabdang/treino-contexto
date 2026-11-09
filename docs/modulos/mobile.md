@@ -2,8 +2,8 @@
 tipo: modulo
 status: em-uso
 dono: rafa
-atualizado: 2026-11-06
-links: [[modulos/api]], [[modulos/api-client]], [[produto/roadmap]], [[decisoes/0004-contrato-tela-evolucao]], [[produto/meta-2-como-rodar]], [[decisoes/0006-upload-de-fit]], [[design/guia-visual]], [[design/tokens]], [[decisoes/0007-clima-da-atividade]], [[modulos/clima]], [[design/telas/treino]]
+atualizado: 2026-11-09
+links: [[modulos/api]], [[modulos/api-client]], [[produto/roadmap]], [[decisoes/0004-contrato-tela-evolucao]], [[produto/meta-2-como-rodar]], [[decisoes/0006-upload-de-fit]], [[design/guia-visual]], [[design/tokens]], [[decisoes/0007-clima-da-atividade]], [[modulos/clima]], [[design/telas/treino]], [[design/telas/semana-padrao]], [[decisoes/0011-linha-de-base-e-semana-padrao]]
 ---
 # Módulo: mobile
 
@@ -22,6 +22,7 @@ O app não calcula pace: todo `m:ss` virá da [[modulos/api]].
 |---|---|---|
 | `src/app/_layout.tsx` | (raiz) | `Stack` sem cabeçalho |
 | `src/app/index.tsx` | `/` | `TelaEvolucao` com `config.apiUrl` e `config.atletaId` |
+| `src/app/semana-padrao.tsx` | `/semana-padrao` | `TelaSemanaPadrao` (#268); aberta pelo botão "Semana-padrão" da evolução |
 | `src/app/treino/[id].tsx` | `/treino/<atividade_id>` | `TelaTreino` (#159); ainda sem link vindo da lista (#217, ver abaixo) |
 
 ## Tela de evolução (`TelaEvolucao`)
@@ -46,6 +47,15 @@ Rodar com dado sintético: passo a passo em [[produto/meta-2-como-rodar]] (API c
 - Capturas por estado (dados sintéticos, 390 de largura, claro e escuro) em `docs/design/telas/treino/`: `treino-<estado>-<tema>.png` para `clima-ok`, `indoor`, `sem-posicao`, `pendente`, `falha`, `natacao-sem-pace`, `erro-404` e `erro-500`, mais `carregando` (esqueleto), regeradas no #219 com o título final "Treino"; as de natação foram regeradas no #233 com "Distância: 1.800 m" vinda da API.
 - Como gerar as capturas (#218), sem trocar config: `npm run api-falsa` (em `apps/mobile`; API falsa com dados sintéticos em `scripts/api-falsa.mjs`, porta 8000, serve a evolução e `GET /atletas/{id}/atividades/{id}`; o id 106 é a natação, os demais são corrida; aceita outra porta: `node scripts/api-falsa.mjs 8010`) e, em outro terminal, `EXPO_PUBLIC_API_URL=http://localhost:8000 npx expo start --web --port 8081`. Abra `http://localhost:8081` (e `/treino/101`). O modo escuro vem do `prefers-color-scheme` do navegador. Captura de prova da tela de evolução em `docs/design/telas/web/evolucao-web-static-218.jpg`.
 - Web com `web.output: "static"` (#218): **causa e correção**. No Expo Router 58 o export e o servidor de dev entregam o `<script>` do bundle, o CSS e as fontes pelo `useServerDocumentContext()` (`headNodes` e `bodyNodes`). O nosso `src/app/+html.tsx` não os renderizava, então o HTML saía sem o bundle (só o fundo "carregando-fonte"); `EXPO_WEB_DEV_HYDRATE` não tem relação. Corrigido no `+html.tsx` (mantido "static", que dá `lang="pt-BR"` e pré-render). Não remova `{headNodes}` e `{bodyNodes}`. Verificação: `npm run verificar:web` (exporta a web e falha se o `index.html` não tiver o `<script>` do `entry-*.js` ou o `lang="pt-BR"`) e `__tests__/html.test.tsx` (o `<script>` do contexto chega ao HTML).
+
+## Tela da semana-padrão (`TelaSemanaPadrao`, #268)
+`src/componentes/TelaSemanaPadrao.tsx`, rota `/semana-padrao`, spec em [[design/telas/semana-padrao]] e contrato na [[decisoes/0011-linha-de-base-e-semana-padrao]] (itens 9 e 10). Entrada: botão "Semana-padrão" (`event`, alvo 48) no alto da `TelaEvolucao`, prop `aoAbrirSemanaPadrao`.
+- Chamadas em `src/semanaPadrao/api.ts` (`buscarSemanaPadrao(atletaId, em?)` e `gravarSemanaPadrao`), com os tipos de `@treino/api-client`. As funções moram no app porque o pacote só exporta os tipos (#264); se virarem funções do pacote, é só trocar o import. `src/semanaPadrao/datas.ts` tem máscara `dd/mm/aaaa`, leitura, "próxima segunda" (calendário do aparelho, não métrica).
+- Formulário: "Vale a partir de" (campo com máscara, começa em **hoje** para criar vigência nova; atalhos "Hoje" e "Próxima segunda"; avisos de data igual a uma vigência e de data futura), "Quem definiu" ("Eu" pré-marcada, só rótulo declarado, texto "O app ainda não tem login."), sete dias com itens (chip da modalidade, seletor de tipo em folha, remover sem confirmação, adicionar só com as modalidades que faltam) e "Semanas anteriores" (tocar só **copia** para o formulário, com `GET ?em=`). Barra fixa com "Salvar semana": desligada sem mudança ("Nada mudou ainda.") ou sem plano e sem treino; zerar um plano vigente avisa que ele acaba e envia `itens: []`.
+- Estados: carregando (esqueleto `EsqueletoSemanaPadrao`), vazio ("Montar minha semana"), editando, salvando, salvo (o número de `atividades_reaplicadas` vem da API e só é mostrado; hoje vem 0 até a #265), erro ao carregar (rede, 404, outro) e ao salvar (rede, 404, 422, outro; as mudanças ficam). O `detail` técnico da API nunca aparece. Depois de salvar, a tela mostra o que a API devolveu e busca o histórico de novo.
+- Sair com mudanças: diálogo "Sair sem salvar?" (Voltar, botão voltar do Android) e `beforeunload` na web; copiar semana com mudanças pede "Copiar esta semana?".
+- Fora desta versão: menu junto ao botão na web larga (a lista de opções é sempre uma folha), devolver o foco ao botão que abriu a folha e anúncios de "removido/adicionado" por leitor de tela. Os ícones novos dos tokens (`event`, `event-note`, `add`, `delete-outline`, `expand-more`, `radio-button-checked`, `radio-button-unchecked`) existem no mapa de glifos do `@expo/vector-icons`.
+- Testes: `__tests__/TelaSemanaPadrao.test.tsx` (todos os estados acima), `semanaPadraoDatas.test.ts`, `rotaSemanaPadrao.test.tsx`; dados em `__fixtures__/semanaPadrao.ts`. A API falsa (`npm run api-falsa`) serve os dois endpoints com dados sintéticos (PUT em memória). Captura: `docs/design/telas/semana-padrao/semana-padrao-web-escuro-268.jpg`.
 
 ## Botão "Enviar arquivo FIT" (`BotaoEnviarFit`)
 `src/componentes/BotaoEnviarFit.tsx`, no alto da `TelaEvolucao`, usa o mesmo `apiUrl` e `atletaId` da tela. Toque abre o seletor do `expo-document-picker` (`getDocumentAsync`, `type: "*/*"`); na web entrega o `File`, no celular o `uri`. Envia com `enviarAtividadeFit` ([[modulos/api-client]]) e mostra um estado por vez:
