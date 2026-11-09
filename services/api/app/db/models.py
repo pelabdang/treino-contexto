@@ -52,6 +52,10 @@ MOTIVOS_CARGA = (
 
 ESTADOS_CLIMA = ("ok", "pendente", "falha")  # indoor e sem_posicao sao calculados na leitura (ADR 0007)
 
+CHECKIN_ATALHOS = ("dor", "cansaco", "sono_ruim", "calor", "trabalho_estresse")  # ADR 0012, item 2
+CHECKIN_VERSAO = "checkin@1"  # versao do formulario (escala CR-10 inteira, sensacao 1 a 5, os 5 atalhos)
+CHECKIN_TEXTO_MAX = 500
+
 FUSO_MIN_MIN, FUSO_MIN_MAX = -720, 840  # minutos: UTC-12 a UTC+14
 
 
@@ -153,6 +157,9 @@ class Atividade(Base):
         back_populates="atividade", cascade="all, delete-orphan", uselist=False
     )
     carga: Mapped["CargaAtividade | None"] = relationship(
+        back_populates="atividade", cascade="all, delete-orphan", uselist=False
+    )
+    checkin: Mapped["CheckinTreino | None"] = relationship(
         back_populates="atividade", cascade="all, delete-orphan", uselist=False
     )
 
@@ -455,3 +462,45 @@ class SemanaPadraoItem(Base):
     tipo_treino: Mapped[str | None] = mapped_column(String(20))  # NULL: treina a modalidade nesse dia, sem tipo
 
     semana: Mapped[SemanaPadrao] = relationship(back_populates="itens")
+
+
+class CheckinTreino(Base):
+    """Check-in pos-treino (ADR 0012, item 1): um por atividade (`UNIQUE`), com PSE, sensacao e observacao.
+
+    Dado pessoal e de saude (a observacao e o mais sensivel): so no banco local, nunca em log nem em mensagem de erro,
+    devolvido so ao proprio atleta; `worker.apagar_checkin` apaga todos de um atleta. `registrado_em` e `atualizado_em`
+    sao definidos pela aplicacao (nao ha `server_default` nem `onupdate`). O `PUT` substitui tudo.
+    """
+
+    __tablename__ = "checkin_treino"
+    __table_args__ = (
+        CheckConstraint("pse BETWEEN 0 AND 10", name="pse"),
+        CheckConstraint("sensacao BETWEEN 1 AND 5", name="sensacao"),
+        CheckConstraint(f"texto IS NULL OR length(texto) BETWEEN 1 AND {CHECKIN_TEXTO_MAX}", name="texto_tamanho"),
+        # ou "nada a relatar" sem atalho e sem texto, ou ao menos um atalho ou texto. Comparacoes explicitas com
+        # TRUE/FALSE; todas as colunas sao NOT NULL (`texto` so aparece em IS [NOT] NULL): nunca vira NULL.
+        CheckConstraint(
+            "(nada_a_relatar = TRUE AND dor = FALSE AND cansaco = FALSE AND sono_ruim = FALSE AND calor = FALSE "
+            "AND trabalho_estresse = FALSE AND texto IS NULL) OR "
+            "(nada_a_relatar = FALSE AND (dor = TRUE OR cansaco = TRUE OR sono_ruim = TRUE OR calor = TRUE "
+            "OR trabalho_estresse = TRUE OR texto IS NOT NULL))",
+            name="observacao_coerente",
+        ),
+    )
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    atividade_id: Mapped[int] = mapped_column(ForeignKey("atividade.id", ondelete="CASCADE"), unique=True)
+    pse: Mapped[int] = mapped_column(Integer)
+    sensacao: Mapped[int] = mapped_column(Integer)
+    nada_a_relatar: Mapped[bool] = mapped_column(Boolean)
+    dor: Mapped[bool] = mapped_column(Boolean, default=False, server_default="false")
+    cansaco: Mapped[bool] = mapped_column(Boolean, default=False, server_default="false")
+    sono_ruim: Mapped[bool] = mapped_column(Boolean, default=False, server_default="false")
+    calor: Mapped[bool] = mapped_column(Boolean, default=False, server_default="false")
+    trabalho_estresse: Mapped[bool] = mapped_column(Boolean, default=False, server_default="false")
+    texto: Mapped[str | None] = mapped_column(String)
+    versao: Mapped[str] = mapped_column(String(20))
+    registrado_em: Mapped[datetime] = mapped_column(DateTime(timezone=True))
+    atualizado_em: Mapped[datetime] = mapped_column(DateTime(timezone=True))
+
+    atividade: Mapped[Atividade] = relationship(back_populates="checkin")

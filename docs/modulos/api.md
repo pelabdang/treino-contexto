@@ -3,7 +3,7 @@ tipo: modulo
 status: em-uso
 dono: theo
 atualizado: 2026-11-09
-links: [[decisoes/0011-linha-de-base-e-semana-padrao]], [[metricas/serie-carga]], [[decisoes/0010-carga-de-treino]], [[decisoes/0001-modelo-de-dados-minimo]], [[decisoes/0003-fuso-da-atividade]], [[decisoes/0004-contrato-tela-evolucao]], [[metricas/tiros-1km]], [[modulos/grafico-tiros]], [[modulos/banco]], [[modulos/worker]], [[modulos/infra]], [[modulos/api-client]], [[decisoes/0006-upload-de-fit]], [[produto/meta-2-como-rodar]], [[decisoes/0007-clima-da-atividade]], [[modulos/clima]], [[produto/meta-4-como-rodar]], [[decisoes/0008-deteccao-de-esforcos]], [[metricas/esforcos]], [[decisoes/0009-treino-de-transicao]]
+links: [[decisoes/0012-check-in-pos-treino]], [[decisoes/0011-linha-de-base-e-semana-padrao]], [[metricas/serie-carga]], [[decisoes/0010-carga-de-treino]], [[decisoes/0001-modelo-de-dados-minimo]], [[decisoes/0003-fuso-da-atividade]], [[decisoes/0004-contrato-tela-evolucao]], [[metricas/tiros-1km]], [[modulos/grafico-tiros]], [[modulos/banco]], [[modulos/worker]], [[modulos/infra]], [[modulos/api-client]], [[decisoes/0006-upload-de-fit]], [[produto/meta-2-como-rodar]], [[decisoes/0007-clima-da-atividade]], [[modulos/clima]], [[produto/meta-4-como-rodar]], [[decisoes/0008-deteccao-de-esforcos]], [[metricas/esforcos]], [[decisoes/0009-treino-de-transicao]]
 ---
 # Módulo: api
 
@@ -20,6 +20,7 @@ Futuramente recebe a importação Garmin e serve métricas ao [[modulos/mobile]]
 - Saída: `GET /atletas/{atleta_id}/atividades/{atividade_id}` (ver "Atividade e clima" abaixo).
 - Entrada e saída: `/atletas/{atleta_id}/treinos-de-transicao` e `PUT`/`DELETE .../atividades/{id}/transicao` (#170, ver "Treino de transição" abaixo).
 - Saída: `GET /atletas/{atleta_id}/carga` e o objeto `carga` da atividade (#142, ver "Carga" abaixo).
+- Entrada e saída: `PUT`, `GET` e `DELETE /atletas/{atleta_id}/atividades/{atividade_id}/checkin` (#296, ver "Check-in" abaixo).
 - Entrada e saída: `GET` e `PUT /atletas/{atleta_id}/semana-padrao` (#264, ver "Semana-padrão" abaixo).
 
 ## Arquivos principais
@@ -258,6 +259,16 @@ modelos Pydantic em `app/rotas/atividades.py`. **Calculada na leitura, nada é g
 - Valores: `pace_medio` = duração / distância (corrida, fora a esteira); `melhor_pace` e `fc_melhor_tiro` = o melhor tiro da série `tiros_1km@6` (a FC dele, sem trocar de tiro; a esteira fica sem `melhor_pace`); `fc_media` = `atividade.fc_media`; `carga_hora` = a `carga@2` calculada dividida pelas horas de `duracao_s` (sem linha ou de versão antiga: `carga_pendente`; sem duração: `sem_duracao`).
 - Janela: mesmo atleta, modalidade e tipo, 84 dias (12 semanas) antes da sessão pela data local, só treinos anteriores, sem divergentes e sem multiesporte; a parte de treino de transição compara só com partes de transição e a isolada só com isoladas (`linha_base@2`). Uma consulta por atividade, da ordem de dezenas de linhas.
 - Testes: `tests/rotas/test_linha_base_atividade.py` (oráculo das fixtures de `tests/fixtures/meta7/` passando pelo banco e pela rota: `LINHA_BASE_ESPERADA`, `SEM_LINHA_BASE`, textos, esteira, sem FC). Exemplo: `packages/api-client/exemplos/atividade-esforcos.json`.
+
+## Check-in pós-treino: `PUT`, `GET` e `DELETE /atletas/{atleta_id}/atividades/{atividade_id}/checkin` (#296, [[decisoes/0012-check-in-pos-treino]])
+`operationId`: `registrarCheckin`, `checkinDaAtividade`, `apagarCheckin`. Código: `app/rotas/checkin.py` (modelos e rotas) e `app/servicos/checkin.py` (prazo, elegibilidade, upsert). Tabela `checkin_treino` em [[modulos/banco]]. **Dado pessoal e de saúde**: só nestas rotas, do próprio atleta (`/atletas/{id}/...`; atividade de outro atleta é `404`, nas três rotas, inclusive no `DELETE`).
+- **`PUT`** `{pse, sensacao, nada_a_relatar, atalhos, texto}` cria ou **substitui** o check-in (um por atividade; `200` nos dois casos; atalho que não vier fica desligado). `pse` inteiro de 0 a 10 (CR-10), `sensacao` inteiro de 1 a 5, `atalhos` entre `dor`, `cansaco`, `sono_ruim`, `calor`, `trabalho_estresse` (sem repetir), `texto` até 500 caracteres (aparado; vazio vira `NULL`). Ou `nada_a_relatar = true` **sem** atalho e sem texto, ou `false` com ao menos um atalho ou texto. Resposta `CheckinOut`: `pse_texto` (âncora: repouso, muito leve, leve, moderado, um pouco difícil, difícil, muito difícil, máximo; 6, 8 e 9 só o número), `sensacao_texto` (muito mal ... muito bem), `atalhos` (`chave` e `texto`), `versao` (`checkin@1`), `registrado_em` e `atualizado_em` (`America/Sao_Paulo`; `registrado_em` não muda na edição).
+- **`GET`**: o `CheckinOut`, ou `404` "sem check-in". **`DELETE`**: remove a linha (sem prazo), `204` também quando já não havia.
+- **Prazo e elegibilidade (parâmetros de produto, "A confirmar" 1 e 2 da ADR):** `PRAZO_DIAS = 7` e `SUBTIPOS_SEM_CHECKIN = {multiesporte_pai, troca}` em `servicos/checkin.py`. Criar vale até 7 dias depois do dia local do treino (`dias_ate_hoje`, "hoje" em `America/Sao_Paulo`); depois, `422` `fora_do_prazo`. Editar e apagar não têm prazo. Pai e troca: `422` `atividade_sem_checkin`; cada parte do multiesporte tem o seu check-in.
+- **`422` sem eco da entrada:** uma `APIRoute` própria (`RotaCheckin`), só neste router, devolve só `loc`, `msg` e `type` (nem `input`, nem `ctx`); os `422` de domínio usam o mesmo formato com o código em `type`. Mensagens do validador de coerência são fixas. Erro inesperado vira `500` com texto fixo e o log leva só o tipo da exceção e a rota (a mensagem de um erro de banco pode trazer os parâmetros). O `PUT` feliz loga só ids e a contagem de atalhos. As outras rotas da API mantêm o `422` padrão.
+- **Upsert:** busca a linha; se não há, `INSERT ... ON CONFLICT DO NOTHING` em `atividade_id` (SQLite e Postgres), nova busca e `UPDATE` (sem `id` nem `registrado_em`). Sem savepoint (o do pysqlite commita a transação externa no `RELEASE`), como na semana-padrão.
+- Sem login (ADR 0012, "A confirmar" 5): quem conhece o `atleta_id` lê, grava e apaga. Comando para apagar todos: `worker.apagar_checkin` ([[modulos/worker]]).
+- Testes: `tests/rotas/test_checkin.py` (gravar, ler, editar, apagar, "nada a relatar", `422` em 14 entradas, marcador sintético fora da resposta e do `caplog`, `404`, prazo nas bordas 23:00/00:00 locais, concorrência simulada e, no Postgres, duas sessões de verdade).
 
 ## Contrato da tela de evolução (Meta 2)
 O contrato que o app consome está em [[decisoes/0004-contrato-tela-evolucao]], com a lista "antes e depois".

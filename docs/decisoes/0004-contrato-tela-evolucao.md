@@ -214,3 +214,14 @@ mudar o modelo de dados: `versao` passa a `linha_base@2` e `janela_semanas` a 12
 e `unidade` troca `pontos` por `pontos/h` (rótulo "Carga por hora"); `motivo` de `linha_base` perde `transicao` (a parte de treino de transição
 tem base própria) e o `sem_valor` ganha `sem_duracao`. O `intervalado` ganha a métrica `fc_media`. O app ainda não lê o objeto. Detalhes em [[modulos/api]].
 
+
+## Adendo 8 (2026-11-09): check-in pós-treino entra no contrato (#296)
+**Status: aceito (Theo, 09/11, modelo de dados da [[decisoes/0012-check-in-pos-treino]]).** Três rotas novas, sem mudar nenhuma existente:
+`PUT`, `GET` e `DELETE /atletas/{atleta_id}/atividades/{atividade_id}/checkin` (`registrarCheckin`, `checkinDaAtividade`,
+`apagarCheckin`). O `CheckinOut` segue o adendo 2 ("a API formata, o app mostra"): `pse_texto` (a âncora da CR-10 quando existe, senão o
+número), `sensacao_texto`, `atalhos` com `chave` e `texto` prontos e `registrado_em`/`atualizado_em` já em `America/Sao_Paulo`.
+Erros: `404` com `Erro` (atleta, atividade ou, no `GET`, check-in inexistente; atividade de outro atleta também) e `422` **só nestas rotas**
+no formato `{"detail": [{"loc", "msg", "type"}]}`, **sem `input` nem `ctx`** (o check-in é dado de saúde e o `422` padrão do FastAPI
+repetiria o texto enviado); os `422` de domínio usam o código no `type`: `fora_do_prazo` e `atividade_sem_checkin`. O `DELETE` devolve
+`204`, também quando já não havia. O corpo do `422` continua declarado no OpenAPI como `HTTPValidationError` (descrição só de `loc`,
+`msg` e `type`). `checkin` e `carga_pse` no `GET` da atividade e a lista de pendentes são da #298, com outro adendo. Detalhes em [[modulos/api]].
