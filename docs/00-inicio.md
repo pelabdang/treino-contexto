@@ -2,7 +2,7 @@
 tipo: mapa
 status: em-uso
 dono: nina
-atualizado: 2026-11-08
+atualizado: 2026-11-09
 ---
 # Treino Contexto: mapa do projeto
 
@@ -14,12 +14,13 @@ App de análise de treinos com contexto (corrida, natação, ciclismo) para atle
 - Meta 3 feita: upload de arquivo FIT pelo botão no app, vista na web com FIT sintéticos ([[produto/metas/meta-3-upload-fit]]). 
 - Meta 4 feita: clima de cada atividade na API, visto com fixtures e a resposta gravada, sem rede ([[produto/metas/meta-4-clima-atividade]])
 - Meta 5 feita: detecção de esforços na API e série de tiros pelos esforços, vistas com fixtures num clone limpo ([[produto/metas/meta-5-deteccao-esforcos]])
-- Meta 6 feita: carga de treino (rTSS, hrTSS, CTL, ATL e TSB) na API, no gráfico e na conferência com o Garmin, vista com fixtures num clone limpo ([[produto/metas/meta-6-carga-treino]]). Próxima: Meta 7, linha de base pessoal e tipo de treino sugerido. Ver [[produto/roadmap]]
-- Como reproduzir: [[produto/meta-1-como-reproduzir]] (Meta 1) e [[produto/meta-2-como-rodar]] (API e app), [[produto/meta-3-como-rodar]] (upload de FIT), [[produto/meta-4-como-rodar]] (clima), [[produto/meta-5-como-rodar]] (esforços, transição e multiesporte), [[produto/meta-6-como-rodar]] (carga de treino)
+- Meta 6 feita: carga de treino (rTSS, hrTSS, CTL, ATL e TSB) na API, no gráfico e na conferência com o Garmin, vista com fixtures num clone limpo ([[produto/metas/meta-6-carga-treino]]). Próxima: Meta 7, linha de base pessoal e semana-padrão. Ver [[produto/roadmap]]
+- Como reproduzir: [[produto/meta-1-como-reproduzir]] (Meta 1) e [[produto/meta-2-como-rodar]] (API e app), [[produto/meta-3-como-rodar]] (upload de FIT), [[produto/meta-4-como-rodar]] (clima), [[produto/meta-5-como-rodar]] (esforços, transição e multiesporte), [[produto/meta-6-como-rodar]] (carga de treino), [[produto/meta-7-como-rodar]] (semana-padrão, tipo de treino e linha de base)
 - Meta 5, parte técnica no `main` (06/11): detecção de esforços ([[metricas/esforcos]]) no banco, no worker e na API, série de tiros pelos esforços (`tiros_1km@5`, [[metricas/tiros-1km]]), treino de transição ([[metricas/transicao]], [[decisoes/0009-treino-de-transicao]]), multiesporte e a tela de um treino no app. QA (#172) e resultado da meta (#173) feitos
 - Time e papéis: [[time]]. A Lia (design) é dona de `docs/design/`; o guia visual, o tema do app e a tela com o melhor tiro estão no main (#192, #195 e #154)
 - Meta 6, parte técnica no `main` (08/11): carga de treino (rTSS e hrTSS por volta, `carga@2`; CTL, ATL e TSB, `serie_carga@1`), dados de saúde da exportação Garmin no banco, `GET /atletas/{id}/carga`, gráfico e conferência com o Garmin ([[decisoes/0010-carga-de-treino]], [[metricas/carga-treino]], [[metricas/serie-carga]], [[metricas/conferencia-carga]], [[modulos/grafico-carga]]). QA (#146) e resultado da meta (#147) feitos
-- Último diário: [[diario/2026-11-08]] (anteriores: [[diario/2026-11-07]] e [[diario/2026-11-06]])
+- Meta 7, em andamento (09/11): semana-padrão na API e na tela, tipo de treino pelo plano e pela regra de reserva, e linha de base pessoal (`linha_base@2`) no `GET` da atividade ([[decisoes/0011-linha-de-base-e-semana-padrao]], [[metricas/tipo-treino]], [[metricas/linha-base]], [[metricas/tipo-linha-base-oraculo]], [[design/telas/semana-padrao]]). Faltam a conferência local (#269), a QA (#271) e o resultado (#272) ([[produto/metas/meta-7-linha-de-base-semana-padrao]])
+- Último diário: [[diario/2026-11-09]] (anteriores: [[diario/2026-11-08]] e [[diario/2026-11-07]])
 
 ## Produto
 - [[produto/plano-mvp-execucao]]: plano completo do MVP
@@ -30,11 +31,13 @@ App de análise de treinos com contexto (corrida, natação, ciclismo) para atle
 - [[produto/meta-4-como-rodar]]: clima da atividade com a resposta gravada, sem rede, e como forçar cada estado (ok, indoor, sem_posicao, pendente, falha)
 - [[produto/meta-5-como-rodar]]: esforços, série `tiros_1km@5`, treino de transição e multiesporte com as fixtures, e o app com a API falsa
 - [[produto/meta-6-como-rodar]]: carga de treino com as fixtures: saúde da exportação, `calcular_carga`, API, gráfico e conferência com o Garmin
+- [[produto/meta-7-como-rodar]]: semana-padrão, tipo de treino e linha de base com as fixtures: Postgres próprio, API, tela, `reclassificar` e a `linha_base` no `GET` da atividade
 - [[produto/metas/meta-2-evolucao-tiros-app]]: nota da Meta 2
 - [[produto/metas/meta-3-upload-fit]]: nota da Meta 3 (upload de FIT): resultado, não verificados, achados e propostas
 - [[produto/metas/meta-4-clima-atividade]]: nota da Meta 4 (clima da atividade): resultado, não verificados, conclusão genérica da série de tiros, achados e propostas
 - [[produto/metas/meta-5-deteccao-esforcos]]: nota da Meta 5 (detecção de esforços): resultado, não verificados, limitações, achados e pendências
 - [[produto/metas/meta-6-carga-treino]]: nota da Meta 6 (carga de treino): resultado, decisões, não verificados, limitações, achados e pendências
+- [[produto/metas/meta-7-linha-de-base-semana-padrao]]: nota da Meta 7 (linha de base e semana-padrão), em andamento
 
 ## Como o sistema funciona
 - Módulos: [[modulos/api]], [[modulos/api-client]], [[modulos/banco]], [[modulos/worker]], [[modulos/mobile]], [[modulos/infra]], [[modulos/grafico-tiros]], [[modulos/ingestao-garmin]] (índice em [[modulos]])
@@ -50,6 +53,8 @@ App de análise de treinos com contexto (corrida, natação, ciclismo) para atle
   - [[decisoes/0007-clima-da-atividade]]: clima de cada atividade (Meta 4): posição de início arredondada, tabela clima_atividade, API do Open-Meteo, falhas e idempotência
   - [[decisoes/0008-deteccao-de-esforcos]]: detecção de esforços (Meta 5): blocos, junção de laps, faixas, treino-chave e tabela `bloco_atividade`
   - [[decisoes/0009-treino-de-transicao]]: treino de transição (Meta 5): rótulo sugerido e corrigível, tabela `rotulo_transicao`, grupos e rotas
+  - [[decisoes/0010-carga-de-treino]]: carga de treino (Meta 6): rTSS, hrTSS, CTL, ATL e TSB
+  - [[decisoes/0011-linha-de-base-e-semana-padrao]]: linha de base pessoal, semana-padrão e tipo de treino (Meta 7)
 
 ## Ciência e especialistas
 - Artigos: pasta [[ciencia/artigos/]]
