@@ -231,6 +231,20 @@ passa `ignoradas_multiesporte`.
 - `definido_por` é rótulo declarado, não verificado: não há login (ADR 0011, "A confirmar" 1 e 7). Plano de treino é dado pessoal: não vai para log.
 - Testes: `tests/rotas/test_semana_padrao.py` (vigência no dia, vigência vazia, antes da primeira vigência, `em` padrão em São Paulo, `422`/`404`, rollback, concorrência simulada e, no Postgres, duas sessões de verdade) e `tests/test_migracoes.py`.
 
+## Tipo, divergência e linha de base no `GET /atletas/{atleta_id}/atividades/{atividade_id}` (#266, [[decisoes/0011-linha-de-base-e-semana-padrao]] itens 6, 7 e 9)
+Código: `app/servicos/linha_base_leitura.py` (monta os valores e os textos) sobre a função pura `app/metricas/linha_base.py` ([[metricas/linha-base]]);
+modelos Pydantic em `app/rotas/atividades.py`. **Calculada na leitura, nada é gravado.** Campos novos, sem remover nenhum (adendo 6 da [[decisoes/0004-contrato-tela-evolucao]]):
+- `tipo_treino`, `tipo_origem` (`sugestao`, `professor`, `trainingpeaks`, `semana_padrao`), `tipo_confirmado` e `tipo_divergencia` (`null` ou `{motivo, texto}`;
+  `sem_esforco`: "O plano diz intervalado, mas o treino não teve esforço detectado."; `tem_tiros`: "O plano diz leve, mas o treino teve 6 tiros de 1 km.").
+- `linha_base`: `versao`, `estado` (`ok` ou `sem_linha_base`), `motivo`, `texto` (só em `sem_linha_base`), `modalidade`, `tipo_treino`, `janela_semanas`, `minimo_treinos` e `metricas`.
+  Sem linha de base, o `motivo` é o primeiro de `multiesporte`, `modalidade_sem_metricas`, `sem_tipo`, `divergente`, `transicao`, com `metricas: []`.
+  Por métrica (as do tipo, ADR 0011 item 7): `chave` (`pace_medio`, `melhor_pace`, `fc_media`, `fc_melhor_tiro`, `carga`), `rotulo`, `unidade`, `estado`
+  (`fora`, `dentro`, `aprendendo`, `sem_valor`), `motivo` (em `sem_valor`: `esteira`, `sem_tiros`, `sem_fc`, `sem_distancia`, `carga_pendente` ou o motivo da carga), `valor`,
+  `valor_texto`, `mediana`, `mediana_texto`, `desvio`, `z`, `n`, `diferenca_texto` (só em `fora`) e `texto` pronto. Os números brutos saem **sem arredondar**; em `aprendendo` e `sem_valor` não há mediana, desvio nem z.
+- Valores: `pace_medio` = duração / distância (corrida, fora a esteira); `melhor_pace` e `fc_melhor_tiro` = o melhor tiro da série `tiros_1km@6` (a FC dele, sem trocar de tiro; a esteira fica sem `melhor_pace`); `fc_media` = `atividade.fc_media`; `carga` = a `carga@2` calculada (sem linha ou de versão antiga: `carga_pendente`).
+- Janela: mesmo atleta, modalidade e tipo, 56 dias antes da sessão pela data local, só treinos anteriores, sem divergentes, sem partes de treino de transição, sem multiesporte. Uma consulta por atividade, da ordem de dezenas de linhas.
+- Testes: `tests/rotas/test_linha_base_atividade.py` (oráculo das fixtures de `tests/fixtures/meta7/` passando pelo banco e pela rota: `LINHA_BASE_ESPERADA`, `SEM_LINHA_BASE`, textos, esteira, sem FC). Exemplo: `packages/api-client/exemplos/atividade-esforcos.json`.
+
 ## Contrato da tela de evolução (Meta 2)
 O contrato que o app consome está em [[decisoes/0004-contrato-tela-evolucao]], com a lista "antes e depois".
 Já valem aqui (#64): D2 a D11 (erro `404` declarado, `versao_calculo` fixa mais `reclassificacao_pendente`, `Unidades`

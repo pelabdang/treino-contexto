@@ -34,6 +34,12 @@ export type SemanaPadraoItem = components["schemas"]["ItemOut"];
 export type SemanaPadraoVigencia = components["schemas"]["VigenciaOut"];
 export type SemanaPadraoEnvio = components["schemas"]["SemanaPadraoIn"];
 export type SemanaPadraoGravada = components["schemas"]["SemanaPadraoGravadaOut"];
+// Tipo de treino e linha de base no GET da atividade (#266, ADR 0011): textos prontos, o app só mostra.
+export type LinhaBase = NonNullable<Atividade["linha_base"]>;
+export type MetricaLinhaBase = LinhaBase["metricas"][number];
+export type EstadoMetricaLinhaBase = MetricaLinhaBase["estado"];
+export type DivergenciaTipo = NonNullable<Atividade["tipo_divergencia"]>;
+export type OrigemTipo = NonNullable<Atividade["tipo_origem"]>;
 export type Eixos =components["schemas"]["Eixos"];
 export type ErroNaoEncontrado = components["schemas"]["Erro"];
 export type ErroValidacao = components["schemas"]["HTTPValidationError"];
