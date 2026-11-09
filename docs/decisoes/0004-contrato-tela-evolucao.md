@@ -2,7 +2,7 @@
 tipo: decisao
 status: em-uso
 dono: theo
-atualizado: 2026-11-06
+atualizado: 2026-11-09
 links: [[modulos/api]], [[modulos/grafico-tiros]], [[modulos/mobile]], [[modulos/worker]], [[metricas/tiros-1km]], [[decisoes/0002-segmento-intensidade-e-versao]], [[decisoes/0003-fuso-da-atividade]], [[decisoes/0005-serie-de-tiros-o-que-entra]], [[decisoes/0006-upload-de-fit]], [[decisoes/0007-clima-da-atividade]], [[produto/roadmap]], [[design/telas/treino]], [[decisoes/0009-treino-de-transicao]]
 ---
 # ADR: 0004 Contrato da tela de evolução dos tiros (Meta 2)
@@ -185,3 +185,13 @@ alinhamento do "Ver treino" e as capturas de natação ficam com o app (#216, pa
 **Status: aceito (Theo, 06/11).** Estende o item 7 (CORS): além de `GET` e `POST`, a API libera `PUT` e `DELETE` para as origens
 de `CORS_ORIGENS`, para o app web corrigir e desfazer o rótulo de transição ([[decisoes/0009-treino-de-transicao]]). Nada mais muda
 no CORS (sem `*`, sem cookies). Detalhes em [[modulos/api]].
+
+## Adendo 5 (2026-11-09): semana-padrão entra no contrato (#264)
+**Status: aceito (Theo, 09/11, modelo de dados da [[decisoes/0011-linha-de-base-e-semana-padrao]]).** Duas rotas novas, sem mudar
+nenhuma existente: `GET` e `PUT /atletas/{atleta_id}/semana-padrao` (`semanaPadraoDoAtleta` e `gravarSemanaPadrao`). Valem a regra do
+adendo 2 ("a API formata, o app mostra"): o item traz `dia_semana_texto` pronto (`segunda`, `terça`...) e `definido_em` já em
+`America/Sao_Paulo`; o app não monta texto de dia. Erros no formato de sempre: `404` com `Erro` (`detail` string) e `422` do FastAPI
+(`detail` lista). O `PUT` devolve `atividades_reaplicadas`, que vale `0` até a #265 reaplicar o tipo. Os tipos entram em
+`packages/api-client` (`SemanaPadrao`, `SemanaPadraoGravada` e afins); ainda sem função de busca (a tela é a #267).
+O que a ADR 0011 prevê para a atividade (`tipo_origem` com `semana_padrao`, `tipo_divergencia` e `linha_base` no `GET .../atividades/{id}`)
+**não entra aqui**: é a #266, com outro adendo. Detalhes em [[modulos/api]].

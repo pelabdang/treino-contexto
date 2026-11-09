@@ -2,8 +2,8 @@
 tipo: modulo
 status: em-uso
 dono: duda
-atualizado: 2026-11-08
-links: [[decisoes/0010-carga-de-treino]], [[decisoes/0009-treino-de-transicao]], [[produto/meta-3-como-rodar]], [[modulos/api]], [[modulos/mobile]], [[decisoes/0004-contrato-tela-evolucao]], [[decisoes/0006-upload-de-fit]], [[decisoes/0007-clima-da-atividade]], [[produto/meta-4-como-rodar]], [[decisoes/0008-deteccao-de-esforcos]]
+atualizado: 2026-11-09
+links: [[decisoes/0011-linha-de-base-e-semana-padrao]], [[decisoes/0010-carga-de-treino]], [[decisoes/0009-treino-de-transicao]], [[produto/meta-3-como-rodar]], [[modulos/api]], [[modulos/mobile]], [[decisoes/0004-contrato-tela-evolucao]], [[decisoes/0006-upload-de-fit]], [[decisoes/0007-clima-da-atividade]], [[produto/meta-4-como-rodar]], [[decisoes/0008-deteccao-de-esforcos]]
 ---
 # Módulo: api-client
 
@@ -22,6 +22,7 @@ mão. Contrato e decisões em [[decisoes/0004-contrato-tela-evolucao]] (item 6).
   `operations` do `schema.d.ts`.
 - `buscarAtividade(atletaId, atividadeId, {baseUrl?, fetch?})` faz o `GET /atletas/{id}/atividades/{id}` (#159) e devolve `Resultado<Atividade>` com os campos prontos (`data_local`, `hora_local`, `duracao`, `pace_medio`, `distancia`, `clima.atribuicao`); `404` vira `nao_encontrado`, `422` vira `validacao`, outros status `http`, falha do `fetch` `rede`. Nunca lança. Testes em `apps/mobile/__tests__/TelaTreino.test.tsx`.
 - `buscarCarga(atletaId, {inicio?, fim?}, {baseUrl?, fetch?})` (#142) faz o `GET /atletas/{id}/carga` e devolve `Resultado<SerieCarga>` (mesmos erros de `buscarAtividade`). Também exporta `CargaAtividade` (o objeto `carga` da atividade; `estado` `calculada`, `sem_carga` ou `pendente`, e `versao` `null` em `pendente`), `SerieCarga`, `DiaCarga`, `TotaisCarga` e `MotivoSemCarga`. Contrato em [[modulos/api]], "Carga".
+- Semana-padrão (#264, [[decisoes/0011-linha-de-base-e-semana-padrao]]): só tipos, sem função (a tela é da #267). `SemanaPadrao` (resposta do `GET`), `SemanaPadraoVigente`, `SemanaPadraoItem`, `SemanaPadraoVigencia`, `SemanaPadraoEnvio` (corpo do `PUT`) e `SemanaPadraoGravada` (resposta do `PUT`, com `atividades_reaplicadas`, sempre 0 até a #265). `operations` traz `semanaPadraoDoAtleta` e `gravarSemanaPadrao`. Contrato em [[modulos/api]], "Semana-padrão".
 - `enviarAtividadeFit(atletaId, arquivo, {baseUrl?, fetch?, nome?})` faz o `POST /atletas/{id}/atividades/fit` (multipart, campo `arquivo`; ver [[modulos/api]], "Upload de FIT") e nunca lança. `arquivo` é `ArquivoFit`: `Blob`/`File` (web; `nome` dá o nome do arquivo) ou `{uri, name, type}` (React Native).
   - `{ok: true, dados: {criada, resposta}}`: `criada` é `true` no `201` e `false` no `200`; `resposta` é `RespostaUploadFit`.
   - `{ok: false, erro}`: `404` vira `nao_encontrado`, `422` vira `validacao`; os demais status (`400`, `413`...) viram `http` com `status` e `detail?` (o `detail` string do corpo `Erro`, quando houver); falha do `fetch` vira `rede`.

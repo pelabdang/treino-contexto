@@ -1127,6 +1127,94 @@
         "title": "IntervaloOut",
         "type": "object"
       },
+      "ItemIn": {
+        "properties": {
+          "dia_semana": {
+            "title": "Dia Semana",
+            "type": "integer"
+          },
+          "modalidade": {
+            "enum": [
+              "corrida",
+              "natacao",
+              "ciclismo"
+            ],
+            "title": "Modalidade",
+            "type": "string"
+          },
+          "tipo_treino": {
+            "anyOf": [
+              {
+                "enum": [
+                  "leve",
+                  "moderado",
+                  "longo",
+                  "intervalado",
+                  "fartlek"
+                ],
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Tipo Treino"
+          }
+        },
+        "required": [
+          "dia_semana",
+          "modalidade"
+        ],
+        "title": "ItemIn",
+        "type": "object"
+      },
+      "ItemOut": {
+        "properties": {
+          "dia_semana": {
+            "title": "Dia Semana",
+            "type": "integer"
+          },
+          "dia_semana_texto": {
+            "title": "Dia Semana Texto",
+            "type": "string"
+          },
+          "modalidade": {
+            "enum": [
+              "corrida",
+              "natacao",
+              "ciclismo"
+            ],
+            "title": "Modalidade",
+            "type": "string"
+          },
+          "tipo_treino": {
+            "anyOf": [
+              {
+                "enum": [
+                  "leve",
+                  "moderado",
+                  "longo",
+                  "intervalado",
+                  "fartlek"
+                ],
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Tipo Treino"
+          }
+        },
+        "required": [
+          "dia_semana",
+          "dia_semana_texto",
+          "modalidade",
+          "tipo_treino"
+        ],
+        "title": "ItemOut",
+        "type": "object"
+      },
       "MarcaFc": {
         "properties": {
           "rotulo": {
@@ -1316,6 +1404,117 @@
           "fim"
         ],
         "title": "Periodo",
+        "type": "object"
+      },
+      "SemanaPadraoGravadaOut": {
+        "properties": {
+          "atividades_reaplicadas": {
+            "title": "Atividades Reaplicadas",
+            "type": "integer"
+          },
+          "definido_em": {
+            "format": "date-time",
+            "title": "Definido Em",
+            "type": "string"
+          },
+          "definido_por": {
+            "enum": [
+              "atleta",
+              "professor"
+            ],
+            "title": "Definido Por",
+            "type": "string"
+          },
+          "itens": {
+            "items": {
+              "$ref": "#/components/schemas/ItemOut"
+            },
+            "title": "Itens",
+            "type": "array"
+          },
+          "vigente_desde": {
+            "format": "date",
+            "title": "Vigente Desde",
+            "type": "string"
+          }
+        },
+        "required": [
+          "vigente_desde",
+          "definido_por",
+          "definido_em",
+          "itens",
+          "atividades_reaplicadas"
+        ],
+        "title": "SemanaPadraoGravadaOut",
+        "type": "object"
+      },
+      "SemanaPadraoIn": {
+        "properties": {
+          "definido_por": {
+            "enum": [
+              "atleta",
+              "professor"
+            ],
+            "title": "Definido Por",
+            "type": "string"
+          },
+          "itens": {
+            "items": {
+              "$ref": "#/components/schemas/ItemIn"
+            },
+            "title": "Itens",
+            "type": "array"
+          },
+          "vigente_desde": {
+            "format": "date",
+            "title": "Vigente Desde",
+            "type": "string"
+          }
+        },
+        "required": [
+          "vigente_desde",
+          "definido_por",
+          "itens"
+        ],
+        "title": "SemanaPadraoIn",
+        "type": "object"
+      },
+      "SemanaPadraoOut": {
+        "properties": {
+          "atleta_id": {
+            "title": "Atleta Id",
+            "type": "integer"
+          },
+          "em": {
+            "format": "date",
+            "title": "Em",
+            "type": "string"
+          },
+          "vigencias": {
+            "items": {
+              "$ref": "#/components/schemas/VigenciaOut"
+            },
+            "title": "Vigencias",
+            "type": "array"
+          },
+          "vigente": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/VigenteOut"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "required": [
+          "atleta_id",
+          "em",
+          "vigente",
+          "vigencias"
+        ],
+        "title": "SemanaPadraoOut",
         "type": "object"
       },
       "SessaoOut": {
@@ -1675,6 +1874,71 @@
           "type"
         ],
         "title": "ValidationError",
+        "type": "object"
+      },
+      "VigenciaOut": {
+        "properties": {
+          "definido_por": {
+            "enum": [
+              "atleta",
+              "professor"
+            ],
+            "title": "Definido Por",
+            "type": "string"
+          },
+          "total_itens": {
+            "title": "Total Itens",
+            "type": "integer"
+          },
+          "vigente_desde": {
+            "format": "date",
+            "title": "Vigente Desde",
+            "type": "string"
+          }
+        },
+        "required": [
+          "vigente_desde",
+          "definido_por",
+          "total_itens"
+        ],
+        "title": "VigenciaOut",
+        "type": "object"
+      },
+      "VigenteOut": {
+        "properties": {
+          "definido_em": {
+            "format": "date-time",
+            "title": "Definido Em",
+            "type": "string"
+          },
+          "definido_por": {
+            "enum": [
+              "atleta",
+              "professor"
+            ],
+            "title": "Definido Por",
+            "type": "string"
+          },
+          "itens": {
+            "items": {
+              "$ref": "#/components/schemas/ItemOut"
+            },
+            "title": "Itens",
+            "type": "array"
+          },
+          "vigente_desde": {
+            "format": "date",
+            "title": "Vigente Desde",
+            "type": "string"
+          }
+        },
+        "required": [
+          "vigente_desde",
+          "definido_por",
+          "definido_em",
+          "itens"
+        ],
+        "title": "VigenteOut",
         "type": "object"
       }
     }
@@ -2226,6 +2490,137 @@
         "summary": "Evolucao Tiros 1Km Png",
         "tags": [
           "evolução"
+        ]
+      }
+    },
+    "/atletas/{atleta_id}/semana-padrao": {
+      "get": {
+        "description": "A semana vigente em `em` (AAAA-MM-DD; padrão: hoje em America/Sao_Paulo) e o histórico de vigências.",
+        "operationId": "semanaPadraoDoAtleta",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "atleta_id",
+            "required": true,
+            "schema": {
+              "title": "Atleta Id",
+              "type": "integer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "em",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "format": "date",
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Em"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SemanaPadraoOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Erro"
+                }
+              }
+            },
+            "description": "Atleta não encontrado"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Semana Padrao Do Atleta",
+        "tags": [
+          "semana-padrão"
+        ]
+      },
+      "put": {
+        "description": "Cria ou substitui a vigência `vigente_desde` (reenviar é idempotente). `itens: []` encerra o plano. Não há `DELETE`.\nA reaplicação do tipo nas atividades é da #265: por enquanto `atividades_reaplicadas` é sempre 0.",
+        "operationId": "gravarSemanaPadrao",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "atleta_id",
+            "required": true,
+            "schema": {
+              "title": "Atleta Id",
+              "type": "integer"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SemanaPadraoIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SemanaPadraoGravadaOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Erro"
+                }
+              }
+            },
+            "description": "Atleta não encontrado"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Gravar Semana Padrao",
+        "tags": [
+          "semana-padrão"
         ]
       }
     },

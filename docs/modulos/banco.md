@@ -2,8 +2,8 @@
 tipo: modulo
 status: em-uso
 dono: theo
-atualizado: 2026-11-07
-links: [[decisoes/0001-modelo-de-dados-minimo]], [[decisoes/0002-segmento-intensidade-e-versao]], [[decisoes/0003-fuso-da-atividade]], [[decisoes/0007-clima-da-atividade]], [[decisoes/0008-deteccao-de-esforcos]], [[decisoes/0009-treino-de-transicao]], [[decisoes/0010-carga-de-treino]], [[modulos/ingestao-garmin]], [[modulos/api]], [[modulos/infra]], [[produto/meta-4-como-rodar]]
+atualizado: 2026-11-09
+links: [[decisoes/0011-linha-de-base-e-semana-padrao]], [[decisoes/0001-modelo-de-dados-minimo]], [[decisoes/0002-segmento-intensidade-e-versao]], [[decisoes/0003-fuso-da-atividade]], [[decisoes/0007-clima-da-atividade]], [[decisoes/0008-deteccao-de-esforcos]], [[decisoes/0009-treino-de-transicao]], [[decisoes/0010-carga-de-treino]], [[modulos/ingestao-garmin]], [[modulos/api]], [[modulos/infra]], [[produto/meta-4-como-rodar]]
 ---
 # Módulo: banco
 
@@ -12,7 +12,7 @@ Guarda atleta, atividades importadas e segmentos (voltas, tiros, recuperações)
 Motivos da escolha em [[decisoes/0001-modelo-de-dados-minimo]].
 
 ## Entradas e saídas
-- Tabelas: `assessoria`, `professor`, `atleta`, `vinculo_professor_atleta`, `atividade`, `segmento`, `clima_atividade`, `bloco_atividade`, `rotulo_transicao`, `limiar_atleta`, `zona_fc_atleta`, `recorde_pessoal`, `carga_garmin_dia`, `carga_atividade`.
+- Tabelas: `assessoria`, `professor`, `atleta`, `vinculo_professor_atleta`, `atividade`, `segmento`, `clima_atividade`, `bloco_atividade`, `rotulo_transicao`, `limiar_atleta`, `zona_fc_atleta`, `recorde_pessoal`, `carga_garmin_dia`, `carga_atividade`, `semana_padrao`, `semana_padrao_item`.
 - `atividade` é única por `(atleta_id, fonte, fonte_id)`: reimportar não duplica.
 - `segmento` tem `intensidade` (valor do FIT, com `CHECK`) e `versao_deteccao` (ex.: `tiros_1km@1`), ambos anuláveis. Ver [[decisoes/0002-segmento-intensidade-e-versao]].
 - `atividade.fuso_min` (int, anulável, `CHECK` de -720 a 840): deslocamento do fuso em minutos; a data local da sessão é a de `inicio + fuso_min`, ou `America/Sao_Paulo` se for `NULL`. Ver [[decisoes/0003-fuso-da-atividade]].
@@ -27,8 +27,11 @@ Motivos da escolha em [[decisoes/0001-modelo-de-dados-minimo]].
 - `arquivo_bruto` guarda o caminho do original (princípio "guardar o dado bruto").
 - Domínios fixos (modalidade, tipo de treino, origem do tipo, tipo de segmento) são texto com `CHECK`.
 - `carga_atividade` (migração 0010, [[decisoes/0010-carga-de-treino]], item 5): a carga de treino de cada atividade **elegível**; `multiesporte_pai` e `troca` não têm linha. Colunas: `atividade_id` (FK única, `ON DELETE CASCADE`), `estado` (`calculada` ou `sem_carga`), `carga` (a do método vencedor), `metodo` (`rtss` ou `hrtss`), `carga_rtss` e `carga_hrtss` (cada uma só se o seu método valeu), `motivo` (um dos seis da ADR: `sem_dados_saude`, `sem_limiar_na_data`, `sem_fc`, `sem_pace`, `cobertura_insuficiente`, `modalidade_sem_carga`), `cobertura_pct`, `granularidade` (`volta` ou `atividade`), `limiar_fc_bpm`, `limiar_velocidade_ms` e `limiar_vigente_desde` (o limiar **usado**, para auditoria; a vigência é a do método vencedor), `entrada` (SHA-256 de modalidade, subtipo, voltas, limiares do caminho da modalidade e, só quando a `carga@2` a usa, a FC média da atividade), `versao` (`carga@2`) e `calculado_em`. `CHECK`s de estado, método, motivo e granularidade, e um que amarra o estado aos campos (`calculada` exige carga, método e cobertura e proíbe motivo; `sem_carga` exige motivo e proíbe carga, método e as duas cargas por método). Quem grava é `app.servicos.carga.calcular_carga_do_atleta` ([[modulos/worker]]), que só regrava a linha quando `entrada` ou `versao` mudam. **Dado fisiológico (LGPD)**: os limiares ficam só no banco local, nunca em log nem pela API.
+- `semana_padrao` e `semana_padrao_item` (migração 0011, [[decisoes/0011-linha-de-base-e-semana-padrao]], item 1; a ADR segue "proposta", o modelo foi aprovado pelo Theo): a semana-padrão do atleta com vigência. `semana_padrao`: `atleta_id` (FK), `vigente_desde` (data, dia do calendário sem fuso), `definido_por` (`atleta` ou `professor`, `CHECK`; **declarado**, não verificado: não há login) e `definido_em` (com fuso, atualizado a cada `PUT`). `UNIQUE (atleta_id, vigente_desde)`. Vale, para a data local `t`, a linha de **maior `vigente_desde <= t`**; não há `vigente_ate` e **nunca** se olha a vigência seguinte (a mudança de plano não reescreve o passado). Vigência com zero itens é válida ("a partir daqui, sem plano"). `semana_padrao_item`: `semana_padrao_id` (FK, `ON DELETE CASCADE`, indexada), `dia_semana` (1 a 7, ISO, `CHECK`), `modalidade` (`corrida`, `natacao`, `ciclismo`, `CHECK`; `outra` fica de fora) e `tipo_treino` (os cinco tipos, anulável: `NULL` = treina a modalidade nesse dia, sem tipo). `UNIQUE (semana_padrao_id, dia_semana, modalidade)`. **Plano de treino do atleta: só no banco local, nunca em log nem em fixture real.** Quem grava é `app.servicos.semana_padrao.gravar_vigencia` (via `PUT`, [[modulos/api]]).
+- `atividade` ganha na 0011 (nada é preenchido na migração): `tipo_versao` (texto 40, anulável: a versão da regra que escreveu o tipo, `tipo_treino@1`, quando a origem é `sugestao` ou `semana_padrao`) e `tipo_divergencia` (`sem_esforco` ou `tem_tiros`, anulável, `CHECK` `tipo_divergencia`). O `CHECK` `tipo_origem` passa a aceitar `semana_padrao` (recriado) e o `CHECK` `tipo_divergencia_origem` exige a origem `semana_padrao` para haver divergência. Nada escreve essas colunas ainda: quem as preenche é a #265. Linhas antigas com `sugestao` e `tipo_versao` nulo contam como desatualizadas.
 
 ## Arquivos principais
+- `services/api/alembic/versions/0011_semana_padrao_e_tipo_versao.py`: as duas tabelas, as duas colunas e os `CHECK`s. O `downgrade` zera `tipo_treino`, `tipo_origem`, `tipo_versao` e `tipo_divergencia` das linhas com origem `semana_padrao` (derivadas e reaplicáveis), recria o `CHECK` antigo, remove colunas e tabelas (itens primeiro). Usa `batch_alter_table` (SQLite) e sobe e desce nos dois bancos (`test_migracoes.py`).
 - `services/api/app/db/models.py`: modelos SQLAlchemy. Mudança só com aprovação do Theo.
 - `services/api/alembic/versions/0001_modelo_de_dados_minimo.py`: migração inicial.
 - `services/api/alembic/versions/0002_segmento_intensidade_e_versao.py`: colunas `intensidade` e `versao_deteccao`.

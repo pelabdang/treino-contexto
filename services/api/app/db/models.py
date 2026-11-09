@@ -25,7 +25,10 @@ from app.db.base import Base
 
 MODALIDADES = ("corrida", "natacao", "ciclismo", "outra")
 TIPOS_TREINO = ("leve", "moderado", "longo", "intervalado", "fartlek")
-ORIGENS_TIPO = ("sugestao", "professor", "trainingpeaks")
+ORIGENS_TIPO = ("sugestao", "professor", "trainingpeaks", "semana_padrao")  # semana_padrao: ADR 0011, item 1
+DIVERGENCIAS_TIPO = ("sem_esforco", "tem_tiros")  # ADR 0011, item 4
+DEFINIDO_POR = ("atleta", "professor")  # declarado, nao verificado (ADR 0011, item 1)
+MODALIDADES_SEMANA = ("corrida", "natacao", "ciclismo")  # `outra` fica de fora da semana-padrao
 TIPOS_SEGMENTO = ("volta", "tiro", "recuperacao")
 CATEGORIAS_BLOCO = ("esforco", "recuperacao", "aquecimento", "desaquecimento", "leve")  # ADR 0008, item 1
 # Valores do campo `intensity` do lap no FIT, normalizados em minúsculas (ADR 0002).
@@ -100,6 +103,13 @@ class Atividade(Base):
         CheckConstraint(_in("modalidade", MODALIDADES), name="modalidade"),
         CheckConstraint(f"tipo_treino IS NULL OR {_in('tipo_treino', TIPOS_TREINO)}", name="tipo_treino"),
         CheckConstraint(f"tipo_origem IS NULL OR {_in('tipo_origem', ORIGENS_TIPO)}", name="tipo_origem"),
+        # ADR 0011, item 1: a divergencia so existe com a origem `semana_padrao`.
+        CheckConstraint(f"tipo_divergencia IS NULL OR {_in('tipo_divergencia', DIVERGENCIAS_TIPO)}", name="tipo_divergencia"),
+        # `IS NOT NULL` explicito: com origem nula, `tipo_origem = 'semana_padrao'` e NULL e o CHECK deixaria passar.
+        CheckConstraint(
+            "tipo_divergencia IS NULL OR (tipo_origem IS NOT NULL AND tipo_origem = 'semana_padrao')",
+            name="tipo_divergencia_origem",
+        ),
         # Fusos reais vao de UTC-12 a UTC+14 (ADR 0003).
         CheckConstraint(f"fuso_min IS NULL OR fuso_min BETWEEN {FUSO_MIN_MIN} AND {FUSO_MIN_MAX}", name="fuso_min"),
         # Posicao de inicio arredondada (ADR 0007): faixa valida e as duas nulas ou as duas preenchidas.
@@ -126,6 +136,9 @@ class Atividade(Base):
     tipo_treino: Mapped[str | None] = mapped_column(String(20))
     tipo_origem: Mapped[str | None] = mapped_column(String(20))
     tipo_confirmado: Mapped[bool] = mapped_column(Boolean, default=False, server_default="false")
+    # versao da regra que escreveu o tipo (ex.: tipo_treino@1) quando a origem e `sugestao` ou `semana_padrao`; ADR 0011
+    tipo_versao: Mapped[str | None] = mapped_column(String(40))
+    tipo_divergencia: Mapped[str | None] = mapped_column(String(20))  # sem_esforco ou tem_tiros (ADR 0011, item 4)
     arquivo_bruto: Mapped[str | None] = mapped_column(String(500))  # caminho do FIT/JSON original
     criado_em: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
 
@@ -398,3 +411,47 @@ class CargaAtividade(Base):
     calculado_em: Mapped[datetime] = mapped_column(DateTime(timezone=True))
 
     atividade: Mapped[Atividade] = relationship(back_populates="carga")
+
+
+class SemanaPadrao(Base):
+    """Cabecalho da semana-padrao do atleta (ADR 0011, item 1): uma linha por (atleta, vigencia).
+
+    Vale, para a data local `t`, a linha de maior `vigente_desde <= t`; nao ha `vigente_ate`. Vigencia sem itens e
+    valida ("a partir daqui, sem plano"). Plano de treino do atleta: so no banco local, nunca em log nem fixture real.
+    """
+
+    __tablename__ = "semana_padrao"
+    __table_args__ = (
+        UniqueConstraint("atleta_id", "vigente_desde", name="uq_semana_padrao_vigencia"),
+        CheckConstraint(_in("definido_por", DEFINIDO_POR), name="definido_por"),
+    )
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    atleta_id: Mapped[int] = mapped_column(ForeignKey("atleta.id"))
+    vigente_desde: Mapped[date] = mapped_column(Date)  # dia do calendario, sem fuso
+    definido_por: Mapped[str] = mapped_column(String(20))
+    definido_em: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+
+    itens: Mapped[list["SemanaPadraoItem"]] = relationship(
+        back_populates="semana", cascade="all, delete-orphan", passive_deletes=True,
+    )
+
+
+class SemanaPadraoItem(Base):
+    """Um item da semana-padrao: modalidade (e tipo, opcional) de um dia da semana ISO (1 = segunda ... 7 = domingo)."""
+
+    __tablename__ = "semana_padrao_item"
+    __table_args__ = (
+        UniqueConstraint("semana_padrao_id", "dia_semana", "modalidade", name="uq_semana_padrao_item_dia_modalidade"),
+        CheckConstraint("dia_semana BETWEEN 1 AND 7", name="dia_semana"),
+        CheckConstraint(_in("modalidade", MODALIDADES_SEMANA), name="modalidade"),
+        CheckConstraint(f"tipo_treino IS NULL OR {_in('tipo_treino', TIPOS_TREINO)}", name="tipo_treino"),
+    )
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    semana_padrao_id: Mapped[int] = mapped_column(ForeignKey("semana_padrao.id", ondelete="CASCADE"), index=True)
+    dia_semana: Mapped[int] = mapped_column(Integer)
+    modalidade: Mapped[str] = mapped_column(String(20))
+    tipo_treino: Mapped[str | None] = mapped_column(String(20))  # NULL: treina a modalidade nesse dia, sem tipo
+
+    semana: Mapped[SemanaPadrao] = relationship(back_populates="itens")
