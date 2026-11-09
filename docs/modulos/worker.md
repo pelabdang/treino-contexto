@@ -2,7 +2,7 @@
 tipo: modulo
 status: em-uso
 dono: theo
-atualizado: 2026-11-07
+atualizado: 2026-11-09
 links: [[decisoes/0006-upload-de-fit]], [[modulos/api]], [[modulos/grafico-tiros]], [[modulos/grafico-carga]], [[metricas/conferencia-carga]], [[modulos/infra]], [[modulos/ingestao-garmin]], [[modulos/banco]], [[modulos/clima]], [[decisoes/0008-deteccao-de-esforcos]], [[decisoes/0009-treino-de-transicao]], [[decisoes/0010-carga-de-treino]], [[metricas/transicao]], [[metricas/esforcos]], [[decisoes/0007-clima-da-atividade]], [[produto/meta-4-como-rodar]]
 ---
 # Módulo: worker
@@ -26,7 +26,10 @@ da importação e do cálculo de métricas, fora da [[modulos/api]].
 - Apagar FIT enviados: `uv run python -m worker.apagar_fit --atleta-id <id>` apaga os arquivos de `FIT_DIR/<id>/` e limpa `arquivo_bruto`, sem apagar as atividades ([[decisoes/0006-upload-de-fit]]; uso na prática em [[produto/meta-3-como-rodar]]).
 - Reclassificação: `uv run python -m worker.reclassificar --atleta-id <id>` roda `classificar_atividades` e mostra
   quantas corridas processou. Idempotente. Use quando a API devolve `reclassificacao_pendente: true`
-  (passo a passo em "Reclassificar" de [[modulos/api]]). Atleta inexistente: stderr e saída 1.
+  (passo a passo em "Reclassificar" de [[modulos/api]]). Atleta inexistente: stderr e saída 1. Desde a #265 também regrava o tipo de
+  **todas** as atividades pela `tipo_treino@1` ([[decisoes/0011-linha-de-base-e-semana-padrao]]): semana-padrão vigente e regra de reserva, com
+  `tipo_versao` e `tipo_divergencia`, só nas linhas que mudam e sem tocar tipo confirmado, `professor` nem `trainingpeaks`. Sugestão de antes da 0011
+  (`tipo_versao` nulo) conta como desatualizada e é regravada aqui ou na importação (`classificar_atividades`).
 - Treino de transição: `uv run python -m worker.sugerir_transicao --atleta-id <id>` (#157, [[decisoes/0009-treino-de-transicao]]) aplica a regra
   `transicao@1` ([[metricas/transicao]]) às atividades do atleta e grava em `rotulo_transicao` ([[modulos/banco]]). **Sem rede.**
   A regra só grava "sim" (origem `sugerido`): insere as sugeridas sem linha, atualiza `versao_regra` e `definido_em` só quando a

@@ -37,4 +37,7 @@ Os 16 casos do encaixe (E1 a E16) com as fixtures de 12 semanas estão em [[metr
 `services/api/tests/metricas/test_tipo_treino.py` (oráculo das 81 atividades e bordas).
 
 ## Limitações
-Um item por modalidade por dia. Divergência só em corrida. A `estrutura` (blocos e tiros) é calculada por quem chama a função (#265).
+Um item por modalidade por dia. Divergência só em corrida. A `estrutura` (blocos e tiros) é calculada por quem chama a função: no banco, `servicos/tipo_treino.estrutura_dos_blocos` resume os blocos gravados da corrida (`tiros` se `tiros_de_blocos` acha 2 ou mais tiros; `sem_esforco` se todos os blocos são `leve`; `esforco` nos demais; sem blocos, nada).
+
+## No banco (#265)
+`servicos/tipo_treino.aplicar_tipos(session, atleta_id, desde=None)` lê as atividades, as vigências e os blocos, chama `classificar` e grava `tipo_treino`, `tipo_origem`, `tipo_versao` e `tipo_divergencia` **só nas linhas que mudam**, sem tocar tipo confirmado, `professor` nem `trainingpeaks`. É chamada por `classificar_atividades` (importação, upload de FIT e `worker.reclassificar`; o atleta todo) e pelo `PUT` da semana-padrão (`desde = vigente_desde`, data local; sem `detectar_esforcos`). `reclassificacao_pendente` trata `sugestao` e `semana_padrao` com `tipo_versao` diferente de `tipo_treino@1` como desatualizadas. Teste com o oráculo das fixtures passando pelo banco: `services/api/tests/servicos/test_tipo_treino_banco.py`.

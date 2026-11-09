@@ -184,15 +184,23 @@ def test_atletas_nao_se_misturam(client, atleta, session):
     assert get(client, outro.id, "2026-03-10").json()["vigencias"] == []
 
 
-def test_put_nao_toca_nas_atividades_enquanto_a_reaplicacao_e_da_265(client, atleta, session):
-    session.add(Atividade(
-        atleta_id=atleta, fonte="teste", fonte_id="1", modalidade="corrida", duracao_s=1800.0,
-        inicio=datetime(2026, 3, 3, 10, tzinfo=timezone.utc), tipo_treino="leve", tipo_origem="sugestao"))
+def test_put_reaplica_o_tipo_so_a_partir_da_vigencia(client, atleta, session):
+    """Terça 2026-03-03 e terça 2026-02-24: só a que tem data local >= vigente_desde muda (ADR 0011, item 8)."""
+    for fid, dia in [("antes", 24), ("depois", 3)]:
+        mes = 2 if dia == 24 else 3
+        session.add(Atividade(
+            atleta_id=atleta, fonte="teste", fonte_id=fid, modalidade="corrida", duracao_s=1800.0, fuso_min=-180,
+            inicio=datetime(2026, mes, dia, 10, tzinfo=timezone.utc), tipo_treino="leve", tipo_origem="sugestao"))
     session.commit()
+    r = put(client, atleta, itens=[{"dia_semana": 2, "modalidade": "corrida", "tipo_treino": "fartlek"}])
+    assert r.json()["atividades_reaplicadas"] == 1
+    por_id = {a.fonte_id: a for a in session.scalars(select(Atividade))}
+    assert (por_id["depois"].tipo_treino, por_id["depois"].tipo_origem, por_id["depois"].tipo_versao) == (
+        "fartlek", "semana_padrao", "tipo_treino@1")
+    assert (por_id["antes"].tipo_treino, por_id["antes"].tipo_origem, por_id["antes"].tipo_versao) == ("leve", "sugestao", None)
+    # repetir o PUT nao muda mais nada
     assert put(client, atleta, itens=[{"dia_semana": 2, "modalidade": "corrida", "tipo_treino": "fartlek"}]).json()[
         "atividades_reaplicadas"] == 0
-    a = session.scalars(select(Atividade)).one()
-    assert (a.tipo_treino, a.tipo_origem) == ("leve", "sugestao")
 
 
 def test_reaplicacao_roda_na_transacao_do_put_e_o_numero_vai_na_resposta(client, atleta, monkeypatch):
