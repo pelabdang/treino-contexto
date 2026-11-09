@@ -8,8 +8,9 @@ links: [[design/guia-visual]], [[design/tokens]], [[design/telas/treino]], [[des
 # Tela: check-in pós-treino e lista de pendentes
 
 Spec da issue #295, antes da implementação (#299, do Rafa). Contrato em [[decisoes/0012-check-in-pos-treino]]
-(itens 2, 3, 4 e 7; a ADR está em proposta no PR #305, então a API pode mudar em detalhe). Todos os dados são
-**sintéticos**. Nada em `apps/mobile/` muda nesta nota.
+(itens 2, 3, 4 e 7; a ADR está em proposta no PR #305). Os campos `checkin_aberto` e `pse_sugerida` que esta nota pediu
+já estão na API (#298, PR #311, adendo 9 da ADR). As dúvidas de desenho foram respondidas pelo Theo em 09/11 (seção final).
+Todos os dados são **sintéticos**. Nada em `apps/mobile/` muda nesta nota.
 
 Esboço do tema claro, em celular pequeno (360 por 640): ![[design/telas/checkin-claro.svg]]
 (arquivo `docs/design/telas/checkin-claro.svg`; mostra a pergunta 1 e a pergunta 3, cada uma **sem rolar**). O tema
@@ -40,7 +41,8 @@ em captura, link ou lista ([[decisoes/0012-check-in-pos-treino]], item 5).
 
 ## Dados
 Pelo cliente gerado (a ser regerado na #296 e #298):
-- `GET /atletas/{id}/atividades/{id}`: traz `checkin` (ou `null`) e `carga_pse` (ou `null`).
+- `GET /atletas/{id}/atividades/{id}`: traz `checkin` (ou `null`), `carga_pse` (ou `null`), `checkin_aberto` (booleano) e
+  `pse_sugerida` (inteiro ou `null`).
 - `PUT .../checkin` com `pse`, `sensacao`, `nada_a_relatar`, `atalhos` e `texto`; `200` com o `CheckinOut`.
 - `DELETE .../checkin`: `204`.
 - `GET /atletas/{id}/checkins/pendentes?dias=7`: `pendentes[]` com `atividade_id`, `modalidade`, `data_local`,
@@ -54,10 +56,12 @@ Pelo cliente gerado (a ser regerado na #296 e #298):
 | `atalhos[].chave`, `.texto` | `dor`, `cansaco`, `sono_ruim`, `calor`, `trabalho_estresse` | chips; o texto vem da API no resumo |
 | `nada_a_relatar`, `texto` | booleano; até 500 caracteres | botão e campo |
 | `carga_pse.texto`, `valor_texto`, `estado` | "270 UA", `calculada`, `sem_checkin`, `sem_duracao` | cartão "Carga pela PSE" |
+| `checkin_aberto` | `true` quando dá para criar (ou já existe check-in, pois editar não tem prazo); `false` em `multiesporte_pai`, `troca` e com o prazo de criação vencido | decide se o cartão "Check-in" oferece "Fazer check-in" (ver "Cartões na tela do treino") |
+| `pse_sugerida` | 0 a 10 ou `null`; numa parte de multiesporte, a PSE do check-in da parte anterior | aviso "Na parte anterior você marcou N (âncora)." e botão "Usar N" na pergunta 1 |
 | `pendentes[].titulo`, `data_local`, `hora_local` | texto pronto | linha da lista |
 
-O app não calcula carga, não escolhe âncora de PSE fora da escala fixa da ADR e não decide quem é pendente. Só a
-data curta `dd/mm/aa` é convertida, como nas outras telas.
+O app não calcula carga, não escolhe âncora de PSE fora da escala fixa da ADR e não decide quem é pendente nem se o prazo
+está aberto (`checkin_aberto` vem pronto). Só a data curta `dd/mm/aa` é convertida, como nas outras telas.
 
 ### Escala da PSE (CR-10) e da sensação
 Os rótulos dos botões são os da ADR 0012 (item 2), conferidos nas fontes pelo Caio. Se uma âncora mudar na ADR, muda aqui.
@@ -198,10 +202,14 @@ que quer mudar:
 - Editar não tem prazo. O `PUT` substitui o registro inteiro.
 
 ### Sugerir a PSE da parte anterior (multiesporte)
-Na **pergunta 1** de uma parte que não é a primeira, **se a API mandar** `pse_sugerida` (dúvida 3 abaixo), aparece acima da
-grade um aviso neutro com `info-outline`: "Na parte anterior (Natação) você marcou 5, difícil." e o botão de texto
-"Usar 5". O botão tem o mesmo efeito de tocar o 5 (escolhe e vai para a pergunta 2). A grade continua toda tocável; a sugestão
-**não vem marcada**, para não virar resposta sem o atleta ver. Sem a sugestão, nada aparece.
+Na **pergunta 1**, se o `GET` da atividade trouxer `pse_sugerida` (inteiro, a PSE do check-in da parte anterior do mesmo
+multiesporte), aparece acima da grade um aviso neutro com `info-outline`: **"Na parte anterior você marcou 5 (difícil)."** e o
+botão de texto **"Usar 5"**. O botão tem o mesmo efeito de tocar o 5 (escolhe e vai para a pergunta 2). A grade continua toda
+tocável; a sugestão **não vem marcada**, para não virar resposta sem o atleta ver. Com `null`, nada aparece.
+- A API manda **só o número**: o app não recebe a modalidade da parte anterior, por isso o aviso não a cita. A âncora entre
+  parênteses vem da tabela fixa da escala (acima), a mesma dos botões. Para 6, 8 e 9, que não têm âncora, o aviso é só
+  "Na parte anterior você marcou 6.".
+- Leitor de tela: o aviso é lido antes da grade, e o botão como "Usar 5, botão".
 
 ## Cartões na tela do treino ([[design/telas/treino]])
 **Sem check-in.**
@@ -236,9 +244,16 @@ grade um aviso neutro com `info-outline`: "Na parte anterior (Natação) você m
 - Carga pela PSE: valor em `fonte.numero-destaque` e a unidade "UA" dentro de `valor_texto`, mostrado como veio. `estado =
   sem_duracao`: só o `texto` da API (sem número). `pse = 0`: "0 UA" vale. Sem `carga_pse` (atividade sem check-in
   elegível), o cartão não aparece.
-- Cartão "Check-in" não aparece para atividade que não pede check-in (`checkin` e `carga_pse` nulos **e** `multiesporte_pai` ou
-  `troca`). Como o app só recebe `null`, a dúvida 2 pede um campo que diga isso; até lá o cartão aparece e o `422`
-  `atividade_sem_checkin` mostra "Este treino não pede check-in." (ver Estados).
+- **Quando o cartão aparece** (regra pelo `checkin_aberto` e pelo `checkin` do `GET`, decidida em 09/11):
+  | `checkin` | `checkin_aberto` | cartão "Check-in" |
+  |---|---|---|
+  | existe | `true` (sempre, pois editar não tem prazo) | "Com check-in", com "Editar" e "Apagar check-in" |
+  | `null` | `true` | "Sem check-in", com "Fazer check-in" |
+  | `null` | `false` e a atividade é `multiesporte_pai` ou `troca` | **não aparece** (o treino inteiro e a troca não têm check-in; as partes têm) |
+  | `null` | `false` nos demais casos (prazo de criação vencido) | "Sem check-in" **sem o botão**, com o aviso de prazo: ícone `info-outline` e "O prazo para fazer o check-in deste treino acabou (7 dias depois do treino)." |
+- O app não calcula prazo: só lê `checkin_aberto`. O `422` `fora_do_prazo` e o `422` `atividade_sem_checkin` (ver Estados)
+  ficam como rede de segurança, para quando a tela estava aberta e o prazo venceu no meio, ou para o endereço `/checkin/<id>`
+  digitado direto na web.
 - **Apagar** abre o diálogo: título "Apagar este check-in?", texto "A PSE, a sensação e a observação deste treino serão
   apagadas. Isso não pode ser desfeito.", botões "Cancelar" (primário) e "Apagar" (secundário, texto `cor.erro`).
 
@@ -348,15 +363,26 @@ como na semana-padrão. Um estado por captura, 390 de largura, claro e escuro.
 | sem ícones de sensação | cinco ícones `sentiment-*`, `assignment`, `edit` e `check` em [[design/tokens]] | #299 |
 
 ## Dúvidas de desenho
+Todas respondidas pelo Theo em 09/11 (comentário no PR #309). O que decidiu já está no corpo da nota; a lista fica como registro.
 1. **Quarto toque.** Com atalho ou texto o caminho é PSE, sensação, atalho, "Salvar check-in" (4 toques). Só "Nada a relatar"
    fecha em 3. Está bom, ou o Theo prefere atalho de um toque único (um atalho só, salvando na hora)? Perde o "vários atalhos".
+   **Respondida (Theo, 09/11):** aceito. "Nada a relatar" fecha em 3 toques; com atalho ou texto são 4, para permitir vários
+   atalhos. O Theo leva ao Angelo como informação.
 2. **Treino que não pede check-in.** O app só recebe `checkin: null` e `carga_pse: null`, igual para "sem check-in" e para
    `multiesporte_pai`/`troca`. Peço um campo na #298 que diga se o treino aceita check-in (e, idealmente, se o prazo ainda está
    aberto, `checkin_aberto`), para o cartão não oferecer "Fazer check-in" onde só virá `422`. Sem isso, o app trata o `422`.
+   **Respondida (Theo, 09/11):** sim. A #298 entregou `checkin_aberto` (booleano) no `GET` da atividade. Regra em "Cartões
+   na tela do treino".
 3. **PSE da parte anterior.** A ADR deixa para a #299. O app não sabe qual é a parte anterior. Peço à #298 um campo no `GET` da
    atividade, por exemplo `pse_sugerida: {modalidade, pse, pse_texto}`, só quando a parte anterior tem check-in. Sem esse campo,
    a sugestão não aparece.
+   **Respondida (Theo, 09/11):** sim, mas como **inteiro ou `null`** (sem modalidade nem texto). O app resolve a âncora pela
+   tabela fixa da escala. Texto em "Sugerir a PSE da parte anterior".
 4. **Entrada na evolução.** A linha "Check-ins pendentes" busca o `total` ao abrir a evolução (uma chamada a mais). Aceitável? A
    alternativa é sem número, só o link.
+   **Respondida (Theo, 09/11):** pode buscar o `total` ao abrir a evolução.
 5. **"Mudar" na edição** abre a mesma folha da criação. Prefere que a edição reaproveite o passo a passo, com as respostas marcadas?
+   **Respondida (Theo, 09/11):** fica a tela única com "Mudar".
 6. **Prazo de 7 dias** ainda depende da resposta do Angelo (A confirmar 1 da ADR). A frase do `fora_do_prazo` está escrita com "7 dias".
+   **Respondida (Theo, 09/11):** 7 dias segue como padrão até o Angelo responder. Se mudar, só o texto do `fora_do_prazo`
+   (e o do aviso de prazo no cartão) muda.
