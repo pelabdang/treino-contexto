@@ -16,8 +16,8 @@ a semana-padrão gravada pela API e pela tela, o tipo de cada treino (origem e d
 **Situação da verificação (#270, Nina, 09/11):** os passos 1 a 9 foram rodados de verdade num clone de trabalho a partir do `main`
 (`d4ec053`, com a `linha_base@2`), com banco `treino-meta7` (Postgres na 5447, API na 8047, app web na 8082). Os números abaixo
 são os que saíram. Os 81 tipos do banco, depois do passo 6, ficaram **iguais ao `TIPO_ESPERADO` do oráculo** (0 diferenças). O banco, a API e
-o app foram derrubados no fim. **Nada usou a rede.** **Não rodado aqui:** o app em celular (só a web), `uv run pytest -q` completo e
-`npm test` completo. Rodei só os testes da meta (passo 10). A QA de ponta a ponta é da #271 (Bia).
+o app foram derrubados no fim. **Nada usou a rede.** **Não rodado aqui:** o app em celular (só a web); rodei só os testes da meta (passo 10). A Bia (#271) seguiu o guia do zero sem achar bug e rodou também
+`uv run pytest -q` completo (1434 passed, 1 skipped) e `npm test` (13 suítes, 154 testes).
 
 ## Antes de começar
 - `git`, `uv`, Docker (Compose 2.24 ou mais novo), `curl`, `python3` e, para a tela, `node` com `npm`. Comandos na **raiz** do repositório.
@@ -51,67 +51,67 @@ o app foram derrubados no fim. **Nada usou a rede.** **Não rodado aqui:** o app
 3. **Carregar as 81 atividades sintéticas** de `tests/fixtures/meta7/atividades.json` (04/01 a 28/03/2026; o oráculo é o
    [[metricas/tipo-linha-base-oraculo]]). As fixtures resumem os blocos em `estrutura`; este trecho os transforma em blocos de
    verdade, grava a carga e o rótulo de transição, e dá o tipo pela **regra de reserva** (`aplicar_tipos`), como numa
-   importação, **ainda sem semana-padrão**. Salve como `/caminho/saida/carregar.py`:
-   ```python
-   import json
-   from datetime import UTC, datetime
-   from pathlib import Path
+   importação, **ainda sem semana-padrão**. Salve como `/caminho/saida/carregar.py` (o bloco abaixo está sem recuo; copie como está):
+```python
+import json
+from datetime import UTC, datetime
+from pathlib import Path
 
-   from app.db.models import Atividade, Atleta, BlocoAtividade, CargaAtividade, RotuloTransicao
-   from app.db.session import SessionLocal
-   from app.metricas import carga as cg
-   from app.metricas import esforcos as ef
-   from app.servicos.tipo_treino import aplicar_tipos
+from app.db.models import Atividade, Atleta, BlocoAtividade, CargaAtividade, RotuloTransicao
+from app.db.session import SessionLocal
+from app.metricas import carga as cg
+from app.metricas import esforcos as ef
+from app.servicos.tipo_treino import aplicar_tipos
 
-   dados = json.loads(Path("tests/fixtures/meta7/atividades.json").read_text(encoding="utf-8"))["atividades"]
-
-
-   def blocos(a, estrutura, tiros):
-       def b(ordem, cat, dur, dist, fc=None, faixa=None):
-           a.blocos.append(BlocoAtividade(
-               ordem=ordem, categoria=cat, volta_inicial=ordem, volta_final=ordem, inicio_offset_s=0.0, duracao_s=dur,
-               distancia_m=dist, fc_media=fc, pace_s_km=dur / dist * 1000, faixa=faixa, versao_deteccao=ef.VERSAO))
-
-       if estrutura == "sem_esforco":
-           b(0, "leve", a.duracao_s, a.distancia_m)
-       elif estrutura == "esforco":
-           b(0, "aquecimento", 600, 1500)
-           b(1, "esforco", 300, 1000, None, "d1500")
-           b(2, "desaquecimento", 600, 1500)
-       elif estrutura == "tiros":
-           b(0, "aquecimento", 600, 1500)
-           ordem = 1
-           for _ in range(tiros["n"]):
-               b(ordem, "esforco", tiros["melhor_pace_s_km"], 1000, tiros["fc_melhor_tiro"], "d1000")
-               b(ordem + 1, "recuperacao", 200, 500)
-               ordem += 2
-           b(ordem, "desaquecimento", 600, 1500)
+dados = json.loads(Path("tests/fixtures/meta7/atividades.json").read_text(encoding="utf-8"))["atividades"]
 
 
-   with SessionLocal() as s:
-       atleta = Atleta(nome="Atleta Fictício")
-       s.add(atleta)
-       s.flush()
-       for f in dados:
-           a = Atividade(
-               atleta_id=atleta.id, fonte="fixture", fonte_id=f["id"], modalidade=f["modalidade"], subtipo=f["subtipo"],
-               inicio=datetime.fromisoformat(f["inicio"]), fuso_min=f["fuso_min"], duracao_s=f["duracao_s"],
-               distancia_m=f["distancia_m"], fc_media=f["fc_media"], tipo_treino=f["tipo_treino"],
-               tipo_origem=f["tipo_origem"], tipo_confirmado=f["tipo_confirmado"])
-           s.add(a)
-           blocos(a, f["estrutura"], f["tiros"])
-           if f["carga"] is not None:
-               a.carga = CargaAtividade(
-                   estado="calculada", carga=f["carga"], metodo="hrtss", cobertura_pct=100.0, granularidade="atividade",
-                   entrada="x" * 64, versao=cg.VERSAO, calculado_em=datetime(2026, 4, 1, tzinfo=UTC))
-           if f["transicao"]:
-               a.rotulo_transicao = RotuloTransicao(
-                   transicao=True, origem="atleta", definido_em=datetime(2026, 4, 1, tzinfo=UTC))
-       s.flush()
-       aplicar_tipos(s, atleta.id)  # a regra de reserva, como numa importação
-       s.commit()
-       print(f"atleta {atleta.id}: {len(dados)} atividades")
-   ```
+def blocos(a, estrutura, tiros):
+    def b(ordem, cat, dur, dist, fc=None, faixa=None):
+        a.blocos.append(BlocoAtividade(
+            ordem=ordem, categoria=cat, volta_inicial=ordem, volta_final=ordem, inicio_offset_s=0.0, duracao_s=dur,
+            distancia_m=dist, fc_media=fc, pace_s_km=dur / dist * 1000, faixa=faixa, versao_deteccao=ef.VERSAO))
+
+    if estrutura == "sem_esforco":
+        b(0, "leve", a.duracao_s, a.distancia_m)
+    elif estrutura == "esforco":
+        b(0, "aquecimento", 600, 1500)
+        b(1, "esforco", 300, 1000, None, "d1500")
+        b(2, "desaquecimento", 600, 1500)
+    elif estrutura == "tiros":
+        b(0, "aquecimento", 600, 1500)
+        ordem = 1
+        for _ in range(tiros["n"]):
+            b(ordem, "esforco", tiros["melhor_pace_s_km"], 1000, tiros["fc_melhor_tiro"], "d1000")
+            b(ordem + 1, "recuperacao", 200, 500)
+            ordem += 2
+        b(ordem, "desaquecimento", 600, 1500)
+
+
+with SessionLocal() as s:
+    atleta = Atleta(nome="Atleta Fictício")
+    s.add(atleta)
+    s.flush()
+    for f in dados:
+        a = Atividade(
+            atleta_id=atleta.id, fonte="fixture", fonte_id=f["id"], modalidade=f["modalidade"], subtipo=f["subtipo"],
+            inicio=datetime.fromisoformat(f["inicio"]), fuso_min=f["fuso_min"], duracao_s=f["duracao_s"],
+            distancia_m=f["distancia_m"], fc_media=f["fc_media"], tipo_treino=f["tipo_treino"],
+            tipo_origem=f["tipo_origem"], tipo_confirmado=f["tipo_confirmado"])
+        s.add(a)
+        blocos(a, f["estrutura"], f["tiros"])
+        if f["carga"] is not None:
+            a.carga = CargaAtividade(
+                estado="calculada", carga=f["carga"], metodo="hrtss", cobertura_pct=100.0, granularidade="atividade",
+                entrada="x" * 64, versao=cg.VERSAO, calculado_em=datetime(2026, 4, 1, tzinfo=UTC))
+        if f["transicao"]:
+            a.rotulo_transicao = RotuloTransicao(
+                transicao=True, origem="atleta", definido_em=datetime(2026, 4, 1, tzinfo=UTC))
+    s.flush()
+    aplicar_tipos(s, atleta.id)  # a regra de reserva, como numa importação
+    s.commit()
+    print(f"atleta {atleta.id}: {len(dados)} atividades")
+```
    Rode (na raiz): `uv run python - < /caminho/saida/carregar.py`. Esperado: `atleta 1: 81 atividades`. Confira:
    ```
    docker exec treino-meta7-postgres-1 psql -U treino -d treino -c "select coalesce(tipo_origem,'(sem)') o, count(*) from atividade group by 1 order by 1"
@@ -175,15 +175,15 @@ o app foram derrubados no fim. **Nada usou a rede.** **Não rodado aqui:** o app
    ```
    cd apps/mobile
    npm ci
-   EXPO_PUBLIC_API_URL=http://localhost:8047 EXPO_PUBLIC_ATLETA_ID=1 npx expo start --web --port 8082
+   CI=1 EXPO_PUBLIC_API_URL=http://localhost:8047 EXPO_PUBLIC_ATLETA_ID=1 npx expo start --web --port 8082
    ```
-   Abra `http://localhost:8082/semana-padrao` (ou o botão "Semana-padrão" na tela inicial). Esperado: o título "Semana-padrão", o campo "Vale a partir de"
+   (`CI=1` evita perguntas interativas do Expo.) Abra `http://localhost:8082/semana-padrao` (ou o botão "Semana-padrão" na tela inicial). Esperado: o título "Semana-padrão", o campo "Vale a partir de"
    (hoje, em `dd/mm/aaaa`, com os atalhos "Hoje" e "Próxima segunda"), "Quem definiu" com **Treinador** marcado (a vigente é a de 02/03, `professor`),
    os sete dias com os itens do plano (segunda natação `Leve`; terça corrida `Intervalado`; quarta ciclismo `Leve`; quinta corrida `Moderado`; sexta "Sem treino"; sábado ciclismo
    `Moderado` e corrida `Longo`; domingo corrida `Sem tipo`) e o botão "Salvar semana" desligado ("Nada mudou ainda."). Toque no tipo da natação de segunda, escolha **Moderado**
    e toque em "Salvar semana". Esperado: o botão liga ("Salvar semana") e, depois de salvar, aparece "Semana salva. Nenhum treino mudou de tipo. Treinos anteriores a 09/11/26 não foram alterados.",
 a data passa a mostrar o aviso "Já existe uma semana que vale desde esta data. Salvar vai substituí-la." (a vigência de hoje agora existe) e "Semanas anteriores" lista três vigências
-(a de hoje "Em vigor", 02/03/26 e 05/01/26, todas "Treinador" ou "Eu" e "7 treinos por semana"). Na API, `GET /atletas/1/semana-padrao` mostra a nova vigência. Nenhum treino muda porque nenhum treino sintético é de hoje em diante.
+("Desde 09/11/26", "Em vigor", "Treinador · 7 treinos por semana"; "Desde 02/03/26", "Treinador · 7 treinos por semana"; "Desde 05/01/26", "Eu · 7 treinos por semana"). Na API, `GET /atletas/1/semana-padrao` mostra a nova vigência. Nenhum treino muda porque nenhum treino sintético é de hoje em diante.
    Para forçar os outros estados (vazio, erro de rede, 404, 422), use a API falsa com `EXPO_PUBLIC_ATLETA_ID` de 2 a 6, como em [[modulos/mobile]].
 9. **`worker.reclassificar` e a `reclassificacao_pendente`** (com blocos de verdade, de FIT). Este passo usa os FIT sintéticos de esforços e um **segundo atleta**
    (o id 2; o atleta 1 continua o das fixtures da Meta 7). **Não rode `reclassificar` no atleta 1**: veja o aviso abaixo.
@@ -196,7 +196,7 @@ a data passa a mostrar o aviso "Já existe uma semana que vale desde esta data. 
    ```
    Esperado: `atividades_reaplicadas: 4`. A segunda-feira (82 e 86) vira `longo`, a quarta (83) `moderado` e a sexta (84, uma rodagem leve) `intervalado` com `tipo_divergencia: "sem_esforco"`; a 85 (sábado) segue `leve`,
    `sugestao`. `GET /atletas/2/atividades/84` traz a divergência e `sem_linha_base` por `divergente`; `GET /atletas/2/atividades/82` tem `linha_base` `ok` com `pace_medio` e
-   `fc_media` `aprendendo` (0 de 8 treinos). A `87` (ciclismo, sem plano nem reserva para ciclismo) fica sem tipo e `sem_linha_base` com o motivo `sem_tipo`.
+   `fc_media` `aprendendo` (0 de 8 treinos). As duas pedaladas (87 e 88, ciclismo sem plano e sem reserva para ciclismo) ficam sem tipo e `sem_linha_base` com o motivo `sem_tipo`.
    Agora simule uma sugestão de antes da regra atual e reclassifique:
    ```
    docker exec treino-meta7-postgres-1 psql -U treino -d treino -c "update atividade set tipo_versao=null where id=85"
@@ -216,7 +216,7 @@ a data passa a mostrar o aviso "Já existe uma semana que vale desde esta data. 
 ## Encerrar e limpar
 - `Ctrl+C` na API e no `expo start`; apague a pasta de `FIT_DIR` e a pasta `/caminho/saida` (o `porta.yml`, o `carregar.py` e os JSON).
 - Apagar o banco de vez (só o projeto `treino-meta7`): `docker compose -p treino-meta7 -f infra/docker-compose.yml -f /caminho/saida/porta.yml down -v`.
-- Confira com `docker ps`: só devem sobrar os containers que já existiam. Em `apps/mobile`, o `npm ci` deixa uma `node_modules/` (ignorada pelo git).
+- Confira com `docker ps`: só devem sobrar os containers que já existiam. Em `apps/mobile`, o `npm ci` deixa uma `node_modules/` (ignorada pelo git), e o `expo start` reescreve o `apps/mobile/tsconfig.json`, que é versionado: rode `git checkout apps/mobile/tsconfig.json` para deixar a árvore limpa.
 
 ## Problemas comuns
 - **Porta ocupada:** troque a porta no override (e na `DATABASE_URL`), na API ou no `--port` do app. Se trocar a do app, ajuste o `CORS_ORIGENS`.
