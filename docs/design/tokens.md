@@ -2,7 +2,7 @@
 tipo: design
 status: rascunho
 dono: lia
-atualizado: 2026-11-04
+atualizado: 2026-11-09
 links: [[design/guia-visual]], [[design/telas/evolucao-tiros]], [[modulos/mobile]]
 ---
 # Design: tokens do tema
@@ -202,5 +202,5 @@ Os nomes abaixo foram conferidos no mapa de glifos do pacote (versão 15.1.1).
 | abrir seletor de tipo | `expand-more` |
 | opção de rádio marcada, desmarcada | `radio-button-checked`, `radio-button-unchecked` |
 
-Os sete nomes acima da semana-padrão são do conjunto padrão do Material Icons e ainda precisam ser conferidos no mapa de glifos
-pelo Rafa ao implementar a tela da semana-padrão.
+Os sete nomes acima da semana-padrão são do conjunto padrão do Material Icons e foram conferidos no mapa de glifos do
+`@expo/vector-icons` pelo Rafa ao implementar a tela (#268, ver [[modulos/mobile]]).
