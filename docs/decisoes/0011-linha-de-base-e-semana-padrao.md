@@ -57,7 +57,7 @@ das anteriores: `CHECK` em vez de enum, nomes de constraint curtos, sem editar m
 | Coluna | Tipo | Observação |
 |---|---|---|
 | `id` | inteiro, chave | |
-| `atleta_id` | FK `atleta.id` | indexada |
+| `atleta_id` | FK `atleta.id` | sem índice próprio: o `UNIQUE` abaixo já cobre a busca por atleta |
 | `vigente_desde` | date | dia do calendário (sem fuso) a partir do qual a semana vale |
 | `definido_por` | texto (20), `CHECK` | `atleta` ou `professor`; **declarado**, não verificado (não há login, ver "A confirmar" 1) |
 | `definido_em` | datetime com fuso | `server_default now()`; atualizado a cada `PUT` |
@@ -92,8 +92,17 @@ vigência seguinte. Isso é o que impede a mudança de plano de reescrever o pas
 | `tipo_versao` | texto (40), anulável | a versão da regra que escreveu `tipo_treino` quando a origem é `sugestao` ou `semana_padrao` (`tipo_treino@1`, formato da ADR 0002); nulo nas demais origens |
 | `tipo_divergencia` | texto (20), anulável, `CHECK` | `sem_esforco` ou `tem_tiros` (item 4); só existe com `tipo_origem = 'semana_padrao'` |
 
-`CHECK` extra: `tipo_divergencia IS NULL OR tipo_origem = 'semana_padrao'`. Tipo confirmado, `professor` e `trainingpeaks` nunca têm
-divergência.
+São **dois** `CHECK` com nomes diferentes em `atividade`: `tipo_divergencia` (os valores `sem_esforco` e `tem_tiros`, ou nulo) e
+`tipo_divergencia_origem` (`tipo_divergencia IS NULL OR tipo_origem = 'semana_padrao'`). Tipo confirmado, `professor` e
+`trainingpeaks` nunca têm divergência.
+
+**Notas da migração `0011` (revisão da Duda).**
+- Recriar o `CHECK` `tipo_origem` pede `batch_alter_table` no SQLite e `drop_constraint` + `create_constraint` no Postgres, com o
+  nome `op.f('ck_atividade_tipo_origem')` nos dois. A migração sobe e desce nos dois bancos em teste.
+- Ordem do `downgrade`: zerar `tipo_treino`, `tipo_origem`, `tipo_versao` e `tipo_divergencia` das linhas com `semana_padrao`; remover
+  os `CHECK` de `tipo_divergencia`; recriar o `CHECK` antigo de `tipo_origem`; remover as colunas; remover as tabelas (itens primeiro).
+- **Linhas antigas** com `tipo_origem = 'sugestao'` e `tipo_versao` nulo contam como **desatualizadas** e são regravadas na primeira
+  passada de `worker.reclassificar` (ou da importação).
 
 **Por que colunas em `atividade` e não tabela própria, ao contrário da ADR 0009.** O tipo **já mora** na `atividade` com origem e
 confirmação, e a importação não o lê nem o escreve (quem escreve é `classificar_atividades`). Dividir o tipo em duas tabelas
@@ -178,6 +187,9 @@ do plano **fica**; a coluna `tipo_divergencia` guarda o motivo:
 |---|---|---|
 | `sem_esforco` | o plano diz `intervalado`, e os blocos da atividade são todos `leve` (nenhum esforço pela ADR 0008) | terça de 30 min contínuos, sem esforço (E3) |
 | `tem_tiros` | o plano diz `leve` ou `longo`, e a série de tiros acha intervalado (2 ou mais tiros, `tiros_1km@6`) | sábado com "longo" e 6 tiros de 1 km |
+
+**Sem blocos gravados não é "sem esforço".** Corrida antiga pode não ter `bloco_atividade`; nesse caso a divergência `sem_esforco`
+**não** é marcada (só vale com blocos gravados e todos `leve`).
 
 Fora desses dois casos **não há divergência**: `moderado` e `fartlek` não têm critério de formato confiável na ADR 0008, e uma
 duração diferente da média não contradiz `longo`. Atividade sem blocos (sem voltas) não tem divergência.
@@ -313,6 +325,8 @@ A linha de base é por **métrica**, e cada atividade com tipo mostra as métric
 | `transicao` | é parte de treino de transição (`rotulo_transicao.transicao = true`) |
 | `multiesporte` | `subtipo` em (`multiesporte_pai`, `troca`) |
 
+Quando mais de um motivo vale, aparece o primeiro desta ordem: `multiesporte`, `modalidade_sem_metricas`, `sem_tipo`, `divergente`, `transicao`.
+
 ### 8. Mudança da semana-padrão e reaplicação
 Gravar uma vigência (`PUT`, item 9) faz:
 1. grava `semana_padrao` e os itens da vigência `vigente_desde` (cria ou substitui) numa transação;
@@ -322,6 +336,14 @@ Gravar uma vigência (`PUT`, item 9) faz:
 3. não toca tipo confirmado, `professor` nem `trainingpeaks` (item 2, passo 1);
 4. não roda `detectar_esforcos`: usa os blocos já gravados (a reaplicação é leve, sem recalcular esforços);
 5. devolve `atividades_reaplicadas` (quantas mudaram de tipo, origem ou divergência).
+
+**Detalhes de implementação (revisão da Duda, #264 e #265).**
+- A data local sai de `inicio` e `atividade.fuso_min`: filtra-se no SQL por `inicio >= vigente_desde - 1 dia` e confere-se a data
+  local em Python. A faixa pode ser limitada a `[vigente_desde, próxima vigência)`; é só otimização.
+- Reaplicar sem mudança **não toca a linha**.
+- Se a reaplicação falhar, o `PUT` inteiro faz **rollback** (a vigência também não fica gravada).
+- Dois `PUT` concorrentes da mesma vigência (clique duplo): o upsert trata a violação do `UNIQUE (atleta_id, vigente_desde)` e repete
+  como atualização.
 
 **Mesmo resultado em qualquer caminho.** Importação, upload de FIT, `worker.reclassificar` e o `PUT` chamam a **mesma** função; a
 diferença é só o intervalo de datas e se os esforços são detectados antes.
@@ -367,7 +389,7 @@ Itens em ordem de dia e modalidade. `vigencias` em ordem decrescente.
 ```
 Resposta `200` com o mesmo objeto de `vigente` mais `"atividades_reaplicadas": 3`. `itens: []` é válido (encerra o plano). `422` para
 `dia_semana` fora de 1 a 7, `modalidade` fora de `corrida`/`natacao`/`ciclismo`, `tipo_treino` fora dos cinco valores, `definido_por`
-fora de `atleta`/`professor`, `vigente_desde` inválido, ou duas vezes o mesmo (`dia_semana`, `modalidade`). `404` para atleta
+fora de `atleta`/`professor` ou **ausente**, `vigente_desde` inválido ou ausente, `itens` ausente, ou duas vezes o mesmo (`dia_semana`, `modalidade`). `404` para atleta
 inexistente. `vigente_desde` no futuro é aceito (nenhuma atividade muda até a data). Não há `DELETE` nesta versão: reenviar
 com `itens: []` faz o mesmo efeito.
 
@@ -410,6 +432,9 @@ com `itens: []` faz o mesmo efeito.
   ]
 }
 ```
+**Custo da `linha_base`.** Uma consulta agregada por atleta, modalidade e tipo na janela de 56 dias (nunca mistura atletas), com
+limite natural de dezenas de linhas; cargas e blocos só dessas atividades. Cliente regerado e teste de contrato rodam na #266.
+
 `estado` da `linha_base`: `ok` (tem ao menos uma métrica) ou `sem_linha_base` (com `motivo` do item 7 e `metricas: []`). Os números
 brutos (`valor`, `mediana`, `desvio`, `z`) são para o app ordenar e para o motor de explicação (Meta 9); o texto é só da API. Os valores
 são sempre calculados por código, nunca por modelo de linguagem.
@@ -484,6 +509,10 @@ Para o Angelo. Cada item traz **o padrão que o time segue enquanto não houver 
 5. **Parte de treino de transição na linha de base.** **Padrão:** fica fora da linha de base e não recebe uma (motivo `transicao`),
    para não misturar a corrida pós-pedal com a corrida isolada.
 6. **Dois treinos da mesma modalidade no dia.** **Padrão:** o plano vale para o de **maior duração**; o outro cai na regra de reserva.
+
+7. **`PUT` da semana-padrão sem autenticação.** Hoje não há login, então qualquer cliente da API reescreve o tipo das atividades do
+   atleta inteiro a partir de `vigente_desde`. **Padrão:** aceitar no piloto local (a API não é exposta); exigir identidade quando
+   houver login (Meta 10).
 
 Calibração que **não** precisa do Angelo: `LEVE_MIN_S`, `LONGO_MIN_S` e `PISO_REL` (Caio, na #269, números só em `entregas/`).
 
