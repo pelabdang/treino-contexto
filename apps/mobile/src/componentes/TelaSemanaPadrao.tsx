@@ -20,6 +20,10 @@ import { isoLocal, isoParaBr, isoParaBrCurto, lerDataBr, mascararData, proximaSe
 import { borda, espaco, fonte, larguraConteudoMax, raio, tamanho, useMargemTela, useTema, type Tema } from "../tema";
 import { EsqueletoSemanaPadrao } from "./Esqueleto";
 
+/** "semana-padrão" com hífen sem quebra (U+2011): o título não parte no hífen. O leitor de tela recebe o texto com hífen comum (`lerTexto`). */
+const semanaPadrao = "semana\u2011padrão";
+const lerTexto = (t: string) => t.replace(/\u2011/g, "-");
+
 type Modalidade = SemanaPadraoItem["modalidade"];
 type Tipo = NonNullable<SemanaPadraoItem["tipo_treino"]>;
 type DefinidoPor = "atleta" | "professor";
@@ -72,7 +76,7 @@ function mensagemErroCarga(erro: ErroApi): string {
     case "rede":
       return "Não foi possível falar com o servidor";
     default:
-      return "Não foi possível carregar a semana-padrão. Tente de novo mais tarde.";
+      return `Não foi possível carregar a ${semanaPadrao}. Tente de novo mais tarde.`;
   }
 }
 
@@ -311,8 +315,12 @@ export function TelaSemanaPadrao({ apiUrl, atletaId, aoVoltar, fetchFn, hojeFn }
 
         {carga.tipo === "carregando" && (
           <View>
-            <Text accessibilityLiveRegion="polite" style={styles.texto}>
-              Carregando a semana-padrão...
+            <Text
+              accessibilityLiveRegion="polite"
+              accessibilityLabel={lerTexto(`Carregando a ${semanaPadrao}...`)}
+              style={styles.texto}
+            >
+              {`Carregando a ${semanaPadrao}...`}
             </Text>
             <EsqueletoSemanaPadrao />
           </View>
@@ -326,7 +334,11 @@ export function TelaSemanaPadrao({ apiUrl, atletaId, aoVoltar, fetchFn, hojeFn }
               color={tema.cor.erro}
               accessible={false}
             />
-            <Text accessibilityRole="alert" style={styles.erro}>
+            <Text
+              accessibilityRole="alert"
+              accessibilityLabel={lerTexto(mensagemErroCarga(carga.erro))}
+              style={styles.erro}
+            >
               {mensagemErroCarga(carga.erro)}
             </Text>
             {carga.erro.tipo === "rede" && (
@@ -340,8 +352,12 @@ export function TelaSemanaPadrao({ apiUrl, atletaId, aoVoltar, fetchFn, hojeFn }
         {vazio && (
           <View testID="estado-vazio" style={styles.estado}>
             <MaterialIcons name="event-note" size={tamanho.iconeEstado} color={tema.cor["texto-2"]} accessible={false} />
-            <Text accessibilityRole="header" style={styles.estadoTitulo}>
-              Você ainda não definiu sua semana-padrão
+            <Text
+              accessibilityRole="header"
+              accessibilityLabel={lerTexto(`Você ainda não definiu sua ${semanaPadrao}`)}
+              style={styles.estadoTitulo}
+            >
+              {`Você ainda não definiu sua ${semanaPadrao}`}
             </Text>
             <Text style={styles.estadoTexto}>
               Diga que treino você costuma fazer em cada dia. O app usa isso para comparar cada treino com os do mesmo
