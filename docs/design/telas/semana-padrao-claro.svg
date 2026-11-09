@@ -1,0 +1,61 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="360" height="1400" viewBox="0 0 360 1400" font-family="Inter, system-ui, sans-serif" role="img" aria-labelledby="t d">
+  <title id="t">Esboço da tela Semana-padrão, tema claro</title>
+  <desc id="d">Esboço da issue 267. Dados sintéticos. Largura de celular pequeno (360). Mostra segunda a quinta; sexta a domingo seguem o mesmo molde.</desc>
+  <style>
+    .card{fill:#FFFFFF;stroke:#DEDBD3;stroke-width:1}
+    .t{fill:#1A1D1F}.t2{fill:#4C5257}.dest{fill:#0B6A6E}
+    .campo{fill:#FFFFFF;stroke:#7D7A72;stroke-width:1}
+    .sel{fill:#DCEFEE;stroke:#0B6A6E;stroke-width:2}
+    .chip{fill:#ECEAE4}.div{stroke:#DEDBD3;stroke-width:1}
+  </style>
+  <rect width="360" height="1400" fill="#F6F5F1"/>
+  <path d="M30 36 h-12 m5 -5 l-5 5 l5 5" stroke="#0B6A6E" stroke-width="2" fill="none"/>
+  <text x="40" y="41" class="dest" font-size="16" font-weight="600">Voltar</text>
+  <text x="16" y="92" class="t" font-size="24" font-weight="700">Semana-padrão</text>
+  <text x="16" y="118" class="t2" font-size="16">O que você costuma treinar em cada dia</text>
+
+<rect class="card" x="16.5" y="140.5" width="327" height="190" rx="12"/>
+<text x="32" y="172" class="t" font-size="18" font-weight="600">Vale a partir de</text>
+<rect class="campo" x="32.5" y="186.5" width="295" height="47" rx="8"/><text x="46" y="216" class="t" font-size="16">02/03/2026</text>
+<rect class="chip" x="32" y="244" width="64" height="44" rx="8"/><text x="64" y="271" text-anchor="middle" class="dest" font-size="14" font-weight="500">Hoje</text>
+<rect class="chip" x="104" y="244" width="136" height="44" rx="8"/><text x="172" y="271" text-anchor="middle" class="dest" font-size="14" font-weight="500">Próxima segunda</text>
+<text x="32" y="312" class="t2" font-size="13">Os treinos antes desta data não mudam.</text>
+<rect class="card" x="16.5" y="350.5" width="327" height="130" rx="12"/>
+<text x="32" y="382" class="t" font-size="18" font-weight="600">Quem definiu</text>
+<rect class="sel" x="33" y="396" width="143" height="48" rx="8"/><circle cx="53" cy="420" r="8" fill="none" stroke="#0B6A6E" stroke-width="2"/><circle cx="53" cy="420" r="4" fill="#0B6A6E"/><text x="71" y="426" class="t" font-size="16" font-weight="600">Eu</text>
+<rect class="campo" x="184.5" y="396.5" width="143" height="47" rx="8"/><circle cx="204" cy="420" r="8" fill="none" stroke="#7D7A72" stroke-width="2"/><text x="222" y="426" class="t" font-size="16">Treinador</text>
+<text x="32" y="466" class="t2" font-size="13">Só registra de quem é o plano.</text>
+<rect class="card" x="16.5" y="500.5" width="327" height="736" rx="12"/>
+<text x="32" y="532" class="t" font-size="18" font-weight="600">Treinos de cada dia</text>
+<text x="32" y="568" class="t" font-size="18" font-weight="600">Segunda</text><text x="327" y="568" text-anchor="end" class="t2" font-size="14">2 treinos</text>
+<rect class="chip" x="32" y="590" width="104" height="28" rx="14"/><circle cx="50" cy="604" r="7" fill="#B4470F"/><text x="64" y="609" class="t" font-size="14" font-weight="500">Corrida</text>
+<rect class="campo" x="144.5" y="580.5" width="131" height="47" rx="8"/><text x="156" y="610" class="t" font-size="16">Fartlek</text><path d="M251 601 l6 6 l6 -6" stroke="#4C5257" stroke-width="2" fill="none"/>
+<path d="M299 596 h12 m-10 0 v14 h8 v-14 m-6 -3 h4" stroke="#B3261E" stroke-width="2" fill="none"/>
+<rect class="chip" x="32" y="646" width="104" height="28" rx="14"/><circle cx="50" cy="660" r="7" fill="#1A5FA8"/><text x="64" y="665" class="t" font-size="14" font-weight="500">Natação</text>
+<rect class="campo" x="144.5" y="636.5" width="131" height="47" rx="8"/><text x="156" y="666" class="t" font-size="16">Sem tipo</text><path d="M251 657 l6 6 l6 -6" stroke="#4C5257" stroke-width="2" fill="none"/>
+<path d="M299 652 h12 m-10 0 v14 h8 v-14 m-6 -3 h4" stroke="#B3261E" stroke-width="2" fill="none"/>
+<path d="M40 714 h12 m-6 -6 v12" stroke="#0B6A6E" stroke-width="2" fill="none"/><text x="62" y="719" class="dest" font-size="16" font-weight="600">Adicionar treino</text>
+<line class="div" x1="32" x2="327" y1="744" y2="744"/>
+<text x="32" y="776" class="t" font-size="18" font-weight="600">Terça</text><text x="327" y="776" text-anchor="end" class="t2" font-size="14">1 treino</text>
+<rect class="chip" x="32" y="798" width="112" height="28" rx="14"/><circle cx="50" cy="812" r="7" fill="#6B3FB0"/><text x="64" y="817" class="t" font-size="14" font-weight="500">Ciclismo</text>
+<rect class="campo" x="152.5" y="788.5" width="123" height="47" rx="8"/><text x="164" y="818" class="t" font-size="16">Intervalado</text><path d="M251 809 l6 6 l6 -6" stroke="#4C5257" stroke-width="2" fill="none"/>
+<path d="M299 804 h12 m-10 0 v14 h8 v-14 m-6 -3 h4" stroke="#B3261E" stroke-width="2" fill="none"/>
+<path d="M40 866 h12 m-6 -6 v12" stroke="#0B6A6E" stroke-width="2" fill="none"/><text x="62" y="871" class="dest" font-size="16" font-weight="600">Adicionar treino</text>
+<line class="div" x1="32" x2="327" y1="896" y2="896"/>
+<text x="32" y="928" class="t" font-size="18" font-weight="600">Quarta</text><text x="327" y="928" text-anchor="end" class="t2" font-size="14">2 treinos</text>
+<rect class="chip" x="32" y="950" width="104" height="28" rx="14"/><circle cx="50" cy="964" r="7" fill="#B4470F"/><text x="64" y="969" class="t" font-size="14" font-weight="500">Corrida</text>
+<rect class="campo" x="144.5" y="940.5" width="131" height="47" rx="8"/><text x="156" y="970" class="t" font-size="16">Intervalado</text><path d="M251 961 l6 6 l6 -6" stroke="#4C5257" stroke-width="2" fill="none"/>
+<path d="M299 956 h12 m-10 0 v14 h8 v-14 m-6 -3 h4" stroke="#B3261E" stroke-width="2" fill="none"/>
+<rect class="chip" x="32" y="1006" width="104" height="28" rx="14"/><circle cx="50" cy="1020" r="7" fill="#1A5FA8"/><text x="64" y="1025" class="t" font-size="14" font-weight="500">Natação</text>
+<rect class="campo" x="144.5" y="996.5" width="131" height="47" rx="8"/><text x="156" y="1026" class="t" font-size="16">Sem tipo</text><path d="M251 1017 l6 6 l6 -6" stroke="#4C5257" stroke-width="2" fill="none"/>
+<path d="M299 1012 h12 m-10 0 v14 h8 v-14 m-6 -3 h4" stroke="#B3261E" stroke-width="2" fill="none"/>
+<path d="M40 1074 h12 m-6 -6 v12" stroke="#0B6A6E" stroke-width="2" fill="none"/><text x="62" y="1079" class="dest" font-size="16" font-weight="600">Adicionar treino</text>
+<line class="div" x1="32" x2="327" y1="1104" y2="1104"/>
+<text x="32" y="1136" class="t" font-size="18" font-weight="600">Quinta</text><text x="327" y="1136" text-anchor="end" class="t2" font-size="14">Sem treino</text>
+<path d="M40 1170 h12 m-6 -6 v12" stroke="#0B6A6E" stroke-width="2" fill="none"/><text x="62" y="1175" class="dest" font-size="16" font-weight="600">Adicionar treino</text>
+<text x="32" y="1220" class="t2" font-size="13">Sexta, sábado e domingo seguem o mesmo molde (fora do esboço).</text>
+<rect x="0" y="1244" width="360" height="156" fill="#FFFFFF"/><line class="div" x1="0" x2="360" y1="1244.5" y2="1244.5"/>
+<rect x="16" y="1256" width="328" height="64" rx="8" fill="#E3F2E8"/><circle cx="36" cy="1276" r="8" fill="none" stroke="#1B6E3A" stroke-width="2"/><path d="M32 1276 l3 3 l5 -6" stroke="#1B6E3A" stroke-width="2" fill="none"/>
+<text x="52" y="1281" font-size="16" fill="#1B6E3A">Semana salva. 3 treinos</text><text x="52" y="1303" font-size="16" fill="#1B6E3A">reclassificados.</text>
+<rect x="16" y="1332" width="328" height="48" rx="8" fill="#0B6A6E"/><text x="180" y="1361" text-anchor="middle" font-size="16" font-weight="600" fill="#FFFFFF">Salvar semana</text>
+</svg>

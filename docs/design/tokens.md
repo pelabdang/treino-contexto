@@ -195,3 +195,12 @@ Os nomes abaixo foram conferidos no mapa de glifos do pacote (versão 15.1.1).
 | voltar | `arrow-back` |
 | abrir item | `chevron-right` |
 | fechar | `close` |
+| semana-padrão: entrada e data (Meta 7, [[design/telas/semana-padrao]]) | `event` |
+| semana-padrão: estado vazio | `event-note` |
+| adicionar treino | `add` |
+| remover treino | `delete-outline` |
+| abrir seletor de tipo | `expand-more` |
+| opção de rádio marcada, desmarcada | `radio-button-checked`, `radio-button-unchecked` |
+
+Os sete nomes acima da semana-padrão são do conjunto padrão do Material Icons e ainda precisam ser conferidos no mapa de glifos
+pelo Rafa ao implementar a tela da semana-padrão.
