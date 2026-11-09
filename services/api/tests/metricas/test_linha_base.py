@@ -7,11 +7,10 @@ da ADR e as bordas com valores escritos aqui.
 import importlib.util
 import json
 import sys
-from datetime import date, datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
 from pathlib import Path
 
 import pytest
-
 from app.metricas import linha_base as lb
 from app.servicos.fuso import data_local
 
@@ -93,7 +92,7 @@ def test_parametros_do_a_confirmar_mudam_o_resultado():
 # ---- exemplo da ADR 0011 (item 6) e bordas ----------------------------------------------------------------------
 
 def _leves(paces, tipo="leve"):
-    base = datetime(2026, 1, 2, 7, tzinfo=timezone.utc)
+    base = datetime(2026, 1, 2, 7, tzinfo=UTC)
     return [
         lb.Treino(id=i, inicio=base + timedelta(days=7 * i), dia=(base + timedelta(days=7 * i)).date(), modalidade="corrida",
                   tipo_treino=tipo, valores={"pace_medio": p})
@@ -102,7 +101,7 @@ def _leves(paces, tipo="leve"):
 
 
 def _sessao(valor, id="s", dias=7 * 8, tipo="leve", modalidade="corrida"):
-    ini = datetime(2026, 1, 2, 7, tzinfo=timezone.utc) + timedelta(days=dias)
+    ini = datetime(2026, 1, 2, 7, tzinfo=UTC) + timedelta(days=dias)
     return lb.Treino(id=id, inicio=ini, dia=ini.date(), modalidade=modalidade, tipo_treino=tipo, valores={"pace_medio": valor})
 
 
