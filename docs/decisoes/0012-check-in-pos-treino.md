@@ -150,6 +150,7 @@ O check-in inteiro é dado pessoal e de saúde (a observação é o mais sensív
 3. **Devolvido só ao próprio atleta.** O check-in só sai nas rotas do item 7, sob `/atletas/{atleta_id}/...` do dono da atividade
    (outro atleta responde `404`). **Não entra** em listas, na série de carga, em exportação, no pacote de fatos do feedback nem em
    qualquer rota de professor nesta meta. A lista de pendentes **não traz** nenhum campo do check-in.
+   *(Nota de 10/11, ADR 0013: na Meta 9, por decisão do Angelo, o pacote de fatos do feedback leva PSE, sensação e os atalhos marcados, **nunca** o texto livre; o resto desta regra fica.)*
 4. **Comando para apagar:** `uv run python -m worker.apagar_checkin --atleta "<nome>"` apaga **todos** os check-ins do atleta
    (`checkin_treino` pelas atividades dele), idempotente, imprime só `checkins: apagados=N`. O atleta e as atividades ficam. Mesma convenção
    do `worker.apagar_saude` (nome repetido: o de menor id, com aviso de que os outros ficam; nome inexistente: código 1). Implementação:
