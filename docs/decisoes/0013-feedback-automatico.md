@@ -87,7 +87,7 @@ Cada número do texto é um dos `*_texto` ou valores do pacote, copiado sem cont
 {"versao": "fatos_treino@1",
  "treino": {"modalidade": "corrida", "tipo_treino": "intervalado", "duracao_s": 3120, "duracao_texto": "52 min", "distancia_m": 9500, "distancia_texto": "9,50 km", "fc_media_bpm": 158},
  "linha_base": {"versao": "linha_base@2", "estado": "ok", "janela_semanas": 12, "minimo_treinos": 8, "metricas": [
-   {"chave": "melhor_pace", "estado": "fora", "valor_texto": "4:21/km", "mediana_texto": "4:09/km", "diferenca_texto": "12 s/km mais lento", "n": 10},
+   {"chave": "melhor_pace", "estado": "fora", "valor_texto": "4:22/km", "mediana_texto": "4:09/km", "diferenca_texto": "13 s/km mais lento", "n": 10},
    {"chave": "fc_melhor_tiro", "estado": "dentro", "valor_texto": "171 bpm", "mediana_texto": "172 bpm", "n": 10},
    {"chave": "fc_media", "estado": "dentro", "valor_texto": "158 bpm", "mediana_texto": "157 bpm", "n": 10}]},
  "esforcos": {"versao": "esforcos@1", "treino_chave": false, "series": [{"faixa_rotulo": "1 km", "quantidade": 5}]},
@@ -97,7 +97,7 @@ Cada número do texto é um dos `*_texto` ou valores do pacote, copiado sem cont
  "checkin": {"pse": 8, "pse_texto": "8", "sensacao_nivel": 3, "sensacao_texto": "normal", "nada_a_relatar": true, "atalhos": []}}
 ```
 **Texto esperado**
-> Seu melhor tiro foi 4:21/km, 12 s/km mais lento que a mediana de 4:09/km nos 10 treinos intervalados das últimas 12 semanas.
+> Seu melhor tiro foi 4:22/km, 13 s/km mais lento que a mediana de 4:09/km nos 10 treinos intervalados das últimas 12 semanas.
 > É uma comparação com o seu histórico, não um julgamento do treino.
 > A FC do melhor tiro foi 171 bpm, dentro do seu normal (mediana de 172 bpm).
 > Você registrou esforço 8 e sensação 3 (normal), sem nada a relatar.
