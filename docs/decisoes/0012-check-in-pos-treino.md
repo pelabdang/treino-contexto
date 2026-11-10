@@ -63,7 +63,7 @@ um** atalho **ou** texto:
 `(nada_a_relatar = TRUE AND dor = FALSE AND cansaco = FALSE AND sono_ruim = FALSE AND calor = FALSE AND trabalho_estresse = FALSE AND texto IS NULL) OR (nada_a_relatar = FALSE AND (dor = TRUE OR cansaco = TRUE OR sono_ruim = TRUE OR calor = TRUE OR trabalho_estresse = TRUE OR texto IS NOT NULL))`.
 Comparações **explícitas** com `TRUE`/`FALSE` (valem no Postgres e no SQLite 3.23 ou mais novo, versão a conferir no CI); nada de booleano solto nem de soma de booleanos.
 Todas as colunas envolvidas são `NOT NULL`, exceto `texto`, que só aparece em comparação com `IS [NOT] NULL`: a expressão nunca vira `NULL`
-(o `CHECK` aceitaria uma expressão `NULL`). Os cinco atalhos têm `server_default` falso. `texto` só aparece em `IS [NOT] NULL`, sem outro uso na expressão.
+(o `CHECK` aceitaria uma expressão `NULL`). Os cinco atalhos têm `server_default` falso.
 
 **Por que booleanos e não JSON ou tabela filha para os atalhos.** São cinco atalhos fixos, consultáveis por coluna (o motor de explicação
 da Meta 9 pergunta "teve dor?" sem abrir JSON) e com os `CHECK` acima. Um sexto atalho vira migração própria, o que é aceitável e deixa
@@ -132,7 +132,8 @@ e o `PUT` sai no fim, com as três respostas. O texto livre é opcional e **não
   o pai repete as partes e a troca não é treino (mesmo critério da carga e do tipo). O `PUT` nelas responde `422` com o código
   `atividade_sem_checkin`; o `GET` da atividade traz `checkin: null` e `carga_pse: null`.
 - **Cada parte do multiesporte tem o seu check-in.** Não há check-in do treino inteiro nem cópia entre partes; a tela pode sugerir a PSE da
-  parte anterior como valor inicial, mas isso é da #299 ("A confirmar" 2). O rótulo de transição (ADR 0009) não entra aqui.
+  parte anterior como valor inicial (`pse_sugerida` no `GET` da atividade, item 7; a tela é da #299; "A confirmar" 2). O rótulo de transição
+  (ADR 0009) não entra aqui.
 
 ### 5. Dado sensível: a regra da Meta 6 aplicada ao check-in
 O check-in inteiro é dado pessoal e de saúde (a observação é o mais sensível: dor, estresse, sono). Vale o que a ADR 0010 fixou:
@@ -234,6 +235,15 @@ existe e não tem.
 
 **`GET /atletas/{atleta_id}/atividades/{atividade_id}`** ganha, sem remover campo (adendo da ADR 0004, #298):
 - `checkin`: o `CheckinOut`, ou `null` (sem check-in ou atividade não elegível);
+- `checkin_aberto` (booleano): decide se a tela oferece "Fazer check-in". `false` em `multiesporte_pai`/`troca` e quando o prazo de
+  criação (item 3) passou sem check-in; `true` se já existe check-in, porque editar não tem prazo. Só orienta a tela: o `PUT` continua
+  recusando o que não vale (`fora_do_prazo`, `atividade_sem_checkin`);
+- `pse_sugerida` (inteiro ou `null`): numa parte de multiesporte, a PSE do check-in da **parte anterior do mesmo multiesporte**, definida
+  como a atividade elegível de `inicio` imediatamente menor dentro do intervalo do `multiesporte_pai` (a `troca` no meio não conta).
+  `null` fora de multiesporte, na primeira parte ou quando a parte anterior não tem check-in. É só valor inicial sugerido: o atleta
+  responde a PSE da parte, e nada é copiado entre partes (item 4).
+
+  Os dois campos vieram do desenho da tela (#295) e entraram no `GET` pela #298; decisão do Theo em 09/11.
 - `carga_pse`: `null` (não elegível) ou
 ```json
 {"versao": "carga_pse@1", "estado": "calculada", "pse": 6, "minutos": 45.0, "valor": 270.0, "valor_texto": "270 UA",
