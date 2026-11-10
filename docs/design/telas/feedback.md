@@ -7,9 +7,8 @@ links: [[design/guia-visual]], [[design/tokens]], [[design/telas/treino]], [[des
 ---
 # Tela: cartão "Feedback" na tela de um treino
 
-Spec da issue #329 (Meta 9), antes da implementação (#330, do Rafa). **Rascunho pelo roteiro e pelo plano**
-([[produto/plano-mvp-execucao]], seção 4.4): a ADR 0013 (#322, do Caio) ainda está sendo escrita. O que depende dela
-vem marcado com **(ADR 0013)** e a lista está em "Dúvidas de desenho". Todos os dados e textos de exemplo são
+Spec da issue #329 (Meta 9), antes da implementação (#330, do Rafa). Alinhada à ADR 0013 (#322, PR #340, modelo aprovado pelo Theo em 10/11), seção "Forma do campo `feedback`", e ao plano
+([[produto/plano-mvp-execucao]], seção 4.4). O contrato fino sai na #328. Todos os dados e textos de exemplo são
 **sintéticos**. Nada em `apps/mobile/` muda nesta nota.
 
 Esboço dos dois temas, em celular de 360 por 640: ![[design/telas/feedback-pronto.svg]]
@@ -39,37 +38,40 @@ dados do treino  >  Check-in  >  Feedback  >  Carga pela PSE  >  Clima
 O feedback nasce do check-in; por isso fica colado nele. A carga pela PSE é um dado e fica depois do texto.
 Sem rota nova, sem tela nova, sem entrada na evolução.
 
-**Quando o cartão aparece** (regra pelo que o `GET` da atividade manda; **(ADR 0013)** para os nomes dos campos):
+**Quando o cartão aparece** (regra pelo que o `GET` da atividade manda):
 | situação | cartão "Feedback" |
 |---|---|
-| a atividade não aceita check-in (`multiesporte_pai`, `troca`) | **não aparece**, como o cartão "Check-in" |
+| `feedback: null` (atividade não elegível: `multiesporte_pai`, `troca`) | **não aparece**, como o cartão "Check-in" |
 | a API não manda o campo `feedback` (versão antiga) | **não aparece** |
 | todos os outros casos | aparece, num dos estados abaixo |
 
 ## Dados
-Do `GET /atletas/{id}/atividades/{id}`, pelo cliente gerado, campo `feedback` (adendo da ADR 0004, #328). **Proposta
-de forma, a confirmar com o Theo e com a ADR 0013:**
+Do `GET /atletas/{id}/atividades/{id}`, pelo cliente gerado, campo `feedback` (adendo da ADR 0004, #328). Forma fixada na ADR 0013:
+`null` para atividade não elegível; senão, cinco estados.
 
 | campo | valores | na tela |
 |---|---|---|
-| `feedback.estado` | `pronto`, `sem_checkin`, `pendente`, `desatualizado`, `reprovado`, `sem_provedor`, `sem_fatos` | escolhe o miolo do cartão |
-| `feedback.texto` | texto de 3 a 5 linhas, só com `estado = pronto` | corpo do cartão, **como veio** |
-| `feedback.mensagem` | frase pronta em português para os estados sem texto | miolo dos estados sem feedback |
-| `feedback.origem` | por exemplo `automatico` | linha discreta "Gerado automaticamente" |
+| `feedback.estado` | `pronto`, `sem_checkin`, `pendente`, `desatualizado`, `indisponivel` | escolhe o miolo do cartão |
+| `feedback.texto` | texto de 3 a 5 linhas, só em `pronto` | corpo do cartão, **como veio** |
+| `feedback.origem` | só em `pronto`: `automatico` ou `teste` (provedor falso) | linha de origem; `teste` ganha o selo "Texto de teste" |
+| `feedback.mensagem` | frase pronta, escrita pela API, em `sem_checkin`, `pendente`, `desatualizado` e `indisponivel` | miolo dos estados sem texto, **como veio** |
+| `feedback.checkin_aberto` | só em `sem_checkin`; falso = prazo vencido | com botão ou sem botão |
+| `feedback.motivo` | só em `indisponivel`; código fechado | **o app não mostra** nem usa para escolher o desenho |
 
 O app **não** gera, não corta, não reformata e não confere o texto: as checagens (número no pacote, linguagem proibida)
 são do backend. O app mostra `texto` como veio, preservando parágrafos. Não calcula `desatualizado` nem `sem_checkin`:
-lê o `estado`. As frases fixas desta nota são o **texto de reserva do app** para o caso de a `mensagem` não vir; se a API
-mandar a frase pronta (como faz com `carga_pse.texto`), vale a da API. **(ADR 0013)** Quem escreve a frase de cada estado?
+lê o `estado`. A frase vem pronta da API (como `carga_pse.texto`) e o cartão a mostra como veio; as frases desta nota
+são só o **texto de reserva do app**, para o caso de a `mensagem` faltar. A API pode variar a frase por `motivo` sem criar
+estado (por exemplo, "sem provedor"); o cartão só mostra a `mensagem`.
 
-O app **não** mostra: motivo técnico da reprovação, nome do provedor ou do modelo, versão do pacote, nada do pacote de
+O app **não** mostra: o `motivo`, o motivo técnico da reprovação, nome do provedor ou do modelo, versão do pacote, nada do pacote de
 fatos. O app **não guarda** o texto: nem em log, nem em armazenamento local, nem em URL, nem em cache do navegador além
 do da própria requisição (é dado de saúde, [[decisoes/0012-check-in-pos-treino]], item 5).
 
 ## Hierarquia da informação
 1. O texto do feedback (quando existe), em `fonte.corpo`, `cor.texto`: é o que o atleta veio ler.
 2. A situação (quando não há texto): uma frase curta e, se houver, a **ação** (fazer o check-in, atualizar).
-3. A origem: "Gerado automaticamente...", em `fonte.legenda`, `cor.texto-2`, no pé do cartão. Discreta, mas sempre
+3. A origem: "Gerado automaticamente..." (ou, com `origem = teste`, o selo "Texto de teste" e a frase de teste), em `fonte.legenda`, `cor.texto-2`, no pé do cartão. Discreta, mas sempre
    presente quando há texto.
 
 O título do cartão é só "Feedback" (`fonte.titulo-secao`). Sem selo, sem chip, sem ícone de "inteligência" no título.
@@ -102,6 +104,20 @@ Celular de 360, margem 16. Cartão como em [[design/guia-visual]] ("Cartão"): `
 - O texto é selecionável (`selectable`; na web, o padrão), para o atleta poder copiar se quiser. Sem botão de compartilhar
   nem de copiar nesta meta.
 - Sem "joinha", sem botão "gostei" e sem pedido de nota (fora da meta).
+- **Selo de teste (`origem = teste`).** Texto do provedor falso, nunca deve parecer um feedback de verdade. Ao lado do
+  título entra um selo **só de texto**, "Texto de teste", em `fonte.rotulo`, `cor.texto`, fundo `cor.superficie-2`, `raio.pilula`,
+  padding `espaco.1` por `espaco.3`, sem ícone e sem cor de estado (par `cor.texto` sobre `cor.superficie-2`: 14,08 claro e
+  12,28 escuro). A linha de origem vira "Texto de teste, gerado sem o provedor de verdade. Não é um feedback de verdade."
+  O leitor de tela lê o selo logo depois do título ("Feedback, texto de teste"). Só aparece em ambiente de teste; o atleta
+  de verdade nunca o vê.
+```
+┌ Feedback ──────── [Texto de teste]┐
+│ (texto)                          │
+│ Texto de teste, gerado sem o     │
+│ provedor de verdade. Não é um    │
+│ feedback de verdade.             │
+└──────────────────────────────────┘
+```
 
 ### Os estados sem texto
 Mesma moldura do cartão. O miolo é **uma frase** (`fonte.corpo`, `cor.texto`) com um ícone de `icone.medio` ao lado,
@@ -124,31 +140,32 @@ já está na tela não some quando "Atualizar" busca de novo.
 
 | estado (`feedback.estado`) | o que aparece | texto |
 |---|---|---|
-| **pronto** (`pronto`) | o texto e a linha de origem | texto da API (3 a 5 linhas) e "Gerado automaticamente a partir dos dados deste treino e do seu check-in." |
-| **sem check-in** (`sem_checkin`) | ícone `assignment`, frase e o botão secundário "Fazer check-in" (abre `/checkin/<id>`) | "Faça o check-in para ver o feedback." |
-| **sem check-in, prazo vencido** (`sem_checkin` com `checkin_aberto` falso) | ícone `info-outline` e a frase, **sem botão** | "O prazo do check-in deste treino acabou, então ele fica sem feedback." |
-| **gerando ou pendente** (`pendente`) | ícone `info-outline`, frase e o botão de texto "Atualizar" (`refresh`) | "O feedback deste treino ainda está sendo preparado. Volte daqui a pouco ou toque em Atualizar." |
-| **desatualizado** (`desatualizado`) | ícone `info-outline` e a frase; **o texto antigo não aparece**; botão de texto "Atualizar" | "Você editou o check-in. O feedback será refeito." |
-| **não foi possível gerar** (`reprovado`: texto reprovado nas checagens ou provedor fora) | ícone `info-outline` e a frase; **nunca** o texto reprovado, nem o motivo técnico | "Ainda não foi possível gerar o feedback deste treino. Uma nova tentativa será feita mais tarde." |
-| **sem provedor** (`sem_provedor`) | ícone `info-outline` e a frase, sem botão | "O feedback automático não está ligado neste app." |
-| **sem feedback possível** (`sem_fatos`) **(ADR 0013)** | ícone `info-outline` e a frase, sem botão | "Ainda não há dados para escrever o feedback deste treino." |
-| sem o campo `feedback` | o cartão não aparece | |
+| **pronto** (`pronto`, `origem = automatico`) | o texto e a linha de origem | texto da API (3 a 5 linhas) e "Gerado automaticamente a partir dos dados deste treino e do seu check-in." |
+| **pronto de teste** (`pronto`, `origem = teste`) | o mesmo, mais o selo de texto "Texto de teste" ao lado do título e a origem trocada | selo "Texto de teste" e "Texto de teste, gerado sem o provedor de verdade. Não é um feedback de verdade." |
+| **sem check-in** (`sem_checkin`, `checkin_aberto` verdadeiro) | ícone `assignment`, a `mensagem` e o botão secundário "Fazer check-in" (abre `/checkin/<id>`) | "Faça o check-in para ver o feedback." |
+| **sem check-in, prazo vencido** (`sem_checkin`, `checkin_aberto` falso) | ícone `info-outline` e a `mensagem`, **sem botão** | "O prazo do check-in deste treino acabou, então ele fica sem feedback." (reserva; a ADR 0013 só fixa a frase do caso com prazo aberto) |
+| **pendente** (`pendente`) | ícone `info-outline`, a `mensagem` e o botão de texto "Atualizar" (`refresh`) | "O feedback deste treino ainda não foi gerado. Toque em Atualizar para ver se já está pronto." |
+| **desatualizado** (`desatualizado`) | ícone `info-outline` e a `mensagem`; a API **não devolve** o texto antigo; botão de texto "Atualizar" | "Você editou o check-in. O feedback será refeito." |
+| **indisponível** (`indisponivel`, para texto reprovado, provedor fora ou limite de chamadas) | ícone `info-outline` e a `mensagem`; **nunca** o texto reprovado nem o `motivo` | "Ainda não foi possível gerar o feedback deste treino. Uma nova tentativa será feita mais tarde." |
+| **indisponível, sem provedor** (`indisponivel`, `motivo = provedor_nao_configurado`) | o mesmo cartão, só a `mensagem` (a ADR 0013 permite uma frase própria para esse motivo); o app **não** olha o `motivo` | "O feedback automático não está ligado neste app." |
+| `feedback: null` ou sem o campo | o cartão não aparece | |
 
 Detalhes de cada estado:
-- **Pendente.** É o caso de quem acabou de salvar o check-in e o feedback ainda não foi escrito (**(ADR 0013)** quando é gerado:
-  no `PUT` do check-in ou só pelo `worker.gerar_feedback`). Como o app **não sabe** quanto falta, o estado **não usa
-  esqueleto nem indicador girando** (isso prometeria que o texto está para aparecer). "Atualizar" busca a atividade de novo
-  e o leitor de tela fala o resultado. Sem busca automática repetida nesta versão (**(ADR 0013)** se o Theo quiser).
-- **Desatualizado.** Editar o check-in marca o feedback e ele é refeito (decisão 5 do Angelo, 10/11). Esconder o texto
-  antigo evita mostrar uma frase que contradiz o check-in novo (por exemplo, o esforço de antes). **A decidir com o Theo**
-  se a API devolve o texto antigo; se devolver, o app ainda assim não o mostra.
-- **Não foi possível gerar.** Decisão 8 do Angelo: sem texto de reserva escrito por regra; a nova tentativa é do
-  `worker.gerar_feedback`. A frase é a mesma para texto reprovado e para provedor fora: o atleta não precisa do motivo, e
-  o texto reprovado **nunca** chega ao app. Sem "Tentar de novo": o app não gera.
-- **Sem provedor.** Quem pode resolver é quem cuida do app, não o atleta. Por isso a frase não pede ação.
-- **Sem feedback possível.** Só existe se a ADR separar esse caso do `reprovado` (por exemplo, atividade sem tipo e sem
-  linha de base). Se a ADR disser que o pacote sempre existe com check-in, o estado some (o "aprendendo" da linha de base
-  entra no texto, não impede o feedback).
+- **Pendente.** Tem check-in e o `worker.gerar_feedback` ainda não rodou. **O feedback nunca é gerado no `PUT` do check-in**
+  (ADR 0013, item 2): no piloto local o `pendente` **dura até alguém rodar o comando**. Por isso a frase não promete
+  ("daqui a pouco") nem diz que está "sendo preparado": diz só que ainda não foi gerado. Sem esqueleto nem indicador
+  girando (prometeriam que o texto está para aparecer). "Atualizar" busca a atividade de novo e o leitor de tela fala o
+  resultado. Sem busca automática.
+- **Desatualizado.** Editar o check-in (ou subir a versão dos fatos) marca o feedback e o worker o refaz. A API não devolve o
+  texto antigo, que poderia contradizer o check-in novo. O app não tem o que esconder.
+- **Indisponível.** Sem texto de reserva escrito por regra (decisão 8 do Angelo); a nova tentativa é do `worker.gerar_feedback`.
+  Texto reprovado e provedor fora têm a mesma frase: o atleta não precisa do motivo e o texto reprovado **nunca** chega ao app.
+  O `motivo` é um código para quem cuida do app: o app não o mostra nem escolhe ícone ou botão por ele. Sem "Tentar de novo":
+  o app não gera.
+- **Sem provedor.** É um `motivo` de `indisponivel`, não um estado. Se a API mandar uma `mensagem` própria, o cartão só mostra a
+  mensagem. A frase não pede ação ao atleta: quem resolve é quem cuida do app.
+- **Linha de base "aprendendo", treino sem tipo, sem carga.** Não há estado para isso: o feedback sai, e o texto traz a frase
+  ("Ainda aprendendo o seu normal...", "Sem comparação..."). O cartão não muda.
 - **Treino com dor no check-in.** O cartão **não muda** por causa disso: sem destaque, sem ícone, sem cor e sem botão
   diferente. Se o texto da API tiver a frase neutra da decisão 7 ("Você registrou dor neste treino."), ela aparece no meio do
   texto, igual às outras frases. O alerta sensível é do professor (Meta 10).
@@ -207,40 +224,32 @@ O feedback é **dado de saúde derivado** (usa PSE, sensação e atalhos do chec
 
 ## Como gerar capturas sintéticas
 Como em [[modulos/mobile]] (`npm run api-falsa`): a API falsa precisa devolver o campo `feedback` em atividades sintéticas
-nos oito casos da tabela de estados (um por atividade), mais uma sem o campo; e estados forçados pelo
+nos casos da tabela de estados (um por atividade, incluindo `origem = teste` e `indisponivel` com e sem a frase de provedor desligado), mais uma com `feedback: null`; e estados forçados pelo
 `EXPO_PUBLIC_ATLETA_ID`, como na semana-padrão. Uma captura por estado, 390 de largura, **claro e escuro**; na web larga
 (900), o estado pronto e o sem check-in. Revisão da Lia no PR do Rafa com essas capturas.
 
 ## O que muda em relação ao app de hoje
 | hoje | proposta | issue |
 |---|---|---|
-| a tela do treino acaba no check-in e na carga pela PSE | cartão "Feedback" logo abaixo do check-in, com 8 estados | #330 |
+| a tela do treino acaba no check-in e na carga pela PSE | cartão "Feedback" logo abaixo do check-in, com 5 estados da API e 9 variantes | #330 |
 | nenhum texto escrito pelo app | texto gerado automaticamente, com a origem dita no cartão | #330 |
-| `feedback` não existe no `GET` da atividade | campo `feedback` com `estado`, `texto` e `mensagem` | #328 |
+| `feedback` não existe no `GET` da atividade | campo `feedback` (ADR 0013): `null` ou cinco estados | #328 |
 
 ## Dúvidas de desenho
-Para o Theo, antes da tela (#330). As marcadas **(ADR 0013)** dependem da ADR em escrita pelo Caio.
-1. **Nomes e forma do campo `feedback`.** Proponho `estado` (sete valores), `texto`, `mensagem` e `origem`. Está bom, ou a
-   #328 define outro desenho? **(ADR 0013)**
-2. **Quem escreve a frase dos estados sem texto?** Proponho a API mandar `mensagem` pronta (como `carga_pse.texto`) e o app
-   ter as frases desta nota só como reserva. Ou o app escreve todas?
-3. **Quando o feedback é gerado.** No `PUT` do check-in (a tela volta ao treino e já o encontra, ou em "pendente") ou só pelo
-   `worker.gerar_feedback`? No piloto local, "pendente" pode durar até alguém rodar o worker. Isso decide se "Atualizar"
-   basta ou se precisamos de busca automática. **(ADR 0013)**
-4. **Desatualizado: a API devolve o texto antigo?** Eu escondo mesmo assim (pode contradizer o check-in novo). Se o Theo
-   preferir mostrá-lo com o aviso, volta para mim.
-5. **`reprovado`: um estado ou dois?** Texto reprovado e provedor fora têm a mesma frase para o atleta. Se a API separar em dois
-   estados, o app trata os dois como o mesmo cartão; só confirmo que **nenhum motivo técnico** vai ao app.
-6. **Sem linha de base.** O roteiro lista fixtures com linha de base "aprendendo" e "fora", o que indica que o feedback sai
-   mesmo assim, e o `sem_fatos` seria raro. A ADR prevê treino **sem feedback possível**? Se não, tiro esse estado.
-   **(ADR 0013)**
-7. **Ordem dos cartões.** Coloquei o feedback **logo abaixo do check-in** (e a carga pela PSE depois). Se o Theo preferir a
-   carga pela PSE colada no check-in, o feedback desce um lugar; é só a ordem.
-8. **De onde vem o texto.** A origem diz só "Gerado automaticamente a partir dos dados deste treino e do seu check-in." Sem nome
-   do provedor nem do modelo. Concorda? Quando o professor existir (Meta 10), a frase pode ganhar uma variante, mas
-   hoje o texto não tem o nome dele (decisão 6).
-9. **Sem provedor numa instalação de atleta.** A frase "não está ligado neste app" faz sentido no piloto local. Quando houver
-   atletas de verdade, vale esconder o cartão nesse caso? Hoje mostro, para quem cuida do app saber por que está vazio.
-10. **Ícone de origem.** Não usei ícone de "inteligência" (como `auto-awesome`) para não dar peso ao selo nem criar
-    ícone novo; a origem é texto. Se o Theo quiser um ícone, a Lia propõe um e atualiza [[design/tokens]].
-11. **Sem "gostei" e sem botão de copiar.** Confirmo que ficam fora da Meta 9.
+As dúvidas 1 a 6 da primeira versão foram **respondidas pela ADR 0013** (modelo aprovado pelo Theo em 10/11): forma do campo
+`feedback`, frase pronta na API, geração só pelo worker, texto antigo não devolvido, `indisponivel` único, sem estado
+"sem feedback possível". O que continua em aberto, para o Theo:
+1. **Frase do prazo vencido.** A ADR 0013 fixa a `mensagem` de `sem_checkin` só com prazo aberto. A API manda uma frase própria
+   quando `checkin_aberto` é falso? Se não, vale a de reserva desta nota ("O prazo do check-in deste treino acabou, então ele
+   fica sem feedback.").
+2. **Frase do `pendente`.** A ADR não fixa a frase. Proponho "O feedback deste treino ainda não foi gerado. Toque em Atualizar
+   para ver se já está pronto." Se o `pendente` longo incomodar o Angelo no piloto local (ADR, item 9), a alternativa é o
+   gatilho de fundo, não texto.
+3. **Selo de teste.** "Texto de teste" no título e frase de origem trocada, como acima. Concorda?
+4. **Ordem dos cartões.** Feedback logo abaixo do check-in e a carga pela PSE depois. Se preferir a carga colada no check-in, é
+   só a ordem.
+5. **Sem provedor com atletas reais.** Hoje o cartão mostra a frase. Quando houver atletas de verdade, esconder? Hoje mostro,
+   para quem cuida do app saber por que está vazio.
+6. **Selo de origem sem ícone.** Sem ícone de "inteligência"; a origem é texto. Se quiser ícone, eu proponho e atualizo
+   [[design/tokens]].
+7. **Sem "gostei" e sem botão de copiar.** Confirmo que ficam fora da Meta 9.
