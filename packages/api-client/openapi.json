@@ -43,6 +43,16 @@
               }
             ]
           },
+          "carga_pse": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/CargaPseOut"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
           "checkin": {
             "anyOf": [
               {
@@ -521,6 +531,73 @@
           "estado"
         ],
         "title": "CargaAtividadeOut",
+        "type": "object"
+      },
+      "CargaPseOut": {
+        "description": "Carga pela PSE da atividade (`carga_pse@1`, ADR 0012, item 6): PSE x minutos, em UA. Calculada na leitura; separada da `carga@2`\n(escalas diferentes, nao se somam). Nao traz a observacao nem a sensacao.",
+        "properties": {
+          "estado": {
+            "enum": [
+              "calculada",
+              "sem_checkin",
+              "sem_duracao"
+            ],
+            "title": "Estado",
+            "type": "string"
+          },
+          "minutos": {
+            "title": "Minutos",
+            "type": "number"
+          },
+          "pse": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Pse"
+          },
+          "texto": {
+            "title": "Texto",
+            "type": "string"
+          },
+          "valor": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Valor"
+          },
+          "valor_texto": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Valor Texto"
+          },
+          "versao": {
+            "title": "Versao",
+            "type": "string"
+          }
+        },
+        "required": [
+          "versao",
+          "estado",
+          "minutos",
+          "texto"
+        ],
+        "title": "CargaPseOut",
         "type": "object"
       },
       "CargaSerieOut": {

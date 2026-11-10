@@ -28,6 +28,7 @@ from app.rotas.evolucao import Erro
 from app.rotas.transicao import TransicaoOut, transicao_da_atividade
 from app.servicos import checkin as checkin_svc
 from app.servicos.carga_leitura import CargaLida, carga_da_atividade
+from app.servicos.carga_pse_leitura import CargaPseLida, carga_pse_da_atividade
 from app.servicos.clima import ClimaDaAtividade, EstadoClima, clima_da_atividade
 from app.servicos.distancia_texto import distancia_da_atividade
 from app.servicos.esforcos_leitura import esforcos_da_atividade
@@ -142,6 +143,19 @@ class LinhaBaseOut(BaseModel):
     metricas: list[MetricaBaseOut]  # [] em `sem_linha_base`
 
 
+class CargaPseOut(BaseModel):
+    """Carga pela PSE da atividade (`carga_pse@1`, ADR 0012, item 6): PSE x minutos, em UA. Calculada na leitura; separada da `carga@2`
+    (escalas diferentes, nao se somam). Nao traz a observacao nem a sensacao."""
+
+    versao: str
+    estado: Literal["calculada", "sem_checkin", "sem_duracao"]
+    pse: int | None = None  # null em `sem_checkin`
+    minutos: float  # duracao_s / 60, tempo de cronometro
+    valor: float | None = None  # UA, sem arredondar; so em `calculada`
+    valor_texto: str | None = None  # "270 UA", "272,5 UA" (1 casa quando nao e inteiro)
+    texto: str  # "Carga pela PSE: 6 x 45 min = 270 UA." ou o motivo de nao haver valor
+
+
 class AtividadeOut(BaseModel):
     """A atividade como a API mostra. A posicao de inicio nunca sai (ADR 0007)."""
 
@@ -165,6 +179,7 @@ class AtividadeOut(BaseModel):
     checkin: CheckinOut | None = None  # null: sem check-in ou atividade que nao pede (multiesporte_pai e troca)
     checkin_aberto: bool = False  # false em pai/troca e quando o prazo de criacao passou sem check-in; true se ja existe (editar nao tem prazo)
     pse_sugerida: int | None = None  # numa parte de multiesporte: a PSE do check-in da parte anterior, se houver
+    carga_pse: CargaPseOut | None = None  # null so em multiesporte_pai e troca; sem check-in vem `sem_checkin`
     # Campos prontos para a tela (#158): a API formata, o app mostra (ADR 0004, adendo 2).
     data_local: str  # AAAA-MM-DD, pelo fuso da atividade (ADR 0003)
     hora_local: str  # HH:MM, pelo fuso da atividade
@@ -250,6 +265,10 @@ def _clima_out(c: ClimaDaAtividade) -> ClimaOut:
         vento_kmh=c.vento_kmh,
         atribuicao=ATRIBUICAO_CLIMA if c.estado == "ok" else None,
     )
+
+
+def _carga_pse_out(c: CargaPseLida | None) -> CargaPseOut | None:
+    return None if c is None else CargaPseOut.model_validate(asdict(c))
 
 
 def _carga_out(c: CargaLida) -> CargaAtividadeOut:
@@ -358,6 +377,7 @@ def buscar_atividade(
         checkin=None if a.checkin is None else checkin_out(a.checkin),
         checkin_aberto=checkin_svc.checkin_aberto(a, a.checkin is not None),
         pse_sugerida=checkin_svc.pse_sugerida(session, a),
+        carga_pse=_carga_pse_out(carga_pse_da_atividade(a, a.checkin)),
         data_local=local.date().isoformat(),
         hora_local=local.strftime("%H:%M"),
         duracao=_duracao_hms(a.duracao_s),

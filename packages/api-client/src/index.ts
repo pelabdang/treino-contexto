@@ -42,6 +42,7 @@ export type DivergenciaTipo = NonNullable<Atividade["tipo_divergencia"]>;
 export type OrigemTipo = NonNullable<Atividade["tipo_origem"]>;
 // Check-in pós-treino (#296, ADR 0012): dado de saúde; só tipos, sem função (a tela é da #299). `422` sem `input` nem `ctx`.
 export type Checkin = components["schemas"]["CheckinOut"];
+export type CargaPse = components["schemas"]["CargaPseOut"];
 export type CheckinEnvio = components["schemas"]["CheckinIn"];
 export type CheckinsPendentes = components["schemas"]["PendentesOut"];
 export type CheckinPendente = components["schemas"]["PendenteOut"];

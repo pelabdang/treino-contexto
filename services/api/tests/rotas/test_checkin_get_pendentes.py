@@ -1,12 +1,15 @@
-"""`checkin` no GET da atividade e lista de pendentes (issue #298, ADR 0012), contra o oraculo das fixtures da Meta 8 (#294).
+"""`checkin`, `carga_pse`, `checkin_aberto` e `pse_sugerida` no GET da atividade e lista de pendentes (issue #298, ADR 0012), contra o
+oraculo inteiro das fixtures da Meta 8 (#294): `CARGA_PSE_ESPERADA` (18 atividades), `PRAZO_CRIAR`, `PENDENTES`, `NAO_ELEGIVEIS` e
+`VALIDACAO` (21 corpos do PUT), passando pelo banco e pela API.
 
-O que a `carga_pse` acrescenta no GET e da #297. Dados sinteticos; nada do check-in aparece na lista de pendentes.
+Dados sinteticos; nada do check-in aparece na lista de pendentes nem no log (marcador sintetico e `caplog`).
 """
 
 import importlib.util
 import json
+import logging
 import sys
-from datetime import date, datetime, timezone
+from datetime import date, datetime
 from pathlib import Path
 
 import pytest
@@ -182,14 +185,14 @@ def test_pse_sugerida_e_a_da_parte_anterior_do_mesmo_multiesporte(client, banco)
 
 
 def test_pse_sugerida_nula_quando_a_parte_anterior_nao_tem_checkin(client, banco, session):
-    atleta, _, ids = banco
+    _, _, ids = banco
     session.delete(session.get(CheckinTreino, session.query(CheckinTreino).filter_by(atividade_id=ids["2026-11-03/cic1"]).one().id))
     session.commit()
     assert _get(client, banco, "2026-11-03/cor1")["pse_sugerida"] is None
 
 
 def test_checkin_de_outro_atleta_nao_vaza(client, banco):
-    atleta, outro, ids = banco
+    _, outro, ids = banco
     assert client.get(f"/atletas/{outro}/atividades/{ids['2026-11-09/cor2']}").status_code == 404
 
 
@@ -197,3 +200,131 @@ def test_campos_antigos_do_get_continuam(client, banco):
     j = _get(client, banco, "2026-11-09/cor2")
     for campo in ("atividade_id", "clima", "esforcos", "carga", "linha_base", "tipo_treino", "data_local", "pace_medio"):
         assert campo in j
+
+
+# --- carga_pse@1 no GET, as 18 atividades do oraculo (ADR 0012, itens 6 e 7) -----------------------------------------------
+
+
+@pytest.mark.parametrize("chave", sorted(O.CARGA_PSE_ESPERADA))
+def test_carga_pse_do_get_igual_ao_oraculo(client, banco, chave):
+    esperado = O.CARGA_PSE_ESPERADA[chave]
+    c = _get(client, banco, chave)["carga_pse"]
+    if esperado is None:  # pai e troca
+        assert c is None
+        return
+    estado, minutos, valor = esperado
+    assert (c["versao"], c["estado"]) == ("carga_pse@1", estado)
+    assert c["minutos"] == pytest.approx(minutos)
+    if valor is None:
+        assert c["valor"] is None and c["valor_texto"] is None
+    else:
+        assert c["valor"] == pytest.approx(valor) and c["valor_texto"].endswith(" UA")
+    assert (c["pse"] is None) is (estado == "sem_checkin")
+    assert set(c) == {"versao", "estado", "pse", "minutos", "valor", "valor_texto", "texto"}  # nunca a observacao nem a sensacao
+
+
+@pytest.mark.parametrize("chave,valor_texto,texto", [
+    ("2026-11-09/cor2", "270 UA", "Carga pela PSE: 6 x 45 min = 270 UA."),
+    ("2026-11-07/cor1", "272,5 UA", "Carga pela PSE: 6 x 45,4 min = 272,5 UA."),  # 1 casa quando nao e inteiro
+    ("2026-11-08/nat1", "160 UA", "Carga pela PSE: 4 x 40 min = 160 UA."),  # natacao tem carga pela PSE
+    ("2026-11-08/cic1", "350 UA", "Carga pela PSE: 7 x 50 min = 350 UA."),
+    ("2026-11-06/out1", "0 UA", "Carga pela PSE: 0 x 30 min = 0 UA."),  # PSE 0 vale
+    ("2026-11-05/cor1", None, "Sem check-in: a carga pela PSE precisa da PSE do treino."),
+    ("2026-11-09/cor1", None, "Treino sem duração registrada: sem carga pela PSE."),
+])
+def test_carga_pse_textos_prontos(client, banco, chave, valor_texto, texto):
+    c = _get(client, banco, chave)["carga_pse"]
+    assert (c["valor_texto"], c["texto"]) == (valor_texto, texto)
+
+
+def test_carga_pse_separada_da_carga_do_relogio(client, banco):
+    j = _get(client, banco, "2026-11-08/nat1")
+    assert j["carga_pse"]["estado"] == "calculada"  # natacao: tem carga pela PSE...
+    assert j["carga"] is None or j["carga"]["estado"] != "calculada"  # ...e nao a carga@2
+
+
+def test_carga_pse_acompanha_o_checkin(client, banco):
+    atleta, _, ids = banco
+    url = f"/atletas/{atleta}/atividades/{ids['2026-11-05/cor1']}/checkin"
+    assert client.put(url, json={"pse": 8, "sensacao": 2, "nada_a_relatar": True}).status_code == 200
+    c = _get(client, banco, "2026-11-05/cor1")["carga_pse"]
+    assert (c["estado"], c["pse"], c["valor"]) == ("calculada", 8, 360.0)  # 8 x 45
+    assert client.delete(url).status_code == 204
+    assert _get(client, banco, "2026-11-05/cor1")["carga_pse"]["estado"] == "sem_checkin"
+
+
+# --- prazo de criacao pelo PUT, as atividades sem check-in do oraculo (ADR 0012, itens 3 e 4) ------------------------------
+
+
+@pytest.mark.parametrize("chave", sorted(O.PRAZO_CRIAR))
+def test_prazo_de_criar_pelo_put_igual_ao_oraculo(client, banco, session, chave):
+    atleta, _, ids = banco
+    r = client.put(f"/atletas/{atleta}/atividades/{ids[chave]}/checkin", json={"pse": 5, "sensacao": 3, "nada_a_relatar": True})
+    esperado = O.PRAZO_CRIAR[chave]
+    if esperado is True:
+        assert r.status_code == 200, r.text
+        assert _get(client, banco, chave)["checkin"]["pse"] == 5
+    else:
+        assert r.status_code == 422
+        assert r.json()["detail"][0]["type"] == ("fora_do_prazo" if esperado is False else "atividade_sem_checkin")
+        assert _get(client, banco, chave)["checkin"] is None
+    assert session.query(CheckinTreino).count() == len(CHECKINS) + (1 if esperado is True else 0)
+
+
+# --- os 21 corpos de validacao do oraculo (ADR 0012, itens 1, 2 e 7) ----------------------------------------------------------
+
+
+def _motivo_bate(motivo: str, detalhe: list[dict]) -> bool:
+    """O 422 aponta o campo que o oraculo diz: `loc` ou `type` (campo ausente), nunca o valor."""
+    locs = [list(e["loc"]) for e in detalhe]
+    if motivo == "obrigatorio":
+        return any(e["type"] == "missing" for e in detalhe)
+    if motivo == "observacao":
+        return any(e["type"] == "value_error" and loc == ["body"] for e, loc in zip(detalhe, locs))
+    if motivo == "atalho":
+        return any("atalhos" in loc for loc in locs) or any(e["msg"].endswith("atalhos repetidos") for e in detalhe)
+    return any(motivo in loc for loc in locs)
+
+
+@pytest.mark.parametrize("descricao,corpo,valido,motivo", O.VALIDACAO, ids=[v[0] for v in O.VALIDACAO])
+def test_validacao_do_put_igual_ao_oraculo(client, banco, session, descricao, corpo, valido, motivo):
+    atleta, _, ids = banco
+    r = client.put(f"/atletas/{atleta}/atividades/{ids['2026-11-05/cor1']}/checkin", json=corpo)  # dentro do prazo, sem check-in
+    if valido:
+        assert r.status_code == 200, r.text
+        j = r.json()
+        assert (j["pse"], j["sensacao"], j["nada_a_relatar"]) == (corpo["pse"], corpo["sensacao"], corpo["nada_a_relatar"])
+        assert [a["chave"] for a in j["atalhos"]] == sorted(corpo["atalhos"], key=list(O.VALIDACAO[6][1]["atalhos"]).index)
+        assert j["texto"] == corpo["texto"]
+        assert session.query(CheckinTreino).count() == len(CHECKINS) + 1
+    else:
+        assert r.status_code == 422, r.text
+        detalhe = r.json()["detail"]
+        assert all(set(e) == {"loc", "msg", "type"} for e in detalhe) and "input" not in r.text and "ctx" not in r.text
+        assert _motivo_bate(motivo, detalhe), detalhe
+        assert session.query(CheckinTreino).count() == len(CHECKINS)
+
+
+def test_oraculo_de_validacao_tem_21_casos():
+    assert len(O.VALIDACAO) == 21 and len(O.CARGA_PSE_ESPERADA) == 18
+
+
+# --- nenhum valor do check-in em log nem em 422 (ADR 0012, item 5) ----------------------------------------------------------
+
+MARCADOR = "MARCADOR-SINTETICO-123"
+
+
+def test_get_da_atividade_e_pendentes_nao_levam_o_checkin_ao_log(client, banco, session, caplog):
+    atleta, _, ids = banco
+    c = session.query(CheckinTreino).filter_by(atividade_id=ids["2026-11-09/cor2"]).one()
+    c.texto = MARCADOR
+    session.commit()
+    caplog.set_level(logging.DEBUG)
+    j = _get(client, banco, "2026-11-09/cor2")
+    assert j["checkin"]["texto"] == MARCADOR  # sai para o proprio atleta...
+    assert MARCADOR not in json.dumps(j["carga_pse"])  # ...mas nao na carga
+    r = client.get(f"/atletas/{atleta}/checkins/pendentes")
+    assert r.status_code == 200 and MARCADOR not in r.text
+    r = client.get(f"/atletas/{atleta}/checkins/pendentes", params={"dias": MARCADOR})
+    assert r.status_code == 422 and MARCADOR not in r.text and "input" not in r.text and "ctx" not in r.text
+    assert MARCADOR not in caplog.text

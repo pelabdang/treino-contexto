@@ -226,7 +226,7 @@ repetiria o texto enviado); os `422` de domínio usam o código no `type`: `fora
 `204`, também quando já não havia. O corpo do `422` continua declarado no OpenAPI como `HTTPValidationError` (descrição só de `loc`,
 `msg` e `type`). `checkin` e `carga_pse` no `GET` da atividade e a lista de pendentes são da #298, com outro adendo. Detalhes em [[modulos/api]].
 
-## Adendo 9 (2026-11-09): `checkin`, `checkin_aberto`, `pse_sugerida` e lista de pendentes (#298)
+## Adendo 9 (2026-11-09): `checkin`, `carga_pse`, `checkin_aberto`, `pse_sugerida` e lista de pendentes (#298)
 **Status: aceito (Theo, 09/11, [[decisoes/0012-check-in-pos-treino]]).** `GET /atletas/{atleta_id}/atividades/{atividade_id}` ganha, sem remover campo: `checkin` (o
 `CheckinOut` do adendo 8, ou `null` sem check-in ou em `multiesporte_pai` e `troca`), `checkin_aberto` (`false` em pai e troca e quando o
 prazo de criação passou sem check-in; `true` se já existe check-in, porque editar não tem prazo) e `pse_sugerida` (inteiro ou `null`: numa
@@ -235,4 +235,6 @@ tela (#295, decisão do Theo). `checkin_aberto` só orienta a tela: o `PUT` cont
 `GET /atletas/{atleta_id}/checkins/pendentes?dias=7` (`listarCheckinsPendentes`): `{dias, total, pendentes}`, cada item com
 `atividade_id`, `modalidade`, `data_local`, `hora_local`, `duracao` e `titulo` prontos ("Corrida, 45 min"), mais recentes primeiro,
 **sem nenhum campo do check-in**; `dias` de 1 a 7 (fora disso, `422` sem `input` nem `ctx`). O check-in só sai no `GET` da própria atividade, nunca
-em lista. A `carga_pse` no `GET` é da #297. Detalhes em [[modulos/api]].
+em lista. O `GET` da atividade ganha ainda `carga_pse` (`carga_pse@1`, [[metricas/carga-pse]]): `null` em pai e troca, senão `versao`, `estado`
+(`calculada`, `sem_checkin`, `sem_duracao`), `pse`, `minutos`, `valor` (UA, sem arredondar) e, pelo adendo 2, `valor_texto` ("270 UA", "272,5 UA") e `texto`
+prontos. Não traz a observação nem a sensação. Detalhes em [[modulos/api]].
