@@ -618,7 +618,8 @@ Revisadas ao fim de cada meta com o que se aprendeu. Ordem tirada da "Fundação
   **Ordem:** #322 na largada (Caio, com a Duda no modelo); #323 e #329 adiantam em paralelo; #326 começa assim que o Theo
   aprovar a parte da camada de LLM. Depois da ADR, #324 e #325 (Caio) em paralelo com #326 (Duda); #327 é o encontro do
   backend; #328 depois da #327; #330 precisa da #328 e da #329. Caminho crítico: #322 → #324 → #327 → #328 → #330 → #331 →
-  #332 → #333. Não há conferência com o histórico real nesta meta, a menos que o Angelo autorize (decisão 3).
+  #332 → #333. A QA usa só fixtures; o feedback dos treinos reais do Angelo no provedor foi autorizado por ele em 10/11, mas
+  roda só localmente (por ele ou pelo Theo) e nada do resultado entra no repositório (ver "PRECISA DO ANGELO").
 - **Paralelas (fora do critério de pronto, sem dependência):**
   - **P13 (#334):** capturas do check-in no tema escuro e nos estados de erro (item 4 da revisão da Lia no #313; rafa-app),
     já que o Rafa mexe na tela do treino nesta meta.
@@ -631,7 +632,7 @@ Revisadas ao fim de cada meta com o que se aprendeu. Ordem tirada da "Fundação
     Garmin falso); credenciais e token só no `.env` ou em pasta local fora do git, nunca em log; uma tentativa de login por
     execução e erro do Garmin como mensagem clara; limitação registrada (biblioteca não oficial, pode quebrar quando o Garmin
     mudar o login; a API oficial continua sendo o caminho de produção e depende do CNPJ); nota do módulo e guia
-    atualizados. Dona: duda-dados. Só local e só na conta do Angelo (item (a) de "PRECISA DO ANGELO").
+    atualizados. Dona: duda-dados. Só local e só na conta do Angelo (decidido por ele em 10/11; ver "PRECISA DO ANGELO").
 - **Quem:** caio-ciencia (ADR, pacote de fatos, checagens, oráculo, exemplos de tom), duda-dados (camada de LLM, banco,
   worker, API, cliente; a P14), lia-design (cartão), rafa-app (tela), nina-docs, bia-qa, Theo (ADR 0013 e adendo da ADR
   0004), Angelo (leitura dos exemplos de tom e o celular).
@@ -764,7 +765,7 @@ stack Expo). A chave do provedor de LLM foi entregue e está no `.env` (fora do 
       texto livre da observação, nome, data real, posição ou qualquer identificador; nada disso em log.
    3. **Dado real no provedor.** *Padrão:* na Meta 9, só fixtures sintéticas vão ao provedor de verdade, numa rodada pequena e
       local; gerar o feedback dos treinos reais do Angelo fica para um "sim" explícito dele, rodado localmente, sem nada no
-      repositório.
+      repositório. **O "sim" veio em 10/11** (item abaixo, com os limites).
    4. **Custo.** *Padrão:* só o plano gratuito do provedor atual (Groq), sem cartão, com limite de chamadas por execução do
       `worker.gerar_feedback`; qualquer plano pago ou provedor novo volta para ele.
    5. **Quando o feedback aparece.** *Padrão:* só depois do check-in (o feedback usa PSE e sensação, e isso dá motivo para
@@ -781,16 +782,17 @@ stack Expo). A chave do provedor de LLM foi entregue e está no `.env` (fora do 
 - **Meta 8, o celular (#301): decidido em 10/11.** O Angelo abre a tela de check-in no celular dele (Expo Go, rede de casa,
   dado sintético) na QA da Meta 9 (#332), junto com o cartão de feedback, numa só sessão. Informação, sem decisão: o caminho
   mínimo do check-in fecha em 3 toques; com atalho ou texto são 4 (Theo, 09/11).
+- **Meta 9, os dois itens novos: respondidos em 10/11 ("sim para as duas").**
+  1. **P14 (#335), buscar a atividade do dia no Garmin Connect: sim.** Paralela da Meta 9, fora do critério de pronto, **só no
+     piloto local e só na conta dele**; credenciais e token só no `.env` ou em pasta local fora do git; biblioteca não oficial
+     (`garminconnect`), aceita como limitação do piloto; a API oficial continua sendo o caminho de produção (depende do CNPJ,
+     item 1 de "Em aberto"). Nada da conta dele entra no repositório.
+  2. **Feedback dos treinos reais dele no provedor de LLM: sim, explícito** (responde à decisão 3 para os treinos reais). Os
+     limites continuam valendo: rodado **só localmente**, por ele ou pelo Theo; ao provedor vai só o pacote de fatos (nunca o
+     texto livre da observação, nome, data real, posição ou identificador); **nada do pacote, do texto gerado ou do resultado**
+     entra no repositório, em issue, PR ou log; só o plano gratuito do Groq, com limite de chamadas por execução. A QA da meta
+     (#332) não muda: fixtures sintéticas e provedor falso, mais a rodada pequena com fixtures no provedor de verdade.
 
 Em aberto:
-1. **Meta 9, paralela P14 (#335): buscar a atividade do dia no Garmin Connect.** Pedido do Angelo em 10/11. *Padrão:* sim,
-   como paralela da Meta 9, fora do critério de pronto, **só no piloto local e só na conta dele**; credenciais e token só no
-   `.env` ou em pasta local fora do git; biblioteca não oficial (`garminconnect`), aceita como limitação do piloto; a API
-   oficial continua sendo o caminho de produção (depende do CNPJ, item 3). Nada da conta dele entra no repositório. A #335 já
-   está aberta; se ele disser "não", ela fecha sem código.
-2. **Feedback dos treinos reais que chegam pela P14.** Com a atividade do dia chegando sozinha, gerar o feedback desses treinos
-   no provedor de LLM continua sob a decisão 3 da Meta 9. *Padrão:* **não**, até ele dizer "sim" explícito; até lá o
-   `worker.gerar_feedback` só manda fixtures sintéticas ao provedor de verdade, e os treinos reais ficam sem feedback (ou com
-   o provedor falso, localmente).
-3. **Próximas metas, sem pressa:** CNPJ e pedido da API da Garmin; pedido da API do TrainingPeaks com a assessoria;
+1. **Próximas metas, sem pressa:** CNPJ e pedido da API da Garmin; pedido da API do TrainingPeaks com a assessoria;
    plano comercial do Open-Meteo para produção; limite de tamanho do upload no proxy, obrigatório na meta de deploy.
