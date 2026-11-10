@@ -212,7 +212,7 @@ print(p["dias"], p["total"], [x["atividade_id"] for x in p["pendentes"]])
    18 aberto= True sug= None pse= 6 | ('calculada', 270.0, '270 UA', 'Carga pela PSE: 6 x 45 min = 270 UA.')
    15 aberto= True sug= None pse= 4 | ('calculada', 160.0, '160 UA', 'Carga pela PSE: 4 x 40 min = 160 UA.')
    16 aberto= True sug= None pse= 7 | ('calculada', 350.0, '350 UA', 'Carga pela PSE: 7 x 50 min = 350 UA.')
-   14 aberto= True sug= None pse= 6 | ('calculada', 272.5, '272,5 UA', 'Carga pela PSE: 6 x 45,4 min = 272,5 UA.')
+   14 aberto= True sug= None pse= 6 | ('calculada', 272.5, '272,5 UA', 'Carga pela PSE: 6 x 45 min 25 s = 272,5 UA.')
    13 aberto= True sug= None pse= 0 | ('calculada', 0.0, '0 UA', 'Carga pela PSE: 0 x 30 min = 0 UA.')
    12 aberto= True sug= None pse= None | ('sem_checkin', None, None, 'Sem check-in: a carga pela PSE precisa da PSE do treino.')
    17 aberto= True sug= None pse= 5 | ('sem_duracao', None, None, 'Treino sem duração registrada: sem carga pela PSE.')
@@ -227,7 +227,7 @@ print(p["dias"], p["total"], [x["atividade_id"] for x in p["pendentes"]])
    7 4 [12, 11, 10, 4]
    ```
    Como ler: **270** (corrida 18, 6 x 45), **160** (natação 15, 4 x 40: a `carga@2` da natação é `sem_carga`, a PSE dá carga), **350** (ciclismo virtual 16, 7 x 50),
-   **272,5** (14, 2725 s; o `valor` é 272,5 sem arredondar, e o `texto` mostra os minutos com 1 casa, "45,4 min"), **0 UA** (13, PSE 0 vale), `sem_checkin`
+   **272,5** (14, 2725 s; o `valor` é 272,5 sem arredondar, e o `texto` mostra a duração em minutos e segundos, "45 min 25 s", para a conta à mão fechar), **0 UA** (13, PSE 0 vale), `sem_checkin`
    (12), `sem_duracao` (17, com check-in e duração 0). Pai (5) e troca (7) têm `carga_pse` e `checkin` nulos e `checkin_aberto` `false`.
    Nas atividades 2 e 3 (fora do prazo, sem check-in), `checkin_aberto` é `false`. **`pse_sugerida`:** a parte 8 (ciclismo) sugere 5, a PSE da natação (id 6); a parte 10 (corrida) sugere 6, a do ciclismo (id 8); a primeira parte (6) não tem sugestão.
    É só um valor inicial: nada é copiado entre partes.
@@ -311,6 +311,5 @@ print(p["dias"], p["total"], [x["atividade_id"] for x in p["pendentes"]])
 ## Fora ou depois (pendências conhecidas)
 - **ADR 0012 ainda proposta** (PR #305): limites como o prazo de 7 dias e os textos podem mudar quando o Angelo responder; o guia vale para o que está no `main`.
 - **App em celular (#301):** o Angelo abre a tela no celular dele no fim da meta; aqui só a web.
-- **Texto da carga com minutos arredondados:** "6 x 45,4 min = 272,5 UA" (o `valor` é exato; o `texto` arredonda os minutos a 1 casa, então a conta à mão parece não fechar). Anotado para o Caio e o Rafa.
 - **Sem série diária da carga pela PSE, sem comparação com a `carga@2`** (fora da meta).
 - **Estados de erro da tela** (API falsa) sem captura de tela e sem conferência visual neste guia.
