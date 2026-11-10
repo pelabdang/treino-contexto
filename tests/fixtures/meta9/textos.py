@@ -83,7 +83,7 @@ A carga pela PSE foi 90 UA em 30 min; a carga do relógio ainda está pendente."
     # clima e atalho calor lado a lado, sem ligação
     "G11": ("F04", """Seu pace médio foi 6:00/km, 18 s/km mais lento que a mediana de 5:42/km nos 9 treinos longos das últimas 12 semanas.
 A FC média foi 158 bpm, 8 bpm acima da mediana de 150 bpm.
-O clima registrado foi 33 °C e você marcou calor; os dois fatos aparecem lado a lado.
+O clima registrado foi 33 °C e você marcou calor; os fatos aparecem lado a lado.
 A carga pela PSE foi 630 UA em 90 min."""),
 }
 
@@ -117,7 +117,7 @@ RUINS: dict[str, tuple[str, str, str, str]] = {
     "R07": _ruim("G01", "Seu pace médio foi 5:44/km", "Seu pace médio foi 5:44 bpm", "unidade_trocada", "5:44 está no pacote, mas em /km"),
     "R08": _ruim("G04", "umidade de 58%", "umidade de 58 km/h", "unidade_trocada", "58 é umidade (%), não vento"),
     # --- diagnóstico ---
-    "R09": _ruim("G05", "Você registrou dor neste treino.", "Você registrou dor neste treino, com sinal de tendinite.", "linguagem_diagnostico", "'tendinite' é diagnóstico"),
+    "R09": _ruim("G05", "Você registrou dor neste treino.", "Você registrou dor neste treino. Sinal de tendinite.", "linguagem_diagnostico", "'tendinite' é diagnóstico"),
     "R10": _ruim("G04", "A carga pela PSE foi 630 UA em 90 min.", "A carga pela PSE foi 630 UA em 90 min, sinal de desidratação.", "linguagem_diagnostico", "'desidratação' é diagnóstico"),
     # --- culpa e juízo ---
     "R11": _ruim("G04", "Seu pace médio foi 6:00/km,", "Foi um treino ruim: seu pace médio foi 6:00/km,", "linguagem_culpa", "'treino ruim' é juízo"),
@@ -146,7 +146,7 @@ RUINS: dict[str, tuple[str, str, str, str]] = {
     "R25": _ruim("G04", "A carga pela PSE foi 630 UA em 90 min.", "Ótimo treino, com a carga pela PSE de 630 UA em 90 min.", "elogio_sem_fato", "há métricas fora do normal: nenhum fato sustenta o elogio"),
     "R26": _ruim("G05", "A FC média foi 139 bpm, dentro do seu normal.", "A FC média foi 139 bpm, dentro do seu normal. Parabéns pelo treino.", "elogio_sem_fato", "com dor registrada não há elogio em volta"),
     "R27": _ruim("G03", "Sem comparação com o seu histórico por enquanto.", "Parabéns, sem comparação com o seu histórico por enquanto.", "elogio_sem_fato", "linha de base aprendendo: nada sustenta o elogio"),
-    "R28": _ruim("G02", "É uma comparação com o seu histórico, não um julgamento do treino.", "Excelente trabalho nos tiros.", "elogio_sem_fato", "o melhor pace está fora do normal"),
+    "R28": _ruim("G02", "É uma comparação com o seu histórico, não um julgamento do treino.", "Excelente desempenho nos tiros.", "elogio_sem_fato", "o melhor pace está fora do normal"),
     # --- forma ---
     "R29": ("F01", "Seu pace médio foi 5:44/km, perto da mediana de 5:48/km nos 11 treinos leves das últimas 12 semanas.\nVocê marcou esforço 4 (um pouco difícil).",
             "forma_linhas", "só 2 linhas"),
