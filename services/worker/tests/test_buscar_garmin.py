@@ -254,6 +254,12 @@ def _biblioteca(login, dumps=None):
             chamadas["login"] += 1
             return login(tokenstore)
 
+        def resume_login(self, estado, codigo):
+            chamadas.setdefault("resume", []).append((estado, codigo))
+            if codigo != "123456":
+                raise _Erros.GarminConnectAuthenticationError(f"codigo {codigo} recusado, {SENHA}")
+            return None, None
+
         def get_activities_by_date(self, a, b, sortorder=None):
             return [{"activityId": 7, "startTimeGMT": "2025-04-02 08:00:00"}, {"sem": "id"}]
 
@@ -301,11 +307,51 @@ def test_com_token_salvo_nao_precisa_de_credenciais(monkeypatch, tmp_path):
     assert ch["login"] == 1 and ch["init"][0]["email"] is None
 
 
-def test_mfa_pedido(monkeypatch, env):
-    mod, _ = _biblioteca(lambda t: ("needs_mfa", {"estado": "x"}))
+def test_mfa_com_terminal_e_codigo_certo_grava_o_token(monkeypatch, env, tmp_path):
+    dumps: list[str] = []
+    mod, ch = _biblioteca(lambda t: ("needs_mfa", {"estado": "x"}), dumps)
+    _instala(monkeypatch, mod)
+    perguntas = []
+    ClienteGarminConnect.entrar(env, ler_codigo=lambda: perguntas.append(1) or "123456")
+    assert perguntas == [1] and ch["login"] == 1
+    assert ch["resume"] == [({"estado": "x"}, "123456")]
+    assert dumps == [str(tmp_path / "token")]
+
+
+def test_mfa_codigo_errado_sai_com_3_e_nao_vaza(monkeypatch, env, capsys, caplog):
+    dumps: list[str] = []
+    mod, ch = _biblioteca(lambda t: ("needs_mfa", {}), dumps)
+    _instala(monkeypatch, mod)
+    with caplog.at_level("DEBUG"), pytest.raises(ErroMfa) as e:
+        ClienteGarminConnect.entrar(env, ler_codigo=lambda: "999999")
+    assert "999999" not in str(e.value) and SENHA not in str(e.value) and "999999" not in caplog.text
+    assert dumps == [] and len(ch["resume"]) == 1  # uma pergunta, uma tentativa, nada gravado
+
+
+def test_mfa_sem_terminal_nao_pergunta(monkeypatch, env):
+    mod, ch = _biblioteca(lambda t: ("needs_mfa", {}))
+    _instala(monkeypatch, mod)
+    monkeypatch.setattr(sys.stdin, "isatty", lambda: False, raising=False)
+    monkeypatch.setattr(garmin_cliente.getpass, "getpass", lambda *a: pytest.fail("perguntou sem terminal"))
+    with pytest.raises(ErroMfa, match="terminal"):
+        ClienteGarminConnect.entrar(env)
+    assert "resume" not in ch
+
+
+def test_mfa_codigo_vazio(monkeypatch, env):
+    mod, ch = _biblioteca(lambda t: ("needs_mfa", {}))
     _instala(monkeypatch, mod)
     with pytest.raises(ErroMfa):
-        ClienteGarminConnect.entrar(env)
+        ClienteGarminConnect.entrar(env, ler_codigo=lambda: None)
+    assert "resume" not in ch
+
+
+def test_mfa_pelo_main_sai_com_3(monkeypatch, env, capsys):
+    mod, _ = _biblioteca(lambda t: ("needs_mfa", {}))
+    _instala(monkeypatch, mod)
+    monkeypatch.setattr(sys.stdin, "isatty", lambda: False, raising=False)
+    assert main(["--atleta", "Atleta Ficticio"], session_factory=_sessao_com_atleta, env=env) == 3
+    assert "MFA" in capsys.readouterr().err
 
 
 def _sessao_com_atleta():

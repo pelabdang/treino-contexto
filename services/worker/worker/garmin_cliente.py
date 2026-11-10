@@ -10,12 +10,14 @@ from __future__ import annotations
 
 import io
 import logging
+import getpass
 import os
+import sys
 import zipfile
 from dataclasses import dataclass
 from datetime import date, datetime, timezone
 from pathlib import Path
-from typing import Protocol
+from typing import Callable, Protocol
 
 from app.config import RAIZ_REPOSITORIO
 
@@ -118,6 +120,16 @@ def _hora_gmt(texto: object) -> datetime | None:
         return None
 
 
+def pedir_codigo_mfa() -> str | None:
+    """Pergunta o codigo uma vez, so com terminal. Sem terminal devolve None sem perguntar. Nao ecoa nem registra."""
+    if not sys.stdin.isatty():
+        return None
+    try:
+        return getpass.getpass("Codigo de verificacao do Garmin: ").strip() or None
+    except (EOFError, KeyboardInterrupt):
+        return None
+
+
 class ClienteGarminConnect:
     """Implementacao real, sobre `garminconnect`. So e criada por `entrar`; os testes usam um cliente falso."""
 
@@ -126,7 +138,8 @@ class ClienteGarminConnect:
         self._mod = garmin_mod
 
     @classmethod
-    def entrar(cls, env: dict[str, str] | None = None) -> ClienteGarminConnect:
+    def entrar(cls, env: dict[str, str] | None = None,
+               ler_codigo: Callable[[], str | None] = pedir_codigo_mfa) -> ClienteGarminConnect:
         """UMA tentativa de login. Usa o token salvo; sem token valido, usa `GARMIN_EMAIL`/`GARMIN_PASSWORD`."""
         env = ler_ambiente(env)
         email, senha = _variavel("GARMIN_EMAIL", env), _variavel("GARMIN_PASSWORD", env)
@@ -143,19 +156,30 @@ class ClienteGarminConnect:
         api = mod.Garmin(email=email, password=senha, return_on_mfa=True, retry_attempts=1)
         cliente = cls(api, mod)
         try:
-            status, _ = api.login(str(pasta))
+            status, estado = api.login(str(pasta))
         except Exception as e:  # noqa: BLE001
             raise cliente._traduzir(e, ao_entrar=True, tinha_token=tem_token) from None
         if status == "needs_mfa":
-            raise ErroMfa(
-                "o Garmin pediu o codigo de verificacao (MFA); este piloto nao faz login com MFA. "
-                "Veja a nota do modulo ingestao-garmin"
-            )
+            cliente._concluir_mfa(estado, ler_codigo)
         try:  # em modo `return_on_mfa` a biblioteca nao grava o token sozinha: gravamos aqui (0600 em pasta 0700)
             api.client.dump(str(pasta))
         except Exception:  # noqa: BLE001
             logging.getLogger(__name__).warning("aviso: token nao salvo; o proximo login vai usar as credenciais")
         return cliente
+
+    def _concluir_mfa(self, estado, ler_codigo) -> None:
+        """Pede o codigo UMA vez e conclui com `resume_login`. Sem terminal, codigo vazio ou recusado: `ErroMfa`."""
+        sem_codigo = ErroMfa(
+            "o Garmin pediu o codigo de verificacao (MFA); rode num terminal para digita-lo. "
+            "Veja a nota do modulo ingestao-garmin"
+        )
+        codigo = ler_codigo()
+        if not codigo:
+            raise sem_codigo
+        try:
+            self._api.resume_login(estado, codigo)
+        except Exception:  # noqa: BLE001  (texto da excecao pode ter dado de conta; nao repete)
+            raise ErroMfa("o Garmin recusou o codigo de verificacao (MFA); rode de novo para tentar outro") from None
 
     def _traduzir(self, e: Exception, ao_entrar: bool = False, tinha_token: bool = False) -> ErroGarmin:
         """Mensagem fixa por tipo de erro; nunca repete o texto da biblioteca (pode ter dado de conta)."""
