@@ -17,7 +17,7 @@ Os números esperados vêm do oráculo [[metricas/carga-pse-oraculo]]. **Check-i
 (`b8f7cf2`, depois do #313), com o banco `treino-meta8` (Postgres na 5455, API na 8055, app web na 8083). Os números abaixo são os que
 saíram. Banco, API e app foram derrubados no fim e **nada usou a rede** (o `npm ci` baixa pacotes; o resto, não).
 **Não rodado aqui:** o app em celular (só a web, no tema escuro do navegador); **os estados forçados com a API falsa (passo 12)**: a
-extensão do navegador caiu antes, então só conferi as respostas da API falsa com `curl` e os testes do app (passo 14); nada de leitor de tela.
+extensão do navegador caiu antes, então só conferi as respostas da API falsa com `curl` e os testes do app (passo 14); a Bia os abriu na tela depois, na revisão independente (todos com o texto certo); nada de leitor de tela.
 A Bia segue o guia como revisão independente.
 
 ## Antes de começar
@@ -121,6 +121,7 @@ with SessionLocal() as s:
    (copie como está; só usa a biblioteca padrão e o banco, para achar os ids):
 ```python
 import json
+import os
 import urllib.error
 import urllib.request
 from pathlib import Path
@@ -129,7 +130,7 @@ from app.db.models import Atividade
 from app.db.session import SessionLocal
 from sqlalchemy import select
 
-API = "http://localhost:8055"
+API = os.environ.get("API", "http://localhost:8055")  # outra porta: API=http://localhost:<porta>
 ATLETA = 1
 checkins = json.loads(Path("tests/fixtures/meta8/checkins.json").read_text(encoding="utf-8"))
 
@@ -148,7 +149,7 @@ for fonte_id, corpo in checkins.items():
     except urllib.error.HTTPError as e:
         print(fonte_id, "->", ids[fonte_id], e.code)
 ```
-   Rode `uv run python - < /caminho/saida/gravar_checkins.py`. Esperado: oito linhas com `200`, nas atividades 17, 18, 15, 16, 14, 13, 6 e 8.
+   Rode `uv run python - < /caminho/saida/gravar_checkins.py` (com outra porta de API: `API=http://localhost:<porta> uv run python - < ...`; o mesmo vale para o `ver.py` do passo 8, e os `curl` dos passos 6 a 10 trazem `localhost:8055` escrito, troque também). Esperado: oito linhas com `200`, nas atividades 17, 18, 15, 16, 14, 13, 6 e 8.
 6. **Os `422` do `PUT`** (sem repetir o que foi enviado; [[decisoes/0012-check-in-pos-treino]], itens 3 e 5):
    ```
    H='content-type: application/json'
@@ -187,9 +188,10 @@ for fonte_id, corpo in checkins.items():
    Para ver as oito de uma vez, salve `/caminho/saida/ver.py`:
 ```python
 import json
+import os
 import urllib.request
 
-API = "http://localhost:8055/atletas/1"
+API = os.environ.get("API", "http://localhost:8055") + "/atletas/1"  # outra porta: API=http://localhost:<porta>
 
 
 def get(rota):
@@ -250,7 +252,7 @@ print(p["dias"], p["total"], [x["atividade_id"] for x in p["pendentes"]])
     - **Cartões** (`/treino/12`): "Check-in" com Esforço 5 · difícil, Sensação normal, Observação Nada a relatar, os botões "Editar" e "Apagar check-in", e "Carga pela PSE" **225 UA**,
       "Carga pela PSE: 5 x 45 min = 225 UA." e "Não se compara com a carga do relógio (pontos): são escalas diferentes.".
     - **Editar** (toque em "Editar", `/checkin/12`): "Editar check-in" em tela única, com "Nada a relatar" marcado e "Salvar alterações" desligado. Toque o atalho **Calor**: "Nada a relatar" desmarca e o botão liga.
-      Salve: "Check-in salvo" e "Observação: Calor". (Editar não tem prazo.)
+      Salve: "Check-in salvo", "Observação: Calor" e o botão "Voltar ao treino" (na criação pelos pendentes o botão é "Voltar aos pendentes"). (Editar não tem prazo.)
     - **Apagar** (volte a `/treino/12`, "Apagar check-in"): diálogo "Apagar este check-in?" ("Isso não pode ser desfeito."); toque "Apagar". Esperado: "Check-in apagado.", "Você ainda não fez o check-in deste treino.",
       "Sem check-in: a carga pela PSE precisa da PSE do treino." e o botão "Fazer check-in". A atividade 12 volta aos pendentes.
     - **Outros cartões:** `/treino/2` (fora do prazo): "Você ainda não fez o check-in deste treino." e "O prazo para fazer o check-in deste treino acabou (7 dias depois do treino).", sem botão.
@@ -266,6 +268,14 @@ print(p["dias"], p["total"], [x["atividade_id"] for x in p["pendentes"]])
     `10` `PUT` com `422` genérico; `11` `PUT` com `422` `fora_do_prazo`; `12` `PUT` com `422` `atividade_sem_checkin`; `13` `PUT` sem rede; `14` `PUT` com `404`; `15` `DELETE` sem rede;
     `16` `PUT` demora 4 s ("Salvando..."); `17` pendentes com `500`; `18` `GET` da atividade demora 6 s (carregando). Atividades da API falsa: `101` e `106` sem check-in, `107` com check-in, `108` com o prazo vencido,
     `109` parte de multiesporte com sugestão 5, `110` treino inteiro de multiesporte.
+    **Onde abrir cada estado** (a Bia os abriu na tela e todos mostram o texto certo):
+    - `7`, `8` e `17`: `/checkins-pendentes` (7: "Nenhum check-in pendente"; 8: erro de rede; 17: "Não foi possível carregar os pendentes...").
+    - `9` e `18`: `/treino/101` (9: erro ao carregar; 18: "Carregando o treino..." por 6 s).
+    - `10`, `11`, `12`, `13`, `14` e `16`: `/checkin/101`; toque **5**, **Normal** e **Nada a relatar** e o `PUT` sai com o estado do atleta (16: "Salvando..." por 4 s;
+      11: o aviso de prazo; 12: "Este treino não pede check-in."; 10: "Algum dado do check-in não foi aceito..."; 14: "Treino não encontrado.").
+    - `15` (`DELETE` sem rede): a API falsa só tem check-in pronto para o atleta 1 (atividade 107). No atleta 15, **crie** o check-in em `/checkin/101` (o `PUT` funciona) e depois, em `/treino/101`, toque
+      "Apagar check-in" e confirme: aparece "Não foi possível apagar. Tente de novo.".
+    - **Estado 17 na evolução** (`/`): a linha "Check-ins pendentes" aparece **sem número e sem erro**; o erro só aparece em `/checkins-pendentes` (é de propósito).
     **O que conferi aqui:** só as respostas da API falsa, com `curl` (pendentes do atleta 7 vazios; `PUT` do 11 com `422` `fora_do_prazo`, do 12 com `atividade_sem_checkin`, do 10 com `value_error`, do 14 com `404`;
     pendentes do 17 com `500`). **A tela em cada estado não foi aberta nesta rodada.**
 13. **`worker.apagar_checkin`** (LGPD; [[modulos/worker]]). Com o banco do passo 3 (nesta altura com 9 check-ins, nas atividades 1, 6, 8 e 13 a 18):
