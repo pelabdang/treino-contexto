@@ -7,8 +7,8 @@ links: [[decisoes/0004-contrato-tela-evolucao]], [[decisoes/0007-clima-da-ativid
 ---
 # ADR: 0013 Feedback automático por treino (pacote de fatos, guarda, camada de LLM, checagens)
 
-> **Proposta** (issue #322). Falta: o "ok" do Theo ao modelo de dados (item 2), a revisão da Duda (modelo e camada de LLM) e a leitura
-> dos **6 exemplos de tom** pelo Angelo, na seção "Exemplos sintéticos de feedback" logo abaixo, **antes** de qualquer código do feedback (#327).
+> **Proposta** (issue #322). **Modelo de dados aprovado pelo Theo em 10/11** (PR #340; item 2, com a ordem da fila do worker). Falta: a revisão da Duda na camada de LLM (item 3) e a leitura
+> dos **6 exemplos de tom** pelo Angelo, com as respostas dele aos itens 1, 2 e 9 de "A confirmar", na seção "Exemplos sintéticos de feedback" logo abaixo, **antes** de qualquer código do feedback (#327).
 > **Nenhuma linha de código nem migração muda neste PR.** Todos os números, textos e exemplos são **sintéticos**. Check-in e feedback são
 > dado pessoal e de saúde: nada de check-in, pacote de fatos ou texto de feedback real no repositório, em log ou em captura.
 > Fecha também, para a spec do cartão (PR #338, #329), a forma do campo `feedback`, quando o feedback é gerado e se existe "sem feedback possível" (item 2).
@@ -267,7 +267,9 @@ a linha de base).
 uma falha de rede, de limite ou do provedor no caminho dos 3 toques (o check-in é "o produto" e não pode falhar por causa do texto); o `PUT` ficaria não determinístico e difícil de testar sem rede;
 e o limite de chamadas por execução (decisão 4) só se controla num ponto único, o worker. **Custo aceito:** no piloto local o estado `pendente` **dura até alguém rodar o worker** (um comando:
 `uv run python -m worker.gerar_feedback --atleta "<nome>"`), e o botão "Atualizar" do cartão basta, sem busca automática. Um gatilho de fundo depois do `PUT` fica para depois ("A confirmar", item 9).
-Gera **só para atividade com check-in**. Entram na fila, nesta ordem (mais recentes primeiro): check-ins **sem linha** de feedback; linhas `sem_feedback` (nova tentativa, decisão 8); linhas **desatualizadas**.
+Gera **só para atividade com check-in**. Entram na fila check-ins **sem linha** de feedback, linhas `sem_feedback` (nova tentativa, decisão 8) e linhas **desatualizadas**. **Ordem da fila de cada execução (Theo, 10/11):** primeiro quem
+**nunca foi tentado** (sem linha, e o check-in editado, que volta a `tentativas = 1`); depois os demais **por menos `tentativas`** (empate: o mais recente primeiro). Assim um treino que sempre reprova não gasta o limite por execução dos outros.
+Não há teto de tentativas.
 Idempotente: rodar de novo sem mudança nova não faz nenhuma chamada.
 
 **Quando fica desatualizado.** Quando `feedback_treino.checkin_atualizado_em <> checkin_treino.atualizado_em` (o check-in foi editado, inclusive um `PUT`
@@ -405,10 +407,10 @@ Regra própria do projeto, sem artigo: o pacote de fatos, as checagens, a lista 
 Cada item tem o **padrão** que vale se o Angelo disser "ok" sem mudança.
 1. **A "observação positiva" é obrigatória?** O plano (seção 4.6) a pede em todo texto. **Padrão:** só quando um fato do pacote a sustenta (por exemplo, métricas dentro do normal); sem fato, o texto não tem elogio. É o que os exemplos 4 e 5 mostram. *Angelo.*
 2. **Clima e check-in podem ser ligados com "possível"?** (por exemplo, "o calor possível pesou"). **Padrão:** não: lado a lado, sem ligação (exemplo 4); a ligação entra com o motor de explicação, em outra meta. *Angelo.*
-3. **Tempo limite e limite de chamadas.** **Padrão:** 20 s por chamada e 20 chamadas por execução, ajustáveis pelo `.env` ou por `--limite`; os números do plano gratuito do Groq são conferidos na #326. *Theo e Duda.*
-4. **Quantas vezes tentar de novo.** **Padrão:** sem teto: a cada execução, uma nova tentativa para cada `sem_feedback` (decisão 8), contida só pelo limite por execução; o `--refazer` força. Um teto (por exemplo, 3 tentativas seguidas) evitaria gastar chamadas com um texto que sempre reprova. *Theo.*
+3. **Tempo limite e limite de chamadas** (**Theo aprovou em 10/11**). **Padrão:** 20 s por chamada e 20 chamadas por execução, ajustáveis pelo `.env` ou por `--limite`; os números do plano gratuito do Groq são conferidos na #326. *Theo e Duda.*
+4. **Quantas vezes tentar de novo** (**Theo aprovou em 10/11**: sem teto, com a fila por menos `tentativas`). **Padrão:** sem teto: a cada execução, uma nova tentativa para cada `sem_feedback` (decisão 8), contida só pelo limite por execução; o `--refazer` força. Um teto (por exemplo, 3 tentativas seguidas) evitaria gastar chamadas com um texto que sempre reprova. *Theo.*
 5. **Quão estrita é a checagem de unidade.** **Padrão:** número e unidade juntos ("5:44/km" não vira "5:44 bpm"); número solto (sem unidade) só passa se for um valor do pacote. A regra fina fica para a #325. *Caio.*
-6. **Reimportação da atividade e feedback.** **Padrão:** o feedback **não** é refeito sozinho (descreve o treino na hora em que foi gerado); `--refazer` o refaz. A alternativa (comparar uma impressão do pacote) custa uma coluna a mais. *Theo e Duda.*
+6. **Reimportação da atividade e feedback** (**Theo aprovou em 10/11**). **Padrão:** o feedback **não** é refeito sozinho (descreve o treino na hora em que foi gerado); `--refazer` o refaz. A alternativa (comparar uma impressão do pacote) custa uma coluna a mais. *Theo e Duda.*
 7. **Tamanho do texto.** **Padrão:** 3 a 5 linhas, até 140 caracteres por linha, até 700 no total (o `CHECK` da coluna). *Caio.*
 8. **O provedor falso aparece na API?** **Padrão:** sim, como `origem = teste` (a API não manda nome de provedor nem de modelo), para um texto de teste nunca passar por texto de verdade; o cartão pode mostrar um selo "de teste" (Lia, #329). *Theo e Lia.*
 9. **Gerar também depois do `PUT`, em segundo plano.** **Padrão:** não; só o worker (item 2). No piloto local o `pendente` dura até alguém rodar o comando. Se isso incomodar o Angelo, a alternativa é um gatilho de fundo depois do `PUT`
@@ -417,4 +419,5 @@ Cada item tem o **padrão** que vale se o Angelo disser "ok" sem mudança.
 
 ## Data e quem decidiu
 2026-11-10. Proposta do Caio (ciência), com revisão da Duda (modelo de dados e camada de LLM) pedida no PR. Decisões do Angelo de 10/11 ("ok para as oito", com o esclarecimento do item 6) no Contexto. Issue #322.
-Modelo de dados: aguarda o "ok" do Theo. Exemplos de tom: aguardam a leitura do Angelo. Status `proposta`; passa a `aceita` com os dois.
+Modelo de dados: **aprovado pelo Theo em 2026-11-10** (comentário no PR #340: FK em `checkin_id`, desatualizado pelo `atualizado_em` e por `versao_fatos`, só o worker gera, sem teto de tentativas com a fila acima, 20 s e 20 chamadas, reimportação só com `--refazer`, cinco estados, sem `sem_fatos`).
+Exemplos de tom e itens 1, 2 e 9 de "A confirmar": aguardam o Angelo. Camada de LLM: aguarda a revisão da Duda. Status `proposta`; passa a `aceita` com essas duas respostas.
