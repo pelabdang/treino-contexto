@@ -1,0 +1,45 @@
+---
+tipo: metrica
+status: rascunho
+dono: caio
+atualizado: 2026-11-10
+links: [[decisoes/0013-feedback-automatico]], [[decisoes/0012-check-in-pos-treino]], [[metricas/linha-base]], [[metricas/carga-pse]], [[metricas/carga-pse-oraculo]], [[produto/roadmap]], [[glossario]]
+---
+# Pacote de fatos `fatos_treino@1`: fixtures e oráculo
+
+## O que é
+O pacote de fatos esperado (ADR 0013, item 1) para **10 treinos sintéticos**, escrito **à mão**, e a conferência de que ele é coerente com o que o código **já calcula**.
+É o oráculo que a função pura do pacote (#324) vai reproduzir. Nenhum número vem de IA nem de dado real, e **nenhum check-in é real**. Rascunho: vira "em-uso" quando a #324 existir.
+Esta nota cobre a parte que **não depende do tom**. Os textos bons e ruins das checagens (#325) esperam a resposta do Angelo aos exemplos de tom da ADR 0013 e ficam para outro commit.
+
+Arquivos: `tests/fixtures/meta9/oraculo.py` (entradas, pacotes esperados e as contas à mão da linha de base) e `tests/test_fixtures_meta9.py`.
+O teste **não** roda a função do pacote (ainda não existe): confere o oráculo contra `linha_base@2`, `carga_pse@1`, os formatos de texto da API e as regras do que nunca vai ao provedor.
+
+## Casos
+| Caso | O que cobre |
+|---|---|
+| F01 | corrida leve, as três métricas **dentro** do normal (exemplo 1 da ADR) |
+| F02 | intervalado, melhor pace **fora** (4:22/km contra a mediana de 4:09/km, 13 s/km mais lento, z = 2,61), com 5 tiros de 1 km (exemplo 2) |
+| F03 | moderado com linha de base **aprendendo** (3 de 8 treinos) e o atalho sono ruim (exemplo 3) |
+| F04 | longo com **calor** (33 °C, sensação 37 °C) e atalhos calor e cansaço; pace e FC **fora** (exemplo 4) |
+| F05 | leve com o atalho **dor** e **texto livre** com marcador sintético; carga do relógio ainda pendente (exemplo 5) |
+| F06 | **natação** sem tipo: `sem_linha_base`, `sem_carga`, carga pela PSE de 200 UA, sem clima (exemplo 6) |
+| F07 | corrida **sem check-in**: sem pacote |
+| F08 | pai do multiesporte: **não elegível**, sem pacote |
+| F09 | **esteira**: clima `indoor`, pace médio `sem_valor` (esteira) |
+| F10 | ciclismo sem tipo, clima e carga **pendentes**, PSE 0 (0 UA) |
+
+Cada caso traz o histórico da janela de 12 semanas (um treino por semana), o valor da sessão e as contas. A conta de cada métrica está nos comentários de
+`LINHA_BASE_ESPERADA` (mediana, MAD, desvio com o piso de 2% da mediana, z e o corte de 2,5). Exemplo, F04 pace: mediana 342 s/km, MAD 2 (1,4826 x 2 = 2,97), piso 0,02 x 342 = 6,84, desvio 6,84;
+valor 5400/15000 x 1000 = 360; z = 18/6,84 = 2,63, **fora**.
+
+## O que o teste confere
+- Os 10 casos cobrem o que a #323 pede (sem check-in, aprendendo, fora, com e sem clima, natação, dor).
+- As chaves de cada bloco do pacote são as do ADR 0013, na ordem, com `null` no lugar do que falta.
+- **Nunca no pacote:** o texto livre (o marcador sintético não aparece), chaves de identificador, nome, data, posição ou professor, e nenhuma data nem hora real.
+- A linha de base do pacote bate com `linha_base@2` (estado e `n` de cada métrica) e as contas à mão (mediana, desvio, z) com tolerância de 0,005.
+- Os `*_texto` são os mesmos formatos da API (pace, FC, carga por hora, diferença, duração, distância, UA, âncoras da PSE e da sensação).
+- A carga pela PSE do pacote é a da `carga_pse@1`; pai do multiesporte e atividade sem check-in não têm pacote.
+
+## Ajuste na ADR 0013 vindo daqui
+O exemplo 2 da ADR tinha 4:21/km (12 s/km): com o piso de 2% da mediana o z dava 2,41 e a métrica ficaria **dentro**. Passou a 4:22/km, 13 s/km (z = 2,61), que é **fora** de verdade.
