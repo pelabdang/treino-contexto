@@ -1,13 +1,13 @@
 ---
 tipo: decisao
-status: proposta
+status: aceita
 dono: caio
-atualizado: 2026-11-09
+atualizado: 2026-11-10
 links: [[decisoes/0003-fuso-da-atividade]], [[decisoes/0004-contrato-tela-evolucao]], [[decisoes/0009-treino-de-transicao]], [[decisoes/0010-carga-de-treino]], [[decisoes/0011-linha-de-base-e-semana-padrao]], [[metricas/carga-treino]], [[modulos/banco]], [[modulos/api]], [[produto/roadmap]], [[produto/plano-mvp-execucao]], [[glossario]]
 ---
 # ADR: 0012 Check-in pós-treino (PSE, sensação, observação) e `carga_pse@1`
 
-> Proposta de 09/11 (issue #293). Fica "aceita" quando o Theo aprovar o modelo de dados no PR e o Angelo responder a seção "A confirmar".
+> Aceita em 10/11 (issue #293): modelo de dados aprovado pelo Theo no PR #305 e os cinco itens de "A confirmar" respondidos pelo Angelo ("ok para as cinco": valem os padrões).
 > **Nenhuma linha de código nem migração muda neste PR.** Todos os números e exemplos são sintéticos. Check-in é dado pessoal e de
 > saúde: nada de check-in real em repositório, log ou captura.
 > Dá base para #294 (fixtures e oráculo), #295 (desenho da tela), #296 (banco, migração 0012 e API), #297 (`carga_pse@1`),
@@ -302,8 +302,8 @@ Citações **ainda não conferidas nos textos**; o Caio abre cada uma antes de a
 - Regra própria do projeto, sem artigo: 3 toques, os 5 níveis de sensação, os cinco atalhos, o limite de 500 caracteres e o prazo de 7 dias
   (decisões do Angelo de 09/11 e propostas desta ADR).
 
-## A confirmar
-Para o Angelo; só o que é de produto e ainda não está decidido. Cada item traz **o padrão que o time segue enquanto não houver resposta**.
+## A confirmar (respondido em 10/11)
+O Angelo aceitou os cinco padrões abaixo em 10/11 ("ok para as cinco"). Eles valem como decisão.
 
 1. **Prazo para registrar.** Até quando o atleta pode fazer o check-in de um treino. **Padrão:** até 7 dias depois do treino (a mesma
    janela da lista de pendentes); editar e apagar, sem prazo.
@@ -318,4 +318,4 @@ Para o Angelo; só o que é de produto e ainda não está decidido. Cada item tr
 
 ## Data e quem decidiu
 2026-11-09. Proposta do Caio (ciência), com revisão da Duda (modelo de dados e API) pedida no PR. Decisões do Angelo de 09/11 ("ok para as
-cinco") no Contexto. Issue #293. Aprovação do Theo e respostas do Angelo ainda pendentes.
+cinco") no Contexto. Issue #293. Modelo de dados aprovado pelo Theo no PR #305. Aceita em 2026-11-10, com os cinco itens de "A confirmar" respondidos pelo Angelo.
