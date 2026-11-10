@@ -94,7 +94,7 @@ a identidade de quem grava (Meta 10).
 
 **Pendências que viram candidatas** (ver [[produto/roadmap]], "Candidatas sem número"):
 - **Capturas do check-in no tema escuro e nos estados de erro** (rafa-app, com a Lia): item 4, não bloqueante, da revisão da Lia no #313.
-  Proposta como paralela da Meta 9.
+  Aberta como paralela da Meta 9 (#334).
 - **"Salvar alterações" desligado sem dizer por quê** na edição (item 5 da revisão da Lia; aceito como está).
 - **`carga_pse@2` pelo tempo total** (caio-ciencia): a `carga_pse@1` usa o cronômetro; o tempo corrido não é gravado na importação.
 - **Série diária da carga pela PSE e comparação com a `carga@2`** (caio-ciencia).
@@ -135,12 +135,12 @@ Detalhes na [[decisoes/0012-check-in-pos-treino]], seção "Limitações", e em 
   na próxima meta, marcar a sessão com ele junto da QA, e não depois.
 
 ## PRECISA DO ANGELO
-- **Abrir a tela de check-in no celular** (Expo Go, rede de casa, dado sintético), uma vez. Pendente da Meta 8; proposta: fazer junto com
-  o cartão de feedback da Meta 9, numa só sessão.
+- **Abrir a tela de check-in no celular** (Expo Go, rede de casa, dado sintético), uma vez. Pendente da Meta 8; decidido pelo Angelo em
+  10/11: junto com o cartão de feedback, na QA da Meta 9 (#332), numa só sessão.
 - **Informação, sem decisão:** o caminho mínimo do check-in ("Nada a relatar") fecha em 3 toques; com atalho ou texto são 4, para permitir
   marcar vários atalhos (Theo, 09/11).
-- **Meta 9 (feedback automático por treino):** proposta no [[produto/roadmap]], com as decisões em "PRECISA DO ANGELO". Nenhuma issue
-  aberta antes da resposta.
+- **Meta 9 (feedback automático por treino):** respondida em 10/11 ("ok" às oito decisões; o feedback é texto, sem áudio). Issues #322 a
+  #335; ver [[produto/roadmap]].
 
 ## Resultado
 **Meta 8 feita.** Com fixtures sintéticas, o atleta registra o check-in de um treino em 3 toques (PSE, sensação e observação, com "nada a
@@ -148,4 +148,4 @@ relatar"), edita e apaga; a API devolve o check-in, a carga pela PSE (`carga_pse
 aberto e a lista de pendentes dos últimos 7 dias; o check-in segue a regra do dado de saúde e tem comando para apagar. Não verificado: a
 tela num celular de verdade.
 
-Próxima: Meta 9, feedback automático por treino (proposta, esperando o Angelo; [[produto/roadmap]]).
+Próxima: Meta 9, feedback automático por treino (em curso desde 10/11; [[produto/roadmap]]).
