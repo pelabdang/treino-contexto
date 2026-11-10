@@ -326,7 +326,7 @@ export function TelaCheckin({ apiUrl, atletaId, atividadeId, aoVoltar, aoConclui
               Check-in salvo
             </Text>
             <Resumo checkin={salvo} styles={styles} />
-            <Pressable accessibilityRole="button" onPress={() => (aoConcluir ?? aoVoltar)?.()} style={styles.botaoPrimario}>
+            <Pressable accessibilityRole="button" onPress={() => (aoConcluir ?? aoVoltar)?.()} style={[styles.botaoPrimario, { alignSelf: "stretch" }]}>
               <Text style={styles.botaoPrimarioTexto}>{origem === "pendentes" ? "Voltar aos pendentes" : "Voltar ao treino"}</Text>
             </Pressable>
           </View>
@@ -345,7 +345,7 @@ export function TelaCheckin({ apiUrl, atletaId, atividadeId, aoVoltar, aoConclui
                 </View>
               )}
               <Text style={styles.rotulo}>
-                {atividade.duracao} · {dataCurta(atividade.data_local)}
+                {Math.round(atividade.duracao_s / 60)} min · {dataCurta(atividade.data_local)}
               </Text>
             </View>
 
@@ -439,10 +439,10 @@ function Resumo({ checkin, styles }: { checkin: Checkin; styles: Estilos }) {
   const o = observacaoDoCheckin(checkin);
   return (
     <View style={styles.resumo}>
-      <Text style={styles.corpo}>Esforço (PSE): {pseDoCheckin(checkin)}</Text>
-      <Text style={styles.corpo}>Sensação: {checkin.sensacao_texto}</Text>
-      <Text style={styles.corpo}>Observação: {o.linha}</Text>
-      {o.texto ? <Text style={styles.secundario}>{o.texto}</Text> : null}
+      <Text style={[styles.corpo, styles.centro]}>Esforço (PSE): {pseDoCheckin(checkin)}</Text>
+      <Text style={[styles.corpo, styles.centro]}>Sensação: {checkin.sensacao_texto}</Text>
+      <Text style={[styles.corpo, styles.centro]}>Observação: {o.linha}</Text>
+      {o.texto ? <Text style={[styles.secundario, styles.centro]}>{o.texto}</Text> : null}
     </View>
   );
 }
@@ -767,7 +767,8 @@ function criarEstilos({ cor }: Tema, margem: number = espaco[4]) {
     pergunta: { ...fonte["titulo-secao"], color: cor.texto, marginTop: espaco[3] },
     estado: { alignItems: "center", paddingVertical: espaco[7], gap: espaco[3] },
     erroTexto: { ...fonte.corpo, color: cor.erro, textAlign: "center" },
-    resumo: { alignSelf: "stretch", gap: espaco[1] },
+    centro: { textAlign: "center" },
+    resumo: { alignSelf: "stretch", gap: espaco[1], alignItems: "center" },
     aviso: {
       flexDirection: "row",
       alignItems: "center",

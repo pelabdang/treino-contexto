@@ -69,7 +69,7 @@ describe("tela de check-in: criar", () => {
     await pergunta1();
     expect(screen.getByText("Check-in do treino")).toBeTruthy();
     expect(screen.getByText("Pergunta 1 de 3")).toBeTruthy();
-    expect(screen.getByText("0:52:05 · 18/03/25")).toBeTruthy();
+    expect(screen.getByText("52 min · 18/03/25")).toBeTruthy();
     expect(screen.getByText("Corrida")).toBeTruthy();
     for (let n = 0; n <= 10; n++) expect(screen.getByTestId(`pse-${n}`)).toBeTruthy();
     expect(screen.getByLabelText("PSE 5, difícil")).toBeTruthy();

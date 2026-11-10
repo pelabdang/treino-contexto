@@ -101,7 +101,7 @@ export function CartoesCheckin({ atividade, apiUrl, atletaId, aoFazerCheckin, ao
               <MaterialIcons name="assignment" size={tamanho.iconeMedio} color={tema.cor.texto} accessible={false} />
               <Text style={styles.notaTexto}>Você ainda não fez o check-in deste treino.</Text>
             </View>
-            {carga?.estado === "sem_checkin" && <Text style={styles.secundario}>{carga.texto}</Text>}
+            {atividade.checkin_aberto && carga?.estado === "sem_checkin" && <Text style={styles.secundario}>{carga.texto}</Text>}
             {atividade.checkin_aberto ? (
               <Pressable testID="fazer-checkin" accessibilityRole="button" onPress={aoFazerCheckin} style={styles.botaoPrimario}>
                 <Text style={styles.botaoPrimarioTexto}>Fazer check-in</Text>

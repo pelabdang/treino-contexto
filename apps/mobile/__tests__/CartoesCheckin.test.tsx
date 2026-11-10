@@ -58,6 +58,7 @@ describe("cartão Check-in na tela do treino", () => {
     expect(within(aviso).getByText("info-outline:20")).toBeTruthy();
     expect(within(aviso).getByText("O prazo para fazer o check-in deste treino acabou (7 dias depois do treino).")).toBeTruthy();
     expect(within(cartao).queryByText("Fazer check-in")).toBeNull();
+    expect(within(cartao).queryByText(/Sem check-in: a carga/)).toBeNull();
   });
 
   it.each(["multiesportePai", "troca"] as const)("%s sem check-in e sem prazo: o cartão não aparece", async (chave) => {
