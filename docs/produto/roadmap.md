@@ -609,7 +609,7 @@ Revisadas ao fim de cada meta com o que se aprendeu. Ordem tirada da "Fundação
   | P8 | Desenho do cartão de feedback na tela do treino | lia-design | P1 (rascunha pelo plano) | spec com os estados, claro e escuro, sem juízo de valor visual; dúvidas para o Theo antes da tela |
   | P9 | Cartão de feedback no app | rafa-app (revisão da Lia) | P7, P8 | teste de componente por estado; nada do texto em log ou armazenamento; design-ok |
   | P10 | Documentação, guia `meta-9-como-rodar` e diário | nina-docs | P7, P9 | guia rodado num clone limpo com o provedor falso; notas de módulo e métrica |
-  | P11 | QA de ponta a ponta com fixtures, e o celular com o Angelo | bia-qa | P10 | e2e da meta; guia seguido do zero; sessão no celular marcada com o Angelo durante a QA, não depois |
+  | P11 | QA de ponta a ponta com fixtures, e o celular com o Angelo | bia-qa | P10 | e2e da meta; guia seguido do zero; sessão no celular marcada com o Angelo durante a QA, não depois: ele abre o check-in (pendente da Meta 8, #301) e o cartão de feedback |
   | P12 | Resultado da meta e roteiro | paulo-planejador | P11 | nota da meta e roteiro atualizados |
 
   **Ordem:** P1 na largada (Caio, com a Duda no modelo); P2 e P8 adiantam em paralelo; P5 começa assim que o Theo aprovar a
@@ -659,7 +659,7 @@ Revisadas ao fim de cada meta com o que se aprendeu. Ordem tirada da "Fundação
 - **Motivo de falta** (depois da Meta 8): com a semana-padrão já dá para saber qual treino planejado não aconteceu.
 - **Hífen sem quebra no estado vazio da tela da semana-padrão** (rafa-app): feita na #303 (PR #304), paralela da Meta 8.
 - **App em celular:** nenhuma tela foi aberta num iOS ou Android até a Meta 8; estava no critério da Meta 8 (#301) e não foi
-  feito. Proposta: o Angelo abre o check-in e o cartão de feedback numa só sessão, durante a QA da Meta 9.
+  feito. Decidido pelo Angelo em 10/11: ele abre o check-in e o cartão de feedback numa só sessão, durante a QA da Meta 9 (P11).
 - **Capturas do check-in no tema escuro e nos estados de erro** (rafa-app, com a Lia): item 4 da revisão da Lia no #313;
   proposta como paralela P13 da Meta 9.
 - **`carga_pse@2` pelo tempo total** (caio-ciencia, com a Duda): a `carga_pse@1` usa o cronômetro; pediria gravar o tempo
@@ -738,7 +738,8 @@ stack Expo). A chave do provedor de LLM foi entregue e está no `.env` (fora do 
 
 Em aberto:
 1. **Meta 8, o celular (#301), ainda não feito:** o Angelo abre a tela de check-in no celular dele (Expo Go, rede de casa,
-   dado sintético) uma vez. **Padrão sugerido:** fazer na QA da Meta 9, junto com o cartão de feedback, numa só sessão.
+   dado sintético) uma vez. **Decidido pelo Angelo em 10/11:** entra na Meta 9, na QA (P11), junto com o cartão de feedback,
+   numa só sessão.
    Informação, sem decisão: o caminho mínimo do check-in fecha em 3 toques; com atalho ou texto são 4 (Theo, 09/11).
 2. **Meta 9 (feedback automático por treino): proposta, esperando resposta.** Cada item com o padrão que o time segue se o
    Angelo disser "ok":
