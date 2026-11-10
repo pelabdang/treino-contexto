@@ -225,7 +225,7 @@ def test_carga_pse_do_get_igual_ao_oraculo(client, banco, chave):
 
 @pytest.mark.parametrize("chave,valor_texto,texto", [
     ("2026-11-09/cor2", "270 UA", "Carga pela PSE: 6 x 45 min = 270 UA."),
-    ("2026-11-07/cor1", "272,5 UA", "Carga pela PSE: 6 x 45,4 min = 272,5 UA."),  # 1 casa quando nao e inteiro
+    ("2026-11-07/cor1", "272,5 UA", "Carga pela PSE: 6 x 45 min 25 s = 272,5 UA."),  # 2725 s: minutos e segundos quando nao e inteiro
     ("2026-11-08/nat1", "160 UA", "Carga pela PSE: 4 x 40 min = 160 UA."),  # natacao tem carga pela PSE
     ("2026-11-08/cic1", "350 UA", "Carga pela PSE: 7 x 50 min = 350 UA."),
     ("2026-11-06/out1", "0 UA", "Carga pela PSE: 0 x 30 min = 0 UA."),  # PSE 0 vale
