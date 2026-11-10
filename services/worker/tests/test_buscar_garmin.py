@@ -4,7 +4,9 @@ Nenhum teste entra em conta nenhuma. A guarda de socket derruba qualquer tentati
 """
 
 import io
+import json
 import os
+import stat
 import socket
 import subprocess
 import sys
@@ -132,8 +134,13 @@ class Falso:
 
 
 def rodar(factory, cliente, pasta, *args):
+    env = {"GARMINTOKENS": str(pasta.parent / "garmin" / "token")}  # nunca a pasta real do repositorio
     return main(["--atleta", "Atleta Ficticio", "--sem-clima", *args], cliente=cliente, session_factory=factory,
-                hoje=HOJE, fit_dir=pasta)
+                hoje=HOJE, fit_dir=pasta, env=env)
+
+
+def _ids(pasta):
+    return pasta.parent / "garmin" / "ids-atleta-1.json"
 
 
 def _n(engine):
@@ -183,6 +190,7 @@ def test_atividade_ja_enviada_por_upload_nao_e_baixada(engine, factory, atleta, 
 def test_baixada_que_ja_existe_nao_duplica(engine, factory, atleta, pasta):
     """Sem `startTimeGMT` o pre-filtro nao age; o `importar_fit` reconhece a atividade e nao duplica."""
     rodar(factory, Falso(), pasta)
+    _ids(pasta).unlink()  # sem o arquivo de ids
     sem_hora = Falso({1001: (None, "upload_rodagem_6km.fit")})
     assert rodar(factory, sem_hora, pasta) == 0
     assert sem_hora.baixados == [1001] and _n(engine) == 2
@@ -204,38 +212,127 @@ def test_datas_invertidas(engine, factory, atleta, pasta):
     assert rodar(factory, Falso(), pasta, "--desde", "2025-04-03", "--ate", "2025-04-01") == 1
 
 
-# ---------- inicio da lista diferente do inicio do FIT (#342) ----------
+# ---------- inicio da lista distante do inicio do FIT (#342): ids do Garmin num arquivo local ----------
 
-@pytest.mark.parametrize("deslocamento_s", [300, -300, 600])
-def test_inicio_da_lista_deslocado_nao_baixa_de_novo(engine, factory, atleta, pasta, deslocamento_s):
-    """Reproduz a #342: a lista traz o inicio diferente do FIT em mais de 60 s; antes, baixava a cada rodada."""
-    rodar(factory, Falso({1001: (RODAGEM, "upload_rodagem_6km.fit")}), pasta)
+DISTANTE = timedelta(minutes=40)
+
+
+def _distante():
+    """Lista com o inicio 40 min distante do FIT: a regra dos 60 s nao reconhece."""
+    return Falso({1001: (RODAGEM + DISTANTE, "upload_rodagem_6km.fit", 2105.0)})
+
+
+def test_inicio_distante_baixa_na_1a_rodada_e_nao_na_2a(engine, factory, atleta, pasta, capsys):
+    primeira = _distante()
+    assert rodar(factory, primeira, pasta) == 0 and primeira.baixados == [1001] and _n(engine) == 1
+    capsys.readouterr()
+    segunda = _distante()
+    assert rodar(factory, segunda, pasta) == 0
+    assert segunda.baixados == [] and _n(engine) == 1
+    assert "ja_no_banco=1 inseridas=0" in capsys.readouterr().out
+
+
+def test_arquivo_de_ids_tem_so_o_par_e_permissao_0600(engine, factory, atleta, pasta):
+    rodar(factory, _distante(), pasta)
+    arq = _ids(pasta)
+    assert json.loads(arq.read_text()) == {"versao": 1, "ids": {"1001": 1}}
+    assert stat.S_IMODE(arq.stat().st_mode) == 0o600 and stat.S_IMODE(arq.parent.stat().st_mode) == 0o700
+    assert not list(arq.parent.glob("*.tmp"))
+
+
+def test_ja_existente_baixada_tambem_registra_o_par(engine, factory, atleta, pasta):
+    """Atividade que ja estava no banco (por upload) e foi baixada (ignorada) entra no arquivo: a proxima nao baixa."""
     with Session(engine) as s:
-        dur = s.scalar(select(Atividade.duracao_s))
-    deslocada = Falso({1001: (RODAGEM + timedelta(seconds=deslocamento_s), "upload_rodagem_6km.fit", dur)})
-    assert rodar(factory, deslocada, pasta) == 0
-    assert deslocada.baixados == [] and _n(engine) == 1
+        importar_fit(s, s.scalar(select(Atleta.id)), (FITS / "upload_rodagem_6km.fit").read_bytes(), pasta)
+    assert rodar(factory, _distante(), pasta) == 0
+    assert json.loads(_ids(pasta).read_text())["ids"] == {"1001": 1}
+    outra = _distante()
+    rodar(factory, outra, pasta)
+    assert outra.baixados == [] and _n(engine) == 1
 
 
-def test_sem_duracao_na_lista_o_deslocado_ainda_baixa_mas_nao_duplica(engine, factory, atleta, pasta, capsys):
+def test_arquivo_de_ids_apagado_baixa_e_nao_duplica(engine, factory, atleta, pasta, capsys):
+    rodar(factory, _distante(), pasta)
+    _ids(pasta).unlink()
+    capsys.readouterr()
+    de_novo = _distante()
+    assert rodar(factory, de_novo, pasta) == 0
+    assert de_novo.baixados == [1001] and _n(engine) == 1
+    assert "aviso: arquivo de ids" not in capsys.readouterr().out  # ausente e caso normal
+    assert _ids(pasta).is_file()  # refeito
+
+
+def test_atividade_apagada_do_banco_baixa_de_novo(engine, factory, atleta, pasta):
+    rodar(factory, _distante(), pasta)
+    with Session(engine) as s:
+        s.delete(s.scalars(select(Atividade)).one())
+        s.commit()
+    de_novo = _distante()
+    assert rodar(factory, de_novo, pasta) == 0
+    assert de_novo.baixados == [1001] and _n(engine) == 1
+
+
+@pytest.mark.parametrize("conteudo", ["isto nao e json", '{"versao": 9, "ids": {}}', '{"versao": 1, "ids": [1]}',
+                                      '{"versao": 1, "ids": {"x": "y"}}', "[]"])
+def test_arquivo_corrompido_avisa_baixa_e_nao_duplica(engine, factory, atleta, pasta, capsys, conteudo):
+    rodar(factory, _distante(), pasta)
+    _ids(pasta).write_text(conteudo)
+    capsys.readouterr()
+    de_novo = _distante()
+    assert rodar(factory, de_novo, pasta) == 0  # nunca erro
+    saida = capsys.readouterr().out
+    assert "aviso: arquivo de ids do Garmin corrompido" in saida and conteudo not in saida
+    assert de_novo.baixados == [1001] and _n(engine) == 1
+    assert json.loads(_ids(pasta).read_text())["ids"] == {"1001": 1}  # refeito
+
+
+def test_id_de_atividade_de_outro_atleta_nao_vale(engine, factory, atleta, pasta):
+    with Session(engine) as s:
+        s.add(Atleta(nome="Outra Atleta"))
+        s.commit()
+    rodar(factory, _distante(), pasta)
+    with Session(engine) as s:  # o par aponta para uma atividade que passou a ser de outro atleta
+        s.scalars(select(Atividade)).one().atleta_id = 2
+        s.commit()
+    de_novo = _distante()
+    rodar(factory, de_novo, pasta)
+    assert de_novo.baixados == [1001]
+
+
+def test_conteudo_do_arquivo_de_ids_nao_vai_para_a_saida(engine, factory, atleta, pasta, capsys, caplog):
+    with caplog.at_level("DEBUG"):
+        rodar(factory, _distante(), pasta)
+        rodar(factory, _distante(), pasta)
+    saida = capsys.readouterr()
+    visto = saida.out + saida.err + caplog.text
+    assert "1001" not in visto and "ids-atleta" not in visto
+
+
+def test_sem_arquivo_e_sem_inicio_proximo_baixa_nao_duplica_e_diagnostico_so_em_numeros(
+        engine, factory, atleta, pasta, capsys):
     rodar(factory, Falso({1001: (RODAGEM, "upload_rodagem_6km.fit")}), pasta)
+    _ids(pasta).unlink()
     sem = Falso({1001: (RODAGEM + timedelta(seconds=300), "upload_rodagem_6km.fit")})
     assert rodar(factory, sem, pasta) == 0
     assert sem.baixados == [1001] and _n(engine) == 1
-    assert "inicio da lista +300 s do FIT" in capsys.readouterr().out  # diagnostico: so numeros
+    assert "inicio da lista +300 s do FIT" in capsys.readouterr().out
 
 
-def test_atividade_diferente_nao_e_confundida(engine, factory, atleta, pasta):
+def test_fit_guardado_ausente_conta_atualizada_mas_so_regrava_o_arquivo(engine, factory, atleta, pasta, capsys):
+    """Por que `atualizadas=1` aparece: o FIT guardado nao esta em `FIT_DIR` (por exemplo, outro repositorio ou worktree).
+    So o arquivo e regravado; a atividade no banco nao muda."""
     rodar(factory, Falso({1001: (RODAGEM, "upload_rodagem_6km.fit")}), pasta)
     with Session(engine) as s:
-        dur = s.scalar(select(Atividade.duracao_s))
-    # outra atividade logo depois (mesma duracao, sem sobreposicao) e uma curta dentro da primeira (como uma filha)
-    outra = Falso({
-        1002: (RODAGEM + timedelta(seconds=dur + 600), "upload_intervalado_5x1km.fit", dur),
-        1003: (RODAGEM + timedelta(seconds=600), "upload_esteira_4x1km.fit", dur / 5),
-    })
-    assert rodar(factory, outra, pasta) == 0
-    assert sorted(outra.baixados) == [1002, 1003]
+        antes = [(a.id, a.arquivo_bruto, a.inicio, a.duracao_s, a.tipo_treino, len(a.segmentos)) for a in s.scalars(select(Atividade))]
+    for f in pasta.rglob("*.fit"):
+        f.unlink()
+    _ids(pasta).unlink()
+    capsys.readouterr()
+    assert rodar(factory, Falso({1001: (RODAGEM + DISTANTE, "upload_rodagem_6km.fit")}), pasta) == 0
+    assert "atualizadas=1" in capsys.readouterr().out
+    with Session(engine) as s:
+        depois = [(a.id, a.arquivo_bruto, a.inicio, a.duracao_s, a.tipo_treino, len(a.segmentos)) for a in s.scalars(select(Atividade))]
+    assert depois == antes and list(pasta.rglob("*.fit"))
 
 
 # ---------- erros do Garmin viram mensagem e codigo ----------
