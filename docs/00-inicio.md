@@ -33,6 +33,7 @@ App de análise de treinos com contexto (corrida, natação, ciclismo) para atle
 - [[produto/meta-5-como-rodar]]: esforços, série `tiros_1km@5`, treino de transição e multiesporte com as fixtures, e o app com a API falsa
 - [[produto/meta-6-como-rodar]]: carga de treino com as fixtures: saúde da exportação, `calcular_carga`, API, gráfico e conferência com o Garmin
 - [[produto/meta-7-como-rodar]]: semana-padrão, tipo de treino e linha de base com as fixtures: Postgres próprio, API, tela, `reclassificar` e a `linha_base` no `GET` da atividade
+- [[produto/meta-8-como-rodar]]: check-in pós-treino e carga pela PSE com as fixtures: Postgres próprio, API, tela de 3 toques, pendentes e `worker.apagar_checkin` (nota da meta: [[produto/metas/meta-8-check-in]]; ADR 0012 ainda proposta)
 - [[produto/metas/meta-2-evolucao-tiros-app]]: nota da Meta 2
 - [[produto/metas/meta-3-upload-fit]]: nota da Meta 3 (upload de FIT): resultado, não verificados, achados e propostas
 - [[produto/metas/meta-4-clima-atividade]]: nota da Meta 4 (clima da atividade): resultado, não verificados, conclusão genérica da série de tiros, achados e propostas
