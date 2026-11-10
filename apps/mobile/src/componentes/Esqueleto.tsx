@@ -135,6 +135,41 @@ export function EsqueletoSemanaPadrao() {
   );
 }
 
+/** Esqueleto do check-in: cabeçalho, progresso e a grade de opções. Só decorativo. */
+export function EsqueletoCheckin() {
+  const { styles, opacidade, barra } = useBase();
+  return (
+    <Animated.View
+      testID="esqueleto-checkin"
+      accessibilityElementsHidden
+      importantForAccessibility="no-hide-descendants"
+      style={{ opacity: opacidade }}
+    >
+      <View style={styles.cartao}>
+        {barra("50%", 24)}
+        {barra("40%", 20)}
+        {barra("30%", 16)}
+        {[0, 1, 2].map((i) => barra("100%", 52, `o${i}`))}
+      </View>
+    </Animated.View>
+  );
+}
+
+/** Esqueleto da lista de pendentes: três linhas. Só decorativo. */
+export function EsqueletoPendentes() {
+  const { styles, opacidade, barra } = useBase();
+  return (
+    <Animated.View
+      testID="esqueleto-pendentes"
+      accessibilityElementsHidden
+      importantForAccessibility="no-hide-descendants"
+      style={{ opacity: opacidade }}
+    >
+      <View style={styles.cartao}>{[0, 1, 2].map((i) => barra("100%", 56, `p${i}`))}</View>
+    </Animated.View>
+  );
+}
+
 function criarEstilos({ cor }: Tema) {
   return StyleSheet.create({
     cartao: {

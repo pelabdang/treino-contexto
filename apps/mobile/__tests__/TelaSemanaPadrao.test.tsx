@@ -61,7 +61,7 @@ describe("tela da semana-padrão", () => {
   describe("carregando", () => {
     it("mostra o texto, o esqueleto e nenhum botão Salvar", async () => {
       await render(tela(jest.fn(() => new Promise<Response>(() => {})) as unknown as typeof fetch));
-      expect(screen.getByText("Carregando a semana-padrão...")).toBeTruthy();
+      expect(screen.getByText("Carregando a semana\u2011padrão...")).toBeTruthy();
       expect(screen.getByTestId("esqueleto-semana-padrao", { includeHiddenElements: true })).toBeTruthy();
       expect(screen.queryByTestId("salvar")).toBeNull();
     });
@@ -72,7 +72,11 @@ describe("tela da semana-padrão", () => {
       await render(tela(vazio()));
       const estado = await screen.findByTestId("estado-vazio");
       expect(within(estado).getByText("[event-note]")).toBeTruthy();
-      expect(within(estado).getByText("Você ainda não definiu sua semana-padrão")).toBeTruthy();
+      expect(within(estado).getByText("Você ainda não definiu sua semana\u2011padrão")).toBeTruthy();
+      // hífen sem quebra só no texto visível; o leitor de tela recebe o hífen comum
+      const titulo = within(estado).getByRole("header");
+      expect(titulo.props.accessibilityLabel).toBe("Você ainda não definiu sua semana-padrão");
+      expect(titulo.props.accessibilityLabel).not.toContain("\u2011");
       expect(screen.queryByTestId("salvar")).toBeNull();
     });
 
@@ -378,7 +382,8 @@ describe("tela da semana-padrão", () => {
 
     it("500: frase genérica", async () => {
       await render(tela(fetchRoteiro({ get: () => resposta(500, {}) })));
-      expect(await screen.findByText("Não foi possível carregar a semana-padrão. Tente de novo mais tarde.")).toBeTruthy();
+      expect(await screen.findByText("Não foi possível carregar a semana\u2011padrão. Tente de novo mais tarde.")).toBeTruthy();
+      expect(screen.getByRole("alert").props.accessibilityLabel).toBe("Não foi possível carregar a semana-padrão. Tente de novo mais tarde.");
     });
   });
 

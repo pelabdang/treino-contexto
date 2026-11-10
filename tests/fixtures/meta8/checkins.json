@@ -1,0 +1,73 @@
+{
+ "2026-11-09/cor1": {
+  "pse": 5,
+  "sensacao": 3,
+  "nada_a_relatar": true,
+  "atalhos": [],
+  "texto": null
+ },
+ "2026-11-09/cor2": {
+  "pse": 6,
+  "sensacao": 4,
+  "nada_a_relatar": false,
+  "atalhos": [
+   "cansaco",
+   "trabalho_estresse"
+  ],
+  "texto": "Semana puxada no trabalho."
+ },
+ "2026-11-08/nat1": {
+  "pse": 4,
+  "sensacao": 3,
+  "nada_a_relatar": true,
+  "atalhos": [],
+  "texto": null
+ },
+ "2026-11-08/cic1": {
+  "pse": 7,
+  "sensacao": 2,
+  "nada_a_relatar": false,
+  "atalhos": [
+   "calor"
+  ],
+  "texto": null
+ },
+ "2026-11-07/cor1": {
+  "pse": 6,
+  "sensacao": 2,
+  "nada_a_relatar": false,
+  "atalhos": [],
+  "texto": "Incômodo no fim do treino."
+ },
+ "2026-11-06/out1": {
+  "pse": 0,
+  "sensacao": 3,
+  "nada_a_relatar": true,
+  "atalhos": [],
+  "texto": null
+ },
+ "2026-11-03/nat1": {
+  "pse": 5,
+  "sensacao": 4,
+  "nada_a_relatar": true,
+  "atalhos": [],
+  "texto": null
+ },
+ "2026-11-03/cic1": {
+  "pse": 6,
+  "sensacao": 3,
+  "nada_a_relatar": false,
+  "atalhos": [
+   "dor",
+   "sono_ruim"
+  ],
+  "texto": null
+ },
+ "2026-10-15/cor1": {
+  "pse": 5,
+  "sensacao": 4,
+  "nada_a_relatar": true,
+  "atalhos": [],
+  "texto": null
+ }
+}

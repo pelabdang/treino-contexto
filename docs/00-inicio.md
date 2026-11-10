@@ -2,7 +2,7 @@
 tipo: mapa
 status: em-uso
 dono: nina
-atualizado: 2026-11-09
+atualizado: 2026-11-10
 ---
 # Treino Contexto: mapa do projeto
 
@@ -20,6 +20,7 @@ App de análise de treinos com contexto (corrida, natação, ciclismo) para atle
 - Time e papéis: [[time]]. A Lia (design) é dona de `docs/design/`; o guia visual, o tema do app e a tela com o melhor tiro estão no main (#192, #195 e #154)
 - Meta 6, parte técnica no `main` (08/11): carga de treino (rTSS e hrTSS por volta, `carga@2`; CTL, ATL e TSB, `serie_carga@1`), dados de saúde da exportação Garmin no banco, `GET /atletas/{id}/carga`, gráfico e conferência com o Garmin ([[decisoes/0010-carga-de-treino]], [[metricas/carga-treino]], [[metricas/serie-carga]], [[metricas/conferencia-carga]], [[modulos/grafico-carga]]). QA (#146) e resultado da meta (#147) feitos
 - Meta 7, em andamento (09/11): semana-padrão na API e na tela, tipo de treino pelo plano e pela regra de reserva, e linha de base pessoal (`linha_base@2`) no `GET` da atividade ([[decisoes/0011-linha-de-base-e-semana-padrao]], [[metricas/tipo-treino]], [[metricas/linha-base]], [[metricas/tipo-linha-base-oraculo]], [[design/telas/semana-padrao]]). Faltam a conferência local (#269), a QA (#271) e o resultado (#272) ([[produto/metas/meta-7-linha-de-base-semana-padrao]])
+- Meta 8, em andamento (09/11): check-in pós-treino (PSE de 0 a 10, sensação, atalhos e "nada a relatar") e carga pela PSE (`carga_pse@1`, em UA). No `main`: API do check-in, `carga_pse`, `checkin_aberto` e `pse_sugerida` no `GET` da atividade, pendentes, fixtures e o desenho da tela ([[metricas/carga-pse]], [[metricas/carga-pse-oraculo]], [[design/telas/checkin]]). A tela no app está em revisão (#313). A [[decisoes/0012-check-in-pos-treino]] segue **proposta** (espera o Angelo)
 - Último diário: [[diario/2026-11-09]] (anteriores: [[diario/2026-11-08]] e [[diario/2026-11-07]])
 
 ## Produto
@@ -32,6 +33,7 @@ App de análise de treinos com contexto (corrida, natação, ciclismo) para atle
 - [[produto/meta-5-como-rodar]]: esforços, série `tiros_1km@5`, treino de transição e multiesporte com as fixtures, e o app com a API falsa
 - [[produto/meta-6-como-rodar]]: carga de treino com as fixtures: saúde da exportação, `calcular_carga`, API, gráfico e conferência com o Garmin
 - [[produto/meta-7-como-rodar]]: semana-padrão, tipo de treino e linha de base com as fixtures: Postgres próprio, API, tela, `reclassificar` e a `linha_base` no `GET` da atividade
+- [[produto/meta-8-como-rodar]]: check-in pós-treino e carga pela PSE com as fixtures: Postgres próprio, API, tela de 3 toques, pendentes e `worker.apagar_checkin` (nota da meta: [[produto/metas/meta-8-check-in]]; ADR 0012 ainda proposta)
 - [[produto/metas/meta-2-evolucao-tiros-app]]: nota da Meta 2
 - [[produto/metas/meta-3-upload-fit]]: nota da Meta 3 (upload de FIT): resultado, não verificados, achados e propostas
 - [[produto/metas/meta-4-clima-atividade]]: nota da Meta 4 (clima da atividade): resultado, não verificados, conclusão genérica da série de tiros, achados e propostas
@@ -41,8 +43,8 @@ App de análise de treinos com contexto (corrida, natação, ciclismo) para atle
 
 ## Como o sistema funciona
 - Módulos: [[modulos/api]], [[modulos/api-client]], [[modulos/banco]], [[modulos/worker]], [[modulos/mobile]], [[modulos/infra]], [[modulos/grafico-tiros]], [[modulos/ingestao-garmin]] (índice em [[modulos]])
-- Métricas: pasta [[metricas/]]; [[metricas/tiros-1km]]; [[metricas/clima-oraculo]]; [[metricas/esforcos]]; [[metricas/esforcos-oraculo]]; [[metricas/transicao]]
-- Design (Lia): [[design/guia-visual]] (identidade, princípios e componentes), [[design/tokens]] (tokens do tema e contraste WCAG) e telas em [[design/telas/]] ([[design/telas/evolucao-tiros]], [[design/telas/treino]])
+- Métricas: pasta [[metricas/]]; [[metricas/tiros-1km]]; [[metricas/clima-oraculo]]; [[metricas/esforcos]]; [[metricas/esforcos-oraculo]]; [[metricas/transicao]]; [[metricas/carga-pse]]; [[metricas/carga-pse-oraculo]]
+- Design (Lia): [[design/guia-visual]] (identidade, princípios e componentes), [[design/tokens]] (tokens do tema e contraste WCAG) e telas em [[design/telas/]] ([[design/telas/evolucao-tiros]], [[design/telas/treino]], [[design/telas/semana-padrao]], [[design/telas/checkin]])
 - Decisões de arquitetura: pasta [[decisoes/]] (a 0004 tem os adendos 1 a 4: melhor tiro, campos prontos, distância e CORS; a 0006 tem o ajuste da #133)
   - [[decisoes/0001-modelo-de-dados-minimo]]: modelo de dados mínimo e monorepo
   - [[decisoes/0002-segmento-intensidade-e-versao]]: intensidade da volta e versão da detecção no segmento
@@ -55,6 +57,7 @@ App de análise de treinos com contexto (corrida, natação, ciclismo) para atle
   - [[decisoes/0009-treino-de-transicao]]: treino de transição (Meta 5): rótulo sugerido e corrigível, tabela `rotulo_transicao`, grupos e rotas
   - [[decisoes/0010-carga-de-treino]]: carga de treino (Meta 6): rTSS, hrTSS, CTL, ATL e TSB
   - [[decisoes/0011-linha-de-base-e-semana-padrao]]: linha de base pessoal, semana-padrão e tipo de treino (Meta 7)
+  - [[decisoes/0012-check-in-pos-treino]]: check-in pós-treino e `carga_pse@1` (Meta 8), proposta; no PR #305
 
 ## Ciência e especialistas
 - Artigos: pasta [[ciencia/artigos/]]

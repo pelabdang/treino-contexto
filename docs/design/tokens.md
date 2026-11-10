@@ -201,6 +201,10 @@ Os nomes abaixo foram conferidos no mapa de glifos do pacote (versão 15.1.1).
 | remover treino | `delete-outline` |
 | abrir seletor de tipo | `expand-more` |
 | opção de rádio marcada, desmarcada | `radio-button-checked`, `radio-button-unchecked` |
+| check-in: entrada, pendentes (Meta 8, [[design/telas/checkin]]) | `assignment` |
+| check-in: editar | `edit` |
+| check-in: escolhido | `check` |
+| sensação 1 a 5 | `sentiment-very-dissatisfied`, `sentiment-dissatisfied`, `sentiment-neutral`, `sentiment-satisfied`, `sentiment-very-satisfied` |
 
-Os sete nomes acima da semana-padrão são do conjunto padrão do Material Icons e foram conferidos no mapa de glifos do
-`@expo/vector-icons` pelo Rafa ao implementar a tela (#268, ver [[modulos/mobile]]).
+Os nomes da semana-padrão foram conferidos no mapa de glifos do `@expo/vector-icons` pelo Rafa (#268, ver [[modulos/mobile]]). Os do
+check-in são do conjunto padrão do Material Icons e ainda precisam ser conferidos pelo Rafa na #299.

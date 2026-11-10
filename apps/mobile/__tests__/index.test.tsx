@@ -13,7 +13,10 @@ jest.mock("@expo/vector-icons", () => {
 });
 
 const mockPush = jest.fn();
-jest.mock("expo-router", () => ({ router: { push: (...a: unknown[]) => mockPush(...a) } }));
+jest.mock("expo-router", () => ({
+  useFocusEffect: (cb: () => void) => require("react").useEffect(cb, [cb]),
+  router: { push: (...a: unknown[]) => mockPush(...a) },
+}));
 
 const base = exemplo as unknown as EvolucaoTiros1km;
 const copia = (): EvolucaoTiros1km => JSON.parse(JSON.stringify(base));

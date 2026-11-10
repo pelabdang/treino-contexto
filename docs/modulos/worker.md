@@ -3,7 +3,7 @@ tipo: modulo
 status: em-uso
 dono: theo
 atualizado: 2026-11-09
-links: [[decisoes/0006-upload-de-fit]], [[modulos/api]], [[modulos/grafico-tiros]], [[modulos/grafico-carga]], [[metricas/conferencia-carga]], [[modulos/infra]], [[modulos/ingestao-garmin]], [[modulos/banco]], [[modulos/clima]], [[decisoes/0008-deteccao-de-esforcos]], [[decisoes/0009-treino-de-transicao]], [[decisoes/0010-carga-de-treino]], [[metricas/transicao]], [[metricas/esforcos]], [[decisoes/0007-clima-da-atividade]], [[produto/meta-4-como-rodar]]
+links: [[decisoes/0012-check-in-pos-treino]], [[decisoes/0006-upload-de-fit]], [[modulos/api]], [[modulos/grafico-tiros]], [[modulos/grafico-carga]], [[metricas/conferencia-carga]], [[modulos/infra]], [[modulos/ingestao-garmin]], [[modulos/banco]], [[modulos/clima]], [[decisoes/0008-deteccao-de-esforcos]], [[decisoes/0009-treino-de-transicao]], [[decisoes/0010-carga-de-treino]], [[metricas/transicao]], [[metricas/esforcos]], [[decisoes/0007-clima-da-atividade]], [[produto/meta-4-como-rodar]]
 ---
 # Módulo: worker
 
@@ -30,6 +30,7 @@ da importação e do cálculo de métricas, fora da [[modulos/api]].
   **todas** as atividades pela `tipo_treino@1` ([[decisoes/0011-linha-de-base-e-semana-padrao]]): semana-padrão vigente e regra de reserva, com
   `tipo_versao` e `tipo_divergencia`, só nas linhas que mudam e sem tocar tipo confirmado, `professor` nem `trainingpeaks`. Sugestão de antes da 0011
   (`tipo_versao` nulo) conta como desatualizada e é regravada aqui ou na importação (`classificar_atividades`).
+- Check-in: `uv run python -m worker.apagar_checkin --atleta "<nome>"` (LGPD, #296, [[decisoes/0012-check-in-pos-treino]]) apaga **todos** os check-ins pós-treino do atleta (PSE, sensação, atalhos e texto) sem apagar o atleta nem as atividades, e imprime só `checkins: apagados=N`, nunca valores. Idempotente (a segunda rodada dá 0). Nome repetido: o de menor id, com aviso em stderr de que os outros ficam; nome inexistente: erro e saída 1.
 - Treino de transição: `uv run python -m worker.sugerir_transicao --atleta-id <id>` (#157, [[decisoes/0009-treino-de-transicao]]) aplica a regra
   `transicao@1` ([[metricas/transicao]]) às atividades do atleta e grava em `rotulo_transicao` ([[modulos/banco]]). **Sem rede.**
   A regra só grava "sim" (origem `sugerido`): insere as sugeridas sem linha, atualiza `versao_regra` e `definido_em` só quando a
@@ -77,6 +78,7 @@ da importação e do cálculo de métricas, fora da [[modulos/api]].
 - O parser (`leitor.py`, `fit.py`, `tipos.py`, `unidades.py`, `modelos.py`) está em `services/api/app/ingestao/garmin/`; o worker importa de lá
 - `services/worker/worker/importar_garmin.py` (importação no banco, CLI `python -m worker.importar_garmin`)
 - `services/worker/worker/importar_saude.py` (limiar, zonas, recordes e carga do Garmin no banco, CLI `python -m worker.importar_saude`)
+- `services/worker/worker/apagar_checkin.py` (apaga os check-ins de um atleta, CLI `python -m worker.apagar_checkin`)
 - `services/worker/worker/apagar_saude.py` (apaga os dados de saúde de um atleta, CLI `python -m worker.apagar_saude`)
 - `services/worker/worker/grafico_tiros_1km.py` (gráfico e CSV, CLI `python -m worker.grafico_tiros_1km`)
 - `services/worker/worker/grafico_carga.py` (gráfico e CSV da carga, CLI `python -m worker.grafico_carga`); teste `services/worker/tests/test_grafico_carga.py`
