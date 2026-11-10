@@ -28,7 +28,7 @@ usados, o tratamento de PSE 0 e de atividade sem duração, ou a elegibilidade.
 
 ## Exemplos à mão
 Corrida de 2700 s (45 min), PSE 6: `6 x 45 = 270 UA`. Natação de 2400 s (40 min), PSE 4: `4 x 40 = 160 UA`. Ciclismo de 3000 s (50 min), PSE 7: `350 UA`.
-Corrida de 2725 s (45,4167 min), PSE 6: `272,5 UA`. PSE 0 em 1800 s: `0 UA`. Check-in com `duracao_s = 0`: `sem_duracao`. Mais casos em [[metricas/carga-pse-oraculo]].
+Corrida de 2725 s (45,4167 min), PSE 6: `272,5 UA`; o texto da API mostra a duração em minutos e segundos: "Carga pela PSE: 6 x 45 min 25 s = 272,5 UA." (inteira: "6 x 45 min = 270 UA."). PSE 0 em 1800 s: `0 UA`. Check-in com `duracao_s = 0`: `sem_duracao`. Mais casos em [[metricas/carga-pse-oraculo]].
 
 ## Testes
 `services/api/tests/metricas/test_carga_pse.py` (oráculo das 18 atividades da #294, valores à mão e bordas).

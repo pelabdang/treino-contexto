@@ -153,7 +153,7 @@ class CargaPseOut(BaseModel):
     minutos: float  # duracao_s / 60, tempo de cronometro
     valor: float | None = None  # UA, sem arredondar; so em `calculada`
     valor_texto: str | None = None  # "270 UA", "272,5 UA" (1 casa quando nao e inteiro)
-    texto: str  # "Carga pela PSE: 6 x 45 min = 270 UA." ou o motivo de nao haver valor
+    texto: str  # "Carga pela PSE: 6 x 45 min = 270 UA." (ou "6 x 45 min 25 s = 272,5 UA.") ou o motivo de nao haver valor
 
 
 class AtividadeOut(BaseModel):
