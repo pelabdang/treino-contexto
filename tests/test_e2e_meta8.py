@@ -359,7 +359,7 @@ def test_10_textos_da_carga_pse_e_da_natacao(ctx):
 
     assert carga("2026-11-09/cor2")["texto"] == "Carga pela PSE: 6 x 45 min = 270 UA." and carga("2026-11-09/cor2")["valor_texto"] == "270 UA"
     d = carga("2026-11-07/cor1")
-    assert (d["valor"], d["valor_texto"], d["texto"]) == (272.5, "272,5 UA", "Carga pela PSE: 6 x 45,4 min = 272,5 UA.")
+    assert (d["valor"], d["valor_texto"], d["texto"]) == (272.5, "272,5 UA", "Carga pela PSE: 6 x 45 min 25 s = 272,5 UA.")
     assert carga("2026-11-06/out1")["valor_texto"] == "0 UA"  # PSE 0 vale
     assert carga("2026-11-05/cor1")["texto"] == "Sem check-in: a carga pela PSE precisa da PSE do treino."
     assert carga("2026-11-09/cor1")["texto"] == "Treino sem duração registrada: sem carga pela PSE."

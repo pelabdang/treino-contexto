@@ -31,6 +31,13 @@ def numero_pt(x: float) -> str:
     return str(int(x)) if float(x).is_integer() else f"{x:.1f}".replace(".", ",")
 
 
+def duracao_pt(minutos: float) -> str:
+    """Minutos inteiros ("45 min") ou minutos e segundos ("45 min 25 s"), para a conta fechar a mao (#316)."""
+    total = round(minutos * 60)
+    m, seg = divmod(total, 60)
+    return f"{m} min" if seg == 0 else f"{m} min {seg} s"
+
+
 def carga_pse_da_atividade(a: Atividade, c: CheckinTreino | None) -> CargaPseLida | None:
     """`None` em `multiesporte_pai` e `troca`; senao o estado, o valor e os textos."""
     r = cp.carga_pse(None if c is None else c.pse, a.duracao_s, a.subtipo)
@@ -38,7 +45,7 @@ def carga_pse_da_atividade(a: Atividade, c: CheckinTreino | None) -> CargaPseLid
         return None
     if r.estado == cp.CALCULADA:
         valor_texto = f"{numero_pt(r.valor)} UA"
-        texto = f"Carga pela PSE: {r.pse} x {numero_pt(r.minutos)} min = {valor_texto}."
+        texto = f"Carga pela PSE: {r.pse} x {duracao_pt(r.minutos)} = {valor_texto}."
     else:
         valor_texto = None
         texto = TEXTO_SEM_CHECKIN if r.estado == cp.SEM_CHECKIN else TEXTO_SEM_DURACAO
