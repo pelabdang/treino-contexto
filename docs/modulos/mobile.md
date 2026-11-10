@@ -2,7 +2,7 @@
 tipo: modulo
 status: em-uso
 dono: rafa
-atualizado: 2026-11-09
+atualizado: 2026-11-10
 links: [[modulos/api]], [[modulos/api-client]], [[produto/roadmap]], [[decisoes/0004-contrato-tela-evolucao]], [[produto/meta-2-como-rodar]], [[decisoes/0006-upload-de-fit]], [[design/guia-visual]], [[design/tokens]], [[decisoes/0007-clima-da-atividade]], [[modulos/clima]], [[design/telas/treino]], [[design/telas/semana-padrao]], [[decisoes/0011-linha-de-base-e-semana-padrao]], [[design/telas/checkin]], [[decisoes/0012-check-in-pos-treino]]
 ---
 # Módulo: mobile
@@ -51,7 +51,7 @@ Rodar com dado sintético: passo a passo em [[produto/meta-2-como-rodar]] (API c
 - Web com `web.output: "static"` (#218): **causa e correção**. No Expo Router 58 o export e o servidor de dev entregam o `<script>` do bundle, o CSS e as fontes pelo `useServerDocumentContext()` (`headNodes` e `bodyNodes`). O nosso `src/app/+html.tsx` não os renderizava, então o HTML saía sem o bundle (só o fundo "carregando-fonte"); `EXPO_WEB_DEV_HYDRATE` não tem relação. Corrigido no `+html.tsx` (mantido "static", que dá `lang="pt-BR"` e pré-render). Não remova `{headNodes}` e `{bodyNodes}`. Verificação: `npm run verificar:web` (exporta a web e falha se o `index.html` não tiver o `<script>` do `entry-*.js` ou o `lang="pt-BR"`) e `__tests__/html.test.tsx` (o `<script>` do contexto chega ao HTML).
 
 ## Check-in pós-treino (#299)
-Spec em [[design/telas/checkin]]; contrato na [[decisoes/0012-check-in-pos-treino]] (ainda **proposta**) e na API (#296 e #298). Check-in é **dado de saúde**: o app não escreve nenhuma resposta em log, console, URL, parâmetro de rota nem armazenamento, e não guarda rascunho (teste de privacidade com texto marcador sintético em `__tests__/TelaCheckin.test.tsx`).
+Spec em [[design/telas/checkin]]; contrato na [[decisoes/0012-check-in-pos-treino]] (aceita em 10/11) e na API (#296 e #298). Check-in é **dado de saúde**: o app não escreve nenhuma resposta em log, console, URL, parâmetro de rota nem armazenamento, e não guarda rascunho (teste de privacidade com texto marcador sintético em `__tests__/TelaCheckin.test.tsx`).
 - Chamadas em `src/checkin/api.ts` (`registrarCheckin` = `PUT`, `apagarCheckin` = `DELETE` com 204, `buscarCheckinsPendentes`, `motivo422`), com os tipos de `@treino/api-client`; moram no app porque o pacote só exporta os tipos, como na semana-padrão. O `GET` da atividade (`buscarAtividade`) traz `checkin`, `carga_pse`, `checkin_aberto` e `pse_sugerida`. O código do `422` de domínio vem em `detail[0].type` (`fora_do_prazo`, `atividade_sem_checkin`); o `detail` técnico nunca aparece na tela.
 - **O que o Angelo pode mudar (textos fáceis de ajustar)**: tudo fica em `src/checkin/escala.ts`. `PRAZO_DIAS = 7` só entra nas frases do prazo (`textoForaDoPrazo`, `avisoPrazoNoCartao`); quem decide se o prazo está aberto é o `checkin_aberto` da API (o app não calcula). `checkinCompleto` é o único lugar que exige PSE, sensação e observação (A confirmar 3 da ADR); as âncoras da PSE (`ANCORAS_PSE`), as sensações e os atalhos também ficam ali.
 - **`TelaCheckin`** (`src/componentes/TelaCheckin.tsx`): carrega a atividade (`buscarAtividade`) e decide: com `checkin` abre a **edição**; sem `checkin` e com `checkin_aberto` abre a **pergunta 1**; sem `checkin` e sem prazo mostra o aviso (`multiesporte_pai`/`troca` dizem "Este treino não pede check-in."; os demais, a frase do prazo).

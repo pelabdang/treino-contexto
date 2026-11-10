@@ -2,7 +2,7 @@
 tipo: guia
 status: em-uso
 dono: nina
-atualizado: 2026-11-09
+atualizado: 2026-11-10
 links: [[produto/meta-7-como-rodar]], [[produto/meta-6-como-rodar]], [[produto/roadmap]], [[produto/metas/meta-8-check-in]], [[decisoes/0012-check-in-pos-treino]], [[decisoes/0004-contrato-tela-evolucao]], [[decisoes/0003-fuso-da-atividade]], [[metricas/carga-pse]], [[metricas/carga-pse-oraculo]], [[design/telas/checkin]], [[modulos/banco]], [[modulos/api]], [[modulos/api-client]], [[modulos/mobile]], [[modulos/worker]], [[diario/2026-11-09]]
 ---
 # Meta 8: como rodar o check-in pós-treino e a carga pela PSE
@@ -10,7 +10,7 @@ links: [[produto/meta-7-como-rodar]], [[produto/meta-6-como-rodar]], [[produto/r
 Passo a passo da Meta 8 com as fixtures: Postgres próprio, migrações até a 0012, 18 atividades sintéticas, o check-in (`PUT`, `GET`,
 `DELETE`) pela API, a carga pela PSE (`carga_pse@1`), a lista de pendentes, o `GET` da atividade com `checkin`, `checkin_aberto` e
 `pse_sugerida`, a tela no app web e o `worker.apagar_checkin`. **Só dado sintético, sem rede.** As regras estão na
-[[decisoes/0012-check-in-pos-treino]], que ainda é **proposta** (PR #305, esperando o Angelo); este guia segue o que está no `main`.
+[[decisoes/0012-check-in-pos-treino]], **aceita em 10/11** (PR #305, "ok para as cinco" do Angelo no "A confirmar"); este guia segue o que está no `main`.
 Os números esperados vêm do oráculo [[metricas/carga-pse-oraculo]]. **Check-in é dado de saúde:** use só estes valores sintéticos.
 
 **Situação da verificação (#300, Nina, 09/11):** os passos 1 a 11, 13 e 14 foram rodados de verdade num clone limpo do `main`
@@ -309,7 +309,7 @@ print(p["dias"], p["total"], [x["atividade_id"] for x in p["pendentes"]])
 - **`PUT` devolve `422` sem dizer o que enviei:** é de propósito. O check-in é dado de saúde; veja `loc` e `type`.
 
 ## Fora ou depois (pendências conhecidas)
-- **ADR 0012 ainda proposta** (PR #305): limites como o prazo de 7 dias e os textos podem mudar quando o Angelo responder; o guia vale para o que está no `main`.
-- **App em celular (#301):** o Angelo abre a tela no celular dele no fim da meta; aqui só a web.
+- **ADR 0012 aceita em 10/11** (PR #305): o prazo de 7 dias, os três campos obrigatórios e o nome "Carga pela PSE" valem como decisão; nada mudou no guia.
+- **App em celular (#301):** não verificado; o Angelo ainda vai abrir a tela no celular dele (proposta: junto da QA da Meta 9). Aqui só a web.
 - **Sem série diária da carga pela PSE, sem comparação com a `carga@2`** (fora da meta).
 - **Estados de erro da tela** (API falsa) sem captura de tela e sem conferência visual neste guia.

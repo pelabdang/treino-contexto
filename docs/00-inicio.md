@@ -19,9 +19,9 @@ App de análise de treinos com contexto (corrida, natação, ciclismo) para atle
 - Meta 5, parte técnica no `main` (06/11): detecção de esforços ([[metricas/esforcos]]) no banco, no worker e na API, série de tiros pelos esforços (`tiros_1km@5`, [[metricas/tiros-1km]]), treino de transição ([[metricas/transicao]], [[decisoes/0009-treino-de-transicao]]), multiesporte e a tela de um treino no app. QA (#172) e resultado da meta (#173) feitos
 - Time e papéis: [[time]]. A Lia (design) é dona de `docs/design/`; o guia visual, o tema do app e a tela com o melhor tiro estão no main (#192, #195 e #154)
 - Meta 6, parte técnica no `main` (08/11): carga de treino (rTSS e hrTSS por volta, `carga@2`; CTL, ATL e TSB, `serie_carga@1`), dados de saúde da exportação Garmin no banco, `GET /atletas/{id}/carga`, gráfico e conferência com o Garmin ([[decisoes/0010-carga-de-treino]], [[metricas/carga-treino]], [[metricas/serie-carga]], [[metricas/conferencia-carga]], [[modulos/grafico-carga]]). QA (#146) e resultado da meta (#147) feitos
-- Meta 7, em andamento (09/11): semana-padrão na API e na tela, tipo de treino pelo plano e pela regra de reserva, e linha de base pessoal (`linha_base@2`) no `GET` da atividade ([[decisoes/0011-linha-de-base-e-semana-padrao]], [[metricas/tipo-treino]], [[metricas/linha-base]], [[metricas/tipo-linha-base-oraculo]], [[design/telas/semana-padrao]]). Faltam a conferência local (#269), a QA (#271) e o resultado (#272) ([[produto/metas/meta-7-linha-de-base-semana-padrao]])
-- Meta 8, em andamento (09/11): check-in pós-treino (PSE de 0 a 10, sensação, atalhos e "nada a relatar") e carga pela PSE (`carga_pse@1`, em UA). No `main`: API do check-in, `carga_pse`, `checkin_aberto` e `pse_sugerida` no `GET` da atividade, pendentes, fixtures e o desenho da tela ([[metricas/carga-pse]], [[metricas/carga-pse-oraculo]], [[design/telas/checkin]]). A tela no app está em revisão (#313). A [[decisoes/0012-check-in-pos-treino]] segue **proposta** (espera o Angelo)
-- Último diário: [[diario/2026-11-09]] (anteriores: [[diario/2026-11-08]] e [[diario/2026-11-07]])
+- Meta 7 feita (09/11): semana-padrão na API e na tela, tipo de treino pelo plano e pela regra de reserva, e linha de base pessoal (`linha_base@2`) no `GET` da atividade, vistas com fixtures num clone limpo ([[decisoes/0011-linha-de-base-e-semana-padrao]], [[metricas/tipo-treino]], [[metricas/linha-base]], [[metricas/tipo-linha-base-oraculo]], [[design/telas/semana-padrao]], [[produto/metas/meta-7-linha-de-base-semana-padrao]])
+- Meta 8 feita (10/11): check-in pós-treino em 3 toques (PSE de 0 a 10, sensação, atalhos e "nada a relatar"), carga pela PSE (`carga_pse@1`, em UA), pendentes e a tela no app, vistos com fixtures num clone limpo ([[metricas/carga-pse]], [[metricas/carga-pse-oraculo]], [[design/telas/checkin]], [[produto/metas/meta-8-check-in]]). A [[decisoes/0012-check-in-pos-treino]] foi **aceita** em 10/11. Não verificado: a tela num celular de verdade. Próxima: Meta 9, feedback automático por treino (proposta, esperando o Angelo). Ver [[produto/roadmap]]
+- Último diário: [[diario/2026-11-10]] (anteriores: [[diario/2026-11-09]] e [[diario/2026-11-08]])
 
 ## Produto
 - [[produto/plano-mvp-execucao]]: plano completo do MVP
@@ -33,13 +33,14 @@ App de análise de treinos com contexto (corrida, natação, ciclismo) para atle
 - [[produto/meta-5-como-rodar]]: esforços, série `tiros_1km@5`, treino de transição e multiesporte com as fixtures, e o app com a API falsa
 - [[produto/meta-6-como-rodar]]: carga de treino com as fixtures: saúde da exportação, `calcular_carga`, API, gráfico e conferência com o Garmin
 - [[produto/meta-7-como-rodar]]: semana-padrão, tipo de treino e linha de base com as fixtures: Postgres próprio, API, tela, `reclassificar` e a `linha_base` no `GET` da atividade
-- [[produto/meta-8-como-rodar]]: check-in pós-treino e carga pela PSE com as fixtures: Postgres próprio, API, tela de 3 toques, pendentes e `worker.apagar_checkin` (nota da meta: [[produto/metas/meta-8-check-in]]; ADR 0012 ainda proposta)
+- [[produto/meta-8-como-rodar]]: check-in pós-treino e carga pela PSE com as fixtures: Postgres próprio, API, tela de 3 toques, pendentes e `worker.apagar_checkin` (nota da meta: [[produto/metas/meta-8-check-in]])
 - [[produto/metas/meta-2-evolucao-tiros-app]]: nota da Meta 2
 - [[produto/metas/meta-3-upload-fit]]: nota da Meta 3 (upload de FIT): resultado, não verificados, achados e propostas
 - [[produto/metas/meta-4-clima-atividade]]: nota da Meta 4 (clima da atividade): resultado, não verificados, conclusão genérica da série de tiros, achados e propostas
 - [[produto/metas/meta-5-deteccao-esforcos]]: nota da Meta 5 (detecção de esforços): resultado, não verificados, limitações, achados e pendências
 - [[produto/metas/meta-6-carga-treino]]: nota da Meta 6 (carga de treino): resultado, decisões, não verificados, limitações, achados e pendências
-- [[produto/metas/meta-7-linha-de-base-semana-padrao]]: nota da Meta 7 (linha de base e semana-padrão), em andamento
+- [[produto/metas/meta-7-linha-de-base-semana-padrao]]: nota da Meta 7 (linha de base e semana-padrão): resultado, decisões, não verificados, limitações, achados e pendências
+- [[produto/metas/meta-8-check-in]]: nota da Meta 8 (check-in pós-treino): resultado, decisões, não verificados, limitações, achados e pendências
 
 ## Como o sistema funciona
 - Módulos: [[modulos/api]], [[modulos/api-client]], [[modulos/banco]], [[modulos/worker]], [[modulos/mobile]], [[modulos/infra]], [[modulos/grafico-tiros]], [[modulos/ingestao-garmin]] (índice em [[modulos]])
@@ -57,7 +58,7 @@ App de análise de treinos com contexto (corrida, natação, ciclismo) para atle
   - [[decisoes/0009-treino-de-transicao]]: treino de transição (Meta 5): rótulo sugerido e corrigível, tabela `rotulo_transicao`, grupos e rotas
   - [[decisoes/0010-carga-de-treino]]: carga de treino (Meta 6): rTSS, hrTSS, CTL, ATL e TSB
   - [[decisoes/0011-linha-de-base-e-semana-padrao]]: linha de base pessoal, semana-padrão e tipo de treino (Meta 7)
-  - [[decisoes/0012-check-in-pos-treino]]: check-in pós-treino e `carga_pse@1` (Meta 8), proposta; no PR #305
+  - [[decisoes/0012-check-in-pos-treino]]: check-in pós-treino e `carga_pse@1` (Meta 8), aceita em 10/11
 
 ## Ciência e especialistas
 - Artigos: pasta [[ciencia/artigos/]]
