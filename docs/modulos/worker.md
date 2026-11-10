@@ -3,7 +3,7 @@ tipo: modulo
 status: em-uso
 dono: theo
 atualizado: 2026-11-10
-links: [[decisoes/0013-feedback-automatico]], [[modulos/camada-llm]], [decisoes/0012-check-in-pos-treino]], [[decisoes/0006-upload-de-fit]], [[modulos/api]], [[modulos/grafico-tiros]], [[modulos/grafico-carga]], [[metricas/conferencia-carga]], [[modulos/infra]], [[modulos/ingestao-garmin]], [[modulos/banco]], [[modulos/clima]], [[decisoes/0008-deteccao-de-esforcos]], [[decisoes/0009-treino-de-transicao]], [[decisoes/0010-carga-de-treino]], [[metricas/transicao]], [[metricas/esforcos]], [[decisoes/0007-clima-da-atividade]], [[produto/meta-4-como-rodar]]
+links: [[decisoes/0013-feedback-automatico]], [[modulos/camada-llm]], [[decisoes/0012-check-in-pos-treino]], [[decisoes/0006-upload-de-fit]], [[modulos/api]], [[modulos/grafico-tiros]], [[modulos/grafico-carga]], [[metricas/conferencia-carga]], [[modulos/infra]], [[modulos/ingestao-garmin]], [[modulos/banco]], [[modulos/clima]], [[decisoes/0008-deteccao-de-esforcos]], [[decisoes/0009-treino-de-transicao]], [[decisoes/0010-carga-de-treino]], [[metricas/transicao]], [[metricas/esforcos]], [[decisoes/0007-clima-da-atividade]], [[produto/meta-4-como-rodar]]
 ---
 # Módulo: worker
 
