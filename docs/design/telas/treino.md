@@ -2,8 +2,8 @@
 tipo: design
 status: rascunho
 dono: lia
-atualizado: 2026-11-06
-links: [[design/guia-visual]], [[design/tokens]], [[design/telas/evolucao-tiros]], [[modulos/mobile]], [[decisoes/0004-contrato-tela-evolucao]], [[decisoes/0007-clima-da-atividade]]
+atualizado: 2026-11-09
+links: [[design/guia-visual]], [[design/tokens]], [[design/telas/evolucao-tiros]], [[design/telas/checkin]], [[modulos/mobile]], [[decisoes/0004-contrato-tela-evolucao]], [[decisoes/0007-clima-da-atividade]]
 ---
 # Tela: um treino, com o clima
 
@@ -52,6 +52,9 @@ Celular de 360, tema claro (a margem é 16; a partir de 600 é 24, largura máxi
 ```
 O título é sempre "Treino": a modalidade fica só no chip (ícone `directions-run`, `directions-bike` ou `pool`
 mais o nome; a cor da modalidade nunca é a única informação).
+
+Meta 8 (#299): entre o cartão dos dados e o "Clima" entram os cartões **"Check-in"** e **"Carga pela PSE"**, especificados em
+[[design/telas/checkin]] ("Cartões na tela do treino"), com a regra de quando aparecem pelo `checkin_aberto`.
 
 ## Distância
 - Corrida e ciclismo: km com duas casas e vírgula ("10,00 km").
