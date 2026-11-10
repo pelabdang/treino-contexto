@@ -2,8 +2,8 @@
 tipo: design
 status: rascunho
 dono: lia
-atualizado: 2026-11-09
-links: [[design/guia-visual]], [[design/tokens]], [[design/telas/evolucao-tiros]], [[design/telas/checkin]], [[modulos/mobile]], [[decisoes/0004-contrato-tela-evolucao]], [[decisoes/0007-clima-da-atividade]]
+atualizado: 2026-11-10
+links: [[design/guia-visual]], [[design/tokens]], [[design/telas/evolucao-tiros]], [[design/telas/checkin]], [[design/telas/feedback]], [[modulos/mobile]], [[decisoes/0004-contrato-tela-evolucao]], [[decisoes/0007-clima-da-atividade]]
 ---
 # Tela: um treino, com o clima
 
@@ -55,6 +55,8 @@ mais o nome; a cor da modalidade nunca é a única informação).
 
 Meta 8 (#299): entre o cartão dos dados e o "Clima" entram os cartões **"Check-in"** e **"Carga pela PSE"**, especificados em
 [[design/telas/checkin]] ("Cartões na tela do treino"), com a regra de quando aparecem pelo `checkin_aberto`.
+
+Meta 9 (#329, #330): logo abaixo do "Check-in" entra o cartão **"Feedback"**, especificado em [[design/telas/feedback]].
 
 ## Distância
 - Corrida e ciclismo: km com duas casas e vírgula ("10,00 km").

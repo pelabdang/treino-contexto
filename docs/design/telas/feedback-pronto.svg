@@ -1,0 +1,40 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 760 420" width="760" height="420" role="img" aria-labelledby="t d" font-family="Inter, Arial, sans-serif">
+  <title id="t">Cartão Feedback, estado pronto, tema claro e escuro</title>
+  <desc id="d">Esboço sintético: cartão com título Feedback, texto de exemplo e a linha "Gerado automaticamente".</desc>
+  <!-- tema claro -->
+  <rect x="10" y="10" width="360" height="400" fill="#F6F5F1"/>
+  <rect x="26" y="30" width="328" height="248" rx="12" fill="#FFFFFF" stroke="#DEDBD3"/>
+  <text x="42" y="62" font-size="18" font-weight="600" fill="#1A1D1F">Feedback</text>
+  <g font-size="16" fill="#1A1D1F">
+    <text x="42" y="94">Você correu 10,00 km em 5:12</text>
+    <text x="42" y="118">min/km, perto do seu normal para</text>
+    <text x="42" y="142">um treino deste tipo. Você</text>
+    <text x="42" y="166">marcou esforço 5 (difícil) e</text>
+    <text x="42" y="190">sensação boa. Fez 24,3 °C.</text>
+    <text x="42" y="214">Bom treino.</text>
+  </g>
+  <line x1="42" y1="228" x2="338" y2="228" stroke="#DEDBD3"/>
+  <g font-size="13" fill="#4C5257">
+    <text x="42" y="248">Gerado automaticamente a partir dos</text>
+    <text x="42" y="266">dados deste treino e do seu check-in.</text>
+  </g>
+  <text x="26" y="306" font-size="13" fill="#4C5257">Claro. Esboço sintético; o tom final é da ADR 0013.</text>
+  <!-- tema escuro -->
+  <rect x="390" y="10" width="360" height="400" fill="#121517"/>
+  <rect x="406" y="30" width="328" height="248" rx="12" fill="#1C2023" stroke="#33393E"/>
+  <text x="422" y="62" font-size="18" font-weight="600" fill="#ECEEEF">Feedback</text>
+  <g font-size="16" fill="#ECEEEF">
+    <text x="422" y="94">Você correu 10,00 km em 5:12</text>
+    <text x="422" y="118">min/km, perto do seu normal para</text>
+    <text x="422" y="142">um treino deste tipo. Você</text>
+    <text x="422" y="166">marcou esforço 5 (difícil) e</text>
+    <text x="422" y="190">sensação boa. Fez 24,3 °C.</text>
+    <text x="422" y="214">Bom treino.</text>
+  </g>
+  <line x1="422" y1="228" x2="718" y2="228" stroke="#33393E"/>
+  <g font-size="13" fill="#B4BBC0">
+    <text x="422" y="248">Gerado automaticamente a partir dos</text>
+    <text x="422" y="266">dados deste treino e do seu check-in.</text>
+  </g>
+  <text x="406" y="306" font-size="13" fill="#B4BBC0">Escuro. Mesmo layout, só a coluna "escuro" dos tokens.</text>
+</svg>
