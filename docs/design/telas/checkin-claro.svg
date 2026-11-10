@@ -1,0 +1,78 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="740" height="640" viewBox="0 0 740 640" font-family="Inter, system-ui, sans-serif" role="img" aria-labelledby="t d">
+  <title id="t">Esboço do check-in pós-treino: pergunta 1 (PSE) e pergunta 3 (observação), tema claro</title>
+  <desc id="d">Esboço da issue 295. Dados sintéticos. Duas telas de celular pequeno (360 por 640) lado a lado: a PSE e a observação. Cada uma cabe sem rolar.</desc>
+  <style>
+    .card{fill:#FFFFFF;stroke:#DEDBD3;stroke-width:1}
+    .t{fill:#1A1D1F}.t2{fill:#4C5257}.dest{fill:#0B6A6E}
+    .cel{fill:#FFFFFF;stroke:#7D7A72;stroke-width:1}
+    .sel{fill:#DCEFEE;stroke:#0B6A6E;stroke-width:2}
+    .div{stroke:#DEDBD3;stroke-width:1}
+  </style>
+  <rect width="740" height="640" fill="#CFCCC4"/>
+<rect x="0" y="0" width="360" height="640" fill="#F6F5F1"/>
+<path d="M30 36 h-12 m5 -5 l-5 5 l5 5" stroke="#0B6A6E" stroke-width="2" fill="none"/><text x="40" y="41" class="dest" font-size="16" font-weight="600">Voltar</text>
+<text x="16" y="76" class="t" font-size="24" font-weight="700">Check-in do treino</text>
+<circle cx="23" cy="94" r="7" fill="#B4470F"/><text x="36" y="99" class="t2" font-size="14">Corrida, 45 min · 09/11/25</text>
+<text x="16" y="126" class="t2" font-size="14" font-weight="500">Pergunta 1 de 3</text>
+<rect x="16" y="134" width="104" height="4" rx="2" fill="#0B6A6E"/>
+<rect x="128" y="134" width="104" height="4" rx="2" fill="#DEDBD3"/>
+<rect x="240" y="134" width="104" height="4" rx="2" fill="#DEDBD3"/>
+<text x="16" y="168" class="t" font-size="18" font-weight="600">Qual foi o esforço do treino?</text>
+<text x="16" y="188" class="t2" font-size="13">0 é repouso e 10 é o máximo. É a sua percepção.</text>
+<rect class="cel" x="16.5" y="204.5" width="159" height="51" rx="8"/>
+<text x="30" y="236" class="t" font-size="18" font-weight="700">0</text>
+<text x="56" y="235" class="t2" font-size="14">repouso</text>
+<rect class="cel" x="16.5" y="262.5" width="159" height="51" rx="8"/>
+<text x="30" y="294" class="t" font-size="18" font-weight="700">1</text>
+<text x="56" y="293" class="t2" font-size="14">muito leve</text>
+<rect class="cel" x="16.5" y="320.5" width="159" height="51" rx="8"/>
+<text x="30" y="352" class="t" font-size="18" font-weight="700">2</text>
+<text x="56" y="351" class="t2" font-size="14">leve</text>
+<rect class="cel" x="16.5" y="378.5" width="159" height="51" rx="8"/>
+<text x="30" y="410" class="t" font-size="18" font-weight="700">3</text>
+<text x="56" y="409" class="t2" font-size="14">moderado</text>
+<rect class="cel" x="16.5" y="436.5" width="159" height="51" rx="8"/>
+<text x="30" y="468" class="t" font-size="18" font-weight="700">4</text>
+<text x="56" y="467" class="t2" font-size="13">um pouco difícil</text>
+<rect class="sel" x="17" y="495" width="158" height="50" rx="8"/>
+<text x="30" y="526" class="t" font-size="18" font-weight="700">5</text>
+<text x="56" y="525" class="t2" font-size="14">difícil</text>
+<path d="M154 520 l5 5 l9 -10" stroke="#0B6A6E" stroke-width="2.5" fill="none"/>
+<rect class="cel" x="184.5" y="204.5" width="159" height="51" rx="8"/>
+<text x="198" y="236" class="t" font-size="18" font-weight="700">6</text>
+<rect class="cel" x="184.5" y="262.5" width="159" height="51" rx="8"/>
+<text x="198" y="294" class="t" font-size="18" font-weight="700">7</text>
+<text x="224" y="293" class="t2" font-size="13">muito difícil</text>
+<rect class="cel" x="184.5" y="320.5" width="159" height="51" rx="8"/>
+<text x="198" y="352" class="t" font-size="18" font-weight="700">8</text>
+<rect class="cel" x="184.5" y="378.5" width="159" height="51" rx="8"/>
+<text x="198" y="410" class="t" font-size="18" font-weight="700">9</text>
+<rect class="cel" x="184.5" y="436.5" width="159" height="51" rx="8"/>
+<text x="198" y="468" class="t" font-size="18" font-weight="700">10</text>
+<text x="224" y="467" class="t2" font-size="14">máximo</text>
+<text x="184" y="524" class="t2" font-size="13">(a lista acaba no 10)</text>
+<text x="16" y="594" class="t2" font-size="13">A PSE é só sua: não se compara com a de outros atletas.</text>
+<text x="16" y="616" class="t2" font-size="13">Ao tocar, o app vai para a próxima pergunta.</text>
+<rect x="380" y="0" width="360" height="640" fill="#F6F5F1"/>
+<path d="M410 36 h-12 m5 -5 l-5 5 l5 5" stroke="#0B6A6E" stroke-width="2" fill="none"/><text x="420" y="41" class="dest" font-size="16" font-weight="600">Voltar</text>
+<text x="396" y="76" class="t" font-size="24" font-weight="700">Check-in do treino</text>
+<circle cx="403" cy="94" r="7" fill="#B4470F"/><text x="416" y="99" class="t2" font-size="14">Corrida, 45 min · 09/11/25</text>
+<text x="396" y="126" class="t2" font-size="14" font-weight="500">Pergunta 3 de 3</text>
+<rect x="396" y="134" width="104" height="4" rx="2" fill="#0B6A6E"/>
+<rect x="508" y="134" width="104" height="4" rx="2" fill="#0B6A6E"/>
+<rect x="620" y="134" width="104" height="4" rx="2" fill="#0B6A6E"/>
+<text x="396" y="168" class="t" font-size="18" font-weight="600">Quer registrar mais alguma coisa?</text>
+<text x="396" y="188" class="t2" font-size="13">Toque no que combina. Pode marcar mais de um.</text>
+<rect class="cel" x="396.5" y="204.5" width="71" height="47" rx="8"/><text x="410" y="234" class="t" font-size="16">Dor</text>
+<rect class="sel" x="477" y="205" width="110" height="46" rx="8"/><path d="M488 228 l4 4 l8 -9" stroke="#0B6A6E" stroke-width="2.5" fill="none"/><text x="508" y="234" class="t" font-size="16" font-weight="600">Cansaço</text>
+<rect class="cel" x="596.5" y="204.5" width="119" height="47" rx="8"/><text x="610" y="234" class="t" font-size="16">Sono ruim</text>
+<rect class="cel" x="396.5" y="260.5" width="87" height="47" rx="8"/><text x="410" y="290" class="t" font-size="16">Calor</text>
+<rect class="sel" x="493" y="261" width="230" height="46" rx="8"/><path d="M504 284 l4 4 l8 -9" stroke="#0B6A6E" stroke-width="2.5" fill="none"/><text x="524" y="290" class="t" font-size="16" font-weight="600">Trabalho ou estresse</text>
+<text x="396" y="342" class="t" font-size="16" font-weight="600">Quer acrescentar algo? (opcional)</text>
+<rect class="cel" x="396.5" y="352.5" width="327" height="95" rx="8"/>
+<text x="408" y="380" class="t" font-size="16">Semana puxada no trabalho.</text>
+<text x="723" y="468" text-anchor="end" class="t2" font-size="13">26 de 500</text>
+<rect x="396" y="480" width="328" height="48" rx="8" fill="#0B6A6E"/><text x="560" y="510" text-anchor="middle" font-size="16" font-weight="600" fill="#FFFFFF">Salvar check-in</text>
+<rect class="cel" x="396.5" y="540.5" width="327" height="47" rx="8"/><text x="560" y="570" text-anchor="middle" class="dest" font-size="16" font-weight="600">Nada a relatar</text>
+<text x="396" y="614" class="t2" font-size="13">“Nada a relatar” salva na hora.</text>
+</svg>

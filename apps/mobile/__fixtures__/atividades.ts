@@ -1,5 +1,41 @@
 // Atividades sintéticas (nada de dado real) para os testes e para o servidor falso das capturas.
-import type { Atividade } from "@treino/api-client";
+import type { Atividade, LinhaBase } from "@treino/api-client";
+
+// Linha de base sintética (`linha_base@2`): corrida leve comparada com o próprio histórico.
+const linhaBaseCorrida: LinhaBase = {
+  versao: "linha_base@2",
+  estado: "ok",
+  modalidade: "corrida",
+  tipo_treino: "leve",
+  janela_semanas: 8,
+  minimo_treinos: 4,
+  metricas: [
+    {
+      chave: "pace_medio",
+      rotulo: "Pace médio",
+      unidade: "s/km",
+      estado: "dentro",
+      n: 6,
+      mediana: 315,
+      mediana_texto: "5:15",
+      desvio: -3,
+      diferenca_texto: "3 s/km mais rápido",
+      texto: "Pace dentro do habitual para treino leve.",
+    },
+    {
+      chave: "fc_media",
+      rotulo: "FC média",
+      unidade: "bpm",
+      estado: "dentro",
+      n: 6,
+      mediana: 150,
+      mediana_texto: "150 bpm",
+      desvio: 2,
+      diferenca_texto: "2 bpm acima",
+      texto: "FC dentro do habitual para treino leve.",
+    },
+  ],
+};
 
 const corrida: Atividade = {
   atividade_id: 101,
@@ -14,6 +50,11 @@ const corrida: Atividade = {
   distancia: "10,00 km",
   pace_medio: "5:12",
   fc_media: 152,
+  tipo_treino: "leve",
+  tipo_confirmado: true,
+  tipo_origem: "professor",
+  tipo_divergencia: null,
+  linha_base: linhaBaseCorrida,
   clima: {
     estado: "ok",
     temperatura_c: 24.3,
@@ -51,6 +92,22 @@ export const atividades = {
     distancia: "1.800 m",
     pace_medio: null,
     fc_media: null,
+    // Tipo só sugerido (não confirmado) e sem linha de base: natação ainda não tem métricas de base.
+    tipo_treino: "leve",
+    tipo_confirmado: false,
+    tipo_origem: "sugestao",
+    tipo_divergencia: null,
+    linha_base: {
+      versao: "linha_base@2",
+      estado: "sem_linha_base",
+      modalidade: "natacao",
+      tipo_treino: "leve",
+      janela_semanas: 8,
+      minimo_treinos: 4,
+      metricas: [],
+      motivo: "modalidade_sem_metricas",
+      texto: "Ainda não há linha de base para natação.",
+    },
     clima: { estado: "indoor" },
   } as Atividade,
 } satisfies Record<string, Atividade>;
