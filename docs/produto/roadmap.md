@@ -677,8 +677,8 @@ Revisadas ao fim de cada meta com o que se aprendeu. Ordem tirada da "Fundação
   feito. Decidido pelo Angelo em 10/11: ele abre o check-in e o cartão de feedback numa só sessão, durante a QA da Meta 9 (P11).
 - **Capturas do check-in no tema escuro e nos estados de erro** (rafa-app, com a Lia): item 4 da revisão da Lia no #313;
   aberta como paralela P13 da Meta 9 (#334).
-- **Sono, VFC, estado de treino, prontidão e treinos planejados do Garmin Connect** (duda-dados, com o Caio): o teste do Theo
-  de 10/11 mostrou que a biblioteca da P14 (#335) também busca esses dados, mas é dado de saúde novo e modelo de dados novo
+- **Sono, VFC, estado de treino, prontidão e treinos planejados do Garmin Connect** (duda-dados, com o Caio): a biblioteca da
+  P14 (#335) expõe, pela documentação dela, esses dados, mas é dado de saúde novo e modelo de dados novo
   (ADR, aprovação do Theo e "PRECISA DO ANGELO" sobre guardar). Sem issue; os treinos planejados podem alimentar a
   semana-padrão e o motivo de falta.
 - **`carga_pse@2` pelo tempo total** (caio-ciencia, com a Duda): a `carga_pse@1` usa o cronômetro; pediria gravar o tempo
