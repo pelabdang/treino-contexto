@@ -15,7 +15,7 @@ from sqlalchemy.dialects.postgresql import insert as _insert_pg
 from sqlalchemy.dialects.sqlite import insert as _insert_sqlite
 from sqlalchemy.orm import Session
 
-from app.db.models import CHECKIN_ATALHOS, CHECKIN_VERSAO, Atividade, CheckinTreino
+from app.db.models import CHECKIN_ATALHOS, CHECKIN_VERSAO, Atividade, CheckinTreino, FeedbackTreino
 from app.servicos.fuso import FUSO_PADRAO, data_local
 
 # --- Parametros de produto, faceis de mudar (ADR 0012, "A confirmar" 1 e 2) -------------------------------------------
@@ -111,15 +111,30 @@ def apagar_checkin(session: Session, atividade_id: int) -> bool:
     return True
 
 
-def apagar_checkins_do_atleta(session: Session, atleta_id: int) -> int:
-    """Apaga todos os check-ins das atividades do atleta (LGPD). O atleta e as atividades ficam. Devolve so a contagem."""
+def apagar_checkins_e_feedbacks_do_atleta(session: Session, atleta_id: int) -> tuple[int, int]:
+    """Apaga todos os check-ins das atividades do atleta e os feedbacks deles (LGPD). Devolve so as contagens.
+
+    O banco ja apaga o feedback pela cascata (`ON DELETE CASCADE`); aqui ele e apagado antes, de forma explicita, para a
+    contagem e porque o SQLite dos testes nao aplica a cascata sem o `PRAGMA foreign_keys`.
+    """
+    checkins = select(CheckinTreino.id).where(
+        CheckinTreino.atividade_id.in_(select(Atividade.id).where(Atividade.atleta_id == atleta_id)))
+    feedbacks = session.execute(
+        delete(FeedbackTreino).where(FeedbackTreino.checkin_id.in_(checkins))
+        .execution_options(synchronize_session=False)
+    ).rowcount
     n = session.execute(
         delete(CheckinTreino)
         .where(CheckinTreino.atividade_id.in_(select(Atividade.id).where(Atividade.atleta_id == atleta_id)))
         .execution_options(synchronize_session=False)
     ).rowcount
     session.commit()
-    return n
+    return n, feedbacks
+
+
+def apagar_checkins_do_atleta(session: Session, atleta_id: int) -> int:
+    """Apaga todos os check-ins (e os feedbacks deles) das atividades do atleta. O atleta e as atividades ficam."""
+    return apagar_checkins_e_feedbacks_do_atleta(session, atleta_id)[0]
 
 
 def duracao_hms(duracao_s: float) -> str:

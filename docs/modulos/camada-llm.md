@@ -8,7 +8,7 @@ links: [[decisoes/0013-feedback-automatico]], [[modulos/api]], [[modulos/worker]
 # Módulo: camada de LLM
 
 ## Para que serve
-A única porta do produto para um modelo de linguagem (regra do `AGENTS.md`: IA sempre por uma camada trocável, nunca provedor direto no código). Meta 9, issue #326; quem usa é o `worker.gerar_feedback` (#327). Código em `services/api/app/llm/camada.py`. A [[decisoes/0013-feedback-automatico]] (ainda `proposta` quando esta nota foi escrita) decide o uso; esta nota descreve o que o módulo faz.
+A única porta do produto para um modelo de linguagem (regra do `AGENTS.md`: IA sempre por uma camada trocável, nunca provedor direto no código). Meta 9, issue #326; quem usa é o `worker.gerar_feedback` (#327, [[modulos/worker]]; o prompt fixo `feedback_prompt@1` está em `app/llm/prompt_feedback.py`). Código em `services/api/app/llm/camada.py`. A [[decisoes/0013-feedback-automatico]] (ainda `proposta` quando esta nota foi escrita) decide o uso; esta nota descreve o que o módulo faz.
 
 ## Entradas e saídas
 - `criar_redator()` monta o `Redator` do `.env`; `Redator.redigir(sistema, pacote)` recebe o prompt fixo e o pacote (dicionário, vira JSON) e **nunca levanta**: devolve `ResultadoLLM(texto, motivo, provedor, modelo)`. Ou há `texto`, ou há um `motivo`:
@@ -30,6 +30,12 @@ São os mesmos códigos do `CHECK` previsto para `feedback_treino` ([[decisoes/0
 - **Dois cuidados com a importação do LiteLLM** (conferidos no código da 1.108.4, e por isso a camada define as variáveis **antes** de importar): `LITELLM_LOCAL_MODEL_COST_MAP=True` (sem isso a importação baixa a tabela de preços da internet; o teste de rede falhou até isso entrar) e `LITELLM_MODE=PRODUCTION` (no modo padrão a importação carrega o `.env` mais próximo para dentro de `os.environ`, o que misturaria credenciais de outros módulos e sobreporia a configuração). Importe o LiteLLM só pela camada.
 - A chave é `SecretStr` em `app/config.py` (não aparece em `repr`).
 - **Dado de saúde que sai da máquina:** com provedor real, o pacote de fatos vai ao provedor. O que o Groq diz sobre retenção e o que **não foi conferido** está na [[decisoes/0013-feedback-automatico]], "A confirmar", item 10; a regra do projeto é: provedor real só no computador do Angelo, com o "sim" dele, e provedor falso em CI e testes.
+
+## Quem usa: `app/servicos/feedback.py` e `worker.gerar_feedback` (#327)
+`gerar(session, atleta_id, redator, montar_pacote, checar, versoes, prompt, refazer)` recebe o pacote e as checagens por **injeção**:
+- `montar_pacote(session, atividade, checkin) -> dict | None` (o pacote `fatos_treino@1`; `None` se a atividade não é elegível);
+- `checar(pacote, texto) -> str | None` (`None` se o texto passa; senão o código do motivo, que **não** é gravado: a linha guarda só `texto_reprovado`).
+Na linha de comando, os padrões vêm de `app.explicacao.fatos_treino` (`montar_pacote_da_atividade`, `VERSAO`) e `app.explicacao.checagens` (`checar`, `VERSAO`), das issues #324 e #325; se faltarem, o comando sai com 1 e mensagem clara.
 
 ## Limitações
 - `groq`, `openai` e `anthropic` são os provedores aceitos hoje; outro exige uma linha em `CHAVES`.
