@@ -34,4 +34,4 @@ Corrida de 2725 s (45,4167 min), PSE 6: `272,5 UA`. PSE 0 em 1800 s: `0 UA`. Che
 `services/api/tests/metricas/test_carga_pse.py` (oráculo das 18 atividades da #294, valores à mão e bordas).
 
 ## Limitações
-Usa o cronômetro e não o tempo total (uma `carga_pse@2` pediria gravar o tempo corrido na importação). A formatação ("270 UA", "272,5 UA") e o texto são da API (#298).
+Usa o cronômetro e não o tempo total (uma `carga_pse@2` pediria gravar o tempo corrido na importação). A formatação ("270 UA", "272,5 UA") e o texto são da API (#298): `services/api/app/servicos/carga_pse_leitura.py`, no `GET` da atividade ([[modulos/api]]).

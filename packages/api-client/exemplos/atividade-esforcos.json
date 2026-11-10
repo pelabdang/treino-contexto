@@ -128,6 +128,18 @@
     "minimo_treinos": 8,
     "metricas": []
   },
+  "checkin": null,
+  "checkin_aberto": false,
+  "pse_sugerida": null,
+  "carga_pse": {
+    "versao": "carga_pse@1",
+    "estado": "sem_checkin",
+    "pse": null,
+    "minutos": 34.85,
+    "valor": null,
+    "valor_texto": null,
+    "texto": "Sem check-in: a carga pela PSE precisa da PSE do treino."
+  },
   "data_local": "2025-05-07",
   "hora_local": "06:00",
   "duracao": "0:34:51",
