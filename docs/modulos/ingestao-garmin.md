@@ -2,7 +2,7 @@
 tipo: modulo
 status: em-uso
 dono: duda
-atualizado: 2026-11-07
+atualizado: 2026-11-10
 links: [[decisoes/0010-carga-de-treino]], [[produto/meta-3-como-rodar]], [[modulos/worker]], [[modulos/banco]], [[decisoes/0006-upload-de-fit]], [[decisoes/0007-clima-da-atividade]], [[produto/roadmap]], [[diario/2026-11-03]], [[produto/meta-4-como-rodar]], [[decisoes/0008-deteccao-de-esforcos]], [[decisoes/0009-treino-de-transicao]], [[modulos/api]]
 ---
 # Módulo: ingestão Garmin
@@ -220,6 +220,23 @@ a função é `importar_fit(session, atleta_id, conteudo)` em `services/api/app/
 - **Apagar:** `uv run python -m worker.apagar_fit --atleta-id <id>` apaga os arquivos do atleta e limpa `arquivo_bruto`
   das atividades que apontavam para eles; as atividades e a série ficam. Idempotente. Atleta inexistente: stderr e saída 1.
 - Testes: `services/api/tests/ingestao/test_importar_fit.py` (FIT sintéticos da #93, `FIT_DIR` em diretório temporário).
+
+## Buscar no Garmin Connect (piloto local, #335)
+Paralela da Meta 9: o atleta não sobe FIT à mão; o worker busca a atividade do dia na conta dele. Só local, só na conta do próprio atleta.
+
+> **Limitação:** usa a biblioteca **não oficial** `garminconnect` (0.3.20, fixada). Ela imita o login do app e **pode quebrar quando o Garmin mudar o login** (ou bloquear o cliente). A API oficial da Garmin segue sendo o caminho de produção e depende do CNPJ.
+
+- **Comando:** `uv run python -m worker.buscar_garmin --atleta "<nome>" [--desde AAAA-MM-DD] [--ate AAAA-MM-DD] [--sem-clima]`. Padrão: hoje. O atleta precisa existir (importe a exportação antes).
+- **Fluxo (`worker/buscar_garmin.py`):** lista as atividades do intervalo, **pula** as que já estão no banco (início a até 60 s de uma atividade do atleta, a regra da ADR 0006, sem baixar), baixa o FIT original (zip com um `.fit`, até 10 MB) e chama `importar_fit`, **o mesmo caminho do upload de FIT**: identidade, guarda em `FIT_DIR`, esforços e tipo (via `classificar_atividades`), transição. Depois roda a carga do atleta e, sem `--sem-clima`, o clima das atividades que entraram ou mudaram (os mesmos auxiliares do `importar_garmin`). A linha entra com `fonte = fit_upload`; **não há mudança no modelo de dados** e o id do Garmin não é guardado.
+- **Idempotente:** a segunda rodada não baixa nada do que já entrou e não duplica. Se o Garmin não mandar o horário, o FIT é baixado e o `importar_fit` reconhece a atividade (`ignorada`). Um FIT que não é atividade ou é inválido conta em `falhas`, não derruba a rodada e dá saída 6.
+- **Cliente atrás de uma interface (`worker/garmin_cliente.py`):** `ClienteGarmin` tem `listar(desde, ate)` e `baixar_fit(id)`. `ClienteGarminConnect` é a implementação real; os testes usam um cliente falso e nenhum teste entra em conta ou abre rede.
+- **Credenciais e token:** só `GARMIN_EMAIL` e `GARMIN_PASSWORD` do `.env` local (ou do ambiente) e `GARMINTOKENS` (pasta do token, padrão `dados-garmin/token` na raiz, no `.gitignore`); o `.env.example` traz só os nomes, vazios. Com token salvo o login não usa a senha. O token é gravado em `garmin_tokens.json` (permissão 0600, pasta 0700) **por nós**, depois do login: com `return_on_mfa=True` a biblioteca não o grava sozinha. Sem token e sem credenciais é erro de configuração (saída 1), não exceção. Nada disso vai para log, saída ou mensagem de erro: as mensagens são fixas e não repetem o texto da biblioteca (teste confere).
+- **Uma tentativa de login por execução** (`retry_attempts=1`, sem nova tentativa). Token recusado: a mensagem manda apagar a pasta do token e rodar de novo.
+- **Erros e códigos de saída:** 1 configuração, argumento ou atleta inexistente; 2 login ou sessão recusados; 3 MFA pedido e sem terminal, ou código recusado; 4 limite de requisições (429); 5 rede ou serviço fora do ar; 6 outro erro do Garmin ou atividades com falha. Tudo em `erro: <mensagem>` no stderr, sem traceback. O que já foi importado antes do erro fica; a próxima rodada completa.
+- **MFA:** se o login pedir o código de verificação e a entrada for um terminal, o comando pergunta **uma vez** (`Codigo de verificacao do Garmin: `, sem eco), conclui com `resume_login` da biblioteca e grava o token como no login normal; as próximas rodadas usam o token. Sem terminal, código vazio ou código recusado: saída 3 com mensagem fixa, nada gravado. Não há opção de linha de comando para o código (ficaria no histórico do shell), e o código nunca vai para log, saída ou mensagem de erro (teste confere).
+- **Fora:** sono, VFC, estado de treino, prontidão e treinos planejados do Garmin Connect (dado de saúde novo e modelo novo; candidata a meta futura).
+- Testes: `services/worker/tests/test_buscar_garmin.py` (FIT sintéticos de `tests/fixtures/garmin/fit/`, biblioteca e cliente falsos, guarda de rede, teste do log).
+- O passo a passo de uso fica no guia de como rodar da Meta 9 ([[produto/roadmap]]).
 
 ## Arquivos principais
 - `services/api/app/ingestao/garmin/` e `services/api/tests/ingestao/test_garmin_parser.py`
