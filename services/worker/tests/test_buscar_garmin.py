@@ -10,7 +10,7 @@ import subprocess
 import sys
 import types
 import zipfile
-from datetime import date, datetime, timezone
+from datetime import date, datetime, timedelta, timezone
 from pathlib import Path
 
 import pytest
@@ -124,7 +124,7 @@ class Falso:
         self.listagens.append((desde, ate))
         if self.erro_listar:
             raise self.erro_listar
-        return [AtividadeGarmin(i, ini) for i, (ini, _) in self.atividades.items()]
+        return [AtividadeGarmin(i, v[0], v[2] if len(v) > 2 else None) for i, v in self.atividades.items()]
 
     def baixar_fit(self, atividade_id):
         self.baixados.append(atividade_id)
@@ -204,6 +204,40 @@ def test_datas_invertidas(engine, factory, atleta, pasta):
     assert rodar(factory, Falso(), pasta, "--desde", "2025-04-03", "--ate", "2025-04-01") == 1
 
 
+# ---------- inicio da lista diferente do inicio do FIT (#342) ----------
+
+@pytest.mark.parametrize("deslocamento_s", [300, -300, 600])
+def test_inicio_da_lista_deslocado_nao_baixa_de_novo(engine, factory, atleta, pasta, deslocamento_s):
+    """Reproduz a #342: a lista traz o inicio diferente do FIT em mais de 60 s; antes, baixava a cada rodada."""
+    rodar(factory, Falso({1001: (RODAGEM, "upload_rodagem_6km.fit")}), pasta)
+    with Session(engine) as s:
+        dur = s.scalar(select(Atividade.duracao_s))
+    deslocada = Falso({1001: (RODAGEM + timedelta(seconds=deslocamento_s), "upload_rodagem_6km.fit", dur)})
+    assert rodar(factory, deslocada, pasta) == 0
+    assert deslocada.baixados == [] and _n(engine) == 1
+
+
+def test_sem_duracao_na_lista_o_deslocado_ainda_baixa_mas_nao_duplica(engine, factory, atleta, pasta, capsys):
+    rodar(factory, Falso({1001: (RODAGEM, "upload_rodagem_6km.fit")}), pasta)
+    sem = Falso({1001: (RODAGEM + timedelta(seconds=300), "upload_rodagem_6km.fit")})
+    assert rodar(factory, sem, pasta) == 0
+    assert sem.baixados == [1001] and _n(engine) == 1
+    assert "inicio da lista +300 s do FIT" in capsys.readouterr().out  # diagnostico: so numeros
+
+
+def test_atividade_diferente_nao_e_confundida(engine, factory, atleta, pasta):
+    rodar(factory, Falso({1001: (RODAGEM, "upload_rodagem_6km.fit")}), pasta)
+    with Session(engine) as s:
+        dur = s.scalar(select(Atividade.duracao_s))
+    # outra atividade logo depois (mesma duracao, sem sobreposicao) e uma curta dentro da primeira (como uma filha)
+    outra = Falso({
+        1002: (RODAGEM + timedelta(seconds=dur + 600), "upload_intervalado_5x1km.fit", dur),
+        1003: (RODAGEM + timedelta(seconds=600), "upload_esteira_4x1km.fit", dur / 5),
+    })
+    assert rodar(factory, outra, pasta) == 0
+    assert sorted(outra.baixados) == [1002, 1003]
+
+
 # ---------- erros do Garmin viram mensagem e codigo ----------
 
 @pytest.mark.parametrize("erro,codigo,trecho", [
@@ -261,7 +295,7 @@ def _biblioteca(login, dumps=None):
             return None, None
 
         def get_activities_by_date(self, a, b, sortorder=None):
-            return [{"activityId": 7, "startTimeGMT": "2025-04-02 08:00:00"}, {"sem": "id"}]
+            return [{"activityId": 7, "startTimeGMT": "2025-04-02 08:00:00", "duration": 1800.5}, {"sem": "id"}]
 
         def download_activity(self, i, dl_fmt=None):
             assert dl_fmt == "original"
@@ -286,7 +320,7 @@ def test_login_com_credenciais_uma_tentativa_e_grava_o_token(monkeypatch, env, t
     cli = ClienteGarminConnect.entrar(env)
     assert ch["login"] == 1 and dumps == [str(tmp_path / "token")]
     assert ch["init"][0]["return_on_mfa"] is True and ch["init"][0]["retry_attempts"] == 1
-    assert cli.listar(HOJE, HOJE) == [AtividadeGarmin(7, RODAGEM)]  # item sem activityId e ignorado
+    assert cli.listar(HOJE, HOJE) == [AtividadeGarmin(7, RODAGEM, 1800.5)]  # item sem activityId e ignorado
     assert cli.baixar_fit(7) == (FITS / "upload_rodagem_6km.fit").read_bytes()
 
 

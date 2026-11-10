@@ -50,14 +50,52 @@ class RelatorioBusca:
     avisos: list[str] = field(default_factory=list)
 
 
+# Parecido o bastante para ser a mesma atividade: os intervalos [inicio, inicio + duracao] coincidem em pelo menos
+# 70% do maior deles (#342). Duas atividades diferentes nao se sobrepoem assim; uma atividade-pai de multiesporte e as
+# filhas tambem nao (a filha e bem menor que a pai).
+SOBREPOSICAO_MIN = 0.7
+JANELA_BUSCA = timedelta(hours=6)  # so para limitar a consulta; a regra e a sobreposicao
+
+
+def _mesma_pelo_intervalo(a: AtividadeGarmin, inicio_banco, duracao_banco: float) -> bool:
+    """O inicio da lista pode diferir do do FIT em mais de 60 s (#342); o intervalo inteiro ainda quase coincide."""
+    if not a.duracao_s or not duracao_banco:
+        return False
+    ini_a = para_utc(a.inicio_utc)
+    ini_b = para_utc(inicio_banco)
+    fim_a, fim_b = ini_a + timedelta(seconds=a.duracao_s), ini_b + timedelta(seconds=duracao_banco)
+    comum = (min(fim_a, fim_b) - max(ini_a, ini_b)).total_seconds()
+    return comum >= SOBREPOSICAO_MIN * max(a.duracao_s, duracao_banco)
+
+
 def _ja_no_banco(session: Session, atleta_id: int, a: AtividadeGarmin) -> bool:
+    """Ja ha uma atividade do atleta que esta lista representa? (1) inicio a ate 60 s, a regra da ADR 0006; (2) sem isso,
+    o intervalo da lista quase coincide com o de uma atividade do banco. Sem mudanca no modelo e sem guardar o id do Garmin."""
     if a.inicio_utc is None:
         return False
     inicio = para_utc(a.inicio_utc)
     folga = timedelta(seconds=TOLERANCIA_S)
-    return session.scalars(select(Atividade.id).where(
+    if session.scalars(select(Atividade.id).where(
         Atividade.atleta_id == atleta_id, Atividade.inicio.between(inicio - folga, inicio + folga),
-    ).limit(1)).first() is not None
+    ).limit(1)).first() is not None:
+        return True
+    if not a.duracao_s:
+        return False
+    fim = inicio + timedelta(seconds=a.duracao_s)
+    candidatas = session.execute(select(Atividade.inicio, Atividade.duracao_s).where(
+        Atividade.atleta_id == atleta_id, Atividade.inicio.between(inicio - JANELA_BUSCA, fim + JANELA_BUSCA),
+    )).all()
+    return any(_mesma_pelo_intervalo(a, ini, dur) for ini, dur in candidatas)
+
+
+def _diferenca(session: Session, atividade_id: int, a: AtividadeGarmin) -> str:
+    """So numeros (segundos de diferenca), nunca datas, ids do Garmin nem tipos."""
+    ativ = session.get(Atividade, atividade_id)
+    if ativ is None or a.inicio_utc is None:
+        return "atividade baixada e ja existente (sem dados da lista para comparar)"
+    d_ini = (para_utc(a.inicio_utc) - para_utc(ativ.inicio)).total_seconds()
+    d_dur = "sem duracao na lista" if not a.duracao_s else f"duracao da lista {a.duracao_s - ativ.duracao_s:+.0f} s"
+    return f"atividade baixada e ja existente: inicio da lista {d_ini:+.0f} s do FIT, {d_dur}"
 
 
 def buscar(session: Session, cliente: ClienteGarmin, atleta_id: int, desde: date, ate: date,
@@ -78,6 +116,8 @@ def buscar(session: Session, cliente: ClienteGarmin, atleta_id: int, desde: date
             rel.falhas += 1
             continue
         rel.avisos.extend(r.avisos)
+        if r.resultado == "ignorada":  # baixada a toa: diz quanto a lista diferia do banco, para achar a causa (#342)
+            rel.avisos.append(_diferenca(session, r.atividade_id, a))
         if r.resultado == "inserida":
             rel.inseridas += 1
         elif r.resultado == "atualizada":
