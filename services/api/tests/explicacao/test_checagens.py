@@ -272,3 +272,12 @@ def test_o_modulo_e_puro_sem_rede_llm_banco_nem_log():
 
 def test_versao():
     assert ck.VERSAO == "checagens_feedback@1"
+
+
+def test_checar_devolve_none_se_aprovado_e_um_codigo_se_reprovado():
+    caso, texto = T.BONS["G01"]
+    assert ck.checar(O.PACOTES[caso], texto) is None
+    caso, texto, motivo, _ = T.RUINS["R05"]
+    assert ck.checar(O.PACOTES[caso], texto) == motivo
+    # com vários motivos, o primeiro da lista MOTIVOS
+    assert ck.checar(O.PACOTES["F01"], "Eu acho que foi o dobro!") == "numero_por_extenso"

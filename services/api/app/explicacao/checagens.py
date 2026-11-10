@@ -272,3 +272,12 @@ def checar_texto(pacote: Mapping[str, Any], texto: str) -> Resultado:
         achados.add("nome_fora_do_pacote")
     motivos = tuple(m for m in MOTIVOS if m in achados)
     return Resultado(aprovado=not motivos, motivos=motivos)
+
+
+def checar(pacote: Mapping[str, Any], texto: str) -> str | None:
+    """Forma que o `worker.gerar_feedback` usa (injeção): ``None`` se aprovado; senão **um** código curto de motivo (o primeiro de MOTIVOS).
+
+    O código nunca repete o texto nem o termo que reprovou. Quem precisa de todos os motivos usa ``checar_texto``.
+    """
+    r = checar_texto(pacote, texto)
+    return None if r.aprovado else r.motivos[0]
