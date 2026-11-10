@@ -3,6 +3,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { MaterialIcons } from "@expo/vector-icons";
 import { Pressable, ScrollView, StyleSheet, Text, useWindowDimensions, View } from "react-native";
 
+import { buscarCheckinsPendentes } from "../checkin/api";
 import { BotaoEnviarFit } from "./BotaoEnviarFit";
 import { EsqueletoEvolucao } from "./Esqueleto";
 import {
@@ -26,6 +27,10 @@ type Props = {
   aoAbrirTreino?: (atividadeId: number) => void;
   /** Abre a tela da semana-padrão. Sem ele, o botão "Semana-padrão" não aparece. */
   aoAbrirSemanaPadrao?: () => void;
+  /** Abre a lista de check-ins pendentes (#299). Sem ele, a linha "Check-ins pendentes" não aparece nem busca o total. */
+  aoAbrirCheckinsPendentes?: () => void;
+  /** Muda quando a tela volta ao foco: busca o total de pendentes de novo. */
+  atualizar?: number;
   /** Troque nos testes. Padrão: o fetch global. */
   fetchFn?: typeof fetch;
 };
@@ -46,7 +51,15 @@ function mensagemErro(erro: ErroApi): string {
   }
 }
 
-export function TelaEvolucao({ apiUrl, atletaId, aoAbrirTreino, aoAbrirSemanaPadrao, fetchFn }: Props) {
+export function TelaEvolucao({
+  apiUrl,
+  atletaId,
+  aoAbrirTreino,
+  aoAbrirSemanaPadrao,
+  aoAbrirCheckinsPendentes,
+  atualizar = 0,
+  fetchFn,
+}: Props) {
   const tema = useTema();
   const margem = useMargemTela();
   const styles = useMemo(() => criarEstilos(tema, margem), [tema, margem]);
@@ -62,6 +75,20 @@ export function TelaEvolucao({ apiUrl, atletaId, aoAbrirTreino, aoAbrirSemanaPad
       ativo = false;
     };
   }, [apiUrl, atletaId, fetchFn, tentativa]);
+
+  // Total de treinos sem check-in (uma chamada a mais ao abrir). Se falhar, a linha aparece sem número.
+  const [pendentes, setPendentes] = useState<number | null>(null);
+  const querPendentes = !!aoAbrirCheckinsPendentes;
+  useEffect(() => {
+    if (!querPendentes) return;
+    let ativo = true;
+    buscarCheckinsPendentes(atletaId, undefined, { baseUrl: apiUrl, fetch: fetchFn }).then((r) => {
+      if (ativo) setPendentes(r.ok && typeof r.dados.total === "number" ? r.dados.total : null);
+    });
+    return () => {
+      ativo = false;
+    };
+  }, [querPendentes, apiUrl, atletaId, fetchFn, atualizar]);
 
   const tentarDeNovo = useCallback(() => {
     setEstado({ tipo: "carregando" });
@@ -88,6 +115,19 @@ export function TelaEvolucao({ apiUrl, atletaId, aoAbrirTreino, aoAbrirSemanaPad
         >
           <MaterialIcons name="event" size={tamanho.iconeMedio} color={tema.cor.destaque} accessible={false} />
           <Text style={styles.verTreinoTexto}>Semana-padrão</Text>
+          <MaterialIcons name="chevron-right" size={tamanho.iconeMedio} color={tema.cor.destaque} accessible={false} />
+        </Pressable>
+      )}
+      {aoAbrirCheckinsPendentes && (
+        <Pressable
+          testID="abrir-checkins-pendentes"
+          accessibilityRole="button"
+          accessibilityLabel={pendentes ? `Check-ins pendentes, ${pendentes}` : "Check-ins pendentes"}
+          onPress={aoAbrirCheckinsPendentes}
+          style={({ pressed }) => [styles.verTreino, styles.semanaPadrao, pressed && { backgroundColor: tema.cor["destaque-suave"] }]}
+        >
+          <MaterialIcons name="assignment" size={tamanho.iconeMedio} color={tema.cor.destaque} accessible={false} />
+          <Text style={styles.verTreinoTexto}>Check-ins pendentes{pendentes ? ` · ${pendentes}` : ""}</Text>
           <MaterialIcons name="chevron-right" size={tamanho.iconeMedio} color={tema.cor.destaque} accessible={false} />
         </Pressable>
       )}

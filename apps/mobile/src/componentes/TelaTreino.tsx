@@ -4,7 +4,9 @@ import { useCallback, useEffect, useMemo, useState, type ReactNode } from "react
 import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 
 import { borda, espaco, fonte, larguraConteudoMax, raio, tamanho, useMargemTela, useTema, type Tema } from "../tema";
+import { CartoesCheckin } from "./CartoesCheckin";
 import { EsqueletoTreino } from "./Esqueleto";
+import { MODALIDADES } from "./modalidades";
 import { dataCurta } from "./GraficoTiros";
 
 type Props = {
@@ -13,20 +15,16 @@ type Props = {
   atividadeId: number;
   /** Mostra o botão "Voltar" quando vier. */
   aoVoltar?: () => void;
+  /** Abrem a tela de check-in (#299). Sem eles, os cartões "Check-in" e "Carga pela PSE" não aparecem. */
+  aoFazerCheckin?: () => void;
+  aoEditarCheckin?: () => void;
+  /** Muda quando a tela volta ao foco: busca o treino de novo, sem apagar o que já está na tela. */
+  atualizar?: number;
   /** Troque nos testes. Padrão: o fetch global. */
   fetchFn?: typeof fetch;
 };
 
 type Estado = { tipo: "carregando" } | { tipo: "ok"; dados: Atividade } | { tipo: "erro"; erro: ErroApi };
-
-const MODALIDADES: Record<
-  string,
-  { nome: string; icone: "directions-run" | "directions-bike" | "pool"; cor: "corrida" | "ciclismo" | "natacao" }
-> = {
-  corrida: { nome: "Corrida", icone: "directions-run", cor: "corrida" },
-  ciclismo: { nome: "Ciclismo", icone: "directions-bike", cor: "ciclismo" },
-  natacao: { nome: "Natação", icone: "pool", cor: "natacao" },
-};
 
 function mensagemErro(erro: ErroApi): string {
   switch (erro.tipo) {
@@ -44,7 +42,7 @@ function numeroBr(n: number): string {
   return String(n).replace(".", ",");
 }
 
-export function TelaTreino({ apiUrl, atletaId, atividadeId, aoVoltar, fetchFn }: Props) {
+export function TelaTreino({ apiUrl, atletaId, atividadeId, aoVoltar, aoFazerCheckin, aoEditarCheckin, atualizar = 0, fetchFn }: Props) {
   const tema = useTema();
   const margem = useMargemTela();
   const styles = useMemo(() => criarEstilos(tema, margem), [tema, margem]);
@@ -54,12 +52,13 @@ export function TelaTreino({ apiUrl, atletaId, atividadeId, aoVoltar, fetchFn }:
   useEffect(() => {
     let ativo = true;
     buscarAtividade(atletaId, atividadeId, { baseUrl: apiUrl, fetch: fetchFn }).then((r) => {
-      if (ativo) setEstado(r.ok ? { tipo: "ok", dados: r.dados } : { tipo: "erro", erro: r.erro });
+      // Um erro numa atualização em segundo plano não apaga o treino que já está na tela.
+      if (ativo) setEstado((atual) => (r.ok ? { tipo: "ok", dados: r.dados } : atual.tipo === "ok" ? atual : { tipo: "erro", erro: r.erro }));
     });
     return () => {
       ativo = false;
     };
-  }, [apiUrl, atletaId, atividadeId, fetchFn, tentativa]);
+  }, [apiUrl, atletaId, atividadeId, fetchFn, tentativa, atualizar]);
 
   const tentarDeNovo = useCallback(() => {
     setEstado({ tipo: "carregando" });
@@ -100,12 +99,39 @@ export function TelaTreino({ apiUrl, atletaId, atividadeId, aoVoltar, fetchFn }:
           )}
         </View>
       )}
-      {estado.tipo === "ok" && <Treino atividade={estado.dados} styles={styles} tema={tema} />}
+      {estado.tipo === "ok" && (
+        <Treino
+          atividade={estado.dados}
+          styles={styles}
+          tema={tema}
+          checkin={
+            aoFazerCheckin && aoEditarCheckin
+              ? {
+                  apiUrl,
+                  atletaId,
+                  fetchFn,
+                  aoFazerCheckin,
+                  aoEditarCheckin,
+                  aoApagado: () => setTentativa((n) => n + 1),
+                }
+              : undefined
+          }
+        />
+      )}
     </ScrollView>
   );
 }
 
-function Treino({ atividade, styles, tema }: { atividade: Atividade; styles: Estilos; tema: Tema }) {
+type PropsCheckin = {
+  apiUrl: string;
+  atletaId: number;
+  fetchFn?: typeof fetch;
+  aoFazerCheckin: () => void;
+  aoEditarCheckin: () => void;
+  aoApagado: () => void;
+};
+
+function Treino({ atividade, styles, tema, checkin }: { atividade: Atividade; styles: Estilos; tema: Tema; checkin?: PropsCheckin }) {
   const mod = MODALIDADES[atividade.modalidade];
   return (
     <View>
@@ -135,6 +161,8 @@ function Treino({ atividade, styles, tema }: { atividade: Atividade; styles: Est
         )}
         <Text style={styles.secundario}>FC média: {atividade.fc_media === null ? "sem FC" : `${atividade.fc_media} bpm`}</Text>
       </View>
+
+      {checkin && <CartoesCheckin atividade={atividade} {...checkin} />}
 
       {atividade.clima && <CartaoClima clima={atividade.clima} styles={styles} tema={tema} />}
     </View>

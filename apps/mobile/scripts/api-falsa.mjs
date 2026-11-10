@@ -154,7 +154,78 @@ const gravarSemana = (id, corpo) => {
   semanas.set(id, [...vigenciasDe(id).filter((v) => v.vigente_desde !== nova.vigente_desde), nova]);
   return { ...nova, atividades_reaplicadas: 0 };
 };
-const atividade = (id) => (id === 106 ? natacao(id) : corrida(id));
+
+// Check-in pós-treino sintético (#299, ADR 0012): PUT/GET/DELETE em memória, por atleta, e a lista de pendentes. Nenhum dado real.
+// Atividades: 101 corrida e 106 natação sem check-in (prazo aberto); 107 corrida com check-in; 108 corrida com o prazo vencido;
+// 109 parte de multiesporte com `pse_sugerida` 5; 110 treino inteiro de multiesporte (não pede check-in). Outros ids: corrida sem check-in.
+// Atleta de teste para forçar estados do check-in (EXPO_PUBLIC_ATLETA_ID=<id>); os demais usam os dados acima:
+//   7 = sem pendentes (lista vazia)          8 = GET dos pendentes derruba a conexão   9 = GET da atividade derruba a conexão
+//  10 = PUT responde 422 genérico           11 = PUT responde 422 fora_do_prazo       12 = PUT responde 422 atividade_sem_checkin
+//  13 = PUT derruba a conexão               14 = PUT responde 404                     15 = DELETE derruba a conexão
+//  16 = PUT demora 4 s (estado "salvando")  17 = GET dos pendentes responde 500       18 = GET da atividade demora 6 s (carregando)
+const ANCORAS = ["repouso", "muito leve", "leve", "moderado", "um pouco difícil", "difícil", "6", "muito difícil", "8", "9", "máximo"];
+const SENSACOES = ["", "Muito mal", "Mal", "Normal", "Bem", "Muito bem"];
+const ATALHOS = { dor: "Dor", cansaco: "Cansaço", sono_ruim: "Sono ruim", calor: "Calor", trabalho_estresse: "Trabalho ou estresse" };
+const checkins = new Map();
+const chaveCheckin = (atleta, atividade) => `${atleta}:${atividade}`;
+const checkinOut = (atividadeId, e) => ({
+  atividade_id: atividadeId,
+  pse: e.pse,
+  pse_texto: ANCORAS[e.pse],
+  sensacao: e.sensacao,
+  sensacao_texto: SENSACOES[e.sensacao],
+  nada_a_relatar: e.nada_a_relatar,
+  atalhos: e.atalhos.map((chave) => ({ chave, texto: ATALHOS[chave] })),
+  texto: e.texto ?? null,
+  versao: "checkin@1",
+  registrado_em: "2025-03-18T12:00:00Z",
+  atualizado_em: "2025-03-18T12:00:00Z",
+});
+const iniciarCheckins = () => {
+  checkins.set(chaveCheckin(1, 107), checkinOut(107, { pse: 5, sensacao: 4, nada_a_relatar: false, atalhos: ["cansaco", "trabalho_estresse"], texto: "Texto sintético de exemplo." }));
+};
+const naoPedeCheckin = (id) => id === 110;
+const prazoVencido = (id) => id === 108;
+const pendentesBase = [101, 106, 109];
+const infoTreino = (id) => {
+  const a = id === 106 ? natacao(id) : corrida(id);
+  return { modalidade: id === 109 ? "ciclismo" : a.modalidade, data_local: a.data_local, hora_local: a.hora_local, duracao: a.duracao, duracao_s: a.duracao_s };
+};
+const comCheckin = (a, atleta) => {
+  const id = a.atividade_id;
+  const e = checkins.get(chaveCheckin(atleta, id)) ?? null;
+  const minutos = Math.round(a.duracao_s / 60);
+  const carga_pse = naoPedeCheckin(id)
+    ? null
+    : e
+      ? { versao: "carga_pse@1", estado: "calculada", pse: e.pse, minutos, valor: e.pse * minutos, valor_texto: `${e.pse * minutos} UA`, texto: `Carga pela PSE: ${e.pse} x ${minutos} min = ${e.pse * minutos} UA.` }
+      : { versao: "carga_pse@1", estado: "sem_checkin", minutos, texto: "Sem check-in: a carga pela PSE precisa da PSE do treino." };
+  return {
+    ...a,
+    ...(id === 109 ? { modalidade: "ciclismo", subtipo: "rua", pace_medio: null } : {}),
+    ...(id === 110 ? { subtipo: "multiesporte_pai" } : {}),
+    checkin: e,
+    carga_pse,
+    checkin_aberto: e ? true : !naoPedeCheckin(id) && !prazoVencido(id),
+    pse_sugerida: id === 109 && !e ? 5 : null,
+  };
+};
+const pendentesDe = (atleta) => {
+  const ids = atleta === 7 ? [] : pendentesBase.filter((id) => !checkins.has(chaveCheckin(atleta, id)));
+  const lista = ids.map((id) => {
+    const t = infoTreino(id);
+    const nome = { corrida: "Corrida", ciclismo: "Ciclismo", natacao: "Natação" }[t.modalidade];
+    return { atividade_id: id, modalidade: t.modalidade, data_local: t.data_local, hora_local: t.hora_local, duracao: t.duracao, titulo: `${nome}, ${Math.round(t.duracao_s / 60)} min` };
+  });
+  return { dias: 7, total: lista.length, pendentes: lista };
+};
+const validarCheckin = (c) =>
+  Number.isInteger(c?.pse) && c.pse >= 0 && c.pse <= 10 && Number.isInteger(c?.sensacao) && c.sensacao >= 1 && c.sensacao <= 5 &&
+  Array.isArray(c?.atalhos) && c.atalhos.every((a) => a in ATALHOS) && (c.texto == null || String(c.texto).length <= 500) &&
+  (c.nada_a_relatar ? c.atalhos.length === 0 && c.texto == null : c.atalhos.length > 0 || !!c.texto);
+const erro422 = (type) => ({ detail: [{ loc: ["body"], msg: "sintético", type }] });
+iniciarCheckins();
+const atividade = (id, atleta = 1) => comCheckin(id === 106 ? natacao(id) : corrida(id), atleta);
 
 createServer((req, res) => {
   const cabecalhos = {
@@ -183,8 +254,58 @@ createServer((req, res) => {
     if (id === 5) return res.writeHead(404, cabecalhos).end(JSON.stringify({ detail: "atleta não encontrado" }));
     return res.writeHead(200, cabecalhos).end(JSON.stringify(semanaPadrao(id, searchParams.get("em"))));
   }
+  const ck = pathname.match(/^\/atletas\/(\d+)\/atividades\/(\d+)\/checkin$/);
+  if (ck) {
+    const atleta = Number(ck[1]);
+    const id = Number(ck[2]);
+    const chave = chaveCheckin(atleta, id);
+    if (req.method === "DELETE") {
+      if (atleta === 15) return req.destroy();
+      checkins.delete(chave);
+      return res.writeHead(204, cabecalhos).end();
+    }
+    if (req.method === "PUT") {
+      if (atleta === 13) return req.destroy();
+      let texto = "";
+      req.on("data", (c) => (texto += c));
+      req.on("end", () => {
+        const responder = () => {
+          if (atleta === 14) return res.writeHead(404, cabecalhos).end(JSON.stringify({ detail: "atividade não encontrada" }));
+          if (atleta === 11 || prazoVencido(id) && !checkins.has(chave)) return res.writeHead(422, cabecalhos).end(JSON.stringify(erro422("fora_do_prazo")));
+          if (atleta === 12 || naoPedeCheckin(id)) return res.writeHead(422, cabecalhos).end(JSON.stringify(erro422("atividade_sem_checkin")));
+          let corpoEnviado;
+          try {
+            corpoEnviado = JSON.parse(texto);
+          } catch {
+            corpoEnviado = null;
+          }
+          if (atleta === 10 || !validarCheckin(corpoEnviado)) return res.writeHead(422, cabecalhos).end(JSON.stringify(erro422("value_error")));
+          const gravado = checkinOut(id, corpoEnviado);
+          checkins.set(chave, gravado);
+          res.writeHead(200, cabecalhos).end(JSON.stringify(gravado));
+        };
+        if (atleta === 16) setTimeout(responder, 4000);
+        else responder();
+      });
+      return;
+    }
+    const existente = checkins.get(chave);
+    return res.writeHead(existente ? 200 : 404, cabecalhos).end(JSON.stringify(existente ?? { detail: "check-in não encontrado" }));
+  }
+  const pe = pathname.match(/^\/atletas\/(\d+)\/checkins\/pendentes$/);
+  if (pe) {
+    const atleta = Number(pe[1]);
+    if (atleta === 8) return req.destroy();
+    if (atleta === 17) return res.writeHead(500, cabecalhos).end(JSON.stringify({ detail: "erro sintético" }));
+    return res.writeHead(200, cabecalhos).end(JSON.stringify(pendentesDe(atleta)));
+  }
   if (/^\/atletas\/\d+\/evolucao\/tiros-1km$/.test(pathname)) corpo = evolucao;
-  const m = pathname.match(/^\/atletas\/\d+\/atividades\/(\d+)$/);
-  if (m) corpo = atividade(Number(m[1]));
+  const m = pathname.match(/^\/atletas\/(\d+)\/atividades\/(\d+)$/);
+  if (m) {
+    const atleta = Number(m[1]);
+    if (atleta === 9) return req.destroy();
+    const enviar = () => res.writeHead(200, cabecalhos).end(JSON.stringify(atividade(Number(m[2]), atleta)));
+    return atleta === 18 ? void setTimeout(enviar, 6000) : enviar();
+  }
   res.writeHead(corpo ? 200 : 404, cabecalhos).end(JSON.stringify(corpo ?? { detail: "não encontrado" }));
 }).listen(porta, () => console.log(`API falsa (dados sintéticos) em http://localhost:${porta}`));

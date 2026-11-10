@@ -5,6 +5,7 @@ import { atividades } from "../__fixtures__/atividades";
 jest.mock("@expo/vector-icons", () => require("../__fixtures__/iconesFalsos"));
 
 jest.mock("expo-router", () => ({
+  useFocusEffect: (cb: () => void) => require("react").useEffect(cb, [cb]),
   useLocalSearchParams: () => ({ id: "101" }),
   router: { canGoBack: () => false, back: jest.fn(), replace: jest.fn() },
 }));
