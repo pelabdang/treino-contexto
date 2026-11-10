@@ -298,9 +298,12 @@ O campo vem **só** no `GET` da atividade do próprio atleta, como o check-in (n
   `sem_linha_base` (sem tipo) e `sem_carga` não impedem o feedback**: viram frase no texto ("Ainda aprendendo o seu normal...", "Sem comparação..."), como nos exemplos 3 e 6. Se o modelo ou as checagens
   falharem, é `indisponivel`, como qualquer outro caso.
 
-**Migração `0013`.** Só cria `feedback_treino` com os `CHECK` e o `UNIQUE`; não edita tabelas anteriores. O `downgrade` apaga a tabela (e os feedbacks: texto derivado, sem
+**Migração `0013`** (pontos da Duda para a #327, depois de `aceita`). Só cria `feedback_treino` com os `CHECK` e o `UNIQUE`; não edita tabelas anteriores. O `downgrade` apaga a tabela (e os feedbacks: texto derivado, sem
 cópia). Sem índice a mais: o `UNIQUE` de `checkin_id` já indexa. A gravação é um *upsert* por `checkin_id`, **sem savepoint**, como o check-in (ADR 0012, item 3) e a semana-padrão
 (#282). Testes: apagar o check-in, a atividade e `worker.apagar_checkin` apagam o feedback; reimportar a atividade (ADR 0006: atualiza no lugar) mantém check-in e feedback.
+- (a) Os `CHECK` de valores fechados (`estado`, `motivo`) usam comparação explícita e nomes pela convenção do `Base`. (b) `estado_campos` já cobre `pronto` sem `provedor`/`modelo`; teste de migração de que `sem_feedback` com `texto` preenchido é **rejeitado** e de que `pronto` com `motivo` é **rejeitado**.
+  (c) `datetime` com fuso volta **sem fuso** no SQLite, como no check-in: a comparação `checkin_atualizado_em <> atualizado_em` normaliza os dois lados (o mesmo cuidado do `para_utc`). (d) `alembic upgrade head` e `downgrade base` rodam no CI e continuam passando.
+  (e) A fila do worker ordena por `tentativas` (nunca tentados primeiro); basta o `UNIQUE` já existente, **sem índice novo** (poucas linhas por atleta).
 
 **Dado de saúde (a regra da Meta 6, ADR 0010 item 2 e ADR 0012 item 5, aplicada ao feedback).** O feedback **é derivado de dado de saúde** (PSE, sensação, atalhos) e
 **é dado de saúde**: só no banco local; **nunca em log, exceção, captura, fixture real ou arquivo versionado**; devolvido só ao próprio atleta
@@ -308,29 +311,34 @@ cópia). Sem índice a mais: o `UNIQUE` de `checkin_id` já indexa. A gravação
 pela cascata e a imprimir só contagens (`checkins: apagados=N`, `feedbacks: apagados=M`). Comandos imprimem só contagens e códigos de motivo, nunca texto.
 
 ### 3. Camada de LLM trocável e `worker.gerar_feedback`
-- **Biblioteca e configuração.** **LiteLLM** (interface unificada compatível com a da OpenAI; confirmar a versão e os nomes na documentação dela quando a #326
-  abrir), como já manda o `AGENTS.md`. `LLM_PROVIDER` e `LLM_MODEL` vêm do `.env`; a chave do provedor também, por variável de ambiente (nome conforme
-  o provedor; a conferir na #326), **nunca no repositório**. Padrão: **Groq**, **plano gratuito, sem cartão** (decisão 4). Trocar de provedor ou de modelo é mudar o `.env`, sem tocar no código.
-  O resto do app **nunca** chama LiteLLM nem provedor: só a interface `redigir(pacote) -> texto` do módulo `app/explicacao/llm.py` (#326).
+- **Biblioteca e configuração** (revisão da Duda no PR #340, conferida no código do LiteLLM 1.108.4, a versão que o `uv` instala). **LiteLLM**, como já manda o `AGENTS.md`. `LLM_PROVIDER` e `LLM_MODEL` vêm do `.env`; a camada monta o nome
+  que o LiteLLM recebe, **`<provedor>/<modelo>`** (por exemplo, `groq/<modelo>`). A chave do Groq é **`GROQ_API_KEY`**, também no `.env` (**nunca no repositório**). Duas variáveis novas, lidas em `config.py`: **`LLM_TIMEOUT_S`** (padrão 20)
+  e **`LLM_LIMITE_CHAMADAS`** (padrão 20, o `--limite` do worker a sobrepõe). O `.env.example` ganha `GROQ_API_KEY`, `LLM_TIMEOUT_S` e `LLM_LIMITE_CHAMADAS`. Padrão: **Groq**, **plano gratuito, sem cartão** (decisão 4).
+  Trocar de provedor ou de modelo é mudar o `.env`, sem tocar no código.
+- **Onde mora e que interface tem.** `services/api/app/llm/` (infraestrutura da API; **não** em `app/explicacao/`, que é das métricas e das checagens). O resto do app **nunca** chama LiteLLM nem provedor: só
+  `redigir(pacote) -> ResultadoLLM(texto, motivo, provedor, modelo)`. Os **motivos da camada** são os quatro que ela produz: `provedor_nao_configurado`, `provedor_erro`, `provedor_tempo_limite`, `limite_de_chamadas`
+  (resposta vazia ou só de espaços é `provedor_erro`). **`texto_reprovado` é do worker**, depois das checagens. O contador de chamadas vive numa **instância por execução**; a chamada que passaria do limite **não vai ao provedor**.
+- **Antes da importação do LiteLLM** (Duda, conferido no código): a camada define `LITELLM_MODE=PRODUCTION` e **`LITELLM_LOCAL_MODEL_COST_MAP=True`**. Sem a segunda, a importação tenta baixar a tabela de preços do GitHub,
+  o que quebraria "testes sem rede" (`litellm_core_utils/get_model_cost_map.py`).
 - **Provedor falso** (`LLM_PROVIDER=falso`), **obrigatório em testes e CI**: sem rede e sem chave. Devolve um texto fixo por fixture, e um modo para devolver
   **textos ruins** de propósito (número fora do pacote, linguagem proibida, 6 linhas), para provar que as checagens reprovam. O texto do provedor falso é de teste: grava
   `provedor = 'falso'` e a API o devolve em `provedor`, para nunca passar por texto de verdade. O padrão do `.env.example` continua `groq`.
 - **Provedor não configurado** (`LLM_MODEL` vazio, sem chave ou provedor desconhecido): sem exceção na API; o feedback fica `sem_feedback` com `motivo = provedor_nao_configurado`.
 - **Prompt.** Fixo, versionado no repositório (`feedback_prompt@1`; contém só regras e o guia de tom, **nenhum dado**). A mensagem do usuário é o pacote em JSON.
   A saída é texto simples, 3 a 5 linhas, uma frase por linha.
-- **Tempo limite e erro.** Tempo limite por chamada (padrão 20 s, a confirmar). **Sem nova tentativa dentro da chamada**: a próxima execução do worker é a nova tentativa.
+- **Tempo limite e erro.** Tempo limite por chamada (`LLM_TIMEOUT_S`, padrão 20 s, aprovado pelo Theo). **Sem nova tentativa dentro da chamada**: a camada passa `num_retries=0` e o tempo limite explícitos; a próxima execução do worker é a nova tentativa. O 429 do provedor (limite do plano) é `provedor_erro`.
   Qualquer erro do provedor (rede, limite do plano gratuito, resposta vazia, tempo esgotado) vira `motivo` (`provedor_erro` ou `provedor_tempo_limite`), nunca exceção na API.
-- **Limite por execução.** `uv run python -m worker.gerar_feedback --atleta "<nome>" [--limite N] [--refazer]`: no máximo **N chamadas ao provedor por execução** (padrão 20, a confirmar);
+- **Limite por execução.** `uv run python -m worker.gerar_feedback --atleta "<nome>" [--limite N] [--refazer]`: no máximo **N chamadas ao provedor por execução** (`LLM_LIMITE_CHAMADAS`, padrão 20, aprovado pelo Theo);
   as que sobrarem ficam sem linha ou `limite_de_chamadas` e entram na próxima execução. `--refazer` ignora o "já está pronto" e refaz o feedback do atleta (ainda dentro do limite).
-  O plano gratuito tem limite de chamadas por minuto e por dia; **os números do plano não são fixados aqui** (a conferir na página do provedor quando a #326 abrir).
+  O plano gratuito tem limite de chamadas por minuto e por dia; **os números do plano não são fixados aqui** (ver "A confirmar", item 10: limites do plano gratuito **não conferidos**). 20 por execução cabem nos limites da tabela do plano Developer que a Duda leu.
   Mesma convenção dos demais comandos: nome repetido pega o menor id, nome inexistente sai com código 1, saída só com contagens (`feedback: gerados=a sem_feedback=b ignorados=c`).
 - **Nada em log.** Nem o pacote, nem o texto, nem o texto reprovado, nem a mensagem de exceção do provedor (que pode repetir o corpo da requisição): captura-se a **classe** do erro, converte-se
-  em `motivo` e descarta-se a mensagem. O log de depuração e os *callbacks* do LiteLLM ficam desligados (os nomes exatos dos ajustes, a conferir na #326). Teste com um texto marcador sintético
+  em `motivo` e descarta-se a mensagem. Ajustes do LiteLLM (nomes conferidos pela Duda no código, `litellm/__init__.py` e `_logging.py`): `litellm.turn_off_message_logging = True`, `litellm.redact_messages_in_exceptions = True`, `litellm.suppress_debug_info = True`, `litellm.log_raw_request_response` e as listas `input_callback`, `success_callback`, `failure_callback` e `callbacks` **vazias** (o padrão); o logger `LiteLLM` (o padrão do código é `DEBUG`, via `LITELLM_LOG`) e o `httpx` em **`CRITICAL`**, por código. `litellm.set_verbose` está obsoleto. Um teste confere os ajustes e o nível dos loggers. Teste com um texto marcador sintético
   (`MARCADOR-SINTETICO-123`) no pacote e na resposta do provedor falso, em sucesso, em reprovação e em erro: o marcador não aparece em `caplog.text` (nível DEBUG), em `stdout`, em `stderr` nem em
   mensagem de exceção. O `worker` loga só contagens e códigos de motivo.
 - **O que vai ao provedor** (decisões 2, 3 e 9): o prompt fixo e o pacote de fatos do item 1, e nada mais. **O pacote é dado de saúde** (PSE, sensação, atalhos, FC). Com o "sim" do Angelo (decisão 9), o
   worker pode gerar o feedback dos **treinos reais dele**, **só na máquina dele**, no plano gratuito do Groq e com o limite por execução; o texto real vai **só para o banco local**. Em **CI, testes, fixtures,
-  exemplos e capturas** o provedor é o falso ou os dados são sintéticos. Os termos de retenção do provedor no plano gratuito ficam **a conferir** (ver "Limitações" e "A confirmar", item 10).
+  exemplos e capturas** o provedor é o falso ou os dados são sintéticos. O que foi e o que **não** foi conferido sobre a retenção do provedor está no "A confirmar", item 10.
 
 ### 4. Checagens e o destino do texto reprovado
 Função pura (`app/explicacao/checagens.py`, #325, `checagens_feedback@1`): recebe o pacote e o texto e devolve aprovado ou o **código** do motivo. **Qualquer reprovação** descarta o texto: ele **não é gravado**,
@@ -387,13 +395,13 @@ refinados na #323 e #325; a lista de linguagem proibida tem **nota própria** e 
 - A migração `0013` é aditiva e reversível; o `downgrade` apaga os feedbacks.
 
 ## Limitações
-- **O pacote é dado de saúde que sai da máquina** quando o provedor é real. Com o "sim" do Angelo (decisão 9) vale para os treinos **dele**, só local. Os termos de
-  retenção e de uso de dados do provedor no plano gratuito **não foram lidos** nesta ADR (a conferir, "A confirmar" item 10). Para **outros atletas** o "sim" dele não vale: pediria base legal (LGPD) e consentimento de cada um (Meta 10 em diante).
+- **O pacote é dado de saúde que sai da máquina** quando o provedor é real. Com o "sim" do Angelo (decisão 9) vale para os treinos **dele**, só local. A retenção do provedor foi
+  conferida em parte; o uso dos dados para treinar modelos e o plano gratuito **não foram conferidos** ("A confirmar" item 10). Para **outros atletas** o "sim" dele não vale: pediria base legal (LGPD) e consentimento de cada um (Meta 10 em diante).
 - **Sem login:** "só ao próprio atleta" é o `atleta_id` da rota, como no check-in (ADR 0012, "Limitações"). Identidade é da Meta 10.
 - **O texto de uma LLM pode ser inexato mesmo passando nas checagens** (o número bate, a frase interpreta mal). As checagens reduzem o risco; não o eliminam. A QA lê textos de fixtures; a revisão de uma amostra pelo professor é da Meta 10.
 - **O feedback não acompanha reimportação** da atividade (mudou a duração ou a FC no arquivo): continua o texto antigo até o check-in mudar ou o `--refazer` (ver "A confirmar", item 6).
 - Sem pace ajustado, sem estimativa de efeito do clima, sem sono, HRV nem FC de repouso, sem séries de natação, sem resumo semanal, quinzenal ou mensal, sem envio por WhatsApp ou e-mail.
-- Fontes de LiteLLM e Groq **não foram abertas** para esta ADR (nomes de variáveis, ajustes de log e limites do plano gratuito são "a conferir" na #326).
+- **LiteLLM e Groq, o que não foi conferido** (Duda, 10/11): telemetria própria do LiteLLM (não achada no código, mas ele não foi lido inteiro); o nome exato do ajuste "Scrub Logged Data" da documentação (a página não abriu; usam-se os nomes do código); o plano gratuito do Groq (a página de dados não o diferencia do pago); o uso de dados para treinar modelos; os limites do plano gratuito. Detalhes no "A confirmar", item 10.
 
 ## Fora desta ADR
 Motor de explicação com estimativa de quanto cada fator pesa (seção 4.3, passo 3; o pacote só põe os fatos lado a lado); resumos semanal, quinzenal e mensal; mensagens em nome do professor e amostra para ele
@@ -401,7 +409,7 @@ revisar (Meta 10); aviso ou envio fora do app; agente com pergunta livre (Meta 1
 
 ## Fontes
 Nenhuma fonte de literatura é nova: o pacote usa só o que as ADRs 0007, 0008, 0010, 0011 e 0012 e as notas de métrica já definem (as citações de Borg, Foster, Leys e Rousseeuw continuam **a conferir nos textos**, como nas ADRs 0011 e 0012).
-Regra própria do projeto, sem artigo: o pacote de fatos, as checagens, a lista de linguagem proibida, o tom e as formas do texto (decisões do Angelo de 10/11 e propostas desta ADR). LiteLLM e Groq: **a conferir** (ver "Limitações").
+Regra própria do projeto, sem artigo: o pacote de fatos, as checagens, a lista de linguagem proibida, o tom e as formas do texto (decisões do Angelo de 10/11 e propostas desta ADR). LiteLLM: conferido pela Duda no código da versão 1.108.4 (nomes e ajustes na seção 3). Groq: páginas oficiais `console.groq.com/docs/your-data` e `console.groq.com/docs/rate-limits`, lidas em 10/11 por uma ferramenta que resume, então vale o Angelo abrir a página; o que não foi conferido está no "A confirmar", item 10.
 
 ## A confirmar
 Cada item tem o **padrão** que vale se o Angelo disser "ok" sem mudança.
@@ -415,7 +423,12 @@ Cada item tem o **padrão** que vale se o Angelo disser "ok" sem mudança.
 8. **O provedor falso aparece na API?** **Padrão:** sim, como `origem = teste` (a API não manda nome de provedor nem de modelo), para um texto de teste nunca passar por texto de verdade; o cartão pode mostrar um selo "de teste" (Lia, #329). *Theo e Lia.*
 9. **Gerar também depois do `PUT`, em segundo plano.** **Padrão:** não; só o worker (item 2). No piloto local o `pendente` dura até alguém rodar o comando. Se isso incomodar o Angelo, a alternativa é um gatilho de fundo depois do `PUT`
    (ainda com o limite por execução e sem atrasar a resposta), em issue própria. *Angelo e Theo.*
-10. **Antes da primeira rodada com treino real.** **Padrão:** a Duda confirma na #326 os termos de retenção do provedor no plano gratuito e o que a LiteLLM registra; só então o Angelo roda o `worker.gerar_feedback` nos treinos dele. O resultado fica só no banco local (decisão 9). *Duda e Angelo.*
+10. **Antes da primeira rodada com treino real: o que foi e o que não foi conferido sobre o provedor** (Duda, 10/11; fonte: `console.groq.com/docs/your-data`). **Padrão:** o Angelo faz os dois passos abaixo e só então roda o `worker.gerar_feedback` nos treinos dele; o resultado fica só no banco local (decisão 9). *Duda e Angelo.*
+    - **Conferido.** "By default, Groq does not retain customer data for inference requests"; dado só é retido com recurso que exige retenção (lote, ajuste fino) ou "if needed to protect platform reliability". Para investigar falha ou abuso o Groq **pode registrar entradas e saídas por até 30 dias**
+      ("These logs are retained for up to 30 days, unless legally required to retain longer"), e isso **pode ser desligado** nos controles de dados da conta. **Zero Data Retention (ZDR)**: "When ZDR is enabled, Groq will not retain customer data for system reliability and abuse monitoring"; a página diz que todos os clientes podem ligá-lo (Data Controls, no console).
+      Há divergência em fontes de terceiros sobre a retenção padrão; vale a página oficial.
+    - **Não conferido.** (a) Se o **plano gratuito** tem o mesmo padrão (a página não diferencia); (b) se o Groq **usa os dados para treinar modelos** (a página não diz; os termos de uso e a política de privacidade não foram abertos: é o ponto aberto mais importante); (c) os **limites do plano gratuito** (a página de limites só traz a tabela do plano Developer, por exemplo 30 req/min e 1.000 req/dia em um dos modelos, e manda ver `console.groq.com/settings/limits`); (d) a telemetria do LiteLLM e o nome do ajuste "Scrub Logged Data".
+    - **Os dois passos do Angelo antes de rodar:** (1) abrir os controles de dados da conta no console do Groq e ligar o ZDR (ou desligar o registro de 30 dias); (2) ler os termos do Groq sobre treino de modelos. Sem o (1) e o (2) o pacote pode ficar guardado até 30 dias no Groq em caso de investigação. A autorização dele (só local, só o pacote de fatos) continua valendo; isto só deixa os termos claros.
 
 ## Data e quem decidiu
 2026-11-10. Proposta do Caio (ciência), com revisão da Duda (modelo de dados e camada de LLM) pedida no PR. Decisões do Angelo de 10/11 ("ok para as oito", com o esclarecimento do item 6) no Contexto. Issue #322.
