@@ -1,5 +1,6 @@
 from pathlib import Path
 
+from pydantic import SecretStr
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -11,6 +12,15 @@ class Settings(BaseSettings):
     cors_origens: str = "http://localhost:8081"
     # Pasta dos FIT enviados por upload (ADR 0006). Relativo = a partir da raiz do repositório. Fora do git.
     fit_dir: str = "dados-upload/fit"
+    # Camada de LLM trocavel (AGENTS.md, ADR 0013 item 3). Vazio em `llm_model` = nao configurado.
+    llm_provider: str = "groq"
+    llm_model: str = ""
+    llm_timeout_s: float = 20.0  # por chamada, sem nova tentativa dentro da chamada
+    llm_limite_chamadas: int = 20  # por execucao do worker
+    # Chaves dos provedores: so no .env local, nunca no repositorio, nunca em log (SecretStr).
+    groq_api_key: SecretStr | None = None
+    openai_api_key: SecretStr | None = None
+    anthropic_api_key: SecretStr | None = None
 
 
 def lista_origens(texto: str) -> list[str]:
