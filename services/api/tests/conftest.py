@@ -26,3 +26,17 @@ def engine():
 def session(engine):
     with Session(engine) as s:
         yield s
+
+
+@pytest.fixture(autouse=True)
+def _cliente_http_do_teste_sem_log_de_url():
+    """O LiteLLM traz o `openai` 3.x, que traz o `httpx2`; o `TestClient` do Starlette passa a usar o `httpx2`, que registra
+    cada URL (com a query) no logger `httpx2` em INFO. E log do cliente DO TESTE, nao da API; sem isso os testes que conferem
+    "nada do dado no log" (caplog em DEBUG) veriam a URL que o proprio teste montou."""
+    import logging
+
+    logger = logging.getLogger("httpx2")
+    antes = logger.level
+    logger.setLevel(logging.WARNING)
+    yield
+    logger.setLevel(antes)
