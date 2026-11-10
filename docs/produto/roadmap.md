@@ -21,7 +21,7 @@ Ao fechar uma meta, o Paulo registra o resultado em `docs/produto/metas/` e revi
 | 6 | Carga de treino (rTSS, hrTSS, CTL, ATL, TSB) | feita (fixtures, sem rede; conferência local com o histórico real; [[produto/metas/meta-6-carga-treino]]) |
 | 7 | Linha de base pessoal e semana-padrão (tipo de treino pelo plano, regra como reserva) | feita (fixtures, sem rede; conferência local com o histórico real; [[produto/metas/meta-7-linha-de-base-semana-padrao]]) |
 | 8 | Check-in pós-treino e carga pela PSE | feita (fixtures, sem rede; celular não verificado; [[produto/metas/meta-8-check-in]]) |
-| **9** | **Feedback automático por treino** | **próxima: proposta, esperando o Angelo** (sem issues) |
+| **9** | **Feedback automático por treino** | **atual: em curso** (decisões do Angelo em 10/11; #322 a #335) |
 | 10 | Caixa do dia do professor | esboço |
 | 11 | Agente do atleta (primeiras perguntas) | esboço |
 
@@ -565,9 +565,9 @@ Revisadas ao fim de cada meta com o que se aprendeu. Ordem tirada da "Fundação
   semanal; motivo de falta para o treino planejado que não aconteceu (candidata); equipamento e zona no check-in; série
   diária e CTL/ATL pela PSE; o check-in no motor de explicação e no feedback (Meta 9); o professor vendo o check-in (Meta 10).
 
-### Meta 9: feedback automático por treino (próxima, proposta)
-> **Proposta de 10/11, esperando o Angelo.** Nenhuma issue foi aberta: a lista abaixo vira issue depois do "ok" dele às
-> decisões em "PRECISA DO ANGELO" (Meta 9). Até lá, ninguém trabalha nela.
+### Meta 9: feedback automático por treino (atual, em curso)
+> **Em curso desde 10/11.** O Angelo deu "ok" às oito decisões no mesmo dia (ver "PRECISA DO ANGELO", decisões de 10/11),
+> com um esclarecimento no item 6: o feedback é **texto escrito**, sem áudio. Issues #322 a #335; roteiro na #336.
 
 - **Objetivo:** depois do check-in, o atleta lê **3 a 5 linhas** sobre o treino: como foi em relação ao normal dele naquele
   tipo de treino, o que o check-in e o contexto (clima, carga) dizem, e uma observação positiva. É a camada 4 do
@@ -578,10 +578,11 @@ Revisadas ao fim de cada meta com o que se aprendeu. Ordem tirada da "Fundação
   - o cartão "Feedback" na tela de um treino no app (web e celular), abaixo do check-in;
   - o `feedback` no `GET` da atividade (texto, versão do pacote, de onde veio o texto e o motivo quando não há feedback);
   - `worker.gerar_feedback` para gerar ou refazer o feedback de um atleta, e o feedback apagado junto com o check-in.
-- **Critério de pronto (proposta):**
+- **Critério de pronto:**
   - ADR 0013 aprovada pelo Theo antes da migração: pacote de fatos e versão, onde o feedback fica guardado, quando é gerado
     e quando fica desatualizado, camada de LLM, checagens, o que vai e o que nunca vai ao provedor, regra do dado de saúde;
-    propostas de produto em "A confirmar";
+    as oito decisões do Angelo de 10/11 registradas; o que sobrar em "A confirmar"; o Angelo lê os 5 exemplos sintéticos
+    (tom do texto) antes do código do feedback (#327);
   - `fatos_treino@1` como função pura, com nota em `docs/metricas/` e oráculo sobre fixtures sintéticas; o pacote só tem
     números que o código já calcula (nenhum número novo inventado) e não afirma causa;
   - checagens automáticas: **todo número do texto está no pacote** e **nenhum termo da lista de linguagem proibida**
@@ -593,38 +594,53 @@ Revisadas ao fim de cada meta com o que se aprendeu. Ordem tirada da "Fundação
     é apagado com o check-in;
   - endpoints no OpenAPI, adendo da ADR 0004 e cliente regerado; cartão com teste e revisão da Lia;
   - QA com fixtures num clone limpo, seguindo só o guia, com o provedor falso; uma rodada com o provedor de verdade só com
-    fixtures sintéticas (se o Angelo autorizar); o Angelo abre no celular, **na mesma sessão**, o check-in (pendente da Meta 8)
-    e o cartão de feedback.
-- **Issues propostas e ordem** (cada uma até 1 dia; numeração só quando forem criadas):
+    fixtures sintéticas (decisão 3); o Angelo abre no celular, **na mesma sessão**, o check-in (pendente da Meta 8) e o
+    cartão de feedback.
+- **Issues e ordem** (cada uma até 1 dia; abertas em 10/11):
 
-  | Proposta | Issue | Dono | Depende de | Critério de pronto curto |
-  |---|---|---|---|---|
-  | P1 | ADR 0013: feedback automático por treino (pacote de fatos, guarda, camada LLM, checagens, dado de saúde) | caio-ciencia com duda-dados (aprovação do Theo) | nenhuma | ADR no `main` como `proposta` logo depois do "ok" do Theo ao modelo; "A confirmar" com padrões; 5 exemplos sintéticos de feedback para o Angelo ler o tom |
-  | P2 | Fixtures sintéticas e oráculo do pacote de fatos, com textos bons e ruins para as checagens | caio-ciencia | P1 (adianta à mão) | atividades sintéticas com e sem check-in, linha de base "aprendendo" e "fora", clima e natação; oráculo do pacote e lista de textos que precisam reprovar |
-  | P3 | `fatos_treino@1`: pacote de fatos como função pura | caio-ciencia | P1, P2 | igual ao oráculo; sem texto livre da observação; nota em `docs/metricas/` |
-  | P4 | Checagens: números do texto contra o pacote e linguagem proibida | caio-ciencia | P1, P2 | função pura; todos os textos ruins reprovados e todos os bons aprovados; lista em nota própria |
-  | P5 | Camada de LLM trocável (LiteLLM), provedor falso, tempo limite, sem log de conteúdo | duda-dados | P1 | troca de provedor só pelo `.env`; testes sem rede; erro do provedor vira motivo, não exceção na API |
-  | P6 | Feedback no banco (migração 0013) e `worker.gerar_feedback` (pacote → LLM → checagens → grava) | duda-dados | P3, P4, P5 | idempotente; reprovado não é gravado como feedback; apagar o check-in apaga o feedback; `worker.apagar_checkin` cobre o feedback |
-  | P7 | `feedback` no `GET` da atividade, adendo da ADR 0004, cliente regerado | duda-dados | P6 | estados (pronto, sem check-in, desatualizado, reprovado, sem provedor) com texto pronto; OpenAPI e cliente |
-  | P8 | Desenho do cartão de feedback na tela do treino | lia-design | P1 (rascunha pelo plano) | spec com os estados, claro e escuro, sem juízo de valor visual; dúvidas para o Theo antes da tela |
-  | P9 | Cartão de feedback no app | rafa-app (revisão da Lia) | P7, P8 | teste de componente por estado; nada do texto em log ou armazenamento; design-ok |
-  | P10 | Documentação, guia `meta-9-como-rodar` e diário | nina-docs | P7, P9 | guia rodado num clone limpo com o provedor falso; notas de módulo e métrica |
-  | P11 | QA de ponta a ponta com fixtures, e o celular com o Angelo | bia-qa | P10 | e2e da meta; guia seguido do zero; sessão no celular marcada com o Angelo durante a QA, não depois: ele abre o check-in (pendente da Meta 8, #301) e o cartão de feedback |
-  | P12 | Resultado da meta e roteiro | paulo-planejador | P11 | nota da meta e roteiro atualizados |
+  | Proposta | Issue | Título | Dono | Depende de | Critério de pronto curto |
+  |---|---|---|---|---|---|
+  | P1 | #322 | ADR 0013: feedback automático por treino (pacote de fatos, guarda, camada LLM, checagens, dado de saúde) | caio-ciencia com duda-dados (aprovação do Theo) | nenhuma | ADR no `main` como `proposta` logo depois do "ok" do Theo ao modelo; "A confirmar" com padrões; 5 exemplos sintéticos de feedback para o Angelo ler o tom |
+  | P2 | #323 | Fixtures sintéticas e oráculo do pacote de fatos, com textos bons e ruins para as checagens | caio-ciencia | #322 (adianta à mão) | atividades sintéticas com e sem check-in, linha de base "aprendendo" e "fora", clima e natação; oráculo do pacote e lista de textos que precisam reprovar |
+  | P3 | #324 | `fatos_treino@1`: pacote de fatos como função pura | caio-ciencia | #322, #323 | igual ao oráculo; sem texto livre da observação; nota em `docs/metricas/` |
+  | P4 | #325 | Checagens: números do texto contra o pacote e linguagem proibida | caio-ciencia | #322, #323 | função pura; todos os textos ruins reprovados e todos os bons aprovados; lista em nota própria |
+  | P5 | #326 | Camada de LLM trocável (LiteLLM), provedor falso, tempo limite, sem log de conteúdo | duda-dados | #322 | troca de provedor só pelo `.env`; testes sem rede; erro do provedor vira motivo, não exceção na API |
+  | P6 | #327 | Feedback no banco (migração 0013) e `worker.gerar_feedback` (pacote → LLM → checagens → grava) | duda-dados | #324, #325, #326 | idempotente; reprovado não é gravado como feedback; apagar o check-in apaga o feedback; `worker.apagar_checkin` cobre o feedback |
+  | P7 | #328 | `feedback` no `GET` da atividade, adendo da ADR 0004, cliente regerado | duda-dados | #327 | estados (pronto, sem check-in, desatualizado, reprovado, sem provedor) com texto pronto; OpenAPI e cliente |
+  | P8 | #329 | Desenho do cartão de feedback na tela do treino | lia-design | #322 (rascunha pelo plano) | spec com os estados, claro e escuro, sem juízo de valor visual; dúvidas para o Theo antes da tela |
+  | P9 | #330 | Cartão de feedback no app | rafa-app (revisão da Lia) | #328, #329 | teste de componente por estado; nada do texto em log ou armazenamento; design-ok |
+  | P10 | #331 | Documentação, guia `meta-9-como-rodar` e diário | nina-docs | #328, #330 | guia rodado num clone limpo com o provedor falso; notas de módulo e métrica |
+  | P11 | #332 | QA de ponta a ponta com fixtures, e o celular com o Angelo | bia-qa | #331 | e2e da meta; guia seguido do zero; sessão no celular marcada com o Angelo durante a QA, não depois: ele abre o check-in (pendente da Meta 8, #301) e o cartão de feedback |
+  | P12 | #333 | Resultado da meta e roteiro | paulo-planejador | #332 | nota da meta e roteiro atualizados |
+  | P13 | #334 | Capturas do check-in no tema escuro e nos estados de erro (paralela) | rafa-app (revisão da Lia) | nenhuma | capturas no PR; design-ok |
+  | P14 | #335 | Piloto local: buscar a atividade do dia no Garmin Connect, `worker.buscar_garmin` (paralela) | duda-dados | nenhuma | ver abaixo |
 
-  **Ordem:** P1 na largada (Caio, com a Duda no modelo); P2 e P8 adiantam em paralelo; P5 começa assim que o Theo aprovar a
-  parte da camada de LLM. Depois da ADR, P3 e P4 (Caio) em paralelo com P5 (Duda); P6 é o encontro do backend; P7 depois
-  da P6; P9 precisa da P7 e da P8. Caminho crítico: P1 → P3 → P6 → P7 → P9 → P10 → P11 → P12. Não há conferência com o
-  histórico real nesta meta, a menos que o Angelo autorize (decisão 3).
-- **Paralela pequena (fora do critério de pronto):** P13, capturas do check-in no tema escuro e nos estados de erro (item 4
-  da revisão da Lia no #313; rafa-app, sem dependência), já que o Rafa mexe na tela do treino nesta meta.
+  **Ordem:** #322 na largada (Caio, com a Duda no modelo); #323 e #329 adiantam em paralelo; #326 começa assim que o Theo
+  aprovar a parte da camada de LLM. Depois da ADR, #324 e #325 (Caio) em paralelo com #326 (Duda); #327 é o encontro do
+  backend; #328 depois da #327; #330 precisa da #328 e da #329. Caminho crítico: #322 → #324 → #327 → #328 → #330 → #331 →
+  #332 → #333. A QA usa só fixtures; o feedback dos treinos reais do Angelo no provedor foi autorizado por ele em 10/11, mas
+  roda só localmente (por ele ou pelo Theo) e nada do resultado entra no repositório (ver "PRECISA DO ANGELO").
+- **Paralelas (fora do critério de pronto, sem dependência):**
+  - **P13 (#334):** capturas do check-in no tema escuro e nos estados de erro (item 4 da revisão da Lia no #313; rafa-app),
+    já que o Rafa mexe na tela do treino nesta meta.
+  - **P14 (#335), pedido do Angelo em 10/11:** o piloto local busca a atividade do dia direto da conta Garmin Connect dele,
+    sem subir um FIT à mão. `worker.buscar_garmin` entra na conta com credenciais do `.env` local, lista as atividades de um
+    intervalo de datas (padrão: hoje), baixa o FIT original de cada uma que ainda não está no banco e passa pelo **mesmo
+    caminho do upload de FIT da Meta 3** (identidade, esforços, clima, carga, tipo). Usa a biblioteca Python `garminconnect`
+    (não oficial), testada localmente pelo Theo em 10/11: login, lista por data e FIT original funcionam. Sem mudança no
+    modelo de dados (se precisar, volta para o Theo). Critério curto: idempotente; sem rede nos testes e no CI (cliente
+    Garmin falso); credenciais e token só no `.env` ou em pasta local fora do git, nunca em log; uma tentativa de login por
+    execução e erro do Garmin como mensagem clara; limitação registrada (biblioteca não oficial, pode quebrar quando o Garmin
+    mudar o login; a API oficial continua sendo o caminho de produção e depende do CNPJ); nota do módulo e guia
+    atualizados. Dona: duda-dados. Só local e só na conta do Angelo (decidido por ele em 10/11; ver "PRECISA DO ANGELO").
 - **Quem:** caio-ciencia (ADR, pacote de fatos, checagens, oráculo, exemplos de tom), duda-dados (camada de LLM, banco,
-  worker, API, cliente), lia-design (cartão), rafa-app (tela), nina-docs, bia-qa, Theo (ADR 0013 e adendo da ADR 0004),
-  Angelo (decisões abaixo e o celular).
+  worker, API, cliente; a P14), lia-design (cartão), rafa-app (tela), nina-docs, bia-qa, Theo (ADR 0013 e adendo da ADR
+  0004), Angelo (leitura dos exemplos de tom e o celular).
 - **Fora:** motor de explicação com estimativa de quanto cada fator pesa (seção 4.3, passo 3: o pacote só põe os fatos lado a
   lado, sem afirmar causa); resumos semanal, quinzenal e mensal; envio em nome do professor e revisão de amostra pelo
   professor (Meta 10); aviso ou envio por WhatsApp ou e-mail; agente com pergunta livre (Meta 11); feedback sem check-in
-  (se o Angelo seguir o padrão da decisão 5).
+  (decisão 5); feedback em áudio (o feedback é texto, decisão 6); sono, VFC, estado de treino, prontidão e treinos planejados
+  do Garmin Connect (candidata sem número).
 
 ### Meta 10: caixa do dia do professor
 - **Objetivo:** o professor vê quem precisa de atenção e confirma o tipo de treino sugerido em lote.
@@ -661,7 +677,11 @@ Revisadas ao fim de cada meta com o que se aprendeu. Ordem tirada da "Fundação
 - **App em celular:** nenhuma tela foi aberta num iOS ou Android até a Meta 8; estava no critério da Meta 8 (#301) e não foi
   feito. Decidido pelo Angelo em 10/11: ele abre o check-in e o cartão de feedback numa só sessão, durante a QA da Meta 9 (P11).
 - **Capturas do check-in no tema escuro e nos estados de erro** (rafa-app, com a Lia): item 4 da revisão da Lia no #313;
-  proposta como paralela P13 da Meta 9.
+  aberta como paralela P13 da Meta 9 (#334).
+- **Sono, VFC, estado de treino, prontidão e treinos planejados do Garmin Connect** (duda-dados, com o Caio): a biblioteca da
+  P14 (#335) expõe, pela documentação dela, esses dados, mas é dado de saúde novo e modelo de dados novo
+  (ADR, aprovação do Theo e "PRECISA DO ANGELO" sobre guardar). Sem issue; os treinos planejados podem alimentar a
+  semana-padrão e o motivo de falta.
 - **`carga_pse@2` pelo tempo total** (caio-ciencia, com a Duda): a `carga_pse@1` usa o cronômetro; pediria gravar o tempo
   corrido na importação.
 - **Série diária da carga pela PSE e comparação com a `carga@2`** (caio-ciencia): fora da Meta 8 por decisão do Angelo.
@@ -736,32 +756,43 @@ stack Expo). A chave do provedor de LLM foi entregue e está no `.env` (fora do 
   observação obrigatórias; "Carga pela PSE" em UA; sem login no piloto local. ADR aceita (PR #305). Ver
   [[diario/2026-11-10]] e [[produto/metas/meta-8-check-in]].
 
-Em aberto:
-1. **Meta 8, o celular (#301), ainda não feito:** o Angelo abre a tela de check-in no celular dele (Expo Go, rede de casa,
-   dado sintético) uma vez. **Decidido pelo Angelo em 10/11:** entra na Meta 9, na QA (P11), junto com o cartão de feedback,
-   numa só sessão.
-   Informação, sem decisão: o caminho mínimo do check-in fecha em 3 toques; com atalho ou texto são 4 (Theo, 09/11).
-2. **Meta 9 (feedback automático por treino): proposta, esperando resposta.** Cada item com o padrão que o time segue se o
-   Angelo disser "ok":
-   1. **Abrir as issues e começar a Meta 9** com a lista P1 a P13 acima. *Padrão:* sim.
+- **Meta 9 (feedback automático por treino): respondida em 10/11.** "Ok" aos oito padrões abaixo, sem mudança; no item 6 o
+  Angelo esclareceu que o feedback é **por texto**, sem áudio (o título antigo do item dava a entender áudio; o item virou "Tom do texto").
+  Issues #322 a #335. Os padrões aceitos:
+   1. **Abrir as issues e começar a Meta 9** com a lista P1 a P13 acima (mais a P14, pedido dele). Feito: #322 a #335.
    2. **O que vai ao provedor de LLM** (serviço externo; a chave já está no `.env`). *Padrão:* só o pacote de fatos
       (números, unidades, estados e rótulos do tipo, do clima e da carga; PSE, sensação e os atalhos marcados); **nunca** o
       texto livre da observação, nome, data real, posição ou qualquer identificador; nada disso em log.
    3. **Dado real no provedor.** *Padrão:* na Meta 9, só fixtures sintéticas vão ao provedor de verdade, numa rodada pequena e
       local; gerar o feedback dos treinos reais do Angelo fica para um "sim" explícito dele, rodado localmente, sem nada no
-      repositório.
+      repositório. **O "sim" veio em 10/11** (item abaixo, com os limites).
    4. **Custo.** *Padrão:* só o plano gratuito do provedor atual (Groq), sem cartão, com limite de chamadas por execução do
       `worker.gerar_feedback`; qualquer plano pago ou provedor novo volta para ele.
    5. **Quando o feedback aparece.** *Padrão:* só depois do check-in (o feedback usa PSE e sensação, e isso dá motivo para
       fazer o check-in); treino sem check-in mostra "Faça o check-in para ver o feedback"; editar o check-in marca o feedback
       como desatualizado e ele é refeito.
-   6. **Voz e tom.** *Padrão:* voz do app, sem o nome do professor até existir professor de verdade (Meta 10); frases curtas,
-      em segunda pessoa, sem diagnóstico, culpa, promessa nem causa afirmada; o Angelo lê os 5 exemplos sintéticos da ADR 0013
-      antes do código.
+   6. **Tom do texto.** O feedback é texto escrito, sem áudio (esclarecimento do Angelo em 10/11). *Padrão:* quem fala no
+      texto é o app, sem o nome do professor até existir professor de verdade (Meta 10); frases curtas, em segunda pessoa, sem
+      diagnóstico, culpa, promessa nem causa afirmada; o Angelo lê os 5 exemplos sintéticos da ADR 0013 antes do código.
    7. **Atalho "dor" no feedback.** *Padrão:* o feedback automático não comenta dor além de uma frase neutra ("Você registrou
       dor neste treino."), sem conselho; alerta sensível é do professor (plano, seção 4.4) e fica para a Meta 10.
    8. **Texto reprovado nas checagens.** *Padrão:* sem feedback naquele treino, com o motivo na API ("ainda não foi possível
       gerar o feedback"), e uma nova tentativa no próximo `worker.gerar_feedback`; nenhum texto de reserva escrito por regra
       nesta meta.
-3. **Próximas metas, sem pressa:** CNPJ e pedido da API da Garmin; pedido da API do TrainingPeaks com a assessoria;
+- **Meta 8, o celular (#301): decidido em 10/11.** O Angelo abre a tela de check-in no celular dele (Expo Go, rede de casa,
+  dado sintético) na QA da Meta 9 (#332), junto com o cartão de feedback, numa só sessão. Informação, sem decisão: o caminho
+  mínimo do check-in fecha em 3 toques; com atalho ou texto são 4 (Theo, 09/11).
+- **Meta 9, os dois itens novos: respondidos em 10/11 ("sim para as duas").**
+  1. **P14 (#335), buscar a atividade do dia no Garmin Connect: sim.** Paralela da Meta 9, fora do critério de pronto, **só no
+     piloto local e só na conta dele**; credenciais e token só no `.env` ou em pasta local fora do git; biblioteca não oficial
+     (`garminconnect`), aceita como limitação do piloto; a API oficial continua sendo o caminho de produção (depende do CNPJ,
+     item 1 de "Em aberto"). Nada da conta dele entra no repositório.
+  2. **Feedback dos treinos reais dele no provedor de LLM: sim, explícito** (responde à decisão 3 para os treinos reais). Os
+     limites continuam valendo: rodado **só localmente**, por ele ou pelo Theo; ao provedor vai só o pacote de fatos (nunca o
+     texto livre da observação, nome, data real, posição ou identificador); **nada do pacote, do texto gerado ou do resultado**
+     entra no repositório, em issue, PR ou log; só o plano gratuito do Groq, com limite de chamadas por execução. A QA da meta
+     (#332) não muda: fixtures sintéticas e provedor falso, mais a rodada pequena com fixtures no provedor de verdade.
+
+Em aberto:
+1. **Próximas metas, sem pressa:** CNPJ e pedido da API da Garmin; pedido da API do TrainingPeaks com a assessoria;
    plano comercial do Open-Meteo para produção; limite de tamanho do upload no proxy, obrigatório na meta de deploy.
