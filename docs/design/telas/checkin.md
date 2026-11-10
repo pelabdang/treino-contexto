@@ -2,13 +2,13 @@
 tipo: design
 status: rascunho
 dono: lia
-atualizado: 2026-11-09
+atualizado: 2026-11-10
 links: [[design/guia-visual]], [[design/tokens]], [[design/telas/treino]], [[design/telas/semana-padrao]], [[design/telas/evolucao-tiros]], [[decisoes/0012-check-in-pos-treino]], [[decisoes/0010-carga-de-treino]], [[modulos/mobile]], [[glossario]]
 ---
 # Tela: check-in pós-treino e lista de pendentes
 
 Spec da issue #295, antes da implementação (#299, do Rafa). Contrato em [[decisoes/0012-check-in-pos-treino]]
-(itens 2, 3, 4 e 7; a ADR está em proposta no PR #305). Os campos `checkin_aberto` e `pse_sugerida` que esta nota pediu
+(itens 2, 3, 4 e 7; a ADR foi aceita em 10/11, PR #305). Os campos `checkin_aberto` e `pse_sugerida` que esta nota pediu
 já estão na API (#298, PR #311, adendo 9 da ADR). As dúvidas de desenho foram respondidas pelo Theo em 09/11 (seção final).
 Todos os dados são **sintéticos**. Nada em `apps/mobile/` muda nesta nota.
 
@@ -302,7 +302,7 @@ Segue [[design/guia-visual]], "Estados". O conteúdo na tela não some quando um
 | apagado | volta ao treino com o cartão "sem check-in"; aviso curto (live region) | "Check-in apagado." |
 | erro ao apagar | aviso de erro; o check-in continua | "Não foi possível apagar. Tente de novo." |
 
-O texto "7 dias" vem do contrato (padrão ainda a confirmar com o Angelo, A confirmar 1 da ADR). Se o prazo mudar, muda
+O texto "7 dias" vem do contrato (A confirmar 1 da ADR, aceito pelo Angelo em 10/11). Se o prazo mudar, muda
 essa frase. O app **não** mostra o texto técnico do `detail` da API (que não repete a entrada) e **não** escreve respostas em log.
 
 ### Pendentes
@@ -386,3 +386,4 @@ Todas respondidas pelo Theo em 09/11 (comentário no PR #309). O que decidiu já
 6. **Prazo de 7 dias** ainda depende da resposta do Angelo (A confirmar 1 da ADR). A frase do `fora_do_prazo` está escrita com "7 dias".
    **Respondida (Theo, 09/11):** 7 dias segue como padrão até o Angelo responder. Se mudar, só o texto do `fora_do_prazo`
    (e o do aviso de prazo no cartão) muda.
+   **Decidido (Angelo, 10/11):** 7 dias, no "ok para as cinco" do "A confirmar" da ADR 0012.
