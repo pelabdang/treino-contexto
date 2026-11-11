@@ -4,8 +4,14 @@ from pydantic import SecretStr
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
+RAIZ_REPOSITORIO = Path(__file__).resolve().parents[3]
+
+
 class Settings(BaseSettings):
-    model_config = SettingsConfigDict(env_file=".env", extra="ignore")
+    # O `.env` e sempre o da raiz do repositorio, de qualquer pasta de execucao (#354): rodando um worker de
+    # `services/worker`, um `.env` relativo nao era lido e o provedor de LLM aparecia como nao configurado, sem erro.
+    # Variavel de ambiente continua valendo mais que o arquivo.
+    model_config = SettingsConfigDict(env_file=RAIZ_REPOSITORIO / ".env", extra="ignore")
 
     database_url: str = "postgresql+psycopg://treino:treino@localhost:5433/treino"
     # Origens do app web liberadas no CORS, separadas por vírgula (ADR 0004, item 7). Vazio libera nenhuma.
@@ -17,6 +23,7 @@ class Settings(BaseSettings):
     llm_model: str = ""
     llm_timeout_s: float = 20.0  # por chamada, sem nova tentativa dentro da chamada
     llm_limite_chamadas: int = 20  # por execucao do worker
+    llm_intervalo_s: float = 0.0  # pausa entre chamadas na mesma execucao (limite por minuto do provedor); 0 = sem pausa
     # Chaves dos provedores: so no .env local, nunca no repositorio, nunca em log (SecretStr).
     groq_api_key: SecretStr | None = None
     openai_api_key: SecretStr | None = None
@@ -32,8 +39,6 @@ def lista_origens(texto: str) -> list[str]:
 
 
 settings = Settings()
-
-RAIZ_REPOSITORIO = Path(__file__).resolve().parents[3]
 
 
 def pasta_fit(valor: str | Path | None = None) -> Path:
