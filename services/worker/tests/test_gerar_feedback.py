@@ -438,7 +438,7 @@ def test_ponta_a_ponta_com_o_oraculo_no_banco_e_as_checagens_reais(fabrica, caps
     assert "gerados=1 sem_feedback=0" in capsys.readouterr().out
     (fb,) = _linhas(fabrica)
     assert (fb.estado, fb.texto, fb.versao_fatos, fb.versao_checagens) == (
-        "pronto", _texto_g01(), "fatos_treino@1", "checagens_feedback@1")
+        "pronto", _texto_g01(), "fatos_treino@1", "checagens_feedback@2")
 
     ruim = ProvedorFalso(modo="ruim")  # numero fora do pacote, causa, conselho...: reprova e nao grava o texto ruim
     assert gerar_feedback.main(["--atleta", "Atleta Ficticio", "--refazer"], redator=Redator(ruim, "falso", "falso"),
