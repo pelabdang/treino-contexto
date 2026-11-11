@@ -2,7 +2,7 @@
 tipo: glossario
 status: em-uso
 dono: nina
-atualizado: 2026-11-09
+atualizado: 2026-11-11
 ---
 # Glossário
 
@@ -64,3 +64,11 @@ atualizado: 2026-11-09
 - **sRPE (session RPE)**: método de Foster et al. (2001): esforço percebido da sessão multiplicado pela duração. Base da carga pela PSE. Ver [[metricas/carga-pse]].
 - **`checkin_aberto`**: campo do `GET` da atividade que diz se a tela oferece "Fazer check-in". É falso em `multiesporte_pai` e `troca` e depois do prazo de 7 dias sem check-in; verdadeiro se já existe check-in (editar não tem prazo). O app não calcula prazo. Ver [[decisoes/0012-check-in-pos-treino]] e [[modulos/api]].
 - **`pse_sugerida`**: campo do `GET` da atividade: a PSE marcada na parte anterior de um multiesporte, oferecida como ponto de partida ("Usar N"). Nunca vem marcada sozinha. Ver [[decisoes/0012-check-in-pos-treino]] e [[design/telas/checkin]].
+- **Feedback (automático por treino)**: texto escrito de 3 a 5 linhas que o app mostra depois do check-in: como o treino foi em relação ao normal do atleta, o que o check-in e o contexto dizem, e uma observação positiva só quando um fato a sustenta. Não é áudio. Gerado só pelo `worker.gerar_feedback`, nunca na hora do `PUT` do check-in. Ver [[decisoes/0013-feedback-automatico]] e [[design/telas/feedback]].
+- **Pacote de fatos (`fatos_treino@1`)**: o que o provedor de LLM recebe sobre um treino: números, unidades, estados e textos prontos que o código já calculou, mais PSE, sensação e atalhos marcados. Nunca leva o texto livre da observação, nome, data, posição nem identificador. Ver [[metricas/fatos-treino]].
+- **Checagens do texto (`checagens_feedback@1`)**: a guarda em código entre o texto do provedor e o atleta: todo número tem de estar no pacote, o texto respeita a forma (3 a 5 linhas) e não usa linguagem proibida. Qualquer reprovação descarta o texto. Ver [[metricas/checagens-feedback]].
+- **Linguagem proibida**: lista de palavras e expressões que o feedback não pode usar (diagnóstico, culpa, promessa, causa afirmada, conselho, quem fala, elogio sem fato, número por extenso). Ver [[metricas/checagens-feedback]].
+- **Provedor de LLM**: serviço externo que redige o feedback (padrão: Groq, plano gratuito). Só entra pela camada de LLM, trocável pelo `.env` (`LLM_PROVIDER`, `LLM_MODEL` e a chave). Com o provedor de verdade, o pacote de fatos (dado de saúde) sai da máquina. Ver [[modulos/camada-llm]].
+- **Provedor falso**: provedor dos testes e do guia (`LLM_PROVIDER=falso`): sem rede e sem chave, devolve um texto fixo. O texto vai com `origem = teste` e o cartão mostra o selo "Texto de teste". Ver [[produto/meta-9-como-rodar]].
+- **Estados do feedback**: `pronto` (com texto), `sem_checkin`, `pendente` (tem check-in, o worker ainda não gerou), `desatualizado` (o check-in foi editado; o texto antigo não é devolvido) e `indisponivel` (texto reprovado, provedor fora, sem provedor ou limite de chamadas). Atividade que não pede check-in vem com `feedback` nulo. Ver [[modulos/api]].
+- **`origem` (do feedback)**: `automatico` ou `teste`; é só o que a API diz sobre quem escreveu o texto (nunca o provedor, o modelo nem as versões).
