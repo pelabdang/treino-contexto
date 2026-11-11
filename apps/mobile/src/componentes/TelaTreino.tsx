@@ -1,9 +1,10 @@
 import { MaterialIcons } from "@expo/vector-icons";
-import { buscarAtividade, type Atividade, type ClimaAtividade, type ErroApi } from "@treino/api-client";
+import { buscarAtividade, type Atividade, type ClimaAtividade, type ErroApi, type FeedbackTreino } from "@treino/api-client";
 import { useCallback, useEffect, useMemo, useState, type ReactNode } from "react";
 import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 
 import { borda, espaco, fonte, larguraConteudoMax, raio, tamanho, useMargemTela, useTema, type Tema } from "../tema";
+import { CartaoFeedback } from "./CartaoFeedback";
 import { CartoesCheckin } from "./CartoesCheckin";
 import { EsqueletoTreino } from "./Esqueleto";
 import { MODALIDADES } from "./modalidades";
@@ -65,6 +66,15 @@ export function TelaTreino({ apiUrl, atletaId, atividadeId, aoVoltar, aoFazerChe
     setTentativa((n) => n + 1);
   }, []);
 
+  // "Atualizar" do cartão Feedback: busca a atividade de novo sem apagar o que está na tela e devolve o feedback novo
+  // (`undefined` se a busca falhar). Nada do texto é guardado fora do estado da tela.
+  const recarregar = useCallback(async (): Promise<FeedbackTreino | null | undefined> => {
+    const r = await buscarAtividade(atletaId, atividadeId, { baseUrl: apiUrl, fetch: fetchFn });
+    if (!r.ok) return undefined;
+    setEstado({ tipo: "ok", dados: r.dados });
+    return r.dados.feedback ?? null;
+  }, [apiUrl, atletaId, atividadeId, fetchFn]);
+
   return (
     <ScrollView testID="rolagem-tela" contentContainerStyle={styles.container}>
       {aoVoltar && (
@@ -104,6 +114,7 @@ export function TelaTreino({ apiUrl, atletaId, atividadeId, aoVoltar, aoFazerChe
           atividade={estado.dados}
           styles={styles}
           tema={tema}
+          aoAtualizarFeedback={recarregar}
           checkin={
             aoFazerCheckin && aoEditarCheckin
               ? {
@@ -131,7 +142,19 @@ type PropsCheckin = {
   aoApagado: () => void;
 };
 
-function Treino({ atividade, styles, tema, checkin }: { atividade: Atividade; styles: Estilos; tema: Tema; checkin?: PropsCheckin }) {
+type PropsTreino = {
+  atividade: Atividade;
+  styles: Estilos;
+  tema: Tema;
+  checkin?: PropsCheckin;
+  aoAtualizarFeedback: () => Promise<FeedbackTreino | null | undefined>;
+};
+
+function Treino({ atividade, styles, tema, checkin, aoAtualizarFeedback }: PropsTreino) {
+  // Ordem da spec: dados > Check-in > Feedback > Carga pela PSE > Clima. Sem as rotas do check-in, o feedback vem logo depois dos dados.
+  const feedback = (
+    <CartaoFeedback feedback={atividade.feedback} aoFazerCheckin={checkin?.aoFazerCheckin} aoAtualizar={aoAtualizarFeedback} />
+  );
   const mod = MODALIDADES[atividade.modalidade];
   return (
     <View>
@@ -162,7 +185,7 @@ function Treino({ atividade, styles, tema, checkin }: { atividade: Atividade; st
         <Text style={styles.secundario}>FC média: {atividade.fc_media === null ? "sem FC" : `${atividade.fc_media} bpm`}</Text>
       </View>
 
-      {checkin && <CartoesCheckin atividade={atividade} {...checkin} />}
+      {checkin ? <CartoesCheckin atividade={atividade} {...checkin} entreCartoes={feedback} /> : feedback}
 
       {atividade.clima && <CartaoClima clima={atividade.clima} styles={styles} tema={tema} />}
     </View>

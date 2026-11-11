@@ -2,7 +2,7 @@
 // O app não calcula carga nem prazo: lê `checkin`, `carga_pse` e `checkin_aberto` do GET da atividade.
 import { MaterialIcons } from "@expo/vector-icons";
 import type { Atividade } from "@treino/api-client";
-import { useMemo, useState } from "react";
+import { useMemo, useState, type ReactNode } from "react";
 import { AccessibilityInfo, Pressable, StyleSheet, Text, View } from "react-native";
 
 import { apagarCheckin } from "../checkin/api";
@@ -19,9 +19,11 @@ type Props = {
   /** Depois de apagar: a tela do treino busca a atividade de novo. */
   aoApagado: () => void;
   fetchFn?: typeof fetch;
+  /** Entra entre o cartão "Check-in" e o "Carga pela PSE" (o cartão "Feedback", #330). */
+  entreCartoes?: ReactNode;
 };
 
-export function CartoesCheckin({ atividade, apiUrl, atletaId, aoFazerCheckin, aoEditarCheckin, aoApagado, fetchFn }: Props) {
+export function CartoesCheckin({ atividade, apiUrl, atletaId, aoFazerCheckin, aoEditarCheckin, aoApagado, fetchFn, entreCartoes }: Props) {
   const tema = useTema();
   const styles = useMemo(() => criarEstilos(tema), [tema]);
   const [dialogo, setDialogo] = useState(false);
@@ -115,6 +117,8 @@ export function CartoesCheckin({ atividade, apiUrl, atletaId, aoFazerCheckin, ao
           </>
         )}
       </View>
+
+      {entreCartoes}
 
       {checkin && carga && carga.estado !== "sem_checkin" && (
         <View testID="cartao-carga-pse" style={styles.cartao}>
