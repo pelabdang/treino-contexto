@@ -7,8 +7,9 @@ Garmin mudar o login; a API oficial segue sendo o caminho de producao. Veja `wor
 
 Cada FIT original passa por `app.ingestao.importacao.importar_fit`, o MESMO caminho do upload de FIT da Meta 3
 (identidade, guarda do arquivo, esforcos, tipo), e depois pelo clima e pela carga, como na importacao da exportacao.
-Idempotente: uma atividade cujo inicio ja esta no banco (a ate 60 s, regra da ADR 0006) nem e baixada; e se for, o
-`importar_fit` reconhece e nao duplica. Sem mudanca no modelo de dados.
+Idempotente: uma atividade ja processada nem e baixada (o id do Garmin esta no arquivo local de ids e a atividade ainda
+existe no banco, ou o inicio da lista esta a ate 60 s do de uma atividade do atleta, ADR 0006); e se for baixada, o
+`importar_fit` reconhece e nao duplica. Sem mudanca no modelo de dados: os ids ficam em `dados-garmin/` (`worker.garmin_vistos`).
 
 Codigos de saida: 0 ok; 1 configuracao ou argumento; 2 login recusado; 3 MFA pedido; 4 limite de requisicoes;
 5 rede; 6 outro erro do Garmin ou atividades que falharam. Credenciais e token nunca vao para log nem mensagem.
@@ -34,8 +35,11 @@ from worker.garmin_cliente import (
     AtividadeGarmin,
     ClienteGarmin,
     ClienteGarminConnect,
+    ler_ambiente,
+    pasta_token,
     ErroGarmin,
 )
+from worker.garmin_vistos import Vistos
 from worker.importar_garmin import carga_do_atleta, clima_do_que_mudou
 
 
@@ -50,7 +54,17 @@ class RelatorioBusca:
     avisos: list[str] = field(default_factory=list)
 
 
-def _ja_no_banco(session: Session, atleta_id: int, a: AtividadeGarmin) -> bool:
+def _ja_no_banco(session: Session, atleta_id: int, a: AtividadeGarmin, vistos: Vistos | None = None) -> bool:
+    """Ja ha uma atividade do atleta que esta lista representa? (1) o id do Garmin ja foi processado e a atividade
+    correspondente ainda existe no banco (arquivo local, #342); (2) o inicio da lista a ate 60 s do inicio de uma atividade
+    do atleta (ADR 0006). Sem mudanca no modelo. (A regra por sobreposicao de intervalos foi testada e saiu: nao cobre inicios
+    distantes dezenas de minutos e arriscaria falso positivo.)"""
+    if vistos is not None:
+        interno = vistos.ids.get(a.id)
+        if interno is not None:
+            ativ = session.get(Atividade, interno)
+            if ativ is not None and ativ.atleta_id == atleta_id:
+                return True
     if a.inicio_utc is None:
         return False
     inicio = para_utc(a.inicio_utc)
@@ -60,15 +74,27 @@ def _ja_no_banco(session: Session, atleta_id: int, a: AtividadeGarmin) -> bool:
     ).limit(1)).first() is not None
 
 
+def _diferenca(session: Session, atividade_id: int, a: AtividadeGarmin) -> str:
+    """So numeros (segundos de diferenca), nunca datas, ids do Garmin nem tipos."""
+    ativ = session.get(Atividade, atividade_id)
+    if ativ is None or a.inicio_utc is None:
+        return "atividade baixada e ja existente (sem dados da lista para comparar)"
+    d_ini = (para_utc(a.inicio_utc) - para_utc(ativ.inicio)).total_seconds()
+    d_dur = "sem duracao na lista" if not a.duracao_s else f"duracao da lista {a.duracao_s - ativ.duracao_s:+.0f} s"
+    return f"atividade baixada e ja existente: inicio da lista {d_ini:+.0f} s do FIT, {d_dur}"
+
+
 def buscar(session: Session, cliente: ClienteGarmin, atleta_id: int, desde: date, ate: date,
-           fit_dir: Path | None = None) -> tuple[RelatorioBusca, RelatorioImportacao]:
+           fit_dir: Path | None = None, vistos: Vistos | None = None) -> tuple[RelatorioBusca, RelatorioImportacao]:
     """Lista, pula o que ja esta no banco, baixa e importa o resto. Erro de login, limite ou rede sobe como `ErroGarmin`."""
     rel = RelatorioBusca()
+    if vistos is not None and vistos.aviso:
+        rel.avisos.append(vistos.aviso)
     alterados = RelatorioImportacao()
     atividades = cliente.listar(desde, ate)
     rel.listadas = len(atividades)
     for a in atividades:
-        if _ja_no_banco(session, atleta_id, a):
+        if _ja_no_banco(session, atleta_id, a, vistos):
             rel.ja_no_banco += 1
             continue
         conteudo = cliente.baixar_fit(a.id)
@@ -78,6 +104,8 @@ def buscar(session: Session, cliente: ClienteGarmin, atleta_id: int, desde: date
             rel.falhas += 1
             continue
         rel.avisos.extend(r.avisos)
+        if r.resultado == "ignorada":  # baixada a toa: diz quanto a lista diferia do banco, para achar a causa (#342)
+            rel.avisos.append(_diferenca(session, r.atividade_id, a))
         if r.resultado == "inserida":
             rel.inseridas += 1
         elif r.resultado == "atualizada":
@@ -86,6 +114,10 @@ def buscar(session: Session, cliente: ClienteGarmin, atleta_id: int, desde: date
             rel.ignoradas += 1
         if r.resultado != "ignorada":
             alterados.ids_alterados.append(r.atividade_id)
+        if vistos is not None:  # inserida, atualizada ou ignorada-por-ja-existir: o par id do Garmin -> id interno
+            vistos.registrar(a.id, r.atividade_id)
+    if vistos is not None and vistos.aviso and vistos.aviso not in rel.avisos:
+        rel.avisos.append(vistos.aviso)  # ex.: nao deu para gravar o arquivo
     return rel, alterados
 
 
@@ -124,7 +156,10 @@ def main(argv: list[str] | None = None, cliente: ClienteGarmin | None = None, se
             atleta_id = atleta.id
             if cliente is None:
                 cliente = ClienteGarminConnect.entrar(env)  # a unica tentativa de login da execucao
-            rel, alterados = buscar(session, cliente, atleta_id, desde, ate, fit_dir)
+            ambiente = ler_ambiente(env)
+            vistos = Vistos.carregar(pasta_token(ambiente.get("GARMINTOKENS") or None).parent
+                                     / f"ids-atleta-{atleta_id}.json")
+            rel, alterados = buscar(session, cliente, atleta_id, desde, ate, fit_dir, vistos)
     except AtletaInexistente:
         print("erro: atleta nao encontrado", file=sys.stderr)
         return 1
