@@ -85,6 +85,16 @@ A carga pela PSE foi 90 UA em 30 min; a carga do relógio ainda está pendente."
 A FC média foi 158 bpm, 8 bpm acima da mediana de 150 bpm.
 O clima registrado foi 33 °C e você marcou calor; os fatos aparecem lado a lado.
 A carga pela PSE foi 630 UA em 90 min."""),
+    # o rótulo da sensação do pacote ("muito bem") passa também fora de parênteses
+    "G12": ("F10", """Ciclismo de 28,00 km em 60 min, com FC média de 135 bpm.
+Sem comparação com o seu histórico: o treino não tem tipo.
+Você marcou esforço 0 (repouso), sensação 5, muito bem, e nada a relatar.
+A carga pela PSE foi 0 UA."""),
+    # "quente" é o mesmo fato do atalho calor: passa quando o calor foi marcado; "mal" é o rótulo da sensação 2 do pacote
+    "G13": ("F04", """Seu pace médio foi 6:00/km, 18 s/km mais lento que a mediana de 5:42/km nos 9 treinos longos das últimas 12 semanas.
+A FC média foi 158 bpm, 8 bpm acima da mediana de 150 bpm.
+Você marcou dia quente e cansaço, esforço 7 (muito difícil) e sensação 2, mal.
+A carga pela PSE foi 630 UA em 90 min."""),
 }
 
 
@@ -167,4 +177,38 @@ RUINS: dict[str, tuple[str, str, str, str]] = {
     # --- nome ou texto que não vem do pacote ---
     "R38": _ruim("G01", "Foram 47 min a 19 °C, com carga pela PSE de 188 UA.", "Foram 47 min a 19 °C no Parque Exemplo, com carga pela PSE de 188 UA.", "nome_fora_do_pacote", "lugar: o pacote não traz posição nem nome de lugar"),
     "R39": _ruim("G05", "Esforço 3 (moderado) e sensação 3 (normal);", "Esforço 3 (moderado), sensação 3 (normal) e MARCADOR-SINTETICO-TEXTO-LIVRE;", "nome_fora_do_pacote", "repete o texto livre do check-in, que nunca vai ao pacote"),
+    # --- revisão da Nina (11/11): termos e famílias que faltavam; um ruim por termo ---
+    "R40": _ruim("G04", "A carga pela PSE foi 630 UA em 90 min.", "Fique atento ao ritmo.", "linguagem_conselho", "'fique atento'"),
+    "R41": _ruim("G01", "Foram 47 min a 19 °C, com carga pela PSE de 188 UA.", "Prefira treinos mais curtos.", "linguagem_conselho", "'prefira'"),
+    "R42": _ruim("G01", "Foram 47 min a 19 °C, com carga pela PSE de 188 UA.", "Considere poupar o ritmo.", "linguagem_conselho", "'considere'"),
+    "R43": _ruim("G01", "Foram 47 min a 19 °C, com carga pela PSE de 188 UA.", "Lembre-se de dormir mais.", "linguagem_conselho", "'lembre-se'"),
+    "R44": _ruim("G01", "Foram 47 min a 19 °C, com carga pela PSE de 188 UA.", "Priorize o ritmo leve.", "linguagem_conselho", "'priorize'"),
+    "R45": _ruim("G01", "Foram 47 min a 19 °C, com carga pela PSE de 188 UA.", "O descanso vem agora.", "linguagem_conselho", "'descanso'"),
+    "R46": _ruim("G01", "Foram 47 min a 19 °C, com carga pela PSE de 188 UA.", "A recuperação vem agora.", "linguagem_conselho", "'recuperação'"),
+    "R47": _ruim("G01", "Foram 47 min a 19 °C, com carga pela PSE de 188 UA.", "Isso indica que o ritmo foi alto.", "linguagem_causa", "'indica que' liga fatos"),
+    "R48": _ruim("G01", "Foram 47 min a 19 °C, com carga pela PSE de 188 UA.", "Isso mostra que o ritmo foi alto.", "linguagem_causa", "'mostra que' liga fatos"),
+    "R49": _ruim("G01", "Foram 47 min a 19 °C, com carga pela PSE de 188 UA.", "Isso significa mais esforço.", "linguagem_causa", "'significa'"),
+    "R50": _ruim("G01", "Foram 47 min a 19 °C, com carga pela PSE de 188 UA.", "A FC reflete o esforço.", "linguagem_causa", "'reflete'"),
+    "R51": _ruim("G04", "A carga pela PSE foi 630 UA em 90 min.", "Foi reflexo do cansaço.", "linguagem_causa", "'reflexo'"),
+    "R52": _ruim("G01", "Foram 47 min a 19 °C, com carga pela PSE de 188 UA.", "Em razão do vento, o ritmo caiu.", "linguagem_causa", "'em razão'"),
+    "R53": _ruim("G01", "Foram 47 min a 19 °C, com carga pela PSE de 188 UA.", "Esse é o motivo do pace.", "linguagem_causa", "'motivo'"),
+    "R54": _ruim("G01", "Foram 47 min a 19 °C, com carga pela PSE de 188 UA.", "O efeito apareceu na FC.", "linguagem_causa", "'efeito'"),
+    "R55": _ruim("G04", "A carga pela PSE foi 630 UA em 90 min.", "Há sinal de fadiga.", "linguagem_diagnostico", "'fadiga'"),
+    "R56": _ruim("G04", "A carga pela PSE foi 630 UA em 90 min.", "Há sinal de esgotamento.", "linguagem_diagnostico", "'esgotamento'"),
+    "R57": _ruim("G04", "A carga pela PSE foi 630 UA em 90 min.", "Há sinal de exaustão.", "linguagem_diagnostico", "'exaustão'"),
+    "R58": _ruim("G04", "A carga pela PSE foi 630 UA em 90 min.", "Há risco no ritmo.", "linguagem_diagnostico", "'risco'"),
+    "R59": _ruim("G04", "A carga pela PSE foi 630 UA em 90 min.", "O pace é preocupante.", "linguagem_culpa", "'preocupante' é juízo"),
+    "R60": _ruim("G04", "A carga pela PSE foi 630 UA em 90 min.", "Fique em alerta.", "linguagem_culpa", "'alerta' é juízo"),
+    "R61": _ruim("G04", "A carga pela PSE foi 630 UA em 90 min.", "Há um problema no pace.", "linguagem_culpa", "'problema' é juízo"),
+    "R62": _ruim("G04", "A carga pela PSE foi 630 UA em 90 min.", "Foi um pior treino.", "linguagem_culpa", "'pior' é juízo"),
+    "R63": _ruim("G04", "A carga pela PSE foi 630 UA em 90 min.", "Foi um erro de ritmo.", "linguagem_culpa", "'erro' é juízo"),
+    "R64": _ruim("G01", "Foram 47 min a 19 °C, com carga pela PSE de 188 UA.", "O treino foi mal.", "linguagem_culpa", "'mal' só passa como rótulo da sensação do pacote (aqui a sensação é 'bem')"),
+    "R65": _ruim("G02", "É uma comparação com o seu histórico, não um julgamento do treino.", "Você evoluiu nos tiros.", "elogio_sem_fato", "'evoluiu' sem fato (melhor pace fora do normal)"),
+    "R66": _ruim("G02", "É uma comparação com o seu histórico, não um julgamento do treino.", "É hora de superar o normal.", "elogio_sem_fato", "'superar' sem fato"),
+    "R67": _ruim("G02", "É uma comparação com o seu histórico, não um julgamento do treino.", "É hora de melhorar o tiro.", "elogio_sem_fato", "'melhorar' sem fato"),
+    "R68": _ruim("G04", "A carga pela PSE foi 630 UA em 90 min.", "Você foi muito bem.", "elogio_sem_fato", "'muito bem' que não é o rótulo da sensação do pacote (aqui 'mal')"),
+    "R69": _ruim("G01", "Foram 47 min a 19 °C, com carga pela PSE de 188 UA.", "Vamos ver o treino.", "linguagem_quem_fala", "'vamos' é primeira pessoa"),
+    "R70": _ruim("G01", "Foram 47 min a 19 °C, com carga pela PSE de 188 UA.", "Estou vendo o treino.", "linguagem_quem_fala", "'estou' é primeira pessoa"),
+    "R71": _ruim("G01", "Foram 47 min a 19 °C, com carga pela PSE de 188 UA.", "Foi um dia quente.", "atalho_nao_marcado", "'quente' é o fato do atalho calor, que não foi marcado"),
+    "R72": _ruim("G01", "Foram 47 min a 19 °C, com carga pela PSE de 188 UA.", "Foi um dia frio.", "nome_fora_do_pacote", "'frio' não está no pacote (ele traz só o °C)"),
 }
