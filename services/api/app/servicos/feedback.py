@@ -37,7 +37,7 @@ Checar = Callable[[dict, str], "str | None"]
 @dataclass(frozen=True)
 class Versoes:
     fatos: str  # `fatos_treino@1`
-    prompt: str  # `feedback_prompt@1`
+    prompt: str  # texto do `feedback_prompt`
     checagens: str  # `checagens_feedback@1`
 
 
