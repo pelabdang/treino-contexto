@@ -353,6 +353,7 @@ Cartão: "Check-in", "Carga pela PSE" (UA, nunca "pontos").
 Como em [[modulos/mobile]] (`npm run api-falsa`): a API falsa precisa dos cinco endpoints, com atividades sintéticas
 com e sem check-in, uma natação, uma fora do prazo e uma parte de multiesporte; e estados forçados pelo `EXPO_PUBLIC_ATLETA_ID`,
 como na semana-padrão. Um estado por captura, 390 de largura, claro e escuro.
+As capturas ficam em `docs/design/telas/checkin/` (`checkin-<estado>-<tema>.png`); a lista completa está em [[modulos/mobile]]. O estado de erro de cada fluxo e o tema escuro foram capturados no #334.
 
 ## O que muda em relação ao app de hoje
 | hoje | proposta | issue |

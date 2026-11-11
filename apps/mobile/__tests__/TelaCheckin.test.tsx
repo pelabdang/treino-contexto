@@ -1,6 +1,8 @@
+import { StyleSheet } from "react-native";
 import { fireEvent, render, screen, waitFor, within } from "@testing-library/react-native";
 import type { Atividade } from "@treino/api-client";
 
+import { coresClaro, coresEscuro } from "../src/tema/tokens";
 import { TelaCheckin } from "../src/componentes/TelaCheckin";
 import { atividadesCheckin, checkinExemplo, MARCADOR } from "../__fixtures__/checkin";
 
@@ -128,6 +130,22 @@ describe("tela de check-in: criar", () => {
       atalhos: ["dor", "sono_ruim"],
       texto: null,
     });
+  });
+
+  it("botão desligado e 'Salvando...' usam o texto de desligado, legível nos dois temas (#334)", async () => {
+    const f = servidor({});
+    await abrir(f);
+    await pergunta1();
+    await fireEvent.press(screen.getByTestId("pse-5"));
+    await screen.findByText("Como você se sentiu no treino?");
+    await fireEvent.press(screen.getByTestId("sensacao-4"));
+    await screen.findByText("Quer registrar mais alguma coisa?");
+    const rotulo = within(screen.getByTestId("salvar-checkin")).getByText("Salvar check-in");
+    const cor = (StyleSheet.flatten(rotulo.props.style) as { color: string }).color;
+    expect([coresClaro["texto-desligado"], coresEscuro["texto-desligado"]]).toContain(cor);
+    await fireEvent.press(screen.getByTestId("atalho-dor"));
+    const ligado = within(screen.getByTestId("salvar-checkin")).getByText("Salvar check-in");
+    expect((StyleSheet.flatten(ligado.props.style) as { color: string }).color).not.toBe(cor);
   });
 
   it("só texto também salva; o texto é aparado e o contador mostra N de 500", async () => {
