@@ -4,8 +4,14 @@ from pydantic import SecretStr
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
+RAIZ_REPOSITORIO = Path(__file__).resolve().parents[3]
+
+
 class Settings(BaseSettings):
-    model_config = SettingsConfigDict(env_file=".env", extra="ignore")
+    # O `.env` e sempre o da raiz do repositorio, de qualquer pasta de execucao (#354): rodando um worker de
+    # `services/worker`, um `.env` relativo nao era lido e o provedor de LLM aparecia como nao configurado, sem erro.
+    # Variavel de ambiente continua valendo mais que o arquivo.
+    model_config = SettingsConfigDict(env_file=RAIZ_REPOSITORIO / ".env", extra="ignore")
 
     database_url: str = "postgresql+psycopg://treino:treino@localhost:5433/treino"
     # Origens do app web liberadas no CORS, separadas por vírgula (ADR 0004, item 7). Vazio libera nenhuma.
@@ -33,8 +39,6 @@ def lista_origens(texto: str) -> list[str]:
 
 
 settings = Settings()
-
-RAIZ_REPOSITORIO = Path(__file__).resolve().parents[3]
 
 
 def pasta_fit(valor: str | Path | None = None) -> Path:
