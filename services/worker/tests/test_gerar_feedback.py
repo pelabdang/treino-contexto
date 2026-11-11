@@ -319,7 +319,9 @@ def test_apagar_checkin_do_worker_cobre_o_feedback_e_imprime_so_contagens(fabric
     saida = capsys.readouterr()
     assert saida.out == "checkins: apagados=2\nfeedbacks: apagados=2\n"
     assert MARCADOR not in saida.out + saida.err + caplog.text
-    assert _linhas(fabrica) == [] and len(list(fabrica().scalars(select(CheckinTreino)))) == 1
+    assert _linhas(fabrica) == []
+    with fabrica() as s:  # fechar a sessao: uma aberta (idle in transaction) trava o DROP TABLE do teardown no Postgres
+        assert len(list(s.scalars(select(CheckinTreino)))) == 1
     assert apagar_checkin.main(["--atleta", "Ana"]) == 0
     assert capsys.readouterr().out == "checkins: apagados=0\nfeedbacks: apagados=0\n"
 
