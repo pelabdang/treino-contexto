@@ -74,10 +74,13 @@ def main(argv: list[str] | None = None, redator: Redator | None = None, montar_p
                     refazer=args.refazer)
 
     print(f"feedback: gerados={rel.gerados} sem_feedback={rel.sem_feedback} ignorados={rel.ignorados}"
-          f" adiados={rel.adiados} erros={rel.erros}")
+          f" adiados={rel.adiados} erros={rel.erros}" + (f" mantidos={rel.mantidos}" if rel.mantidos else ""))
     for nome, mapa in (("motivos", rel.motivos), ("reprovacoes", rel.reprovacoes)):
         if mapa:
             print(f"  {nome}: " + " ".join(f"{k}={v}" for k, v in sorted(mapa.items())))
+    if rel.limite_do_provedor:
+        print("aviso: o provedor recusou por limite de requisicoes; rode de novo daqui a 1 minuto (ou use LLM_INTERVALO_S)",
+              file=sys.stderr)
     if not redator.configurado:
         print("aviso: provedor de LLM nao configurado (LLM_PROVIDER, LLM_MODEL e a chave no .env)", file=sys.stderr)
     return 0

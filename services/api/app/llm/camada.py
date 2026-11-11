@@ -18,6 +18,8 @@ from __future__ import annotations
 import json
 import logging
 import os
+import time
+from collections.abc import Callable
 from dataclasses import dataclass
 from typing import Any, Protocol
 
@@ -36,6 +38,10 @@ CHAVES = {"groq": "groq_api_key", "openai": "openai_api_key", "anthropic": "anth
 
 class TempoLimite(Exception):
     """O provedor nao respondeu a tempo."""
+
+
+class LimiteDoProvedor(Exception):
+    """O provedor recusou por limite de requisicoes ou de tokens por minuto (HTTP 429). Sem a mensagem do provedor."""
 
 
 class ErroProvedor(Exception):
@@ -68,7 +74,7 @@ class ProvedorFalso:
     )
 
     def __init__(self, texto: str | None = None, modo: str = "bom") -> None:
-        if modo not in ("bom", "ruim", "vazio", "erro", "tempo"):
+        if modo not in ("bom", "ruim", "vazio", "erro", "tempo", "limite"):
             raise ValueError("modo invalido")
         self.texto, self.modo = texto, modo
         self.chamadas = 0
@@ -79,6 +85,8 @@ class ProvedorFalso:
             raise ErroProvedor()
         if self.modo == "tempo":
             raise TempoLimite()
+        if self.modo == "limite":
+            raise LimiteDoProvedor()
         if self.modo == "vazio":
             return ""
         if self.texto is not None:
@@ -129,6 +137,8 @@ class ProvedorLiteLLM:
         except Exception as e:  # noqa: BLE001  (so a CLASSE conta; a mensagem pode ter dado de saude)
             if isinstance(e, TimeoutError) or "Timeout" in e.__class__.__name__:
                 raise TempoLimite() from None
+            if "RateLimit" in e.__class__.__name__ or getattr(e, "status_code", None) == 429:
+                raise LimiteDoProvedor() from None
             raise ErroProvedor() from None
         if not isinstance(texto, str) or not texto.strip():
             raise ErroProvedor()
@@ -139,11 +149,14 @@ class Redator:
     """Uma instancia por execucao do worker: conta as chamadas e traduz tudo em `ResultadoLLM`."""
 
     def __init__(self, provedor: ProvedorLLM | None, nome_provedor: str | None, modelo: str | None,
-                 timeout_s: float = 20.0, limite_chamadas: int = 20) -> None:
+                 timeout_s: float = 20.0, limite_chamadas: int = 20, intervalo_s: float = 0.0,
+                 dormir: Callable[[float], None] = time.sleep) -> None:
         self._provedor = provedor
         self.nome_provedor, self.modelo = nome_provedor, modelo
         self.timeout_s, self.limite_chamadas = timeout_s, limite_chamadas
+        self.intervalo_s, self._dormir = max(0.0, intervalo_s), dormir
         self.chamadas = 0
+        self.limite_do_provedor = False  # o provedor recusou por limite: quem chama deve parar a execucao
 
     @property
     def configurado(self) -> bool:
@@ -157,12 +170,17 @@ class Redator:
             return self._res(motivo=MOTIVO_NAO_CONFIGURADO)
         if self.chamadas >= self.limite_chamadas:
             return self._res(motivo=MOTIVO_LIMITE)
+        if self.chamadas and self.intervalo_s:  # pausa so ENTRE chamadas, nunca antes da primeira
+            self._dormir(self.intervalo_s)
         self.chamadas += 1
         usuario = pacote if isinstance(pacote, str) else json.dumps(pacote, ensure_ascii=False, separators=(",", ":"))  # compacto e na ordem do pacote (menos tokens)
         try:
             texto = self._provedor.completar(sistema, usuario, self.timeout_s)
         except TempoLimite:
             return self._res(motivo=MOTIVO_TEMPO_LIMITE)
+        except LimiteDoProvedor:
+            self.limite_do_provedor = True
+            return self._res(motivo=MOTIVO_LIMITE)
         except Exception:  # noqa: BLE001  (nunca repete nem registra a excecao)
             return self._res(motivo=MOTIVO_ERRO)
         if not isinstance(texto, str) or not texto.strip():
@@ -177,7 +195,7 @@ def criar_redator(config: Settings | None = None) -> Redator:
     c = config or settings
     provedor = (c.llm_provider or "").strip().lower()
     modelo = (c.llm_model or "").strip()
-    comum = dict(timeout_s=c.llm_timeout_s, limite_chamadas=c.llm_limite_chamadas)
+    comum = dict(timeout_s=c.llm_timeout_s, limite_chamadas=c.llm_limite_chamadas, intervalo_s=c.llm_intervalo_s)
     if provedor == PROVEDOR_FALSO:
         return Redator(ProvedorFalso(), PROVEDOR_FALSO, modelo or PROVEDOR_FALSO, **comum)
     campo = CHAVES.get(provedor)
