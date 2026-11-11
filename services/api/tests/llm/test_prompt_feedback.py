@@ -75,7 +75,7 @@ def test_prompt_com_acentos_e_sem_a_ortografia_sem_acento():
     "aprendendo", "sem_linha_base", "sem_carga", "pendente", "indoor",  # estados sem valor
     "sozinha na linha", "Você registrou dor neste treino.",  # dor
     "nós", "eu, meu",  # primeira pessoa
-    "verbo conjugado", "valor_texto", "mediana_texto", "Não repita a mesma conclusão", "Escolha o essencial", "sem \"pois\"",  # forma (@2, #355)
+    "verbo conjugado", "valor_texto", "mediana_texto", "Não repita a mesma conclusão", "Escolha o essencial", "sem \"pois\"", 'nunca "seu FC médio"',  # forma (@2, #355)
 ])
 def test_prompt_traz_os_avisos_pedidos(trecho):
     assert trecho in prompt_feedback.TEXTO
