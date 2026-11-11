@@ -3,7 +3,7 @@ tipo: guia
 status: em-uso
 dono: nina
 atualizado: 2026-11-11
-links: [[produto/meta-8-como-rodar]], [[produto/roadmap]], [[decisoes/0013-feedback-automatico]], [[decisoes/0012-check-in-pos-treino]], [[decisoes/0004-contrato-tela-evolucao]], [[metricas/fatos-treino]], [[metricas/fatos-treino-oraculo]], [[metricas/checagens-feedback]], [[design/telas/feedback]], [[modulos/camada-llm]], [[modulos/banco]], [[modulos/api]], [[modulos/mobile]], [[modulos/worker]], [[modulos/ingestao-garmin]]
+links: [[produto/meta-8-como-rodar]], [[produto/roadmap]], [[decisoes/0013-feedback-automatico]], [[decisoes/0012-check-in-pos-treino]], [[decisoes/0004-contrato-tela-evolucao]], [[metricas/fatos-treino]], [[metricas/fatos-treino-oraculo]], [[metricas/checagens-feedback]], [[design/telas/feedback]], [[modulos/camada-llm]], [[modulos/banco]], [[modulos/api]], [[modulos/mobile]], [[modulos/worker]], [[modulos/ingestao-garmin]], [[diario/2026-11-11]], [[glossario]]
 ---
 # Meta 9: como rodar o feedback automático por treino
 
@@ -16,7 +16,8 @@ sintéticos.
 **Situação da verificação (#331, Theo, 11/11):** os passos 1 a 9 e o 12 foram rodados de verdade num clone limpo do `main`
 (`87a9049`, depois do #352), com o banco `treino-meta9` (Postgres na 5456, API na 8059). Os números abaixo são os que saíram.
 Banco e API foram derrubados no fim e nada usou a rede. **Não rodado aqui:** o app (passos 10 e 11; ficam para a QA, #332), o
-provedor de verdade (passo 13) e o `worker.buscar_garmin` (passo 14, que entra numa conta real).
+provedor de verdade (passo 13) e o `worker.buscar_garmin` (passo 14, que entra numa conta real). O passo 13 foi atualizado depois, com o que
+o prompt `@2` (#355), o `.env` da raiz (#354) e a pausa entre chamadas (#357) mudam; essa parte **não foi rodada**: vem das notas de módulo.
 
 ## Antes de começar
 - As mesmas ferramentas e cuidados do [[produto/meta-8-como-rodar]] ("Antes de começar"): comandos na **raiz** do repositório,
@@ -104,7 +105,8 @@ provedor de verdade (passo 13) e o `worker.buscar_garmin` (passo 14, que entra n
    feedback será refeito.". Rode o `gerar_feedback` de novo: `gerados=1 ...` e a atividade 18 volta a `pronto`.
    `curl -s -o /dev/null -w '%{http_code}\n' -X DELETE localhost:8059/atletas/1/atividades/17/checkin` dá `204`, e o `GET` da 17
    volta a `sem_checkin` com `checkin_aberto` `true`: apagar o check-in apaga o feedback (cascata no banco).
-   `--refazer` refaz também o que está pronto, ainda dentro do limite: com `--refazer --limite 2`, `gerados=2 ... adiados=6`.
+   `--refazer` refaz também o que está pronto, ainda dentro do limite: com `--refazer --limite 2`, `gerados=2 ... adiados=6`. Se o
+   provedor ou as checagens falharem no `--refazer`, o texto que já estava pronto e em dia é **mantido** (a saída ganha `mantidos=N`).
 10. **O cartão no app web** (não rodado nesta verificação). Como no passo 11 do [[produto/meta-8-como-rodar]], apontando para a
     API do passo 4: em `apps/mobile`, `npm ci` e
     `CI=1 EXPO_PUBLIC_API_URL=http://localhost:8059 EXPO_PUBLIC_ATLETA_ID=1 npx expo start --web --port 8083`. Em `/treino/18` o
@@ -123,12 +125,18 @@ provedor de verdade (passo 13) e o `worker.buscar_garmin` (passo 14, que entra n
     do passo 9), e `0|0` em
     `select (select count(*) from checkin_treino), (select count(*) from feedback_treino)`. As atividades e o atleta ficam.
 13. **Provedor de verdade** (não rodado nesta verificação; **só com fixtures**, a menos que o atleta autorize o dado dele). No
-    `.env` da raiz: `LLM_PROVIDER=groq`, `LLM_MODEL=<modelo da sua conta>` e `GROQ_API_KEY=<chave>`; rode o `gerar_feedback`
-    **da raiz do repositório**, com `--limite` pequeno (o `.env` é lido da pasta de onde o comando roda: de outra pasta o
-    provedor aparece como não configurado). Ao provedor vai **só o pacote de fatos** ([[metricas/fatos-treino]]): nunca o texto livre da observação,
-    nome, data real, posição ou identificador. O que foi e o que **não** foi conferido sobre retenção de dados no provedor está
-    no item 10 de "A confirmar" da [[decisoes/0013-feedback-automatico]]; leia antes de mandar dado real. Erro, tempo limite e
-    limite de requisições do provedor viram `sem_feedback` com o motivo e entram na próxima execução ([[modulos/camada-llm]]).
+    `.env` **da raiz do repositório** (é o único que vale, de qualquer pasta de onde o comando rode; variável de ambiente vale mais
+    que o arquivo): `LLM_PROVIDER=groq`, `LLM_MODEL=<modelo da sua conta>` e `GROQ_API_KEY=<chave>`. Rode o `gerar_feedback` com
+    `--limite` pequeno. Ao provedor vai **só o pacote de fatos** ([[metricas/fatos-treino]]): nunca o texto livre da observação,
+    nome, data real, posição ou identificador. **Dado real no provedor só com a autorização do próprio atleta**, no computador dele.
+    O que foi e o que **não** foi conferido sobre retenção de dados no provedor está no item 10 de "A confirmar" da
+    [[decisoes/0013-feedback-automatico]]; leia antes de mandar dado real.
+    - **Limite por minuto do plano gratuito:** `LLM_INTERVALO_S` (padrão 0) põe uma pausa em segundos entre as chamadas da mesma
+      execução; para o plano gratuito comece por 40. Quando o provedor recusa por limite, a execução **para ali, sem gravar
+      linha**, o resto conta em `adiados` e sai o aviso para rodar de novo em 1 minuto ([[modulos/camada-llm]]).
+    - **Prompt:** o texto vem do `feedback_prompt@2`, e mudar a versão do prompt **não desatualiza** o que já está `pronto`: para
+      reescrever com o prompt novo, `--refazer`.
+    - Erro, tempo limite e limite de requisições do provedor viram `sem_feedback` com o motivo e entram na próxima execução.
 14. **`worker.buscar_garmin`** (opcional; **entra numa conta real do Garmin Connect**, só no computador do próprio atleta; não
     faz parte da verificação com fixtures). Com `GARMIN_EMAIL` e `GARMIN_PASSWORD` no `.env` local:
     `uv run python -m worker.buscar_garmin --atleta "<nome>"`. Busca as atividades de hoje (ou
@@ -148,7 +156,7 @@ provedor de verdade (passo 13) e o `worker.buscar_garmin` (passo 14, que entra n
 - Os do [[produto/meta-8-como-rodar]] (porta ocupada, CORS, relógio, banco errado, aviso do `VIRTUAL_ENV`) valem aqui.
 - **O cartão fica em "ainda não foi gerado":** ninguém rodou o `worker.gerar_feedback` depois do check-in. É assim no piloto local.
 - **`sem_feedback` com `provedor_nao_configurado`:** falta `LLM_PROVIDER`, `LLM_MODEL` ou a chave no ambiente do **worker** (a
-  API não precisa deles), ou o comando rodou fora da raiz e não leu o `.env`.
+  API não precisa deles).
 - **Um treino sempre reprova com o provedor falso:** o check-in tem o atalho Dor (passo 8). Com o provedor de verdade, veja o
   código em `reprovacoes:` e a lista em [[metricas/checagens-feedback]].
 - **`gerar_feedback` trava ou falha esperando o banco:** outra sessão está com transação aberta; os testes usam
