@@ -126,7 +126,7 @@ o prompt `@2` (#355), o `.env` da raiz (#354) e a pausa entre chamadas (#357) mu
     `select (select count(*) from checkin_treino), (select count(*) from feedback_treino)`. As atividades e o atleta ficam.
 13. **Provedor de verdade** (não rodado nesta verificação; **só com fixtures**, a menos que o atleta autorize o dado dele). No
     `.env` **da raiz do repositório** (é o único que vale, de qualquer pasta de onde o comando rode; variável de ambiente vale mais
-    que o arquivo): `LLM_PROVIDER=groq`, `LLM_MODEL=<modelo da sua conta>` e `GROQ_API_KEY=<chave>`. Rode o `gerar_feedback` com
+    que o arquivo; numa worktree a raiz é a da worktree, que não tem `.env`): `LLM_PROVIDER=groq`, `LLM_MODEL=<modelo da sua conta>` e `GROQ_API_KEY=<chave>`. Rode o `gerar_feedback` com
     `--limite` pequeno. Ao provedor vai **só o pacote de fatos** ([[metricas/fatos-treino]]): nunca o texto livre da observação,
     nome, data real, posição ou identificador. **Dado real no provedor só com a autorização do próprio atleta**, no computador dele.
     O que foi e o que **não** foi conferido sobre retenção de dados no provedor está no item 10 de "A confirmar" da
