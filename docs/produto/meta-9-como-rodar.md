@@ -67,7 +67,7 @@ provedor de verdade (passo 13) e o `worker.buscar_garmin` (passo 14, que entra n
    Em todos, `texto`, `origem` e `motivo` vêm nulos fora do estado que os usa.
 7. **Sem provedor configurado.** Na raiz, com a mesma `DATABASE_URL`:
    ```
-   (cd services/worker && LLM_PROVIDER= LLM_MODEL= uv run python -m worker.gerar_feedback --atleta "Atleta Fictício")
+   LLM_PROVIDER= LLM_MODEL= uv run python -m worker.gerar_feedback --atleta "Atleta Fictício"
    ```
    Esperado: `aviso: provedor de LLM nao configurado (LLM_PROVIDER, LLM_MODEL e a chave no .env)`,
    `feedback: gerados=0 sem_feedback=9 ignorados=0 adiados=0 erros=0` e `motivos: provedor_nao_configurado=9`, saída 0. O `GET`
@@ -75,7 +75,6 @@ provedor de verdade (passo 13) e o `worker.buscar_garmin` (passo 14, que entra n
    está ligado neste app.". O comando imprime só contagens e códigos, nunca texto nem pacote ([[modulos/worker]]).
 8. **Gerar com o provedor falso, em duas rodadas** (o limite de chamadas é por execução):
    ```
-   cd services/worker
    LLM_PROVIDER=falso uv run python -m worker.gerar_feedback --atleta "Atleta Fictício" --limite 3
    LLM_PROVIDER=falso uv run python -m worker.gerar_feedback --atleta "Atleta Fictício"
    LLM_PROVIDER=falso uv run python -m worker.gerar_feedback --atleta "Atleta Fictício"
@@ -124,14 +123,15 @@ provedor de verdade (passo 13) e o `worker.buscar_garmin` (passo 14, que entra n
     do passo 9), e `0|0` em
     `select (select count(*) from checkin_treino), (select count(*) from feedback_treino)`. As atividades e o atleta ficam.
 13. **Provedor de verdade** (não rodado nesta verificação; **só com fixtures**, a menos que o atleta autorize o dado dele). No
-    `.env`: `LLM_PROVIDER=groq`, `LLM_MODEL=<modelo da sua conta>` e `GROQ_API_KEY=<chave>`; rode o `gerar_feedback` com
-    `--limite` pequeno. Ao provedor vai **só o pacote de fatos** ([[metricas/fatos-treino]]): nunca o texto livre da observação,
+    `.env` da raiz: `LLM_PROVIDER=groq`, `LLM_MODEL=<modelo da sua conta>` e `GROQ_API_KEY=<chave>`; rode o `gerar_feedback`
+    **da raiz do repositório**, com `--limite` pequeno (o `.env` é lido da pasta de onde o comando roda: de outra pasta o
+    provedor aparece como não configurado). Ao provedor vai **só o pacote de fatos** ([[metricas/fatos-treino]]): nunca o texto livre da observação,
     nome, data real, posição ou identificador. O que foi e o que **não** foi conferido sobre retenção de dados no provedor está
     no item 10 de "A confirmar" da [[decisoes/0013-feedback-automatico]]; leia antes de mandar dado real. Erro, tempo limite e
     limite de requisições do provedor viram `sem_feedback` com o motivo e entram na próxima execução ([[modulos/camada-llm]]).
 14. **`worker.buscar_garmin`** (opcional; **entra numa conta real do Garmin Connect**, só no computador do próprio atleta; não
     faz parte da verificação com fixtures). Com `GARMIN_EMAIL` e `GARMIN_PASSWORD` no `.env` local:
-    `(cd services/worker && uv run python -m worker.buscar_garmin --atleta "<nome>")`. Busca as atividades de hoje (ou
+    `uv run python -m worker.buscar_garmin --atleta "<nome>"`. Busca as atividades de hoje (ou
     `--desde`/`--ate`), baixa o FIT original das que ainda não estão no banco e usa o mesmo caminho do upload. Token e ids já
     importados ficam em `dados-garmin/`, fora do git. Rode da raiz do repositório principal ou com `FIT_DIR` e `GARMINTOKENS`
     absolutos. A biblioteca não é oficial e pode parar de funcionar quando o Garmin mudar o login ([[modulos/ingestao-garmin]]).
@@ -148,7 +148,7 @@ provedor de verdade (passo 13) e o `worker.buscar_garmin` (passo 14, que entra n
 - Os do [[produto/meta-8-como-rodar]] (porta ocupada, CORS, relógio, banco errado, aviso do `VIRTUAL_ENV`) valem aqui.
 - **O cartão fica em "ainda não foi gerado":** ninguém rodou o `worker.gerar_feedback` depois do check-in. É assim no piloto local.
 - **`sem_feedback` com `provedor_nao_configurado`:** falta `LLM_PROVIDER`, `LLM_MODEL` ou a chave no ambiente do **worker** (a
-  API não precisa deles).
+  API não precisa deles), ou o comando rodou fora da raiz e não leu o `.env`.
 - **Um treino sempre reprova com o provedor falso:** o check-in tem o atalho Dor (passo 8). Com o provedor de verdade, veja o
   código em `reprovacoes:` e a lista em [[metricas/checagens-feedback]].
 - **`gerar_feedback` trava ou falha esperando o banco:** outra sessão está com transação aberta; os testes usam
