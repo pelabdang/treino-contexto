@@ -1,6 +1,6 @@
 ---
 tipo: metrica
-status: rascunho
+status: em-uso
 dono: caio
 atualizado: 2026-11-10
 links: [[decisoes/0013-feedback-automatico]], [[decisoes/0012-check-in-pos-treino]], [[metricas/linha-base]], [[metricas/carga-pse]], [[metricas/carga-pse-oraculo]], [[produto/roadmap]], [[glossario]]
@@ -9,11 +9,11 @@ links: [[decisoes/0013-feedback-automatico]], [[decisoes/0012-check-in-pos-trein
 
 ## O que é
 O pacote de fatos esperado (ADR 0013, item 1) para **10 treinos sintéticos**, escrito **à mão**, e a conferência de que ele é coerente com o que o código **já calcula**.
-É o oráculo que a função pura do pacote (#324) vai reproduzir. Nenhum número vem de IA nem de dado real, e **nenhum check-in é real**. Rascunho: vira "em-uso" quando a #324 existir.
+É o oráculo que a função pura do pacote (#324) vai reproduzir. Nenhum número vem de IA nem de dado real, e **nenhum check-in é real**.
 A segunda parte da #323, os **textos bons e ruins** das checagens, está na seção "Textos bons e ruins" abaixo (o tom foi aprovado pelo Angelo em 10/11).
 
 Arquivos: `tests/fixtures/meta9/oraculo.py` (entradas, pacotes esperados e as contas à mão da linha de base) e `tests/test_fixtures_meta9.py`.
-O teste **não** roda a função do pacote (ainda não existe): confere o oráculo contra `linha_base@2`, `carga_pse@1`, os formatos de texto da API e as regras do que nunca vai ao provedor.
+O teste desta nota confere o oráculo contra `linha_base@2`, `carga_pse@1`, os formatos de texto da API e as regras do que nunca vai ao provedor. A função pura do pacote (#324, [[metricas/fatos-treino]]) reproduz este oráculo nos 8 casos com pacote.
 
 ## Casos
 | Caso | O que cobre |
