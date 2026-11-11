@@ -4,7 +4,7 @@
 import { MaterialIcons } from "@expo/vector-icons";
 import type { EstadoFeedback, FeedbackTreino } from "@treino/api-client";
 import { useMemo, useState } from "react";
-import { AccessibilityInfo, Pressable, StyleSheet, Text, View } from "react-native";
+import { AccessibilityInfo, Platform, Pressable, StyleSheet, Text, View } from "react-native";
 
 import { borda, espaco, fonte, raio, tamanho, useTema, type Tema } from "../tema";
 
@@ -36,6 +36,7 @@ export function CartaoFeedback({ feedback, aoFazerCheckin, aoAtualizar }: Props)
   const tema = useTema();
   const styles = useMemo(() => criarEstilos(tema), [tema]);
   const [atualizando, setAtualizando] = useState(false);
+  const [anuncio, setAnuncio] = useState("");
   if (!feedback) return null;
 
   const texto = feedback.estado === "pronto" && feedback.texto ? feedback.texto : null;
@@ -47,7 +48,10 @@ export function CartaoFeedback({ feedback, aoFazerCheckin, aoAtualizar }: Props)
   const podeAtualizar = !texto && (estadoSemTexto === "pendente" || estadoSemTexto === "desatualizado") && !!aoAtualizar;
   const podeFazerCheckin = !texto && estadoSemTexto === "sem_checkin" && feedback.checkin_aberto === true && !!aoFazerCheckin;
 
+  // Android: região viva sempre montada no cartão (muda o texto, o leitor lê). iOS e web: `announceForAccessibility`.
   const anunciar = (frase: string) => {
+    setAnuncio(frase);
+    if (Platform.OS === "android") return;
     try {
       AccessibilityInfo.announceForAccessibility?.(frase);
     } catch {
@@ -65,6 +69,9 @@ export function CartaoFeedback({ feedback, aoFazerCheckin, aoAtualizar }: Props)
 
   return (
     <View testID="cartao-feedback" accessibilityLabel="Feedback do treino" style={styles.cartao}>
+      <Text testID="feedback-anuncio" accessibilityLiveRegion="polite" style={styles.anuncio}>
+        {anuncio}
+      </Text>
       <View style={styles.titulo}>
         <Text accessibilityRole="header" style={styles.tituloTexto}>
           Feedback
@@ -143,6 +150,7 @@ function criarEstilos({ cor }: Tema) {
       borderColor: cor.borda,
       backgroundColor: cor.superficie,
     },
+    anuncio: { position: "absolute", width: 1, height: 1, overflow: "hidden" },
     titulo: { flexDirection: "row", alignItems: "center", flexWrap: "wrap", gap: espaco[2] },
     tituloTexto: { ...fonte["titulo-secao"], color: cor.texto },
     selo: { paddingVertical: espaco[1], paddingHorizontal: espaco[3], borderRadius: raio.pilula, backgroundColor: cor["superficie-2"] },
@@ -154,7 +162,8 @@ function criarEstilos({ cor }: Tema) {
     notaTexto: { ...fonte.corpo, color: cor.texto, flex: 1 },
     botaoSecundario: { ...botao, alignSelf: "stretch", borderWidth: borda.fina, borderColor: cor["borda-forte"], backgroundColor: cor.superficie },
     botaoTextoSecundario: { ...fonte.botao, color: cor.destaque },
-    botaoTexto: { ...botao, alignSelf: "flex-start", paddingHorizontal: espaco[2] },
+    // marginLeft negativo: o texto do botão (alvo de 48) começa na borda do conteúdo do cartão.
+    botaoTexto: { ...botao, alignSelf: "flex-start", paddingHorizontal: espaco[2], marginLeft: -espaco[2] },
     botaoTextoDestaque: { ...fonte.botao, color: cor.destaque },
   });
 }

@@ -1,6 +1,6 @@
 import { fireEvent, render, screen, waitFor, within } from "@testing-library/react-native";
 import type { Atividade, FeedbackTreino } from "@treino/api-client";
-import { AccessibilityInfo } from "react-native";
+import { AccessibilityInfo, Platform } from "react-native";
 
 import { CartaoFeedback, ORIGEM_AUTOMATICO, ORIGEM_TESTE } from "../src/componentes/CartaoFeedback";
 import { TelaTreino } from "../src/componentes/TelaTreino";
@@ -149,6 +149,31 @@ describe("'Atualizar': recarga e anúncio", () => {
     atualizar.mockResolvedValueOnce(undefined);
     await fireEvent.press(screen.getByTestId("feedback-atualizar"));
     await waitFor(() => expect(anuncio).toHaveBeenLastCalledWith("Não foi possível atualizar o feedback."));
+  });
+
+  it("região viva (Android): elemento sempre montado com accessibilityLiveRegion polite, que recebe o anúncio", async () => {
+    const atualizar = jest.fn(async () => pronto as FeedbackTreino | null | undefined);
+    await render(<CartaoFeedback feedback={{ estado: "pendente" }} aoAtualizar={atualizar} />);
+    const regiao = screen.getByTestId("feedback-anuncio");
+    expect(regiao.props.accessibilityLiveRegion).toBe("polite");
+    expect(regiao).toHaveTextContent("");
+    await fireEvent.press(screen.getByTestId("feedback-atualizar"));
+    await waitFor(() => expect(screen.getByTestId("feedback-anuncio")).toHaveTextContent("Feedback pronto."));
+    // continua o mesmo elemento mesmo com o cartão trocando de estado
+    expect(screen.getByTestId("feedback-anuncio").props.accessibilityLiveRegion).toBe("polite");
+  });
+
+  it("no Android a região viva anuncia e o announceForAccessibility não é chamado", async () => {
+    const os = Platform.OS;
+    Platform.OS = "android";
+    try {
+      await render(<CartaoFeedback feedback={{ estado: "pendente" }} aoAtualizar={jest.fn(async () => ({ estado: "pendente" }) as FeedbackTreino)} />);
+      await fireEvent.press(screen.getByTestId("feedback-atualizar"));
+      await waitFor(() => expect(screen.getByTestId("feedback-anuncio")).toHaveTextContent("O feedback ainda não está pronto."));
+      expect(anuncio).not.toHaveBeenCalled();
+    } finally {
+      Platform.OS = os;
+    }
   });
 
   it("enquanto busca, o botão fica desligado ('Atualizando...') e não dispara duas buscas", async () => {
