@@ -206,7 +206,7 @@ def _perto(a, b):
 
 # ---------------------------------------------------------------- 1. migracoes e importacao com saude
 def test_1_migracoes_ate_a_0010(ctx):
-    assert _sql(ctx, "select version_num from alembic_version") == [("0012",)]  # head (0012, check-in, #296); a 0011 e a 0012 nao afetam o fluxo da Meta 6
+    assert _sql(ctx, "select version_num from alembic_version") == [("0013",)]  # head (0013, feedback, #327); a 0011 a 0013 nao afetam o fluxo da Meta 6
     tabelas = {t for (t,) in _sql(ctx, "select name from sqlite_master where type = 'table'")}
     assert {"limiar_atleta", "zona_fc_atleta", "recorde_pessoal", "carga_garmin_dia", "carga_atividade"} <= tabelas
 

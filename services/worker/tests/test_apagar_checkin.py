@@ -68,13 +68,13 @@ def test_apaga_so_os_checkins_do_atleta_escolhido_e_a_segunda_rodada_nao_faz_nad
     caplog.set_level(logging.DEBUG)
     assert apagar_checkin.main(["--atleta", "Ana"]) == 0
     saida = capsys.readouterr()
-    assert saida.out == "checkins: apagados=2\n" and MARCADOR not in saida.out + saida.err + caplog.text
+    assert saida.out == "checkins: apagados=2\nfeedbacks: apagados=0\n" and MARCADOR not in saida.out + saida.err + caplog.text
     assert _conta(fabrica) == 2  # os do Beto ficam
     with fabrica() as s:
         assert {a.atleta.nome for a in s.scalars(select(Atividade)) if a.checkin is not None} == {"Beto"}
     assert _conta(fabrica, Atividade) == 4 and _conta(fabrica, Atleta) == 2  # atividades e atletas ficam
     assert apagar_checkin.main(["--atleta", "Ana"]) == 0
-    assert capsys.readouterr().out == "checkins: apagados=0\n"
+    assert capsys.readouterr().out == "checkins: apagados=0\nfeedbacks: apagados=0\n"
     assert _conta(fabrica) == 2
 
 
@@ -98,7 +98,7 @@ def test_nome_repetido_apaga_so_o_de_menor_id_e_avisa(fabrica, capsys):
         s.commit()
     assert apagar_checkin.main(["--atleta", "Igual"]) == 0
     cap = capsys.readouterr()
-    assert cap.out == "checkins: apagados=1\n" and "outros ficam" in cap.err
+    assert cap.out == "checkins: apagados=1\nfeedbacks: apagados=0\n" and "outros ficam" in cap.err
     with fabrica() as s:
         restante = s.scalars(select(CheckinTreino)).one()
         assert restante.atividade.atleta_id == max(ids)

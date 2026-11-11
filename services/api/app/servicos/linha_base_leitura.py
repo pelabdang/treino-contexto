@@ -217,13 +217,13 @@ def _metrica_texto(m: lb.MetricaBase, tipo_treino: str, motivos: dict[str, str])
                         m.n, dif, texto)
 
 
-def linha_base_da_atividade(session: Session, a: Atividade) -> LinhaBaseTexto:
-    """A linha de base da atividade (`linha_base@1`) com os textos prontos. Calculada na leitura; nunca grava."""
+def linha_base_resultado(session: Session, a: Atividade) -> lb.LinhaBase:
+    """O resultado cru da `linha_base@2` da atividade (valores, medianas, estados), sem textos. Calculado na leitura; nunca grava.
+    Usado pela API (`linha_base_da_atividade`) e pelo pacote de fatos do feedback (`feedback_fatos`)."""
     sessao = _treino(a)
-    base = dict(modalidade=a.modalidade, tipo_treino=a.tipo_treino, janela_semanas=JANELA_SEMANAS, minimo_treinos=MINIMO_TREINOS)
     motivo = lb.motivo_sem_linha_base(sessao)
     if motivo is not None:
-        return LinhaBaseTexto(lb.VERSAO, "sem_linha_base", motivo, f"Sem linha de base: {MOTIVO_SEM_LINHA_BASE[motivo]}.", metricas=(), **base)
+        return lb.LinhaBase(lb.VERSAO, "sem_linha_base", motivo, ())
     corte = sessao.dia - timedelta(days=lb.PADRAO.janela_dias + 1)  # folga de um dia para o fuso; a data local exata é conferida na função
     candidatas = session.scalars(
         select(Atividade)
@@ -237,7 +237,17 @@ def linha_base_da_atividade(session: Session, a: Atividade) -> LinhaBaseTexto:
         )
         .options(selectinload(Atividade.blocos), selectinload(Atividade.carga), selectinload(Atividade.rotulo_transicao))
     ).all()
-    resultado = lb.linha_base(sessao, [_treino(c) for c in candidatas])
+    return lb.linha_base(sessao, [_treino(c) for c in candidatas])
+
+
+def linha_base_da_atividade(session: Session, a: Atividade) -> LinhaBaseTexto:
+    """A linha de base da atividade (`linha_base@1`) com os textos prontos. Calculada na leitura; nunca grava."""
+    sessao = _treino(a)
+    base = dict(modalidade=a.modalidade, tipo_treino=a.tipo_treino, janela_semanas=JANELA_SEMANAS, minimo_treinos=MINIMO_TREINOS)
+    resultado = linha_base_resultado(session, a)
+    if resultado.estado == "sem_linha_base":
+        return LinhaBaseTexto(lb.VERSAO, "sem_linha_base", resultado.motivo,
+                              f"Sem linha de base: {MOTIVO_SEM_LINHA_BASE[resultado.motivo]}.", metricas=(), **base)
     _, motivos = valores_e_motivos(a)
     return LinhaBaseTexto(
         resultado.versao, resultado.estado, resultado.motivo, None,

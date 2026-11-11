@@ -55,6 +55,10 @@ ESTADOS_CLIMA = ("ok", "pendente", "falha")  # indoor e sem_posicao sao calculad
 CHECKIN_ATALHOS = ("dor", "cansaco", "sono_ruim", "calor", "trabalho_estresse")  # ADR 0012, item 2
 CHECKIN_VERSAO = "checkin@1"  # versao do formulario (escala CR-10 inteira, sensacao 1 a 5, os 5 atalhos)
 CHECKIN_TEXTO_MAX = 500
+FEEDBACK_TEXTO_MAX = 700  # ADR 0013, item 2
+FEEDBACK_ESTADOS = ("pronto", "sem_feedback")
+FEEDBACK_MOTIVOS = ("texto_reprovado", "provedor_erro", "provedor_tempo_limite", "provedor_nao_configurado",
+                    "limite_de_chamadas")
 
 FUSO_MIN_MIN, FUSO_MIN_MAX = -720, 840  # minutos: UTC-12 a UTC+14
 
@@ -504,3 +508,48 @@ class CheckinTreino(Base):
     atualizado_em: Mapped[datetime] = mapped_column(DateTime(timezone=True))
 
     atividade: Mapped[Atividade] = relationship(back_populates="checkin")
+    feedback: Mapped["FeedbackTreino | None"] = relationship(
+        back_populates="checkin", cascade="all, delete-orphan", uselist=False
+    )
+
+
+class FeedbackTreino(Base):
+    """Feedback automatico do treino (ADR 0013, item 2): um por check-in (`UNIQUE`), apagado com ele (`ON DELETE CASCADE`).
+
+    Dado de saude (derivado do check-in): so no banco local, nunca em log nem em mensagem de erro, devolvido so ao proprio
+    atleta. `estado = pronto` guarda o texto aprovado; `sem_feedback` guarda so o `motivo` (codigo), NUNCA o texto reprovado
+    nem o termo que reprovou. O pacote de fatos nao e gravado. `tentado_em` e definido pela aplicacao.
+    """
+
+    __tablename__ = "feedback_treino"
+    __table_args__ = (
+        CheckConstraint("estado IN ('pronto', 'sem_feedback')", name="estado"),
+        CheckConstraint(
+            "motivo IS NULL OR motivo IN ('texto_reprovado', 'provedor_erro', 'provedor_tempo_limite', "
+            "'provedor_nao_configurado', 'limite_de_chamadas')",
+            name="motivo",
+        ),
+        CheckConstraint(f"texto IS NULL OR length(texto) BETWEEN 1 AND {FEEDBACK_TEXTO_MAX}", name="texto_tamanho"),
+        # comparacoes explicitas: `texto`, `motivo`, `provedor` e `modelo` so aparecem em IS [NOT] NULL; nunca vira NULL.
+        CheckConstraint(
+            "(estado = 'pronto' AND texto IS NOT NULL AND motivo IS NULL AND provedor IS NOT NULL AND modelo IS NOT NULL) OR "
+            "(estado = 'sem_feedback' AND texto IS NULL AND motivo IS NOT NULL)",
+            name="estado_campos",
+        ),
+    )
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    checkin_id: Mapped[int] = mapped_column(ForeignKey("checkin_treino.id", ondelete="CASCADE"), unique=True)
+    estado: Mapped[str] = mapped_column(String(20))
+    motivo: Mapped[str | None] = mapped_column(String(30))
+    texto: Mapped[str | None] = mapped_column(String)
+    versao_fatos: Mapped[str] = mapped_column(String(20))
+    versao_prompt: Mapped[str] = mapped_column(String(40))
+    versao_checagens: Mapped[str] = mapped_column(String(40))
+    provedor: Mapped[str | None] = mapped_column(String(40))
+    modelo: Mapped[str | None] = mapped_column(String(80))
+    tentativas: Mapped[int] = mapped_column(Integer, default=1, server_default="1")
+    checkin_atualizado_em: Mapped[datetime] = mapped_column(DateTime(timezone=True))
+    tentado_em: Mapped[datetime] = mapped_column(DateTime(timezone=True))
+
+    checkin: Mapped[CheckinTreino] = relationship(back_populates="feedback")

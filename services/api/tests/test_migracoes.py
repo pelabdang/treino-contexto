@@ -108,3 +108,82 @@ def test_0011_sobe_de_novo_depois_de_descer(db_url):
         assert compare_metadata(MigrationContext.configure(conn), Base.metadata) == []
     command.downgrade(cfg, "base")
     engine.dispose()
+
+
+# ---------- 0013: feedback_treino (ADR 0013, item 2) ----------
+
+_FB = ("INSERT INTO feedback_treino (checkin_id, estado, motivo, texto, versao_fatos, versao_prompt, versao_checagens, "
+       "provedor, modelo, tentativas, checkin_atualizado_em, tentado_em) VALUES ({v})")
+_DATA = "'2026-11-10 12:00:00'"
+
+
+def _fb(conn, checkin_id=1, estado="'pronto'", motivo="NULL", texto="'tres linhas'", provedor="'falso'", modelo="'falso'"):
+    conn.exec_driver_sql(_FB.format(v=(
+        f"{checkin_id}, {estado}, {motivo}, {texto}, 'fatos_treino@1', 'feedback_prompt@1', 'checagens_feedback@1', "
+        f"{provedor}, {modelo}, 1, {_DATA}, {_DATA}")))
+
+
+def _com_checkin(engine):
+    with engine.begin() as conn:
+        conn.exec_driver_sql("INSERT INTO atleta (id, nome) VALUES (1, 'Ana')")
+        conn.exec_driver_sql("INSERT INTO atividade (id, atleta_id, fonte, fonte_id, modalidade, inicio, duracao_s) "
+                             "VALUES (1, 1, 't', '1', 'corrida', '2026-11-10 10:00:00', 1800)")
+        conn.exec_driver_sql(
+            "INSERT INTO checkin_treino (id, atividade_id, pse, sensacao, nada_a_relatar, dor, cansaco, sono_ruim, calor, "
+            f"trabalho_estresse, versao, registrado_em, atualizado_em) VALUES (1, 1, 5, 3, TRUE, FALSE, FALSE, FALSE, FALSE, "
+            f"FALSE, 'checkin@1', {_DATA}, {_DATA})")
+
+
+def test_0013_cria_a_tabela_e_os_check_rejeitam_o_incoerente(db_url):
+    cfg, engine = _cfg_e_engine(db_url)
+    command.upgrade(cfg, "head")
+    _com_checkin(engine)
+    with engine.begin() as conn:  # os dois estados validos
+        _fb(conn)
+    with engine.begin() as conn:
+        conn.exec_driver_sql("DELETE FROM feedback_treino")
+        _fb(conn, estado="'sem_feedback'", motivo="'provedor_erro'", texto="NULL", provedor="NULL", modelo="NULL")
+    ruins = {
+        "estado fora da lista": dict(estado="'outro'"),
+        "motivo fora da lista": dict(estado="'sem_feedback'", motivo="'qualquer'", texto="NULL"),
+        "sem_feedback com texto": dict(estado="'sem_feedback'", motivo="'texto_reprovado'"),
+        "sem_feedback sem motivo": dict(estado="'sem_feedback'", texto="NULL"),
+        "pronto com motivo": dict(motivo="'provedor_erro'"),
+        "pronto sem texto": dict(texto="NULL"),
+        "pronto sem provedor": dict(provedor="NULL"),
+        "pronto sem modelo": dict(modelo="NULL"),
+        "texto vazio": dict(texto="''"),
+        "texto de 701 caracteres": dict(texto="'" + "a" * 701 + "'"),
+    }
+    for nome, kw in ruins.items():
+        with pytest.raises(IntegrityError), engine.begin() as conn:
+            conn.exec_driver_sql("DELETE FROM feedback_treino")
+            _fb(conn, **kw)
+    with engine.begin() as conn:
+        conn.exec_driver_sql("DELETE FROM feedback_treino")
+        _fb(conn, texto="'" + "a" * 700 + "'")  # 700 passa
+    with pytest.raises(IntegrityError), engine.begin() as conn:  # UNIQUE: um feedback por check-in
+        _fb(conn)
+    if engine.dialect.name == "postgresql":  # o SQLite dos testes nao aplica FK sem o PRAGMA
+        with pytest.raises(IntegrityError), engine.begin() as conn:  # FK: check-in que nao existe
+            _fb(conn, checkin_id=99)
+    command.downgrade(cfg, "base")
+    engine.dispose()
+
+
+def test_0013_downgrade_apaga_so_a_tabela_e_sobe_de_novo(db_url):
+    cfg, engine = _cfg_e_engine(db_url)
+    command.upgrade(cfg, "head")
+    _com_checkin(engine)
+    with engine.begin() as conn:
+        _fb(conn)
+    command.downgrade(cfg, "0012")
+    with engine.connect() as conn:
+        tabelas = set(inspect(conn).get_table_names())
+        assert "feedback_treino" not in tabelas and "checkin_treino" in tabelas  # o check-in fica
+        assert conn.exec_driver_sql("SELECT count(*) FROM checkin_treino").scalar() == 1
+    command.upgrade(cfg, "head")
+    with engine.connect() as conn:
+        assert compare_metadata(MigrationContext.configure(conn), Base.metadata) == []
+    command.downgrade(cfg, "base")
+    engine.dispose()

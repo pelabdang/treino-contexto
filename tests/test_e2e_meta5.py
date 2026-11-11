@@ -137,7 +137,7 @@ def _ids_fit(ctx):
 # ---------------------------------------------------------------- 1. migracoes e importacao
 def test_1_migracoes_ate_a_0010(ctx):
     # a 0008 a 0010 (Meta 6, #140, #174 e #141) so acrescentam tabelas de saude e de carga; o fluxo da Meta 5 nao as usa
-    assert _sql(ctx, "select version_num from alembic_version") == [("0012",)]  # head (0012, check-in, #296); a 0011 e a 0012 nao afetam o fluxo da Meta 5
+    assert _sql(ctx, "select version_num from alembic_version") == [("0013",)]  # head (0013, feedback, #327); a 0011 a 0013 nao afetam o fluxo da Meta 5
     tabelas = {t for (t,) in _sql(ctx, "select name from sqlite_master where type='table'")}
     assert {"bloco_atividade", "rotulo_transicao", "limiar_atleta", "zona_fc_atleta", "carga_atividade"} <= tabelas
 
