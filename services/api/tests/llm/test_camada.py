@@ -255,3 +255,27 @@ def test_503_continua_provedor_erro():
 def test_criar_redator_repassa_o_intervalo():
     assert criar_redator(_cfg(llm_provider="falso", llm_intervalo_s=40)).intervalo_s == 40
     assert criar_redator(_cfg(llm_provider="falso")).intervalo_s == 0
+
+
+def _oraculo_meta9():
+    import importlib.util
+    import sys
+    from pathlib import Path
+
+    caminho = Path(__file__).parents[4] / "tests" / "fixtures" / "meta9" / "oraculo.py"
+    spec = importlib.util.spec_from_file_location("oraculo_meta9_camada", caminho)
+    mod = importlib.util.module_from_spec(spec)
+    sys.modules[spec.name] = mod
+    spec.loader.exec_module(mod)
+    return mod
+
+
+def test_texto_do_provedor_falso_nas_checagens_reais():
+    """#361: roda a `checar_texto` DE VERDADE (os testes do worker injetam uma propria e nao pegaram a reprovacao por forma)."""
+    from app.explicacao.checagens import checar_texto
+
+    pacotes = _oraculo_meta9().PACOTES
+    comum = checar_texto(pacotes["F01"], ProvedorFalso.TEXTO_BOM)
+    assert comum.aprovado and comum.motivos == ()
+    com_dor = checar_texto(pacotes["F05"], ProvedorFalso.TEXTO_BOM)
+    assert not com_dor.aprovado and com_dor.motivos == ("dor_regra",)

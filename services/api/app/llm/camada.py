@@ -63,10 +63,12 @@ class ProvedorLLM(Protocol):
 class ProvedorFalso:
     """Provedor dos testes e do CI: sem rede, sem chave. `modo` escolhe o que devolve, para provar as checagens e os erros."""
 
+    # Passa na `checar_texto` (checagens_feedback@2) com pacote comum: cada linha com verbo da lista (com acento), sem número.
+    # Com o atalho `dor` reprova por `dor_regra` (nao traz a frase da dor); ver `test_texto_do_provedor_falso_nas_checagens_reais`.
     TEXTO_BOM = (
-        "Treino de teste do provedor falso.\n"
-        "Esta linha existe so nos testes.\n"
-        "Nenhum dado real passa por aqui."
+        "Este é um texto de teste do provedor falso.\n"
+        "Esta linha foi escrita só para os testes.\n"
+        "Nenhum dado real é usado aqui."
     )
     TEXTO_RUIM = (  # sinteticos: numero fora do pacote, linguagem proibida e mais de 5 linhas
         "Voce correu 99 km hoje.\nIsso foi por causa do calor, com certeza.\nDescanse amanha.\n"
