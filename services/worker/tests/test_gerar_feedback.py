@@ -440,12 +440,13 @@ def test_ponta_a_ponta_com_o_oraculo_no_banco_e_as_checagens_reais(fabrica, caps
     assert (fb.estado, fb.texto, fb.versao_fatos, fb.versao_checagens) == (
         "pronto", _texto_g01(), "fatos_treino@1", "checagens_feedback@1")
 
-    ruim = ProvedorFalso(modo="ruim")  # numero fora do pacote, causa, conselho...: reprova e nao grava o texto
+    ruim = ProvedorFalso(modo="ruim")  # numero fora do pacote, causa, conselho...: reprova e nao grava o texto ruim
     assert gerar_feedback.main(["--atleta", "Atleta Ficticio", "--refazer"], redator=Redator(ruim, "falso", "falso"),
                                session_factory=fabrica) == 0
-    assert "sem_feedback=1" in capsys.readouterr().out
-    (fb,) = _linhas(fabrica)
-    assert (fb.estado, fb.motivo, fb.texto, fb.tentativas) == ("sem_feedback", "texto_reprovado", None, 2)
+    saida = capsys.readouterr().out
+    assert "sem_feedback=0" in saida and "mantidos=1" in saida and "texto_reprovado=1" in saida
+    (fb,) = _linhas(fabrica)  # #357: o `--refazer` que falha mantem o texto pronto e em dia
+    assert (fb.estado, fb.motivo, fb.texto, fb.tentativas) == ("pronto", None, _texto_g01(), 1)
 
 
 def _texto_g01():
@@ -456,3 +457,83 @@ def _texto_g01():
 
 def test_padroes_do_comando_existem():
     assert gerar_feedback._padroes() is not None
+
+
+# ---------- #357: limite por minuto do provedor, pausa entre chamadas e `--refazer` sem perder o texto pronto ----------
+
+def test_limite_do_provedor_para_a_execucao_sem_gravar_linha(fabrica):
+    at = _atleta(fabrica, 3)
+    r, falso = _redator(falso=ProvedorFalso(modo="limite"))
+    rel = _gerar(fabrica, at, r)
+    assert (rel.gerados, rel.sem_feedback, rel.adiados, rel.limite_do_provedor) == (0, 0, 3, True)
+    assert falso.chamadas == 1 and _linhas(fabrica) == []  # parou na primeira recusa, sem gastar as outras
+    assert _gerar(fabrica, at, _redator()[0]).gerados == 3  # a proxima execucao completa
+
+
+def test_pausa_so_entre_chamadas(fabrica):
+    at = _atleta(fabrica, 3)
+    pausas = []
+    r = Redator(ProvedorFalso(), "falso", "falso", intervalo_s=30, dormir=pausas.append)
+    assert _gerar(fabrica, at, r).gerados == 3
+    assert pausas == [30, 30]  # nenhuma antes da primeira
+
+
+def test_sem_intervalo_nao_dorme(fabrica):
+    at = _atleta(fabrica, 2)
+    pausas = []
+    _gerar(fabrica, at, Redator(ProvedorFalso(), "falso", "falso", dormir=pausas.append))
+    assert pausas == []
+
+
+@pytest.mark.parametrize("modo", ["erro", "tempo", "checagem"])
+def test_refazer_que_falha_mantem_o_texto_pronto(fabrica, modo):
+    at = _atleta(fabrica, 1)
+    _gerar(fabrica, at, _redator(falso=ProvedorFalso(texto="Texto bom."))[0])
+    if modo == "checagem":
+        rel = _gerar(fabrica, at, _redator(falso=ProvedorFalso(texto="Texto novo."))[0], checar=lambda p, t: "numero_fora_do_pacote",
+                     refazer=True)
+    else:
+        rel = _gerar(fabrica, at, _redator(falso=ProvedorFalso(modo=modo))[0], refazer=True)
+    assert (rel.gerados, rel.sem_feedback, rel.mantidos) == (0, 0, 1)
+    (fb,) = _linhas(fabrica)
+    assert (fb.estado, fb.texto, fb.tentativas) == ("pronto", "Texto bom.", 1)
+
+
+def test_falha_em_checkin_editado_nao_mantem_o_texto_antigo(fabrica):
+    at = _atleta(fabrica, 1)
+    _gerar(fabrica, at, _redator(falso=ProvedorFalso(texto="Texto bom."))[0])
+    with fabrica() as s:
+        s.scalars(select(CheckinTreino)).one().atualizado_em = AGORA + timedelta(minutes=5)
+        s.commit()
+    rel = _gerar(fabrica, at, _redator(falso=ProvedorFalso(modo="erro"))[0])
+    assert (rel.sem_feedback, rel.mantidos) == (1, 0)
+    (fb,) = _linhas(fabrica)
+    assert (fb.estado, fb.texto) == ("sem_feedback", None)  # o texto de um check-in editado nao vale mais
+
+
+def test_comando_avisa_do_limite_do_provedor_e_mostra_mantidos(fabrica, capsys):
+    at = _atleta(fabrica, 2, nome="Bia")
+    r, _ = _redator(falso=ProvedorFalso(modo="limite"))
+    assert gerar_feedback.main(["--atleta", "Bia"], redator=r, montar_pacote=Pacotes(), checar=_aprova, versoes=V,
+                               session_factory=fabrica) == 0
+    saida = capsys.readouterr()
+    assert "adiados=2" in saida.out and "limite de requisicoes" in saida.err and "mantidos" not in saida.out
+
+
+def test_redator_reutilizado_nao_herda_o_limite_anterior(fabrica):
+    at = _atleta(fabrica, 2)
+    falso = ProvedorFalso(modo="limite")
+    r = Redator(falso, "falso", "falso")
+    assert _gerar(fabrica, at, r).limite_do_provedor is True
+    falso.modo = "erro"  # outra falha, no mesmo `Redator`: nao e mais limite
+    rel = _gerar(fabrica, at, r)
+    assert rel.limite_do_provedor is False and rel.sem_feedback == 2 and r.limite_do_provedor is False
+
+
+def test_refazer_sem_provedor_configurado_mantem_o_texto(fabrica):
+    at = _atleta(fabrica, 1)
+    _gerar(fabrica, at, _redator(falso=ProvedorFalso(texto="Texto bom."))[0])
+    rel = _gerar(fabrica, at, Redator(None, "groq", None), refazer=True)
+    assert (rel.sem_feedback, rel.mantidos, rel.motivos) == (0, 1, {"provedor_nao_configurado": 1})
+    (fb,) = _linhas(fabrica)
+    assert (fb.estado, fb.texto) == ("pronto", "Texto bom.")

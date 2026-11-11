@@ -46,9 +46,11 @@ class RelatorioFeedback:
     gerados: int = 0  # linhas `pronto` gravadas
     sem_feedback: int = 0  # linhas `sem_feedback` gravadas (qualquer motivo)
     ignorados: int = 0  # em dia, ou nao elegiveis
-    adiados: int = 0  # sobraram por causa do limite de chamadas; entram na proxima execucao
+    adiados: int = 0  # sobraram por causa do limite de chamadas (nosso ou do provedor); entram na proxima execucao
+    mantidos: int = 0  # `--refazer` falhou (provedor ou checagens) e o texto pronto e em dia foi mantido
+    limite_do_provedor: bool = False  # o provedor recusou por limite por minuto: a execucao parou ali
     erros: int = 0  # falha ao montar o pacote ou checar: nada gravado (so a contagem, nunca a mensagem)
-    motivos: dict[str, int] = field(default_factory=dict)  # codigos de `sem_feedback`
+    motivos: dict[str, int] = field(default_factory=dict)  # codigos das falhas: soma = `sem_feedback` + `mantidos`
     reprovacoes: dict[str, int] = field(default_factory=dict)  # codigos devolvidos pelas checagens (nao gravados)
 
 
@@ -130,7 +132,13 @@ def gerar(session: Session, atleta_id: int, redator: Redator, montar_pacote: Mon
         if pacote is None:  # nao elegivel
             rel.ignorados += 1
             continue
+        fb_antes = checkin.feedback  # com `refazer`: texto pronto e em dia nao se perde se a nova tentativa falhar
+        manter = fb_antes is not None and fb_antes.estado == "pronto" and not desatualizado(fb_antes, checkin, versoes.fatos)
         res = redator.redigir(prompt, pacote)
+        if res.texto is None and getattr(redator, "limite_do_provedor", False):  # limite do provedor: nada gravado, o resto fica para depois
+            rel.adiados = len(checkins) - n
+            rel.limite_do_provedor = True
+            break
         momento = agora or datetime.now(timezone.utc)
 
         def grava(estado: str, motivo: str | None, texto: str | None) -> None:
@@ -138,8 +146,11 @@ def gerar(session: Session, atleta_id: int, redator: Redator, montar_pacote: Mon
                     modelo=res.modelo, versoes=versoes, agora=momento)
 
         if res.texto is None:
-            grava("sem_feedback", res.motivo, None)
-            rel.sem_feedback += 1
+            if manter:
+                rel.mantidos += 1
+            else:
+                grava("sem_feedback", res.motivo, None)
+                rel.sem_feedback += 1
             rel.motivos[res.motivo] = rel.motivos.get(res.motivo, 0) + 1
             continue
         try:
@@ -149,8 +160,11 @@ def gerar(session: Session, atleta_id: int, redator: Redator, montar_pacote: Mon
             rel.erros += 1
             continue
         if reprovado is not None:  # o texto e descartado; guarda-se so o codigo de motivo da linha
-            grava("sem_feedback", "texto_reprovado", None)
-            rel.sem_feedback += 1
+            if manter:
+                rel.mantidos += 1
+            else:
+                grava("sem_feedback", "texto_reprovado", None)
+                rel.sem_feedback += 1
             rel.motivos["texto_reprovado"] = rel.motivos.get("texto_reprovado", 0) + 1
             codigo = str(reprovado) if _CODIGO.fullmatch(str(reprovado)) else "outro"  # nunca texto livre nem o termo
             rel.reprovacoes[codigo] = rel.reprovacoes.get(codigo, 0) + 1

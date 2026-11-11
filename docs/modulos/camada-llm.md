@@ -45,6 +45,7 @@ Regras de forma, tom e do que falta no pacote, mais os **6 exemplos aprovados** 
 - `groq`, `openai` e `anthropic` são os provedores aceitos hoje; outro exige uma linha em `CHAVES`.
 - O LiteLLM traz o `openai` 3.x e o `httpx2`; por isso o `TestClient` do Starlette passou a usar o `httpx2`, e o `conftest` da API silencia o logger `httpx2` nos testes (o log é do cliente do teste, não da API).
 - Limites do plano gratuito do Groq: não conferidos (a página só mostra o plano pago). O limite de 20 chamadas por execução é configurável.
+- **Limite por minuto do provedor (#357):** a recusa (HTTP 429 ou erro de limite) vira `LimiteDoProvedor` na camada; o `Redator` marca `limite_do_provedor` e o worker para a execução sem gravar linha (o treino segue `pendente`). `LLM_INTERVALO_S` (padrão 0) é a pausa entre chamadas; numa medição local com fixtures, 28 s entre chamadas ainda teve recusa, então para o plano gratuito comece por 40.
 
 ## Arquivos principais
 - `services/api/app/llm/camada.py`, `services/api/app/llm/__init__.py`

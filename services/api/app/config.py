@@ -23,6 +23,7 @@ class Settings(BaseSettings):
     llm_model: str = ""
     llm_timeout_s: float = 20.0  # por chamada, sem nova tentativa dentro da chamada
     llm_limite_chamadas: int = 20  # por execucao do worker
+    llm_intervalo_s: float = 0.0  # pausa entre chamadas na mesma execucao (limite por minuto do provedor); 0 = sem pausa
     # Chaves dos provedores: so no .env local, nunca no repositorio, nunca em log (SecretStr).
     groq_api_key: SecretStr | None = None
     openai_api_key: SecretStr | None = None
