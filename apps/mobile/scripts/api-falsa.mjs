@@ -164,6 +164,7 @@ const gravarSemana = (id, corpo) => {
 //  13 = PUT derruba a conexão               14 = PUT responde 404                     15 = DELETE derruba a conexão
 //  16 = PUT demora 4 s (estado "salvando")  17 = GET dos pendentes responde 500       18 = GET da atividade demora 6 s (carregando)
 //  19 = GET da atividade responde 404 (treino não encontrado ao carregar)
+// Estados do cartão Feedback por atividade (atleta 1): ver `FEEDBACK_POR_ID` abaixo.
 const ANCORAS = ["repouso", "muito leve", "leve", "moderado", "um pouco difícil", "difícil", "6", "muito difícil", "8", "9", "máximo"];
 const SENSACOES = ["", "Muito mal", "Mal", "Normal", "Bem", "Muito bem"];
 const ATALHOS = { dor: "Dor", cansaco: "Cansaço", sono_ruim: "Sono ruim", calor: "Calor", trabalho_estresse: "Trabalho ou estresse" };
@@ -184,6 +185,30 @@ const checkinOut = (atividadeId, e) => ({
 });
 const iniciarCheckins = () => {
   checkins.set(chaveCheckin(1, 107), checkinOut(107, { pse: 5, sensacao: 4, nada_a_relatar: false, atalhos: ["cansaco", "trabalho_estresse"], texto: "Texto sintético de exemplo." }));
+  for (const id of [111, 112, 113, 114, 115]) checkins.set(chaveCheckin(1, id), checkinOut(id, { pse: 5, sensacao: 4, nada_a_relatar: true, atalhos: [], texto: null }));
+};
+// Feedback sintético (#330, ADR 0013): um id por estado, sempre com texto marcador. 107 pronto (automático), 111 pronto de teste,
+// 112 pendente, 113 desatualizado, 114 indisponível, 115 indisponível sem provedor; 101 e 106 sem check-in (prazo aberto), 108 sem check-in
+// com o prazo vencido; 110 não elegível (`feedback: null`). Os demais ids com check-in (só o PUT cria) ficam `pendente`.
+const TEXTO_FEEDBACK = "Texto de exemplo do feedback.\nSegunda linha do texto de exemplo.\nTerceira linha do texto de exemplo.";
+const FEEDBACK_POR_ID = {
+  107: { estado: "pronto", texto: TEXTO_FEEDBACK, origem: "automatico" },
+  111: { estado: "pronto", texto: TEXTO_FEEDBACK, origem: "teste" },
+  112: { estado: "pendente", mensagem: "O feedback deste treino ainda não foi gerado. Toque em Atualizar para ver se já está pronto." },
+  113: { estado: "desatualizado", mensagem: "Você editou o check-in. O feedback será refeito." },
+  114: { estado: "indisponivel", motivo: "provedor_erro", mensagem: "Ainda não foi possível gerar o feedback deste treino. Uma nova tentativa será feita mais tarde." },
+  115: { estado: "indisponivel", motivo: "provedor_nao_configurado", mensagem: "O feedback automático não está ligado neste app." },
+};
+const feedbackDe = (id, temCheckin, aberto) => {
+  if (naoPedeCheckin(id)) return null;
+  if (!temCheckin) {
+    return {
+      estado: "sem_checkin",
+      mensagem: aberto ? "Faça o check-in para ver o feedback." : "O prazo do check-in deste treino acabou, então ele fica sem feedback.",
+      checkin_aberto: aberto,
+    };
+  }
+  return FEEDBACK_POR_ID[id] ?? FEEDBACK_POR_ID[112];
 };
 const naoPedeCheckin = (id) => id === 110;
 const prazoVencido = (id) => id === 108;
@@ -208,6 +233,7 @@ const comCheckin = (a, atleta) => {
     checkin: e,
     carga_pse,
     checkin_aberto: e ? true : !naoPedeCheckin(id) && !prazoVencido(id),
+    feedback: feedbackDe(id, !!e, !naoPedeCheckin(id) && !prazoVencido(id)),
     pse_sugerida: id === 109 && !e ? 5 : null,
   };
 };
