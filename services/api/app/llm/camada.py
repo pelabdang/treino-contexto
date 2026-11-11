@@ -158,7 +158,7 @@ class Redator:
         if self.chamadas >= self.limite_chamadas:
             return self._res(motivo=MOTIVO_LIMITE)
         self.chamadas += 1
-        usuario = pacote if isinstance(pacote, str) else json.dumps(pacote, ensure_ascii=False, sort_keys=True)
+        usuario = pacote if isinstance(pacote, str) else json.dumps(pacote, ensure_ascii=False, separators=(",", ":"))  # compacto e na ordem do pacote (menos tokens)
         try:
             texto = self._provedor.completar(sistema, usuario, self.timeout_s)
         except TempoLimite:

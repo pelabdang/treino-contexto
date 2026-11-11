@@ -2,7 +2,7 @@
 tipo: modulo
 status: em-uso
 dono: duda
-atualizado: 2026-11-10
+atualizado: 2026-11-11
 links: [[decisoes/0013-feedback-automatico]], [[modulos/api]], [[modulos/worker]], [[produto/roadmap]]
 ---
 # Módulo: camada de LLM
@@ -32,10 +32,14 @@ São os mesmos códigos do `CHECK` previsto para `feedback_treino` ([[decisoes/0
 - **Dado de saúde que sai da máquina:** com provedor real, o pacote de fatos vai ao provedor. O que o Groq diz sobre retenção e o que **não foi conferido** está na [[decisoes/0013-feedback-automatico]], "A confirmar", item 10; a regra do projeto é: provedor real só no computador do Angelo, com o "sim" dele, e provedor falso em CI e testes.
 
 ## Quem usa: `app/servicos/feedback.py` e `worker.gerar_feedback` (#327)
-`gerar(session, atleta_id, redator, montar_pacote, checar, versoes, prompt, refazer)` recebe o pacote e as checagens por **injeção**:
-- `montar_pacote(session, atividade, checkin) -> dict | None` (o pacote `fatos_treino@1`; `None` se a atividade não é elegível);
-- `checar(pacote, texto) -> str | None` (`None` se o texto passa; senão o código do motivo, que **não** é gravado: a linha guarda só `texto_reprovado`).
-Na linha de comando, os padrões vêm de `app.explicacao.fatos_treino` (`montar_pacote_da_atividade`, `VERSAO`) e `app.explicacao.checagens` (`checar`, `VERSAO`), das issues #324 e #325; se faltarem, o comando sai com 1 e mensagem clara.
+`gerar(session, atleta_id, redator, montar_pacote, checar, versoes, prompt, refazer)` (em `app/servicos/feedback.py`) recebe o pacote e as checagens por **injeção**:
+- `montar_pacote(session, atividade, checkin) -> dict | None` (o pacote `fatos_treino@1`; `None` se não há check-in ou a atividade não é elegível);
+- `checar(pacote, texto) -> str | None` (`None` se o texto passa; senão o **primeiro** código de motivo; a linha guarda só `texto_reprovado`, nunca o texto nem o código do termo).
+
+Na linha de comando, os padrões são os reais: `app.servicos.feedback_fatos.fatos_da_atividade` (o **adaptador** que lê o banco e chama a função pura `app.explicacao.fatos_treino.fatos_treino`, #324), `app.explicacao.checagens.checar` (#325) e as `VERSAO` dos dois módulos. O adaptador usa os serviços de leitura que a API já tem (`linha_base_resultado`, `clima_da_atividade`, `carga_da_atividade`, `esforcos_da_atividade`, rótulo de transição) e não recalcula nada; natação fica sem bloco de clima. Teste: o pacote que sai do banco semeado com as fixtures da meta 9 é igual ao do oráculo (`services/api/tests/servicos/test_feedback_fatos.py`).
+
+## Prompt `feedback_prompt@1` (`app/llm/prompt_feedback.py`)
+Regras de forma, tom e do que falta no pacote, mais os **6 exemplos aprovados** (G01 a G06, pacote reduzido sem campos nulos e texto da ADR 0013). Os exemplos têm **fonte única** em `app/llm/exemplos_feedback.py`; um teste confere o texto contra `tests/fixtures/meta9/textos.py`, o pacote contra o oráculo e que cada texto passa nas checagens. O prompt tem uns 2,5 mil tokens (estimativa), para caber no limite por minuto do plano gratuito (não conferido). Se o texto mudar de forma relevante, a `VERSAO` sobe.
 
 ## Limitações
 - `groq`, `openai` e `anthropic` são os provedores aceitos hoje; outro exige uma linha em `CHAVES`.

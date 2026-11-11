@@ -27,11 +27,12 @@ from sqlalchemy import select
 
 
 def _padroes():
-    """Pacote de fatos (#324) e checagens (#325), como a ADR 0013 os nomeia. Falta um deles: `None`."""
+    """Pacote de fatos (#324, pelo adaptador que le o banco) e checagens (#325). Falta um deles: `None`."""
     try:
         from app.explicacao import checagens, fatos_treino
+        from app.servicos.feedback_fatos import fatos_da_atividade
 
-        return fatos_treino.montar_pacote_da_atividade, checagens.checar, fatos_treino.VERSAO, checagens.VERSAO
+        return fatos_da_atividade, checagens.checar, fatos_treino.VERSAO, checagens.VERSAO
     except (ImportError, AttributeError):
         return None
 

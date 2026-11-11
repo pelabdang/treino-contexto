@@ -410,3 +410,47 @@ def test_comando_provedor_nao_configurado_avisa(fabrica, capsys):
     assert _main(fabrica, redator=Redator(None, "groq", None)) == 0
     saida = capsys.readouterr()
     assert "motivos: provedor_nao_configurado=1" in saida.out and "nao configurado" in saida.err
+
+
+# ---------- ponta a ponta com o pacote do banco e as checagens de verdade (padroes do comando) ----------
+
+def _carrega_semeador():
+    import importlib.util
+    import sys
+
+    arq = Path(__file__).resolve().parents[2] / "api" / "tests" / "servicos" / "test_feedback_fatos.py"
+    spec = importlib.util.spec_from_file_location("semeador_feedback_fatos", arq)
+    mod = importlib.util.module_from_spec(spec)
+    sys.modules[spec.name] = mod
+    spec.loader.exec_module(mod)
+    return mod
+
+
+def test_ponta_a_ponta_com_o_oraculo_no_banco_e_as_checagens_reais(fabrica, capsys):
+    sem = _carrega_semeador()
+    with fabrica() as s:
+        sem._semear(s, "F01")
+    bom = ProvedorFalso(texto=_texto_g01())
+    assert gerar_feedback.main(["--atleta", "Atleta Ficticio"], redator=Redator(bom, "falso", "falso"),
+                               session_factory=fabrica) == 0  # sem injecao: pacote do adaptador e checar real
+    assert "gerados=1 sem_feedback=0" in capsys.readouterr().out
+    (fb,) = _linhas(fabrica)
+    assert (fb.estado, fb.texto, fb.versao_fatos, fb.versao_checagens) == (
+        "pronto", _texto_g01(), "fatos_treino@1", "checagens_feedback@1")
+
+    ruim = ProvedorFalso(modo="ruim")  # numero fora do pacote, causa, conselho...: reprova e nao grava o texto
+    assert gerar_feedback.main(["--atleta", "Atleta Ficticio", "--refazer"], redator=Redator(ruim, "falso", "falso"),
+                               session_factory=fabrica) == 0
+    assert "sem_feedback=1" in capsys.readouterr().out
+    (fb,) = _linhas(fabrica)
+    assert (fb.estado, fb.motivo, fb.texto, fb.tentativas) == ("sem_feedback", "texto_reprovado", None, 2)
+
+
+def _texto_g01():
+    from app.llm.exemplos_feedback import EXEMPLOS
+
+    return next(e["texto"] for e in EXEMPLOS if e["id"] == "G01")
+
+
+def test_padroes_do_comando_existem():
+    assert gerar_feedback._padroes() is not None
