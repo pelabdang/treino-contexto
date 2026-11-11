@@ -1,4 +1,4 @@
-"""Os 6 exemplos de tom do `feedback_prompt@1` (ADR 0013, item 5): par pacote -> texto aprovado. 100% sintéticos.
+"""Os 6 exemplos de tom do `feedback_prompt` (ADR 0013, item 5): par pacote -> texto aprovado. 100% sintéticos.
 
 FONTE ÚNICA dos exemplos dentro do prompt. Os textos são os G01 a G06 de `tests/fixtures/meta9/textos.py` (os 6 exemplos da ADR, palavra por
 palavra) e os pacotes são os do oráculo (`tests/fixtures/meta9/oraculo.py`) **reduzidos**: sem `versao`, `janela_semanas`, `minimo_treinos` e

@@ -38,13 +38,17 @@ São os mesmos códigos do `CHECK` previsto para `feedback_treino` ([[decisoes/0
 
 Na linha de comando, os padrões são os reais: `app.servicos.feedback_fatos.fatos_da_atividade` (o **adaptador** que lê o banco e chama a função pura `app.explicacao.fatos_treino.fatos_treino`, #324), `app.explicacao.checagens.checar` (#325) e as `VERSAO` dos dois módulos. O adaptador usa os serviços de leitura que a API já tem (`linha_base_resultado`, `clima_da_atividade`, `carga_da_atividade`, `esforcos_da_atividade`, rótulo de transição) e não recalcula nada; natação fica sem bloco de clima. Teste: o pacote que sai do banco semeado com as fixtures da meta 9 é igual ao do oráculo (`services/api/tests/servicos/test_feedback_fatos.py`).
 
-## Prompt `feedback_prompt@1` (`app/llm/prompt_feedback.py`)
+## Prompt `feedback_prompt@2` (`app/llm/prompt_feedback.py`)
 Regras de forma, tom e do que falta no pacote, mais os **6 exemplos aprovados** (G01 a G06, pacote reduzido sem campos nulos e texto da ADR 0013). Os exemplos têm **fonte única** em `app/llm/exemplos_feedback.py`; um teste confere o texto contra `tests/fixtures/meta9/textos.py`, o pacote contra o oráculo e que cada texto passa nas checagens. O prompt tem uns 2,5 mil tokens (estimativa), para caber no limite por minuto do plano gratuito (não conferido). Se o texto mudar de forma relevante, a `VERSAO` sobe.
+
+**`@2` (11/11, #355):** a primeira rodada com o provedor de verdade deu textos aprovados nas checagens, mas telegráficos. O `@2` acrescenta regras de forma: toda linha com verbo conjugado (nada de lista de valores); quando a linha de base tem métrica `dentro` ou `fora`, a primeira linha traz valor e mediana, com o número de treinos e a janela; não repetir a mesma conclusão em duas linhas; do clima, só o essencial; o que falta é dito com dois-pontos, sem "pois" nem "porque". O prompt passou a uns 2,9 mil tokens (estimativa). Medição local com os 8 pacotes do oráculo no provedor (só fixtures; contagens): com o `@1`, 5 respostas e 5 aprovadas, 3 chamadas recusadas pelo provedor; com o `@2`, 6 respostas e 6 aprovadas, todas com valor e mediana na primeira linha quando havia comparação, 2 chamadas recusadas. As recusas vieram com chamadas a cada 12 s e a cada 28 s: sinal de limite por minuto do provedor (não conferido na documentação dele). **Mudar a versão do prompt não desatualiza o que já está `pronto`** (só `versao_fatos` e a edição do check-in desatualizam): para reescrever com o prompt novo, `worker.gerar_feedback --refazer`.
 
 ## Limitações
 - `groq`, `openai` e `anthropic` são os provedores aceitos hoje; outro exige uma linha em `CHAVES`.
 - O LiteLLM traz o `openai` 3.x e o `httpx2`; por isso o `TestClient` do Starlette passou a usar o `httpx2`, e o `conftest` da API silencia o logger `httpx2` nos testes (o log é do cliente do teste, não da API).
 - Limites do plano gratuito do Groq: não conferidos (a página só mostra o plano pago). O limite de 20 chamadas por execução é configurável.
+- O worker não espaça as chamadas: numa execução com vários check-ins, parte delas pode ser recusada pelo limite por minuto do provedor e virar `provedor_erro`, tentado de novo na execução seguinte.
+- As checagens ainda deixam passar "pois" como palavra de causa (visto numa resposta do `@1`); fica para a `checagens_feedback@2`.
 
 ## Arquivos principais
 - `services/api/app/llm/camada.py`, `services/api/app/llm/__init__.py`
