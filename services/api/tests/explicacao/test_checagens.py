@@ -170,12 +170,73 @@ def test_ruim_so_passa_na_frase_sono_ruim():
 
 
 def test_rotulos_da_pse_e_da_sensacao_nao_sao_elogio_nem_culpa():
-    # F10: sensação 5 "muito bem" e PSE 0 "repouso" são rótulos do check-in
+    # F10: sensação 5 "muito bem" e PSE 0 "repouso" são rótulos do check-in; o rótulo do pacote passa com ou sem parênteses
     ok = ("Ciclismo de 28,00 km em 60 min, com FC média de 135 bpm.\nSem comparação com o seu histórico: o treino não tem tipo.\n"
           "Você marcou esforço 0 (repouso), sensação 5 (muito bem) e nada a relatar.")
-    assert ck.checar_texto(O.PACOTES["F10"], ok).aprovado
-    com_elogio = ok.replace("sensação 5 (muito bem)", "sensação 5, muito bem")
-    assert "elogio_sem_fato" in ck.checar_texto(O.PACOTES["F10"], com_elogio).motivos
+    f10 = O.PACOTES["F10"]
+    assert ck.checar_texto(f10, ok).aprovado
+    assert ck.checar_texto(f10, ok.replace("sensação 5 (muito bem)", "sensação 5, muito bem")).aprovado
+    # "muito bem" que NÃO é o rótulo da sensação do pacote continua elogio (F04: sensação "mal", métricas fora do normal)
+    f4 = O.PACOTES["F04"]
+    base = T.BONS["G04"][1].replace("A carga pela PSE foi 630 UA em 90 min.", "Você foi muito bem.")
+    assert ck.checar_texto(f4, base).motivos == ("elogio_sem_fato",)
+
+
+def test_mal_so_passa_como_rotulo_da_sensacao_2_do_pacote():
+    f4 = O.PACOTES["F04"]  # sensação 2, "mal"
+    g04 = T.BONS["G04"][1]
+    assert ck.checar_texto(f4, g04).aprovado
+    assert ck.checar_texto(f4, g04.replace("sensação 2 (mal)", "sensação 2, mal")).aprovado  # sem parênteses também
+    # F01 tem sensação "bem": "mal" aí é juízo
+    assert ck.checar_texto(O.PACOTES["F01"], BASE + "Foi mal.").motivos == ("linguagem_culpa",)
+    # o rótulo da sensação 1 é "muito mal": passa inteiro, mas "mal" sozinho não
+    p = {**f4, "checkin": {**f4["checkin"], "sensacao_nivel": 1, "sensacao_texto": "muito mal"}}
+    assert ck.checar_texto(p, g04.replace("sensação 2 (mal)", "sensação 1 (muito mal)")).aprovado
+    assert "linguagem_culpa" in ck.checar_texto(p, g04.replace("sensação 2 (mal)", "sensação 1 (muito mal) e foi mal")).motivos
+
+
+def test_quente_e_calor_sao_o_mesmo_fato_e_frio_nao_esta_no_pacote():
+    f4 = O.PACOTES["F04"]  # calor marcado
+    g04 = T.BONS["G04"][1]
+    assert ck.checar_texto(f4, g04.replace("Você marcou calor e cansaço", "Você marcou dia quente e cansaço")).aprovado
+    # F01 não marcou calor: "quente" e "calor" reprovam igual
+    assert _ok(BASE + "Foi um dia quente.").motivos == ("atalho_nao_marcado",)
+    assert _ok(BASE + "Foi um dia de calor.").motivos == ("atalho_nao_marcado",)
+    # o pacote traz °C, não "frio": a palavra sozinha não é fato do pacote
+    assert _ok(BASE + "Foi um dia frio.").motivos == ("nome_fora_do_pacote",)
+    assert ck.checar_texto(f4, g04.replace("Você marcou calor e cansaço", "Você marcou calor e frio")).motivos == ("nome_fora_do_pacote",)
+
+
+@pytest.mark.parametrize(("termo", "motivo"), [
+    ("Fique atento ao ritmo.", "linguagem_conselho"), ("Prefira treinos curtos.", "linguagem_conselho"), ("Considere poupar.", "linguagem_conselho"),
+    ("Lembre-se do descanso.", "linguagem_conselho"), ("Priorize a recuperação.", "linguagem_conselho"),
+    ("Isso indica que foi forte.", "linguagem_causa"), ("Isso mostra que foi forte.", "linguagem_causa"), ("Isso significa mais esforço.", "linguagem_causa"),
+    ("A FC reflete o esforço.", "linguagem_causa"), ("Em razão do vento.", "linguagem_causa"), ("Esse é o motivo.", "linguagem_causa"),
+    ("O efeito apareceu.", "linguagem_causa"), ("Foi reflexo do ritmo.", "linguagem_causa"),
+    ("Sinal de fadiga.", "linguagem_diagnostico"), ("Sinal de esgotamento.", "linguagem_diagnostico"), ("Sinal de exaustão.", "linguagem_diagnostico"),
+    ("Há risco.", "linguagem_diagnostico"),
+    ("É preocupante.", "linguagem_culpa"), ("Fique em alerta.", "linguagem_culpa"), ("Há um problema.", "linguagem_culpa"),
+    ("Foi pior.", "linguagem_culpa"), ("Foi um erro.", "linguagem_culpa"),
+    ("Vamos ver o treino.", "linguagem_quem_fala"), ("Estou vendo o treino.", "linguagem_quem_fala"),
+])
+def test_termos_da_revisao_da_nina(termo, motivo):
+    assert motivo in ck.checar_texto(O.PACOTES["F02"], T.BONS["G02"][1].replace("É uma comparação com o seu histórico, não um julgamento do treino.", termo)).motivos
+
+
+@pytest.mark.parametrize("termo", ["Você evoluiu.", "É hora de superar.", "É hora de melhorar."])
+def test_elogio_nas_formas_que_faltavam(termo):
+    # F02: melhor pace fora do normal, nada sustenta o elogio
+    texto = T.BONS["G02"][1].replace("É uma comparação com o seu histórico, não um julgamento do treino.", termo)
+    assert ck.checar_texto(O.PACOTES["F02"], texto).motivos == ("elogio_sem_fato",)
+
+
+def test_termos_novos_nao_barram_texto_legitimo():
+    """Contexto: 'melhor tiro', 'esforço', 'pior' só como palavra inteira, rótulos do check-in e 'estou/sou/vamos' não aparecem nos bons."""
+    for i, (caso, texto) in T.BONS.items():
+        assert ck.checar_texto(O.PACOTES[caso], texto).aprovado, i
+    assert ck.checar_texto(O.PACOTES["F02"], T.BONS["G02"][1]).aprovado  # "melhor tiro"
+    assert _ok(BASE + "Foi um esforço dentro do seu normal.").aprovado
+    assert _ok(BASE + "O erro padrão não aparece aqui.").motivos == ("linguagem_culpa",)  # "erro" é palavra de juízo, mesmo em outro sentido: limite conhecido
 
 
 # --- elogio só com fato --------------------------------------------------------------------------------------------------------

@@ -39,10 +39,12 @@ MOTIVOS = (
 DIAGNOSTICO = (
     "lesao", "lesoes", "lesionado", "lesionada", "inflamacao", "tendinite", "fratura", "distensao", "overtraining", "sobretreino",
     "supertreino", "doenca", "infeccao", "sintoma", "sintomas", "diagnostico", "sindrome", "arritmia", "desidratacao", "desidratado",
+    "fadiga", "esgotamento", "exaustao", "risco",
 )
 CULPA = (
     "falhou", "fracasso", "fracassou", "preguica", "desleixo", "culpa", "fraco", "fraca", "decepcionante", "voce deveria", "voce devia",
     "pessimo", "horrivel", "treino ruim", "mau treino", "ruim", "mau",
+    "preocupante", "alerta", "problema", "pior", "erro", "mal",  # "mal" só passa como rótulo da sensação 2 do pacote (ver _mascarar_rotulos)
 )
 PROMESSA = (
     "vai melhorar", "com certeza", "certamente", "garanto", "prometo", "garantido", "voce vai conseguir", "na proxima sera", "em breve voce",
@@ -51,21 +53,25 @@ CAUSA = (
     "porque", "por causa", "por conta", "devido", "gracas a", "se deve", "foi por isso", "por isso", "causou", "explica", "explicam",
     "pode ter sido", "deve ter sido", "possivelmente", "provavelmente", "talvez", "pesou", "afetou", "atrapalhou", "influenciou",
     "contribuiu", "impactou", "consequencia",
+    "indica que", "indicam que", "mostra que", "mostram que", "significa", "reflete", "reflexo", "em razao", "motivo", "efeito",
 )
 CAUSA_PADROES = (r"resultado d[oae]s?",)  # "resultado do calor", "resultado da carga"
 CONSELHO = (
     "descanse", "descansar", "procure", "consulte", "evite", "tente", "recomendo", "sugiro", "o ideal", "precisa", "nao esqueca", "cuide",
     "hidrate", "beba", "medico", "fisioterapeuta", "fique de olho", "vale a pena", "convem", "mantenha", "continue", "aumente", "reduza",
     "diminua", "voce deve",
+    "descanso", "recuperacao", "fique atento", "fique atenta", "prefira", "considere", "lembre-se", "priorize",
 )
 QUEM_FALA = (
     "professor", "professora", "treinador", "treinadora", "tecnico", "coach", "eu", "meu", "minha", "meus", "minhas", "nosso", "nossa",
     "nossos", "nossas", "inteligencia artificial", "modelo de linguagem", "ola",
+    "vamos", "estou", "sou", "acho", "penso", "notei",
 )
 QUEM_FALA_COM_ACENTO = ("nós",)  # "nos" (em + os) é preposição e aparece nos textos bons: só vale com o acento
 ELOGIO = (
     "otimo", "otima", "excelente", "parabens", "muito bem", "bom treino", "bom trabalho", "bem feito", "mandou bem", "incrivel", "arrasou",
     "orgulho", "evolucao", "evoluindo", "caprichou", "perfeito", "perfeita", "maravilhoso", "melhorou", "melhora", "progresso", "superou",
+    "evoluiu", "superar", "melhorar",
 )
 PARTES_DO_CORPO = (
     "joelho", "joelhos", "tornozelo", "canela", "panturrilha", "coxa", "quadril", "costas", "ombro", "tendao", "musculo", "perna", "pernas",
@@ -75,9 +81,11 @@ PARTES_DO_CORPO = (
 TERMOS_DO_ATALHO = {
     "cansaco": ("cansaco", "cansado", "cansada"),
     "sono_ruim": ("sono ruim",),
-    "calor": ("calor",),
+    "calor": ("calor", "quente", "quentes", "abafado", "abafada"),  # "quente" é o mesmo fato que "calor": só com o atalho marcado
     "trabalho_estresse": ("trabalho ou estresse", "estresse"),
 }
+# Clima descrito em palavras que o pacote não traz (o pacote traz °C, não "frio"): sem o fato no pacote, reprova como "fora do pacote".
+CLIMA_FORA_DO_PACOTE = ("frio", "fria", "frios", "frias", "gelado", "gelada", "friozinho")
 EXTENSO = (
     "dois", "duas", "tres", "quatro", "cinco", "seis", "sete", "oito", "nove", "dez", "onze", "doze", "treze", "quatorze", "quinze",
     "dezesseis", "dezessete", "dezoito", "dezenove", "vinte", "trinta", "quarenta", "cinquenta", "sessenta", "setenta", "oitenta",
@@ -169,12 +177,18 @@ def _numeros(pacote: Mapping[str, Any], texto: str, plano: str) -> set[str]:
 
 
 def _mascarar_rotulos(plano: str, pacote: Mapping[str, Any]) -> str:
-    """Tira do texto o que o app escreve de propósito e as listas pegariam: os rótulos da PSE e da sensação, entre parênteses
-    ("(muito bem)", "(repouso)"), e a frase exata "sono ruim" (o rótulo do atalho; ADR 0013, item 4.2)."""
+    """Tira do texto o que o app escreve de propósito e as listas pegariam: o rótulo da sensação **do pacote**, com ou sem parênteses
+    ("muito bem", "mal"), o da PSE entre parênteses ("(repouso)") e a frase exata "sono ruim" (o rótulo do atalho; ADR 0013, item 4.2).
+    O rótulo só passa se é o da sensação que o pacote traz: "muito bem" num treino de sensação "mal" continua elogio, e "mal" num treino
+    de sensação "bem" continua juízo."""
     ck = pacote.get("checkin") or {}
-    for rotulo in (ck.get("pse_texto"), ck.get("sensacao_texto")):
-        if rotulo:
-            plano = plano.replace(f"({_plano(str(rotulo))})", " ")
+    sens, pse = ck.get("sensacao_texto"), ck.get("pse_texto")
+    if pse:
+        plano = plano.replace(f"({_plano(str(pse))})", " ")
+    if sens:
+        rotulo = re.escape(_plano(str(sens)))
+        antes = "" if _plano(str(sens)).startswith("muito") else r"(?<!muito )"  # "bem" não pode mascarar o "bem" de "muito bem"
+        plano = re.sub(rf"(?<!\w){antes}{rotulo}(?!\w)", " ", plano)
     return plano.replace("sono ruim", " ")
 
 
@@ -250,6 +264,8 @@ def _dor_e_atalhos(plano: str, pacote: Mapping[str, Any]) -> set[str]:
             motivos.add("dor_nao_marcada")
         if _tem_termo(plano, PARTES_DO_CORPO):
             motivos.add("nome_fora_do_pacote")
+    if _tem_termo(plano, CLIMA_FORA_DO_PACOTE):
+        motivos.add("nome_fora_do_pacote")
     for atalho, termos in TERMOS_DO_ATALHO.items():
         if atalho not in atalhos and _tem_termo(plano, termos):
             motivos.add("atalho_nao_marcado")
