@@ -2,8 +2,8 @@
 tipo: decisao
 status: em-uso
 dono: theo
-atualizado: 2026-11-09
-links: [[modulos/api]], [[modulos/grafico-tiros]], [[modulos/mobile]], [[modulos/worker]], [[metricas/tiros-1km]], [[decisoes/0002-segmento-intensidade-e-versao]], [[decisoes/0003-fuso-da-atividade]], [[decisoes/0005-serie-de-tiros-o-que-entra]], [[decisoes/0006-upload-de-fit]], [[decisoes/0007-clima-da-atividade]], [[produto/roadmap]], [[design/telas/treino]], [[decisoes/0009-treino-de-transicao]]
+atualizado: 2026-11-11
+links: [[decisoes/0013-feedback-automatico]], [[modulos/api]], [[modulos/grafico-tiros]], [[modulos/mobile]], [[modulos/worker]], [[metricas/tiros-1km]], [[decisoes/0002-segmento-intensidade-e-versao]], [[decisoes/0003-fuso-da-atividade]], [[decisoes/0005-serie-de-tiros-o-que-entra]], [[decisoes/0006-upload-de-fit]], [[decisoes/0007-clima-da-atividade]], [[produto/roadmap]], [[design/telas/treino]], [[decisoes/0009-treino-de-transicao]]
 ---
 # ADR: 0004 Contrato da tela de evolução dos tiros (Meta 2)
 
@@ -238,3 +238,17 @@ tela (#295, decisão do Theo). `checkin_aberto` só orienta a tela: o `PUT` cont
 em lista. O `GET` da atividade ganha ainda `carga_pse` (`carga_pse@1`, [[metricas/carga-pse]]): `null` em pai e troca, senão `versao`, `estado`
 (`calculada`, `sem_checkin`, `sem_duracao`), `pse`, `minutos`, `valor` (UA, sem arredondar) e, pelo adendo 2, `valor_texto` ("270 UA", "272,5 UA") e `texto`
 prontos. Não traz a observação nem a sensação. Detalhes em [[modulos/api]].
+
+## Adendo 10 (2026-11-11): `feedback` no `GET` da atividade (#328)
+**Status: aceito (Theo, [[decisoes/0013-feedback-automatico]], item 2).** `GET /atletas/{atleta_id}/atividades/{atividade_id}` ganha, sem remover campo,
+`feedback`: `null` em `multiesporte_pai` e `troca` (o cartão não aparece), senão um objeto com `estado` (`pronto`, `sem_checkin`, `pendente`,
+`desatualizado`, `indisponivel`) e, conforme o estado: `texto` (3 a 5 linhas) e `origem` (`automatico` ou `teste`, esta quando o texto veio do provedor falso)
+só em `pronto`; `mensagem` (**frase pronta em português, escrita pela API**, que o app mostra como veio; pelo adendo 2) nos demais; `checkin_aberto` só em
+`sem_checkin` (falso = prazo vencido, sem botão); `motivo` (código fechado: `texto_reprovado`, `provedor_erro`, `provedor_tempo_limite`,
+`provedor_nao_configurado`, `limite_de_chamadas`) só em `indisponivel`, para quem cuida do app: o app **não** o mostra. As frases: `sem_checkin` com prazo aberto
+"Faça o check-in para ver o feedback."; com prazo vencido "O prazo do check-in deste treino acabou, então ele fica sem feedback."; `pendente` "O feedback deste
+treino ainda não foi gerado. Toque em Atualizar para ver se já está pronto."; `desatualizado` "Você editou o check-in. O feedback será refeito."; `indisponivel`
+"Ainda não foi possível gerar o feedback deste treino. Uma nova tentativa será feita mais tarde." (a mesma para texto reprovado, provedor fora e limite de chamadas) e, só para
+`provedor_nao_configurado`, "O feedback automático não está ligado neste app." A API **nunca** devolve o texto de um feedback desatualizado, o texto reprovado (que nem é
+gravado), o provedor, o modelo nem as versões; só o `GET` da própria atividade traz o campo (nunca lista; outro atleta recebe `404`). Dado de saúde derivado do
+check-in. Tipos no cliente: `FeedbackTreino` e `EstadoFeedback`. Detalhes em [[modulos/api]].

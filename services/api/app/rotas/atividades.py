@@ -11,7 +11,7 @@ from fastapi import APIRouter, Depends, File, HTTPException, Response, UploadFil
 from pydantic import BaseModel, Field
 from sqlalchemy.orm import Session, joinedload
 
-from app.db.models import Atividade, Atleta
+from app.db.models import Atividade, Atleta, CheckinTreino
 from app.db.session import get_session
 from app.ingestao.fit_guardado import AtletaInexistente
 from app.ingestao.importacao import (
@@ -32,6 +32,7 @@ from app.servicos.carga_pse_leitura import CargaPseLida, carga_pse_da_atividade
 from app.servicos.clima import ClimaDaAtividade, EstadoClima, clima_da_atividade
 from app.servicos.distancia_texto import distancia_da_atividade
 from app.servicos.esforcos_leitura import esforcos_da_atividade
+from app.servicos.feedback_leitura import FeedbackLido, feedback_da_atividade
 from app.servicos.fuso import inicio_local
 from app.servicos.linha_base_leitura import linha_base_da_atividade, texto_divergencia
 
@@ -156,6 +157,22 @@ class CargaPseOut(BaseModel):
     texto: str  # "Carga pela PSE: 6 x 45 min = 270 UA." (ou "6 x 45 min 25 s = 272,5 UA.") ou o motivo de nao haver valor
 
 
+class FeedbackOut(BaseModel):
+    """Feedback automatico do treino (ADR 0013, item 2): cinco estados e a `mensagem` pronta, que o app mostra como veio.
+
+    Dado de saude (derivado do check-in): so no `GET` da atividade do proprio atleta, nunca em lista. Nunca traz o texto de um
+    feedback desatualizado, o texto reprovado, o provedor, o modelo nem a versao dos fatos.
+    """
+
+    estado: Literal["pronto", "sem_checkin", "pendente", "desatualizado", "indisponivel"]
+    texto: str | None = None  # so em `pronto` (3 a 5 linhas)
+    origem: Literal["automatico", "teste"] | None = None  # so em `pronto`; `teste` = provedor falso, nunca texto de verdade
+    mensagem: str | None = None  # frase pronta em portugues, em todos os estados menos `pronto`
+    checkin_aberto: bool | None = None  # so em `sem_checkin`; falso = prazo vencido (sem botao)
+    motivo: Literal["texto_reprovado", "provedor_erro", "provedor_tempo_limite", "provedor_nao_configurado",
+                    "limite_de_chamadas"] | None = None  # so em `indisponivel`; codigo para quem cuida do app, o app nao o mostra
+
+
 class AtividadeOut(BaseModel):
     """A atividade como a API mostra. A posicao de inicio nunca sai (ADR 0007)."""
 
@@ -180,6 +197,7 @@ class AtividadeOut(BaseModel):
     checkin_aberto: bool = False  # false em pai/troca e quando o prazo de criacao passou sem check-in; true se ja existe (editar nao tem prazo)
     pse_sugerida: int | None = None  # numa parte de multiesporte: a PSE do check-in da parte anterior, se houver
     carga_pse: CargaPseOut | None = None  # null so em multiesporte_pai e troca; sem check-in vem `sem_checkin`
+    feedback: FeedbackOut | None = None  # ADR 0013, #328; null em multiesporte_pai e troca (o cartao nao aparece)
     # Campos prontos para a tela (#158): a API formata, o app mostra (ADR 0004, adendo 2).
     data_local: str  # AAAA-MM-DD, pelo fuso da atividade (ADR 0003)
     hora_local: str  # HH:MM, pelo fuso da atividade
@@ -271,6 +289,10 @@ def _carga_pse_out(c: CargaPseLida | None) -> CargaPseOut | None:
     return None if c is None else CargaPseOut.model_validate(asdict(c))
 
 
+def _feedback_out(f: FeedbackLido | None) -> FeedbackOut | None:
+    return None if f is None else FeedbackOut(**asdict(f))
+
+
 def _carga_out(c: CargaLida) -> CargaAtividadeOut:
     return CargaAtividadeOut(estado=c.estado, carga=c.carga, metodo=c.metodo, cobertura_pct=c.cobertura_pct,
                              motivo=c.motivo, versao=c.versao)
@@ -350,7 +372,7 @@ def buscar_atividade(
     """A atividade com o `clima` (ADR 0007). `indoor`, `sem_posicao`, `pendente` e `falha` dizem por que não há valores."""
     if session.get(Atleta, atleta_id) is None:
         raise HTTPException(status_code=404, detail="atleta não encontrado")
-    a = session.get(Atividade, atividade_id, options=[joinedload(Atividade.checkin)])  # LEFT JOIN: sem consulta extra
+    a = session.get(Atividade, atividade_id, options=[joinedload(Atividade.checkin).joinedload(CheckinTreino.feedback)])  # LEFT JOIN: sem consulta extra
     if a is None or a.atleta_id != atleta_id:
         raise HTTPException(status_code=404, detail="atividade não encontrada")
     clima = clima_da_atividade(session, atividade_id)
@@ -376,6 +398,7 @@ def buscar_atividade(
         linha_base=LinhaBaseOut.model_validate(asdict(linha_base_da_atividade(session, a))),
         checkin=None if a.checkin is None else checkin_out(a.checkin),
         checkin_aberto=checkin_svc.checkin_aberto(a, a.checkin is not None),
+        feedback=_feedback_out(feedback_da_atividade(a, a.checkin, checkin_svc.checkin_aberto(a, a.checkin is not None))),
         pse_sugerida=checkin_svc.pse_sugerida(session, a),
         carga_pse=_carga_pse_out(carga_pse_da_atividade(a, a.checkin)),
         data_local=local.date().isoformat(),
