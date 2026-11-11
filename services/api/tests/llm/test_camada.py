@@ -216,3 +216,42 @@ def test_litellm_importado_em_modo_production_sem_carregar_o_env():
 
     litellm = _litellm()
     assert os.environ["LITELLM_MODE"] == "PRODUCTION" and litellm.litellm_mode == "PRODUCTION"
+
+
+# ---------- #357: limite por minuto do provedor e pausa entre chamadas ----------
+
+def test_litellm_429_vira_limite_do_provedor():
+    import litellm
+
+    r = _lite(mock_response=litellm.RateLimitError(message=MARCADOR, model="m", llm_provider="groq"))
+    res = r.redigir("s", "p")
+    assert (res.texto, res.motivo, r.limite_do_provedor) == (None, "limite_de_chamadas", True)
+    assert MARCADOR not in repr(res)
+
+
+def test_excecao_qualquer_com_status_429_vira_limite_do_provedor(monkeypatch):
+    """Sem depender da classe: basta o `status_code` 429 na excecao que sai do `litellm.completion`."""
+    import litellm
+
+    class Recusa(Exception):
+        status_code = 429
+
+    def completion(**kw):
+        raise Recusa(MARCADOR)
+
+    monkeypatch.setattr(litellm, "completion", completion)
+    r = _lite()
+    res = r.redigir("s", "p")
+    assert (res.motivo, r.limite_do_provedor) == ("limite_de_chamadas", True) and MARCADOR not in repr(res)
+
+
+def test_503_continua_provedor_erro():
+    import litellm
+
+    r = _lite(mock_response=litellm.ServiceUnavailableError(message=MARCADOR, model="m", llm_provider="groq"))
+    assert r.redigir("s", "p").motivo == "provedor_erro" and not r.limite_do_provedor
+
+
+def test_criar_redator_repassa_o_intervalo():
+    assert criar_redator(_cfg(llm_provider="falso", llm_intervalo_s=40)).intervalo_s == 40
+    assert criar_redator(_cfg(llm_provider="falso")).intervalo_s == 0

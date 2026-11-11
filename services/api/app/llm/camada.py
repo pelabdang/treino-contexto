@@ -166,6 +166,7 @@ class Redator:
         return ResultadoLLM(texto, motivo, self.nome_provedor, self.modelo)
 
     def redigir(self, sistema: str, pacote: dict | str) -> ResultadoLLM:
+        self.limite_do_provedor = False  # vale so para ESTA chamada (um `Redator` reutilizado nao herda o 429 anterior)
         if self._provedor is None:
             return self._res(motivo=MOTIVO_NAO_CONFIGURADO)
         if self.chamadas >= self.limite_chamadas:

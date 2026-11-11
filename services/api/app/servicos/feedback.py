@@ -50,7 +50,7 @@ class RelatorioFeedback:
     mantidos: int = 0  # `--refazer` falhou (provedor ou checagens) e o texto pronto e em dia foi mantido
     limite_do_provedor: bool = False  # o provedor recusou por limite por minuto: a execucao parou ali
     erros: int = 0  # falha ao montar o pacote ou checar: nada gravado (so a contagem, nunca a mensagem)
-    motivos: dict[str, int] = field(default_factory=dict)  # codigos de `sem_feedback`
+    motivos: dict[str, int] = field(default_factory=dict)  # codigos das falhas: soma = `sem_feedback` + `mantidos`
     reprovacoes: dict[str, int] = field(default_factory=dict)  # codigos devolvidos pelas checagens (nao gravados)
 
 

@@ -518,3 +518,22 @@ def test_comando_avisa_do_limite_do_provedor_e_mostra_mantidos(fabrica, capsys):
                                session_factory=fabrica) == 0
     saida = capsys.readouterr()
     assert "adiados=2" in saida.out and "limite de requisicoes" in saida.err and "mantidos" not in saida.out
+
+
+def test_redator_reutilizado_nao_herda_o_limite_anterior(fabrica):
+    at = _atleta(fabrica, 2)
+    falso = ProvedorFalso(modo="limite")
+    r = Redator(falso, "falso", "falso")
+    assert _gerar(fabrica, at, r).limite_do_provedor is True
+    falso.modo = "erro"  # outra falha, no mesmo `Redator`: nao e mais limite
+    rel = _gerar(fabrica, at, r)
+    assert rel.limite_do_provedor is False and rel.sem_feedback == 2 and r.limite_do_provedor is False
+
+
+def test_refazer_sem_provedor_configurado_mantem_o_texto(fabrica):
+    at = _atleta(fabrica, 1)
+    _gerar(fabrica, at, _redator(falso=ProvedorFalso(texto="Texto bom."))[0])
+    rel = _gerar(fabrica, at, Redator(None, "groq", None), refazer=True)
+    assert (rel.sem_feedback, rel.mantidos, rel.motivos) == (0, 1, {"provedor_nao_configurado": 1})
+    (fb,) = _linhas(fabrica)
+    assert (fb.estado, fb.texto) == ("pronto", "Texto bom.")

@@ -79,7 +79,7 @@ def main(argv: list[str] | None = None, redator: Redator | None = None, montar_p
         if mapa:
             print(f"  {nome}: " + " ".join(f"{k}={v}" for k, v in sorted(mapa.items())))
     if rel.limite_do_provedor:
-        print("aviso: o provedor recusou por limite de requisicoes; rode de novo daqui a 1 minuto (ou use LLM_INTERVALO_S)",
+        print("aviso: o provedor recusou por limite de requisicoes; rode de novo mais tarde (limite por minuto: 1 minuto basta, ou use LLM_INTERVALO_S; limite diario: so no dia seguinte)",
               file=sys.stderr)
     if not redator.configurado:
         print("aviso: provedor de LLM nao configurado (LLM_PROVIDER, LLM_MODEL e a chave no .env)", file=sys.stderr)
