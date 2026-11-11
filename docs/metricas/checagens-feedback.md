@@ -14,7 +14,7 @@ Se um texto escrito pela camada de LLM pode chegar ao atleta (ADR 0013, item 4).
 treino fica `sem_feedback` com `motivo = texto_reprovado`; a nova tentativa é a do próximo `worker.gerar_feedback`. Não há texto de reserva escrito por regra.
 
 ## Versão `@2` (11/11, #355): o que mudou
-A primeira rodada com o provedor de verdade deu textos que passavam nas checagens `@1` mas saíam telegráficos (pedido do Angelo em 11/11). Quatro casos reais, avaliados um a um:
+A primeira rodada com o provedor de verdade deu textos que passavam nas checagens `@1` mas saíam telegráficos (pedido do Angelo em 11/11). Quatro casos vistos nessa rodada (só com fixtures), avaliados um a um:
 - **(a) Linha que é só lista de valores, sem verbo** ("Treino indoor, carga do relógio 20,0 pontos e 150 UA pela PSE."): virou regra, **`forma_sem_verbo`**, por heurística documentada (abaixo).
 - **(b) "pois" como palavra de causa**: virou termo da lista `linguagem_causa`, com "já que" e "visto que".
 - **(c) "dentro da mediana de X"** quando o estado é `dentro`: virou regra, **`comparacao_mediana`**. Vale para a expressão em qualquer caso (o certo é "perto da mediana" ou "dentro do seu normal"; "dentro da mediana" nunca é certo, nem em `fora`).
@@ -70,7 +70,7 @@ Ponto de partida: a lista da ADR 0013 (item 4.2), ampliada. Mudar qualquer lista
 Regra própria do projeto, sem artigo (ADR 0013, "Fontes"). Decisões do Angelo de 10/11: tom aprovado como está, observação positiva só quando um fato a sustenta, clima e check-in lado a lado, dor em uma frase neutra.
 
 ## Código e teste
-- Código: `services/api/app/explicacao/checagens.py` (`VERSAO = "checagens_feedback@1"`; as listas são constantes nomeadas no topo).
+- Código: `services/api/app/explicacao/checagens.py` (`VERSAO = "checagens_feedback@2"`; as listas são constantes nomeadas no topo).
 - Teste: `services/api/tests/explicacao/test_checagens.py`. **Os 13 textos bons passam e os 82 ruins reprovam com o motivo certo** (listas da #323, [[metricas/fatos-treino-oraculo]], escritas à mão contra os pacotes do oráculo;
   cada ruim tem exatamente um motivo). Mais casos pequenos de cada regra: unidade, número por extenso, acento e maiúscula, palavra inteira, "nós" e "nos", "sono ruim", rótulos da sensação, rótulos da sensação do pacote e de fora dele, "quente" e "frio", um ruim por termo novo da revisão da Nina, elogio com e sem fato, limites de linhas e de
   caracteres, Markdown, dor marcada e não marcada, atalhos, nome próprio e siglas, ordem dos motivos, pureza do módulo.
