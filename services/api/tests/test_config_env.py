@@ -38,8 +38,8 @@ def test_variavel_de_ambiente_vale_mais_que_o_arquivo(tmp_path, monkeypatch):
 
 
 def test_um_env_na_pasta_de_execucao_nao_e_lido(tmp_path, monkeypatch):
-    (tmp_path / ".env").write_text("LLM_MODEL=da-pasta-errada\n", encoding="utf-8")
-    monkeypatch.delenv("LLM_MODEL", raising=False)
+    """`Settings()` de verdade (sem `_env_file`), rodando de uma pasta que tem um `.env` proprio: ele e ignorado."""
+    (tmp_path / ".env").write_text("CORS_ORIGENS=http://pasta-errada.example\n", encoding="utf-8")
+    monkeypatch.delenv("CORS_ORIGENS", raising=False)
     monkeypatch.chdir(tmp_path)
-    assert Settings(_env_file=None).llm_model == ""  # sem arquivo: o padrao
-    assert Path(Settings.model_config["env_file"]) != tmp_path / ".env"
+    assert "pasta-errada" not in Settings().cors_origens
