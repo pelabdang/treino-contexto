@@ -235,14 +235,14 @@ def test_termos_novos_nao_barram_texto_legitimo():
     for i, (caso, texto) in T.BONS.items():
         assert ck.checar_texto(O.PACOTES[caso], texto).aprovado, i
     assert ck.checar_texto(O.PACOTES["F02"], T.BONS["G02"][1]).aprovado  # "melhor tiro"
-    assert _ok(BASE + "Foi um esforço dentro do seu normal.").aprovado
+    assert _ok(BASE + "Foi um esforço leve.").aprovado
     assert _ok(BASE + "O erro padrão não aparece aqui.").motivos == ("linguagem_culpa",)  # "erro" é palavra de juízo, mesmo em outro sentido: limite conhecido
 
 
 # --- elogio só com fato --------------------------------------------------------------------------------------------------------
 def test_elogio_com_fato_passa_e_sem_fato_reprova():
     # F01: tudo dentro do normal e sem dor: o fato sustenta
-    assert _ok(BASE + "Ótimo treino, com tudo dentro do seu normal.").aprovado
+    assert _ok(BASE + "Foi um ótimo treino.").aprovado
     # F02: o melhor pace está fora; F03: aprendendo; F05: com dor; F06: sem linha de base
     for caso in ("F02", "F03", "F05", "F06"):
         assert "elogio_sem_fato" in ck.checar_texto(O.PACOTES[caso], "Ótimo treino.\nLinha dois.\nLinha três.").motivos, caso
@@ -269,7 +269,7 @@ def test_markdown_reprova(linha):
 
 # --- dor e atalhos -------------------------------------------------------------------------------------------------------------
 DOR = ("Seu pace médio foi 6:00/km, perto da mediana de 5:56/km nos 10 treinos leves das últimas 12 semanas.\n"
-       "Esforço 3 (moderado) e sensação 3 (normal).\n")
+       "Você marcou esforço 3 (moderado) e sensação 3 (normal).\n")
 
 
 def test_dor_marcada_exige_a_frase_exata_uma_vez():
@@ -283,7 +283,7 @@ def test_dor_marcada_exige_a_frase_exata_uma_vez():
 
 def test_dor_nao_marcada_reprova_em_qualquer_forma():
     for frase in ("Você registrou dor neste treino.", "Foi doloroso.", "Sem dores.", "Dói."):
-        assert _ok(BASE + frase).motivos == ("dor_nao_marcada",), frase
+        assert "dor_nao_marcada" in _ok(BASE + frase).motivos, frase
 
 
 def test_atalho_so_pode_ser_citado_se_marcado():
@@ -332,7 +332,7 @@ def test_o_modulo_e_puro_sem_rede_llm_banco_nem_log():
 
 
 def test_versao():
-    assert ck.VERSAO == "checagens_feedback@1"
+    assert ck.VERSAO == "checagens_feedback@2"
 
 
 def test_checar_devolve_none_se_aprovado_e_um_codigo_se_reprovado():
@@ -342,3 +342,59 @@ def test_checar_devolve_none_se_aprovado_e_um_codigo_se_reprovado():
     assert ck.checar(O.PACOTES[caso], texto) == motivo
     # com vários motivos, o primeiro da lista MOTIVOS
     assert ck.checar(O.PACOTES["F01"], "Eu acho que foi o dobro!") == "numero_por_extenso"
+
+
+# --- checagens_feedback@2 (#355): forma pedida pelo Angelo em 11/11 ------------------------------------------------------------
+def test_linha_sem_verbo_reprova_e_as_formas_dos_exemplos_aprovados_passam():
+    assert "forma_sem_verbo" in _ok(BASE + "Treino leve, 47 min, 8,20 km e 188 UA.").motivos
+    assert "forma_sem_verbo" in _ok(BASE + "Duração de 47 min e carga pela PSE de 188 UA.").motivos
+    # formas curtas dos exemplos aprovados: "Sem ...", o gerúndio de G03 e a abertura descritiva do exemplo 6
+    assert _ok(BASE + "Sem carga do relógio por enquanto.").aprovado
+    assert ck._tem_verbo("Ainda aprendendo o seu normal em treino moderado: 3 de 8 treinos.")
+    assert ck._tem_verbo("Natação de 1.600 m em 40 min, com FC média de 128 bpm.")
+    assert ck._tem_verbo("Treino leve na esteira de 30 min e 5,00 km, com FC média de 140 bpm.")
+    assert not ck._tem_verbo("Treino indoor, carga do relógio 20,0 pontos e 150 UA pela PSE.")  # sem "com FC média de": não é a abertura
+
+
+@pytest.mark.parametrize("linha", ["Foram 47 min.", "A carga foi de 188 UA.", "Você marcou esforço 4.", "Isso é tudo.", "A FC ficou estável.",
+                                   "O treino durou 47 min.", "Você percorreu 8,20 km.", "Você nadou 1.600 m.", "As métricas estão no pacote."])
+def test_verbos_aceitos(linha):
+    assert ck._tem_verbo(linha)
+
+
+@pytest.mark.parametrize("linha", ["Seu pace.", "Carga pela PSE de 188 UA.", "Esforço 4, sensação 4.", "O seu normal."])
+def test_sem_verbo_nao_e_aceito(linha):
+    assert not ck._tem_verbo(linha)
+
+
+def test_pois_e_ja_que_sao_causa():
+    for frase in ("Foi assim, pois o dia ajudou.", "Foi assim, já que o dia ajudou.", "Foi assim visto que o dia ajudou."):
+        assert _ok(BASE + frase).motivos == ("linguagem_causa",), frase
+    assert _ok(BASE + "Foi um treino de 47 min nos pontos do pacote.").aprovado  # "pontos" não é "pois"
+
+
+@pytest.mark.parametrize("frase", ["A FC foi 146 bpm, dentro da mediana de 148 bpm.", "A FC foi 146 bpm, dentro de mediana.",
+                                   "A FC foi 146 bpm, dentro da sua mediana de 148 bpm."])
+def test_dentro_da_mediana_reprova(frase):
+    assert "comparacao_mediana" in _ok(BASE + frase).motivos
+
+
+def test_formas_certas_de_dizer_a_comparacao_passam():
+    assert _ok(BASE + "A FC foi 146 bpm, perto da mediana de 148 bpm.").motivos == ("conclusao_repetida",)  # "perto da mediana" já abriu o texto
+    f2 = T.BONS["G02"][1]
+    assert "(mediana de 172 bpm)" in f2 and ck.checar_texto(O.PACOTES["F02"], f2).aprovado  # "dentro do seu normal (mediana de ...)"
+
+
+def test_conclusao_repetida_em_duas_linhas():
+    assert "conclusao_repetida" in _ok(BASE + "Foi tudo dentro do seu normal.").motivos
+    # conclusões diferentes em linhas diferentes passam: "perto da mediana" (linha 1) e "dentro do seu normal" (linha 2)
+    assert ck.checar_texto(O.PACOTES["F01"], T.BONS["G01"][1]).aprovado
+    assert ck.checar_texto(O.PACOTES["F06"], T.BONS["G06"][1]).aprovado
+    # F06: "sem comparação" em duas linhas
+    texto = T.BONS["G06"][1].replace("A natação não tem carga do relógio; a carga pela PSE foi 200 UA.", "Foi sem comparação com o seu histórico.")
+    assert "conclusao_repetida" in ck.checar_texto(O.PACOTES["F06"], texto).motivos
+
+
+def test_versao_2_e_codigos_novos():
+    assert ck.VERSAO == "checagens_feedback@2"
+    assert {"forma_sem_verbo", "conclusao_repetida", "comparacao_mediana"} <= set(ck.MOTIVOS)
