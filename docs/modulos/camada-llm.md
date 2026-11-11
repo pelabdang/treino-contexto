@@ -8,7 +8,7 @@ links: [[decisoes/0013-feedback-automatico]], [[modulos/api]], [[modulos/worker]
 # Módulo: camada de LLM
 
 ## Para que serve
-A única porta do produto para um modelo de linguagem (regra do `AGENTS.md`: IA sempre por uma camada trocável, nunca provedor direto no código). Meta 9, issue #326; quem usa é o `worker.gerar_feedback` (#327, [[modulos/worker]]; o prompt fixo `feedback_prompt@1` está em `app/llm/prompt_feedback.py`). Código em `services/api/app/llm/camada.py`. A [[decisoes/0013-feedback-automatico]] (ainda `proposta` quando esta nota foi escrita) decide o uso; esta nota descreve o que o módulo faz.
+A única porta do produto para um modelo de linguagem (regra do `AGENTS.md`: IA sempre por uma camada trocável, nunca provedor direto no código). Meta 9, issue #326; quem usa é o `worker.gerar_feedback` (#327, [[modulos/worker]]; o prompt fixo `feedback_prompt@1` está em `app/llm/prompt_feedback.py`). Código em `services/api/app/llm/camada.py`. A [[decisoes/0013-feedback-automatico]] (`aceita` em 10/11) decide o uso; esta nota descreve o que o módulo faz.
 
 ## Entradas e saídas
 - `criar_redator()` monta o `Redator` do `.env`; `Redator.redigir(sistema, pacote)` recebe o prompt fixo e o pacote (dicionário, vira JSON) e **nunca levanta**: devolve `ResultadoLLM(texto, motivo, provedor, modelo)`. Ou há `texto`, ou há um `motivo`:
