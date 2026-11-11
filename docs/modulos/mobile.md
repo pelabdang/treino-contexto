@@ -2,8 +2,8 @@
 tipo: modulo
 status: em-uso
 dono: rafa
-atualizado: 2026-11-10
-links: [[modulos/api]], [[modulos/api-client]], [[produto/roadmap]], [[decisoes/0004-contrato-tela-evolucao]], [[produto/meta-2-como-rodar]], [[decisoes/0006-upload-de-fit]], [[design/guia-visual]], [[design/tokens]], [[decisoes/0007-clima-da-atividade]], [[modulos/clima]], [[design/telas/treino]], [[design/telas/semana-padrao]], [[decisoes/0011-linha-de-base-e-semana-padrao]], [[design/telas/checkin]], [[decisoes/0012-check-in-pos-treino]]
+atualizado: 2026-11-11
+links: [[design/telas/feedback]], [[decisoes/0013-feedback-automatico]], [[modulos/api]], [[modulos/api-client]], [[produto/roadmap]], [[decisoes/0004-contrato-tela-evolucao]], [[produto/meta-2-como-rodar]], [[decisoes/0006-upload-de-fit]], [[design/guia-visual]], [[design/tokens]], [[decisoes/0007-clima-da-atividade]], [[modulos/clima]], [[design/telas/treino]], [[design/telas/semana-padrao]], [[decisoes/0011-linha-de-base-e-semana-padrao]], [[design/telas/checkin]], [[decisoes/0012-check-in-pos-treino]]
 ---
 # Módulo: mobile
 
