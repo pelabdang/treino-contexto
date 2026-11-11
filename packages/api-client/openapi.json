@@ -133,6 +133,16 @@
             ],
             "title": "Fc Media"
           },
+          "feedback": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/FeedbackOut"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
           "hora_local": {
             "title": "Hora Local",
             "type": "string"
@@ -1319,6 +1329,93 @@
           "sessoes"
         ],
         "title": "EvolucaoTiros1km",
+        "type": "object"
+      },
+      "FeedbackOut": {
+        "description": "Feedback automatico do treino (ADR 0013, item 2): cinco estados e a `mensagem` pronta, que o app mostra como veio.\n\nDado de saude (derivado do check-in): so no `GET` da atividade do proprio atleta, nunca em lista. Nunca traz o texto de um\nfeedback desatualizado, o texto reprovado, o provedor, o modelo nem a versao dos fatos.",
+        "properties": {
+          "checkin_aberto": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Checkin Aberto"
+          },
+          "estado": {
+            "enum": [
+              "pronto",
+              "sem_checkin",
+              "pendente",
+              "desatualizado",
+              "indisponivel"
+            ],
+            "title": "Estado",
+            "type": "string"
+          },
+          "mensagem": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Mensagem"
+          },
+          "motivo": {
+            "anyOf": [
+              {
+                "enum": [
+                  "texto_reprovado",
+                  "provedor_erro",
+                  "provedor_tempo_limite",
+                  "provedor_nao_configurado",
+                  "limite_de_chamadas"
+                ],
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Motivo"
+          },
+          "origem": {
+            "anyOf": [
+              {
+                "enum": [
+                  "automatico",
+                  "teste"
+                ],
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Origem"
+          },
+          "texto": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Texto"
+          }
+        },
+        "required": [
+          "estado"
+        ],
+        "title": "FeedbackOut",
         "type": "object"
       },
       "GrupoOut": {

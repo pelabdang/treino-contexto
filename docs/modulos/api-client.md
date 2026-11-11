@@ -2,7 +2,7 @@
 tipo: modulo
 status: em-uso
 dono: duda
-atualizado: 2026-11-09
+atualizado: 2026-11-11
 links: [[decisoes/0011-linha-de-base-e-semana-padrao]], [[decisoes/0010-carga-de-treino]], [[decisoes/0009-treino-de-transicao]], [[produto/meta-3-como-rodar]], [[modulos/api]], [[modulos/mobile]], [[decisoes/0004-contrato-tela-evolucao]], [[decisoes/0006-upload-de-fit]], [[decisoes/0007-clima-da-atividade]], [[produto/meta-4-como-rodar]], [[decisoes/0008-deteccao-de-esforcos]]
 ---
 # Módulo: api-client

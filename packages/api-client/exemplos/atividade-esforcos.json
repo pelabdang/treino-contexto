@@ -140,6 +140,14 @@
     "valor_texto": null,
     "texto": "Sem check-in: a carga pela PSE precisa da PSE do treino."
   },
+  "feedback": {
+    "estado": "sem_checkin",
+    "texto": null,
+    "origem": null,
+    "mensagem": "O prazo do check-in deste treino acabou, então ele fica sem feedback.",
+    "checkin_aberto": false,
+    "motivo": null
+  },
   "data_local": "2025-05-07",
   "hora_local": "06:00",
   "duracao": "0:34:51",
