@@ -1,4 +1,4 @@
-"""Checagens do texto do feedback (issue #325, ADR 0013, item 4): `checagens_feedback@1`.
+"""Checagens do texto do feedback (issue #325, ADR 0013, item 4): `checagens_feedback@2`.
 
 Função pura: sem banco, sem rede, sem IA, sem log. Confere um texto contra o pacote de fatos (`fatos_treino@1`) e devolve se foi aprovado e, se não,
 os **códigos** dos motivos. Texto reprovado é descartado pelo chamador (nunca gravado nem mostrado) e a nova tentativa fica para a próxima execução
@@ -18,7 +18,7 @@ from collections.abc import Iterator, Mapping
 from dataclasses import dataclass
 from typing import Any
 
-VERSAO = "checagens_feedback@1"
+VERSAO = "checagens_feedback@2"
 
 LINHAS_MIN, LINHAS_MAX = 3, 5  # ADR 0013, item 4.3
 LINHA_MAX_CARACTERES = 140
@@ -30,7 +30,7 @@ FRASE_DOR = "Você registrou dor neste treino."  # decisão 7: sempre esta, sem 
 MOTIVOS = (
     "numero_fora_do_pacote", "numero_por_extenso", "unidade_trocada",
     "linguagem_diagnostico", "linguagem_culpa", "linguagem_promessa", "linguagem_causa", "linguagem_conselho", "linguagem_quem_fala",
-    "elogio_sem_fato", "forma_linhas", "forma_tamanho_linha", "forma_markdown",
+    "elogio_sem_fato", "forma_linhas", "forma_tamanho_linha", "forma_markdown", "forma_sem_verbo", "conclusao_repetida", "comparacao_mediana",
     "dor_regra", "dor_nao_marcada", "atalho_nao_marcado", "nome_fora_do_pacote",
 )
 
@@ -53,6 +53,7 @@ CAUSA = (
     "porque", "por causa", "por conta", "devido", "gracas a", "se deve", "foi por isso", "por isso", "causou", "explica", "explicam",
     "pode ter sido", "deve ter sido", "possivelmente", "provavelmente", "talvez", "pesou", "afetou", "atrapalhou", "influenciou",
     "contribuiu", "impactou", "consequencia",
+    "pois", "ja que", "visto que",
     "indica que", "indicam que", "mostra que", "mostram que", "significa", "reflete", "reflexo", "em razao", "motivo", "efeito",
 )
 CAUSA_PADROES = (r"resultado d[oae]s?",)  # "resultado do calor", "resultado da carga"
@@ -84,6 +85,22 @@ TERMOS_DO_ATALHO = {
     "calor": ("calor", "quente", "quentes", "abafado", "abafada"),  # "quente" é o mesmo fato que "calor": só com o atalho marcado
     "trabalho_estresse": ("trabalho ou estresse", "estresse"),
 }
+# --- Forma da frase (checagens_feedback@2, #355) --------------------------------------------------------------------------------
+# Verbos aceitos, minúsculos e COM acento ("é" não é a conjunção "e"). Heurística: uma lista fechada mais a terminação do pretérito.
+VERBOS = frozenset({
+    "é", "são", "era", "eram", "foi", "foram", "está", "estão", "esteve", "estiveram", "tem", "têm", "teve", "tiveram", "houve",
+    "fica", "ficam", "ficou", "ficaram", "marcou", "marcaram", "registrou", "registraram", "aparece", "aparecem", "apareceu", "apareceram",
+    "soma", "somam", "somou", "somaram", "vale", "valem", "durou", "duraram", "fez", "fizeram", "corresponde", "equivale", "representa",
+    "manteve", "mantiveram", "ocorreu", "ocorreram", "aconteceu", "ficando",
+})
+_PRETERITO = re.compile(r"^[a-zà-ÿ]{3,}(ou|eu|iu|aram|eram|iram)$")  # "percorreu", "nadou", "pedalaram"; "seu" e "meu" não entram (3 letras)
+# Frases curtas sem verbo que os exemplos aprovados usam: "Sem comparação ...", o gerúndio de "Ainda aprendendo o seu normal..." e a
+# abertura descritiva do exemplo 6 ("Natação de 1.600 m em 40 min, com FC média de 128 bpm."). Uma lista de valores sem isso reprova.
+_ABERTURA_DESCRITIVA = re.compile(r"^(natacao|ciclismo|corrida|treino\b[^,]*)\b.* com fc media de \d+ bpm\.?$")
+# Expressões de conclusão: a mesma em duas linhas é repetição ("dentro do seu normal" abrindo e fechando o texto).
+CONCLUSOES = ("dentro do seu normal", "fora do seu normal", "dentro do normal", "perto da mediana", "sem comparacao com o seu historico")
+_DENTRO_DA_MEDIANA = re.compile(r"dentro d[aeo]s? (sua |a )?mediana")  # o certo é "perto da mediana" ou "dentro do seu normal"
+
 # Clima descrito em palavras que o pacote não traz (o pacote traz °C, não "frio"): sem o fato no pacote, reprova como "fora do pacote".
 CLIMA_FORA_DO_PACOTE = ("frio", "fria", "frios", "frias", "gelado", "gelada", "friozinho")
 EXTENSO = (
@@ -220,6 +237,13 @@ def _nome_proprio(texto: str) -> bool:
     return False
 
 
+def _tem_verbo(linha: str) -> bool:
+    plano = _plano(linha)
+    if plano.startswith("sem ") or "aprendendo" in plano or _ABERTURA_DESCRITIVA.match(plano):
+        return True
+    return any(t in VERBOS or _PRETERITO.match(t) for t in re.findall(r"[\wà-ÿ]+", linha.casefold()))
+
+
 def _forma(texto: str, linhas: list[str]) -> set[str]:
     motivos: set[str] = set()
     if not LINHAS_MIN <= len(linhas) <= LINHAS_MAX:
@@ -228,6 +252,13 @@ def _forma(texto: str, linhas: list[str]) -> set[str]:
         motivos.add("forma_tamanho_linha")
     if re.search(r"[*`]|__", texto) or any(re.match(r"\s*(#|>|[-•]\s|\d+[.)]\s)", x) for x in linhas):
         motivos.add("forma_markdown")
+    if any(not _tem_verbo(x) for x in linhas):
+        motivos.add("forma_sem_verbo")
+    planas = [_plano(x) for x in linhas]
+    if any(sum(c in x for x in planas) >= 2 for c in CONCLUSOES):
+        motivos.add("conclusao_repetida")
+    if _DENTRO_DA_MEDIANA.search(_plano(texto)):
+        motivos.add("comparacao_mediana")
     return motivos
 
 
