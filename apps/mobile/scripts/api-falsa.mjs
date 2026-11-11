@@ -163,6 +163,7 @@ const gravarSemana = (id, corpo) => {
 //  10 = PUT responde 422 genérico           11 = PUT responde 422 fora_do_prazo       12 = PUT responde 422 atividade_sem_checkin
 //  13 = PUT derruba a conexão               14 = PUT responde 404                     15 = DELETE derruba a conexão
 //  16 = PUT demora 4 s (estado "salvando")  17 = GET dos pendentes responde 500       18 = GET da atividade demora 6 s (carregando)
+//  19 = GET da atividade responde 404 (treino não encontrado ao carregar)
 const ANCORAS = ["repouso", "muito leve", "leve", "moderado", "um pouco difícil", "difícil", "6", "muito difícil", "8", "9", "máximo"];
 const SENSACOES = ["", "Muito mal", "Mal", "Normal", "Bem", "Muito bem"];
 const ATALHOS = { dor: "Dor", cansaco: "Cansaço", sono_ruim: "Sono ruim", calor: "Calor", trabalho_estresse: "Trabalho ou estresse" };
@@ -304,6 +305,7 @@ createServer((req, res) => {
   if (m) {
     const atleta = Number(m[1]);
     if (atleta === 9) return req.destroy();
+    if (atleta === 19) return res.writeHead(404, cabecalhos).end(JSON.stringify({ detail: "atividade não encontrada" }));
     const enviar = () => res.writeHead(200, cabecalhos).end(JSON.stringify(atividade(Number(m[2]), atleta)));
     return atleta === 18 ? void setTimeout(enviar, 6000) : enviar();
   }

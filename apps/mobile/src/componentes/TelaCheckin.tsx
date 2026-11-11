@@ -299,7 +299,7 @@ export function TelaCheckin({ apiUrl, atletaId, atividadeId, aoVoltar, aoConclui
                   setCarga({ tipo: "carregando" });
                   setTentativa((n) => n + 1);
                 }}
-                style={styles.botaoPrimario}
+                style={[styles.botaoPrimario, { alignSelf: "center" }]}
               >
                 <Text style={styles.botaoPrimarioTexto}>Tentar de novo</Text>
               </Pressable>
@@ -313,7 +313,7 @@ export function TelaCheckin({ apiUrl, atletaId, atividadeId, aoVoltar, aoConclui
             <Text accessibilityRole="alert" style={styles.erroTexto}>
               {carga.texto}
             </Text>
-            <Pressable accessibilityRole="button" onPress={() => (aoConcluir ?? aoVoltar)?.()} style={styles.botaoPrimario}>
+            <Pressable accessibilityRole="button" onPress={() => (aoConcluir ?? aoVoltar)?.()} style={[styles.botaoPrimario, { alignSelf: "center" }]}>
               <Text style={styles.botaoPrimarioTexto}>Voltar ao treino</Text>
             </Pressable>
           </View>
@@ -537,7 +537,7 @@ function Pergunta(props: {
             onPress={props.aoSalvar}
             style={[styles.botaoPrimario, styles.larguraTotal, (!props.completo || ocupado) && styles.botaoDesligado]}
           >
-            <Rotulo styles={styles} tema={tema} ocupado={props.acao === "salvando"} ocupadoTexto="Salvando..." texto="Salvar check-in" />
+            <Rotulo styles={styles} tema={tema} desligado={!props.completo || ocupado} ocupado={props.acao === "salvando"} ocupadoTexto="Salvando..." texto="Salvar check-in" />
           </Pressable>
           <Pressable
             testID="nada-a-relatar"
@@ -556,14 +556,16 @@ function Pergunta(props: {
   );
 }
 
-function Rotulo({ styles, tema, ocupado, ocupadoTexto, texto }: { styles: Estilos; tema: Tema; ocupado: boolean; ocupadoTexto: string; texto: string }) {
+/** Rótulo do botão primário. Ocupado ("Salvando...") usa `cor.texto-2` sobre `superficie-2`, pois é informação de estado; só desligado usa `cor.texto-desligado`. */
+function Rotulo({ styles, tema, ocupado, ocupadoTexto, texto, desligado = false }: { styles: Estilos; tema: Tema; ocupado: boolean; ocupadoTexto: string; texto: string; desligado?: boolean }) {
+  const cor = ocupado ? tema.cor["texto-2"] : desligado ? tema.cor["texto-desligado"] : tema.cor["sobre-destaque"];
   return ocupado ? (
     <View style={styles.linhaCentro}>
-      <ActivityIndicator color={tema.cor["sobre-destaque"]} />
-      <Text style={styles.botaoPrimarioTexto}>{ocupadoTexto}</Text>
+      <ActivityIndicator color={cor} />
+      <Text style={[styles.botaoPrimarioTexto, { color: cor }]}>{ocupadoTexto}</Text>
     </View>
   ) : (
-    <Text style={styles.botaoPrimarioTexto}>{texto}</Text>
+    <Text style={[styles.botaoPrimarioTexto, { color: cor }]}>{texto}</Text>
   );
 }
 
@@ -712,7 +714,7 @@ function Edicao(props: {
         onPress={props.aoSalvar}
         style={[styles.botaoPrimario, styles.larguraTotal, { marginTop: espaco[4] }, (!props.podeSalvar || ocupado) && styles.botaoDesligado]}
       >
-        <Rotulo styles={styles} tema={tema} ocupado={props.acao === "salvando"} ocupadoTexto="Salvando..." texto="Salvar alterações" />
+        <Rotulo styles={styles} tema={tema} desligado={!props.podeSalvar || ocupado} ocupado={props.acao === "salvando"} ocupadoTexto="Salvando..." texto="Salvar alterações" />
       </Pressable>
       <Pressable
         testID="apagar-checkin"
