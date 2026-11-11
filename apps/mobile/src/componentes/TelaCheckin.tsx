@@ -556,9 +556,9 @@ function Pergunta(props: {
   );
 }
 
-/** Rótulo do botão primário. Desligado, o texto usa `cor.texto-desligado` (o fundo vira `superficie-2`; `sobre-destaque` some no escuro). */
+/** Rótulo do botão primário. Ocupado ("Salvando...") usa `cor.texto-2` sobre `superficie-2`, pois é informação de estado; só desligado usa `cor.texto-desligado`. */
 function Rotulo({ styles, tema, ocupado, ocupadoTexto, texto, desligado = false }: { styles: Estilos; tema: Tema; ocupado: boolean; ocupadoTexto: string; texto: string; desligado?: boolean }) {
-  const cor = desligado ? tema.cor["texto-desligado"] : tema.cor["sobre-destaque"];
+  const cor = ocupado ? tema.cor["texto-2"] : desligado ? tema.cor["texto-desligado"] : tema.cor["sobre-destaque"];
   return ocupado ? (
     <View style={styles.linhaCentro}>
       <ActivityIndicator color={cor} />
