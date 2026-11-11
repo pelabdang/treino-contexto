@@ -55,6 +55,7 @@ class ErroRede(ErroGarmin):
 class AtividadeGarmin:
     id: int
     inicio_utc: datetime | None  # `startTimeGMT`; None se o Garmin nao mandou
+    duracao_s: float | None = None  # `duration` da lista; None se nao mandou
 
 
 class ClienteGarmin(Protocol):
@@ -128,6 +129,12 @@ def pedir_codigo_mfa() -> str | None:
         return getpass.getpass("Codigo de verificacao do Garmin: ").strip() or None
     except (EOFError, KeyboardInterrupt):
         return None
+
+
+def _segundos(valor: object) -> float | None:
+    if isinstance(valor, bool) or not isinstance(valor, (int, float)) or valor <= 0:
+        return None
+    return float(valor)
 
 
 class ClienteGarminConnect:
@@ -207,7 +214,8 @@ class ClienteGarminConnect:
         itens = []
         for a in bruto or []:
             try:
-                itens.append(AtividadeGarmin(id=int(a["activityId"]), inicio_utc=_hora_gmt(a.get("startTimeGMT"))))
+                itens.append(AtividadeGarmin(id=int(a["activityId"]), inicio_utc=_hora_gmt(a.get("startTimeGMT")),
+                                             duracao_s=_segundos(a.get("duration"))))
             except (KeyError, TypeError, ValueError):
                 continue  # sem `activityId` utilizavel: nao da para baixar
         return itens

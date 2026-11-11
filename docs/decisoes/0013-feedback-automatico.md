@@ -1,14 +1,14 @@
 ---
 tipo: decisao
-status: proposta
+status: aceita
 dono: caio
 atualizado: 2026-11-10
 links: [[decisoes/0004-contrato-tela-evolucao]], [[decisoes/0007-clima-da-atividade]], [[decisoes/0008-deteccao-de-esforcos]], [[decisoes/0010-carga-de-treino]], [[decisoes/0011-linha-de-base-e-semana-padrao]], [[decisoes/0012-check-in-pos-treino]], [[metricas/linha-base]], [[metricas/carga-treino]], [[metricas/carga-pse]], [[metricas/esforcos]], [[modulos/banco]], [[modulos/api]], [[modulos/worker]], [[produto/roadmap]], [[produto/plano-mvp-execucao]], [[glossario]]
 ---
 # ADR: 0013 Feedback automático por treino (pacote de fatos, guarda, camada de LLM, checagens)
 
-> **Proposta** (issue #322). **Modelo de dados aprovado pelo Theo em 10/11** (PR #340; item 2, com a ordem da fila do worker). Falta: a revisão da Duda na camada de LLM (item 3) e a leitura
-> dos **6 exemplos de tom** pelo Angelo, com as respostas dele aos itens 1, 2 e 9 de "A confirmar", na seção "Exemplos sintéticos de feedback" logo abaixo, **antes** de qualquer código do feedback (#327).
+> **Aceita em 10/11** (issue #322). Modelo de dados aprovado pelo Theo (PR #340, item 2, com a ordem da fila do worker); camada de LLM revisada pela Duda no mesmo PR (item 3);
+> o Angelo leu os 6 exemplos de tom e respondeu "ok para as quatro" (itens 1, 2, 9 e 10 de "A confirmar"). Os itens 3, 4 e 6 foram resolvidos pelo Theo e os itens 5, 7 e 8 seguem com o padrão (Caio, Caio e Theo com a Lia).
 > **Nenhuma linha de código nem migração muda neste PR.** Todos os números, textos e exemplos são **sintéticos**. Check-in e feedback são
 > dado pessoal e de saúde: nada de check-in, pacote de fatos ou texto de feedback real no repositório, em log ou em captura.
 > Fecha também, para a spec do cartão (PR #338, #329), a forma do campo `feedback`, quando o feedback é gerado e se existe "sem feedback possível" (item 2).
@@ -411,10 +411,10 @@ revisar (Meta 10); aviso ou envio fora do app; agente com pergunta livre (Meta 1
 Nenhuma fonte de literatura é nova: o pacote usa só o que as ADRs 0007, 0008, 0010, 0011 e 0012 e as notas de métrica já definem (as citações de Borg, Foster, Leys e Rousseeuw continuam **a conferir nos textos**, como nas ADRs 0011 e 0012).
 Regra própria do projeto, sem artigo: o pacote de fatos, as checagens, a lista de linguagem proibida, o tom e as formas do texto (decisões do Angelo de 10/11 e propostas desta ADR). LiteLLM: conferido pela Duda no código da versão 1.108.4 (nomes e ajustes na seção 3). Groq: páginas oficiais `console.groq.com/docs/your-data` e `console.groq.com/docs/rate-limits`, lidas em 10/11 por uma ferramenta que resume, então vale o Angelo abrir a página; o que não foi conferido está no "A confirmar", item 10.
 
-## A confirmar
-Cada item tem o **padrão** que vale se o Angelo disser "ok" sem mudança.
-1. **A "observação positiva" é obrigatória?** O plano (seção 4.6) a pede em todo texto. **Padrão:** só quando um fato do pacote a sustenta (por exemplo, métricas dentro do normal); sem fato, o texto não tem elogio. É o que os exemplos 4 e 5 mostram. *Angelo.*
-2. **Clima e check-in podem ser ligados com "possível"?** (por exemplo, "o calor possível pesou"). **Padrão:** não: lado a lado, sem ligação (exemplo 4); a ligação entra com o motor de explicação, em outra meta. *Angelo.*
+## A confirmar (itens 1, 2, 9 e 10 respondidos em 10/11)
+Cada item tem o **padrão**. O Angelo respondeu "ok para as quatro" em 10/11: o tom dos 6 exemplos está aprovado como está e os itens 1, 2, 9 e 10 abaixo estão resolvidos. Os itens 3, 4 e 6 o Theo aprovou em 10/11; os itens 5, 7 e 8 seguem com o padrão e viram decisão na #325, na #327 e na #329.
+1. **A "observação positiva" é obrigatória?** O plano (seção 4.6) a pede em todo texto. **Padrão:** só quando um fato do pacote a sustenta (por exemplo, métricas dentro do normal); sem fato, o texto não tem elogio. É o que os exemplos 4 e 5 mostram. *Angelo.* **Resolvido em 10/11 (Angelo: "ok para as quatro"): vale o padrão.** Observação positiva só quando um fato a sustenta.
+2. **Clima e check-in podem ser ligados com "possível"?** (por exemplo, "o calor possível pesou"). **Padrão:** não: lado a lado, sem ligação (exemplo 4); a ligação entra com o motor de explicação, em outra meta. *Angelo.* **Resolvido em 10/11 (Angelo): vale o padrão.** Clima e check-in ficam lado a lado com o resultado, sem "possível" nem causa afirmada.
 3. **Tempo limite e limite de chamadas** (**Theo aprovou em 10/11**). **Padrão:** 20 s por chamada e 20 chamadas por execução, ajustáveis pelo `.env` ou por `--limite`; os números do plano gratuito do Groq são conferidos na #326. *Theo e Duda.*
 4. **Quantas vezes tentar de novo** (**Theo aprovou em 10/11**: sem teto, com a fila por menos `tentativas`). **Padrão:** sem teto: a cada execução, uma nova tentativa para cada `sem_feedback` (decisão 8), contida só pelo limite por execução; o `--refazer` força. Um teto (por exemplo, 3 tentativas seguidas) evitaria gastar chamadas com um texto que sempre reprova. *Theo.*
 5. **Quão estrita é a checagem de unidade.** **Padrão:** número e unidade juntos ("5:44/km" não vira "5:44 bpm"); número solto (sem unidade) só passa se for um valor do pacote. A regra fina fica para a #325. *Caio.*
@@ -422,8 +422,8 @@ Cada item tem o **padrão** que vale se o Angelo disser "ok" sem mudança.
 7. **Tamanho do texto.** **Padrão:** 3 a 5 linhas, até 140 caracteres por linha, até 700 no total (o `CHECK` da coluna). *Caio.*
 8. **O provedor falso aparece na API?** **Padrão:** sim, como `origem = teste` (a API não manda nome de provedor nem de modelo), para um texto de teste nunca passar por texto de verdade; o cartão pode mostrar um selo "de teste" (Lia, #329). *Theo e Lia.*
 9. **Gerar também depois do `PUT`, em segundo plano.** **Padrão:** não; só o worker (item 2). No piloto local o `pendente` dura até alguém rodar o comando. Se isso incomodar o Angelo, a alternativa é um gatilho de fundo depois do `PUT`
-   (ainda com o limite por execução e sem atrasar a resposta), em issue própria. *Angelo e Theo.*
-10. **Antes da primeira rodada com treino real: o que foi e o que não foi conferido sobre o provedor** (Duda, 10/11; fonte: `console.groq.com/docs/your-data`). **Padrão:** o Angelo faz os dois passos abaixo e só então roda o `worker.gerar_feedback` nos treinos dele; o resultado fica só no banco local (decisão 9). *Duda e Angelo.*
+   (ainda com o limite por execução e sem atrasar a resposta), em issue própria. *Angelo e Theo.* **Resolvido em 10/11 (Angelo): vale o padrão.** O `pendente` até alguém rodar `worker.gerar_feedback` é aceito no piloto local.
+10. **Antes da primeira rodada com treino real: o que foi e o que não foi conferido sobre o provedor** (Duda, 10/11; fonte: `console.groq.com/docs/your-data`). **Padrão:** o Angelo faz os dois passos abaixo e só então roda o `worker.gerar_feedback` nos treinos dele; o resultado fica só no banco local (decisão 9). *Duda e Angelo.* **Atualização de 10/11: o Angelo informou que a retenção zero (ZDR) já está ligada na conta dele do provedor.** É informação dele, não conferida por nós (ninguém abriu o console por ele). O que a Duda marcou como **não conferido** continua não conferido: (a), (b), (c) e (d) abaixo, e a leitura dos termos sobre treino de modelos (passo 2).
     - **Conferido.** "By default, Groq does not retain customer data for inference requests"; dado só é retido com recurso que exige retenção (lote, ajuste fino) ou "if needed to protect platform reliability". Para investigar falha ou abuso o Groq **pode registrar entradas e saídas por até 30 dias**
       ("These logs are retained for up to 30 days, unless legally required to retain longer"), e isso **pode ser desligado** nos controles de dados da conta. **Zero Data Retention (ZDR)**: "When ZDR is enabled, Groq will not retain customer data for system reliability and abuse monitoring"; a página diz que todos os clientes podem ligá-lo (Data Controls, no console).
       Há divergência em fontes de terceiros sobre a retenção padrão; vale a página oficial.
@@ -433,4 +433,4 @@ Cada item tem o **padrão** que vale se o Angelo disser "ok" sem mudança.
 ## Data e quem decidiu
 2026-11-10. Proposta do Caio (ciência), com revisão da Duda (modelo de dados e camada de LLM) pedida no PR. Decisões do Angelo de 10/11 ("ok para as oito", com o esclarecimento do item 6) no Contexto. Issue #322.
 Modelo de dados: **aprovado pelo Theo em 2026-11-10** (comentário no PR #340: FK em `checkin_id`, desatualizado pelo `atualizado_em` e por `versao_fatos`, só o worker gera, sem teto de tentativas com a fila acima, 20 s e 20 chamadas, reimportação só com `--refazer`, cinco estados, sem `sem_fatos`).
-Exemplos de tom e itens 1, 2 e 9 de "A confirmar": aguardam o Angelo. Camada de LLM: aguarda a revisão da Duda. Status `proposta`; passa a `aceita` com essas duas respostas.
+Aceita em 2026-11-10: o Angelo aprovou o tom dos 6 exemplos e resolveu os itens 1, 2, 9 e 10 de "A confirmar" ("ok para as quatro"); a Duda revisou a camada de LLM no PR #340. Ficou decidido: tom aprovado como está; observação positiva só com fato que a sustente; clima e check-in lado a lado, sem "possível" nem causa afirmada; `pendente` aceito no piloto local; retenção zero ligada, segundo o Angelo.
