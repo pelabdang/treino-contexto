@@ -184,6 +184,8 @@ O worker gera de novo esses feedbacks **sem** a recuperação na próxima execu�
 (a API só a usa por dentro, para montar o pacote; a recuperação aparece **só no texto do feedback**, decisão 6); comando para apagar; comandos imprimem só contagens. **Fixtures são escritas à mão** (a #371 cria o formato; a #372 e as demais só usam fixtures sintéticas), nunca uma resposta gravada
 da conta de ninguém.
 
+**Adendo 1 ao item 5 (12/11, #372, aprovado pelo Theo): o sono é uma chamada por noite.** O teto de **12 chamadas por execução** vale para as chamadas **de faixa** (VFC e FC de repouso). O **sono tem teto próprio de 130 chamadas por execução** (`get_sleep_data`, uma por noite, pausa de 1,5 s entre as chamadas), com as noites em **ordem crescente**; depois de um 429 a rodada seguinte continua dali (`max(noite gravada) - 2`). Motivo: o sono só foi conferido **por dia** na #371; o formato do `get_sleep_daily` (por faixa) **não foi conferido**. A primeira rodada de 120 noites faz cerca de 130 chamadas com pausa (alguns minutos). Se um dia o formato da faixa for conferido, o sono passa a **uma chamada por bloco de 28 dias** e o teto próprio some.
+
 ### 6. Regras de linguagem novas (`checagens_feedback@4`, #375)
 As checagens da ADR 0013 (item 4) continuam; a lista de linguagem proibida ganha o que vem **com a recuperação** (sobe para `checagens_feedback@4`: a `@3` e o `feedback_prompt@3` são do #384, que entrou antes; as versões da Meta 10 são a `@4`). Em duas partes:
 
