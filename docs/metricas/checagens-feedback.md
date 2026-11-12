@@ -2,7 +2,7 @@
 tipo: metrica
 status: em-uso
 dono: caio
-atualizado: 2026-11-11
+atualizado: 2026-11-12
 links: [[decisoes/0013-feedback-automatico]], [[metricas/fatos-treino]], [[metricas/fatos-treino-oraculo]], [[produto/roadmap]], [[glossario]]
 ---
 # Checagens do texto do feedback (`checagens_feedback@2`) e lista de linguagem proibida
@@ -52,6 +52,9 @@ aparece nos textos bons ("nos 11 treinos"). Antes das listas, tiram-se do texto 
 - **O rótulo da sensação do pacote passa, com ou sem parênteses.** Se o pacote traz sensação 5 ("muito bem"), "sensação 5 (muito bem)" e "sensação 5, muito bem" passam; se traz sensação 2 ("mal"), "mal" passa; se traz 1 ("muito mal"), passa inteiro. O **mesmo rótulo fora do pacote** não passa: "muito bem" num treino de sensação "mal" é elogio (`elogio_sem_fato`), e "mal" num treino de sensação "bem" é juízo (`linguagem_culpa`). O rótulo da PSE ("repouso", "máximo"...) passa entre parênteses.
 - **"quente" é o fato do atalho "calor"**: "calor", "quente(s)" e "abafado(a)" só aparecem se o atalho calor foi marcado (`atalho_nao_marcado`); a temperatura em °C, sozinha, não autoriza a palavra. **"frio", "fria", "gelado(a)" e "friozinho"** não têm atalho nem campo no pacote (ele traz só °C): reprovam como `nome_fora_do_pacote`. Regra única: o texto só chama o clima de uma palavra se o atleta a marcou; o resto são os números do pacote.
 - **Contexto, sem barrar texto legítimo:** "melhor tiro" e "esforço" passam (os termos novos são palavras inteiras: "pior", "erro", "risco", "motivo", "efeito"). Limite conhecido: palavras como "erro" e "efeito" reprovam em qualquer sentido, mesmo inocente; o texto do app tem como evitá-las.
+
+## Aviso para quem mudar as checagens (#361)
+Os testes do worker injetam a própria `checar`; só o teste de `services/api/tests/llm/test_camada.py` (`test_texto_do_provedor_falso_nas_checagens_reais`) roda a `checar_texto` real contra o texto fixo do provedor falso. Mudou a forma, os verbos ou a lista? Confira esse texto e o teste. Ver [[modulos/camada-llm]] e [[modulos/worker]].
 
 ## Lista de linguagem proibida (`checagens_feedback@1`)
 Ponto de partida: a lista da ADR 0013 (item 4.2), ampliada. Mudar qualquer lista abaixo, ou um limite, **sobe a versão** (`checagens_feedback@2`).
