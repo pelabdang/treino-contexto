@@ -75,8 +75,7 @@ em "Alternativas consideradas".
 `fc_repouso_bpm = 0` e origem desconhecida; `alembic upgrade head` e `downgrade base` continuam no CI. Gravação em *upsert* por `(atleta_id, origem, noite)`, **sem savepoint**, como nas ADRs 0012 e 0013.
 
 ### 2. A que "noite" pertence cada valor e como ela se liga a um treino
-**Noite = a data local de acordar** (a data do dia em que o atleta levantou). É a convenção em que o Garmin atribui o sono ao dia seguinte à noite, e a que o `cdate` do
-`get_sleep_data` usa na chamada; a #371 **confirma** com a resposta (campo e data) e, se divergir, o leitor converte para esta regra (o ADR manda a regra; o leitor se adapta).
+**Noite = a data local de acordar** (a data do dia em que o atleta levantou). É a regra **que adotamos** (o `cdate` do `get_sleep_data` é uma data de calendário, e a hipótese é que o Garmin atribua o sono à data de acordar; **não conferido**). A #371 confirma com a resposta (campo e data) e, se divergir, o leitor converte para esta regra (a ADR manda a regra; o leitor se adapta).
 A **FC de repouso** e a **VFC** entram na linha da **mesma data**: o dia que começa na manhã em que o atleta acordou.
 Fuso: a data é a **data local do atleta**, sem conversão por nós (o Garmin já entrega no fuso do relógio); quem viaja entre fusos pode ter uma noite duplicada ou ausente (limitação aceita).
 
@@ -126,7 +125,7 @@ O pacote continua **sem número novo**: cada valor vem da função `recuperacao@
 |---|---|---|
 | `recuperacao.versao` | `recuperacao@1` | constante |
 | `recuperacao.estado` | `ok` ou `sem_dado` | item 3 |
-| `recuperacao.motivo` | só em `sem_dado`: `sem_noite` (a noite não tem linha, ou o relógio/conta não devolveu), `treino_de_madrugada`, `sem_fuso` não existe (fallback do item 2) | item 2 e 5 |
+| `recuperacao.motivo` | só em `sem_dado`: `sem_noite` (a noite não tem linha, ou o relógio/conta não devolveu), `treino_de_madrugada` | item 2 e 5 |
 | `recuperacao.janela_noites` | 28 | parâmetro |
 | `recuperacao.minimo_noites` | 14 | parâmetro |
 | `recuperacao.medidas[]` | uma por medida, na ordem `sono`, `vfc`, `fc_repouso`; **sempre as três quando `estado = ok`** | |
@@ -150,7 +149,7 @@ o código subir; o worker os refaz respeitando o limite de chamadas por execuç�
 do treino **hoje** (a noite chegou depois, mudou um valor, ou o atleta apagou a recuperação: sem linha, o lado de lá é `NULL`). Os dois lados são normalizados para UTC antes de comparar (o mesmo cuidado da ADR 0013).
 **Não** fica desatualizado porque o **normal** mudou (entrou noite nova na janela): o feedback descreve o treino no momento em que foi gerado, como a linha de base (ADR 0013, item 2).
 
-**O que vai ao provedor (decisão 4).** O prompt fixo e o pacote `fatos_treino@2`, e nada mais; do bloco `recuperacao`, só o que está na tabela acima: **a noite anterior ao treino** e o normal dela, nunca a série. O limite de quatro tópicos da decisão 9 da ADR 0013 continua:
+**O que vai ao provedor (decisão 4).** O prompt fixo e o pacote `fatos_treino@2`, e nada mais; do bloco `recuperacao`, só o que está na tabela acima: **a noite anterior ao treino** e o normal dela, nunca a série. Os limites da decisão 9 da ADR 0013 continuam:
 só local, só o pacote, plano gratuito, nada em log nem no repositório. Em CI e testes o provedor é o falso.
 
 ### 5. Idempotência da busca, apagar e quando o Garmin não devolve a noite
@@ -184,7 +183,7 @@ As checagens da ADR 0013 (item 4) continuam; a lista de linguagem proibida ganha
 - **Conselho**: "durma", "dormir mais", "dormir cedo", "vá dormir", "descanse", "priorize", "durma pelo menos", "o ideal é dormir". (A ADR 0013 já proíbe "descanse", "evite", "tente"...)
 - **Julgamento da noite**: "noite ruim", "noite boa", "mal dormido", "mal dormiu", "dormiu mal", "dormiu bem", "sono curto", "sono bom", "sono pouco", "sono insuficiente", "pouco sono", "bem recuperado", "mal recuperado", "recuperado", "descansado", "cansado", "VFC baixa", "VFC alta", "FC de repouso alta", "FC de repouso baixa", "melhor", "pior", "boa recuperação", "má recuperação". Vale a direção só com **"abaixo/acima do seu normal"** e **"dentro do seu normal"**.
   Atenção ao atalho "sono ruim" do check-in (ADR 0013, item 4, exceção por frase exata): continua permitido **só como rótulo marcado pelo atleta** ("Você marcou sono ruim."); a checagem 2 de linguagem **não** pode aceitar "ruim" em frase da recuperação.
-- **Diagnóstico e termos fisiológicos fora da conta**: "insônia", "apneia", "sistema nervoso", "parassimpático", "simpático", "estresse", "fadiga", "overreaching", "prontidão", "bateria", "Body Battery", "estado de treino", "readiness", "ansiedade", "arritmia" (já), "cardíaco" fora de "FC de repouso".
+- **Diagnóstico e termos fisiológicos fora da conta**: "insônia", "apneia", "sistema nervoso", "parassimpático", "simpático", "fadiga", "overreaching", "prontidão", "bateria", "Body Battery", "estado de treino", "readiness", "ansiedade", "arritmia" (já). ("Estresse" não entra na lista porque é o rótulo do atalho `trabalho_estresse`; vale só como rótulo marcado, e a linha da recuperação não o usa.)
 
 **B. Regras mecânicas (em código, com texto ruim que precisa reprovar):**
 1. **Recuperação numa linha própria.** A frase que traz sono, VFC ou FC de repouso não traz nenhuma outra medida, nem pace, FC do treino, carga, clima ou check-in (cada linha = uma ideia, e a recuperação não divide a linha com o resultado). A checagem reprova a linha que mistura os vocabulários.
@@ -197,7 +196,7 @@ As checagens da ADR 0013 (item 4) continuam; a lista de linguagem proibida ganha
 **Exemplos de frase (sintéticos, para o prompt da #375).** Em cada um, o texto ao lado do resultado, sem ligar os dois.
 - **Bom, `abaixo`:** "Na noite anterior você dormiu 5 h 40 min, 1 h 30 min abaixo do seu normal de 7 h 10 min." (linha só da recuperação; as linhas do resultado vêm antes ou depois, sem "por isso").
 - **Bom, `acima` e `dentro`:** "Na noite anterior, a FC de repouso foi 55 bpm, 3 bpm acima do seu normal de 52 bpm. A VFC foi 47 ms, dentro do seu normal." (só números do pacote.)
-- **Bom, `aprendendo`:** "Na noite anterior você dormiu 6 h 20 min. Ainda estou..." **não**: a frase correta é "Na noite anterior você dormiu 6 h 20 min. Ainda aprendendo o seu normal de sono: 9 de 14 noites."
+- **Bom, `aprendendo`:** "Na noite anterior você dormiu 6 h 20 min. Ainda aprendendo o seu normal de sono: 9 de 14 noites."
 - **Bom, `sem_dado`:** "Sem dado de sono, VFC e FC de repouso da noite anterior."
 - **Ruim (precisa reprovar):** "Você correu mais devagar porque dormiu pouco." (causa; "pouco sono"); "Dormir mais pode ajudar nos próximos treinos." (conselho); "Com 5 h 40 min de sono, o ritmo caiu." (une recuperação e resultado na mesma linha); "Seu sono foi ruim e sua VFC está baixa." (julgamento); "Seu sono ficou 1,5 h abaixo do normal." (número que não está no pacote); "Nos últimos dias você dormiu menos." (outro dia).
 
@@ -252,7 +251,7 @@ exportação do Garmin como segunda fonte da recuperação; API oficial do Garmi
 - **Conferido no código** (12/11): `garminconnect==0.3.20` (assinaturas e docstrings de `get_sleep_data`, `get_sleep_daily`, `get_rhr_day`, `get_rhr_daily`, `get_hrv_data`, `get_hrv_data_range`), sem rede e sem conta. **Não** conferido: nomes dos campos das respostas e o formato do dia sem dado (#371).
 - Leys, C., Ley, C., Klein, O., Bernard, P. e Licata, L. (2013), Hampel (1974) e Rousseeuw e Croux (1993): mediana, MAD, constante 1,4826 e limites 2, 2,5 e 3, **como na ADR 0011, citações ainda não conferidas nos textos** (pendência do Caio, antes da nota da métrica).
 - Garmin, ajuda do *HRV status* (páginas de manual `www8.garmin.com/manuals/webhelp/...`, "Heart Rate Variability Status"): cerca de três semanas de leituras noturnas para formar a faixa de base e comparação de uma média de 7 dias com ela. Lido em 12/11 numa busca que resume a página, **não aberta por inteiro**; serve só como ordem de grandeza da janela, não como fonte da regra.
-- Plews, D. J., Laursen, P. B., Stanley, J., Kilding, A. E. e Buchheit, M. (2013). *Training adaptation and heart rate variability in elite endurance athletes: opening the door to effective monitoring.* Sports Medicine, 43(9), 773-781. Só o **resumo** foi lido (12/11): a VFC é usada para acompanhar a adaptação ao treino de resistência. **Não** é fonte de nenhuma escolha desta ADR (o artigo trata de médias móveis de VFC em atletas de elite; não adotamos o método). Citada como contexto.
+- Plews, D. J., Laursen, P. B., Stanley, J., Kilding, A. E. e Buchheit, M. (2013). *Training adaptation and heart rate variability in elite endurance athletes: opening the door to effective monitoring.* Sports Medicine, 43(9), 773-781. Só o **resumo** foi lido (12/11): a VFC é usada para acompanhar a adaptação ao treino de resistência. **Não** é fonte de nenhuma escolha desta ADR (não adotamos método dele). Citada como contexto.
 - Regra própria do projeto, sem artigo: janela de 28 noites, mínimo de 14, `PISO_REL = 0,05`, limite 2,0, corte das 06:00, a lista de linguagem, as regras mecânicas e o corte "só a noite anterior ao provedor" (decisão 4 do Angelo).
 
 ## A confirmar
@@ -264,7 +263,7 @@ Cada item tem o **recomendado** (o padrão se o Angelo não responder). Itens 1 
 5. **A coluna extra `recuperacao_importada_em` em `feedback_treino`** para refazer o feedback quando a noite chega ou muda. *Recomendação:* sim (item 4(b)). Alternativa: sem a coluna, só `--refazer` manual. *Theo.*
 6. **Quando a noite falta, o texto diz "Sem dado de sono..." ou omite?** *Recomendação:* diz, exceto em treino de madrugada (omite); o atleta sabe que o relógio não enviou. Alternativa: sempre omitir, para o cartão não ter uma linha de "falta". *Angelo e Lia.*
 7. **A origem `garmin_connect` e a chave `(atleta_id, origem, noite)`.** *Recomendação:* origem na chave, como em `carga_garmin_dia`, mesmo com uma só fonte hoje. Alternativa: chave só `(atleta_id, noite)`, e a API oficial substituiria a linha. *Theo e Duda.*
-8. **Busca inicial de 35 noites e rebusca das 3 últimas.** *Recomendação:* sim. Pode ser ajustada por `--desde`. Ao chamar o Garmin 3 vezes por faixa (sono, VFC, FC de repouso), a primeira rodada faz cerca de 6 chamadas. *Duda.*
+8. **Busca inicial de 35 noites e rebusca das 3 últimas.** *Recomendação:* sim. Pode ser ajustada por `--desde`. A primeira rodada faz poucas chamadas (uma por medida e por faixa de até 28 dias). *Duda.*
 
 ## Data e quem decidiu
 2026-11-12. Proposta do Caio (ciência), com revisão da Duda (modelo de dados, busca e apagar) pedida no PR. Decisões do Angelo de 12/11 ("ok para as nove") no Contexto. Issue #370.
