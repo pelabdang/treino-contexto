@@ -332,7 +332,7 @@ def test_o_modulo_e_puro_sem_rede_llm_banco_nem_log():
 
 
 def test_versao():
-    assert ck.VERSAO == "checagens_feedback@2"
+    assert ck.VERSAO == "checagens_feedback@3"
 
 
 def test_checar_devolve_none_se_aprovado_e_um_codigo_se_reprovado():
@@ -396,5 +396,26 @@ def test_conclusao_repetida_em_duas_linhas():
 
 
 def test_versao_2_e_codigos_novos():
-    assert ck.VERSAO == "checagens_feedback@2"
+    assert ck.VERSAO.startswith("checagens_feedback@")
     assert {"forma_sem_verbo", "conclusao_repetida", "comparacao_mediana"} <= set(ck.MOTIVOS)
+
+
+# --- checagens_feedback@3 (#367): numero repetido entre parenteses ---------------------------------------------------------------
+
+@pytest.mark.parametrize("trecho", ["esforço 6 (6)", "sensação 4 (4)", "esforço 6  (  6 )"])
+def test_numero_repetido_entre_parenteses_reprova(trecho):
+    base = T.BONS["G03"][1].replace("esforço 6", trecho)
+    assert ck.checar_texto(O.PACOTES["F03"], base).motivos == ("numero_repetido",)
+
+
+@pytest.mark.parametrize("trecho", ["esforço 6", "esforço 5 (difícil)", "esforço 7 (muito difícil)", "esforço 4 (um pouco difícil)"])
+def test_esforco_sem_repeticao_nao_reprova_por_numero_repetido(trecho):
+    # (o rótulo certo vem de outro pacote; aqui só a regra nova importa)
+    base = T.BONS["G03"][1].replace("esforço 6", trecho)
+    assert "numero_repetido" not in ck.checar_texto(O.PACOTES["F03"], base).motivos
+
+
+def test_numero_repetido_nao_pega_numeros_diferentes_nem_pedaco_de_outro():
+    for ok in ("esforço 6 (7)", "esforço 16 (6)", "5:44 (4)", "esforço 6 (66)"):
+        assert not ck._NUMERO_REPETIDO.search(ok), ok
+    assert ck._NUMERO_REPETIDO.search("esforço 6 (6)")

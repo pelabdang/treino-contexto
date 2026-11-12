@@ -279,3 +279,26 @@ def test_texto_do_provedor_falso_nas_checagens_reais():
     assert comum.aprovado and comum.motivos == ()
     com_dor = checar_texto(pacotes["F05"], ProvedorFalso.TEXTO_BOM)
     assert not com_dor.aprovado and com_dor.motivos == ("dor_regra",)
+
+
+def test_texto_sai_sem_espacos_no_fim_de_cada_linha():
+    """#367: o provedor de verdade devolveu dois espacos no fim de cada linha; a camada limpa antes de checar e gravar."""
+    sujo = "  Linha um.  \nLinha dois.  \n\nLinha tres.\t \n  Linha quatro.  \n"
+    res = Redator(ProvedorFalso(texto=sujo), "falso", "falso").redigir("s", "p")
+    assert res.texto == "Linha um.\nLinha dois.\n\nLinha tres.\n  Linha quatro."
+    assert all(linha == linha.rstrip() for linha in res.texto.split("\n"))
+
+
+def test_texto_do_provedor_falso_com_espacos_no_fim_passa_nas_checagens_reais():
+    from app.explicacao.checagens import checar_texto
+
+    sujo = "\n".join(linha + "  " for linha in ProvedorFalso.TEXTO_BOM.split("\n"))
+    res = Redator(ProvedorFalso(texto=sujo), "falso", "falso").redigir("s", "p")
+    assert res.texto == ProvedorFalso.TEXTO_BOM.strip()
+    assert checar_texto(_oraculo_meta9().PACOTES["F01"], res.texto).aprovado
+
+
+def test_texto_do_provedor_falso_nao_tem_numero_repetido():
+    from app.explicacao.checagens import checar_texto
+
+    assert "numero_repetido" not in checar_texto(_oraculo_meta9().PACOTES["F01"], ProvedorFalso.TEXTO_BOM).motivos
