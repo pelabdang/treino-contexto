@@ -40,6 +40,7 @@ ORIGENS_ROTULO = ("sugerido", "atleta")  # ADR 0009, item 1
 GRANDEZAS_LIMIAR = ("fc_bpm", "velocidade_ms")  # ADR 0010, item 1
 ORIGENS_LIMIAR = ("garmin_export", "informado")
 ORIGENS_ZONA = ("garmin_export", "garmin_fit")
+ORIGENS_RECUPERACAO = ("garmin_connect",)  # ADR 0014, item 1; a exportacao nao e fonte da recuperacao
 ORIGENS_SAUDE = ("garmin_export",)  # recorde_pessoal e carga_garmin_dia (ADR 0010, item 2)
 UNIDADES_RECORDE = ("s", "m", "W", "passos")  # ou nulo: tipo desconhecido (adendo da ADR 0010)
 
@@ -550,6 +551,37 @@ class FeedbackTreino(Base):
     modelo: Mapped[str | None] = mapped_column(String(80))
     tentativas: Mapped[int] = mapped_column(Integer, default=1, server_default="1")
     checkin_atualizado_em: Mapped[datetime] = mapped_column(DateTime(timezone=True))
+    # ADR 0014, item 1: copia do `importado_em` da noite usada no pacote; NULL = o pacote saiu sem noite
+    recuperacao_importada_em: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
     tentado_em: Mapped[datetime] = mapped_column(DateTime(timezone=True))
 
     checkin: Mapped[CheckinTreino] = relationship(back_populates="feedback")
+
+
+class RecuperacaoDia(Base):
+    """Recuperacao de uma noite: sono, VFC noturna e FC de repouso (ADR 0014, item 1). Um registro por atleta, origem e noite.
+
+    Guarda so tres numeros, nada mais da resposta do Garmin. `noite` e a data local de ACORDAR. Dado de saude: so no banco
+    local, nunca em log nem em mensagem de erro, sem rota que o devolva. Noite sem nenhuma medida nao vira linha (a ausencia
+    da linha e o "sem dado"). `importado_em` e definido pela aplicacao e so muda quando algum dos tres valores muda.
+    """
+
+    __tablename__ = "recuperacao_dia"
+    __table_args__ = (
+        UniqueConstraint("atleta_id", "origem", "noite", name="uq_recuperacao_dia_chave"),
+        CheckConstraint(_in("origem", ORIGENS_RECUPERACAO), name="origem"),
+        CheckConstraint("sono_s IS NULL OR sono_s BETWEEN 1 AND 86400", name="sono_s"),
+        CheckConstraint("vfc_ms IS NULL OR (vfc_ms > 0 AND vfc_ms <= 500)", name="vfc_ms"),
+        CheckConstraint("fc_repouso_bpm IS NULL OR fc_repouso_bpm BETWEEN 20 AND 150", name="fc_repouso_bpm"),
+        CheckConstraint("sono_s IS NOT NULL OR vfc_ms IS NOT NULL OR fc_repouso_bpm IS NOT NULL", name="alguma_medida"),
+    )
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    atleta_id: Mapped[int] = mapped_column(ForeignKey("atleta.id", ondelete="CASCADE"), index=True)
+    origem: Mapped[str] = mapped_column(String(20))
+    noite: Mapped[date] = mapped_column(Date)
+    sono_s: Mapped[int | None] = mapped_column(Integer)
+    vfc_ms: Mapped[float | None] = mapped_column(Float)
+    fc_repouso_bpm: Mapped[int | None] = mapped_column(Integer)
+    versao_leitura: Mapped[str] = mapped_column(String(40))
+    importado_em: Mapped[datetime] = mapped_column(DateTime(timezone=True))

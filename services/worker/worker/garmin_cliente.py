@@ -58,9 +58,35 @@ class AtividadeGarmin:
     duracao_s: float | None = None  # `duration` da lista; None se nao mandou
 
 
+VERSAO_LEITURA = "recuperacao_leitura@1"  # ADR 0014: sobe quando a regra de extracao muda
+MEDIDAS_RECUPERACAO = ("sono", "vfc", "fc")
+SONO_MIN_S, SONO_MAX_S = 1, 86400  # as faixas dos CHECK de `recuperacao_dia` (ADR 0014, item 1)
+VFC_MAX_MS = 500
+FC_REPOUSO_MIN, FC_REPOUSO_MAX = 20, 150
+BLOCO_MAX_DIAS = 28  # a faixa maxima que pedimos de uma vez (o limite do servidor nao foi medido, #371)
+
+
+@dataclass(frozen=True)
+class NoiteRecuperacao:
+    """Uma noite ja normalizada: `noite` e a data local de ACORDAR; `None` para o que nao veio (ADR 0014).
+
+    Nenhum nome de campo do Garmin sai do cliente. Ausente, `None`, `0` e fora da faixa dos CHECK viram `None`.
+    """
+
+    noite: date
+    sono_s: int | None = None
+    vfc_ms: float | None = None
+    fc_repouso_bpm: int | None = None
+
+
 class ClienteGarmin(Protocol):
     def listar(self, desde: date, ate: date) -> list[AtividadeGarmin]:
         """Atividades com data local entre `desde` e `ate` (inclusive)."""
+
+    def recuperacao(self, desde: date, ate: date, medidas: tuple[str, ...] = MEDIDAS_RECUPERACAO) -> list[NoiteRecuperacao]:
+        """Noites entre `desde` e `ate` (inclusive), so com as `medidas` pedidas ("sono", "vfc", "fc"); so as noites com algum
+        valor. Cada chamada e UMA requisicao ao Garmin: "vfc" e "fc" aceitam ate 28 dias; "sono" aceita um dia (`desde == ate`).
+        Erro de login, limite ou rede sobe como `ErroGarmin`."""
 
     def baixar_fit(self, atividade_id: int) -> bytes:
         """Os bytes do FIT original da atividade (ja extraido do zip)."""
@@ -131,6 +157,59 @@ def pedir_codigo_mfa() -> str | None:
         return None
 
 
+def _numero(valor: object) -> float | None:
+    """So numero de verdade: bool, texto, `None`, NaN e infinito viram `None`."""
+    if isinstance(valor, bool) or not isinstance(valor, (int, float)) or valor != valor or valor in (float("inf"), float("-inf")):
+        return None
+    return float(valor)
+
+
+def _data_texto(valor: object) -> date | None:
+    if not isinstance(valor, str):
+        return None
+    try:
+        return date.fromisoformat(valor)
+    except ValueError:
+        return None
+
+
+def ler_sono(resposta: object, noite: date) -> int | None:
+    """Duracao do sono (segundos) de `get_sleep_data(noite)`: `dailySleepDTO.sleepTimeSeconds`, sem os despertares e sem sesta.
+    Resposta vazia (`{}`, 204), sem o DTO, de outra data, ou duracao ausente, `None`, `0` ou fora de 1..86400: `None`."""
+    dto = resposta.get("dailySleepDTO") if isinstance(resposta, dict) else None
+    if not isinstance(dto, dict) or _data_texto(dto.get("calendarDate")) != noite:
+        return None
+    v = _numero(dto.get("sleepTimeSeconds"))
+    if v is None or not SONO_MIN_S <= round(v) <= SONO_MAX_S:
+        return None
+    return round(v)
+
+
+def ler_vfc(resposta: object) -> dict[date, float]:
+    """VFC noturna (ms) por noite de `get_hrv_data_range`: `hrvSummaries[].lastNightAvg`. Dia sem leitura nao aparece."""
+    itens = resposta.get("hrvSummaries") if isinstance(resposta, dict) else None
+    saida: dict[date, float] = {}
+    for item in itens if isinstance(itens, list) else []:
+        if not isinstance(item, dict):
+            continue
+        dia, v = _data_texto(item.get("calendarDate")), _numero(item.get("lastNightAvg"))
+        if dia is not None and v is not None and 0 < v <= VFC_MAX_MS:
+            saida[dia] = v
+    return saida
+
+
+def ler_fc_repouso(resposta: object) -> dict[date, int]:
+    """FC de repouso (bpm) por dia de `get_rhr_daily`: lista de `{calendarDate, value}` (a faixa devolve decimal)."""
+    saida: dict[date, int] = {}
+    for item in resposta if isinstance(resposta, list) else []:
+        if not isinstance(item, dict):
+            continue
+        dia, v = _data_texto(item.get("calendarDate")), _numero(item.get("value"))
+        if dia is not None and v is not None and FC_REPOUSO_MIN <= round(v) <= FC_REPOUSO_MAX:
+            saida[dia] = round(v)
+    return saida
+
+
 def _segundos(valor: object) -> float | None:
     if isinstance(valor, bool) or not isinstance(valor, (int, float)) or valor <= 0:
         return None
@@ -193,7 +272,9 @@ class ClienteGarminConnect:
         if isinstance(e, ErroGarmin):
             return e
         m = self._mod
-        if isinstance(e, m.GarminConnectTooManyRequestsError):
+        # #386: nas rotas de dados o 429 chega como `GarminConnectConnectionError` com a resposta em `.response`
+        if isinstance(e, m.GarminConnectTooManyRequestsError) or \
+                getattr(getattr(e, "response", None), "status_code", None) == 429:
             return ErroLimite("o Garmin limitou as requisicoes (429); espere alguns minutos e rode de novo")
         if isinstance(e, m.GarminConnectAuthenticationError):
             if tinha_token or not ao_entrar:
@@ -219,6 +300,29 @@ class ClienteGarminConnect:
             except (KeyError, TypeError, ValueError):
                 continue  # sem `activityId` utilizavel: nao da para baixar
         return itens
+
+    def recuperacao(self, desde: date, ate: date, medidas: tuple[str, ...] = MEDIDAS_RECUPERACAO) -> list[NoiteRecuperacao]:
+        """Ver `ClienteGarmin.recuperacao`. O leitor (`ler_*`) e a `VERSAO_LEITURA` ficam aqui: o nome de campo do Garmin
+        nao sai deste modulo. Nada da resposta vai para log nem para mensagem de erro."""
+        if (ate - desde).days >= BLOCO_MAX_DIAS or desde > ate:
+            raise ErroGarmin("faixa de recuperacao invalida")
+        if "sono" in medidas and desde != ate:
+            raise ErroGarmin("o sono e pedido um dia por vez")
+        ini, fim = desde.isoformat(), ate.isoformat()
+        sono, vfc, fc = {}, {}, {}
+        try:
+            if "sono" in medidas:
+                s = ler_sono(self._api.get_sleep_data(ini), desde)
+                if s is not None:
+                    sono[desde] = s
+            if "vfc" in medidas:
+                vfc = ler_vfc(self._api.get_hrv_data_range(ini, fim))
+            if "fc" in medidas:
+                fc = ler_fc_repouso(self._api.get_rhr_daily(ini, fim))
+        except Exception as e:  # noqa: BLE001
+            raise self._traduzir(e) from None
+        return [NoiteRecuperacao(d, sono.get(d), vfc.get(d), fc.get(d))
+                for d in sorted(set(sono) | set(vfc) | set(fc)) if desde <= d <= ate]
 
     def baixar_fit(self, atividade_id: int) -> bytes:
         try:

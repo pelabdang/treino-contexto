@@ -230,7 +230,7 @@ def _worker(ctx, *args, esperado=0):
 # ---------------------------------------------------------------- migração e carga (passos 2 e 3)
 
 def test_01_migracao_0012_cria_checkin_treino_um_por_atividade(ctx):
-    assert _sql(ctx, "select version_num from alembic_version") == [("0013",)]
+    assert _sql(ctx, "select version_num from alembic_version") == [("0014",)]
     colunas = {c[1] for c in _sql(ctx, "pragma table_info(checkin_treino)")}
     assert {"atividade_id", "pse", "sensacao", "nada_a_relatar", "texto", "versao", "registrado_em", "atualizado_em",
             "dor", "cansaco", "sono_ruim", "calor", "trabalho_estresse"} <= colunas

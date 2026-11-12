@@ -247,7 +247,7 @@ Paralela da Meta 9: o atleta não sobe FIT à mão; o worker busca a atividade d
 Formato do que a biblioteca do `worker.buscar_garmin` devolve para a recuperação. Esta seção descreve **só a estrutura** (chamada, caminho do campo, tipo, unidade, dia sem dado),
 conferida em 12/11 com **uma** consulta local à conta do próprio atleta (3 noites recentes e uma faixa curta de VFC e de FC de repouso, token já salvo, nada gravado no banco nem
 no repositório) e com o código da versão fixada, **`garminconnect==0.3.20`**. Nenhum valor, data, horário ou padrão real está aqui; as fixtures são escritas à mão (`tests/fixtures/meta10/`).
-Não há leitor nem banco ainda (#372). Sono, VFC e FC de repouso são dado de saúde: só no banco local, nunca em log, exceção, captura ou fixture gravada.
+O leitor e o banco vieram na #372 (seção "Leitor e busca (#372)", abaixo). Sono, VFC e FC de repouso são dado de saúde: só no banco local, nunca em log, exceção, captura ou fixture gravada.
 
 **Legenda:** *observado* = visto na resposta real; *código* = lido no código da biblioteca; *hipótese* = não visto, o leitor deve tolerar.
 
@@ -255,7 +255,7 @@ Não há leitor nem banco ainda (#372). Sono, VFC e FC de repouso são dado de s
 | Medida | Chamada (`Garmin`) | Pedido | Resposta |
 |---|---|---|---|
 | Sono + VFC da noite + FC de repouso | `get_sleep_data(cdate)` | um dia `AAAA-MM-DD` | `dict` grande (séries de centenas de itens); o leitor usa só 4 campos |
-| Sono (resumo) | `get_sleep_daily(start, end)` | faixa; a biblioteca parte em blocos de 28 dias e junta | lista de resumos por `calendarDate`. **Não usada** (formato dos itens não conferido) |
+| Sono (resumo) | `get_sleep_daily(start, end)` | faixa; a biblioteca parte em blocos de 28 dias e junta | lista de resumos por `calendarDate`. **Não usada** (formato dos itens não conferido); por isso o sono é uma chamada de `get_sleep_data` por noite |
 | VFC noturna em faixa | `get_hrv_data_range(start, end)` | faixa | `dict` com `hrvSummaries` (abaixo) |
 | VFC de um dia | `get_hrv_data(cdate)` | um dia | `None` possível (docstring de `typed.py`); formato não conferido |
 | FC de repouso em faixa | `get_rhr_daily(start, end)` | faixa ("até ~1 ano", docstring) | lista de `{calendarDate, value}` |
@@ -343,6 +343,9 @@ Escritas à mão, com valores e datas inventados (março de 2026); cada dicioná
 | `sono_noite_com_marcador.json` | texto `MARCADOR-SINTETICO-META10-NAO-LOGAR` em campos de texto e em campo desconhecido, para o teste de log da #372 |
 | `vfc_faixa.json`, `vfc_faixa_com_buraco.json`, `vfc_faixa_sem_dado.json` | faixa de VFC; faixa com dia faltando; `{}` |
 | `rhr_faixa.json`, `rhr_faixa_sem_dado.json` | faixa de FC de repouso (com dia faltando); `[]` |
+
+### Leitor e busca (#372)
+O **leitor** fica dentro do cliente real (`worker/garmin_cliente.py`: `ler_sono`, `ler_vfc`, `ler_fc_repouso`, `VERSAO_LEITURA = "recuperacao_leitura@1"`); o nome de campo do Garmin **não sai dele**. `ClienteGarmin.recuperacao(desde, ate, medidas)` devolve `NoiteRecuperacao(noite, sono_s, vfc_ms, fc_repouso_bpm)` (`None` para o que faltou); cada chamada é **uma requisição** (`"vfc"` e `"fc"` aceitam até 28 dias, `"sono"` um dia). Regras: sono = `dailySleepDTO.sleepTimeSeconds` só se `calendarDate` for a data pedida; VFC = `hrvSummaries[].lastNightAvg`; FC de repouso = `get_rhr_daily` arredondada; ausente, `None`, `0`, não numérico e fora da faixa dos `CHECK` viram `None`; formato inesperado nunca levanta. O comando é `worker.buscar_recuperacao` ([[modulos/worker]]). **O 429 das rotas de dados** (#386): `_traduzir` agora trata como `ErroLimite` (saída 4) todo `GarminConnectConnectionError` cuja `.response.status_code` é 429, também em `listar` e `baixar_fit` do `buscar_garmin`.
 
 O oráculo de `recuperacao@1` (comparação com o normal) é do Caio e fica em `docs/metricas/`; usa estas fixtures como formato, não como valores.
 
