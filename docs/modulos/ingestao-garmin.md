@@ -256,9 +256,9 @@ O leitor e o banco vieram na #372 (seção "Leitor e busca (#372)", abaixo). Son
 |---|---|---|---|
 | Sono + VFC da noite + FC de repouso | `get_sleep_data(cdate)` | um dia `AAAA-MM-DD` | `dict` grande (séries de centenas de itens); o leitor usa só 4 campos |
 | Sono (resumo) | `get_sleep_daily(start, end)` | faixa; a biblioteca parte em blocos de 28 dias e junta | lista de resumos por `calendarDate`. **Não usada** (formato dos itens não conferido); por isso o sono é uma chamada de `get_sleep_data` por noite |
-| VFC noturna em faixa | `get_hrv_data_range(start, end)` | faixa | `dict` com `hrvSummaries` (abaixo) |
+| VFC noturna em faixa | `get_hrv_data_range(start, end)` | faixa | `dict` com `hrvSummaries` (abaixo). **Não usada na busca** (adendo 1 da ADR 0014) |
 | VFC de um dia | `get_hrv_data(cdate)` | um dia | `None` possível (docstring de `typed.py`); formato não conferido |
-| FC de repouso em faixa | `get_rhr_daily(start, end)` | faixa ("até ~1 ano", docstring) | lista de `{calendarDate, value}` |
+| FC de repouso em faixa | `get_rhr_daily(start, end)` | faixa ("até ~1 ano", docstring) | lista de `{calendarDate, value}`. **Não usada na busca** (adendo 1 da ADR 0014) |
 | FC de repouso de um dia | `get_rhr_day(cdate)` | um dia | `dict` bruto da rota de bem-estar, não conferido |
 
 As chamadas `get_sleep_data`, `get_rhr_day` e `get_rhr_daily` usam o nome de exibição da conta que a biblioteca obtém no login; as de VFC não.
@@ -305,7 +305,7 @@ repouso "da noite" separada**: é a FC de repouso **do dia** `calendarDate`. Nã
 | `createTimeStamp` | texto de data e hora | quando o Garmin criou o resumo |
 
 **Limite de faixa:** a biblioteca não impõe limite ao `get_hrv_data_range` (só valida `start <= end`) e o limite do servidor **não foi medido** (a consulta usou 3 dias). O `get_sleep_daily` tem 28 dias por pedido
-(a biblioteca parte em blocos) e o `get_rhr_daily` documenta "até ~1 ano". Recomendação para o leitor: pedir **blocos de no máximo 28 dias** nas três rotas e parar no primeiro erro.
+(a biblioteca parte em blocos) e o `get_rhr_daily` documenta "até ~1 ano". Isto vale só se um dia as rotas de faixa forem usadas: a busca da #372 usa apenas `get_sleep_data`, uma chamada por noite (adendo 1 da ADR 0014).
 
 ### FC de repouso em faixa: `get_rhr_daily` (observado)
 Lista de `{"calendarDate": "AAAA-MM-DD", "value": decimal}` (a faixa devolve decimal; o `restingHeartRate` do sono, inteiro; mesmo número). **A biblioteca descarta as linhas com `value = None`** (código):
