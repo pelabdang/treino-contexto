@@ -1,0 +1,45 @@
+{
+  "_sintetico": "SINTETICO: fixture escrita a mao, valores inventados; nao e resposta gravada de nenhuma conta",
+  "dailySleepDTO": {
+    "id": 1000000000001,
+    "calendarDate": "2026-03-15",
+    "sleepTimeSeconds": 24000,
+    "napTimeSeconds": 0,
+    "sleepWindowConfirmed": true,
+    "sleepWindowConfirmationType": "enhanced_confirmed_final",
+    "sleepStartTimestampGMT": 1773540600000,
+    "sleepEndTimestampGMT": 1773567600000,
+    "sleepStartTimestampLocal": 1773529800000,
+    "sleepEndTimestampLocal": 1773556800000,
+    "unmeasurableSleepSeconds": 0,
+    "deepSleepSeconds": 4800,
+    "lightSleepSeconds": 14400,
+    "remSleepSeconds": 4800,
+    "awakeSleepSeconds": 3000,
+    "awakeCount": 2,
+    "sleepScoreFeedback": "MARCADOR-SINTETICO-META10-NAO-LOGAR",
+    "sleepScores": {
+      "overall": {
+        "value": 70,
+        "qualifierKey": "FAIR"
+      }
+    }
+  },
+  "sleepHeartRate": [
+    {
+      "value": 50,
+      "startGMT": 1773108600000
+    }
+  ],
+  "hrvData": [
+    {
+      "value": 60.0,
+      "startGMT": 1773108600000
+    }
+  ],
+  "avgOvernightHrv": 61.0,
+  "hrvStatus": "MARCADOR-SINTETICO-META10-NAO-LOGAR",
+  "bodyBatteryChange": 40,
+  "restingHeartRate": 49,
+  "campoDesconhecido": "MARCADOR-SINTETICO-META10-NAO-LOGAR"
+}

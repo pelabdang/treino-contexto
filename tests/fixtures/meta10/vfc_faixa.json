@@ -1,0 +1,51 @@
+{
+  "_sintetico": "SINTETICO: fixture escrita a mao, valores inventados; nao e resposta gravada de nenhuma conta",
+  "userProfilePk": 1,
+  "hrvSummaries": [
+    {
+      "calendarDate": "2026-03-10",
+      "weeklyAvg": null,
+      "lastNightAvg": 61,
+      "lastNight5MinHigh": 90,
+      "baseline": {
+        "lowUpper": 45,
+        "balancedLow": 50,
+        "balancedUpper": 70,
+        "markerValue": null
+      },
+      "status": "BALANCED",
+      "feedbackPhrase": "HRV_BALANCED_1",
+      "createTimeStamp": "2026-03-12T10:00:00.0"
+    },
+    {
+      "calendarDate": "2026-03-11",
+      "weeklyAvg": null,
+      "lastNightAvg": 55,
+      "lastNight5MinHigh": 80,
+      "baseline": {
+        "lowUpper": 45,
+        "balancedLow": 50,
+        "balancedUpper": 70,
+        "markerValue": null
+      },
+      "status": "BALANCED",
+      "feedbackPhrase": "HRV_BALANCED_2",
+      "createTimeStamp": "2026-03-12T10:00:00.0"
+    },
+    {
+      "calendarDate": "2026-03-12",
+      "weeklyAvg": null,
+      "lastNightAvg": 40,
+      "lastNight5MinHigh": 60,
+      "baseline": {
+        "lowUpper": 45,
+        "balancedLow": 50,
+        "balancedUpper": 70,
+        "markerValue": null
+      },
+      "status": "LOW",
+      "feedbackPhrase": "HRV_LOW_1",
+      "createTimeStamp": "2026-03-12T10:00:00.0"
+    }
+  ]
+}

@@ -1,0 +1,9 @@
+{
+  "_sintetico": "SINTETICO: fixture escrita a mao, valores inventados; nao e resposta gravada de nenhuma conta",
+  "dailySleepDTO": {
+    "calendarDate": "2026-03-13",
+    "sleepTimeSeconds": null,
+    "napTimeSeconds": 0
+  },
+  "restingHeartRate": 48
+}

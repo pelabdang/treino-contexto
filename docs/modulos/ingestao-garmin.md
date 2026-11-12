@@ -2,7 +2,7 @@
 tipo: modulo
 status: em-uso
 dono: duda
-atualizado: 2026-11-10
+atualizado: 2026-11-12
 links: [[decisoes/0010-carga-de-treino]], [[produto/meta-3-como-rodar]], [[modulos/worker]], [[modulos/banco]], [[decisoes/0006-upload-de-fit]], [[decisoes/0007-clima-da-atividade]], [[produto/roadmap]], [[diario/2026-11-03]], [[produto/meta-4-como-rodar]], [[decisoes/0008-deteccao-de-esforcos]], [[decisoes/0009-treino-de-transicao]], [[modulos/api]]
 ---
 # Módulo: ingestão Garmin
@@ -239,9 +239,112 @@ Paralela da Meta 9: o atleta não sobe FIT à mão; o worker busca a atividade d
 - **Uma tentativa de login por execução** (`retry_attempts=1`, sem nova tentativa). Token recusado: a mensagem manda apagar a pasta do token e rodar de novo.
 - **Erros e códigos de saída:** 1 configuração, argumento ou atleta inexistente; 2 login ou sessão recusados; 3 MFA pedido e sem terminal, ou código recusado; 4 limite de requisições (429); 5 rede ou serviço fora do ar; 6 outro erro do Garmin ou atividades com falha. Tudo em `erro: <mensagem>` no stderr, sem traceback. O que já foi importado antes do erro fica; a próxima rodada completa.
 - **MFA:** se o login pedir o código de verificação e a entrada for um terminal, o comando pergunta **uma vez** (`Codigo de verificacao do Garmin: `, sem eco), conclui com `resume_login` da biblioteca e grava o token como no login normal; as próximas rodadas usam o token. Sem terminal, código vazio ou código recusado: saída 3 com mensagem fixa, nada gravado. Não há opção de linha de comando para o código (ficaria no histórico do shell), e o código nunca vai para log, saída ou mensagem de erro (teste confere).
-- **Fora:** sono, VFC, estado de treino, prontidão e treinos planejados do Garmin Connect (dado de saúde novo e modelo novo; candidata a meta futura).
+- **Fora (na Meta 9):** sono, VFC, estado de treino, prontidão e treinos planejados do Garmin Connect. Sono, VFC e FC de repouso entram na Meta 10: formato em "Sono, VFC e FC de repouso: formato das respostas", abaixo.
 - Testes: `services/worker/tests/test_buscar_garmin.py` (FIT sintéticos de `tests/fixtures/garmin/fit/`, biblioteca e cliente falsos, guarda de rede, teste do log).
 - O passo a passo de uso fica no guia de como rodar da Meta 9 ([[produto/roadmap]]).
+
+## Sono, VFC e FC de repouso: formato das respostas (Meta 10, #371)
+Formato do que a biblioteca do `worker.buscar_garmin` devolve para a recuperação. Esta seção descreve **só a estrutura** (chamada, caminho do campo, tipo, unidade, dia sem dado),
+conferida em 12/11 com **uma** consulta local à conta do próprio atleta (3 noites recentes e uma faixa curta de VFC e de FC de repouso, token já salvo, nada gravado no banco nem
+no repositório) e com o código da versão fixada, **`garminconnect==0.3.20`**. Nenhum valor, data, horário ou padrão real está aqui; as fixtures são escritas à mão (`tests/fixtures/meta10/`).
+Não há leitor nem banco ainda (#372). Sono, VFC e FC de repouso são dado de saúde: só no banco local, nunca em log, exceção, captura ou fixture gravada.
+
+**Legenda:** *observado* = visto na resposta real; *código* = lido no código da biblioteca; *hipótese* = não visto, o leitor deve tolerar.
+
+### Chamadas
+| Medida | Chamada (`Garmin`) | Pedido | Resposta |
+|---|---|---|---|
+| Sono + VFC da noite + FC de repouso | `get_sleep_data(cdate)` | um dia `AAAA-MM-DD` | `dict` grande (séries de centenas de itens); o leitor usa só 4 campos |
+| Sono (resumo) | `get_sleep_daily(start, end)` | faixa; a biblioteca parte em blocos de 28 dias e junta | lista de resumos por `calendarDate`. **Não usada** (formato dos itens não conferido) |
+| VFC noturna em faixa | `get_hrv_data_range(start, end)` | faixa | `dict` com `hrvSummaries` (abaixo) |
+| VFC de um dia | `get_hrv_data(cdate)` | um dia | `None` possível (docstring de `typed.py`); formato não conferido |
+| FC de repouso em faixa | `get_rhr_daily(start, end)` | faixa ("até ~1 ano", docstring) | lista de `{calendarDate, value}` |
+| FC de repouso de um dia | `get_rhr_day(cdate)` | um dia | `dict` bruto da rota de bem-estar, não conferido |
+
+As chamadas `get_sleep_data`, `get_rhr_day` e `get_rhr_daily` usam o nome de exibição da conta que a biblioteca obtém no login; as de VFC não.
+
+### Sono: `get_sleep_data` (observado)
+| Caminho | Tipo e unidade | Uso |
+|---|---|---|
+| `dailySleepDTO.calendarDate` | texto `AAAA-MM-DD` | **a data da noite = a data local de acordar** (ver abaixo) |
+| `dailySleepDTO.sleepTimeSeconds` | inteiro, **segundos** | **tempo dormindo**: é `deepSleepSeconds + lightSleepSeconds + remSleepSeconds`, **sem** os despertares |
+| `dailySleepDTO.awakeSleepSeconds` | inteiro, segundos | tempo acordado dentro da janela. `sleepTimeSeconds + awakeSleepSeconds + unmeasurableSleepSeconds` = janela (fim - início) |
+| `dailySleepDTO.napTimeSeconds` | inteiro, segundos | sesta; `0` nas noites conferidas (ver "Sesta") |
+| `dailySleepDTO.sleepStartTimestampGMT`, `sleepEndTimestampGMT` | inteiro, **milissegundos desde 1970** (instante real) | início e fim da janela |
+| `dailySleepDTO.sleepStartTimestampLocal`, `sleepEndTimestampLocal` | inteiro, milissegundos | **hora de parede local lida como se fosse UTC** (`Local - GMT` = deslocamento do fuso, em horas inteiras). Não converter de novo |
+| `avgOvernightHrv` (**no topo**, não no `dailySleepDTO`) | decimal, **ms** | **VFC noturna média** da noite; igual ao `lastNightAvg` da rota de faixa no mesmo dia |
+| `restingHeartRate` (**no topo**) | inteiro, bpm | **FC de repouso** |
+| `hrvStatus` (topo) | texto (enum) | status do Garmin; **não usar** (métrica proprietária) |
+
+O resto da resposta (estágios, séries de FC, estresse, Body Battery, SpO2, respiração, notas, pontuações, necessidade de sono) **não é lido nem guardado** (decisão do Angelo). `dailySleepDTO.avgSleepHRV`,
+que o tipo da biblioteca declara, **não existe** na resposta real: a VFC está em `avgOvernightHrv`. `userProfilePK` e `id` são identificadores: **ignorar**.
+
+**Data da noite (observado):** nas três noites, `calendarDate` = data pedida (`cdate`) = data local do **fim** do sono (`sleepEndTimestampLocal`); o início cai na véspera. O Garmin atribui a noite
+ao dia em que o atleta **acordou**, a regra da ADR 0014: pedir `cdate = D` devolve a noite que termina em `D`. Não foi testada noite com viagem entre fusos.
+
+**Sono total x acordado (observado):** o campo a guardar é `sleepTimeSeconds` (sem os despertares). O tempo na cama é a janela (`sleepEnd - sleepStart`), ou a soma com `awakeSleepSeconds`.
+
+**Sesta:** só se viu `napTimeSeconds` (inteiro, segundos) no mesmo `dailySleepDTO`, igual a `0` nas três noites; **a estrutura das sestas (lista com início e fim) não foi observada**. Como `sleepTimeSeconds` é a soma
+dos três estágios da janela da noite, o leitor usa `sleepTimeSeconds` e **ignora** `napTimeSeconds`. Se a sesta soma ou não em `sleepTimeSeconds` quando `napTimeSeconds > 0`: **não conferido** (hipótese: não soma).
+
+**FC de repouso (observado):** a resposta do sono **traz** `restingHeartRate` (no topo), e o valor é **igual** ao de `get_rhr_daily` para o mesmo `calendarDate`, inclusive na noite que terminou naquela manhã. **Não existe uma FC de
+repouso "da noite" separada**: é a FC de repouso **do dia** `calendarDate`. Não foi conferido se o valor muda ao longo do dia (exigiria nova consulta horas depois), então a regra da ADR 0014
+(preencher só quando a data já passou) continua necessária enquanto isso não for medido.
+
+### VFC em faixa: `get_hrv_data_range` (observado)
+`{"hrvSummaries": [...], "userProfilePk": inteiro}`. Cada item, **um por dia com leitura**, em ordem crescente de `calendarDate`:
+
+| Campo | Tipo e unidade | Observação |
+|---|---|---|
+| `calendarDate` | texto `AAAA-MM-DD` | a mesma data da noite no `get_sleep_data` (data de acordar) |
+| `lastNightAvg` | inteiro, **ms** | VFC noturna média (inteiro aqui; no sono, decimal) |
+| `lastNight5MinHigh` | inteiro, ms | maior janela de 5 min; **não usar** |
+| `weeklyAvg` | inteiro ou `None` | `None` nas noites conferidas; não usar |
+| `baseline.lowUpper`, `balancedLow`, `balancedUpper` | inteiro, ms | faixa de base do Garmin; **não usar** (métrica proprietária); `markerValue` era `None` |
+| `status`, `feedbackPhrase` | texto (enum e chave) | **não usar**. Uma noite tinha `status = "NONE"` e mesmo assim `lastNightAvg` inteiro |
+| `createTimeStamp` | texto de data e hora | quando o Garmin criou o resumo |
+
+**Limite de faixa:** a biblioteca não impõe limite ao `get_hrv_data_range` (só valida `start <= end`) e o limite do servidor **não foi medido** (a consulta usou 3 dias). O `get_sleep_daily` tem 28 dias por pedido
+(a biblioteca parte em blocos) e o `get_rhr_daily` documenta "até ~1 ano". Recomendação para o leitor: pedir **blocos de no máximo 28 dias** nas três rotas e parar no primeiro erro.
+
+### FC de repouso em faixa: `get_rhr_daily` (observado)
+Lista de `{"calendarDate": "AAAA-MM-DD", "value": decimal}` (a faixa devolve decimal; o `restingHeartRate` do sono, inteiro; mesmo número). **A biblioteca descarta as linhas com `value = None`** (código):
+dia sem FC de repouso = a linha não existe.
+
+### Como vem "dia sem dado"
+| Caso | O que chega | Origem |
+|---|---|---|
+| Sono de um dia sem registro (HTTP 204) | `{}` (dicionário vazio) | código (`_EmptyJSONResp`); **não observado** (as três noites tinham dado) |
+| `dailySleepDTO` presente sem duração | `sleepTimeSeconds` = `None` ou `0` | hipótese; o leitor trata `None`, `0` e fora de `1..86400` como sem sono |
+| VFC ausente numa noite com sono | `avgOvernightHrv`, `hrvData`, `hrvStatus` ausentes **ou** `None` | hipótese (as três noites tinham VFC); ausente e `None` valem o mesmo |
+| VFC em faixa, dia sem leitura | o dia **não aparece** em `hrvSummaries`; faixa toda sem dado: lista vazia ou `{}` (204) | código + hipótese |
+| FC de repouso em faixa, dia sem valor | a linha não existe; faixa toda sem dado: `[]` | código |
+| Dia com 404 | `GarminConnectNotFoundError` (subclasse de `GarminConnectConnectionError`) | código |
+
+Não se viu `0` como sentinela, mas o leitor trata `0` ou fora da faixa dos `CHECK` como sem dado (ADR 0014). Relógio que não sincronizou não se distingue de "sem dado": a resposta é a mesma.
+
+### Erros e limite (429)
+- Rotas de dados: a biblioteca (`client/transport.py`) levanta **`GarminConnectConnectionError("API Error 429 ...")`**, com a resposta HTTP em `.response` (`.response.status_code == 429`). **Não** levanta
+  `GarminConnectTooManyRequestsError`: essa classe só sai do **login** (SSO e troca do token), e **não** é subclasse de `GarminConnectConnectionError`. Lido no código; o 429 não foi provocado.
+- Consequência para `worker.garmin_cliente._traduzir`: hoje todo `GarminConnectConnectionError` vira `ErroRede` (saída 5). Para a recuperação, o 429 das rotas de dados tem de virar `ErroLimite` (saída 4), olhando
+  `getattr(getattr(e, "response", None), "status_code", None) == 429` **antes** do caso de rede e sem repetir o texto do erro. Fica para a #372. Vale também para as rotas de atividade da Meta 9.
+- 401: a biblioteca renova a sessão uma vez; recusa persistente vira `GarminConnectAuthenticationError`.
+- A biblioteca escreve `logger.debug("Requesting ...")` por chamada, sem o conteúdo; ainda assim o logger `garminconnect` fica acima de DEBUG por código.
+
+### Fixtures sintéticas (`tests/fixtures/meta10/`)
+Escritas à mão, com valores e datas inventados (março de 2026); cada dicionário traz `_sintetico`. Teste: `tests/test_fixtures_meta10.py`.
+
+| Arquivo | Caso |
+|---|---|
+| `sono_noite_completa.json` | noite completa: sono, VFC no topo, FC de repouso |
+| `sono_noite_sem_vfc.json`, `sono_noite_sem_vfc_none.json` | sem VFC (chaves ausentes; chaves `None`), hipótese |
+| `sono_dia_sem_dado.json`, `sono_dto_sem_duracao.json` | `{}` (204); duração `None` |
+| `sono_noite_com_sesta.json` | `napTimeSeconds > 0` |
+| `sono_noite_com_marcador.json` | texto `MARCADOR-SINTETICO-META10-NAO-LOGAR` em campos de texto e em campo desconhecido, para o teste de log da #372 |
+| `vfc_faixa.json`, `vfc_faixa_com_buraco.json`, `vfc_faixa_sem_dado.json` | faixa de VFC; faixa com dia faltando; `{}` |
+| `rhr_faixa.json`, `rhr_faixa_sem_dado.json` | faixa de FC de repouso (com dia faltando); `[]` |
+
+O oráculo de `recuperacao@1` (comparação com o normal) é do Caio e fica em `docs/metricas/`; usa estas fixtures como formato, não como valores.
 
 ## Arquivos principais
 - `services/api/app/ingestao/garmin/` e `services/api/tests/ingestao/test_garmin_parser.py`
