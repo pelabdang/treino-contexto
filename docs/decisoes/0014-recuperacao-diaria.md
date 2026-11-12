@@ -185,7 +185,7 @@ O worker gera de novo esses feedbacks **sem** a recuperação na próxima execu�
 da conta de ninguém.
 
 ### 6. Regras de linguagem novas (`checagens_feedback@4`, #375)
-As checagens da ADR 0013 (item 4) continuam; a lista de linguagem proibida ganha o que vem **com a recuperação** (sobe para `checagens_feedback@4`: a `@3` e o `feedback_prompt@3` são do #384, que entrou antes; as versões da Meta 10 são a `@4`). Em duas partes:
+As checagens da ADR 0013 (item 4) continuam; a lista de linguagem proibida ganha o que vem **com a recuperação** (sobe para `checagens_feedback@4`; o `feedback_prompt@3` é do #384, o `feedback_prompt@4` é da #374, que mudou a regra da PSE e os exemplos G02 e G03 junto do `fatos_treino@2`, e as regras e exemplos da recuperação são o `feedback_prompt@5`, da #375). Em duas partes:
 
 **A. Palavras e expressões novas** (sem acento e sem diferença de maiúscula, como as demais). **Escopo (conferido em 12/11):** as listas de causa, conselho e julgamento valem **na linha que fala de sono, VFC ou FC de repouso**, não no texto inteiro. Conferi os 6 exemplos aprovados da ADR 0013: nenhum usa "mas", "enquanto", "mesmo com", "então", "portanto", "logo", "assim", "daí", "pesou" ou "explica", mas **"melhor" aparece** ("Seu melhor tiro", "A FC do melhor tiro", chave `melhor_pace`) e "por enquanto" aparece no exemplo 3; por isso "melhor" e "pior" ficam restritos à linha da recuperação, e as palavras de ligação ("mas", "enquanto", "mesmo com"...) também. Os textos bons desta seção passam em todas.
 - **Causa ligando recuperação a resultado**: "por isso", "então", "portanto", "logo", "assim", "daí", "reflete", "refletiu", "reflexo", "influenciou", "influência", "afetou", "impactou", "pesou", "contribuiu", "efeito do sono", "efeito da noite", "explica", "o sono explica", "culpa do sono", "mesmo com", "apesar de", "apesar do", "mesmo assim", "mas" e "porém" entre a recuperação e o resultado, "no entanto", "enquanto" quando liga as duas ideias. (A ADR 0013 já proíbe "porque", "por causa", "devido", "causou"...)
@@ -238,7 +238,7 @@ As checagens da ADR 0013 (item 4) continuam; a lista de linguagem proibida ganha
 - `fatos_treino` sobe a `@2`; **todos os feedbacks gerados com a `@1` ficam desatualizados** e são refeitos pelo worker, com o limite de chamadas por execução. O texto antigo é substituído.
 - `feedback_treino` ganha uma coluna anulável; `worker.apagar_checkin` continua igual; `worker.apagar_recuperacao` também apaga os feedbacks que usaram a recuperação (adendo 1 da ADR 0013).
 - `fatos_treino@2` também manda `checkin.pse_texto: null` quando a PSE não tem âncora (só o pacote; a rota do check-in não muda).
-- Nasce `recuperacao@1`; sobem `feedback_prompt@4` e `checagens_feedback@4` (a `@3` de cada uma é do #384).
+- Nasce `recuperacao@1`; sobem `feedback_prompt@4` (#374: regra da PSE sem rótulo e exemplos G02 e G03), `feedback_prompt@5` (#375: regras e exemplos da recuperação) e `checagens_feedback@4` (#375); a `@3` de cada uma é do #384.
 - A API **não** ganha campo nem rota nova: o `GET` da atividade continua com os cinco estados do `feedback`; só o texto muda. Sem adendo da ADR 0004 (confirmar com a Duda na #374).
 - A migração `0014` é aditiva e reversível.
 
