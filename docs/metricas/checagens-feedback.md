@@ -66,7 +66,7 @@ aparece nos textos bons ("nos 11 treinos"). Antes das listas, tiram-se do texto 
 Os testes do worker injetam a própria `checar`; só o teste de `services/api/tests/llm/test_camada.py` (`test_texto_do_provedor_falso_nas_checagens_reais`) roda a `checar_texto` real contra o texto fixo do provedor falso. Mudou a forma, os verbos ou a lista? Confira esse texto e o teste. Ver [[modulos/camada-llm]] e [[modulos/worker]].
 
 ## Lista de linguagem proibida (`checagens_feedback@1`)
-Ponto de partida: a lista da ADR 0013 (item 4.2), ampliada. Mudar qualquer lista abaixo, ou um limite, **sobe a versão** (`checagens_feedback@2`).
+Ponto de partida: a lista da ADR 0013 (item 4.2), ampliada. Mudar qualquer lista abaixo, ou um limite, **sobe a versão** (hoje `checagens_feedback@3`).
 - **Diagnóstico (`linguagem_diagnostico`):** lesão, lesões, lesionado(a), inflamação, tendinite, fratura, distensão, overtraining, sobretreino, supertreino, doença, infecção, sintoma(s), diagnóstico, síndrome, arritmia, desidratação, desidratado, fadiga, esgotamento, exaustão, risco.
 - **Culpa e juízo (`linguagem_culpa`):** falhou, fracasso, fracassou, preguiça, desleixo, culpa, fraco(a), decepcionante, "você deveria", "você devia", péssimo, horrível, "treino ruim", "mau treino", ruim, mau, preocupante, alerta, problema, pior, erro, **mal** (só passa como rótulo da sensação do pacote; ver "Rótulos do check-in").
 - **Promessa (`linguagem_promessa`):** "vai melhorar", "com certeza", certamente, garanto, prometo, garantido, "você vai conseguir", "na próxima será", "em breve você".
