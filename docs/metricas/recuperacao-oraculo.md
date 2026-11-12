@@ -31,5 +31,5 @@ Parâmetros: janela 28 noites, mínimo 14, piso 0,05, limite 2,0, corte 06:00.
 ## Fontes e versão
 Mesmas da [[metricas/recuperacao]]. `recuperacao@1`.
 
-## Limitações
+## Limitações e quando não usar
 Os casos cobrem a função pura; o `importado_em`, o "desatualizado" e os textos são das issues #372 e #374.

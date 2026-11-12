@@ -26,7 +26,7 @@ Decisão: [[decisoes/0014-recuperacao-diaria]]. É só uma comparação com o hi
   o bloco com as três `aprendendo` continua `ok`.
 - **Unidades de entrada:** `sono_s` em segundos, `vfc_ms` em ms, `fc_repouso_bpm` em bpm. Os textos ("5 h 40 min", "1 h 30 min abaixo") são da API (#374), não da função.
 
-## Fontes e versão
+## Referência e versão
 Mediana e MAD: Leys et al. (2013), J. Exp. Soc. Psychol. 49(4):764-766. Constante 1,4826: Rousseeuw e Croux (1993), JASA 88(424):1273-1283. Citações
 **ainda a conferir nos textos** (a mesma pendência da [[metricas/linha-base]]). Janela de 28 noites, mínimo de 14, piso de 0,05, limite 2,0 e corte das 06:00 são
 **escolha nossa**, sem artigo e sem calibração (Angelo, 12/11, "ok para as cinco"; rever depois de uns 30 dias olhando só contagens). `VERSAO = "recuperacao@1"`;
@@ -36,9 +36,10 @@ sobe quando mudar janela, mínimo, piso, limite, medida ou a regra da noite do t
 Sono em minutos, 14 noites: 400, 410, 420, 420, 425, 430, 435, 435, 440, 440, 445, 450, 460, 470. Mediana 435; MAD 12,5; desvio `max(18,5325; 21,75) = 21,75`.
 Noite de 345 min: `z = -4,138`, abaixo. A de 420 min: `z = -0,690`, dentro. Com 13 noites: aprendendo. Todos os casos, com a conta, em [[metricas/recuperacao-oraculo]].
 
-## Testes
-`services/api/tests/metricas/test_recuperacao.py` (19 testes: o oráculo à mão, os limites 2,0, o piso, as bordas da janela, as regras da noite do treino).
+## Código e teste
+- Código: `services/api/app/metricas/recuperacao.py`.
+- Teste: `services/api/tests/metricas/test_recuperacao.py` (19 testes: o oráculo à mão, os limites 2,0, o piso, as bordas da janela, as regras da noite do treino).
 
-## Limitações
+## Limitações e quando não usar
 Os parâmetros são escolhas nossas, não calibradas. A janela de 28 noites acompanha mudanças lentas de rotina (uma fase longa fora do padrão vira o normal). Início
 frio de cerca de duas semanas com o relógio no pulso. A função não sabe se uma noite foi recalculada pelo Garmin: isso é do `importado_em` (#372, #374).
