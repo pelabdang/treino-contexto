@@ -89,8 +89,8 @@ o prompt `@2` (#355), o `.env` da raiz (#354) e a pausa entre chamadas (#357) mu
    A reprovação é a atividade 8, cujo check-in tem o atalho **Dor**: o texto fixo do provedor falso não traz a frase neutra da
    dor, então as checagens o barram ([[metricas/checagens-feedback]]). É o comportamento certo: **texto reprovado nunca é
    gravado nem chega ao app**. No `GET`:
-   - atividades 1, 6, 13 a 18: `estado` `pronto`, `origem` `teste`, `texto` "Treino de teste do provedor falso.\nEsta linha
-     existe so nos testes.\nNenhum dado real passa por aqui.";
+   - atividades 1, 6, 13 a 18: `estado` `pronto`, `origem` `teste`, `texto` "Este é um texto de teste do provedor falso.\nEsta
+     linha foi escrita só para os testes.\nNenhum dado real é usado aqui.";
    - atividade 8: `indisponivel`, `motivo` `texto_reprovado`, "Ainda não foi possível gerar o feedback deste treino. Uma nova
      tentativa será feita mais tarde.".
    No banco: `docker exec treino-meta9-postgres-1 psql -U treino -d treino -At -c "select estado, motivo, count(*) from feedback_treino group by 1,2 order by 1"`

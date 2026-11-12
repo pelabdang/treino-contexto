@@ -10,7 +10,7 @@ Um teste por item do critério de pronto da Meta 9 (`docs/produto/roadmap.md`); 
 Os testes seguem a ordem do arquivo e dividem o mesmo banco, então a ordem importa.
 
 O que este arquivo NÃO cobre (exige olho humano ou rede): o cartão na tela (web e celular), o provedor de verdade e a revisão da Lia.
-O `worker.gerar_feedback` com `LLM_PROVIDER=falso` na linha de comando está marcado `xfail(strict)` pelo bug #361.
+O `worker.gerar_feedback` com `LLM_PROVIDER=falso` na linha de comando é coberto pelo test_20 (o bug #361 foi corrigido).
 """
 
 import importlib.util
@@ -38,7 +38,7 @@ MARCADOR = "MARCADOR-SINTETICO-TEXTO-LIVRE"
 FORA_DO_PRAZO = "2026-10-15/cor1"
 ATLETA = "Atleta Fictício"
 
-# Texto que passa nas checagens@2 (3 linhas, verbo, sem número, sem nome próprio). O `TEXTO_BOM` do provedor falso não passa (#361).
+# Texto que passa nas checagens@2 (3 linhas, verbo, sem número, sem nome próprio). É o mesmo `TEXTO_BOM` do provedor falso (corrigido no #361).
 TEXTO_OK = (
     "Este é um texto de teste do provedor falso.\n"
     "Esta linha foi escrita só para os testes.\n"
@@ -537,9 +537,8 @@ def test_19_worker_apagar_checkin_leva_os_feedbacks_junto(ctx):
     assert _fb(ctx, "2026-11-09/cor2")["estado"] == "sem_checkin"
 
 
-@pytest.mark.xfail(strict=True, reason="#361: o texto fixo do provedor falso reprova em forma_sem_verbo (checagens_feedback@2)")
 def test_20_worker_na_linha_de_comando_com_llm_provider_falso_gera_feedback(ctx):
-    """Item: o guia roda o worker com LLM_PROVIDER=falso (passo 8). Hoje nada chega a `pronto` (#361)."""
+    """Item: o guia roda o worker com LLM_PROVIDER=falso (passo 8). O texto fixo passa nas checagens (#361)."""
     for f in ("2026-11-09/cor2", "2026-11-08/nat1"):
         _put(ctx, f, CHECKINS[f])
     out = _worker(ctx, "worker.gerar_feedback", env_extra={"LLM_PROVIDER": "falso"})
