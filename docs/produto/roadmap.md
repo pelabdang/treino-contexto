@@ -22,16 +22,16 @@ Ao fechar uma meta, o Paulo registra o resultado em `docs/produto/metas/` e revi
 | 7 | Linha de base pessoal e semana-padrão (tipo de treino pelo plano, regra como reserva) | feita (fixtures, sem rede; conferência local com o histórico real; [[produto/metas/meta-7-linha-de-base-semana-padrao]]) |
 | 8 | Check-in pós-treino e carga pela PSE | feita (fixtures, sem rede; celular não verificado; [[produto/metas/meta-8-check-in]]) |
 | 9 | Feedback automático por treino | feita (fixtures e provedor falso; tela rodando, celular e revisão da Lia na tela não verificados; [[produto/metas/meta-9-feedback-automatico]]) |
-| **10** | **Sono, VFC e FC de repouso no contexto do treino** | **proposta, esperando o "ok" do Angelo** (sem issues abertas) |
+| **10** | **Sono, VFC e FC de repouso no contexto do treino** | **atual: em curso** ("ok para as nove" do Angelo em 12/11; #368 a #380) |
 | 11 | Caixa do dia do professor | esboço (era a Meta 10) |
 | 12 | Agente do atleta (primeiras perguntas) | esboço (era a Meta 11) |
 
 Numeração: em 03/11 a linha de base virou meta própria e as metas seguintes andaram um número. Em 04/11 (decisão do
 Angelo) a detecção de esforços entrou como Meta 5, antes da carga, e as seguintes andaram mais um número: carga = 6,
 linha de base = 7, check-in = 8, feedback = 9, caixa do professor = 10, agente = 11. Notas antigas que citam "Meta 5"
-para a carga falam da atual Meta 6; "Meta 8" para o feedback com LLM, da atual Meta 9. Em 12/11 o Paulo propôs a recuperação
-(sono, VFC e FC de repouso) como Meta 10; **se o Angelo aceitar**, a caixa do professor vira 11 e o agente vira 12. Notas até a Meta 9
-que citam "Meta 10" para o professor e "Meta 11" para o agente falam dessas duas.
+para a carga falam da atual Meta 6; "Meta 8" para o feedback com LLM, da atual Meta 9. Em 12/11 (decisão do Angelo) a recuperação
+(sono, VFC e FC de repouso) entrou como Meta 10, a caixa do professor virou 11 e o agente virou 12. Notas até a Meta 9 que citam
+"Meta 10" para o professor e "Meta 11" para o agente falam das atuais Metas 11 e 12.
 
 ---
 
@@ -659,8 +659,8 @@ Revisadas ao fim de cada meta com o que se aprendeu. Ordem tirada da "Fundação
   2374 verdes e 2 pulados; `npm test` com 249. **Não verificados:** o cartão na tela do app rodando (ninguém viu a tela; a extensão do
   navegador não estava conectada), o celular do Angelo (check-in da Meta 8 e cartão da Meta 9; a sessão não aconteceu) e a revisão da
   Lia sobre a tela pronta (o design-ok foi sobre capturas). Resultado completo em [[produto/metas/meta-9-feedback-automatico]].
-- **Pendências que seguem:** a conferência do cartão e do check-in na tela rodando e a sessão do celular com o Angelo entram como as
-  duas primeiras issues da Meta 10 proposta (P1 e P2), qualquer que seja o tema escolhido; #364 (docs, Nina) fecha à parte.
+- **Pendências que seguem:** a conferência do cartão e do check-in na tela rodando virou a P1 da Meta 10 (#369), no Chrome em tamanho
+  de celular; o celular de verdade virou pendência conhecida, sem data (decisão do Angelo em 12/11); #364 (docs, Nina) fecha à parte.
 - **Aprendido na Meta 9:** versão nova de checagem confere também o texto do provedor falso (os testes do worker injetavam uma checagem
   própria e não pegaram o #361; o e2e pegou); o `.env` é lido da raiz do repositório, e numa worktree ou em outro clone essa raiz muda
   (#354); o plano gratuito do provedor recusa por limite por minuto, daí `LLM_INTERVALO_S` e a parada no primeiro limite (#357); mudar a
@@ -669,11 +669,24 @@ Revisadas ao fim de cada meta com o que se aprendeu. Ordem tirada da "Fundação
   depois da camada e do prompt; "A confirmar" com padrões funcionou pela quarta vez; passo que depende de pessoa (celular) ou de
   ferramenta (extensão do navegador) não pode ficar para a QA: vira issue própria na largada, com data marcada.
 
-### Meta 10, proposta: sono, VFC e FC de repouso no contexto do treino
-> **Proposta do Paulo em 12/11, esperando o "ok" do Angelo.** Nenhuma issue foi aberta. As perguntas estão em "PRECISA DO ANGELO",
-> "Meta 10: perguntas". Se ele escolher outro tema, P1 e P2 ficam e o resto é replanejado.
+### Meta 10: sono, VFC e FC de repouso no contexto do treino (atual, em curso)
+> **Em curso desde 12/11.** Proposta do Paulo na #333; o Angelo respondeu "ok para as nove" no mesmo dia, com uma mudança na
+> pergunta 6 (celular). Issues #369 a #380; roteiro na #368. Paralela fora do critério: #367.
 
-- **Por que esta e não outra.** O plano pede no feedback de cada treino "o que pesou (sono, calor, carga)" (seção 4.6) e põe sono, VFC e
+- **Decisões do Angelo (12/11, "ok para as nove"):**
+  1. tema da Meta 10 = recuperação (sono, VFC e FC de repouso no contexto do treino);
+  2. guardar a recuperação diária da conta dele no banco local, **só** duração do sono, VFC noturna e FC de repouso, com a regra do dado
+     de saúde da Meta 6 (só banco local, nunca em log, comando para apagar);
+  3. fonte = a mesma biblioteca não oficial do `worker.buscar_garmin`, só no piloto local; a API oficial segue como caminho de produção;
+  4. ao provedor de LLM vai só a comparação da noite anterior com o normal dele, nunca a série diária;
+  5. no feedback, a recuperação fica lado a lado com o resultado, sem causa e sem conselho;
+  6. **mudou:** ele **não** fará a sessão do celular agora e pediu que o Theo abra o app no Chrome simulando o celular. A P2 (sessão do
+     celular) **saiu** do critério de pronto; a conferência visual no Chrome em tamanho de celular entrou na P1 (#369). O Theo adiantou a
+     simulação em 12/11, e o resultado vai anexado na #369. O celular de verdade é pendência conhecida, sem data;
+  7. caixa do professor = Meta 11 (esboço), levantando antes login, vínculo professor-atleta e consentimento;
+  8. #213, #237 e #74 fora da Meta 10;
+  9. treinos planejados do Garmin fora da Meta 10.
+- **Por que esta e não outra** (como proposto na #333). O plano pede no feedback de cada treino "o que pesou (sono, calor, carga)" (seção 4.6) e põe sono, VFC e
   FC de repouso entre os fatores do motor de explicação (seção 4.3); a Garmin é a fonte principal justamente por trazer sono e VFC (seção
   3.1). Calor e carga já estão no pacote de fatos; sono e recuperação são o fator que falta. O Angelo mostrou interesse em 10/11, e o
   caminho até a conta dele já existe (`worker.buscar_garmin`, P14 da Meta 9). Fica no piloto local, com um atleta, sem conta nem serviço
@@ -687,11 +700,11 @@ Revisadas ao fim de cada meta com o que se aprendeu. Ordem tirada da "Fundação
 - **Objetivo:** o pacote de fatos ganha a recuperação da noite anterior ao treino (duração do sono, VFC noturna e FC de repouso),
   comparada com o normal do próprio atleta, e o feedback passa a pôr esse fato **lado a lado** com o resultado, sem afirmar causa.
 - **Entrega visível:** o cartão "Feedback" com uma linha sobre a recuperação quando há dado ("Você dormiu 5 h 40 min, abaixo do seu
-  normal de 7 h 10 min.", exemplo sintético); o comando que busca e grava a recuperação diária; e as duas pendências da Meta 9
-  conferidas (cartão na tela rodando e o celular).
-- **Critério de pronto (proposto):**
-  - conferência visual do cartão e do check-in na web com a API real, com revisão da Lia sobre a tela rodando; sessão do celular com o
-    Angelo feita (ou registrada de novo como não feita, com o motivo);
+  normal de 7 h 10 min.", exemplo sintético); o comando que busca e grava a recuperação diária; e o cartão e o check-in conferidos na
+  tela rodando, no Chrome em tamanho de celular.
+- **Critério de pronto:**
+  - conferência visual do cartão e do check-in no Chrome com tamanho de tela de celular, com a API real e o provedor falso, e revisão da
+    Lia sobre a tela rodando; registrado que a simulação não é celular de verdade;
   - ADR 0014 aprovada pelo Theo antes da migração: o que se guarda, de onde vem, um registro por dia com versão, idempotência, regra do
     dado de saúde da Meta 6 (só banco local, nunca log, comando para apagar), o que entra no pacote e o que vai ao provedor; "A confirmar"
     com padrões;
@@ -701,31 +714,33 @@ Revisadas ao fim de cada meta com o que se aprendeu. Ordem tirada da "Fundação
     do provedor falso (aprendido na Meta 9);
   - testes e CI sem rede (cliente Garmin falso, provedor falso); a falta de dado de sono num dia nunca vira número inventado;
   - QA com fixtures num clone limpo, seguindo só o guia; conferência local com a conta do Angelo, com nada no repositório.
-- **Issues propostas** (cada uma até 1 dia; **não abertas**):
+- **Issues e ordem** (cada uma até 1 dia; abertas em 12/11; o critério curto de cada uma está na própria issue):
 
-  | Proposta | Título | Dono | Depende de |
-  |---|---|---|---|
-  | P1 | Conferência visual do cartão de feedback e do check-in na web, com a API real e o provedor falso, e revisão da Lia sobre a tela rodando (pendência da Meta 9) | bia-qa com lia-design | nenhuma |
-  | P2 | Sessão do celular com o Angelo: check-in e cartão de feedback no Expo Go, dado sintético (pendência das Metas 8 e 9) | bia-qa com o Angelo | data marcada pelo Angelo |
-  | P3 | ADR 0014: recuperação diária (sono, VFC, FC de repouso), fonte, guarda, dado de saúde, o que entra no pacote | caio-ciencia com duda-dados (aprovação do Theo) | nenhuma |
-  | P4 | Formato dos dados de recuperação e fixtures sintéticas (semanas com noite curta, dia sem VFC, dia sem dado) e oráculo | duda-dados (formato) e caio-ciencia (oráculo) | P3 (adianta à mão) |
-  | P5 | Recuperação no banco (migração 0014), busca pelo Garmin Connect no piloto local, idempotente, e comando para apagar | duda-dados | P3, P4 |
-  | P6 | `recuperacao@1`: noite anterior ao treino comparada com o normal do atleta (função pura) | caio-ciencia | P3, P4 |
-  | P7 | `fatos_treino@2` com a recuperação e o adaptador do banco | caio-ciencia com duda-dados | P5, P6 |
-  | P8 | Prompt e checagens com versão nova, textos bons e ruins com a recuperação, checagem real sobre o texto do provedor falso | caio-ciencia | P7 |
-  | P9 | Rodada pequena com o provedor de verdade, só fixtures, logo depois da P8 (aprendido na Meta 9) | caio-ciencia (rodada local pelo Theo) | P8 |
-  | P10 | Documentação, guia `meta-10-como-rodar` e diário | nina-docs | P5, P8 |
-  | P11 | QA de ponta a ponta com fixtures | bia-qa | P10 |
-  | P12 | Conferência local com a conta do Angelo (nada no repositório) | caio-ciencia com duda-dados | P5, P7 e o "sim" da pergunta 2 |
-  | P13 | Resultado da meta e roteiro | paulo-planejador | P11 (e P1, P2) |
+  | Proposta | Issue | Título | Dono | Depende de |
+  |---|---|---|---|---|
+  | P1 | #369 | Conferência visual do check-in e do cartão de feedback no Chrome em tamanho de celular, com revisão da Lia (simulação adiantada pelo Theo em 12/11) | bia-qa com lia-design | nenhuma |
+  | P2 | (sem issue) | Sessão do celular com o Angelo: **saiu da meta** (decisão 6); celular de verdade é pendência conhecida, sem data | | |
+  | P3 | #370 | ADR 0014: recuperação diária (sono, VFC, FC de repouso) no contexto do treino | caio-ciencia com duda-dados (aprovação do Theo) | nenhuma |
+  | P4 | #371 | Formato da recuperação, fixtures sintéticas e oráculo | duda-dados (formato) e caio-ciencia (oráculo) | #370 (adianta à mão) |
+  | P5 | #372 | Recuperação no banco (migração 0014), busca pelo Garmin Connect e comando para apagar | duda-dados | #370, #371 |
+  | P6 | #373 | `recuperacao@1`: noite anterior ao treino comparada com o normal do atleta | caio-ciencia | #370, #371 |
+  | P7 | #374 | `fatos_treino@2` com a recuperação e o adaptador do banco | caio-ciencia com duda-dados | #372, #373 |
+  | P8 | #375 | Prompt e checagens com a recuperação (`feedback_prompt@3`, `checagens_feedback@3`) | caio-ciencia | #374 |
+  | P9 | #376 | Rodada pequena com o provedor de verdade, só fixtures | caio-ciencia (rodada local pelo Theo) | #375 |
+  | P10 | #377 | Documentação, guia `meta-10-como-rodar` e diário | nina-docs | #372, #375 |
+  | P11 | #378 | QA de ponta a ponta com fixtures | bia-qa | #377 |
+  | P12 | #379 | Conferência local da recuperação com a conta do Angelo (nada no repositório) | caio-ciencia com duda-dados | #372, #374 |
+  | P13 | #380 | Resultado da meta e roteiro | paulo-planejador | #378 (e #369, #379) |
 
-  **Ordem:** P1, P2 e P3 na largada, em paralelo (a P2 só precisa da data). P4 adianta à mão enquanto a ADR não entra. Depois da ADR,
-  P5 (Duda) e P6 (Caio) em paralelo; P7 é o encontro; P8 e P9 em sequência; P10 e P11 fecham. Caminho crítico: P3 → P5 → P7 → P8 → P10
-  → P11 → P13. Sem tela nova: a recuperação aparece só no texto do cartão que já existe.
-- **Quem:** caio-ciencia (ADR, métrica, pacote, prompt, checagens), duda-dados (formato, banco, busca, adaptador), bia-qa (conferência
-  visual, celular, QA), lia-design (revisão da tela rodando), nina-docs, Theo (ADR 0014 e a rodada local), Angelo (respostas e a sessão
-  do celular). O rafa-app só entra se a P1 achar um ajuste na tela.
-- **Fora:** tela própria da recuperação; estágios do sono, estresse, prontidão e estado de treino do Garmin (métricas proprietárias, sem
+  **Ordem:** #369 e #370 na largada, em paralelo; #371 adianta à mão enquanto a ADR não entra. Depois da ADR, #372 (Duda) e #373 (Caio)
+  em paralelo; #374 é o encontro; #375 e #376 em sequência; #379 depois da #374; #377 e #378 fecham. Caminho crítico: #370 → #372 →
+  #374 → #375 → #377 → #378 → #380. Sem tela nova: a recuperação aparece só no texto do cartão que já existe.
+- **Paralela (fora do critério de pronto):** #367, pedida pelo Angelo: espaços no fim da linha e PSE sem rótulo repetida ("esforço 6
+  (6)") no texto do feedback (caio-ciencia). Se mudar prompt ou checagens antes da #375, a #375 parte da versão dela.
+- **Quem:** caio-ciencia (ADR, métrica, pacote, prompt, checagens; a #367), duda-dados (formato, banco, busca, adaptador), bia-qa
+  (conferência visual, QA), lia-design (revisão da tela rodando), nina-docs, Theo (ADR 0014, a simulação no Chrome e a rodada local),
+  Angelo (respostas e a conferência local). O rafa-app só entra se a #369 achar um ajuste na tela.
+- **Fora:** sessão no celular de verdade (decisão 6); tela própria da recuperação; estágios do sono, estresse, prontidão e estado de treino do Garmin (métricas proprietárias, sem
   fórmula aberta); motor de explicação com o peso de cada fator ("provável", "possível"); treinos planejados do Garmin; a exportação
   Garmin como segunda fonte da recuperação, salvo se a ADR mostrar que sai de graça; alerta de recuperação baixa; outros atletas.
 
@@ -764,11 +779,12 @@ Revisadas ao fim de cada meta com o que se aprendeu. Ordem tirada da "Fundação
 - **Motivo de falta** (depois da Meta 8): com a semana-padrão já dá para saber qual treino planejado não aconteceu.
 - **Hífen sem quebra no estado vazio da tela da semana-padrão** (rafa-app): feita na #303 (PR #304), paralela da Meta 8.
 - **App em celular:** nenhuma tela foi aberta num iOS ou Android até a Meta 9; estava no critério das Metas 8 (#301) e 9 (#332)
-  e não foi feito. Vira a P2 da Meta 10 proposta, com data marcada na largada.
-- **Cartão de feedback na tela rodando** (bia-qa, com a Lia): ninguém viu o cartão fora dos testes e das capturas na Meta 9. Vira a
-  P1 da Meta 10 proposta.
+  e não foi feito. Em 12/11 o Angelo decidiu não fazer a sessão agora: **pendência conhecida, sem data**. No lugar, a simulação no
+  Chrome em tamanho de celular (#369), que não substitui o aparelho (Expo Go, iOS, Android, leitor de tela).
+- **Cartão de feedback na tela rodando** (bia-qa, com a Lia): ninguém viu o cartão fora dos testes e das capturas na Meta 9. É a #369
+  da Meta 10.
 - **Capturas do check-in no tema escuro e nos estados de erro:** feita na Meta 9 (#334, PR #351).
-- **Sono, VFC e FC de repouso do Garmin Connect:** viraram a Meta 10 proposta. **Estado de treino, prontidão, estágios do sono e
+- **Sono, VFC e FC de repouso do Garmin Connect:** viraram a Meta 10. **Estado de treino, prontidão, estágios do sono e
   estresse** (métricas proprietárias do Garmin) ficam aqui, sem issue. **Treinos planejados do Garmin Connect** (duda-dados, com o
   Caio): podem alimentar a semana-padrão e o motivo de falta; modelo de dados novo, sem issue.
 - **Feedback: gatilho depois do `PUT` do check-in** (duda-dados): hoje o feedback fica `pendente` até alguém rodar o worker (aceito
@@ -786,7 +802,7 @@ Revisadas ao fim de cada meta com o que se aprendeu. Ordem tirada da "Fundação
 - **Abrir as fontes das ADRs 0008, 0011 e 0012** (caio-ciencia): Borg e Foster na 0012, ainda citadas sem conferir no texto.
 - **#213** (rafa-app, revisão da Lia): acessibilidade e visual da tela de evolução. **#237** (rafa-app, com a Lia): mesma
   aparência para distância e pace na tela de um treino; pode tocar o contrato (ADR 0004). As duas vão com a tela dos esforços,
-  da carga ou da linha de base (fora da Meta 10 proposta).
+  da carga ou da linha de base (fora da Meta 10, decisão do Angelo em 12/11).
 - **#74** (vault do Graphify, `docs/_grafo/`): quando o Theo pedir o grafo de novo.
 - **Calibração da detecção de esforços pelos recordes pessoais** (caio-ciencia): os recordes já estão no banco (#174, Meta 6);
   falta mapear a categoria da fonte para as faixas (`d1000`, `t20`...) e decidir a regra (`esforcos@2`).
@@ -888,34 +904,17 @@ stack Expo). A chave do provedor de LLM foi entregue e está no `.env` (fora do 
      texto livre da observação, nome, data real, posição ou identificador); **nada do pacote, do texto gerado ou do resultado**
      entra no repositório, em issue, PR ou log; só o plano gratuito do Groq, com limite de chamadas por execução. A QA da meta
      (#332) não muda: fixtures sintéticas e provedor falso, mais a rodada pequena com fixtures no provedor de verdade.
-- **Meta 9, fechada em 12/11: dois pontos seguem com o Angelo.**
-  1. **A sessão do celular** (check-in e cartão de feedback, Expo Go, dado sintético) não aconteceu na QA (#332). Proposta: P2 da
-     Meta 10, com data marcada por ele na largada.
-  2. **Antes de gerar o feedback dos treinos reais dele:** ler os termos do provedor sobre o uso dos dados para treinar modelos (item 10
-     de "A confirmar" da ADR 0013). Segue não conferido por nós.
+- **Meta 10: respondida em 12/11 ("ok para as nove").** As nove perguntas da #333 valeram com as recomendações, menos a 6: o Angelo
+  não fará a sessão do celular agora e pediu a simulação no Chrome pelo Theo (#369). Lista completa em "Meta 10", "Decisões do
+  Angelo". Issues #368 a #380; paralela #367, aberta a pedido dele.
 
-- **Meta 10: perguntas (12/11, abertas).** Cada uma com a recomendação do Paulo; um "ok para todas" vale as recomendações.
-  1. **Tema da Meta 10.** (a) sono, VFC e FC de repouso no contexto do treino; (b) caixa do dia do professor; (c) telas da carga, da
-     linha de base e dos esforços. *Recomendação:* (a). Completa o "o que pesou" do feedback (plano, seção 4.6) sem conta, serviço nem
-     atleta novo; (b) pede antes as decisões de login e de dado de outros atletas (pergunta 7); (c) não muda o que o atleta aprende do
-     treino.
-  2. **Guardar a recuperação diária da conta dele no banco local** (dado de saúde novo). *Recomendação:* sim, só três medidas (duração
-     do sono, VFC noturna, FC de repouso), com a regra da Meta 6: só no banco local, nunca em log, comando para apagar; nada no
-     repositório.
-  3. **Fonte.** *Recomendação:* a mesma biblioteca não oficial do `worker.buscar_garmin` (P14 da Meta 9), só no piloto local, aceita
-     como limitação (pode quebrar quando o Garmin mudar); a API oficial segue como caminho de produção (depende do CNPJ).
-  4. **O que vai ao provedor de LLM.** *Recomendação:* só a comparação da noite anterior ao treino com o normal dele (valor, normal e
-     estado, como as outras métricas do pacote), nunca a série diária; os limites da decisão 2 da Meta 9 continuam valendo.
-  5. **Como o feedback fala da recuperação.** *Recomendação:* lado a lado com o resultado, sem causa e sem conselho ("Você dormiu
-     menos que o seu normal." e não "porque dormiu pouco" nem "durma mais"); dizer "provável" ou "possível" fica para o motor de
-     explicação.
-  6. **A sessão do celular.** *Recomendação:* marcar a data no primeiro dia da Meta 10, 20 minutos com a Bia, antes de qualquer código
-     novo; se não der, o item sai do critério de pronto e fica só aqui, para não ficar aberto pela terceira meta.
-  7. **Caixa do professor como Meta 11.** *Recomendação:* sim, e antes de planejá-la levantar com ele login e contas, vínculo
-     professor-atleta e dado de outros atletas (base legal e consentimento); nada disso entra na Meta 10.
-  8. **Pendências #213, #237 e #74.** *Recomendação:* fora da Meta 10; #213 e #237 vão com uma meta de telas, e #74 quando o Theo pedir
-     o grafo.
-  9. **Treinos planejados do Garmin.** *Recomendação:* fora da Meta 10; candidata junto da semana-padrão e do motivo de falta.
+Pendentes com o Angelo (o time segue em volta delas):
+1. **Celular de verdade** (Expo Go, iOS ou Android): pendência conhecida das Metas 8 e 9, **sem data**, por decisão dele em 12/11;
+   fora do critério de pronto da Meta 10.
+2. **Antes de gerar o feedback dos treinos reais dele:** ler os termos do provedor sobre o uso dos dados para treinar modelos (item 10
+   de "A confirmar" da ADR 0013). Segue não conferido por nós.
+3. **"A confirmar" da ADR 0014** (#370), quando a ADR trouxer os padrões.
+4. **Antes de planejar a Meta 11** (caixa do professor): login e contas, vínculo professor-atleta e consentimento dos outros atletas.
 
 Em aberto:
 1. **Próximas metas, sem pressa:** CNPJ e pedido da API da Garmin; pedido da API do TrainingPeaks com a assessoria;
