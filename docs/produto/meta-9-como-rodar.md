@@ -2,7 +2,7 @@
 tipo: guia
 status: em-uso
 dono: nina
-atualizado: 2026-11-11
+atualizado: 2026-11-12
 links: [[produto/meta-8-como-rodar]], [[produto/roadmap]], [[decisoes/0013-feedback-automatico]], [[decisoes/0012-check-in-pos-treino]], [[decisoes/0004-contrato-tela-evolucao]], [[metricas/fatos-treino]], [[metricas/fatos-treino-oraculo]], [[metricas/checagens-feedback]], [[design/telas/feedback]], [[modulos/camada-llm]], [[modulos/banco]], [[modulos/api]], [[modulos/mobile]], [[modulos/worker]], [[modulos/ingestao-garmin]], [[diario/2026-11-11]], [[glossario]]
 ---
 # Meta 9: como rodar o feedback automático por treino
@@ -15,9 +15,11 @@ sintéticos.
 
 **Situação da verificação (#331, Theo, 11/11):** os passos 1 a 9 e o 12 foram rodados de verdade num clone limpo do `main`
 (`87a9049`, depois do #352), com o banco `treino-meta9` (Postgres na 5456, API na 8059). Os números abaixo são os que saíram.
-Banco e API foram derrubados no fim e nada usou a rede. **Não rodado aqui:** o app (passos 10 e 11; ficam para a QA, #332), o
-provedor de verdade (passo 13) e o `worker.buscar_garmin` (passo 14, que entra numa conta real). O passo 13 foi atualizado depois, com o que
-o prompt `@2` (#355), o `.env` da raiz (#354) e a pausa entre chamadas (#357) mudam; essa parte **não foi rodada**: vem das notas de módulo.
+Banco e API foram derrubados no fim e nada usou a rede. **Não rodado aqui:** o app (passos 10 e 11), o
+provedor de verdade (passo 13) e o `worker.buscar_garmin` (passo 14, que entra numa conta real).
+
+**QA da Meta 9 (#332, Bia, 11/11):** o `tests/test_e2e_meta9.py` (PR #362) percorre este roteiro por código, com fixtures sintéticas e sem rede: migrações, as 18 atividades e os oito check-ins, a API em cada estado do `feedback`, o `worker.gerar_feedback` (duas rodadas, texto reprovado, limite do provedor, `--refazer`, também na linha de comando com `LLM_PROVIDER=falso`), editar e apagar o check-in, o OpenAPI e as notas. **Não verificado:** o cartão na tela (web e celular), o celular com o Angelo e a revisão da Lia.
+A Bia também rodou o provedor de verdade em 11/11, só com fixtures sintéticas e `LLM_INTERVALO_S=40`: 4 textos gerados, 0 reprovados nas checagens e 0 recusas por limite. O texto gerado não é colado aqui. O passo 13 vem do prompt `@2` (#355), do `.env` da raiz (#354) e da pausa entre chamadas (#357).
 
 ## Antes de começar
 - As mesmas ferramentas e cuidados do [[produto/meta-8-como-rodar]] ("Antes de começar"): comandos na **raiz** do repositório,
@@ -145,7 +147,7 @@ o prompt `@2` (#355), o `.env` da raiz (#354) e a pausa entre chamadas (#357) mu
     absolutos. A biblioteca não é oficial e pode parar de funcionar quando o Garmin mudar o login ([[modulos/ingestao-garmin]]).
 15. **Testes da meta.** Na raiz, sem a `DATABASE_URL`:
     `uv run pytest -q tests/test_fixtures_meta9.py tests/test_textos_meta9.py services/api/tests/explicacao services/api/tests/llm services/api/tests/servicos/test_feedback_fatos.py services/api/tests/rotas/test_atividade_feedback.py services/worker/tests/test_gerar_feedback.py`.
-    Em `apps/mobile`: `npx jest __tests__/CartaoFeedback.test.tsx`. Esperado no primeiro comando: `528 passed` (rodado em 11/11 no `87a9049`). O do app entra aqui quando a QA (#332) rodar.
+    Em `apps/mobile`: `npx jest __tests__/CartaoFeedback.test.tsx`. Esperado no primeiro comando: `592 passed` (rodado em 12/11 no `17b1c85`). Os testes de ponta a ponta da QA ficam à parte: `uv run pytest -q tests/test_e2e_meta9.py` dá `23 passed` (mesmo commit). O do app (`npx jest`) não foi rodado nesta revisão de docs.
 
 ## Encerrar e limpar
 - `Ctrl+C` na API (e no `expo start` e na API falsa, se subiram); apague a pasta de `FIT_DIR` e a `/caminho/saida`.
@@ -163,7 +165,7 @@ o prompt `@2` (#355), o `.env` da raiz (#354) e a pausa entre chamadas (#357) mu
   `lock_timeout` de 60 s no Postgres para falhar em vez de travar.
 
 ## Fora ou depois (pendências conhecidas)
-- **App em celular** (check-in da Meta 8 e o cartão de feedback): na QA (#332), com o Angelo, numa só sessão. O anúncio do
+- **App em celular** (check-in da Meta 8 e o cartão de feedback): a QA com fixtures (#332) não cobre o cartão em tela nem o celular; fica para uma sessão com o Angelo. O anúncio do
   "Atualizar" ao leitor de tela não foi conferido em leitor de tela de verdade.
 - **Feedback gerado na hora do check-in:** fora da meta; hoje só o comando gera.
 - **Sono, VFC, estado de treino e treinos planejados do Garmin Connect:** candidatos a meta futura ([[produto/roadmap]]).
