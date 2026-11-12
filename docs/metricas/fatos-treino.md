@@ -3,9 +3,9 @@ tipo: metrica
 status: em-uso
 dono: caio
 atualizado: 2026-11-10
-links: [[decisoes/0013-feedback-automatico]], [[decisoes/0012-check-in-pos-treino]], [[metricas/fatos-treino-oraculo]], [[metricas/linha-base]], [[metricas/carga-treino]], [[metricas/carga-pse]], [[metricas/esforcos]], [[modulos/api]], [[produto/roadmap]], [[glossario]]
+links: [[decisoes/0013-feedback-automatico]], [[decisoes/0014-recuperacao-diaria]], [[metricas/recuperacao]], [[decisoes/0012-check-in-pos-treino]], [[metricas/fatos-treino-oraculo]], [[metricas/linha-base]], [[metricas/carga-treino]], [[metricas/carga-pse]], [[metricas/esforcos]], [[modulos/api]], [[produto/roadmap]], [[glossario]]
 ---
-# Pacote de fatos `fatos_treino@1`
+# Pacote de fatos `fatos_treino@2`
 
 ## O que mede
 Não é uma métrica nova: é o **pacote de fatos** que o provedor de LLM recebe sobre um treino (ADR 0013, item 1). Reúne, lado a lado, o que o código **já calcula**
@@ -13,16 +13,26 @@ Não é uma métrica nova: é o **pacote de fatos** que o provedor de LLM recebe
 **Nenhum número é novo, nenhuma conta é feita e nenhuma causa é afirmada**: o calor, por exemplo, aparece como dois fatos separados (a temperatura medida e o atalho "calor").
 
 ## Fórmula
-Nenhuma. Função pura `fatos_treino(atividade, checkin, linha_base, motivos_sem_valor, clima, carga, esforcos, parte_de_transicao=False)` em
+Nenhuma. Função pura `fatos_treino(atividade, checkin, linha_base, motivos_sem_valor, clima, carga, esforcos, parte_de_transicao=False, recuperacao=None)` em
 `services/api/app/explicacao/fatos_treino.py`: sem banco, sem rede, sem IA, sem log. Devolve um dicionário ou `None`.
 
 - **`None`** (sem pacote): atividade **sem check-in** (o feedback só nasce depois dele) ou **não elegível** (`multiesporte_pai` e `troca`, ADR 0012 item 4).
-- **Chaves sempre presentes**, na ordem da ADR: `versao`, `treino`, `linha_base`, `esforcos`, `clima`, `carga`, `carga_pse`, `checkin`. O que falta vem `null`, nunca omitido
+- **Chaves sempre presentes**, na ordem da ADR: `versao`, `treino`, `linha_base`, `esforcos`, `clima`, `recuperacao`, `carga`, `carga_pse`, `checkin`. O que falta vem `null`, nunca omitido
   (`esforcos` e `clima` são `null` na natação; o clima fora de `ok` traz só o estado).
 - **Textos prontos** (`*_texto`) com as funções que a API já usa: `_texto_valor` e `_diferenca` da linha de base, `duracao_pt` e `numero_pt` da carga pela PSE, `distancia_da_atividade`,
   as âncoras da PSE e os textos da sensação. A `carga@2` sai com 1 casa e vírgula ("38,5 pontos").
 - **Atalhos do check-in**: só as chaves marcadas, **em ordem alfabética** (a ordem não depende de quem chama).
 - **`linha_base.metricas[]`**: `sem_valor` traz `motivo` (do `valores_e_motivos`) e nenhum texto; `aprendendo` traz só `valor_texto`; `dentro` traz também a mediana; `fora`, também `diferenca_texto`.
+
+## O que mudou na `@2` (ADR 0014, issue #374)
+- **Bloco `recuperacao`**, depois de `clima`: a noite anterior ao treino comparada com o normal do atleta (`recuperacao@1`, [[metricas/recuperacao]]). Com `estado = ok`:
+  `versao`, `estado`, `motivo` (`null`), `janela_noites` (28), `minimo_noites` (14) e `medidas[]` na ordem `sono`, `vfc`, `fc_repouso` (cada uma com `chave`, `estado`,
+  `valor`, `valor_texto`, `normal_texto`, `diferenca_texto`, `n`). Com `sem_dado`: só `versao`, `estado` e `motivo` (`sem_noite`, `treino_de_madrugada`, `fora_do_periodo`). `null`
+  quando quem chama não passa a recuperação. Textos: sono "5 h 45 min", VFC "41 ms", FC de repouso "58 bpm", **arredondados** (minuto, ms, bpm) antes de comparar; a diferença
+  ("1 h 30 min abaixo", "6 bpm acima") é a conta entre os valores arredondados, então fecha à mão. Nunca entram a série diária, a data da noite, MAD, `z` nem a mediana numérica.
+- **`checkin.pse_texto` é `null`** quando a PSE não tem âncora (6, 8 e 9). Só no pacote; a rota do check-in não muda.
+- Os feedbacks gerados com a `@1` ficam desatualizados e são refeitos (ADR 0014, item 4). A coluna `recuperacao_importada_em` e a comparação com a noite de hoje são da #372 e do
+  adaptador do banco.
 
 ## Dados de entrada
 Os do `GET` da atividade, já calculados: a atividade (lê só `modalidade`, `subtipo`, `tipo_treino`, `duracao_s`, `distancia_m`, `fc_media`), o check-in (lê só `pse`, `sensacao`, `nada_a_relatar` e os atalhos),
@@ -35,7 +45,7 @@ o resultado da `linha_base@2`, o clima (`ClimaFatos`), a `carga@2` (`CargaFatos`
 Regra própria do projeto, sem artigo (ADR 0013, "Fontes"). As fontes das métricas de dentro estão nas suas notas: [[metricas/linha-base]], [[metricas/carga-pse]], [[metricas/carga-treino]], [[metricas/esforcos]].
 
 ## Código e teste
-- Código: `services/api/app/explicacao/fatos_treino.py` (`VERSAO = "fatos_treino@1"`; sobe quando mudar um campo, uma unidade, um estado, a lista de métricas ou o que fica de fora).
+- Código: `services/api/app/explicacao/fatos_treino.py` (`VERSAO = "fatos_treino@2"`; sobe quando mudar um campo, uma unidade, um estado, a lista de métricas ou o que fica de fora).
 - Teste: `services/api/tests/explicacao/test_fatos_treino.py`. Valor esperado calculado à mão no oráculo da #323 ([[metricas/fatos-treino-oraculo]], `tests/fixtures/meta9/oraculo.py`):
   o pacote é **igual ao oráculo** nos 8 casos com pacote (F01 a F06, F09 e F10); F07 (sem check-in) e F08 (pai do multiesporte) dão `None`.
   Confere também: o texto livre não entra (nem com um `CheckinTreino` de verdade); nenhum identificador, data ou posição de uma `Atividade` de verdade entra; nenhuma chave nem texto de causa;

@@ -1,4 +1,4 @@
-"""Oráculo do pacote de fatos `fatos_treino@1` (issue #323, ADR 0013), escrito à mão, com dados 100% sintéticos.
+"""Oráculo do pacote de fatos `fatos_treino@2` (issue #323, ADR 0013; `@2` na #374, ADR 0014), escrito à mão, com dados 100% sintéticos.
 
 Cada caso tem uma ENTRADA (o que o código já calcula: atividade, histórico por métrica, clima, carga, check-in) e o PACOTE esperado.
 Nenhum número vem de IA nem de dado real, e nenhum check-in é real. O texto livre do check-in só existe na ENTRADA (com um marcador
@@ -18,7 +18,7 @@ NOMES_PROIBIDOS_NO_PACOTE = ("atleta", "atividade_id", "id", "nome", "inicio", "
 
 # Chaves de cada bloco do pacote, na ordem do ADR 0013 (item 1). Ausente = None, nunca omitida.
 CHAVES = {
-    "pacote": ("versao", "treino", "linha_base", "esforcos", "clima", "carga", "carga_pse", "checkin"),
+    "pacote": ("versao", "treino", "linha_base", "esforcos", "clima", "recuperacao", "carga", "carga_pse", "checkin"),
     "treino": ("modalidade", "tipo_treino", "parte_de_transicao", "ambiente", "duracao_s", "duracao_texto", "distancia_m", "distancia_texto", "fc_media_bpm"),
     "linha_base": ("versao", "estado", "motivo", "janela_semanas", "minimo_treinos", "metricas"),
     "metrica": ("chave", "estado", "valor_texto", "mediana_texto", "diferenca_texto", "n", "motivo"),
@@ -178,7 +178,7 @@ LINHA_BASE_ESPERADA = {
     ("F09", "carga_hora"): ("dentro", 9, 40.5, 1.631, -0.307),
 }
 
-_V = "fatos_treino@1"
+_V = "fatos_treino@2"
 
 # --- PACOTES ESPERADOS ------------------------------------------------------------------------------------------------------
 PACOTES = {
@@ -196,14 +196,14 @@ PACOTES = {
                                _m("fc_media", "dentro", "158 bpm", "157 bpm", 10),
                                _m("carga_hora", "dentro", "70,7 pontos/h", "70,0 pontos/h", 10)]),
             "esforcos": _esf([("1 km", 5)]), "clima": _clima(22, 23, 55, 12), "carga": _carga(61.3, "61,3 pontos", "rtss"),
-            "carga_pse": _pse(416), "checkin": _ck(8, "8", 3, "normal", True)},
+            "carga_pse": _pse(416), "checkin": _ck(8, None, 3, "normal", True)},
     "F03": {"versao": _V,
             "treino": _treino("corrida", "moderado", 2400, "40 min", 7000, "7,00 km", 152),
             "linha_base": _lb([_m("pace_medio", "aprendendo", "5:43/km", None, 3),
                                _m("fc_media", "aprendendo", "152 bpm", None, 3),
                                _m("carga_hora", "aprendendo", "52,2 pontos/h", None, 3)]),
             "esforcos": _esf(), "clima": _clima(24, 25, 60, 7), "carga": _carga(34.8, "34,8 pontos", "hrtss"),
-            "carga_pse": _pse(240), "checkin": _ck(6, "6", 4, "bem", False, ["sono_ruim"])},
+            "carga_pse": _pse(240), "checkin": _ck(6, None, 4, "bem", False, ["sono_ruim"])},
     "F04": {"versao": _V,
             "treino": _treino("corrida", "longo", 5400, "90 min", 15000, "15,00 km", 158),
             "linha_base": _lb([_m("pace_medio", "fora", "6:00/km", "5:42/km", 9, diferenca_texto="18 s/km mais lento"),
@@ -238,3 +238,17 @@ PACOTES = {
             "esforcos": _esf(), "clima": _clima_sem("pendente"), "carga": CARGA_PENDENTE,
             "carga_pse": _pse(0), "checkin": _ck(0, "repouso", 5, "muito bem", True)},
 }
+
+
+def _com_recuperacao(pacote):
+    """`fatos_treino@2` (ADR 0014): o bloco `recuperacao` vem depois de `clima`. Estes casos da Meta 9 não passam a recuperação
+    (`None`); os casos com recuperação estão em `tests/fixtures/meta10/oraculo_fatos_recuperacao.py`."""
+    saida = {}
+    for chave, valor in pacote.items():
+        saida[chave] = valor
+        if chave == "clima":
+            saida["recuperacao"] = None
+    return saida
+
+
+PACOTES = {i: (None if p is None else _com_recuperacao(p)) for i, p in PACOTES.items()}

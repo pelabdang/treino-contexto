@@ -5,7 +5,7 @@ dono: caio
 atualizado: 2026-11-10
 links: [[decisoes/0013-feedback-automatico]], [[decisoes/0012-check-in-pos-treino]], [[metricas/linha-base]], [[metricas/carga-pse]], [[metricas/carga-pse-oraculo]], [[produto/roadmap]], [[glossario]]
 ---
-# Pacote de fatos `fatos_treino@1`: fixtures e oráculo
+# Pacote de fatos `fatos_treino@2`: fixtures e oráculo
 
 ## O que é
 O pacote de fatos esperado (ADR 0013, item 1) para **10 treinos sintéticos**, escrito **à mão**, e a conferência de que ele é coerente com o que o código **já calcula**.
@@ -51,3 +51,8 @@ Arquivos: `tests/fixtures/meta9/textos.py` (a lista) e `tests/test_textos_meta9.
 - **84 textos ruins** (R01 a R84; R83 e R84 são de `checagens_feedback@3`, #367: "esforço 6 (6)" e "esforço 8 (8)"; R40 a R72 vieram da revisão da Nina em 11/11, um por termo ou família nova; R73 a R82 são da forma pedida pelo Angelo em 11/11, `checagens_feedback@2`: linha sem verbo, "pois", "dentro da mediana" e conclusão repetida). Cada um é um bom com **uma** troca e tem **um** motivo esperado, de um conjunto fechado (`MOTIVOS`, 20 códigos): `numero_fora_do_pacote` (inclui data real e conta nova), `numero_por_extenso`, `unidade_trocada`, `linguagem_diagnostico`, `linguagem_culpa`, `linguagem_promessa`, `linguagem_causa`, `linguagem_conselho` (inclui conselho sobre dor), `linguagem_quem_fala`, `elogio_sem_fato`, `forma_linhas`, `forma_tamanho_linha`, `forma_markdown`, `forma_sem_verbo`, `conclusao_repetida`, `comparacao_mediana`, `dor_regra`, `dor_nao_marcada`, `atalho_nao_marcado` e `nome_fora_do_pacote` (lugar e texto livre).
 - O teste confere: os 6 primeiros bons são os da ADR; os bons têm 3 a 5 linhas de até 140 caracteres; todo ruim tem motivo do conjunto e uma explicação; todos os códigos têm ao menos um ruim; nenhum texto leva e-mail, link nem data (a data só no R04, que a reprova de propósito), e o marcador do texto livre só aparece no R39.
 - Tudo sintético: nenhum texto é feedback real, e o lugar do R38 é inventado.
+
+## Adendo `fatos_treino@2` (issue #374, ADR 0014)
+Os pacotes de F01 a F10 ganham `recuperacao: null` (depois de `clima`) e `pse_texto: null` nos casos de PSE sem âncora (F02 e F03); a versão passa a `fatos_treino@2`.
+O bloco `recuperacao` tem oráculo próprio, à mão, em `tests/fixtures/meta10/oraculo_fatos_recuperacao.py` (casos R01 a R06: as três medidas, `aprendendo`, arredondamento e hora
+cheia, `sem_noite`, `treino_de_madrugada` e `fora_do_periodo`), testado em `services/api/tests/explicacao/test_fatos_treino_recuperacao.py`.

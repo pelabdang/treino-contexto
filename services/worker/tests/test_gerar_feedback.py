@@ -24,7 +24,7 @@ from worker.importar_garmin import importar
 
 MARCADOR = "MARCADOR-SINTETICO-123"
 AGORA = datetime(2026, 11, 10, 12, 0, tzinfo=timezone.utc)
-V = Versoes(fatos="fatos_treino@1", prompt="feedback_prompt@1", checagens="checagens_feedback@1")
+V = Versoes(fatos="fatos_treino@2", prompt="feedback_prompt@1", checagens="checagens_feedback@1")
 ZIP = Path(__file__).resolve().parents[3] / "tests" / "fixtures" / "garmin" / "exportacao_minima.zip"
 
 
@@ -279,10 +279,10 @@ def test_versao_de_fatos_nova_deixa_desatualizado(fabrica):
 
     at = _atleta(fabrica, 1)
     _gerar(fabrica, at, _redator()[0])
-    nova = Versoes(fatos="fatos_treino@2", prompt=V.prompt, checagens=V.checagens)
+    nova = Versoes(fatos="fatos_treino@3", prompt=V.prompt, checagens=V.checagens)
     with fabrica() as s:
         rel = gerar(s, at, _redator()[0], Pacotes(), _aprova, nova, prompt_feedback.TEXTO)
-    assert rel.gerados == 1 and _linhas(fabrica)[0].versao_fatos == "fatos_treino@2"
+    assert rel.gerados == 1 and _linhas(fabrica)[0].versao_fatos == "fatos_treino@3"
 
 
 def test_refazer_refaz_o_que_esta_pronto_dentro_do_limite(fabrica):
@@ -438,7 +438,7 @@ def test_ponta_a_ponta_com_o_oraculo_no_banco_e_as_checagens_reais(fabrica, caps
     assert "gerados=1 sem_feedback=0" in capsys.readouterr().out
     (fb,) = _linhas(fabrica)
     assert (fb.estado, fb.texto, fb.versao_fatos, fb.versao_checagens) == (
-        "pronto", _texto_g01(), "fatos_treino@1", "checagens_feedback@3")
+        "pronto", _texto_g01(), "fatos_treino@2", "checagens_feedback@3")
 
     ruim = ProvedorFalso(modo="ruim")  # numero fora do pacote, causa, conselho...: reprova e nao grava o texto ruim
     assert gerar_feedback.main(["--atleta", "Atleta Ficticio", "--refazer"], redator=Redator(ruim, "falso", "falso"),

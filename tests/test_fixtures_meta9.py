@@ -1,4 +1,4 @@
-"""Oráculo do pacote de fatos `fatos_treino@1` (issue #323, ADR 0013): confere o oráculo escrito à mão.
+"""Oráculo do pacote de fatos `fatos_treino@2` (issue #323, ADR 0013): confere o oráculo escrito à mão.
 
 NÃO roda a função pura do pacote (#324, ainda não existe): confere que o oráculo é coerente com o que o código **já calcula**
 (`linha_base@2`, `carga_pse@1`, formatos de texto da API) e que nenhum caso carrega dado pessoal que não deve ir ao provedor
@@ -68,7 +68,7 @@ def test_estrutura_do_pacote(i):
     _chaves_ok("carga", p["carga"])
     _chaves_ok("carga_pse", p["carga_pse"])
     _chaves_ok("checkin", p["checkin"])
-    assert p["versao"] == "fatos_treino@1"
+    assert p["versao"] == "fatos_treino@2"
     assert p["linha_base"]["versao"] == lb.VERSAO and p["carga_pse"]["versao"] == cp.VERSAO
 
 
@@ -191,7 +191,7 @@ def test_treino_carga_e_checkin_do_pacote(i):
     c = p["checkin"]
     assert (c["pse"], c["sensacao_nivel"], c["nada_a_relatar"], c["atalhos"]) == (
         ck["pse"], ck["sensacao"], ck["nada_a_relatar"], ck["atalhos"])
-    assert c["pse_texto"] == svc_checkin.PSE_ANCORA.get(ck["pse"], str(ck["pse"]))
+    assert c["pse_texto"] == svc_checkin.PSE_ANCORA.get(ck["pse"])  # sem âncora: null (ADR 0014)
     assert c["sensacao_texto"] == svc_checkin.SENSACAO_TEXTO[ck["sensacao"]]
     # carga@2 (calculada): o texto é o valor com 1 casa e vírgula
     if p["carga"]["estado"] == "calculada":
