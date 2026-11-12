@@ -3,19 +3,19 @@
   "dailySleepDTO": {
     "id": 1000000000001,
     "calendarDate": "2026-03-12",
-    "sleepTimeSeconds": 20400,
+    "sleepTimeSeconds": 21600,
     "napTimeSeconds": 0,
     "sleepWindowConfirmed": true,
     "sleepWindowConfirmationType": "enhanced_confirmed_final",
-    "sleepStartTimestampGMT": 1773283200000,
-    "sleepEndTimestampGMT": 1773304800000,
-    "sleepStartTimestampLocal": 1773272400000,
-    "sleepEndTimestampLocal": 1773294000000,
+    "sleepStartTimestampGMT": 1773271200000,
+    "sleepEndTimestampGMT": 1773295500000,
+    "sleepStartTimestampLocal": 1773260400000,
+    "sleepEndTimestampLocal": 1773284700000,
     "unmeasurableSleepSeconds": 0,
-    "deepSleepSeconds": 3600,
-    "lightSleepSeconds": 13200,
-    "remSleepSeconds": 3600,
-    "awakeSleepSeconds": 1200,
+    "deepSleepSeconds": 5700,
+    "lightSleepSeconds": 11400,
+    "remSleepSeconds": 4500,
+    "awakeSleepSeconds": 2700,
     "awakeCount": 2,
     "sleepScoreFeedback": "TEXTO_SINTETICO",
     "sleepScores": {
@@ -27,12 +27,12 @@
   },
   "sleepHeartRate": [
     {
-      "value": 50,
-      "startGMT": 1773196800000
+      "value": 58,
+      "startGMT": 1773184800000
     }
   ],
   "bodyBatteryChange": 40,
-  "restingHeartRate": 49,
+  "restingHeartRate": 54,
   "avgOvernightHrv": null,
   "hrvData": null,
   "hrvStatus": null

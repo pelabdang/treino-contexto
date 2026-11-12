@@ -5,12 +5,12 @@
     {
       "calendarDate": "2026-03-10",
       "weeklyAvg": null,
-      "lastNightAvg": 61,
-      "lastNight5MinHigh": 90,
+      "lastNightAvg": 128,
+      "lastNight5MinHigh": 168,
       "baseline": {
-        "lowUpper": 45,
-        "balancedLow": 50,
-        "balancedUpper": 70,
+        "lowUpper": 104,
+        "balancedLow": 111,
+        "balancedUpper": 139,
         "markerValue": null
       },
       "status": "BALANCED",
@@ -20,12 +20,12 @@
     {
       "calendarDate": "2026-03-11",
       "weeklyAvg": null,
-      "lastNightAvg": 55,
-      "lastNight5MinHigh": 80,
+      "lastNightAvg": 121,
+      "lastNight5MinHigh": 160,
       "baseline": {
-        "lowUpper": 45,
-        "balancedLow": 50,
-        "balancedUpper": 70,
+        "lowUpper": 104,
+        "balancedLow": 111,
+        "balancedUpper": 139,
         "markerValue": null
       },
       "status": "BALANCED",
@@ -35,16 +35,16 @@
     {
       "calendarDate": "2026-03-12",
       "weeklyAvg": null,
-      "lastNightAvg": 40,
-      "lastNight5MinHigh": 60,
+      "lastNightAvg": 136,
+      "lastNight5MinHigh": 176,
       "baseline": {
-        "lowUpper": 45,
-        "balancedLow": 50,
-        "balancedUpper": 70,
+        "lowUpper": 104,
+        "balancedLow": 111,
+        "balancedUpper": 139,
         "markerValue": null
       },
-      "status": "LOW",
-      "feedbackPhrase": "HRV_LOW_1",
+      "status": "BALANCED",
+      "feedbackPhrase": "HRV_BALANCED_3",
       "createTimeStamp": "2026-03-12T10:00:00.0"
     }
   ]
