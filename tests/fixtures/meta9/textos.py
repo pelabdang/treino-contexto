@@ -27,6 +27,7 @@ MOTIVOS = (
     "forma_sem_verbo",  # linha que é só uma lista de valores, sem verbo conjugado (#355)
     "conclusao_repetida",  # a mesma conclusão ("dentro do seu normal") em duas linhas (#355)
     "comparacao_mediana",  # "dentro da mediana de X": o certo é "perto da mediana" ou "dentro do seu normal" (#355)
+    "numero_repetido",  # o mesmo número repetido entre parênteses: "esforço 6 (6)" (#367)
     "dor_regra",  # com o atalho dor: falta a frase exata, ou há outra menção a dor ou a parte do corpo
     "dor_nao_marcada",  # fala em dor sem o atalho
     "atalho_nao_marcado",  # cita um atalho (calor, cansaço, sono ruim, trabalho ou estresse) que o atleta não marcou
@@ -225,4 +226,7 @@ RUINS: dict[str, tuple[str, str, str, str]] = {
     "R80": _ruim("G01", "Foram 47 min a 19 °C, com carga pela PSE de 188 UA.", "Tudo ficou dentro do seu normal.", "conclusao_repetida", "'dentro do seu normal' na linha 2 e de novo na última"),
     "R81": _ruim("G01", "Foram 47 min a 19 °C, com carga pela PSE de 188 UA.", "A FC média ficou perto da mediana de 148 bpm.", "conclusao_repetida", "'perto da mediana' na linha 1 e de novo na última"),
     "R82": _ruim("G06", "A natação não tem carga do relógio; a carga pela PSE foi 200 UA.", "Foi sem comparação com o seu histórico.", "conclusao_repetida", "'sem comparação' dita em duas linhas"),
+    # --- checagens_feedback@3 (#367): o número da PSE sem âncora repetido entre parênteses ---
+    "R83": _ruim("G03", "esforço 6,", "esforço 6 (6),", "numero_repetido", "PSE 6 não tem rótulo: 'esforço 6 (6)'"),
+    "R84": _ruim("G02", "esforço 8 e", "esforço 8 (8) e", "numero_repetido", "PSE 8 não tem rótulo: 'esforço 8 (8)'"),
 }

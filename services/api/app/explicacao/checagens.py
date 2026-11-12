@@ -1,4 +1,4 @@
-"""Checagens do texto do feedback (issue #325, ADR 0013, item 4): `checagens_feedback@2`.
+"""Checagens do texto do feedback (issue #325, ADR 0013, item 4): `checagens_feedback@3`.
 
 Função pura: sem banco, sem rede, sem IA, sem log. Confere um texto contra o pacote de fatos (`fatos_treino@1`) e devolve se foi aprovado e, se não,
 os **códigos** dos motivos. Texto reprovado é descartado pelo chamador (nunca gravado nem mostrado) e a nova tentativa fica para a próxima execução
@@ -18,7 +18,7 @@ from collections.abc import Iterator, Mapping
 from dataclasses import dataclass
 from typing import Any
 
-VERSAO = "checagens_feedback@2"
+VERSAO = "checagens_feedback@3"
 
 LINHAS_MIN, LINHAS_MAX = 3, 5  # ADR 0013, item 4.3
 LINHA_MAX_CARACTERES = 140
@@ -30,7 +30,7 @@ FRASE_DOR = "Você registrou dor neste treino."  # decisão 7: sempre esta, sem 
 MOTIVOS = (
     "numero_fora_do_pacote", "numero_por_extenso", "unidade_trocada",
     "linguagem_diagnostico", "linguagem_culpa", "linguagem_promessa", "linguagem_causa", "linguagem_conselho", "linguagem_quem_fala",
-    "elogio_sem_fato", "forma_linhas", "forma_tamanho_linha", "forma_markdown", "forma_sem_verbo", "conclusao_repetida", "comparacao_mediana",
+    "elogio_sem_fato", "forma_linhas", "forma_tamanho_linha", "forma_markdown", "forma_sem_verbo", "conclusao_repetida", "comparacao_mediana", "numero_repetido",
     "dor_regra", "dor_nao_marcada", "atalho_nao_marcado", "nome_fora_do_pacote",
 )
 
@@ -221,6 +221,9 @@ def _elogio_sustentado(pacote: Mapping[str, Any]) -> bool:
     com_dor = "dor" in ((pacote.get("checkin") or {}).get("atalhos") or [])
     return lb.get("estado") == "ok" and "dentro" in estados and "fora" not in estados and not com_dor
 
+# checagens_feedback@3 (#367): o mesmo numero repetido entre parenteses ("esforco 6 (6)"). A PSE 6, 8 e 9 nao tem ancora (ADR 0012, item 2).
+_NUMERO_REPETIDO = re.compile(r"(?<![\d,.:])(\d+(?:[.,]\d+)?)\s*\(\s*\1\s*\)(?![\d])")
+
 
 def _nome_proprio(texto: str) -> bool:
     """Palavra com inicial maiúscula fora do começo de frase, ou em maiúsculas em qualquer lugar, que não seja sigla do pacote (FC, PSE, UA, °C)."""
@@ -259,6 +262,8 @@ def _forma(texto: str, linhas: list[str]) -> set[str]:
         motivos.add("conclusao_repetida")
     if _DENTRO_DA_MEDIANA.search(_plano(texto)):
         motivos.add("comparacao_mediana")
+    if _NUMERO_REPETIDO.search(texto):
+        motivos.add("numero_repetido")
     return motivos
 
 

@@ -188,7 +188,16 @@ class Redator:
             return self._res(motivo=MOTIVO_ERRO)
         if not isinstance(texto, str) or not texto.strip():
             return self._res(motivo=MOTIVO_ERRO)
-        return self._res(texto=texto.strip())
+        return self._res(texto=limpar_texto(texto))
+
+
+def limpar_texto(texto: str) -> str:
+    """Tira os espacos do fim de cada linha e os do comeco e do fim do texto (#367).
+
+    Feito na camada, e nao no worker, porque o resquicio e do provedor: toda saida de `redigir` ja sai limpa, e o texto que as
+    checagens leem e o que o worker grava e o MESMO. Nao muda nenhuma regra das checagens.
+    """
+    return "\n".join(linha.rstrip() for linha in texto.strip().splitlines())
 
 
 def criar_redator(config: Settings | None = None) -> Redator:

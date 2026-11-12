@@ -3,9 +3,9 @@ tipo: metrica
 status: em-uso
 dono: caio
 atualizado: 2026-11-12
-links: [[decisoes/0013-feedback-automatico]], [[metricas/fatos-treino]], [[metricas/fatos-treino-oraculo]], [[produto/roadmap]], [[glossario]]
+links: [[decisoes/0013-feedback-automatico]], [[modulos/camada-llm]], [[metricas/fatos-treino]], [[metricas/fatos-treino-oraculo]], [[produto/roadmap]], [[glossario]]
 ---
-# Checagens do texto do feedback (`checagens_feedback@2`) e lista de linguagem proibida
+# Checagens do texto do feedback (`checagens_feedback@3`) e lista de linguagem proibida
 
 ## O que mede
 Se um texto escrito pela camada de LLM pode chegar ao atleta (ADR 0013, item 4). Não é uma métrica de treino: é a **guarda em código** entre o texto e o app. Função pura
@@ -23,6 +23,14 @@ Todos os 13 textos bons continuam passando e os 72 ruins anteriores continuam co
 
 **O que muda para quem lê a versão.** `VERSAO` sobe para `checagens_feedback@2`; o worker grava `versao_checagens` com ela (lida do módulo, não escrita à mão) e o teste de ponta a ponta do worker passou a esperar `@2`. **Feedback já `pronto` não é refeito sozinho** (só a edição do check-in e `versao_fatos` desatualizam; ADR 0013, item 2): os textos gravados com `@1` ficam como estão, com `versao_checagens = checagens_feedback@1` na linha, e só um `worker.gerar_feedback --refazer` os confere de novo pelas regras novas. Texto `sem_feedback` é tentado de novo na próxima execução, já com as regras novas. Nenhuma coluna, migração, motivo de `feedback_treino` ou código da API muda: o `motivo` guardado continua `texto_reprovado`; os códigos novos só aparecem em `checar_texto` (e `checar` devolve o primeiro da lista).
 
+## Versão `@3` (12/11, #367): "N (N)"
+Na rodada com o provedor de verdade da QA da Meta 9 (só fixtures sintéticas), um texto passou nas `@2` com **"esforço 6 (6)"**: a PSE sem rótulo com o número repetido entre parênteses (com rótulo sai certo: "esforço 5 (difícil)").
+- **Origem:** o pacote `fatos_treino@1` manda `checkin.pse_texto` igual ao número, como texto, quando a PSE não tem âncora (6, 8 e 9; ADR 0012, item 2): `{"pse": 6, "pse_texto": "6"}` (`_checkin` em `app/explicacao/fatos_treino.py`, `PSE_ANCORA.get(c.pse, str(c.pse))`). O modelo copia o padrão "esforço N (pse_texto)" dos exemplos com rótulo. Os exemplos 2 e 3 do prompt já mostram "esforço 8" e "esforço 6", mas o prompt `@2` não dizia a regra.
+- **Correção (sem mudar o pacote):** `feedback_prompt@3` ganha a regra "se `pse_texto` é só o número, escreva apenas 'esforço 6'", e as checagens ganham a regra **`numero_repetido`**: o mesmo número repetido entre parênteses ("6 (6)", "4 (4)", com espaços dentro dos parênteses também) reprova. A regra é de forma e fica na posição da tabela depois de `comparacao_mediana`. Número diferente ("6 (7)") e número que é pedaço de outro ("16 (6)", "6 (66)") passam por esta regra.
+- **Proposta ao Theo, não implementada:** enviar `pse_texto: null` quando a PSE não tem âncora (pacote `fatos_treino@2`) tiraria a ambiguidade na raiz. Muda o pacote, então fica para decisão dele; com a checagem em código, o texto "N (N)" já não chega ao app.
+- **Espaços no fim da linha (não é regra de checagem):** o provedor devolveu dois espaços no fim de cada linha. A camada (`limpar_texto` em `app/llm/camada.py`, chamada por `Redator.redigir`) tira os espaços do fim de cada linha antes de o texto chegar às checagens e ao worker; o que se checa é o que se grava. Nenhuma regra das checagens mudou por isso.
+- **Versões:** `checagens_feedback@3` e `feedback_prompt@3`; `fatos_treino@1` não mudou. Feedback já `pronto` não é refeito sozinho (como na `@2`): só `worker.gerar_feedback --refazer`. Mais 2 textos ruins (R83 e R84) e 1 motivo novo na lista. A issue #375 (Meta 10), que prevê prompt e checagens novos, parte desta versão `@3`.
+
 ## Regras
 Todas rodam sempre; o resultado reúne os códigos de todas as que reprovam, na ordem da tabela.
 
@@ -37,6 +45,7 @@ Todas rodam sempre; o resultado reúne os códigos de todas as que reprovam, na 
 | `forma_tamanho_linha` | linha com mais de 140 caracteres, ou texto com mais de 700 |
 | `forma_markdown` | `*`, crase, `__`, título (`#`), citação (`>`), item de lista (`-`, `•`, `1.`) |
 | `forma_sem_verbo` | linha sem verbo conjugado. Aceitam-se: um verbo da lista fechada `VERBOS` (é, são, foi, foram, está, tem, teve, houve, fica(ou), marcou, registrou, aparece(m), soma, durou, fez...) ou uma terminação de pretérito (`-ou`, `-eu`, `-iu`, `-aram`, `-eram`, `-iram`, com 3 letras ou mais antes: "percorreu", "nadou"); e três formas curtas dos exemplos aprovados: a linha que **começa com "Sem"** ("Sem comparação com o seu histórico por enquanto."), a que traz o gerúndio **"aprendendo"** (G03) e a **abertura descritiva** do exemplo 6 (começa com natação, ciclismo, corrida ou "treino ...", e traz "com FC média de N bpm"). Uma lista de valores sem isso reprova |
+| `numero_repetido` | o mesmo número repetido entre parênteses, como "esforço 6 (6)" (PSE sem rótulo; `@3`, #367) |
 | `conclusao_repetida` | a mesma expressão de conclusão em **duas linhas diferentes**: "dentro do seu normal", "fora do seu normal", "dentro do normal", "perto da mediana", "sem comparação com o seu histórico". Expressões diferentes em linhas diferentes passam (G01: "perto da mediana" na linha 1 e "dentro do seu normal" na 2) |
 | `comparacao_mediana` | "dentro da mediana", "dentro de mediana", "dentro da sua mediana" |
 | `dor_regra` | com o atalho dor: falta a frase exata "Você registrou dor neste treino.", há outra menção a dor, ou uma parte do corpo |
@@ -57,7 +66,7 @@ aparece nos textos bons ("nos 11 treinos"). Antes das listas, tiram-se do texto 
 Os testes do worker injetam a própria `checar`; só o teste de `services/api/tests/llm/test_camada.py` (`test_texto_do_provedor_falso_nas_checagens_reais`) roda a `checar_texto` real contra o texto fixo do provedor falso. Mudou a forma, os verbos ou a lista? Confira esse texto e o teste. Ver [[modulos/camada-llm]] e [[modulos/worker]].
 
 ## Lista de linguagem proibida (`checagens_feedback@1`)
-Ponto de partida: a lista da ADR 0013 (item 4.2), ampliada. Mudar qualquer lista abaixo, ou um limite, **sobe a versão** (`checagens_feedback@2`).
+Ponto de partida: a lista da ADR 0013 (item 4.2), ampliada. Mudar qualquer lista abaixo, ou um limite, **sobe a versão** (hoje `checagens_feedback@3`).
 - **Diagnóstico (`linguagem_diagnostico`):** lesão, lesões, lesionado(a), inflamação, tendinite, fratura, distensão, overtraining, sobretreino, supertreino, doença, infecção, sintoma(s), diagnóstico, síndrome, arritmia, desidratação, desidratado, fadiga, esgotamento, exaustão, risco.
 - **Culpa e juízo (`linguagem_culpa`):** falhou, fracasso, fracassou, preguiça, desleixo, culpa, fraco(a), decepcionante, "você deveria", "você devia", péssimo, horrível, "treino ruim", "mau treino", ruim, mau, preocupante, alerta, problema, pior, erro, **mal** (só passa como rótulo da sensação do pacote; ver "Rótulos do check-in").
 - **Promessa (`linguagem_promessa`):** "vai melhorar", "com certeza", certamente, garanto, prometo, garantido, "você vai conseguir", "na próxima será", "em breve você".
@@ -73,8 +82,8 @@ Ponto de partida: a lista da ADR 0013 (item 4.2), ampliada. Mudar qualquer lista
 Regra própria do projeto, sem artigo (ADR 0013, "Fontes"). Decisões do Angelo de 10/11: tom aprovado como está, observação positiva só quando um fato a sustenta, clima e check-in lado a lado, dor em uma frase neutra.
 
 ## Código e teste
-- Código: `services/api/app/explicacao/checagens.py` (`VERSAO = "checagens_feedback@2"`; as listas são constantes nomeadas no topo).
-- Teste: `services/api/tests/explicacao/test_checagens.py`. **Os 13 textos bons passam e os 82 ruins reprovam com o motivo certo** (listas da #323, [[metricas/fatos-treino-oraculo]], escritas à mão contra os pacotes do oráculo;
+- Código: `services/api/app/explicacao/checagens.py` (`VERSAO = "checagens_feedback@3"`; as listas são constantes nomeadas no topo).
+- Teste: `services/api/tests/explicacao/test_checagens.py`. **Os 13 textos bons passam e os 84 ruins reprovam com o motivo certo** (listas da #323, [[metricas/fatos-treino-oraculo]], escritas à mão contra os pacotes do oráculo;
   cada ruim tem exatamente um motivo). Mais casos pequenos de cada regra: unidade, número por extenso, acento e maiúscula, palavra inteira, "nós" e "nos", "sono ruim", rótulos da sensação, rótulos da sensação do pacote e de fora dele, "quente" e "frio", um ruim por termo novo da revisão da Nina, elogio com e sem fato, limites de linhas e de
   caracteres, Markdown, dor marcada e não marcada, atalhos, nome próprio e siglas, ordem dos motivos, pureza do módulo.
 

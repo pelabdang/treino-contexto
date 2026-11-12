@@ -2,16 +2,16 @@
 tipo: modulo
 status: em-uso
 dono: duda
-atualizado: 2026-11-11
-links: [[decisoes/0013-feedback-automatico]], [[modulos/api]], [[modulos/worker]], [[produto/roadmap]]
+atualizado: 2026-11-12
+links: [[decisoes/0013-feedback-automatico]], [[metricas/checagens-feedback]], [[modulos/api]], [[modulos/worker]], [[produto/roadmap]]
 ---
 # Módulo: camada de LLM
 
 ## Para que serve
-A única porta do produto para um modelo de linguagem (regra do `AGENTS.md`: IA sempre por uma camada trocável, nunca provedor direto no código). Meta 9, issue #326; quem usa é o `worker.gerar_feedback` (#327, [[modulos/worker]]; o prompt fixo `feedback_prompt@1` está em `app/llm/prompt_feedback.py`). Código em `services/api/app/llm/camada.py`. A [[decisoes/0013-feedback-automatico]] (`aceita` em 10/11) decide o uso; esta nota descreve o que o módulo faz.
+A única porta do produto para um modelo de linguagem (regra do `AGENTS.md`: IA sempre por uma camada trocável, nunca provedor direto no código). Meta 9, issue #326; quem usa é o `worker.gerar_feedback` (#327, [[modulos/worker]]; o prompt fixo `feedback_prompt@3` está em `app/llm/prompt_feedback.py`). Código em `services/api/app/llm/camada.py`. A [[decisoes/0013-feedback-automatico]] (`aceita` em 10/11) decide o uso; esta nota descreve o que o módulo faz.
 
 ## Entradas e saídas
-- `criar_redator()` monta o `Redator` do `.env`; `Redator.redigir(sistema, pacote)` recebe o prompt fixo e o pacote (dicionário, vira JSON) e **nunca levanta**: devolve `ResultadoLLM(texto, motivo, provedor, modelo)`. Ou há `texto`, ou há um `motivo`:
+- `criar_redator()` monta o `Redator` do `.env`; `Redator.redigir(sistema, pacote)` recebe o prompt fixo e o pacote (dicionário, vira JSON) e **nunca levanta**; o texto que volta já vem limpo (`limpar_texto`: sem espaços no fim de cada linha nem nas pontas, #367, porque o provedor de verdade devolveu dois espaços no fim de cada linha e o texto era gravado assim): devolve `ResultadoLLM(texto, motivo, provedor, modelo)`. Ou há `texto`, ou há um `motivo`:
 
 | `motivo` | quando |
 |---|---|
@@ -21,7 +21,7 @@ A única porta do produto para um modelo de linguagem (regra do `AGENTS.md`: IA 
 | `limite_de_chamadas` | a execução já fez `LLM_LIMITE_CHAMADAS` (padrão 20) chamadas; a chamada acima do limite nem vai ao provedor |
 
 São os mesmos códigos do `CHECK` previsto para `feedback_treino` ([[decisoes/0013-feedback-automatico]]). `texto_reprovado` não é daqui: é do worker, depois das checagens.
-- **Provedor falso** (`LLM_PROVIDER=falso`): sem rede e sem chave, obrigatório em testes e CI. Devolve um texto fixo de 3 linhas que **passa na `checar_texto` real** (`checagens_feedback@2`) com um pacote comum: cada linha tem verbo da lista (com acento: "é", "foi"), sem número; com o atalho `dor` reprova por `dor_regra`, porque não traz a frase da dor (#361; teste em `test_camada.py` com as checagens reais, sem `checar` injetada). Quem mudar as checagens confere esse texto; `ProvedorFalso(modo="ruim")` devolve um texto de propósito reprovável, e os modos `erro`, `tempo` e `vazio` simulam falhas. O resultado leva `provedor = "falso"`.
+- **Provedor falso** (`LLM_PROVIDER=falso`): sem rede e sem chave, obrigatório em testes e CI. Devolve um texto fixo de 3 linhas que **passa na `checar_texto` real** (`checagens_feedback@3`) com um pacote comum: cada linha tem verbo da lista (com acento: "é", "foi"), sem número; com o atalho `dor` reprova por `dor_regra`, porque não traz a frase da dor (#361; teste em `test_camada.py` com as checagens reais, sem `checar` injetada). Quem mudar as checagens confere esse texto; `ProvedorFalso(modo="ruim")` devolve um texto de propósito reprovável, e os modos `erro`, `tempo` e `vazio` simulam falhas. O resultado leva `provedor = "falso"`.
 
 ## Regras
 - **Troca só pelo `.env`:** `LLM_PROVIDER` (`groq`, `openai`, `anthropic` ou `falso`), `LLM_MODEL` e a chave (`GROQ_API_KEY`, `OPENAI_API_KEY`, `ANTHROPIC_API_KEY`). O LiteLLM recebe `<provedor>/<modelo>` e a chave explícita. Padrão: `groq`. `.env.example` só com os nomes.
@@ -38,8 +38,10 @@ São os mesmos códigos do `CHECK` previsto para `feedback_treino` ([[decisoes/0
 
 Na linha de comando, os padrões são os reais: `app.servicos.feedback_fatos.fatos_da_atividade` (o **adaptador** que lê o banco e chama a função pura `app.explicacao.fatos_treino.fatos_treino`, #324), `app.explicacao.checagens.checar` (#325) e as `VERSAO` dos dois módulos. O adaptador usa os serviços de leitura que a API já tem (`linha_base_resultado`, `clima_da_atividade`, `carga_da_atividade`, `esforcos_da_atividade`, rótulo de transição) e não recalcula nada; natação fica sem bloco de clima. Teste: o pacote que sai do banco semeado com as fixtures da meta 9 é igual ao do oráculo (`services/api/tests/servicos/test_feedback_fatos.py`).
 
-## Prompt `feedback_prompt@2` (`app/llm/prompt_feedback.py`)
+## Prompt `feedback_prompt@3` (`app/llm/prompt_feedback.py`)
 Regras de forma, tom e do que falta no pacote, mais os **6 exemplos aprovados** (G01 a G06, pacote reduzido sem campos nulos e texto da ADR 0013). Os exemplos têm **fonte única** em `app/llm/exemplos_feedback.py`; um teste confere o texto contra `tests/fixtures/meta9/textos.py`, o pacote contra o oráculo e que cada texto passa nas checagens. O prompt tem uns 2,5 mil tokens (estimativa), para caber no limite por minuto do plano gratuito (não conferido). Se o texto mudar de forma relevante, a `VERSAO` sobe.
+
+**`@3` (12/11, #367):** uma regra nova: quando `checkin.pse_texto` é só o número (PSE 6, 8 e 9 não têm rótulo), escrever "esforço 6", nunca "esforço 6 (6)". Origem e checagem em [[metricas/checagens-feedback]] ("Versão `@3`"). O pacote não mudou.
 
 **`@2` (11/11, #355):** a primeira rodada com o provedor de verdade deu textos aprovados nas checagens, mas telegráficos. O `@2` acrescenta regras de forma: toda linha com verbo conjugado (nada de lista de valores); quando a linha de base tem métrica `dentro` ou `fora`, a primeira linha traz valor e mediana, com o número de treinos e a janela; não repetir a mesma conclusão em duas linhas; do clima, só o essencial; o que falta é dito com dois-pontos, sem "pois" nem "porque". Também fixa o nome e o gênero de cada métrica ("sua FC média", "seu pace médio", "a carga por hora"), depois de uma resposta com erro de concordância. O prompt passou a uns 2,9 mil tokens (estimativa). **Medição com `feedback_prompt@2` e `checagens_feedback@2`, com 42 s entre chamadas (local, só fixtures; contagens):** 8 respostas, nenhuma recusa, 7 aprovadas e 1 reprovada (`linguagem_causa` e `forma_sem_verbo`). Medição anterior, com as checagens `@1`: com os 8 pacotes do oráculo no provedor (só fixtures; contagens): com o `@1`, 5 respostas e 5 aprovadas, 3 chamadas recusadas pelo provedor; com o `@2`, 6 respostas e 6 aprovadas, todas com valor e mediana na primeira linha quando havia comparação, 2 chamadas recusadas. As recusas vieram com chamadas a cada 12 s e a cada 28 s: sinal de limite por minuto do provedor (não conferido na documentação dele). **Mudar a versão do prompt não desatualiza o que já está `pronto`** (só `versao_fatos` e a edição do check-in desatualizam): para reescrever com o prompt novo, `worker.gerar_feedback --refazer`.
 
