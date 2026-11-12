@@ -1,5 +1,6 @@
-"""worker.buscar_recuperacao e o leitor de recuperacao do cliente (issue #372, ADR 0014). Cliente FALSO, fixtures de
-`tests/fixtures/meta10/`, nenhuma conexao de rede, nenhum banco real. Dados inventados.
+"""worker.buscar_recuperacao e o leitor de recuperacao do cliente (issue #372, ADR 0014 e adendo 1 ao item 5). Cliente
+FALSO, fixtures de `tests/fixtures/meta10/` (as respostas do sono; as de faixa so documentam o formato), nenhuma conexao de
+rede, nenhum banco real. As tres medidas vem da MESMA resposta do sono. Dados inventados.
 """
 
 import json
@@ -29,9 +30,7 @@ from worker.garmin_cliente import (
     ErroLogin,
     ErroRede,
     NoiteRecuperacao,
-    ler_fc_repouso,
-    ler_sono,
-    ler_vfc,
+    ler_noite,
 )
 
 FIX = Path(__file__).resolve().parents[3] / "tests" / "fixtures" / "meta10"
@@ -110,33 +109,21 @@ def atleta(engine):
 
 
 class ApiFalsa:
-    """O objeto `garminconnect.Garmin` por dentro: devolve as fixtures (a faixa devolve sempre o arquivo inteiro, como um
-    servidor que ignora o intervalo: o leitor filtra). Guarda as chamadas. `erros` mapeia o nome do metodo a uma excecao."""
+    """O objeto `garminconnect.Garmin` por dentro: so `get_sleep_data` existe (qualquer chamada de faixa levantaria
+    `AttributeError`, o que prova que a busca nao as usa). `sono` mapeia a data ao nome da fixture OU a uma resposta pronta."""
 
-    def __init__(self, vfc="vfc_faixa.json", rhr="rhr_faixa.json", sono=None, erros=None):
-        self.vfc, self.rhr = vfc, rhr
+    def __init__(self, sono=None, erros=None):
         self.sono = SONO_POR_DIA if sono is None else sono
-        self.erros = erros or {}
-        self.chamadas: list[tuple] = []
-
-    def _antes(self, nome, *args):
-        self.chamadas.append((nome, *args))
-        e = self.erros.get(nome)
-        if e is not None:
-            raise (e(args) if callable(e) else e)
+        self.erros = erros or {}  # data ISO -> excecao (ou funcao que a cria)
+        self.chamadas: list[str] = []
 
     def get_sleep_data(self, cdate):
-        self._antes("sono", cdate)
-        arq = self.sono.get(cdate)
-        return fx(arq) if arq else {}
-
-    def get_hrv_data_range(self, a, b):
-        self._antes("vfc", a, b)
-        return fx(self.vfc)
-
-    def get_rhr_daily(self, a, b):
-        self._antes("fc", a, b)
-        return fx(self.rhr)
+        self.chamadas.append(cdate)
+        e = self.erros.get(cdate)
+        if e is not None:
+            raise (e() if callable(e) else e)
+        alvo = self.sono.get(cdate)
+        return fx(alvo) if isinstance(alvo, str) else (alvo or {})
 
 
 class _Erros:
@@ -156,8 +143,22 @@ def cliente(api):
     return ClienteGarminConnect(api, MOD)
 
 
-def e429(args=None):
+def e429():
     return _Erros.GarminConnectConnectionError(f"API Error 429 {MARCADOR}", 429)
+
+
+def e502():
+    return _Erros.GarminConnectConnectionError(f"API Error 502 {MARCADOR}", 502)
+
+
+def resp(cal, sono=20000, vfc=90.0, fc=55):
+    """Resposta minima valida do sono (sintetica), para os testes que precisam de valores diferentes dos das fixtures."""
+    r = {"dailySleepDTO": {"calendarDate": cal, "sleepTimeSeconds": sono}}
+    if vfc is not None:
+        r["avgOvernightHrv"] = vfc
+    if fc is not None:
+        r["restingHeartRate"] = fc
+    return r
 
 
 def rodar(factory, cli, *args, hoje=D(2026, 3, 16), agora=datetime(2026, 3, 16, 9, 0, tzinfo=timezone.utc), pausas=None):
@@ -171,88 +172,82 @@ def _linhas(engine):
         return {r.noite: (r.sono_s, r.vfc_ms, r.fc_repouso_bpm) for r in s.scalars(select(RecuperacaoDia))}
 
 
-# ---------- leitor (dentro do cliente) ----------
-
-def test_leitor_do_sono_com_as_fixtures():
-    assert ler_sono(fx("sono_noite_completa.json"), D(2026, 3, 10)) == 22500  # profundo + leve + REM, sem despertares
-    assert ler_sono(fx("sono_noite_sem_vfc.json"), D(2026, 3, 11)) == 21600
-    assert ler_sono(fx("sono_noite_com_sesta.json"), D(2026, 3, 14)) == 16500  # a sesta (1800 s) nao entra
-    assert ler_sono(fx("sono_dto_sem_duracao.json"), D(2026, 3, 13)) is None
-    assert ler_sono(fx("sono_dia_sem_dado.json"), D(2026, 3, 10)) is None  # {} (204)
-    assert ler_sono(fx("sono_noite_completa.json"), D(2026, 3, 11)) is None  # outra data: nao arrisca
+def _gravar(session, atleta, noite, sono=20000, vfc=90.0, fc=55):
+    banco.gravar_noite(session, atleta, noite, sono, vfc, fc, "v", datetime(2026, 3, 1, tzinfo=timezone.utc))
 
 
-@pytest.mark.parametrize("valor", [None, 0, -5, 86401, True, "25000", float("nan"), float("inf"), [], {}])
-def test_leitor_do_sono_ausente_zero_e_fora_da_faixa_viram_none(valor):
-    r = {"dailySleepDTO": {"calendarDate": "2026-03-10", "sleepTimeSeconds": valor}}
-    assert ler_sono(r, D(2026, 3, 10)) is None
+# ---------- leitor (dentro do cliente): as tres medidas da resposta do sono ----------
+
+def test_leitor_com_as_fixtures_do_sono():
+    n = ler_noite(fx("sono_noite_completa.json"), D(2026, 3, 10))
+    assert n == NoiteRecuperacao(D(2026, 3, 10), 22500, 128.0, 54)  # sono sem despertares; VFC decimal; FC inteira
+    assert ler_noite(fx("sono_noite_sem_vfc.json"), D(2026, 3, 11)) == NoiteRecuperacao(D(2026, 3, 11), 21600, None, 54)  # ausente
+    assert ler_noite(fx("sono_noite_sem_vfc_none.json"), D(2026, 3, 12)) == NoiteRecuperacao(D(2026, 3, 12), 21600, None, 54)  # None
+    assert ler_noite(fx("sono_dto_sem_duracao.json"), D(2026, 3, 13)) == NoiteRecuperacao(D(2026, 3, 13), None, None, 56)
+    assert ler_noite(fx("sono_noite_com_sesta.json"), D(2026, 3, 14)).sono_s == 16500  # a sesta (1800 s) nao entra
+    assert ler_noite(fx("sono_dia_sem_dado.json"), D(2026, 3, 10)) == NoiteRecuperacao(D(2026, 3, 10))  # {} (204): tudo None
+    assert ler_noite(fx("sono_noite_completa.json"), D(2026, 3, 11)) == NoiteRecuperacao(D(2026, 3, 11))  # outra data: tudo None
+
+
+@pytest.mark.parametrize("valor", [None, 0, -5, True, "25", float("nan"), float("inf"), [], {}])
+def test_cada_medida_ausente_zero_ou_invalida_vira_none(valor):
+    r = {"dailySleepDTO": {"calendarDate": "2026-03-10", "sleepTimeSeconds": valor}, "avgOvernightHrv": valor,
+         "restingHeartRate": valor}
+    assert ler_noite(r, D(2026, 3, 10)) == NoiteRecuperacao(D(2026, 3, 10))
+
+
+@pytest.mark.parametrize("campo,valor", [("sono", 86401), ("vfc", 500.1), ("fc", 19), ("fc", 151)])
+def test_fora_da_faixa_dos_check_vira_none(campo, valor):
+    kw = {"sono": 20000, "vfc": 90.0, "fc": 55, campo: valor}
+    n = ler_noite(resp("2026-03-10", **kw), D(2026, 3, 10))
+    assert getattr(n, {"sono": "sono_s", "vfc": "vfc_ms", "fc": "fc_repouso_bpm"}[campo]) is None
+    assert sum(x is not None for x in (n.sono_s, n.vfc_ms, n.fc_repouso_bpm)) == 2  # as outras seguem
+
+
+def test_extremos_validos_e_fc_decimal_arredondada():
+    n = ler_noite(resp("2026-03-10", sono=86400, vfc=500.0, fc=20.4), D(2026, 3, 10))
+    assert (n.sono_s, n.vfc_ms, n.fc_repouso_bpm) == (86400, 500.0, 20)
+    assert ler_noite(resp("2026-03-10", sono=1, vfc=0.1, fc=150), D(2026, 3, 10)).sono_s == 1
 
 
 @pytest.mark.parametrize("lixo", [None, [], "x", 3, {"dailySleepDTO": None}, {"dailySleepDTO": []},
-                                   {"dailySleepDTO": {"calendarDate": 20260310, "sleepTimeSeconds": 100}}])
+                                   {"dailySleepDTO": {"calendarDate": 20260310, "sleepTimeSeconds": 100}},
+                                   {"avgOvernightHrv": 90.0, "restingHeartRate": 55}])  # sem o DTO: nao atribui a noite
 def test_leitor_nao_quebra_com_formato_inesperado(lixo):
-    assert ler_sono(lixo, D(2026, 3, 10)) is None
-    assert ler_vfc(lixo) == {} and ler_fc_repouso(lixo) == {}
-
-
-def test_leitor_da_vfc_e_da_fc_de_repouso():
-    assert ler_vfc(fx("vfc_faixa.json")) == {D(2026, 3, 10): 128, D(2026, 3, 11): 121, D(2026, 3, 12): 136}
-    assert list(ler_vfc(fx("vfc_faixa_com_buraco.json"))) == [D(2026, 3, 10), D(2026, 3, 12)]  # dia sem leitura nao aparece
-    assert ler_vfc(fx("vfc_faixa_sem_dado.json")) == {}
-    assert ler_fc_repouso(fx("rhr_faixa.json")) == {D(2026, 3, 10): 54, D(2026, 3, 11): 56, D(2026, 3, 13): 52}
-    assert ler_fc_repouso(fx("rhr_faixa_sem_dado.json")) == {}
-    ruins = [{"calendarDate": "2026-03-10", "value": v} for v in (None, 0, 19.0, 151.0, True, "54")]
-    ruins += [{"calendarDate": "ontem", "value": 54.0}, "x", {"value": 54.0}]
-    assert ler_fc_repouso(ruins) == {}
-    vruins = [{"calendarDate": "2026-03-10", "lastNightAvg": v} for v in (None, 0, -1, 501, True, "90")]
-    assert ler_vfc({"hrvSummaries": vruins}) == {}
-    assert ler_fc_repouso([{"calendarDate": "2026-03-10", "value": 54.4}]) == {D(2026, 3, 10): 54}  # decimal da faixa
+    assert ler_noite(lixo, D(2026, 3, 10)) == NoiteRecuperacao(D(2026, 3, 10))
 
 
 # ---------- o cliente real, com a biblioteca trocada por um falso ----------
 
-def test_cliente_devolve_noites_normalizadas_por_medida():
+def test_cliente_faz_uma_requisicao_por_noite_so_no_sono():
     api = ApiFalsa()
     cli = cliente(api)
-    assert cli.recuperacao(D(2026, 3, 10), D(2026, 3, 10), ("sono",)) == [NoiteRecuperacao(D(2026, 3, 10), sono_s=22500)]
-    assert cli.recuperacao(D(2026, 3, 11), D(2026, 3, 12), ("vfc",)) == [
-        NoiteRecuperacao(D(2026, 3, 11), vfc_ms=121), NoiteRecuperacao(D(2026, 3, 12), vfc_ms=136)]  # filtra pela faixa
-    assert cli.recuperacao(D(2026, 3, 10), D(2026, 3, 13), ("fc",))[-1] == NoiteRecuperacao(D(2026, 3, 13), fc_repouso_bpm=52)
-    assert [c[0] for c in api.chamadas] == ["sono", "vfc", "fc"]  # cada chamada ao cliente e UMA requisicao
-    assert cli.recuperacao(D(2026, 3, 20), D(2026, 3, 20), ("sono",)) == []  # sem dado: lista vazia
-
-
-def test_cliente_recusa_faixa_grande_e_sono_de_varios_dias():
-    cli = cliente(ApiFalsa())
-    with pytest.raises(ErroGarmin):
-        cli.recuperacao(D(2026, 3, 1), D(2026, 3, 29), ("vfc",))  # 29 dias
-    assert cli.recuperacao(D(2026, 3, 1), D(2026, 3, 28), ("vfc",))  # 28 dias passam
-    with pytest.raises(ErroGarmin):
-        cli.recuperacao(D(2026, 3, 10), D(2026, 3, 11), ("sono",))
+    assert cli.recuperacao(D(2026, 3, 10)) == NoiteRecuperacao(D(2026, 3, 10), 22500, 128.0, 54)
+    assert cli.recuperacao(D(2026, 3, 20)) == NoiteRecuperacao(D(2026, 3, 20))  # sem dado: tudo None, nao levanta
+    assert api.chamadas == ["2026-03-10", "2026-03-20"]
 
 
 @pytest.mark.parametrize("excecao,esperado", [
     (e429, ErroLimite),  # #386: o 429 das rotas de dados chega como erro de conexao com a resposta
     (_Erros.GarminConnectTooManyRequestsError, ErroLimite),
-    (lambda a: _Erros.GarminConnectConnectionError(f"API Error 500 {MARCADOR}", 500), ErroRede),
-    (lambda a: _Erros.GarminConnectConnectionError(f"sem resposta {MARCADOR}"), ErroRede),
+    (e502, ErroRede),
+    (lambda: _Erros.GarminConnectConnectionError(f"sem resposta {MARCADOR}"), ErroRede),
     (_Erros.GarminConnectAuthenticationError, ErroLogin),
-    (lambda a: RuntimeError(MARCADOR), ErroGarmin),
+    (lambda: RuntimeError(MARCADOR), ErroGarmin),
 ])
 def test_erros_viram_codigo_e_a_mensagem_nao_repete_a_resposta(excecao, esperado):
-    cli = cliente(ApiFalsa(erros={"sono": excecao, "vfc": excecao, "fc": excecao}))
-    for medida, ini, fim in (("sono", D(2026, 3, 10), D(2026, 3, 10)), ("vfc", D(2026, 3, 10), D(2026, 3, 12)),
-                             ("fc", D(2026, 3, 10), D(2026, 3, 12))):
-        with pytest.raises(esperado) as e:
-            cli.recuperacao(ini, fim, (medida,))
-        assert type(e.value) is esperado and MARCADOR not in str(e.value)
+    cli = cliente(ApiFalsa(erros={"2026-03-10": excecao}))
+    with pytest.raises(esperado) as e:
+        cli.recuperacao(D(2026, 3, 10))
+    assert type(e.value) is esperado and MARCADOR not in str(e.value)
 
 
 def test_429_das_rotas_de_atividade_tambem_vira_limite():
     """#386: o mesmo tratamento vale para `listar` e `baixar_fit` do `buscar_garmin` (Meta 9)."""
-    api = types.SimpleNamespace(get_activities_by_date=lambda *a, **k: (_ for _ in ()).throw(e429()),
-                                download_activity=lambda *a, **k: (_ for _ in ()).throw(e429()))
-    api.Garmin = None
+    def cai(*a, **k):
+        raise e429()
+
+    api = types.SimpleNamespace(get_activities_by_date=cai, download_activity=cai)
     mod = types.SimpleNamespace(Garmin=types.SimpleNamespace(ActivityDownloadFormat=types.SimpleNamespace(ORIGINAL="o")),
                                 **vars(_Erros))
     cli = ClienteGarminConnect(api, mod)
@@ -260,8 +255,11 @@ def test_429_das_rotas_de_atividade_tambem_vira_limite():
         cli.listar(D(2026, 3, 10), D(2026, 3, 10))
     with pytest.raises(ErroLimite):
         cli.baixar_fit(1)
-    erro500 = _Erros.GarminConnectConnectionError("API Error 500", 500)
-    api.get_activities_by_date = lambda *a, **k: (_ for _ in ()).throw(erro500)
+
+    def cai500(*a, **k):
+        raise _Erros.GarminConnectConnectionError("API Error 500", 500)
+
+    api.get_activities_by_date = cai500
     with pytest.raises(ErroRede):  # so o 429 muda; o resto continua rede
         cli.listar(D(2026, 3, 10), D(2026, 3, 10))
 
@@ -313,55 +311,102 @@ def test_primeira_rodada_corta_no_teto_de_120_e_avisa(factory, atleta):
     assert (fim - ini).days + 1 == 120 and len(av) == 1 and "120" in av[0]
 
 
+def _noites(s, atleta, de, ate):
+    d = de
+    while d <= ate:
+        _gravar(s, atleta, d)
+        d += timedelta(days=1)
+    s.commit()
+
+
 def test_rodadas_seguintes_comecam_duas_noites_antes_da_ultima(factory, atleta):
     with factory() as s:
-        banco.gravar_noite(s, atleta, D(2026, 3, 10), 20000, None, None, "v", datetime.now(timezone.utc))
-        s.commit()
-        assert escolher_faixa(s, atleta, D(2026, 3, 16), None, None) == (D(2026, 3, 8), D(2026, 3, 16), [])
+        _noites(s, atleta, D(2026, 3, 10), D(2026, 3, 14))  # tudo completo: sem buraco
+        assert escolher_faixa(s, atleta, D(2026, 3, 15), None, None) == (D(2026, 3, 12), D(2026, 3, 15), [])
         ini, fim, av = escolher_faixa(s, atleta, D(2026, 8, 16), None, None)  # muito tempo sem rodar: teto de 60
         assert (fim - ini).days + 1 == 60 and len(av) == 1 and "60" in av[0]
-        assert escolher_faixa(s, atleta, D(2026, 8, 16), D(2026, 3, 1), D(2026, 3, 5)) == (D(2026, 3, 1), D(2026, 3, 5), [])  # sobrepoem
-        assert escolher_faixa(s, atleta, D(2026, 3, 16), D(2026, 1, 1), None)[:2] == (D(2026, 1, 1), D(2026, 3, 16))  # --desde passa do teto
+        assert escolher_faixa(s, atleta, D(2026, 8, 16), D(2026, 3, 1), D(2026, 3, 5)) == (D(2026, 3, 1), D(2026, 3, 5), [])
+        assert escolher_faixa(s, atleta, D(2026, 3, 15), D(2026, 1, 1), None)[:2] == (D(2026, 1, 1), D(2026, 3, 15))  # passa do teto
+
+
+def test_buraco_linha_incompleta_puxa_o_inicio_da_rodada(factory, atleta):
+    with factory() as s:
+        _noites(s, atleta, D(2026, 3, 10), D(2026, 3, 15))
+        s.query(RecuperacaoDia).filter(RecuperacaoDia.noite == D(2026, 3, 11)).update({"vfc_ms": None})  # a VFC faltou
+        s.commit()
+        assert escolher_faixa(s, atleta, D(2026, 3, 16), None, None) == (D(2026, 3, 11), D(2026, 3, 16), [])  # antes de 13/3
+
+
+def test_buraco_noite_sem_linha_dentro_da_janela_puxa_o_inicio(factory, atleta):
+    with factory() as s:
+        _noites(s, atleta, D(2026, 3, 10), D(2026, 3, 15))
+        s.query(RecuperacaoDia).filter(RecuperacaoDia.noite == D(2026, 3, 12)).delete()
+        s.commit()
+        assert escolher_faixa(s, atleta, D(2026, 3, 16), None, None)[0] == D(2026, 3, 12)
+
+
+def test_buraco_antigo_sai_da_janela_e_nao_e_rebuscado_para_sempre(factory, atleta):
+    """Uma noite que o Garmin realmente nao tem so puxa a rodada por 14 dias; depois sai da janela."""
+    with factory() as s:
+        _noites(s, atleta, D(2026, 3, 10), D(2026, 3, 23))
+        s.query(RecuperacaoDia).filter(RecuperacaoDia.noite == D(2026, 3, 11)).delete()
+        s.commit()
+        assert escolher_faixa(s, atleta, D(2026, 3, 24), None, None)[0] == D(2026, 3, 11)  # janela 10/3 a 23/3: ainda puxa
+        _noites(s, atleta, D(2026, 3, 24), D(2026, 3, 25))
+        assert escolher_faixa(s, atleta, D(2026, 3, 26), None, None)[0] == D(2026, 3, 23)  # janela 12/3 a 25/3: 11/3 saiu
+
+
+def test_buraco_so_conta_noite_que_ja_passou_e_depois_da_primeira_gravada(factory, atleta):
+    with factory() as s:
+        _gravar(s, atleta, D(2026, 3, 10), fc=None)  # a FC do dia ainda nao valia
+        s.commit()
+        # no proprio dia 10/3 a noite nao passou: nao e buraco (so ultima - 2)
+        assert escolher_faixa(s, atleta, D(2026, 3, 10), None, None)[0] == D(2026, 3, 8)
+        # em 11/3 ela passou e esta incompleta: e buraco, mas 10/3 > ultima - 2 (8/3): vale 8/3
+        assert escolher_faixa(s, atleta, D(2026, 3, 11), None, None)[0] == D(2026, 3, 8)
+        _gravar(s, atleta, D(2026, 3, 16))
+        s.commit()
+        # 10/3 incompleta e passou: e o buraco mais antigo (11 a 15/3 sem linha tambem sao); antes de 10/3 nada conta
+        assert escolher_faixa(s, atleta, D(2026, 3, 17), None, None)[0] == D(2026, 3, 10)
 
 
 # ---------- a busca ----------
 
-def test_grava_as_noites_independente_por_medida(engine, factory, atleta, capsys):
+def test_grava_as_tres_medidas_da_mesma_resposta_do_sono(engine, factory, atleta, capsys):
     api = ApiFalsa()
     pausas = []
-    assert rodar(factory, cliente(api), "--desde", "2026-03-10", "--ate", "2026-03-15", hoje=D(2026, 3, 16), pausas=pausas) == 0
+    assert rodar(factory, cliente(api), "--desde", "2026-03-10", "--ate", "2026-03-15", pausas=pausas) == 0
     assert _linhas(engine) == {
-        D(2026, 3, 10): (22500, 128, 54), D(2026, 3, 11): (21600, 121, 56), D(2026, 3, 12): (21600, 136, None),
-        D(2026, 3, 13): (None, None, 52),  # so a FC de repouso
-        D(2026, 3, 14): (16500, None, None),  # so o sono; sesta ignorada
-        D(2026, 3, 15): (22500, None, None),
+        D(2026, 3, 10): (22500, 128.0, 54), D(2026, 3, 11): (21600, None, 54), D(2026, 3, 12): (21600, None, 54),
+        D(2026, 3, 13): (None, None, 56),  # so a FC de repouso
+        D(2026, 3, 14): (16500, 128.0, 54),  # sesta ignorada
+        D(2026, 3, 15): (22500, 128.0, 54),
     }
     assert "recuperacao: noites_novas=6 atualizadas=0 iguais=0 sem_dado=0 falhas=0" in capsys.readouterr().out
-    assert [c[0] for c in api.chamadas] == ["vfc", "fc"] + ["sono"] * 6  # um bloco: 2 faixas e 6 noites
-    assert len(pausas) == len(api.chamadas) - 1  # pausa entre as chamadas, nao antes da primeira
+    assert api.chamadas == [f"2026-03-{d}" for d in range(10, 16)]  # uma chamada por noite, em ordem crescente, sem faixa
+    assert len(pausas) == 5 and set(pausas) == {br.PAUSA_S}  # pausa entre as chamadas, nao antes da primeira
 
 
 def test_fc_de_repouso_so_quando_a_noite_ja_passou(engine, factory, atleta, capsys):
     """A FC e a do DIA: na noite de hoje (ou depois) fica vazia; a rodada seguinte preenche."""
     rodar(factory, cliente(ApiFalsa()), "--desde", "2026-03-10", "--ate", "2026-03-13", hoje=D(2026, 3, 13))
-    assert _linhas(engine)[D(2026, 3, 11)][2] == 56 and D(2026, 3, 13) not in _linhas(engine)  # 13/3 era so FC e hoje
-    assert "sem_dado=1" in capsys.readouterr().out  # consultou as tres e nenhuma serve
+    assert _linhas(engine)[D(2026, 3, 11)][2] == 54 and D(2026, 3, 13) not in _linhas(engine)  # 13/3 era so FC e e hoje
+    assert "sem_dado=1" in capsys.readouterr().out
     rodar(factory, cliente(ApiFalsa()), "--desde", "2026-03-10", "--ate", "2026-03-13", hoje=D(2026, 3, 14))
-    assert _linhas(engine)[D(2026, 3, 13)] == (None, None, 52)
+    assert _linhas(engine)[D(2026, 3, 13)] == (None, None, 56)
 
 
 def test_idempotente_e_importado_em_so_muda_quando_um_valor_muda(engine, factory, atleta, capsys):
     a1 = datetime(2026, 3, 16, 9, 0, tzinfo=timezone.utc)
-    a2 = a1 + timedelta(days=1)
     args = ("--desde", "2026-03-10", "--ate", "2026-03-15")
     rodar(factory, cliente(ApiFalsa()), *args, agora=a1)
     capsys.readouterr()
     with Session(engine) as s:
         antes = {n: x.importado_em for n, x in banco.noites_do_atleta(s, atleta).items()}
-    rodar(factory, cliente(ApiFalsa()), *args, agora=a2)
+    rodar(factory, cliente(ApiFalsa()), *args, agora=a1 + timedelta(days=1))
     assert "noites_novas=0 atualizadas=0 iguais=6" in capsys.readouterr().out
     with Session(engine) as s:
-        assert {n: x.importado_em for n, x in banco.noites_do_atleta(s, atleta).items()} == antes  # nada mudou
+        assert {n: x.importado_em for n, x in banco.noites_do_atleta(s, atleta).items()} == antes
         assert s.scalar(select(func.count()).select_from(RecuperacaoDia)) == 6
 
 
@@ -371,67 +416,74 @@ def test_valor_diferente_substitui_e_nulo_nunca_apaga(engine, factory, atleta, c
     args = ("--desde", "2026-03-10", "--ate", "2026-03-11")
     rodar(factory, cliente(ApiFalsa()), *args, agora=a1)
     capsys.readouterr()
-    # o Garmin recalcula a VFC de 11/3, e agora nao devolve mais o sono nem a FC de 10/3
-    novo = {"_sintetico": "SINTETICO", "hrvSummaries": [
-        {"calendarDate": "2026-03-11", "lastNightAvg": 150, "lastNight5MinHigh": 190, "weeklyAvg": None, "baseline": {},
-         "status": "BALANCED", "feedbackPhrase": "x", "createTimeStamp": "x"}]}
-    api = ApiFalsa(rhr="rhr_faixa_sem_dado.json", sono={})
-    api.vfc = "vfc_nova.json"
-    original = fx
-    try:
-        globals()["fx"] = lambda nome: novo if nome == "vfc_nova.json" else original(nome)
-        rodar(factory, cliente(api), *args, agora=a2)
-    finally:
-        globals()["fx"] = original
+    # o Garmin recalcula a VFC de 11/3 e agora devolve a de 10/3 sem sono nem FC
+    novo = ApiFalsa({"2026-03-10": resp("2026-03-10", sono=None, vfc=None, fc=None),
+                     "2026-03-11": resp("2026-03-11", sono=21600, vfc=150.0, fc=54)})
+    rodar(factory, cliente(novo), *args, agora=a2)
     assert "atualizadas=1 iguais=1" in capsys.readouterr().out
-    assert _linhas(engine) == {D(2026, 3, 10): (22500, 128, 54), D(2026, 3, 11): (21600, 150, 56)}
+    assert _linhas(engine) == {D(2026, 3, 10): (22500, 128.0, 54), D(2026, 3, 11): (21600, 150.0, 54)}
     with Session(engine) as s:
         n = banco.noites_do_atleta(s, atleta)
         assert n[D(2026, 3, 11)].importado_em.replace(tzinfo=None) == a2.replace(tzinfo=None)
         assert n[D(2026, 3, 10)].importado_em.replace(tzinfo=None) == a1.replace(tzinfo=None)
 
 
-def test_blocos_de_28_dias_e_teto_de_12_chamadas_de_faixa(engine, factory, atleta, capsys):
+def test_rodada_seguinte_refaz_o_buraco_e_diz_so_a_contagem(engine, factory, atleta, capsys):
+    """10 a 15/3 em duas rodadas: a 1a perde a VFC de 11/3 (o Garmin ainda nao a tinha); a 2a, sem --desde, a refaz."""
+    primeira = ApiFalsa({**SONO_POR_DIA, "2026-03-11": resp("2026-03-11", sono=21600, vfc=None, fc=54)})
+    rodar(factory, cliente(primeira), "--desde", "2026-03-10", "--ate", "2026-03-15")
+    capsys.readouterr()
+    segunda = ApiFalsa({**SONO_POR_DIA, "2026-03-11": resp("2026-03-11", sono=21600, vfc=99.0, fc=54)})
+    assert rodar(factory, cliente(segunda)) == 0
+    saida = capsys.readouterr().out
+    assert segunda.chamadas[0] == "2026-03-11"  # comecou no buraco (antes de ultima - 2 = 13/3)
+    assert "aviso: rebuscadas=2" in saida and "2026" not in saida  # so a contagem, nenhuma data
+    assert _linhas(engine)[D(2026, 3, 11)] == (21600, 99.0, 54)
+
+
+def test_teto_de_130_chamadas_por_execucao(engine, factory, atleta, capsys):
     api = ApiFalsa(sono={})
     assert rodar(factory, cliente(api), "--desde", "2025-01-01", "--ate", "2026-03-01") == 0  # ~425 noites
-    faixas = [c for c in api.chamadas if c[0] in ("vfc", "fc")]
-    assert len(faixas) == br.TETO_CHAMADAS_FAIXA == 12  # parou no teto
-    for _, ini, fim in faixas:
-        assert (date.fromisoformat(fim) - date.fromisoformat(ini)).days + 1 <= 28
-    assert sum(1 for c in api.chamadas if c[0] == "sono") <= br.TETO_CHAMADAS_SONO
-    assert "aviso: teto_faixa" in capsys.readouterr().out
+    assert len(api.chamadas) == br.TETO_CHAMADAS == 130
+    assert api.chamadas == sorted(api.chamadas)  # ordem crescente: a rodada seguinte continua dali
+    saida = capsys.readouterr().out
+    assert "aviso: teto_chamadas" in saida and "sem_dado=130" in saida
 
 
 def test_429_para_a_execucao_e_preserva_o_gravado(engine, factory, atleta, capsys, caplog):
-    api = ApiFalsa(erros={})
-    original = api.get_sleep_data
-
-    def sono(cdate):
-        if cdate == "2026-03-13":
-            raise e429()
-        return original(cdate)
-
-    api.get_sleep_data = sono
+    api = ApiFalsa(erros={"2026-03-13": e429})
     with caplog.at_level(logging.DEBUG):
         rc = rodar(factory, cliente(api), "--desde", "2026-03-10", "--ate", "2026-03-15")
     saida = capsys.readouterr()
-    assert rc == 4 and ("sono", "2026-03-14") not in api.chamadas  # nao tentou os dias seguintes
-    assert _linhas(engine)[D(2026, 3, 10)] == (22500, 128, 54) and D(2026, 3, 12) in _linhas(engine)  # o que veio, ficou
+    assert rc == 4 and "2026-03-14" not in api.chamadas  # nao tentou as noites seguintes
+    assert set(_linhas(engine)) == {D(2026, 3, 10), D(2026, 3, 11), D(2026, 3, 12)}  # o que veio, ficou
     assert "falhas=1" in saida.out and MARCADOR not in saida.out + saida.err + caplog.text
 
 
-def test_falha_de_rede_numa_medida_nao_perde_as_outras(engine, factory, atleta, capsys):
-    api = ApiFalsa(erros={"vfc": lambda a: _Erros.GarminConnectConnectionError(f"API Error 502 {MARCADOR}", 502)})
+def test_falha_de_rede_numa_noite_nao_perde_as_outras(engine, factory, atleta, capsys):
+    api = ApiFalsa(erros={"2026-03-11": e502})
     assert rodar(factory, cliente(api), "--desde", "2026-03-10", "--ate", "2026-03-12") == 5
-    assert _linhas(engine) == {D(2026, 3, 10): (22500, None, 54), D(2026, 3, 11): (21600, None, 56), D(2026, 3, 12): (21600, None, None)}
+    assert set(_linhas(engine)) == {D(2026, 3, 10), D(2026, 3, 12)}  # a de 11/3 fica sem linha: a proxima rodada a refaz
     saida = capsys.readouterr()
     assert "falhas=1" in saida.out and "sem_dado=0" in saida.out and MARCADOR not in saida.out + saida.err
-    assert [c[0] for c in api.chamadas].count("vfc") == 1  # nao insiste
+
+
+def test_tres_falhas_seguidas_param_a_execucao(engine, factory, atleta, capsys):
+    api = ApiFalsa(erros={f"2026-03-{d}": e502 for d in range(10, 16)})
+    assert rodar(factory, cliente(api), "--desde", "2026-03-10", "--ate", "2026-03-15") == 5
+    assert len(api.chamadas) == br.FALHAS_SEGUIDAS_MAX == 3
+    assert "aviso: parou_por_falhas_seguidas" in capsys.readouterr().out and _linhas(engine) == {}
 
 
 def test_precedencia_dos_codigos_limite_antes_de_rede(engine, factory, atleta):
-    api = ApiFalsa(erros={"vfc": lambda a: _Erros.GarminConnectConnectionError("API Error 502", 502), "fc": e429})
+    api = ApiFalsa(erros={"2026-03-10": e502, "2026-03-11": e429})
     assert rodar(factory, cliente(api), "--desde", "2026-03-10", "--ate", "2026-03-12") == 4
+
+
+def test_sessao_recusada_no_meio_para_com_2(engine, factory, atleta):
+    api = ApiFalsa(erros={"2026-03-11": _Erros.GarminConnectAuthenticationError})
+    assert rodar(factory, cliente(api), "--desde", "2026-03-10", "--ate", "2026-03-12") == 2
+    assert api.chamadas == ["2026-03-10", "2026-03-11"] and set(_linhas(engine)) == {D(2026, 3, 10)}
 
 
 def test_login_recusado_sai_com_2_antes_de_qualquer_gravacao(engine, factory, atleta, monkeypatch, capsys):
@@ -464,9 +516,10 @@ def test_o_marcador_nunca_aparece_em_nenhuma_saida(engine, factory, atleta, caps
                                            for r in s.scalars(select(RecuperacaoDia))])
 
 
-def test_nao_usa_nenhuma_outra_biblioteca_do_garmin_alem_do_cliente():
-    """O nome de campo do Garmin nunca sai do cliente: o comando nao conhece `dailySleepDTO` nem `hrvSummaries`."""
+def test_o_comando_nao_conhece_campos_do_garmin_nem_rotas_de_faixa():
+    """O nome de campo do Garmin nunca sai do cliente: o comando nao conhece `dailySleepDTO`, nem pede faixa."""
     fonte = Path(br.__file__).read_text()
-    for campo in ("dailySleepDTO", "hrvSummaries", "sleepTimeSeconds", "lastNightAvg", "restingHeartRate", "garminconnect"):
+    for campo in ("dailySleepDTO", "hrvSummaries", "sleepTimeSeconds", "avgOvernightHrv", "restingHeartRate", "garminconnect",
+                  "get_hrv_data_range", "get_rhr_daily", "BLOCO"):
         assert campo not in fonte
     assert garmin_cliente.VERSAO_LEITURA == "recuperacao_leitura@1"

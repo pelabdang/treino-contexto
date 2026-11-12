@@ -13,9 +13,9 @@ from datetime import date, datetime
 from sqlalchemy import delete, func, select
 from sqlalchemy.orm import Session
 
-from app.db.models import FeedbackTreino, RecuperacaoDia
+from app.db.models import ORIGENS_RECUPERACAO, FeedbackTreino, RecuperacaoDia
 
-ORIGEM = "garmin_connect"
+ORIGEM = ORIGENS_RECUPERACAO[0]
 
 
 @dataclass(frozen=True)
