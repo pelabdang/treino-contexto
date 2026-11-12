@@ -725,7 +725,7 @@ Revisadas ao fim de cada meta com o que se aprendeu. Ordem tirada da "Fundação
   | P5 | #372 | Recuperação no banco (migração 0014), busca pelo Garmin Connect e comando para apagar | duda-dados | #370, #371 |
   | P6 | #373 | `recuperacao@1`: noite anterior ao treino comparada com o normal do atleta | caio-ciencia | #370, #371 |
   | P7 | #374 | `fatos_treino@2` com a recuperação e o adaptador do banco | caio-ciencia com duda-dados | #372, #373 |
-  | P8 | #375 | Prompt e checagens com a recuperação (`feedback_prompt@3`, `checagens_feedback@3`) | caio-ciencia | #374 |
+  | P8 | #375 | Prompt e checagens com a recuperação (`feedback_prompt@4`, `checagens_feedback@4`; a `@3` foi do #384) | caio-ciencia | #374 |
   | P9 | #376 | Rodada pequena com o provedor de verdade, só fixtures | caio-ciencia (rodada local pelo Theo) | #375 |
   | P10 | #377 | Documentação, guia `meta-10-como-rodar` e diário | nina-docs | #372, #375 |
   | P11 | #378 | QA de ponta a ponta com fixtures | bia-qa | #377 |
