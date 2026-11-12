@@ -737,6 +737,9 @@ Revisadas ao fim de cada meta com o que se aprendeu. Ordem tirada da "Fundação
   #374 → #375 → #377 → #378 → #380. Sem tela nova: a recuperação aparece só no texto do cartão que já existe.
 - **Paralela (fora do critério de pronto):** #367, pedida pelo Angelo: espaços no fim da linha e PSE sem rótulo repetida ("esforço 6
   (6)") no texto do feedback (caio-ciencia). Se mudar prompt ou checagens antes da #375, a #375 parte da versão dela.
+- **Candidata, fora do critério de pronto:** #382 (app, rafa-app com a Lia): no check-in, o botão Salvar sobe quando a dica some e
+  "Nada a relatar" fica onde ele estava. Achada na simulação no Chrome em tamanho de celular; o resultado da simulação está em
+  comentário na #369. Entra na Meta 10 só se a #369 pedir o ajuste.
 - **Quem:** caio-ciencia (ADR, métrica, pacote, prompt, checagens; a #367), duda-dados (formato, banco, busca, adaptador), bia-qa
   (conferência visual, QA), lia-design (revisão da tela rodando), nina-docs, Theo (ADR 0014, a simulação no Chrome e a rodada local),
   Angelo (respostas e a conferência local). O rafa-app só entra se a #369 achar um ajuste na tela.
