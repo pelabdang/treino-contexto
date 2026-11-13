@@ -259,7 +259,7 @@ def _esperado_do_oraculo(f):
 # ---------------------------------------------------------------- migracao e carga
 
 def test_01_migracao_0011_cria_as_tabelas_e_as_colunas(ctx):
-    assert _sql(ctx, "select version_num from alembic_version") == [("0013",)]  # head: a 0013 (feedback_treino, #327) so acrescenta tabelas
+    assert _sql(ctx, "select version_num from alembic_version") == [("0014",)]  # head: a 0014 (recuperacao_dia, #372) so acrescenta tabela e coluna
     tabelas = {t for (t,) in _sql(ctx, "select name from sqlite_master where type = 'table'")}
     assert {"semana_padrao", "semana_padrao_item"} <= tabelas
     colunas = {c[1] for c in _sql(ctx, "pragma table_info(atividade)")}
