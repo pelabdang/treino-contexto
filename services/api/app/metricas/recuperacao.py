@@ -89,8 +89,8 @@ def noite_do_treino(dia: date, hora: time, noites: Sequence[Noite], p: Parametro
     ``(noite, None)`` quando há; senão ``(None, motivo)``. Ordem: treino antes do corte (``treino_de_madrugada``), treino
     anterior à noite mais antiga gravada (``fora_do_periodo``), noite de ``dia`` ausente ou sem nenhuma medida (``sem_noite``).
     ``primeira_noite`` é a noite mais antiga que o atleta tem gravada (``recuperacao_banco.primeira_noite``): o banco passa-a
-    porque ``noites`` pode ser só uma janela e a mais antiga da janela não é a mais antiga do atleta. Omitida, vale a mais antiga
-    de ``noites``. Sem nenhuma noite gravada: ``sem_noite`` (a busca nunca rodou). É a mesma regra para montar o pacote e para a comparação do
+    porque ``noites`` pode ser só uma janela. Omitida, vale a mais antiga de ``noites``.
+    Sem nenhuma noite gravada: ``sem_noite`` (a busca nunca rodou). É a mesma regra para montar o pacote e para a comparação do
     "desatualizado" (madrugada, fora do período e sem noite valem ``None`` dos dois lados).
     """
     if hora < p.hora_corte:
