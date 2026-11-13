@@ -2,10 +2,10 @@
 tipo: metrica
 status: em-uso
 dono: caio
-atualizado: 2026-11-12
-links: [[decisoes/0013-feedback-automatico]], [[modulos/camada-llm]], [[metricas/fatos-treino]], [[metricas/fatos-treino-oraculo]], [[produto/roadmap]], [[glossario]]
+atualizado: 2026-11-13
+links: [[decisoes/0013-feedback-automatico]], [[decisoes/0014-recuperacao-diaria]], [[metricas/recuperacao]], [[metricas/recuperacao-oraculo]], [[modulos/camada-llm]], [[metricas/fatos-treino]], [[metricas/fatos-treino-oraculo]], [[produto/roadmap]], [[glossario]]
 ---
-# Checagens do texto do feedback (`checagens_feedback@3`) e lista de linguagem proibida
+# Checagens do texto do feedback (`checagens_feedback@4`) e lista de linguagem proibida
 
 ## O que mede
 Se um texto escrito pela camada de LLM pode chegar ao atleta (ADR 0013, item 4). Não é uma métrica de treino: é a **guarda em código** entre o texto e o app. Função pura
@@ -30,6 +30,18 @@ Na rodada com o provedor de verdade da QA da Meta 9 (só fixtures sintéticas), 
 - **Proposta ao Theo, não implementada:** enviar `pse_texto: null` quando a PSE não tem âncora (pacote `fatos_treino@2`) tiraria a ambiguidade na raiz. Muda o pacote, então fica para decisão dele; com a checagem em código, o texto "N (N)" já não chega ao app.
 - **Espaços no fim da linha (não é regra de checagem):** o provedor devolveu dois espaços no fim de cada linha. A camada (`limpar_texto` em `app/llm/camada.py`, chamada por `Redator.redigir`) tira os espaços do fim de cada linha antes de o texto chegar às checagens e ao worker; o que se checa é o que se grava. Nenhuma regra das checagens mudou por isso.
 - **Versões:** `checagens_feedback@3` e `feedback_prompt@3`; `fatos_treino@1` não mudou. Feedback já `pronto` não é refeito sozinho (como na `@2`): só `worker.gerar_feedback --refazer`. Mais 2 textos ruins (R83 e R84) e 1 motivo novo na lista. A issue #375 (Meta 10), que prevê prompt e checagens novos, parte desta versão `@3`.
+
+## Versão `@4` (13/11, #375): a recuperação da noite
+Regras do item 6 da [[decisoes/0014-recuperacao-diaria]], com o pacote `fatos_treino@2` (bloco `recuperacao`). A **linha da recuperação** é a que fala de sono, VFC, FC de repouso, "noite" ou "dormiu"
+(o rótulo "sono ruim" do atalho marcado não conta). As listas de causa, julgamento e outro dia valem **só nessa linha**; conselho sobre o sono e termos fisiológicos valem no texto inteiro. Cinco códigos novos, no fim de `MOTIVOS`:
+- `linguagem_julgamento`: "noite ruim", "dormiu mal", "VFC baixa", "FC de repouso alta", "recuperado", "cansado", "melhor", "pior", "sono ruim" (mesmo escrito junto da noite) etc. Vale a direção só com "abaixo/acima do seu normal" e "dentro do seu normal".
+- `recuperacao_mistura` (regra 1): a linha traz também pace, ritmo, FC média, carga, esforço, sensação, clima, km ou °C. "FC de repouso" é da recuperação.
+- `recuperacao_forma` (regra 2): sem "noite anterior" em nenhuma linha da recuperação; "abaixo", "acima" ou "dentro" fora de "... do seu normal"; direção diferente da do pacote; comparação em medida `aprendendo`; medida `sem_dado` citada.
+- `recuperacao_outro_dia` (regra 4): "ontem", "anteontem", "semana", "dias", "média de", dia da semana ou data.
+- `recuperacao_sem_pacote` (regra 5): o texto cita recuperação com o bloco ausente ou `sem_dado`; a frase pronta "Sem dado de sono, VFC e FC de repouso da noite anterior." só passa em `sem_dado` com `sem_noite`.
+Mudanças nas outras regras: a unidade `ms` entra; "5 h 40 min" vale como **um** número e só passa se está escrito assim no pacote (`numero_fora_do_pacote` caso contrário); "VFC" entra nas siglas; "durma", "dormir mais", "dormir cedo", "vá dormir" e "o ideal é dormir" entram em `linguagem_conselho`; os termos fisiológicos ("sistema nervoso", "prontidão", "Body Battery"...) entram em `linguagem_diagnostico`;
+a repetição de "dentro do seu normal" (`conclusao_repetida`) conta separado para as linhas da recuperação e as do resultado. Textos em `tests/fixtures/meta10/textos_recuperacao.py` (6 bons e 25 ruins, cada ruim com o motivo esperado), teste `services/api/tests/explicacao/test_checagens_recuperacao.py`.
+Feedback `pronto` com `checagens_feedback@3` não é refeito sozinho por isso (a versão das checagens não entra no "desatualizado"); o `fatos_treino@2` já os refaz.
 
 ## Regras
 Todas rodam sempre; o resultado reúne os códigos de todas as que reprovam, na ordem da tabela.
@@ -66,7 +78,7 @@ aparece nos textos bons ("nos 11 treinos"). Antes das listas, tiram-se do texto 
 Os testes do worker injetam a própria `checar`; só o teste de `services/api/tests/llm/test_camada.py` (`test_texto_do_provedor_falso_nas_checagens_reais`) roda a `checar_texto` real contra o texto fixo do provedor falso. Mudou a forma, os verbos ou a lista? Confira esse texto e o teste. Ver [[modulos/camada-llm]] e [[modulos/worker]].
 
 ## Lista de linguagem proibida (`checagens_feedback@1`)
-Ponto de partida: a lista da ADR 0013 (item 4.2), ampliada. Mudar qualquer lista abaixo, ou um limite, **sobe a versão** (hoje `checagens_feedback@3`).
+Ponto de partida: a lista da ADR 0013 (item 4.2), ampliada. Mudar qualquer lista abaixo, ou um limite, **sobe a versão** (hoje `checagens_feedback@4`).
 - **Diagnóstico (`linguagem_diagnostico`):** lesão, lesões, lesionado(a), inflamação, tendinite, fratura, distensão, overtraining, sobretreino, supertreino, doença, infecção, sintoma(s), diagnóstico, síndrome, arritmia, desidratação, desidratado, fadiga, esgotamento, exaustão, risco.
 - **Culpa e juízo (`linguagem_culpa`):** falhou, fracasso, fracassou, preguiça, desleixo, culpa, fraco(a), decepcionante, "você deveria", "você devia", péssimo, horrível, "treino ruim", "mau treino", ruim, mau, preocupante, alerta, problema, pior, erro, **mal** (só passa como rótulo da sensação do pacote; ver "Rótulos do check-in").
 - **Promessa (`linguagem_promessa`):** "vai melhorar", "com certeza", certamente, garanto, prometo, garantido, "você vai conseguir", "na próxima será", "em breve você".
@@ -82,7 +94,7 @@ Ponto de partida: a lista da ADR 0013 (item 4.2), ampliada. Mudar qualquer lista
 Regra própria do projeto, sem artigo (ADR 0013, "Fontes"). Decisões do Angelo de 10/11: tom aprovado como está, observação positiva só quando um fato a sustenta, clima e check-in lado a lado, dor em uma frase neutra.
 
 ## Código e teste
-- Código: `services/api/app/explicacao/checagens.py` (`VERSAO = "checagens_feedback@3"`; as listas são constantes nomeadas no topo).
+- Código: `services/api/app/explicacao/checagens.py` (`VERSAO = "checagens_feedback@4"`; as listas são constantes nomeadas no topo).
 - Teste: `services/api/tests/explicacao/test_checagens.py`. **Os 13 textos bons passam e os 84 ruins reprovam com o motivo certo** (listas da #323, [[metricas/fatos-treino-oraculo]], escritas à mão contra os pacotes do oráculo;
   cada ruim tem exatamente um motivo). Mais casos pequenos de cada regra: unidade, número por extenso, acento e maiúscula, palavra inteira, "nós" e "nos", "sono ruim", rótulos da sensação, rótulos da sensação do pacote e de fora dele, "quente" e "frio", um ruim por termo novo da revisão da Nina, elogio com e sem fato, limites de linhas e de
   caracteres, Markdown, dor marcada e não marcada, atalhos, nome próprio e siglas, ordem dos motivos, pureza do módulo.

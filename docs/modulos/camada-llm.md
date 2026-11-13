@@ -2,7 +2,7 @@
 tipo: modulo
 status: em-uso
 dono: duda
-atualizado: 2026-11-12
+atualizado: 2026-11-13
 links: [[decisoes/0013-feedback-automatico]], [[metricas/checagens-feedback]], [[modulos/api]], [[modulos/worker]], [[produto/roadmap]]
 ---
 # Módulo: camada de LLM
@@ -21,7 +21,7 @@ A única porta do produto para um modelo de linguagem (regra do `AGENTS.md`: IA 
 | `limite_de_chamadas` | a execução já fez `LLM_LIMITE_CHAMADAS` (padrão 20) chamadas; a chamada acima do limite nem vai ao provedor |
 
 São os mesmos códigos do `CHECK` previsto para `feedback_treino` ([[decisoes/0013-feedback-automatico]]). `texto_reprovado` não é daqui: é do worker, depois das checagens.
-- **Provedor falso** (`LLM_PROVIDER=falso`): sem rede e sem chave, obrigatório em testes e CI. Devolve um texto fixo de 3 linhas que **passa na `checar_texto` real** (`checagens_feedback@3`) com um pacote comum: cada linha tem verbo da lista (com acento: "é", "foi"), sem número; com o atalho `dor` reprova por `dor_regra`, porque não traz a frase da dor (#361; teste em `test_camada.py` com as checagens reais, sem `checar` injetada). Quem mudar as checagens confere esse texto; `ProvedorFalso(modo="ruim")` devolve um texto de propósito reprovável, e os modos `erro`, `tempo` e `vazio` simulam falhas. O resultado leva `provedor = "falso"`.
+- **Provedor falso** (`LLM_PROVIDER=falso`): sem rede e sem chave, obrigatório em testes e CI. Devolve um texto fixo de 3 linhas que **passa na `checar_texto` real** (`checagens_feedback@4`) com um pacote comum: cada linha tem verbo da lista (com acento: "é", "foi"), sem número; com o atalho `dor` reprova por `dor_regra`, porque não traz a frase da dor (#361; teste em `test_camada.py` com as checagens reais, sem `checar` injetada). Quem mudar as checagens confere esse texto; `ProvedorFalso(modo="ruim")` devolve um texto de propósito reprovável, e os modos `erro`, `tempo` e `vazio` simulam falhas. O resultado leva `provedor = "falso"`.
 
 ## Regras
 - **Troca só pelo `.env`:** `LLM_PROVIDER` (`groq`, `openai`, `anthropic` ou `falso`), `LLM_MODEL` e a chave (`GROQ_API_KEY`, `OPENAI_API_KEY`, `ANTHROPIC_API_KEY`). O LiteLLM recebe `<provedor>/<modelo>` e a chave explícita. Padrão: `groq`. `.env.example` só com os nomes.
@@ -38,8 +38,10 @@ São os mesmos códigos do `CHECK` previsto para `feedback_treino` ([[decisoes/0
 
 Na linha de comando, os padrões são os reais: `app.servicos.feedback_fatos.fatos_da_atividade` (o **adaptador** que lê o banco e chama a função pura `app.explicacao.fatos_treino.fatos_treino`, #324), `app.explicacao.checagens.checar` (#325) e as `VERSAO` dos dois módulos. O adaptador usa os serviços de leitura que a API já tem (`linha_base_resultado`, `clima_da_atividade`, `carga_da_atividade`, `esforcos_da_atividade`, rótulo de transição) e não recalcula nada; natação fica sem bloco de clima. Desde a #374 ele também passa a recuperação (`app/servicos/recuperacao_pacote.py`, ver [[metricas/fatos-treino]]). Teste: o pacote que sai do banco semeado com as fixtures da meta 9 é igual ao do oráculo, com `recuperacao = sem_noite` (`services/api/tests/servicos/test_feedback_fatos.py`).
 
-## Prompt `feedback_prompt@4` (`app/llm/prompt_feedback.py`)
+## Prompt `feedback_prompt@5` (`app/llm/prompt_feedback.py`)
 Regras de forma, tom e do que falta no pacote, mais os **6 exemplos aprovados** (G01 a G06, pacote reduzido sem campos nulos e texto da ADR 0013). Os exemplos têm **fonte única** em `app/llm/exemplos_feedback.py`; um teste confere o texto contra `tests/fixtures/meta9/textos.py`, o pacote contra o oráculo e que cada texto passa nas checagens. O prompt tem uns 2,5 mil tokens (estimativa), para caber no limite por minuto do plano gratuito (não conferido). Se o texto mudar de forma relevante, a `VERSAO` sobe.
+
+**`@5` (13/11, #375):** a regra da recuperação (ADR 0014, item 6): a noite anterior numa linha própria, com os `*_texto` do pacote e só "abaixo/acima/dentro do seu normal"; `aprendendo` sem comparar; frase pronta do `sem_noite`; nada sobre recuperação em madrugada, `fora_do_periodo` ou sem o bloco; sem causa, conselho, julgamento nem outro dia. Os 6 exemplos aprovados não mudaram (as frases da regra são as da ADR). Cabe em 3500 tokens (conferido por teste). Checagens em [[metricas/checagens-feedback]] (`@4`).
 
 **`@4` (12/11, #374):** acompanha o `fatos_treino@2`: sem rótulo (PSE 6, 8 e 9), `checkin.pse_texto` vem nulo (ou ausente nos exemplos, que não trazem campos nulos) e a regra manda escrever só o número de `checkin.pse`. Os exemplos G02 e G03 perderam o `pse_texto` repetido; os textos aprovados não mudaram.
 

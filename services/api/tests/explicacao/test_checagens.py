@@ -43,7 +43,7 @@ def test_texto_ruim_reprova_com_o_motivo_certo(i):
 
 
 def test_os_motivos_da_funcao_sao_os_da_lista_de_textos():
-    assert ck.MOTIVOS == T.MOTIVOS
+    assert ck.MOTIVOS[:len(T.MOTIVOS)] == T.MOTIVOS  # os da meta 9; os da recuperação (@4) estão em test_checagens_recuperacao.py
 
 
 def test_o_resultado_so_traz_codigos_nunca_o_texto_nem_o_termo():
@@ -332,7 +332,7 @@ def test_o_modulo_e_puro_sem_rede_llm_banco_nem_log():
 
 
 def test_versao():
-    assert ck.VERSAO == "checagens_feedback@3"
+    assert ck.VERSAO == "checagens_feedback@4"
 
 
 def test_checar_devolve_none_se_aprovado_e_um_codigo_se_reprovado():

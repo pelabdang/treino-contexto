@@ -45,8 +45,8 @@ Nenhuma. Função pura `fatos_treino(atividade, checkin, linha_base, motivos_sem
 - Teste: `services/api/tests/servicos/test_recuperacao_pacote.py` (bloco igual ao oráculo `tests/fixtures/meta10/oraculo_fatos_recuperacao.py` nos 6 casos; o pacote não leva série, data, identificador nem texto livre)
   e `services/worker/tests/test_gerar_feedback.py` (noite que chega refaz uma vez; apagar a recuperação apaga o feedback).
 
-## Aviso: entre a #374 e a #375
-Depois da #374 o pacote já leva o bloco `recuperacao`, mas o `feedback_prompt@4` não tem regra para ele e as `checagens_feedback@3` não cobrem a linguagem da recuperação. A rodada com o provedor de verdade (#376) só vale depois da #375.
+## Prompt e checagens da recuperação (#375)
+O `feedback_prompt@5` e as `checagens_feedback@4` cobrem o bloco `recuperacao` ([[metricas/checagens-feedback]]). A rodada com o provedor de verdade é a #376.
 
 ## Dados de entrada
 A recuperação da noite do treino (`recuperacao@1`, [[metricas/recuperacao]]), lida do banco pelo adaptador (veja acima); a função pura recebe o resultado pronto.
