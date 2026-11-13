@@ -55,6 +55,4 @@ Arquivos: `tests/fixtures/meta9/textos.py` (a lista) e `tests/test_textos_meta9.
 ## Adendo `fatos_treino@2` (issue #374, ADR 0014)
 Os pacotes de F01 a F10 ganham `recuperacao: null` (depois de `clima`) e `pse_texto: null` nos casos de PSE sem âncora (F02 e F03); a versão passa a `fatos_treino@2`.
 O bloco `recuperacao` tem oráculo próprio, à mão, em `tests/fixtures/meta10/oraculo_fatos_recuperacao.py` (casos R01 a R06: as três medidas, `aprendendo`, arredondamento e hora
-cheia, `sem_noite`, `treino_de_madrugada` e `fora_do_periodo`), testado em `services/api/tests/explicacao/test_fatos_treino_recuperacao.py`.
-
-O bloco `recuperacao` com valores (as três medidas, `aprendendo`, `sem_noite`, madrugada e `fora_do_periodo`) tem oráculo próprio: `tests/fixtures/meta10/oraculo_fatos_recuperacao.py`, com a conta à mão em [[metricas/recuperacao-oraculo]] (regra em [[decisoes/0014-recuperacao-diaria]]).
+cheia, `sem_noite`, `treino_de_madrugada` e `fora_do_periodo`), com a conta em [[metricas/recuperacao-oraculo]] (regra em [[decisoes/0014-recuperacao-diaria]]); testado em `services/api/tests/explicacao/test_fatos_treino_recuperacao.py`.

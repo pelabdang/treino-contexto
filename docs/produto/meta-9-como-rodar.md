@@ -2,7 +2,7 @@
 tipo: guia
 status: em-uso
 dono: nina
-atualizado: 2026-11-12
+atualizado: 2026-11-13
 links: [[produto/meta-8-como-rodar]], [[produto/roadmap]], [[decisoes/0013-feedback-automatico]], [[decisoes/0012-check-in-pos-treino]], [[decisoes/0004-contrato-tela-evolucao]], [[metricas/fatos-treino]], [[metricas/fatos-treino-oraculo]], [[metricas/checagens-feedback]], [[design/telas/feedback]], [[modulos/camada-llm]], [[modulos/banco]], [[modulos/api]], [[modulos/mobile]], [[modulos/worker]], [[modulos/ingestao-garmin]], [[diario/2026-11-11]], [[glossario]]
 ---
 # Meta 9: como rodar o feedback automático por treino
@@ -136,7 +136,7 @@ A Bia também rodou o provedor de verdade em 11/11, só com fixtures sintéticas
     - **Limite por minuto do plano gratuito:** `LLM_INTERVALO_S` (padrão 0) põe uma pausa em segundos entre as chamadas da mesma
       execução; para o plano gratuito comece por 40. Quando o provedor recusa por limite, a execução **para ali, sem gravar
       linha**, o resto conta em `adiados` e sai o aviso para rodar de novo em 1 minuto ([[modulos/camada-llm]]).
-    - **Prompt:** o texto vem do `feedback_prompt@3`, e mudar a versão do prompt **não desatualiza** o que já está `pronto`: para
+    - **Prompt:** o texto vem do prompt em vigor (hoje o `feedback_prompt@5`, que acrescentou a recuperação da Meta 10; o `@3` era o desta verificação), e mudar a versão do prompt **não desatualiza** o que já está `pronto`: para
       reescrever com o prompt novo, `--refazer`.
     - Erro, tempo limite e limite de requisições do provedor viram `sem_feedback` com o motivo e entram na próxima execução.
 14. **`worker.buscar_garmin`** (opcional; **entra numa conta real do Garmin Connect**, só no computador do próprio atleta; não
