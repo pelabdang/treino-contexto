@@ -1,4 +1,4 @@
-"""Prompt `feedback_prompt@4` e seus 6 exemplos (issue #327, revisão do Caio no PR #348): fonte única conferida contra as fixtures da meta 9."""
+"""Prompt `feedback_prompt@5` e seus 6 exemplos (issue #327, revisão do Caio no PR #348): fonte única conferida contra as fixtures da meta 9."""
 
 import importlib.util
 import sys
@@ -57,7 +57,7 @@ def test_os_seis_exemplos_estao_no_prompt_e_o_prompt_nao_tem_dado():
     for e in EXEMPLOS:
         assert e["texto"] in prompt_feedback.TEXTO
     assert O.MARCADOR_TEXTO_LIVRE not in prompt_feedback.TEXTO
-    assert prompt_feedback.VERSAO == "feedback_prompt@4"
+    assert prompt_feedback.VERSAO == "feedback_prompt@5"
 
 
 def test_prompt_com_acentos_e_sem_a_ortografia_sem_acento():
@@ -84,3 +84,14 @@ def test_prompt_traz_os_avisos_pedidos(trecho):
 def test_tamanho_do_prompt_cabe_no_limite_de_tokens():
     """Estimativa grosseira (4 caracteres por token): prompt + pacote precisam caber com folga em 8.000 tokens por minuto."""
     assert len(prompt_feedback.TEXTO) / 4 < 3500
+
+
+def test_prompt_traz_as_regras_da_recuperacao_da_adr_0014():
+    """Regras do item 6 no prompt (#375): a frase pronta do `sem_dado`, a forma permitida e o que nunca dizer."""
+    from app.explicacao.checagens import FRASE_SEM_DADO
+
+    t = prompt_feedback.TEXTO
+    assert FRASE_SEM_DADO in t
+    for trecho in ("noite anterior", "abaixo", "acima", "dentro do seu normal", "aprendendo", "treino_de_madrugada", "fora_do_periodo",
+                   "linha PRÓPRIA", "nunca ligada", "ontem"):
+        assert trecho in t, trecho

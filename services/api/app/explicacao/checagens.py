@@ -1,6 +1,6 @@
-"""Checagens do texto do feedback (issue #325, ADR 0013, item 4): `checagens_feedback@3`.
+"""Checagens do texto do feedback (issue #325, ADR 0013, item 4): `checagens_feedback@4`.
 
-Função pura: sem banco, sem rede, sem IA, sem log. Confere um texto contra o pacote de fatos (`fatos_treino@1`) e devolve se foi aprovado e, se não,
+Função pura: sem banco, sem rede, sem IA, sem log. Confere um texto contra o pacote de fatos (`fatos_treino@2`) e devolve se foi aprovado e, se não,
 os **códigos** dos motivos. Texto reprovado é descartado pelo chamador (nunca gravado nem mostrado) e a nova tentativa fica para a próxima execução
 do worker (decisão 8 da ADR). **O resultado nunca repete o texto nem o termo que reprovou**: só códigos, para que nada do texto (dado de saúde)
 vá parar em log. Lista de linguagem proibida e regras em docs/metricas/checagens-feedback.md.
@@ -18,7 +18,7 @@ from collections.abc import Iterator, Mapping
 from dataclasses import dataclass
 from typing import Any
 
-VERSAO = "checagens_feedback@3"
+VERSAO = "checagens_feedback@4"
 
 LINHAS_MIN, LINHAS_MAX = 3, 5  # ADR 0013, item 4.3
 LINHA_MAX_CARACTERES = 140
@@ -32,6 +32,8 @@ MOTIVOS = (
     "linguagem_diagnostico", "linguagem_culpa", "linguagem_promessa", "linguagem_causa", "linguagem_conselho", "linguagem_quem_fala",
     "elogio_sem_fato", "forma_linhas", "forma_tamanho_linha", "forma_markdown", "forma_sem_verbo", "conclusao_repetida", "comparacao_mediana", "numero_repetido",
     "dor_regra", "dor_nao_marcada", "atalho_nao_marcado", "nome_fora_do_pacote",
+    # checagens_feedback@4 (#375, ADR 0014, item 6): a recuperação da noite
+    "linguagem_julgamento", "recuperacao_mistura", "recuperacao_forma", "recuperacao_outro_dia", "recuperacao_sem_pacote",
 )
 
 # --- Listas de linguagem proibida --------------------------------------------------------------------------------------------
@@ -40,7 +42,32 @@ DIAGNOSTICO = (
     "lesao", "lesoes", "lesionado", "lesionada", "inflamacao", "tendinite", "fratura", "distensao", "overtraining", "sobretreino",
     "supertreino", "doenca", "infeccao", "sintoma", "sintomas", "diagnostico", "sindrome", "arritmia", "desidratacao", "desidratado",
     "fadiga", "esgotamento", "exaustao", "risco",
+    # @4: termos fisiológicos e métricas proprietárias que o pacote não traz (ADR 0014, item 6.A)
+    "insonia", "apneia", "sistema nervoso", "parassimpatico", "simpatico", "overreaching", "prontidao", "bateria", "body battery",
+    "estado de treino", "readiness", "ansiedade",
 )
+# --- Recuperação (checagens_feedback@4, ADR 0014, item 6): valem só na LINHA que fala de sono, VFC ou FC de repouso ------------------
+REC_CAUSA = (
+    "por isso", "entao", "portanto", "logo", "assim", "dai", "reflete", "refletiu", "reflexo", "influenciou", "influencia", "afetou", "impactou",
+    "pesou", "contribuiu", "efeito do sono", "efeito da noite", "explica", "o sono explica", "culpa do sono", "mesmo com", "apesar de",
+    "apesar do", "mesmo assim", "mas", "porem", "no entanto", "enquanto",
+)
+REC_JULGAMENTO = (
+    "noite ruim", "noite boa", "mal dormido", "mal dormiu", "dormiu mal", "dormiu bem", "sono curto", "sono bom", "sono pouco",
+    "sono insuficiente", "pouco sono", "sono ruim", "bem recuperado", "mal recuperado", "recuperado", "descansado", "cansado",
+    "vfc baixa", "vfc alta", "fc de repouso alta", "fc de repouso baixa", "melhor", "pior", "boa recuperacao", "ma recuperacao",
+    "ruim",
+)
+REC_OUTRO_DIA = (
+    "ontem", "anteontem", "semana", "semanas", "ultimos dias", "dias", "media de", "segunda", "terca", "quarta", "quinta", "sexta",
+    "sabado", "domingo", "segunda-feira", "terca-feira", "quarta-feira", "quinta-feira", "sexta-feira",
+)
+# Vocabulário de OUTRA medida: a linha da recuperação não divide a linha com o resultado (regra 1).
+REC_MISTURA = (
+    "pace", "ritmo", "velocidade", "desempenho", "resultado", "fc", "carga", "esforco", "sensacao", "pse", "temperatura", "clima",
+    "umidade", "vento", "tiro", "tiros", "km", "pontos", "ua", "calor", "marcou",
+)
+FRASE_SEM_DADO = "Sem dado de sono, VFC e FC de repouso da noite anterior."  # ADR 0014, item 4 (motivo sem_noite)
 CULPA = (
     "falhou", "fracasso", "fracassou", "preguica", "desleixo", "culpa", "fraco", "fraca", "decepcionante", "voce deveria", "voce devia",
     "pessimo", "horrivel", "treino ruim", "mau treino", "ruim", "mau",
@@ -62,6 +89,8 @@ CONSELHO = (
     "hidrate", "beba", "medico", "fisioterapeuta", "fique de olho", "vale a pena", "convem", "mantenha", "continue", "aumente", "reduza",
     "diminua", "voce deve",
     "descanso", "recuperacao", "fique atento", "fique atenta", "prefira", "considere", "lembre-se", "priorize",
+    # @4 (ADR 0014, item 6.A): conselho sobre o sono vale no texto inteiro
+    "durma", "dormir mais", "dormir cedo", "va dormir", "o ideal e dormir",
 )
 QUEM_FALA = (
     "professor", "professora", "treinador", "treinadora", "tecnico", "coach", "eu", "meu", "minha", "meus", "minhas", "nosso", "nossa",
@@ -108,13 +137,13 @@ EXTENSO = (
     "dezesseis", "dezessete", "dezoito", "dezenove", "vinte", "trinta", "quarenta", "cinquenta", "sessenta", "setenta", "oitenta",
     "noventa", "cem", "cento", "mil", "metade", "dobro", "triplo", "dezena", "duzia",
 )  # "um" e "uma" ficam de fora: como artigo passam
-SIGLAS_PERMITIDAS = frozenset({"FC", "PSE", "UA", "C"})  # o "C" de "°C"
+SIGLAS_PERMITIDAS = frozenset({"FC", "PSE", "UA", "C", "VFC"})  # o "C" de "°C"
 
 # unidade de cada campo numérico do pacote (o que o texto pode escrever depois do número)
 _UNIDADE_DO_CAMPO = {"temperatura_c": "°c", "sensacao_termica_c": "°c", "umidade_pct": "%", "vento_kmh": "km/h", "fc_media_bpm": "bpm",
                      "duracao_s": "s", "distancia_m": "m"}
 
-_UNIDADES = r"pontos/h|pontos|s/km|km/h|km|bpm|min|ua|°\s?c|%|/km|m|s|h"
+_UNIDADES = r"pontos/h|pontos|s/km|km/h|km|bpm|min|ms|ua|°\s?c|%|/km|m|s|h"
 _NUMERO = r"(?<![\w:,.])(\d{1,3}(?:\.\d{3})+(?:,\d+)?|\d+:\d{2}|\d+(?:,\d+)?)"
 _NUM_UNIDADE = re.compile(_NUMERO + rf"(?:\s?({_UNIDADES})(?![\w]))?")
 
@@ -176,11 +205,32 @@ def _coletar(pacote: Any, pares: set[tuple[str, str]], soltos: set[str], campo: 
                 pares.add((f, _UNIDADE_DO_CAMPO[campo]))
 
 
+_COMPOSTA = re.compile(r"(?<![\w:,.])(\d+) h (\d+) min(?!\w)")  # "5 h 40 min": UM número (ADR 0014, item 6.B3)
+
+
+def _compostas_do_pacote(pacote: Any) -> set[str]:
+    achadas: set[str] = set()
+    if isinstance(pacote, Mapping):
+        for v in pacote.values():
+            achadas |= _compostas_do_pacote(v)
+    elif isinstance(pacote, (list, tuple)):
+        for v in pacote:
+            achadas |= _compostas_do_pacote(v)
+    elif isinstance(pacote, str):
+        achadas |= {m.group(0) for m in _COMPOSTA.finditer(pacote)}
+    return achadas
+
+
 def _numeros(pacote: Mapping[str, Any], texto: str, plano: str) -> set[str]:
     pares: set[tuple[str, str]] = set()
     soltos: set[str] = set()
     _coletar(pacote, pares, soltos)
     motivos: set[str] = set()
+    compostas = _compostas_do_pacote(pacote)
+    for m in _COMPOSTA.finditer(texto):  # "1 h 30 min" só passa se é um texto composto do pacote
+        if m.group(0) not in compostas:
+            motivos.add("numero_fora_do_pacote")
+    texto = _COMPOSTA.sub(" ", texto)
     for num, un in _numeros_do_texto(texto):
         if un is not None:
             if (num, un) in pares:
@@ -247,7 +297,76 @@ def _tem_verbo(linha: str) -> bool:
     return any(t in VERBOS or _PRETERITO.match(t) for t in re.findall(r"[\wà-ÿ]+", linha.casefold()))
 
 
-def _forma(texto: str, linhas: list[str]) -> set[str]:
+_REC_TERMO = r"(?<!\w)(sono|vfc|fc de repouso|noite anterior|noite|dormiu|dormiram)(?!\w)"
+_MEDIDA_NA_FRASE = re.compile(r"(?<!\w)(fc de repouso|vfc|sono|dormiu|dormiram)(?!\w)")
+_CHAVE_DA_PALAVRA = {"fc de repouso": "fc_repouso", "vfc": "vfc"}
+_COMPARACAO = re.compile(r"(?<!\w)(abaixo|acima|dentro)(?!\w)")
+_COMPARACAO_PERMITIDA = re.compile(r"(?<!\w)(abaixo|acima|dentro) d[oa] seu normal(?!\w)")
+
+
+def _e_linha_rec(linha: str, pacote: Mapping[str, Any]) -> bool:
+    """A linha fala de sono, VFC ou FC de repouso (o rótulo "sono ruim" do atalho marcado não conta)."""
+    return re.search(_REC_TERMO, _mascarar_rotulos(_plano(linha), pacote)) is not None
+
+
+def _recuperacao(linhas: list[str], pacote: Mapping[str, Any]) -> set[str]:
+    """Regras da recuperação da noite (ADR 0014, item 6; `checagens_feedback@4`). Linhas que não falam de sono, VFC ou FC de repouso
+    não são tocadas por nenhuma delas."""
+    bloco = pacote.get("recuperacao") or {}
+    sem_dado_ok = bloco.get("estado") == "sem_dado" and bloco.get("motivo") == "sem_noite"
+    frase = _plano(FRASE_SEM_DADO).rstrip(".")
+    motivos: set[str] = set()
+    rec = []
+    for linha in linhas:
+        if not _e_linha_rec(linha, pacote):
+            continue
+        plano = _plano(linha).strip().rstrip(".")
+        if plano == frase:
+            if not sem_dado_ok:
+                motivos.add("recuperacao_sem_pacote")  # a frase pronta só vale em sem_dado/sem_noite
+            continue
+        rec.append(linha)
+    if not rec:
+        return motivos
+    if bloco.get("estado") != "ok":  # regra 5: sem recuperação no pacote, sem recuperação no texto
+        return motivos | {"recuperacao_sem_pacote"}
+    planas = [_plano(x) for x in rec]
+    sem_rotulo = [re.sub(r"\s+", " ", x) for x in planas]
+    juntas = " | ".join(sem_rotulo)
+    if _tem_termo(juntas, REC_CAUSA):
+        motivos.add("linguagem_causa")
+    if _tem_termo(juntas, REC_JULGAMENTO):
+        motivos.add("linguagem_julgamento")
+    if _tem_termo(juntas, REC_OUTRO_DIA) or re.search(r"\d{1,2}/\d{1,2}", juntas):
+        motivos.add("recuperacao_outro_dia")
+    for x in sem_rotulo:  # regra 1: nenhuma outra medida na linha ("fc de repouso" é da recuperação)
+        sobra = x.replace("fc de repouso", " ")
+        if _tem_termo(sobra, REC_MISTURA) or re.search(r"\d\s?°\s?c|/km", sobra):
+            motivos.add("recuperacao_mistura")
+    # regra 2: "noite anterior" aparece, e a comparação só tem a forma "abaixo/acima/dentro do seu normal", coerente com o estado
+    if "noite anterior" not in juntas:
+        motivos.add("recuperacao_forma")
+    estados = {m.get("chave"): m.get("estado") for m in bloco.get("medidas") or []}
+    for x in sem_rotulo:
+        if len(_COMPARACAO.findall(x)) != len(_COMPARACAO_PERMITIDA.findall(x)):
+            motivos.add("recuperacao_forma")
+        for frase_ in re.split(r"(?<=[.!?])\s+", x):
+            marcas = list(_MEDIDA_NA_FRASE.finditer(frase_))
+            for i, mt in enumerate(marcas):
+                fim = marcas[i + 1].start() if i + 1 < len(marcas) else len(frase_)
+                trecho = frase_[mt.start():fim]
+                chave = _CHAVE_DA_PALAVRA.get(mt.group(1), "sono")
+                estado = estados.get(chave)
+                achadas = set(_COMPARACAO.findall(trecho))
+                if estado in ("abaixo", "acima", "dentro"):
+                    if achadas - {estado}:
+                        motivos.add("recuperacao_forma")
+                elif achadas or estado in (None, "sem_dado"):  # aprendendo: sem comparação; sem_dado: nem se cita
+                    motivos.add("recuperacao_forma")
+    return motivos
+
+
+def _forma(texto: str, linhas: list[str], pacote: Mapping[str, Any] | None = None) -> set[str]:
     motivos: set[str] = set()
     if not LINHAS_MIN <= len(linhas) <= LINHAS_MAX:
         motivos.add("forma_linhas")
@@ -257,9 +376,11 @@ def _forma(texto: str, linhas: list[str]) -> set[str]:
         motivos.add("forma_markdown")
     if any(not _tem_verbo(x) for x in linhas):
         motivos.add("forma_sem_verbo")
-    planas = [_plano(x) for x in linhas]
-    if any(sum(c in x for x in planas) >= 2 for c in CONCLUSOES):
-        motivos.add("conclusao_repetida")
+    # A linha da recuperação tem a sua própria conclusão ("dentro do seu normal" da VFC): conta à parte da do resultado (@4).
+    rec = [_e_linha_rec(x, pacote or {}) for x in linhas]
+    for grupo in ([_plano(x) for x, r in zip(linhas, rec) if not r], [_plano(x) for x, r in zip(linhas, rec) if r]):
+        if any(sum(c in x for x in grupo) >= 2 for c in CONCLUSOES):
+            motivos.add("conclusao_repetida")
     if _DENTRO_DA_MEDIANA.search(_plano(texto)):
         motivos.add("comparacao_mediana")
     if _NUMERO_REPETIDO.search(texto):
@@ -319,7 +440,7 @@ def checar_texto(pacote: Mapping[str, Any], texto: str) -> Resultado:
     """
     linhas = [x for x in texto.split("\n") if x.strip()]
     plano = _plano(texto)
-    achados = _forma(texto, linhas) | _numeros(pacote, texto, plano) | _linguagem(texto, plano, pacote) | _dor_e_atalhos(plano, pacote)
+    achados = _forma(texto, linhas, pacote) | _recuperacao(linhas, pacote) | _numeros(pacote, texto, plano) | _linguagem(texto, plano, pacote) | _dor_e_atalhos(plano, pacote)
     if _nome_proprio(texto):
         achados.add("nome_fora_do_pacote")
     motivos = tuple(m for m in MOTIVOS if m in achados)
