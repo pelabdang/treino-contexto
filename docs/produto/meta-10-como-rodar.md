@@ -18,8 +18,10 @@ com o **provedor falso**, o feedback refeito quando a noite chega, a busca com o
 e nada usou a rede. **Não rodado aqui:**
 - o app (o cartão "Feedback" em tela e a tela do treino): conferência visual no Chrome em tamanho de celular é a #369; o celular de
   verdade segue pendente, sem data;
-- o **provedor de verdade** com a recuperação no prompt (`feedback_prompt@5`): é a #376, ainda não aconteceu; nenhum texto real
-  com linha de recuperação foi visto;
+- o **provedor de verdade** com a recuperação no prompt (`feedback_prompt@5`): a rodada da #376 (Caio, 13/11, só fixtures) está na
+  seção "Rodada com o provedor de verdade, Meta 10" da `docs/modulos/camada-llm.md` (nota do PR #393; escrita sem link até ele entrar no `main`).
+  **Hoje o provedor de verdade com a recuperação não fecha** sem os ajustes propostos lá: a linha com as três medidas passa de 140
+  caracteres, e a camada não fecha no limite por minuto do plano gratuito. Este guia não repete a rodada;
 - a busca com **conta real** do Garmin (`worker.buscar_recuperacao` sem cliente falso): passo 11, opcional e só local;
 - a conferência local (#379), a QA (#378) e o resultado da meta (#380).
 
@@ -146,11 +148,11 @@ e nada usou a rede. **Não rodado aqui:**
    dá `pronto||f|1|1`, `pronto||t|7|2` e `sem_feedback|texto_reprovado|t|1|3`. Noite que chega **soma 1 em `tentativas`** (só ordena a fila, não
    barra o treino). O worker lê as noites do atleta **uma vez** por execução.
    **O que este passo não mostra:** o texto fixo do provedor falso não fala de sono, então o `GET` e o cartão não ganham uma linha de
-   recuperação aqui. A linha da recuperação no texto só aparece com o provedor de verdade (#376) e o `feedback_prompt@5`.
+   recuperação aqui. A linha da recuperação no texto só aparece com o provedor de verdade e o `feedback_prompt@5`, e hoje o texto com as três medidas reprova por tamanho (rodada da #376).
 8. **Sem dado, sem recuperação no texto.** As `checagens_feedback@4` barram o texto que fala de sono, VFC ou FC de repouso quando o bloco é
    `sem_dado` (a frase pronta só passa em `sem_dado` com `sem_noite`) e usam cinco códigos novos de motivo
-   ([[metricas/checagens-feedback]]). Texto reprovado nunca é gravado. Rodar isso à mão exige o provedor de verdade (#376); sem ele, a
-   conferência é o conjunto de frases de teste do passo 12 (6 boas e 25 ruins, cada ruim com o motivo esperado).
+   ([[metricas/checagens-feedback]]). Texto reprovado nunca é gravado. Rodar isso à mão exige o provedor de verdade, e hoje ele não fecha com a recuperação (a rodada e os ajustes propostos estão na seção da
+   `camada-llm.md` citada no começo); sem ele, a conferência é o conjunto de frases de teste do passo 12 (6 boas e 25 ruins, cada ruim com o motivo esperado).
 9. **Busca com o cliente Garmin falso** (sem rede e sem conta; as respostas são as fixtures de `tests/fixtures/meta10`). O
    `worker.buscar_recuperacao` não tem opção de cliente falso na linha de comando, então este trecho chama o `main` do worker com um
    cliente falso que passa as respostas sintéticas do sono pelo leitor de verdade (`ler_noite`). Salve `/caminho/saida/busca_falsa.py`:
@@ -222,4 +224,4 @@ e pare a API (Ctrl+C no terminal do passo 4). Isso apaga o banco `treino-meta10`
 - **A mensagem do `GET` não diz que foi a noite.** Quando a noite chega e o feedback fica `desatualizado`, o `mensagem` é a mesma da
   edição do check-in: "Você editou o check-in. O feedback será refeito.". Está certo no estado, mas o texto fala de uma ação que o atleta
   não fez.
-- **O provedor falso não exercita a linha de recuperação.** O texto fixo não cita a noite; só o provedor de verdade (#376) mostra o texto.
+- **O provedor falso não exercita a linha de recuperação.** O texto fixo não cita a noite; só o provedor de verdade mostra o texto, e a rodada da #376 mostrou que ele ainda reprova por tamanho com as três medidas.
