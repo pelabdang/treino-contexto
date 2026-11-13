@@ -27,6 +27,7 @@ O = importlib.util.module_from_spec(_spec)
 sys.modules[_spec.name] = O
 _spec.loader.exec_module(O)
 
+SEM_NOITE = {"versao": "recuperacao@1", "estado": "sem_dado", "motivo": "sem_noite"}
 HOJE = datetime(2026, 11, 9, 9, 0, tzinfo=UTC)
 METODO = {"F01": "rtss", "F02": "rtss", "F03": "hrtss", "F04": "rtss", "F07": "rtss", "F08": "rtss", "F09": "hrtss"}
 COM_PACOTE = [i for i in O.ENTRADAS if O.PACOTES[i] is not None]
@@ -112,7 +113,8 @@ def _semear(session, caso):
 @pytest.mark.parametrize("caso", COM_PACOTE)
 def test_o_pacote_do_banco_e_igual_ao_do_oraculo(session, caso):
     ativ, checkin = _semear(session, caso)
-    assert fatos_da_atividade(session, ativ, checkin) == O.PACOTES[caso]
+    esperado = {**O.PACOTES[caso], "recuperacao": SEM_NOITE}  # o adaptador sempre passa a recuperacao: sem busca, `sem_noite`
+    assert fatos_da_atividade(session, ativ, checkin) == esperado
 
 
 @pytest.mark.parametrize("caso", ["F07", "F08"])

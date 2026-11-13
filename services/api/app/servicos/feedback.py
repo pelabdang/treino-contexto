@@ -16,6 +16,7 @@ import re
 from collections.abc import Callable
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
+from typing import Any
 
 from sqlalchemy import select
 from sqlalchemy.dialects.postgresql import insert as _insert_pg
@@ -26,9 +27,14 @@ from app.db.models import FEEDBACK_TEXTO_MAX, Atividade, CheckinTreino, Feedback
 from app.ingestao.garmin.unidades import para_utc
 from app.llm import Redator
 from app.servicos.checkin import elegivel
+from app.servicos.recuperacao_pacote import mesmo_instante
 
 _CODIGO = re.compile(r"[a-z0-9_]{1,40}")
 _INSERT = {"postgresql": _insert_pg, "sqlite": _insert_sqlite}
+
+# `RecuperacaoHoje(atividade) -> importado_em | None`: o `importado_em` da noite do treino HOJE (ADR 0014, item 4b).
+RecuperacaoHoje = Callable[[Atividade], "datetime | None"]
+_NAO_SEI = object()  # quem chama sem a recuperacao nao compara essa parte (so check-in e versao)
 
 MontarPacote = Callable[[Session, Atividade, CheckinTreino], "dict | None"]
 Checar = Callable[[dict, str], "str | None"]
@@ -54,13 +60,22 @@ class RelatorioFeedback:
     reprovacoes: dict[str, int] = field(default_factory=dict)  # codigos devolvidos pelas checagens (nao gravados)
 
 
-def desatualizado(fb: FeedbackTreino, checkin: CheckinTreino, versao_fatos: str) -> bool:
-    """O feedback nao vale mais: o check-in foi editado (inclusive um `PUT` identico) ou a versao do pacote mudou.
-    Os dois `datetime` sao normalizados (o SQLite devolve sem fuso)."""
-    return (para_utc(fb.checkin_atualizado_em) != para_utc(checkin.atualizado_em)) or fb.versao_fatos != versao_fatos
+def desatualizado(fb: FeedbackTreino, checkin: CheckinTreino, versao_fatos: str, recuperacao_hoje: Any = _NAO_SEI) -> bool:
+    """O feedback nao vale mais: o check-in foi editado (inclusive um `PUT` identico), a versao do pacote mudou ou a noite do
+    treino chegou/mudou (ADR 0014, item 4b: `fb.recuperacao_importada_em` difere do `importado_em` de hoje; `None` dos dois lados
+    nao desatualiza). Todos os `datetime` sao normalizados para UTC (o SQLite devolve sem fuso). A noite so entra na conta quando
+    quem chama passa `recuperacao_hoje`; nao muda porque o "normal" mudou (so a noite do treino)."""
+    if (para_utc(fb.checkin_atualizado_em) != para_utc(checkin.atualizado_em)) or fb.versao_fatos != versao_fatos:
+        return True
+    return recuperacao_hoje is not _NAO_SEI and not mesmo_instante(fb.recuperacao_importada_em, recuperacao_hoje)
 
 
-def fila(session: Session, atleta_id: int, versoes: Versoes, refazer: bool = False) -> tuple[list[CheckinTreino], int]:
+def _hoje(recuperacao_hoje: RecuperacaoHoje | None, ativ: Atividade) -> Any:
+    return _NAO_SEI if recuperacao_hoje is None else recuperacao_hoje(ativ)
+
+
+def fila(session: Session, atleta_id: int, versoes: Versoes, refazer: bool = False,
+         recuperacao_hoje: RecuperacaoHoje | None = None) -> tuple[list[CheckinTreino], int]:
     """Os check-ins a gerar, na ordem de atendimento, e quantos ficaram de fora (em dia ou nao elegiveis).
 
     Entram: sem linha, `sem_feedback` e desatualizados (com `refazer`, todos). Ordem: quem nunca foi tentado primeiro; depois
@@ -76,7 +91,7 @@ def fila(session: Session, atleta_id: int, versoes: Versoes, refazer: bool = Fal
         fb = checkin.feedback
         if not elegivel(ativ):
             fora += 1
-        elif fb is None or refazer or fb.estado == "sem_feedback" or desatualizado(fb, checkin, versoes.fatos):
+        elif fb is None or refazer or fb.estado == "sem_feedback" or desatualizado(fb, checkin, versoes.fatos, _hoje(recuperacao_hoje, ativ)):
             nunca = 0 if fb is None else 1
             tent = 0 if fb is None else fb.tentativas
             entram.append(((nunca, tent, -para_utc(ativ.inicio).timestamp()), checkin))
@@ -87,7 +102,8 @@ def fila(session: Session, atleta_id: int, versoes: Versoes, refazer: bool = Fal
 
 
 def _gravar(session: Session, checkin: CheckinTreino, atualizado_em: datetime, *, estado: str, motivo: str | None,
-            texto: str | None, provedor: str | None, modelo: str | None, versoes: Versoes, agora: datetime) -> None:
+            texto: str | None, provedor: str | None, modelo: str | None, versoes: Versoes, agora: datetime,
+            recuperacao_em: datetime | None = None) -> None:
     """Upsert por `checkin_id` (`INSERT ... ON CONFLICT DO NOTHING` por dialeto, sem savepoint, como o check-in) e commit."""
     fb = session.scalars(select(FeedbackTreino).where(FeedbackTreino.checkin_id == checkin.id)).first()
     if fb is None:
@@ -98,7 +114,7 @@ def _gravar(session: Session, checkin: CheckinTreino, atualizado_em: datetime, *
             _INSERT[dialeto](FeedbackTreino).values(
                 checkin_id=checkin.id, estado=estado, motivo=motivo, texto=texto, versao_fatos=versoes.fatos,
                 versao_prompt=versoes.prompt, versao_checagens=versoes.checagens, provedor=provedor, modelo=modelo,
-                tentativas=1, checkin_atualizado_em=atualizado_em, tentado_em=agora,
+                tentativas=1, checkin_atualizado_em=atualizado_em, recuperacao_importada_em=recuperacao_em, tentado_em=agora,
             ).on_conflict_do_nothing(index_elements=["checkin_id"])
         )
         fb = session.scalars(select(FeedbackTreino).where(FeedbackTreino.checkin_id == checkin.id)).one()
@@ -109,20 +125,23 @@ def _gravar(session: Session, checkin: CheckinTreino, atualizado_em: datetime, *
     fb.estado, fb.motivo, fb.texto, fb.provedor, fb.modelo = estado, motivo, texto, provedor, modelo
     fb.versao_fatos, fb.versao_prompt, fb.versao_checagens = versoes.fatos, versoes.prompt, versoes.checagens
     fb.checkin_atualizado_em, fb.tentado_em = atualizado_em, agora
+    fb.recuperacao_importada_em = recuperacao_em
     session.commit()
 
 
 def gerar(session: Session, atleta_id: int, redator: Redator, montar_pacote: MontarPacote, checar: Checar,
-          versoes: Versoes, prompt: str, refazer: bool = False, agora: datetime | None = None) -> RelatorioFeedback:
+          versoes: Versoes, prompt: str, refazer: bool = False, agora: datetime | None = None,
+          recuperacao_hoje: RecuperacaoHoje | None = None) -> RelatorioFeedback:
     """Gera (ou refaz) o feedback dos check-ins do atleta, dentro do limite de chamadas do `redator`. Idempotente: sem mudanca
     nova, nao ha fila e nao ha chamada. Um `commit` por feedback. Nunca levanta por causa do provedor."""
     rel = RelatorioFeedback()
-    checkins, rel.ignorados = fila(session, atleta_id, versoes, refazer)
+    checkins, rel.ignorados = fila(session, atleta_id, versoes, refazer, recuperacao_hoje)
     for n, checkin in enumerate(checkins):
         if redator.configurado and redator.chamadas >= redator.limite_chamadas:
             rel.adiados = len(checkins) - n  # sem linha nova; entram na proxima execucao
             break
         atualizado_em = checkin.atualizado_em  # o que o pacote vai refletir
+        recuperacao_em = None if recuperacao_hoje is None else recuperacao_hoje(checkin.atividade)  # a noite que o pacote usa
         try:
             pacote = montar_pacote(session, checkin.atividade, checkin)
         except Exception:  # noqa: BLE001  (a mensagem pode ter dado de saude: so a contagem)
@@ -133,7 +152,7 @@ def gerar(session: Session, atleta_id: int, redator: Redator, montar_pacote: Mon
             rel.ignorados += 1
             continue
         fb_antes = checkin.feedback  # com `refazer`: texto pronto e em dia nao se perde se a nova tentativa falhar
-        manter = fb_antes is not None and fb_antes.estado == "pronto" and not desatualizado(fb_antes, checkin, versoes.fatos)
+        manter = fb_antes is not None and fb_antes.estado == "pronto" and not desatualizado(fb_antes, checkin, versoes.fatos, _hoje(recuperacao_hoje, checkin.atividade))
         res = redator.redigir(prompt, pacote)
         if res.texto is None and getattr(redator, "limite_do_provedor", False):  # limite do provedor: nada gravado, o resto fica para depois
             rel.adiados = len(checkins) - n
@@ -143,7 +162,7 @@ def gerar(session: Session, atleta_id: int, redator: Redator, montar_pacote: Mon
 
         def grava(estado: str, motivo: str | None, texto: str | None) -> None:
             _gravar(session, checkin, atualizado_em, estado=estado, motivo=motivo, texto=texto, provedor=res.provedor,
-                    modelo=res.modelo, versoes=versoes, agora=momento)
+                    modelo=res.modelo, versoes=versoes, agora=momento, recuperacao_em=recuperacao_em)
 
         if res.texto is None:
             if manter:

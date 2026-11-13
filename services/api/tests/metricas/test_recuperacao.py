@@ -139,3 +139,12 @@ def test_pura_nao_altera_a_entrada():
     copia = list(noites)
     rc.recuperacao(D, MANHA, noites)
     assert noites == copia
+
+
+def test_primeira_noite_do_atleta_vale_mais_que_a_da_janela():
+    # Janela so com D-3..D; o atleta tem noites desde D-30: o treino em D-10 NAO e fora do periodo (sem_noite), e em D-40 e.
+    noites = [Noite(D - timedelta(days=k), sono_s=1) for k in (3, 2, 1, 0)]
+    assert rc.noite_do_treino(D - timedelta(days=10), MANHA, noites) == (None, "fora_do_periodo")  # sem o argumento: a da lista
+    assert rc.noite_do_treino(D - timedelta(days=10), MANHA, noites, primeira_noite=D - timedelta(days=30)) == (None, "sem_noite")
+    assert rc.noite_do_treino(D - timedelta(days=40), MANHA, noites, primeira_noite=D - timedelta(days=30)) == (None, "fora_do_periodo")
+    assert rc.recuperacao(D - timedelta(days=40), MANHA, noites, primeira_noite=D - timedelta(days=30)).motivo == "fora_do_periodo"

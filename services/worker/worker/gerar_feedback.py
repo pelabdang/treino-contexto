@@ -2,7 +2,7 @@
 
     uv run python -m worker.gerar_feedback --atleta "<nome>" [--limite N] [--refazer]
 
-Para cada check-in sem feedback, com feedback `sem_feedback` ou desatualizado (o check-in foi editado ou a `fatos_treino` mudou):
+Para cada check-in sem feedback, com feedback `sem_feedback` ou desatualizado (o check-in foi editado, a `fatos_treino` mudou ou a noite da recuperacao chegou/mudou, ADR 0014):
 monta o pacote de fatos, pede o texto a camada de LLM (`app.llm`), passa pelas checagens e grava em `feedback_treino`. Texto
 reprovado NUNCA e gravado (so o motivo `texto_reprovado`). No maximo N chamadas ao provedor por execucao (`--limite`, senao
 `LLM_LIMITE_CHAMADAS`, padrao 20); as que sobram entram na proxima execucao. Idempotente: sem mudanca nova, nenhuma chamada.
@@ -49,6 +49,7 @@ def main(argv: list[str] | None = None, redator: Redator | None = None, montar_p
         print("erro: --limite nao pode ser negativo", file=sys.stderr)
         return 1
 
+    pacote_injetado = montar_pacote is not None
     if montar_pacote is None or checar is None or versoes is None:
         padroes = _padroes()
         if padroes is None:
@@ -70,8 +71,16 @@ def main(argv: list[str] | None = None, redator: Redator | None = None, montar_p
         redator = redator or criar_redator()
         if args.limite is not None:
             redator.limite_chamadas = args.limite
+        recuperacao_hoje = None
+        if not pacote_injetado:  # a recuperacao (ADR 0014): UMA leitura das noites por atleta, para o pacote e para o "desatualizado"
+            from app.servicos.recuperacao_pacote import carregar_do_atleta, importado_em_de_hoje
+
+            dados = carregar_do_atleta(session, atletas[0].id)
+            base = montar_pacote
+            montar_pacote = lambda s, a, c: base(s, a, c, dados)  # noqa: E731
+            recuperacao_hoje = lambda a: importado_em_de_hoje(dados, a)  # noqa: E731
         rel = gerar(session, atletas[0].id, redator, montar_pacote, checar, versoes, prompt_feedback.TEXTO,
-                    refazer=args.refazer)
+                    refazer=args.refazer, recuperacao_hoje=recuperacao_hoje)
 
     print(f"feedback: gerados={rel.gerados} sem_feedback={rel.sem_feedback} ignorados={rel.ignorados}"
           f" adiados={rel.adiados} erros={rel.erros}" + (f" mantidos={rel.mantidos}" if rel.mantidos else ""))

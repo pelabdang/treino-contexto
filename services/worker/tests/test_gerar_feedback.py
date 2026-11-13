@@ -537,3 +537,60 @@ def test_refazer_sem_provedor_configurado_mantem_o_texto(fabrica):
     assert (rel.sem_feedback, rel.mantidos, rel.motivos) == (0, 1, {"provedor_nao_configurado": 1})
     (fb,) = _linhas(fabrica)
     assert (fb.estado, fb.texto) == ("pronto", "Texto bom.")
+
+
+# ---------- recuperacao (#374, ADR 0014) ----------
+
+def _gravar_noite(fabrica, atleta_id, dia, sono_s, em):
+    from app.servicos.recuperacao_banco import gravar_noite
+
+    with fabrica() as s:
+        gravar_noite(s, atleta_id, dia, sono_s, None, None, "teste", em)
+        s.commit()
+
+
+def _rodar(fabrica, **kw):
+    """O worker com o adaptador de verdade (pacote do banco) e as checagens aprovando; provedor falso."""
+    r, falso = _redator()
+    codigo = gerar_feedback.main(["--atleta", "Ana", *kw.pop("args", [])], redator=r, checar=_aprova, versoes=V,
+                                 session_factory=fabrica)
+    return codigo, falso
+
+
+def test_sem_recuperacao_o_feedback_sai_com_recuperacao_importada_em_nulo(fabrica):
+    _atleta(fabrica, 1)
+    codigo, falso = _rodar(fabrica)
+    (fb,) = _linhas(fabrica)
+    assert codigo == 0 and falso.chamadas == 1 and fb.estado == "pronto" and fb.recuperacao_importada_em is None
+    assert _rodar(fabrica)[1].chamadas == 0  # sem noite nova, em dia
+
+
+def test_noite_que_chega_depois_refaz_o_feedback_uma_vez(fabrica):
+    at = _atleta(fabrica, 1)
+    _rodar(fabrica)
+    dia = (AGORA - timedelta(hours=3)).date()  # data local do treino (12:00 UTC = 09:00 em Sao Paulo)
+    em = AGORA + timedelta(hours=1)
+    _gravar_noite(fabrica, at, dia, 25200, em)
+    codigo, falso = _rodar(fabrica)
+    (fb,) = _linhas(fabrica)
+    assert falso.chamadas == 1 and fb.tentativas == 2 and fb.recuperacao_importada_em is not None
+    assert fb.recuperacao_importada_em.replace(tzinfo=None) == em.replace(tzinfo=None)
+    assert _rodar(fabrica)[1].chamadas == 0  # em dia de novo
+    _gravar_noite(fabrica, at, dia, 25200, em + timedelta(hours=1))  # mesmo valor: nada muda
+    assert _rodar(fabrica)[1].chamadas == 0
+    _gravar_noite(fabrica, at, dia, 21600, em + timedelta(hours=2))  # valor novo: refaz
+    assert _rodar(fabrica)[1].chamadas == 1
+
+
+def test_apagar_a_recuperacao_apaga_o_feedback_que_a_usou(fabrica):
+    from app.servicos.recuperacao_banco import apagar_recuperacao_do_atleta
+
+    at = _atleta(fabrica, 1)
+    _gravar_noite(fabrica, at, (AGORA - timedelta(hours=3)).date(), 25200, AGORA)
+    _rodar(fabrica)
+    assert _linhas(fabrica)[0].recuperacao_importada_em is not None
+    with fabrica() as s:
+        assert apagar_recuperacao_do_atleta(s, at) == (1, 1)
+    assert _linhas(fabrica) == []
+    _rodar(fabrica)  # gerado de novo, sem a recuperacao
+    assert _linhas(fabrica)[0].recuperacao_importada_em is None

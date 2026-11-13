@@ -31,8 +31,19 @@ Nenhuma. Função pura `fatos_treino(atividade, checkin, linha_base, motivos_sem
   quando quem chama não passa a recuperação. Textos: sono "5 h 45 min", VFC "41 ms", FC de repouso "58 bpm", **arredondados** (minuto, ms, bpm) antes de comparar; a diferença
   ("1 h 30 min abaixo", "6 bpm acima") é a conta entre os valores arredondados, então fecha à mão. Nunca entram a série diária, a data da noite, MAD, `z` nem a mediana numérica.
 - **`checkin.pse_texto` é `null`** quando a PSE não tem âncora (6, 8 e 9). Só no pacote; a rota do check-in não muda.
-- Os feedbacks gerados com a `@1` ficam desatualizados e são refeitos (ADR 0014, item 4). A coluna `recuperacao_importada_em` e a comparação com a noite de hoje são da #372 e do
-  adaptador do banco.
+- Os feedbacks gerados com a `@1` ficam desatualizados e são refeitos (ADR 0014, item 4); o texto antigo é substituído.
+
+## Adaptador do banco (#374)
+`app/servicos/feedback_fatos.py` passa a recuperação à função pura; `app/servicos/recuperacao_pacote.py` lê as noites gravadas pela #372 (`recuperacao_banco`) e converte cada
+`NoiteGravada` em `rc.Noite`. A data e a hora locais do treino vêm de `inicio_local` (ADR 0003, sem `fuso_min` vale `America/Sao_Paulo`).
+- **Sempre há bloco no pacote do adaptador**: atleta sem nenhuma noite (a busca nunca rodou) sai `sem_dado` com `sem_noite`, sem quebrar o feedback. `null` só quando quem chama a função pura não passa a recuperação.
+- **`fora_do_periodo`** usa a **primeira noite do atleta** (`primeira_noite`, argumento de `noite_do_treino`), não a mais antiga da janela lida. Omitido, vale a mais antiga da lista.
+- **Uma leitura por atleta** no worker (`carregar_do_atleta`); a API lê só a janela do treino (`D-28` a `D`) e a primeira noite.
+- **Desatualizado** (ADR 0014, item 4b): `desatualizado(fb, checkin, versao_fatos, recuperacao_hoje)` compara `feedback_treino.recuperacao_importada_em` com o `importado_em` da noite que `noite_do_treino`
+  devolve hoje, os dois em UTC. Madrugada, `fora_do_periodo` e sem noite valem `null` dos dois lados e **não** desatualizam. A mesma comparação vale para a fila e o `manter` do worker e para o cartão da API.
+  O worker grava `recuperacao_importada_em` com a noite que o pacote usou. Não desatualiza porque o normal mudou.
+- Teste: `services/api/tests/servicos/test_recuperacao_pacote.py` (bloco igual ao oráculo `tests/fixtures/meta10/oraculo_fatos_recuperacao.py` nos 6 casos; o pacote não leva série, data, identificador nem texto livre)
+  e `services/worker/tests/test_gerar_feedback.py` (noite que chega refaz uma vez; apagar a recuperação apaga o feedback).
 
 ## Dados de entrada
 Os do `GET` da atividade, já calculados: a atividade (lê só `modalidade`, `subtipo`, `tipo_treino`, `duracao_s`, `distancia_m`, `fc_media`), o check-in (lê só `pse`, `sensacao`, `nada_a_relatar` e os atalhos),

@@ -82,18 +82,21 @@ class Recuperacao:
     medidas: tuple[MedidaRecuperacao, ...]  # vazio em sem_dado
 
 
-def noite_do_treino(dia: date, hora: time, noites: Sequence[Noite], p: Parametros = PADRAO) -> tuple[Noite | None, str | None]:
+def noite_do_treino(dia: date, hora: time, noites: Sequence[Noite], p: Parametros = PADRAO,
+                    primeira_noite: date | None = None) -> tuple[Noite | None, str | None]:
     """A noite que liga ao treino de data local ``dia`` e hora local ``hora`` (ADR 0014, item 2), ou o motivo de não haver.
 
     ``(noite, None)`` quando há; senão ``(None, motivo)``. Ordem: treino antes do corte (``treino_de_madrugada``), treino
     anterior à noite mais antiga gravada (``fora_do_periodo``), noite de ``dia`` ausente ou sem nenhuma medida (``sem_noite``).
-    Sem nenhuma noite gravada: ``sem_noite`` (a busca nunca rodou). É a mesma regra para montar o pacote e para a comparação do
+    ``primeira_noite`` é a noite mais antiga que o atleta tem gravada (``recuperacao_banco.primeira_noite``): o banco passa-a
+    porque ``noites`` pode ser só uma janela e a mais antiga da janela não é a mais antiga do atleta. Omitida, vale a mais antiga
+    de ``noites``. Sem nenhuma noite gravada: ``sem_noite`` (a busca nunca rodou). É a mesma regra para montar o pacote e para a comparação do
     "desatualizado" (madrugada, fora do período e sem noite valem ``None`` dos dois lados).
     """
     if hora < p.hora_corte:
         return None, TREINO_DE_MADRUGADA
-    gravadas = [n.noite for n in noites]
-    if gravadas and dia < min(gravadas):
+    primeira = primeira_noite if primeira_noite is not None else min((n.noite for n in noites), default=None)
+    if primeira is not None and dia < primeira:
         return None, FORA_DO_PERIODO
     achada = next((n for n in noites if n.noite == dia and not n.vazia()), None)
     if achada is None:
@@ -113,7 +116,8 @@ def _medida(chave: str, valor: float | None, janela: Sequence[float], p: Paramet
     return MedidaRecuperacao(chave, estado, valor, n, mediana, desvio, z)
 
 
-def recuperacao(dia: date, hora: time, noites: Sequence[Noite], p: Parametros = PADRAO) -> Recuperacao:
+def recuperacao(dia: date, hora: time, noites: Sequence[Noite], p: Parametros = PADRAO,
+                primeira_noite: date | None = None) -> Recuperacao:
     """Recuperação da noite anterior ao treino, comparada com o normal do atleta (ADR 0014, itens 2 e 3).
 
     A janela são as ``janela_noites`` noites que terminam na véspera da noite do treino (``dia - 28`` a ``dia - 1``,
@@ -121,7 +125,7 @@ def recuperacao(dia: date, hora: time, noites: Sequence[Noite], p: Parametros = 
     comparada à parte: menos de ``minimo_noites`` valores é ``aprendendo`` (sem mediana); ``sem_dado`` é a noite sem
     valor da medida. O bloco é ``ok`` quando a noite tem ao menos uma medida.
     """
-    noite, motivo = noite_do_treino(dia, hora, noites, p)
+    noite, motivo = noite_do_treino(dia, hora, noites, p, primeira_noite)
     if noite is None:
         return Recuperacao(VERSAO, "sem_dado", motivo, ())
     desde = dia - timedelta(days=p.janela_noites)
