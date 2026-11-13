@@ -2,7 +2,7 @@
 tipo: metrica
 status: em-uso
 dono: caio
-atualizado: 2026-11-10
+atualizado: 2026-11-13
 links: [[decisoes/0013-feedback-automatico]], [[decisoes/0014-recuperacao-diaria]], [[metricas/recuperacao]], [[decisoes/0012-check-in-pos-treino]], [[metricas/fatos-treino-oraculo]], [[metricas/linha-base]], [[metricas/carga-treino]], [[metricas/carga-pse]], [[metricas/esforcos]], [[modulos/api]], [[produto/roadmap]], [[glossario]]
 ---
 # Pacote de fatos `fatos_treino@2`
@@ -45,7 +45,11 @@ Nenhuma. Função pura `fatos_treino(atividade, checkin, linha_base, motivos_sem
 - Teste: `services/api/tests/servicos/test_recuperacao_pacote.py` (bloco igual ao oráculo `tests/fixtures/meta10/oraculo_fatos_recuperacao.py` nos 6 casos; o pacote não leva série, data, identificador nem texto livre)
   e `services/worker/tests/test_gerar_feedback.py` (noite que chega refaz uma vez; apagar a recuperação apaga o feedback).
 
+## Aviso: entre a #374 e a #375
+Depois da #374 o pacote já leva o bloco `recuperacao`, mas o `feedback_prompt@4` não tem regra para ele e as `checagens_feedback@3` não cobrem a linguagem da recuperação. A rodada com o provedor de verdade (#376) só vale depois da #375.
+
 ## Dados de entrada
+A recuperação da noite do treino (`recuperacao@1`, [[metricas/recuperacao]]), lida do banco pelo adaptador (veja acima); a função pura recebe o resultado pronto.
 Os do `GET` da atividade, já calculados: a atividade (lê só `modalidade`, `subtipo`, `tipo_treino`, `duracao_s`, `distancia_m`, `fc_media`), o check-in (lê só `pse`, `sensacao`, `nada_a_relatar` e os atalhos),
 o resultado da `linha_base@2`, o clima (`ClimaFatos`), a `carga@2` (`CargaFatos`) e os esforços (`EsforcosFatos`). A `carga_pse@1` é calculada dentro, com a função pura da Meta 8.
 
@@ -57,6 +61,7 @@ Regra própria do projeto, sem artigo (ADR 0013, "Fontes"). As fontes das métri
 
 ## Código e teste
 - Código: `services/api/app/explicacao/fatos_treino.py` (`VERSAO = "fatos_treino@2"`; sobe quando mudar um campo, uma unidade, um estado, a lista de métricas ou o que fica de fora).
+- Teste do bloco da recuperação: `services/api/tests/explicacao/test_fatos_treino_recuperacao.py` (oráculo `tests/fixtures/meta10/oraculo_fatos_recuperacao.py`).
 - Teste: `services/api/tests/explicacao/test_fatos_treino.py`. Valor esperado calculado à mão no oráculo da #323 ([[metricas/fatos-treino-oraculo]], `tests/fixtures/meta9/oraculo.py`):
   o pacote é **igual ao oráculo** nos 8 casos com pacote (F01 a F06, F09 e F10); F07 (sem check-in) e F08 (pai do multiesporte) dão `None`.
   Confere também: o texto livre não entra (nem com um `CheckinTreino` de verdade); nenhum identificador, data ou posição de uma `Atividade` de verdade entra; nenhuma chave nem texto de causa;

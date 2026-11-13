@@ -33,7 +33,7 @@ São os mesmos códigos do `CHECK` previsto para `feedback_treino` ([[decisoes/0
 
 ## Quem usa: `app/servicos/feedback.py` e `worker.gerar_feedback` (#327)
 `gerar(session, atleta_id, redator, montar_pacote, checar, versoes, prompt, refazer)` (em `app/servicos/feedback.py`) recebe o pacote e as checagens por **injeção**:
-- `montar_pacote(session, atividade, checkin) -> dict | None` (o pacote `fatos_treino@1`; `None` se não há check-in ou a atividade não é elegível);
+- `montar_pacote(session, atividade, checkin) -> dict | None` (o pacote `fatos_treino@2`; `None` se não há check-in ou a atividade não é elegível);
 - `checar(pacote, texto) -> str | None` (`None` se o texto passa; senão o **primeiro** código de motivo; a linha guarda só `texto_reprovado`, nunca o texto nem o código do termo).
 
 Na linha de comando, os padrões são os reais: `app.servicos.feedback_fatos.fatos_da_atividade` (o **adaptador** que lê o banco e chama a função pura `app.explicacao.fatos_treino.fatos_treino`, #324), `app.explicacao.checagens.checar` (#325) e as `VERSAO` dos dois módulos. O adaptador usa os serviços de leitura que a API já tem (`linha_base_resultado`, `clima_da_atividade`, `carga_da_atividade`, `esforcos_da_atividade`, rótulo de transição) e não recalcula nada; natação fica sem bloco de clima. Desde a #374 ele também passa a recuperação (`app/servicos/recuperacao_pacote.py`, ver [[metricas/fatos-treino]]). Teste: o pacote que sai do banco semeado com as fixtures da meta 9 é igual ao do oráculo, com `recuperacao = sem_noite` (`services/api/tests/servicos/test_feedback_fatos.py`).
