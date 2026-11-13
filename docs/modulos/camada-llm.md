@@ -33,13 +33,15 @@ São os mesmos códigos do `CHECK` previsto para `feedback_treino` ([[decisoes/0
 
 ## Quem usa: `app/servicos/feedback.py` e `worker.gerar_feedback` (#327)
 `gerar(session, atleta_id, redator, montar_pacote, checar, versoes, prompt, refazer)` (em `app/servicos/feedback.py`) recebe o pacote e as checagens por **injeção**:
-- `montar_pacote(session, atividade, checkin) -> dict | None` (o pacote `fatos_treino@1`; `None` se não há check-in ou a atividade não é elegível);
+- `montar_pacote(session, atividade, checkin) -> dict | None` (o pacote `fatos_treino@2`; `None` se não há check-in ou a atividade não é elegível);
 - `checar(pacote, texto) -> str | None` (`None` se o texto passa; senão o **primeiro** código de motivo; a linha guarda só `texto_reprovado`, nunca o texto nem o código do termo).
 
-Na linha de comando, os padrões são os reais: `app.servicos.feedback_fatos.fatos_da_atividade` (o **adaptador** que lê o banco e chama a função pura `app.explicacao.fatos_treino.fatos_treino`, #324), `app.explicacao.checagens.checar` (#325) e as `VERSAO` dos dois módulos. O adaptador usa os serviços de leitura que a API já tem (`linha_base_resultado`, `clima_da_atividade`, `carga_da_atividade`, `esforcos_da_atividade`, rótulo de transição) e não recalcula nada; natação fica sem bloco de clima. Teste: o pacote que sai do banco semeado com as fixtures da meta 9 é igual ao do oráculo (`services/api/tests/servicos/test_feedback_fatos.py`).
+Na linha de comando, os padrões são os reais: `app.servicos.feedback_fatos.fatos_da_atividade` (o **adaptador** que lê o banco e chama a função pura `app.explicacao.fatos_treino.fatos_treino`, #324), `app.explicacao.checagens.checar` (#325) e as `VERSAO` dos dois módulos. O adaptador usa os serviços de leitura que a API já tem (`linha_base_resultado`, `clima_da_atividade`, `carga_da_atividade`, `esforcos_da_atividade`, rótulo de transição) e não recalcula nada; natação fica sem bloco de clima. Desde a #374 ele também passa a recuperação (`app/servicos/recuperacao_pacote.py`, ver [[metricas/fatos-treino]]). Teste: o pacote que sai do banco semeado com as fixtures da meta 9 é igual ao do oráculo, com `recuperacao = sem_noite` (`services/api/tests/servicos/test_feedback_fatos.py`).
 
-## Prompt `feedback_prompt@3` (`app/llm/prompt_feedback.py`)
+## Prompt `feedback_prompt@4` (`app/llm/prompt_feedback.py`)
 Regras de forma, tom e do que falta no pacote, mais os **6 exemplos aprovados** (G01 a G06, pacote reduzido sem campos nulos e texto da ADR 0013). Os exemplos têm **fonte única** em `app/llm/exemplos_feedback.py`; um teste confere o texto contra `tests/fixtures/meta9/textos.py`, o pacote contra o oráculo e que cada texto passa nas checagens. O prompt tem uns 2,5 mil tokens (estimativa), para caber no limite por minuto do plano gratuito (não conferido). Se o texto mudar de forma relevante, a `VERSAO` sobe.
+
+**`@4` (12/11, #374):** acompanha o `fatos_treino@2`: sem rótulo (PSE 6, 8 e 9), `checkin.pse_texto` vem nulo (ou ausente nos exemplos, que não trazem campos nulos) e a regra manda escrever só o número de `checkin.pse`. Os exemplos G02 e G03 perderam o `pse_texto` repetido; os textos aprovados não mudaram.
 
 **`@3` (12/11, #367):** uma regra nova: quando `checkin.pse_texto` é só o número (PSE 6, 8 e 9 não têm rótulo), escrever "esforço 6", nunca "esforço 6 (6)". Origem e checagem em [[metricas/checagens-feedback]] ("Versão `@3`"). O pacote não mudou.
 

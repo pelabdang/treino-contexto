@@ -20,6 +20,7 @@ from app.servicos.carga_leitura import carga_da_atividade
 from app.servicos.clima import clima_da_atividade
 from app.servicos.esforcos_leitura import esforcos_da_atividade
 from app.servicos.linha_base_leitura import linha_base_resultado, valores_e_motivos
+from app.servicos.recuperacao_pacote import RecuperacaoDoAtleta, carregar_da_atividade, recuperacao_da_atividade
 
 VERSAO = ft.VERSAO
 
@@ -60,10 +61,16 @@ def _esforcos(session: Session, a: Atividade) -> EsforcosFatos | None:
     return EsforcosFatos(e.treino_chave, tuple(contagem.items()))
 
 
-def fatos_da_atividade(session: Session, atividade: Atividade, checkin: CheckinTreino | None) -> dict[str, Any] | None:
-    """O pacote `fatos_treino@1` da atividade com o check-in, ou `None` (sem check-in ou atividade não elegível)."""
+def fatos_da_atividade(session: Session, atividade: Atividade, checkin: CheckinTreino | None,
+                       recuperacao: RecuperacaoDoAtleta | None = None) -> dict[str, Any] | None:
+    """O pacote `fatos_treino@2` da atividade com o check-in, ou `None` (sem check-in ou atividade não elegível).
+
+    `recuperacao`: as noites do atleta já lidas (o worker lê uma vez por atleta); omitida, lê a janela deste treino.
+    """
     if checkin is None:
         return None
+    if recuperacao is None:
+        recuperacao = carregar_da_atividade(session, atividade)
     return ft.fatos_treino(
         atividade=atividade,
         checkin=checkin,
@@ -73,4 +80,5 @@ def fatos_da_atividade(session: Session, atividade: Atividade, checkin: CheckinT
         carga=_carga(session, atividade),
         esforcos=_esforcos(session, atividade),
         parte_de_transicao=bool(atividade.rotulo_transicao and atividade.rotulo_transicao.transicao),
+        recuperacao=recuperacao_da_atividade(recuperacao, atividade),
     )

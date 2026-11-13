@@ -296,7 +296,7 @@ def test_03_pacote_de_fatos_do_banco_nao_leva_dado_pessoal_nem_o_texto_livre(ctx
                 assert p is None
                 continue
             n += 1
-            assert p["versao"] == "fatos_treino@1"
+            assert p["versao"] == "fatos_treino@2"
             bruto = json.dumps(p, ensure_ascii=False)
             assert MARCADOR not in bruto and a.fonte_id not in bruto and "Atleta" not in bruto
 
@@ -471,7 +471,7 @@ def test_14_o_prompt_so_leva_o_pacote_e_o_texto_livre_nunca_vai_ao_provedor(ctx,
     assert len(vistos) == 2  # o desse check-in e o da atividade 8 (reprovada por dor, tentada de novo a cada execucao)
     assert any('"cansaco"' in v for v in vistos) or any("cansaco" in v for v in vistos)
     for v in vistos:
-        assert MARCADOR not in v and "fatos_treino@1" in v  # o pacote vai; o texto livre, o nome e a data nao
+        assert MARCADOR not in v and "fatos_treino@2" in v  # o pacote vai; o texto livre, o nome e a data nao
         assert "Atleta Fictício" not in v and "2026-11-0" not in v
     assert MARCADOR not in out
     _put(ctx, "2026-11-09/cor2", CHECKINS["2026-11-09/cor2"])  # volta o check-in do guia

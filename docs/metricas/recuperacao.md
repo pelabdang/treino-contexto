@@ -15,7 +15,7 @@ Decisão: [[decisoes/0014-recuperacao-diaria]]. É só uma comparação com o hi
 
 ## Regra
 - **Noite do treino** (`noite_do_treino`): a linha com `noite = dia` (data local de acordar), se o treino começa **às 06:00 ou depois**. Antes das 06:00:
-  `sem_dado` / `treino_de_madrugada`. Treino anterior à noite mais antiga gravada: `sem_dado` / `fora_do_periodo`. Noite ausente ou sem nenhuma medida (ou
+  `sem_dado` / `treino_de_madrugada`. Treino anterior à noite mais antiga gravada: `sem_dado` / `fora_do_periodo` (o banco passa essa noite no argumento `primeira_noite`, pois as noites lidas podem ser só a janela; omitido, vale a mais antiga da lista). Noite ausente ou sem nenhuma medida (ou
   nenhuma noite gravada): `sem_dado` / `sem_noite`. A ordem é essa. Dois treinos no mesmo dia usam a mesma noite.
 - **Janela:** as noites de `dia - 28` a `dia - 1` (extremos incluídos); a noite do treino **não entra** no próprio normal.
 - **Por medida:** só conta a noite que tem o valor. Menos de **14** valores: `aprendendo` (traz o valor e `n`, sem mediana nem desvio). Noite sem o valor da

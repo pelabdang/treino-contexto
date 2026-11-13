@@ -33,6 +33,7 @@ from app.servicos.clima import ClimaDaAtividade, EstadoClima, clima_da_atividade
 from app.servicos.distancia_texto import distancia_da_atividade
 from app.servicos.esforcos_leitura import esforcos_da_atividade
 from app.servicos.feedback_leitura import FeedbackLido, feedback_da_atividade
+from app.servicos.recuperacao_pacote import carregar_da_atividade, importado_em_de_hoje
 from app.servicos.fuso import inicio_local
 from app.servicos.linha_base_leitura import linha_base_da_atividade, texto_divergencia
 
@@ -289,6 +290,15 @@ def _carga_pse_out(c: CargaPseLida | None) -> CargaPseOut | None:
     return None if c is None else CargaPseOut.model_validate(asdict(c))
 
 
+def _feedback(session: Session, a: Atividade) -> FeedbackLido | None:
+    """O cartao do feedback; a noite do treino so e lida quando ja ha feedback gravado (ADR 0014, item 4b)."""
+    aberto = checkin_svc.checkin_aberto(a, a.checkin is not None)
+    if a.checkin is None or a.checkin.feedback is None:
+        return feedback_da_atividade(a, a.checkin, aberto)
+    hoje = importado_em_de_hoje(carregar_da_atividade(session, a), a)
+    return feedback_da_atividade(a, a.checkin, aberto, recuperacao_hoje=hoje)
+
+
 def _feedback_out(f: FeedbackLido | None) -> FeedbackOut | None:
     return None if f is None else FeedbackOut(**asdict(f))
 
@@ -398,7 +408,7 @@ def buscar_atividade(
         linha_base=LinhaBaseOut.model_validate(asdict(linha_base_da_atividade(session, a))),
         checkin=None if a.checkin is None else checkin_out(a.checkin),
         checkin_aberto=checkin_svc.checkin_aberto(a, a.checkin is not None),
-        feedback=_feedback_out(feedback_da_atividade(a, a.checkin, checkin_svc.checkin_aberto(a, a.checkin is not None))),
+        feedback=_feedback_out(_feedback(session, a)),
         pse_sugerida=checkin_svc.pse_sugerida(session, a),
         carga_pse=_carga_pse_out(carga_pse_da_atividade(a, a.checkin)),
         data_local=local.date().isoformat(),

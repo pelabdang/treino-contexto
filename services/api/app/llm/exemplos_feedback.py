@@ -82,7 +82,7 @@ EXEMPLOS = (
          'clima': {'estado': 'ok', 'temperatura_c': 22, 'sensacao_termica_c': 23, 'umidade_pct': 55, 'vento_kmh': 12},
          'carga': {'estado': 'calculada', 'valor': 61.3, 'valor_texto': '61,3 pontos', 'metodo': 'rtss'},
          'carga_pse': {'estado': 'calculada', 'valor': 416, 'valor_texto': '416 UA'},
-         'checkin': {'pse': 8, 'pse_texto': '8', 'sensacao_nivel': 3, 'sensacao_texto': 'normal', 'nada_a_relatar': True}},
+         'checkin': {'pse': 8, 'sensacao_nivel': 3, 'sensacao_texto': 'normal', 'nada_a_relatar': True}},
         "texto": 'Seu melhor tiro foi 4:22/km, 13 s/km mais lento que a mediana de 4:09/km nos 10 treinos intervalados das últimas 12 semanas.\nÉ uma comparação com o seu histórico, não um julgamento do treino.\nA FC do melhor tiro foi 171 bpm, dentro do seu normal (mediana de 172 bpm).\nVocê registrou esforço 8 e sensação 3 (normal), sem nada a relatar.\nForam 5 tiros de 1 km e 416 UA de carga pela PSE.',
     },
     {
@@ -108,7 +108,6 @@ EXEMPLOS = (
          'carga': {'estado': 'calculada', 'valor': 34.8, 'valor_texto': '34,8 pontos', 'metodo': 'hrtss'},
          'carga_pse': {'estado': 'calculada', 'valor': 240, 'valor_texto': '240 UA'},
          'checkin': {'pse': 6,
-                     'pse_texto': '6',
                      'sensacao_nivel': 4,
                      'sensacao_texto': 'bem',
                      'nada_a_relatar': False,

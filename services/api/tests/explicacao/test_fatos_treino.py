@@ -1,4 +1,4 @@
-"""`fatos_treino@1` (issue #324, ADR 0013, item 1): a função pura devolve exatamente o pacote do oráculo da #323.
+"""`fatos_treino@2` (issue #324, ADR 0013, item 1; #374, ADR 0014): a função pura devolve exatamente o pacote do oráculo da #323.
 
 O oráculo (`tests/fixtures/meta9/oraculo.py`) é escrito à mão: cada pacote esperado, com as contas da linha de base nos comentários.
 Aqui cada caso é montado a partir da ENTRADA do oráculo (a atividade, o histórico, o clima, a carga e o check-in) e comparado com o PACOTE.
@@ -127,7 +127,7 @@ def test_chaves_na_ordem_da_adr(i):
     assert tuple(p["linha_base"]) == O.CHAVES["linha_base"]
     assert tuple(p["checkin"]) == O.CHAVES["checkin"]
     assert tuple(p["carga"]) == O.CHAVES["carga"] and tuple(p["carga_pse"]) == O.CHAVES["carga_pse"]
-    assert p["versao"] == ft.VERSAO == "fatos_treino@1"
+    assert p["versao"] == ft.VERSAO == "fatos_treino@2"
 
 
 def test_sem_checkin_nao_ha_pacote():
@@ -267,7 +267,7 @@ def test_carga_pse_sem_duracao_e_pse_sem_ancora():
     ck = SimpleNamespace(pse=6, sensacao=3, nada_a_relatar=True, atalhos=[])
     p = _pacote("F01", atividade=a, checkin=ck)
     assert p["carga_pse"] == {"versao": "carga_pse@1", "estado": "sem_duracao", "valor": None, "valor_texto": None}
-    assert p["checkin"]["pse_texto"] == "6"  # 6, 8 e 9 ficam só com o número (ADR 0012, item 2)
+    assert p["checkin"]["pse_texto"] is None  # 6, 8 e 9 não têm âncora: no pacote vai `null`, não o número repetido (ADR 0014, item 4)
     assert p["treino"]["distancia_texto"] == "8,20 km"
 
 

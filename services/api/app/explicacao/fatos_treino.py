@@ -1,4 +1,4 @@
-"""Pacote de fatos `fatos_treino@1` (issue #324, ADR 0013, item 1): a única coisa que o provedor de LLM recebe sobre o treino.
+"""Pacote de fatos `fatos_treino@2` (issues #324 e #374, ADR 0013 item 1 e ADR 0014 item 4): a única coisa que o provedor de LLM recebe sobre o treino.
 
 Função pura: sem banco, sem rede, sem IA. Recebe o que o código **já calculou** (a atividade, o resultado da `linha_base@2` com os valores da
 sessão, o clima, a `carga@2`, os esforços e o check-in) e devolve um dicionário com os fatos lado a lado e os textos prontos (`*_texto`),
@@ -23,6 +23,7 @@ from app.metricas import carga as cg
 from app.metricas import carga_pse as cp
 from app.metricas import esforcos as esf
 from app.metricas import linha_base as lb
+from app.metricas import recuperacao as rc
 from app.servicos.carga_pse_leitura import duracao_pt, numero_pt
 from app.servicos.checkin import PSE_ANCORA, SENSACAO_TEXTO
 from app.servicos.distancia_texto import distancia_da_atividade
@@ -34,7 +35,7 @@ from app.servicos.linha_base_leitura import (
     _texto_valor,
 )
 
-VERSAO = "fatos_treino@1"
+VERSAO = "fatos_treino@2"
 
 # Atalhos do check-in (ADR 0012, item 2). Só as chaves vão ao pacote, ordenadas por nome: a ordem não depende de quem chama.
 _ATALHOS = ("dor", "cansaco", "sono_ruim", "calor", "trabalho_estresse")
@@ -124,6 +125,48 @@ def _clima(c: ClimaFatos | None) -> dict[str, Any] | None:
             "umidade_pct": c.umidade_pct if ok else None, "vento_kmh": c.vento_kmh if ok else None}
 
 
+def _hm(segundos: float) -> str:
+    """Duração em minutos inteiros: "5 h 40 min", "6 h", "45 min" (a conta fecha à mão, como `duracao_pt`)."""
+    h, m = divmod(int(segundos / 60 + 0.5), 60)
+    return f"{h} h" if h and not m else f"{h} h {m} min" if h else f"{m} min"
+
+
+def _arred(x: float) -> int:
+    return int(x + 0.5)
+
+
+def _medida_recuperacao(m: rc.MedidaRecuperacao) -> dict[str, Any]:
+    """Uma medida da noite. O texto vem dos valores **arredondados** (minuto, ms, bpm), e a diferença é a conta entre eles."""
+    com_normal = m.estado in (rc.DENTRO, rc.ABAIXO, rc.ACIMA)
+    valor_t = normal_t = dif_t = None
+    if m.valor is not None:
+        if m.chave == "sono":
+            valor_t = _hm(m.valor)
+            normal_t = _hm(m.mediana) if com_normal else None
+            diff = abs(_arred(m.mediana / 60) - _arred(m.valor / 60)) * 60 if com_normal else 0
+            dif_t = _hm(diff) if m.estado in (rc.ABAIXO, rc.ACIMA) else None
+        else:
+            unidade = "ms" if m.chave == "vfc" else "bpm"
+            valor_t = f"{_arred(m.valor)} {unidade}"
+            normal_t = f"{_arred(m.mediana)} {unidade}" if com_normal else None
+            dif_t = f"{abs(_arred(m.mediana) - _arred(m.valor))} {unidade}" if m.estado in (rc.ABAIXO, rc.ACIMA) else None
+        if dif_t is not None:
+            dif_t += " abaixo" if m.estado == rc.ABAIXO else " acima"
+    return {"chave": m.chave, "estado": m.estado, "valor": None if m.valor is None else _inteiro_se_exato(m.valor),
+            "valor_texto": valor_t, "normal_texto": normal_t, "diferenca_texto": dif_t, "n": m.n}
+
+
+def _recuperacao(r: rc.Recuperacao | None, p: rc.Parametros = rc.PADRAO) -> dict[str, Any] | None:
+    """Bloco `recuperacao` (ADR 0014, item 4). `None` quando quem chama não passa a recuperação. Em `sem_dado` só `versao`,
+    `estado` e `motivo`. Nunca a série diária, a data da noite, MAD, z ou a mediana numérica."""
+    if r is None:
+        return None
+    if r.estado != rc.OK:
+        return {"versao": r.versao, "estado": r.estado, "motivo": r.motivo}
+    return {"versao": r.versao, "estado": r.estado, "motivo": None, "janela_noites": p.janela_noites,
+            "minimo_noites": p.minimo_noites, "medidas": [_medida_recuperacao(m) for m in r.medidas]}
+
+
 def _carga(c: CargaFatos) -> dict[str, Any]:
     calculada = c.estado == "calculada"
     return {"versao": None if c.estado == "pendente" else cg.VERSAO, "estado": c.estado,
@@ -146,7 +189,7 @@ def _atalhos(checkin: Any) -> list[str]:
 
 
 def _checkin(c: Any) -> dict[str, Any]:
-    return {"pse": c.pse, "pse_texto": PSE_ANCORA.get(c.pse, str(c.pse)), "sensacao_nivel": c.sensacao,
+    return {"pse": c.pse, "pse_texto": PSE_ANCORA.get(c.pse), "sensacao_nivel": c.sensacao,
             "sensacao_texto": SENSACAO_TEXTO[c.sensacao], "nada_a_relatar": bool(c.nada_a_relatar), "atalhos": _atalhos(c)}
 
 
@@ -159,13 +202,15 @@ def fatos_treino(
     carga: CargaFatos,
     esforcos: EsforcosFatos | None,
     parte_de_transicao: bool = False,
+    recuperacao: rc.Recuperacao | None = None,
 ) -> dict[str, Any] | None:
-    """O pacote `fatos_treino@1`, ou ``None`` quando não há feedback possível: **sem check-in** ou atividade **não elegível**
+    """O pacote `fatos_treino@2`, ou ``None`` quando não há feedback possível: **sem check-in** ou atividade **não elegível**
     (`multiesporte_pai` e `troca`, ADR 0012 item 4).
 
     - ``atividade``: lê só `modalidade`, `subtipo`, `tipo_treino`, `duracao_s`, `distancia_m` e `fc_media`.
     - ``checkin``: lê só `pse`, `sensacao`, `nada_a_relatar` e os atalhos (`atalhos` ou as colunas `dor`, `cansaco`...). **Nunca** o texto livre.
     - ``linha_base``: o resultado da `linha_base@2`; ``motivos_sem_valor``: o motivo de cada métrica `sem_valor` (como `valores_e_motivos`).
+    - ``recuperacao``: o resultado da `recuperacao@1` da noite do treino (ou ``None``: o bloco sai ``None``).
     - ``clima``, ``carga`` e ``esforcos``: o que a API já lê; ``None`` em clima e esforços onde não se aplica (natação).
     Chaves sempre presentes, na ordem da ADR; ausente é ``None``. Nada é alterado nos argumentos.
     """
@@ -180,6 +225,7 @@ def fatos_treino(
         "linha_base": _linha_base(linha_base, motivos_sem_valor),
         "esforcos": _esforcos(esforcos),
         "clima": _clima(clima),
+        "recuperacao": _recuperacao(recuperacao),
         "carga": _carga(carga),
         "carga_pse": _carga_pse(r_pse),
         "checkin": _checkin(checkin),

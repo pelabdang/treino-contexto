@@ -25,7 +25,7 @@ TEXTO = T.BONS["G01"][1]
 
 HOJE = date(2026, 11, 10)
 AGORA = datetime(2026, 11, 10, 12, 0, tzinfo=timezone.utc)
-V = "fatos_treino@1"
+V = "fatos_treino@2"
 FRASES = {
     "sem_checkin": "Faça o check-in para ver o feedback.",
     "prazo": "O prazo do check-in deste treino acabou, então ele fica sem feedback.",
@@ -135,7 +135,7 @@ def test_check_in_editado_deixa_desatualizado_e_nao_devolve_o_texto_antigo(sessi
 def test_versao_nova_dos_fatos_deixa_desatualizado(session, client, atleta):
     a = _atividade(session, atleta)
     _feedback(session, _checkin(session, a))
-    f = fl.feedback_da_atividade(a, a.checkin, True, versao_fatos="fatos_treino@2")
+    f = fl.feedback_da_atividade(a, a.checkin, True, versao_fatos="fatos_treino@3")
     assert f.estado == "desatualizado" and f.texto is None
 
 
