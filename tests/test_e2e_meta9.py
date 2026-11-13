@@ -255,7 +255,7 @@ def _worker(ctx, modulo, *args, env_extra=None, esperado=0):
 
 def test_01_migracao_0013_cria_feedback_treino_um_por_checkin(ctx):
     """Item: feedback guardado no banco, um por check-in (ADR 0013, item 2)."""
-    assert _sql(ctx, "select version_num from alembic_version") == [("0013",)]
+    assert _sql(ctx, "select version_num from alembic_version") == [("0014",)]
     colunas = {c[1] for c in _sql(ctx, "pragma table_info(feedback_treino)")}
     assert {"checkin_id", "estado", "motivo", "texto", "provedor", "modelo", "versao_fatos", "versao_prompt", "versao_checagens"} <= colunas
     unicos = [r for r in _sql(ctx, "pragma index_list(feedback_treino)") if r[2]]
