@@ -21,7 +21,7 @@ A única porta do produto para um modelo de linguagem (regra do `AGENTS.md`: IA 
 | `limite_de_chamadas` | a execução já fez `LLM_LIMITE_CHAMADAS` (padrão 20) chamadas; a chamada acima do limite nem vai ao provedor |
 
 São os mesmos códigos do `CHECK` previsto para `feedback_treino` ([[decisoes/0013-feedback-automatico]]). `texto_reprovado` não é daqui: é do worker, depois das checagens.
-- **Provedor falso** (`LLM_PROVIDER=falso`): sem rede e sem chave, obrigatório em testes e CI. Devolve um texto fixo de 3 linhas que **passa na `checar_texto` real** (`checagens_feedback@5`) com um pacote comum: cada linha tem verbo da lista (com acento: "é", "foi"), sem número; com o atalho `dor` reprova por `dor_regra`, porque não traz a frase da dor (#361; teste em `test_camada.py` com as checagens reais, sem `checar` injetada). Quem mudar as checagens confere esse texto; `ProvedorFalso(modo="ruim")` devolve um texto de propósito reprovável, e os modos `erro`, `tempo` e `vazio` simulam falhas. O resultado leva `provedor = "falso"`.
+- **Provedor falso** (`LLM_PROVIDER=falso`): sem rede e sem chave, obrigatório em testes e CI. Devolve um texto fixo de 3 linhas que **passa na `checar_texto` real** (`checagens_feedback@6`) com um pacote comum: cada linha tem verbo da lista (com acento: "é", "foi"), sem número; com o atalho `dor` reprova por `dor_regra`, porque não traz a frase da dor (#361; teste em `test_camada.py` com as checagens reais, sem `checar` injetada). Quem mudar as checagens confere esse texto; `ProvedorFalso(modo="ruim")` devolve um texto de propósito reprovável, e os modos `erro`, `tempo` e `vazio` simulam falhas. O resultado leva `provedor = "falso"`.
 
 ## Regras
 - **Troca só pelo `.env`:** `LLM_PROVIDER` (`groq`, `openai`, `anthropic` ou `falso`), `LLM_MODEL` e a chave (`GROQ_API_KEY`, `OPENAI_API_KEY`, `ANTHROPIC_API_KEY`). O LiteLLM recebe `<provedor>/<modelo>` e a chave explícita. Padrão: `groq`. `.env.example` só com os nomes.
@@ -38,8 +38,10 @@ São os mesmos códigos do `CHECK` previsto para `feedback_treino` ([[decisoes/0
 
 Na linha de comando, os padrões são os reais: `app.servicos.feedback_fatos.fatos_da_atividade` (o **adaptador** que lê o banco e chama a função pura `app.explicacao.fatos_treino.fatos_treino`, #324), `app.explicacao.checagens.checar` (#325) e as `VERSAO` dos dois módulos. O adaptador usa os serviços de leitura que a API já tem (`linha_base_resultado`, `clima_da_atividade`, `carga_da_atividade`, `esforcos_da_atividade`, rótulo de transição) e não recalcula nada; natação fica sem bloco de clima. Desde a #374 ele também passa a recuperação (`app/servicos/recuperacao_pacote.py`, ver [[metricas/fatos-treino]]). Teste: o pacote que sai do banco semeado com as fixtures da meta 9 é igual ao do oráculo, com `recuperacao = sem_noite` (`services/api/tests/servicos/test_feedback_fatos.py`).
 
-## Prompt `feedback_prompt@7` (`app/llm/prompt_feedback.py`)
+## Prompt `feedback_prompt@8` (`app/llm/prompt_feedback.py`)
 Regras de forma, tom e do que falta no pacote, mais os **6 exemplos aprovados** (G01 a G06, pacote reduzido sem campos nulos e texto da ADR 0013). Os exemplos têm **fonte única** em `app/llm/exemplos_feedback.py`; um teste confere o texto contra `tests/fixtures/meta9/textos.py`, o pacote contra o oráculo e que cada texto passa nas checagens. Estimativa da época do `@1`: uns 2,5 mil tokens. Medido na rodada da #376 com o `@5`: cerca de 4.300 tokens (ver a seção da rodada e o teste de tamanho, abaixo). Se o texto mudar de forma relevante, a `VERSAO` sobe.
+
+**`@8` (15/11, #405):** uma frase pronta por estado do clima, sem trocar um pelo outro: `pendente` "O clima ainda está pendente."; `indoor` "O treino foi indoor, sem dados de clima." (nunca "o clima foi indoor"); `sem_posicao` "Sem a posição de início, sem dados de clima."; `falha` "Não foi possível obter o clima."; temperatura, sensação, umidade e vento só com `ok`. Acompanha as `checagens_feedback@6`.
 
 **`@7` (15/11, #403):** duas regras de redação: a frase "Ainda aprendendo o seu normal de ...: N de 14 noites." é **obrigatória** quando há medida `aprendendo` (com as três, duas linhas curtas), e FC, VFC e PSE são femininas ("a FC", "sua FC média"). Acompanha as `checagens_feedback@5` ([[metricas/checagens-feedback]]). O prompt foi a 14.260 caracteres (cerca de 4.320 tokens a 3,3), dentro do teste de tamanho.
 
@@ -95,6 +97,11 @@ Mesmo formato, camada do `main`, pacotes sintéticos (fixtures da meta 9 com as 
 - **Resultado: 3 aprovadas, 5 reprovadas e 1 sem texto** (`provedor_erro`, uma chamada). Reprovações: 4 por `forma_tamanho_linha` (as três medidas `aprendendo` com as duas frases na mesma linha, ou a primeira linha de um treino com pace e FC média, que passa de 140 caracteres) e 1 por `recuperacao_mistura` (clima e carga na mesma linha da recuperação). São variações do modelo que as checagens pegam; o worker tenta de novo na próxima execução.
 - **Ajuste de redação no prompt, depois da primeira passada:** com as três `aprendendo` o modelo juntava tudo numa linha; o prompt ganhou o par de linhas curtas (B13). Repetidas, 1 de 2 passou (a outra voltou a juntar as frases).
 - Não há mais ajuste de redação em vista que não custe tokens: o prompt está em 4.320 tokens estimados.
+
+## Rodada com o provedor de verdade, `feedback_prompt@8` (15/11, #405)
+Camada do `main`, 65 s entre as chamadas, pacotes sintéticos (F01, F09 e F10 da meta 9 com um estado de clima de cada vez e noites do oráculo). 6 chamadas: **4 aprovadas e 2 reprovadas** (`forma_sem_verbo`, uma linha do check-in sem "Você marcou"; `forma_tamanho_linha`, as três medidas da recuperação numa linha). **Nenhuma por `clima_estado`.**
+- `indoor` (2 chamadas): as duas disseram "O treino foi indoor, sem dados de clima." (a segunda reprovou por tamanho da linha da recuperação, não pelo clima). `pendente`: "O clima ainda está pendente." `ok`: sem frase de clima, o texto cortou o clima para caber em 5 linhas.
+- `sem_posicao` e `falha`: o modelo **omitiu o clima** nos dois (para caber em 5 linhas com a recuperação), então a frase pronta desses dois estados não foi exercitada pelo provedor; só pelas fixtures. Fica sem verificar.
 
 ## Limitações
 - `groq`, `openai` e `anthropic` são os provedores aceitos hoje; outro exige uma linha em `CHAVES`.
