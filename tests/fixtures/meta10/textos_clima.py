@@ -36,7 +36,7 @@ BONS = {
 }
 
 RUINS = {
-    # o caso do feedback real (pedal virtual): pacote indoor, texto "pendente"
+    # pacote com `clima.estado = indoor` e texto que diz "pendente"
     "X01": ("indoor", _t(L1, L2, CK, "O clima ainda está pendente."), "clima_estado"),
     "X02": ("indoor", _t(L1, L2, CK, "O clima e a carga do relógio ainda estão pendentes."), "clima_estado"),
     "X03": ("pendente", _t(L1, L2, CK, "O clima foi indoor."), "clima_estado"),

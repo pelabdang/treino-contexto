@@ -52,7 +52,7 @@ Dois defeitos do primeiro feedback real da Meta 10 (só descritos aqui, sem text
 O feedback já `pronto` com versão antiga de checagens ou de prompt não é refeito sozinho (a versão do prompt e das checagens não entra no "desatualizado"): só `worker.gerar_feedback --refazer`.
 
 ## Versão `@6` (15/11, #405): o estado do clima no texto
-No feedback real de um pedal virtual o pacote tinha `clima.estado = indoor` e o texto disse "O clima ainda está pendente." e passou: nenhuma checagem conferia o que o texto diz do clima, só os números. Um código novo, no fim de `MOTIVOS`: `clima_estado`.
+Quando o pacote tem `clima.estado = indoor`, um texto podia dizer "O clima ainda está pendente." e passava: nenhuma checagem conferia o que o texto diz do clima, só os números. Um código novo, no fim de `MOTIVOS`: `clima_estado`.
 - **Palavra de estado:** na frase que fala de "clima", a palavra de outro estado reprova: `pendente`/`pendentes`/`aguardando`; "clima ... indoor" (preso a "clima", até duas palavras no meio, sem "treino"); "sem posição", "sem localização", "sem GPS"; `falha`, `falhou`, `indisponível`, "não foi possível". Com o pacote `ok` a frase "clima 19 °C e a carga do relógio ainda está pendente" passa (o pendente é da carga).
 - **Valores:** temperatura (`°C`), umidade, vento ou sensação térmica só com `clima.estado = ok`; sem o bloco (natação) também reprovam.
 - **Limites:** "O treino foi indoor, sem dados de clima." (frase do prompt `@8`) passa porque "indoor" descreve o treino. "O clima foi indoor" com o pacote `indoor` também passa (é estranho, mas o fato está certo; o `@8` pede a outra frase). Só a frase que contém a palavra "clima" é conferida: "A carga do relógio ainda está pendente" com o clima `indoor` passa. Omitir o clima continua permitido.
