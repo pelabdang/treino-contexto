@@ -1,4 +1,4 @@
-"""Checagens do texto do feedback (issue #325, ADR 0013, item 4): `checagens_feedback@4`.
+"""Checagens do texto do feedback (issue #325, ADR 0013, item 4): `checagens_feedback@5`.
 
 Função pura: sem banco, sem rede, sem IA, sem log. Confere um texto contra o pacote de fatos (`fatos_treino@2`) e devolve se foi aprovado e, se não,
 os **códigos** dos motivos. Texto reprovado é descartado pelo chamador (nunca gravado nem mostrado) e a nova tentativa fica para a próxima execução
@@ -18,7 +18,7 @@ from collections.abc import Iterator, Mapping
 from dataclasses import dataclass
 from typing import Any
 
-VERSAO = "checagens_feedback@4"
+VERSAO = "checagens_feedback@5"
 
 LINHAS_MIN, LINHAS_MAX = 3, 5  # ADR 0013, item 4.3
 LINHA_MAX_CARACTERES = 140
@@ -34,6 +34,8 @@ MOTIVOS = (
     "dor_regra", "dor_nao_marcada", "atalho_nao_marcado", "nome_fora_do_pacote",
     # checagens_feedback@4 (#375, ADR 0014, item 6): a recuperação da noite
     "linguagem_julgamento", "recuperacao_mistura", "recuperacao_forma", "recuperacao_outro_dia", "recuperacao_sem_pacote",
+    # checagens_feedback@5 (#403): a linha de "aprendendo" e a concordância das siglas femininas
+    "recuperacao_sem_aprendendo", "concordancia_sigla",
 )
 
 # --- Listas de linguagem proibida --------------------------------------------------------------------------------------------
@@ -114,6 +116,10 @@ TERMOS_DO_ATALHO = {
     "calor": ("calor", "quente", "quentes", "abafado", "abafada"),  # "quente" é o mesmo fato que "calor": só com o atalho marcado
     "trabalho_estresse": ("trabalho ou estresse", "estresse"),
 }
+# --- Concordância (checagens_feedback@5, #403): FC, VFC e PSE são femininas ("a FC média", "sua VFC"), nunca "seu FC médio" ---------------
+_SIGLAS_FEMININAS = r"(?:fc|vfc|pse)"
+_ARTIGO_MASCULINO = re.compile(rf"(?<!\w)(?:o|um|seu|meu|nosso|esse|este|aquele|do|no|ao|pelo|dele) {_SIGLAS_FEMININAS}(?!\w)")
+_ADJETIVO_MASCULINO = re.compile(rf"(?<!\w){_SIGLAS_FEMININAS}(?: de repouso)? (?:medio|minimo|maximo|alto|baixo|elevado)(?!\w)")
 # --- Forma da frase (checagens_feedback@2, #355) --------------------------------------------------------------------------------
 # Verbos aceitos, minúsculos e COM acento ("é" não é a conjunção "e"). Heurística: uma lista fechada mais a terminação do pretérito.
 VERBOS = frozenset({
@@ -290,6 +296,12 @@ def _nome_proprio(texto: str) -> bool:
     return False
 
 
+def _concordancia(plano: str) -> set[str]:
+    if _ARTIGO_MASCULINO.search(plano) or _ADJETIVO_MASCULINO.search(plano):
+        return {"concordancia_sigla"}
+    return set()
+
+
 def _tem_verbo(linha: str) -> bool:
     plano = _plano(linha)
     if plano.startswith("sem ") or "aprendendo" in plano or _ABERTURA_DESCRITIVA.match(plano):
@@ -347,6 +359,7 @@ def _recuperacao(linhas: list[str], pacote: Mapping[str, Any]) -> set[str]:
     if "noite anterior" not in juntas:
         motivos.add("recuperacao_forma")
     estados = {m.get("chave"): m.get("estado") for m in bloco.get("medidas") or []}
+    citou_aprendendo = False
     for x in sem_rotulo:
         if len(_COMPARACAO.findall(x)) != len(_COMPARACAO_PERMITIDA.findall(x)):
             motivos.add("recuperacao_forma")
@@ -363,6 +376,10 @@ def _recuperacao(linhas: list[str], pacote: Mapping[str, Any]) -> set[str]:
                         motivos.add("recuperacao_forma")
                 elif achadas or estado in (None, "sem_dado"):  # aprendendo: sem comparação; sem_dado: nem se cita
                     motivos.add("recuperacao_forma")
+                if estado == "aprendendo":
+                    citou_aprendendo = True
+    if citou_aprendendo and "aprendendo" not in juntas:  # @5: citou medida aprendendo, tem de dizer por que não compara
+        motivos.add("recuperacao_sem_aprendendo")
     return motivos
 
 
@@ -440,7 +457,7 @@ def checar_texto(pacote: Mapping[str, Any], texto: str) -> Resultado:
     """
     linhas = [x for x in texto.split("\n") if x.strip()]
     plano = _plano(texto)
-    achados = _forma(texto, linhas, pacote) | _recuperacao(linhas, pacote) | _numeros(pacote, texto, plano) | _linguagem(texto, plano, pacote) | _dor_e_atalhos(plano, pacote)
+    achados = _forma(texto, linhas, pacote) | _recuperacao(linhas, pacote) | _concordancia(plano) | _numeros(pacote, texto, plano) | _linguagem(texto, plano, pacote) | _dor_e_atalhos(plano, pacote)
     if _nome_proprio(texto):
         achados.add("nome_fora_do_pacote")
     motivos = tuple(m for m in MOTIVOS if m in achados)

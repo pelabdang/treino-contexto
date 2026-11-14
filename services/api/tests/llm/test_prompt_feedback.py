@@ -1,4 +1,4 @@
-"""Prompt `feedback_prompt@6` e seus 6 exemplos (issue #327, revisão do Caio no PR #348): fonte única conferida contra as fixtures da meta 9."""
+"""Prompt `feedback_prompt@7` e seus 6 exemplos (issue #327, revisão do Caio no PR #348): fonte única conferida contra as fixtures da meta 9."""
 
 import importlib.util
 import sys
@@ -57,7 +57,7 @@ def test_os_seis_exemplos_estao_no_prompt_e_o_prompt_nao_tem_dado():
     for e in EXEMPLOS:
         assert e["texto"] in prompt_feedback.TEXTO
     assert O.MARCADOR_TEXTO_LIVRE not in prompt_feedback.TEXTO
-    assert prompt_feedback.VERSAO == "feedback_prompt@6"
+    assert prompt_feedback.VERSAO == "feedback_prompt@7"
 
 
 def test_prompt_com_acentos_e_sem_a_ortografia_sem_acento():
@@ -124,3 +124,9 @@ def test_exemplos_do_prompt_sao_os_mesmos_sem_os_campos_redundantes():
         assert enxuto in prompt_feedback.TEXTO and e["texto"] in prompt_feedback.TEXTO
         for k in prompt_feedback._REDUNDANTES:
             assert f'"{k}"' not in enxuto
+
+
+def test_prompt_7_traz_a_frase_obrigatoria_do_aprendendo_e_a_concordancia_das_siglas():
+    t = prompt_feedback.TEXTO
+    for trecho in ("é OBRIGATÓRIA", "sem saber por que não há comparação", "FC, VFC e PSE são femininas", '"sua FC média"', 'nunca "o FC"'):
+        assert trecho in t, trecho

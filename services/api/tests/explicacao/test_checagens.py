@@ -332,7 +332,7 @@ def test_o_modulo_e_puro_sem_rede_llm_banco_nem_log():
 
 
 def test_versao():
-    assert ck.VERSAO == "checagens_feedback@4"
+    assert ck.VERSAO == "checagens_feedback@5"
 
 
 def test_checar_devolve_none_se_aprovado_e_um_codigo_se_reprovado():

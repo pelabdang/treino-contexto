@@ -46,7 +46,7 @@ Nenhuma. Função pura `fatos_treino(atividade, checkin, linha_base, motivos_sem
   e `services/worker/tests/test_gerar_feedback.py` (noite que chega refaz uma vez; apagar a recuperação apaga o feedback).
 
 ## Prompt e checagens da recuperação (#375)
-O `feedback_prompt@6` e as `checagens_feedback@4` cobrem o bloco `recuperacao` ([[metricas/checagens-feedback]]). A rodada com o provedor de verdade é a #376.
+O `feedback_prompt@7` e as `checagens_feedback@5` cobrem o bloco `recuperacao` ([[metricas/checagens-feedback]]). A rodada com o provedor de verdade é a #376.
 
 ## Dados de entrada
 A recuperação da noite do treino (`recuperacao@1`, [[metricas/recuperacao]]), lida do banco pelo adaptador (veja acima); a função pura recebe o resultado pronto.
