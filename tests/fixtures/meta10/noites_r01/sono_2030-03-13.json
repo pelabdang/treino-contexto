@@ -1,0 +1,9 @@
+{
+  "_sintetico": "SINTETICO: escrita a mao a partir do oraculo do caso R01; valores inventados",
+  "dailySleepDTO": {
+    "calendarDate": "2030-03-13",
+    "sleepTimeSeconds": 27600
+  },
+  "avgOvernightHrv": 54,
+  "restingHeartRate": 52
+}
