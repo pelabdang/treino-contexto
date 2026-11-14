@@ -18,6 +18,11 @@ FC_VFC = "A FC de repouso foi 58 bpm, 6 bpm acima do seu normal de 52 bpm, e a V
 DUAS_LINHAS_FC_VFC = "A FC de repouso foi 58 bpm, 6 bpm acima do seu normal de 52 bpm, e a VFC, 41 ms, dentro do seu normal."
 # Caso só com a VFC (sono e FC de repouso sem dado na noite): bloco à mão, números sintéticos (normal 47 ms, hoje 46 ms).
 BLOCOS_EXTRA = {
+    # U02: as três dentro do normal (sono 7 h 20 min contra 7 h 15 min; VFC 46 ms contra 47 ms; FC de repouso 52 bpm contra 52 bpm)
+    "U02": {"versao": "recuperacao@1", "estado": "ok", "motivo": None, "janela_noites": 28, "minimo_noites": 14, "medidas": [
+        {"chave": "sono", "estado": "dentro", "valor": 26400, "valor_texto": "7 h 20 min", "normal_texto": "7 h 15 min", "diferenca_texto": None, "n": 14},
+        {"chave": "vfc", "estado": "dentro", "valor": 46, "valor_texto": "46 ms", "normal_texto": "47 ms", "diferenca_texto": None, "n": 14},
+        {"chave": "fc_repouso", "estado": "dentro", "valor": 52, "valor_texto": "52 bpm", "normal_texto": "52 bpm", "diferenca_texto": None, "n": 14}]},
     "U01": {"versao": "recuperacao@1", "estado": "ok", "motivo": None, "janela_noites": 28, "minimo_noites": 14, "medidas": [
         {"chave": "sono", "estado": "sem_dado", "valor": None, "valor_texto": None, "normal_texto": None, "diferenca_texto": None, "n": 0},
         {"chave": "vfc", "estado": "dentro", "valor": 46, "valor_texto": "46 ms", "normal_texto": "47 ms", "diferenca_texto": None, "n": 14},
@@ -40,6 +45,8 @@ BONS = {
     "B07": ("R01", _t(L1, L2, SONO, DUAS_LINHAS_FC_VFC, CK)),
     # @6: uma medida, uma linha
     "B08": ("U01", _t(L1, L2, "Na noite anterior, a VFC foi 46 ms, dentro do seu normal.", CK)),
+    # @6: as três dentro, uma linha só (rodada da #394: duas linhas com "dentro do seu normal" repetiam a conclusão)
+    "B10": ("U02", _t(L1, L2, "Na noite anterior você dormiu 7 h 20 min, a FC de repouso foi 52 bpm e a VFC, 46 ms: todas dentro do seu normal.", CK)),
     # @6: aprendendo com a noite anterior antes, e n de minimo_noites
     "B09": ("R02", _t(L1, L2, "Na noite anterior você dormiu 6 h 20 min.", "Ainda aprendendo o seu normal de sono: 13 de 14 noites.", CK)),
 }
@@ -75,5 +82,9 @@ RUINS = {
     "M27": ("R02", _t(L1, L2, "Ainda aprendendo o seu normal de sono: 6 h 20 min.", CK), "recuperacao_forma"),
     # duas linhas, mas a de sono mistura o resultado
     "M28": ("R01", _t(L1, L2, "Na noite anterior você dormiu 5 h 45 min e correu a 5:44/km.", DUAS_LINHAS_FC_VFC, CK), "recuperacao_mistura"),
+    # rodada da #394: duas linhas da recuperação, cada uma com "dentro do seu normal"
+    "M29": ("U02", _t(L1, L2, "Na noite anterior você dormiu 7 h 20 min, dentro do seu normal.", "A FC de repouso foi 52 bpm e a VFC, 46 ms, dentro do seu normal.", CK), "conclusao_repetida"),
+    # rodada da #394: diferença inventada em medida dentro
+    "M30": ("U02", _t(L1, L2, "Na noite anterior você dormiu 7 h 20 min, 5 min acima do seu normal de 7 h 15 min.", "A FC de repouso foi 52 bpm e a VFC, 46 ms.", CK), "recuperacao_forma"),
     "M25": ("R01", _t(L1, L2, "Seu sono ruim marcado combina com 5 h 45 min na noite anterior.", CK), "linguagem_julgamento"),
 }
