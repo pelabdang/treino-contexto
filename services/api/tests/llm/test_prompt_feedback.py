@@ -1,4 +1,4 @@
-"""Prompt `feedback_prompt@7` e seus 6 exemplos (issue #327, revisão do Caio no PR #348): fonte única conferida contra as fixtures da meta 9."""
+"""Prompt `feedback_prompt@8` e seus 6 exemplos (issue #327, revisão do Caio no PR #348): fonte única conferida contra as fixtures da meta 9."""
 
 import importlib.util
 import sys
@@ -57,7 +57,7 @@ def test_os_seis_exemplos_estao_no_prompt_e_o_prompt_nao_tem_dado():
     for e in EXEMPLOS:
         assert e["texto"] in prompt_feedback.TEXTO
     assert O.MARCADOR_TEXTO_LIVRE not in prompt_feedback.TEXTO
-    assert prompt_feedback.VERSAO == "feedback_prompt@7"
+    assert prompt_feedback.VERSAO == "feedback_prompt@8"
 
 
 def test_prompt_com_acentos_e_sem_a_ortografia_sem_acento():

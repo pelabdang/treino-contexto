@@ -1,7 +1,7 @@
-"""Prompt fixo do feedback (`feedback_prompt@7`, ADR 0013 itens 3 e 5 e ADR 0014 item 6). Regras, guia de tom e os 6 exemplos aprovados: nenhum dado real.
+"""Prompt fixo do feedback (`feedback_prompt@8`, ADR 0013 itens 3 e 5 e ADR 0014 item 6). Regras, guia de tom e os 6 exemplos aprovados: nenhum dado real.
 
 A mensagem do usuário é o pacote de fatos em JSON. Os exemplos vêm de `app.llm.exemplos_feedback` (fonte única, conferida por teste contra as
-fixtures da meta 9). As checagens em código (`checagens_feedback@5`) continuam sendo quem decide se o texto chega ao atleta; o prompt só orienta.
+fixtures da meta 9). As checagens em código (`checagens_feedback@6`) continuam sendo quem decide se o texto chega ao atleta; o prompt só orienta.
 Subir `VERSAO` quando o texto mudar de forma relevante.
 """
 
@@ -9,7 +9,7 @@ import json
 
 from app.llm.exemplos_feedback import EXEMPLOS
 
-VERSAO = "feedback_prompt@7"
+VERSAO = "feedback_prompt@8"
 
 _REGRAS = """Você escreve um feedback curto, em português do Brasil, sobre um treino de um atleta, a partir de um pacote de fatos em JSON.
 
@@ -30,7 +30,7 @@ Regras:
 - Nunca julgue: "fora" é "fora do seu normal", não "pior". A comparação é com o histórico do próprio atleta.
 - Nunca afirme nem sugira causa: clima e check-in ficam lado a lado, sem "porque", "por causa", "talvez" ou "provavelmente".
 - Nunca dê conselho, diagnóstico, promessa nem culpa.
-- O que falta no pacote: diga "sem" o que falta, sem inventar. `aprendendo` ("Ainda aprendendo o seu normal... N de M treinos"), `sem_linha_base` (diga que não há comparação e o motivo, por exemplo "o treino não tem tipo"), `sem_carga` ou carga `pendente` ("a natação não tem carga do relógio", "a carga do relógio ainda está pendente"), clima `pendente` ou `indoor` ("o clima ainda está pendente"; na esteira não há clima), métrica `sem_valor` (diga que não há valor, e o motivo, se houver). Nunca preencha com um valor que não está no pacote.
+- O que falta no pacote: diga "sem" o que falta, sem inventar. `aprendendo` ("Ainda aprendendo o seu normal... N de M treinos"), `sem_linha_base` (diga que não há comparação e o motivo, por exemplo "o treino não tem tipo"), `sem_carga` ou carga `pendente` ("a natação não tem carga do relógio", "a carga do relógio ainda está pendente"), clima por estado, sem trocar um pelo outro: `pendente` "O clima ainda está pendente."; `indoor` "O treino foi indoor, sem dados de clima." (nunca "o clima foi indoor"); `sem_posicao` "Sem a posição de início, sem dados de clima."; `falha` "Não foi possível obter o clima."; só com `ok` cite temperatura, sensação, umidade ou vento, métrica `sem_valor` (diga que não há valor, e o motivo, se houver). Nunca preencha com um valor que não está no pacote.
 - Dor: se `dor` está entre os atalhos, escreva exatamente "Você registrou dor neste treino." como uma frase própria, sozinha na linha, sem elogio nem conselho em volta, e nada mais sobre dor, sem parte do corpo. Sem `dor`, não fale em dor. Os outros atalhos são ditos como foram marcados ("Você marcou calor e cansaço"), só os marcados.
 - Não cite o texto livre, nome, data ou lugar: eles não estão no pacote.
 - Responda só com o texto do feedback."""

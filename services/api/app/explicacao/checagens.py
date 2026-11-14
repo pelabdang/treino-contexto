@@ -1,4 +1,4 @@
-"""Checagens do texto do feedback (issue #325, ADR 0013, item 4): `checagens_feedback@5`.
+"""Checagens do texto do feedback (issue #325, ADR 0013, item 4): `checagens_feedback@6`.
 
 Função pura: sem banco, sem rede, sem IA, sem log. Confere um texto contra o pacote de fatos (`fatos_treino@2`) e devolve se foi aprovado e, se não,
 os **códigos** dos motivos. Texto reprovado é descartado pelo chamador (nunca gravado nem mostrado) e a nova tentativa fica para a próxima execução
@@ -18,7 +18,7 @@ from collections.abc import Iterator, Mapping
 from dataclasses import dataclass
 from typing import Any
 
-VERSAO = "checagens_feedback@5"
+VERSAO = "checagens_feedback@6"
 
 LINHAS_MIN, LINHAS_MAX = 3, 5  # ADR 0013, item 4.3
 LINHA_MAX_CARACTERES = 140
@@ -36,6 +36,8 @@ MOTIVOS = (
     "linguagem_julgamento", "recuperacao_mistura", "recuperacao_forma", "recuperacao_outro_dia", "recuperacao_sem_pacote",
     # checagens_feedback@5 (#403): a linha de "aprendendo" e a concordância das siglas femininas
     "recuperacao_sem_aprendendo", "concordancia_sigla",
+    # checagens_feedback@6 (#405): o que o texto diz do clima tem de bater com `clima.estado`
+    "clima_estado",
 )
 
 # --- Listas de linguagem proibida --------------------------------------------------------------------------------------------
@@ -120,6 +122,16 @@ TERMOS_DO_ATALHO = {
 _SIGLAS_FEMININAS = r"(?:fc|vfc|pse)"
 _ARTIGO_MASCULINO = re.compile(rf"(?<!\w)(?:o|um|seu|meu|nosso|esse|este|aquele|do|no|ao|pelo|dele) {_SIGLAS_FEMININAS}(?!\w)")
 _ADJETIVO_MASCULINO = re.compile(rf"(?<!\w){_SIGLAS_FEMININAS}(?: de repouso)? (?:medio|minimo|maximo|alto|baixo|elevado)(?!\w)")
+# --- Clima (checagens_feedback@6, #405) -----------------------------------------------------------------------------------------------
+# Palavras de estado, comparadas na FRASE que fala do clima. `indoor` só conta preso a "clima" ("o clima foi indoor"): "o treino foi indoor,
+# sem dados de clima" descreve o treino, não o clima, e é o certo. Estados do pacote: ok | indoor | sem_posicao | pendente | falha.
+_ESTADO_DO_CLIMA = {
+    "pendente": re.compile(r"(?<!\w)(pendente|pendentes|aguardando)(?!\w)"),
+    "indoor": re.compile(r"(?<!\w)clima (?:(?!treino)\w+ ){0,2}indoor(?!\w)"),
+    "sem_posicao": re.compile(r"(?<!\w)(sem posicao|sem localizacao|sem gps|sem coordenada)"),
+    "falha": re.compile(r"(?<!\w)(falha|falhou|indisponivel|nao foi possivel)(?!\w)"),
+}
+_NUMERO_DE_CLIMA = re.compile(r"\d\s?°\s?c|(?<!\w)(umidade|vento|sensacao termica)(?!\w)")
 # --- Forma da frase (checagens_feedback@2, #355) --------------------------------------------------------------------------------
 # Verbos aceitos, minúsculos e COM acento ("é" não é a conjunção "e"). Heurística: uma lista fechada mais a terminação do pretérito.
 VERBOS = frozenset({
@@ -302,6 +314,23 @@ def _concordancia(plano: str) -> set[str]:
     return set()
 
 
+def _clima_estado(plano: str, pacote: Mapping[str, Any]) -> set[str]:
+    """A palavra de estado do clima no texto bate com `clima.estado`; temperatura, umidade ou vento só com `ok` (#405)."""
+    estado = (pacote.get("clima") or {}).get("estado")  # None: natação, sem bloco de clima
+    if estado != "ok" and _NUMERO_DE_CLIMA.search(plano):
+        return {"clima_estado"}
+    for frase in re.split(r"[.;:](?:\s|$)|\n", plano):
+        if not re.search(r"(?<!\w)clima(?!\w)", frase):
+            continue
+        for nome, padrao in _ESTADO_DO_CLIMA.items():
+            if nome == estado or not padrao.search(frase):
+                continue
+            if estado == "ok" and "carga" in frase and nome in ("pendente", "falha"):  # "clima ... 19 °C e a carga pendente"
+                continue
+            return {"clima_estado"}
+    return set()
+
+
 def _tem_verbo(linha: str) -> bool:
     plano = _plano(linha)
     if plano.startswith("sem ") or "aprendendo" in plano or _ABERTURA_DESCRITIVA.match(plano):
@@ -457,7 +486,7 @@ def checar_texto(pacote: Mapping[str, Any], texto: str) -> Resultado:
     """
     linhas = [x for x in texto.split("\n") if x.strip()]
     plano = _plano(texto)
-    achados = _forma(texto, linhas, pacote) | _recuperacao(linhas, pacote) | _concordancia(plano) | _numeros(pacote, texto, plano) | _linguagem(texto, plano, pacote) | _dor_e_atalhos(plano, pacote)
+    achados = _forma(texto, linhas, pacote) | _recuperacao(linhas, pacote) | _concordancia(plano) | _clima_estado(_mascarar_rotulos(plano, pacote), pacote) | _numeros(pacote, texto, plano) | _linguagem(texto, plano, pacote) | _dor_e_atalhos(plano, pacote)
     if _nome_proprio(texto):
         achados.add("nome_fora_do_pacote")
     motivos = tuple(m for m in MOTIVOS if m in achados)

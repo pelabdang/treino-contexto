@@ -31,7 +31,7 @@ def _pacote(caso):
 
 
 def test_codigos_novos_e_versao():
-    assert ck.VERSAO == "checagens_feedback@5"
+    assert ck.VERSAO == "checagens_feedback@6"
     novos = {"linguagem_julgamento", "recuperacao_mistura", "recuperacao_forma", "recuperacao_outro_dia", "recuperacao_sem_pacote"}
     assert novos <= set(ck.MOTIVOS) and len(set(ck.MOTIVOS)) == len(ck.MOTIVOS)
 
