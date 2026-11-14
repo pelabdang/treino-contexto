@@ -31,7 +31,7 @@ FRASES = {
     "prazo": "O prazo do check-in deste treino acabou, então ele fica sem feedback.",
     "pendente": "O feedback deste treino ainda não foi gerado. Toque em Atualizar para ver se já está pronto.",
     "desatualizado": "Você editou o check-in. O feedback será refeito.",
-    "desatualizado_noite": "Chegou o dado de sono da noite anterior. O feedback será refeito.",
+    "desatualizado_noite": "Os dados da noite anterior foram atualizados. O feedback será refeito.",
     "indisponivel": "Ainda não foi possível gerar o feedback deste treino. Uma nova tentativa será feita mais tarde.",
     "sem_provedor": "O feedback automático não está ligado neste app.",
 }

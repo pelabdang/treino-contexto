@@ -18,7 +18,7 @@ MSG_SEM_CHECKIN = "Faça o check-in para ver o feedback."
 MSG_PRAZO_VENCIDO = "O prazo do check-in deste treino acabou, então ele fica sem feedback."
 MSG_PENDENTE = "O feedback deste treino ainda não foi gerado. Toque em Atualizar para ver se já está pronto."
 MSG_DESATUALIZADO = "Você editou o check-in. O feedback será refeito."
-MSG_DESATUALIZADO_NOITE = "Chegou o dado de sono da noite anterior. O feedback será refeito."  # #396: so a noite mudou
+MSG_DESATUALIZADO_NOITE = "Os dados da noite anterior foram atualizados. O feedback será refeito."  # #396: so a noite mudou
 MSG_INDISPONIVEL = "Ainda não foi possível gerar o feedback deste treino. Uma nova tentativa será feita mais tarde."
 MSG_SEM_PROVEDOR = "O feedback automático não está ligado neste app."
 
