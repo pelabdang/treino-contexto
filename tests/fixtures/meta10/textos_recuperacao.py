@@ -54,6 +54,8 @@ BONS = {
     "B10": ("U02", _t(L1, L2, "Na noite anterior você dormiu 7 h 20 min, a FC de repouso foi 52 bpm e a VFC, 46 ms: todas dentro do seu normal.", CK)),
     # @5 (#403): as três medidas aprendendo, com a frase obrigatória (duas linhas)
     "B11": ("U03", _t(L1, L2, "Na noite anterior você dormiu 6 h 20 min.", "A FC de repouso foi 52 bpm e a VFC, 47 ms. Ainda aprendendo o seu normal: 9 de 14 noites.", CK)),
+    # @7 (rodada da #403): as três aprendendo em duas linhas curtas (numa linha só passam de 140 caracteres)
+    "B13": ("U03", _t(L1, L2, "Na noite anterior você dormiu 6 h 20 min, a FC de repouso foi 52 bpm e a VFC, 47 ms.", "Ainda aprendendo o seu normal de sono, FC de repouso e VFC: 9 de 14 noites.", CK)),
     # @5: concordância certa
     "B12": ("R01", _t(L1, "Sua FC média foi 146 bpm e a carga por hora, 49,1 pontos/h: ambas dentro do seu normal.", CK)),
     # @6: aprendendo com a noite anterior antes, e n de minimo_noites
@@ -103,5 +105,7 @@ RUINS = {
     "M34": ("R01", _t(L1, "O FC médio foi 146 bpm e a carga por hora, 49,1 pontos/h: ambas dentro do seu normal.", CK), "concordancia_sigla"),
     "M35": ("R01", _t(L1, L2, SONO, "Na noite anterior o VFC foi 41 ms, dentro do seu normal.", CK), "concordancia_sigla"),
     "M36": ("R01", _t(L1, "Foi um FC alto de 146 bpm e a carga por hora, 49,1 pontos/h: ambas dentro do seu normal.", CK), "concordancia_sigla"),
+    # rodada da #403: as três aprendendo numa linha só passam de 140 caracteres
+    "M37": ("U03", _t(L1, L2, "Na noite anterior você dormiu 6 h 20 min, a VFC foi 47 ms e a FC de repouso foi 52 bpm. Ainda aprendendo o seu normal de sono, VFC e FC de repouso: 9 de 14 noites.", CK), "forma_tamanho_linha"),
     "M25": ("R01", _t(L1, L2, "Seu sono ruim marcado combina com 5 h 45 min na noite anterior.", CK), "linguagem_julgamento"),
 }

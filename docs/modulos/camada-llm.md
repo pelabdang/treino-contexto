@@ -2,7 +2,7 @@
 tipo: modulo
 status: em-uso
 dono: duda
-atualizado: 2026-11-14
+atualizado: 2026-11-15
 links: [[decisoes/0013-feedback-automatico]], [[metricas/checagens-feedback]], [[modulos/api]], [[modulos/worker]], [[produto/roadmap]]
 ---
 # Módulo: camada de LLM
@@ -38,8 +38,10 @@ São os mesmos códigos do `CHECK` previsto para `feedback_treino` ([[decisoes/0
 
 Na linha de comando, os padrões são os reais: `app.servicos.feedback_fatos.fatos_da_atividade` (o **adaptador** que lê o banco e chama a função pura `app.explicacao.fatos_treino.fatos_treino`, #324), `app.explicacao.checagens.checar` (#325) e as `VERSAO` dos dois módulos. O adaptador usa os serviços de leitura que a API já tem (`linha_base_resultado`, `clima_da_atividade`, `carga_da_atividade`, `esforcos_da_atividade`, rótulo de transição) e não recalcula nada; natação fica sem bloco de clima. Desde a #374 ele também passa a recuperação (`app/servicos/recuperacao_pacote.py`, ver [[metricas/fatos-treino]]). Teste: o pacote que sai do banco semeado com as fixtures da meta 9 é igual ao do oráculo, com `recuperacao = sem_noite` (`services/api/tests/servicos/test_feedback_fatos.py`).
 
-## Prompt `feedback_prompt@6` (`app/llm/prompt_feedback.py`)
+## Prompt `feedback_prompt@7` (`app/llm/prompt_feedback.py`)
 Regras de forma, tom e do que falta no pacote, mais os **6 exemplos aprovados** (G01 a G06, pacote reduzido sem campos nulos e texto da ADR 0013). Os exemplos têm **fonte única** em `app/llm/exemplos_feedback.py`; um teste confere o texto contra `tests/fixtures/meta9/textos.py`, o pacote contra o oráculo e que cada texto passa nas checagens. Estimativa da época do `@1`: uns 2,5 mil tokens. Medido na rodada da #376 com o `@5`: cerca de 4.300 tokens (ver a seção da rodada e o teste de tamanho, abaixo). Se o texto mudar de forma relevante, a `VERSAO` sobe.
+
+**`@7` (15/11, #403):** duas regras de redação: a frase "Ainda aprendendo o seu normal de ...: N de 14 noites." é **obrigatória** quando há medida `aprendendo` (com as três, duas linhas curtas), e FC, VFC e PSE são femininas ("a FC", "sua FC média"). Acompanha as `checagens_feedback@5` ([[metricas/checagens-feedback]]). O prompt foi a 14.260 caracteres (cerca de 4.320 tokens a 3,3), dentro do teste de tamanho.
 
 **`@6` (14/11, #394):** a recuperação em **duas linhas**, decisão do Angelo de 13/11 depois da rodada da #376 (as três medidas numa linha passavam de 140 caracteres): linha 1 o sono, linha 2 a FC de repouso e a VFC; uma medida só, uma linha; `aprendendo` com "Na noite anterior você dormiu X." antes de "Ainda aprendendo o seu normal de sono: N de 14 noites."; o máximo de 5 linhas continua e o prompt manda juntar clima e carga e cortar o menos importante quando há recuperação. As `checagens_feedback@4` **não mudaram** (a forma nova já passava; textos novos em `tests/fixtures/meta10/textos_recuperacao.py`, 3 bons e 3 ruins). Tamanho: os exemplos aprovados saem do prompt **sem os campos numéricos que repetem o `*_texto`** (`valor`, `duracao_s`, `distancia_m`, `sensacao_nivel`, `parte_de_transicao`, `treino_chave`); os textos aprovados e as regras ficaram. O prompt foi de 13.766 para 13.311 caracteres; depois da rodada da #394 ele ganhou 3 esclarecimentos de redação (medida `dentro` sem diferença, as três dentro em uma linha, uma medida também com "Na noite anterior") e ficou com 13.737 (cerca de 4.160 tokens a 3,3), ver a seção da rodada.
 
@@ -86,6 +88,13 @@ Mesmo formato da #376, só pacotes sintéticos (fixtures da meta 9 com os blocos
 - **Falso positivo ou texto ruim que passou:** nenhum visto. Nenhum texto ligou a noite ao resultado, aconselhou ou julgou.
 - **Tamanho:** o prompt ficou com 13.737 caracteres (cerca de 4.160 tokens a 3,3), dentro do teste da #395.
 - Os textos de B10, M29 e M30 em `tests/fixtures/meta10/textos_recuperacao.py` vêm dessa rodada.
+
+## Rodada com o provedor de verdade, `feedback_prompt@7` (15/11, #403)
+Mesmo formato, camada do `main`, pacotes sintéticos (fixtures da meta 9 com as noites do oráculo e as noites "três aprendendo" da fixture da meta 10). 9 chamadas ao todo (6 e 3 de repetição de casos que reprovaram por tamanho), 65 s entre elas.
+- **A frase do `aprendendo` saiu em todos os textos com medida `aprendendo` (5 de 5); "Seu FC" não saiu em nenhum.** As duas checagens novas não reprovaram nada nesta rodada: sem falso positivo e sem o defeito de volta.
+- **Resultado: 3 aprovadas, 5 reprovadas e 1 sem texto** (`provedor_erro`, uma chamada). Reprovações: 4 por `forma_tamanho_linha` (as três medidas `aprendendo` com as duas frases na mesma linha, ou a primeira linha de um treino com pace e FC média, que passa de 140 caracteres) e 1 por `recuperacao_mistura` (clima e carga na mesma linha da recuperação). São variações do modelo que as checagens pegam; o worker tenta de novo na próxima execução.
+- **Ajuste de redação no prompt, depois da primeira passada:** com as três `aprendendo` o modelo juntava tudo numa linha; o prompt ganhou o par de linhas curtas (B13). Repetidas, 1 de 2 passou (a outra voltou a juntar as frases).
+- Não há mais ajuste de redação em vista que não custe tokens: o prompt está em 4.320 tokens estimados.
 
 ## Limitações
 - `groq`, `openai` e `anthropic` são os provedores aceitos hoje; outro exige uma linha em `CHAVES`.

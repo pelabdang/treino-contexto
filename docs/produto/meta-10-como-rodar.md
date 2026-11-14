@@ -128,7 +128,7 @@ e nada usou a rede. **Não rodado aqui:**
    barra o treino). O worker lê as noites do atleta **uma vez** por execução.
    **O que este passo não mostra:** o texto fixo do provedor falso não fala de sono, então o `GET` e o cartão não ganham uma linha de
    recuperação aqui. A linha da recuperação no texto só aparece com o provedor de verdade e o `feedback_prompt@5`, e hoje o texto com as três medidas reprova por tamanho (rodada da #376).
-8. **Sem dado, sem recuperação no texto.** As `checagens_feedback@4` barram o texto que fala de sono, VFC ou FC de repouso quando o bloco é
+8. **Sem dado, sem recuperação no texto.** As `checagens_feedback@5` barram o texto que fala de sono, VFC ou FC de repouso quando o bloco é
    `sem_dado` (a frase pronta só passa em `sem_dado` com `sem_noite`) e usam cinco códigos novos de motivo
    ([[metricas/checagens-feedback]]). Texto reprovado nunca é gravado. Rodar isso à mão exige o provedor de verdade, e hoje ele não fecha com a recuperação (a rodada e os ajustes propostos estão na seção da
    [[modulos/camada-llm]], citada no começo); sem ele, a conferência é o conjunto de frases de teste do passo 12 (6 boas e 25 ruins, cada ruim com o motivo esperado).
