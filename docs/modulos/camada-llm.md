@@ -2,7 +2,7 @@
 tipo: modulo
 status: em-uso
 dono: duda
-atualizado: 2026-11-13
+atualizado: 2026-11-14
 links: [[decisoes/0013-feedback-automatico]], [[metricas/checagens-feedback]], [[modulos/api]], [[modulos/worker]], [[produto/roadmap]]
 ---
 # Módulo: camada de LLM
@@ -59,11 +59,25 @@ Casos: abaixo/dentro/acima (R01, 5 chamadas, em 4 treinos diferentes), `aprenden
 - **Achado do provedor (importante):** o prompt tem ~4.300 tokens reais e o pacote com a recuperação passa de 5.100 no total; o teste `len(TEXTO)/4 < 3500` subestima (português: ~3,3 caracteres por token). Com a configuração de hoje (sem `max_tokens`) o provedor soma o teto de saída ao pedido: **8.184 pedidos contra o limite de 8.000 por minuto** ("Request too large"), e quando passa, o modelo de raciocínio gasta os ~3.000 tokens de saída pensando e devolve **texto vazio** (`provedor_erro`). A rodada só funcionou com `reasoning_effort=low` e `max_tokens=1200` (3 s por chamada). **Esses dois parâmetros foram passados só num script local da rodada, que não está no repositório; a camada de hoje não passa nenhum dos dois** (o `extra` do `ProvedorLiteLLM` existe só para testes). Cada chamada consome 5 a 6 mil dos 8.000 tokens por minuto: **40 s de pausa não bastam, usei 65 s**.
 - **Propostas (nenhuma aplicada aqui):** (1) o prompt manda a recuperação em duas linhas (sono; VFC e FC de repouso), com um exemplo, e o `aprendendo` com "Na noite anterior você dormiu X." antes; (2) a camada passa `max_tokens` e `reasoning_effort` ao Groq (hoje o `extra` do `ProvedorLiteLLM` só existe para testes); (3) o teste do tamanho do prompt passa a contar com 3,3 caracteres por token, ou o prompt encolhe; (4) `LLM_INTERVALO_S` sugerido de 65 s no plano gratuito. Um `feedback_prompt@6` e a mudança na camada são decisões do Theo.
 
+## Teto de saída e esforço de raciocínio (#395)
+A camada passa ao LiteLLM, em toda chamada, o teto de saída e o esforço de raciocínio do `.env`:
+
+| Variável | Padrão | Efeito |
+|---|---|---|
+| `LLM_MAX_TOKENS` | `1200` | `max_tokens` da chamada. `0` ou negativo = não envia. |
+| `LLM_REASONING_EFFORT` | `low` | `reasoning_effort` (`low`, `medium`, `high`, conforme o modelo). Vazio = não envia. |
+| `LLM_INTERVALO_S` | `0` (no código); `65` no `.env.example` | Pausa entre chamadas. No plano gratuito do Groq (8.000 tokens por minuto) use 65. |
+
+- **Por quê.** O provedor soma o teto de saída ao tamanho do pedido contra o limite por minuto. Prompt (~4.200 tokens) + pacote (~800) + teto padrão do modelo passava de 8.000 ("Request too large"). E o modelo de raciocínio, sem `reasoning_effort=low`, gasta a saída pensando e devolve texto vazio. Com 1200 e `low` a rodada da #376 fechou (3 s por chamada).
+- **Modelo que não aceita `reasoning_effort`.** Quando o parâmetro está definido, a chamada leva também `drop_params=True`: o LiteLLM descarta o que o modelo não suporta (conferido na 1.108.4: sem isso, `groq/llama-3.3-70b-versatile` levanta `UnsupportedParamsError` e o feedback viraria `provedor_erro`). O teto (`max_tokens`) é aceito por todos. Para nunca enviar o esforço, deixe `LLM_REASONING_EFFORT=` vazio.
+- **Texto vazio** continua `provedor_erro`, sem texto e sem gravar nada (teste).
+- **Tamanho do prompt.** O teste conta 3,3 caracteres por token (português) e exige prompt + pacote (até 1.500 tokens) + `LLM_MAX_TOKENS` abaixo de 8.000.
+
 ## Limitações
 - `groq`, `openai` e `anthropic` são os provedores aceitos hoje; outro exige uma linha em `CHAVES`.
 - O LiteLLM traz o `openai` 3.x e o `httpx2`; por isso o `TestClient` do Starlette passou a usar o `httpx2`, e o `conftest` da API silencia o logger `httpx2` nos testes (o log é do cliente do teste, não da API).
 - Limites do plano gratuito do Groq: não conferidos (a página só mostra o plano pago). O limite de 20 chamadas por execução é configurável.
-- **Limite por minuto do provedor (#357):** a recusa (HTTP 429 ou erro de limite) vira `LimiteDoProvedor` na camada; o `Redator` marca `limite_do_provedor` e o worker para a execução sem gravar linha (o treino segue `pendente`). `LLM_INTERVALO_S` (padrão 0) é a pausa entre chamadas; numa medição local com fixtures, 28 s entre chamadas ainda teve recusa, então para o plano gratuito comece por 40.
+- **Limite por minuto do provedor (#357):** a recusa (HTTP 429 ou erro de limite) vira `LimiteDoProvedor` na camada; o `Redator` marca `limite_do_provedor` e o worker para a execução sem gravar linha (o treino segue `pendente`). `LLM_INTERVALO_S` (padrão 0) é a pausa entre chamadas; numa medição local com fixtures, 28 s entre chamadas ainda teve recusa, então para o plano gratuito use 65 (cada chamada consome 5 a 6 mil dos 8.000 tokens por minuto; 40 s não bastaram na rodada da #376).
 - As checagens `@1` deixavam passar "pois" como palavra de causa (visto numa resposta do `@1`); a `checagens_feedback@2` (#355) cobre.
 
 ## Arquivos principais

@@ -81,9 +81,19 @@ def test_prompt_traz_os_avisos_pedidos(trecho):
     assert trecho in prompt_feedback.TEXTO
 
 
-def test_tamanho_do_prompt_cabe_no_limite_de_tokens():
-    """Estimativa grosseira (4 caracteres por token): prompt + pacote precisam caber com folga em 8.000 tokens por minuto."""
-    assert len(prompt_feedback.TEXTO) / 4 < 3500
+def test_tamanho_do_prompt_cabe_no_limite_por_minuto_do_provedor():
+    """Conta fiel (#395): ~3,3 caracteres por token em portugues (a rodada da #376 mediu ~4.300 tokens para este prompt;
+    `len/4` dava menos de 3.500 e escondeu o problema). O provedor soma o teto de saida ao pedido contra os 8.000
+    tokens por minuto do plano gratuito: prompt + pacote (pior caso, com a recuperacao) + teto de saida < 8.000.
+    """
+    from app.config import Settings
+
+    teto_saida = Settings(_env_file=None).llm_max_tokens  # padrao do .env.example: 1200
+    tokens_prompt = len(prompt_feedback.TEXTO) / 3.3
+    tokens_pacote_max = 1500  # pacote com recuperacao: ~800 medidos na rodada, com folga
+    assert tokens_prompt + tokens_pacote_max + teto_saida < 8000, (tokens_prompt, teto_saida)
+    # o prompt sozinho + o teto de saida tambem fica abaixo (o limite pedido na #395)
+    assert tokens_prompt + teto_saida < 8000
 
 
 def test_prompt_traz_as_regras_da_recuperacao_da_adr_0014():
