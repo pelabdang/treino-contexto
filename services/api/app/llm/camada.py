@@ -119,9 +119,25 @@ def _configurar_litellm():
 class ProvedorLiteLLM:
     """Chama `litellm.completion` com `<provedor>/<modelo>`. A chave vai explicita (nao polui `os.environ`)."""
 
-    def __init__(self, provedor: str, modelo: str, chave: str, extra: dict[str, Any] | None = None) -> None:
+    def __init__(self, provedor: str, modelo: str, chave: str, extra: dict[str, Any] | None = None,
+                 max_tokens: int | None = None, reasoning_effort: str | None = None) -> None:
         self.provedor, self.modelo, self._chave = provedor, modelo, chave
         self._extra = extra or {}  # so para testes offline (`mock_response`)
+        # Teto de saida e esforco de raciocinio (#395). Vazio/None/<=0 = nao manda o parametro (padrao do provedor).
+        self.max_tokens = max_tokens if isinstance(max_tokens, int) and max_tokens > 0 else None
+        self.reasoning_effort = (reasoning_effort or "").strip().lower() or None
+
+    def _parametros(self) -> dict[str, Any]:
+        p: dict[str, Any] = {}
+        if self.max_tokens is not None:
+            p["max_tokens"] = self.max_tokens
+        if self.reasoning_effort is not None:
+            p["reasoning_effort"] = self.reasoning_effort
+            # nem todo modelo aceita `reasoning_effort`: sem isto o LiteLLM levanta UnsupportedParamsError e o
+            # feedback viraria `provedor_erro`. Com isto ele descarta o parametro e segue (so vale para esta chamada).
+            p["drop_params"] = True
+        p.update(self._extra)
+        return p
 
     def completar(self, sistema: str, usuario: str, timeout_s: float) -> str:
         litellm = _configurar_litellm()
@@ -133,7 +149,7 @@ class ProvedorLiteLLM:
                 timeout=timeout_s,
                 num_retries=0,
                 temperature=0.2,
-                **self._extra,
+                **self._parametros(),
             )
             texto = resp.choices[0].message.content
         except Exception as e:  # noqa: BLE001  (so a CLASSE conta; a mensagem pode ter dado de saude)
@@ -215,4 +231,5 @@ def criar_redator(config: Settings | None = None) -> Redator:
     chave_txt = chave.get_secret_value().strip() if chave is not None else ""
     if not (provedor and modelo and campo and chave_txt):
         return Redator(None, provedor or None, modelo or None, **comum)
-    return Redator(ProvedorLiteLLM(provedor, modelo, chave_txt), provedor, modelo, **comum)
+    lite = ProvedorLiteLLM(provedor, modelo, chave_txt, max_tokens=c.llm_max_tokens, reasoning_effort=c.llm_reasoning_effort)
+    return Redator(lite, provedor, modelo, **comum)

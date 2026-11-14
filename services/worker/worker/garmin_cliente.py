@@ -15,7 +15,7 @@ import os
 import sys
 import zipfile
 from dataclasses import dataclass
-from datetime import date, datetime, timezone
+from datetime import date, datetime, timedelta, timezone
 from pathlib import Path
 from typing import Callable, Protocol
 
@@ -196,6 +196,65 @@ def _segundos(valor: object) -> float | None:
     if isinstance(valor, bool) or not isinstance(valor, (int, float)) or valor <= 0:
         return None
     return float(valor)
+
+
+VERSAO_FIXTURE = "fixture"  # `versao_leitura` das noites carregadas de uma pasta de fixtures (as marca como sinteticas)
+MAX_ARQUIVOS_FIXTURE = 400
+
+
+class ClienteFixtures:
+    """Cliente SEM rede, sem login e sem token (#397): le uma pasta de respostas sinteticas do sono (`*.json`, cada uma o que o
+    `get_sleep_data` devolveria) com o leitor de verdade (`ler_noite`). A noite de cada arquivo e o `calendarDate` da resposta;
+    arquivo que nao e um objeto com esse campo e ignorado. `deslocamento` (dias) leva as noites da pasta para outras datas.
+    Nunca cria `ClienteGarminConnect` nem importa a biblioteca do Garmin. Mensagens fixas: nada do arquivo vai para a saida."""
+
+    def __init__(self, respostas: dict[date, object], deslocamento: timedelta = timedelta(0)) -> None:
+        self._respostas, self.deslocamento = respostas, deslocamento
+
+    @classmethod
+    def de_pasta(cls, pasta: Path) -> ClienteFixtures:
+        import json
+
+        pasta = Path(pasta)
+        if not pasta.is_dir():
+            raise ErroConfiguracao("pasta de fixtures nao encontrada")
+        arquivos = sorted(pasta.glob("*.json"))
+        if len(arquivos) > MAX_ARQUIVOS_FIXTURE:
+            raise ErroConfiguracao("fixtures demais na pasta")
+        respostas: dict[date, object] = {}
+        for arq in arquivos:
+            try:
+                resposta = json.loads(arq.read_text(encoding="utf-8"))
+            except (OSError, ValueError):
+                continue
+            dto = resposta.get("dailySleepDTO") if isinstance(resposta, dict) else None
+            dia = _data_texto(dto.get("calendarDate")) if isinstance(dto, dict) else None
+            if dia is None:
+                continue
+            if dia in respostas:
+                raise ErroConfiguracao("duas fixtures para a mesma noite")
+            respostas[dia] = resposta
+        if not respostas:
+            raise ErroConfiguracao("nenhuma noite nas fixtures")
+        return cls(respostas)
+
+    def com_deslocamento(self, deslocamento: timedelta) -> ClienteFixtures:
+        return ClienteFixtures(self._respostas, deslocamento)
+
+    def faixa(self) -> tuple[date, date]:
+        """Primeira e ultima noite da pasta, ja deslocadas."""
+        return min(self._respostas) + self.deslocamento, max(self._respostas) + self.deslocamento
+
+    def recuperacao(self, noite: date) -> NoiteRecuperacao:
+        original = noite - self.deslocamento
+        lida = ler_noite(self._respostas.get(original, {}), original)
+        return NoiteRecuperacao(noite, sono_s=lida.sono_s, vfc_ms=lida.vfc_ms, fc_repouso_bpm=lida.fc_repouso_bpm)
+
+    def listar(self, desde: date, ate: date) -> list[AtividadeGarmin]:
+        return []
+
+    def baixar_fit(self, atividade_id: int) -> bytes:
+        raise ErroConfiguracao("fixtures nao tem FIT")
 
 
 class ClienteGarminConnect:

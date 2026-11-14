@@ -23,6 +23,8 @@ class Settings(BaseSettings):
     llm_model: str = ""
     llm_timeout_s: float = 20.0  # por chamada, sem nova tentativa dentro da chamada
     llm_limite_chamadas: int = 20  # por execucao do worker
+    llm_max_tokens: int = 1200  # teto de saida por chamada (#395); 0 ou negativo = nao manda (padrao do provedor)
+    llm_reasoning_effort: str = "low"  # esforco de raciocinio (#395); vazio = nao manda. Modelo que nao aceita: descartado
     llm_intervalo_s: float = 0.0  # pausa entre chamadas na mesma execucao (limite por minuto do provedor); 0 = sem pausa
     # Chaves dos provedores: so no .env local, nunca no repositorio, nunca em log (SecretStr).
     groq_api_key: SecretStr | None = None

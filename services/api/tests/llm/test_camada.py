@@ -302,3 +302,67 @@ def test_texto_do_provedor_falso_nao_tem_numero_repetido():
     from app.explicacao.checagens import checar_texto
 
     assert "numero_repetido" not in checar_texto(_oraculo_meta9().PACOTES["F01"], ProvedorFalso.TEXTO_BOM).motivos
+
+
+# ---------- #395: teto de saida e esforco de raciocinio ----------
+
+def _captura(monkeypatch):
+    """Troca `litellm.completion` por um que guarda os argumentos e chama o de verdade (offline, com mock_response)."""
+    litellm = _litellm()
+    real, vistos = litellm.completion, {}
+
+    def espia(**kw):
+        vistos.update(kw)
+        return real(**kw)
+
+    monkeypatch.setattr(litellm, "completion", espia)
+    return vistos
+
+
+def test_teto_e_esforco_chegam_na_chamada(monkeypatch):
+    vistos = _captura(monkeypatch)
+    p = ProvedorLiteLLM("groq", "openai/gpt-oss-120b", CHAVE, dict(mock_response="Texto."), max_tokens=1200, reasoning_effort="low")
+    assert Redator(p, "groq", "m").redigir("s", "p").texto == "Texto."
+    assert vistos["max_tokens"] == 1200 and vistos["reasoning_effort"] == "low" and vistos["drop_params"] is True
+
+
+def test_sem_teto_e_sem_esforco_nao_manda_os_parametros(monkeypatch):
+    vistos = _captura(monkeypatch)
+    for kw in ({}, dict(max_tokens=0, reasoning_effort="  "), dict(max_tokens=None, reasoning_effort=None)):
+        vistos.clear()
+        p = ProvedorLiteLLM("groq", "modelo-g", CHAVE, dict(mock_response="Texto."), **kw)
+        assert Redator(p, "groq", "m").redigir("s", "p").texto == "Texto."
+        assert not {"max_tokens", "reasoning_effort", "drop_params"} & vistos.keys()
+
+
+def test_so_o_teto_sem_esforco(monkeypatch):
+    vistos = _captura(monkeypatch)
+    p = ProvedorLiteLLM("groq", "modelo-g", CHAVE, dict(mock_response="Texto."), max_tokens=800)
+    Redator(p, "groq", "m").redigir("s", "p")
+    assert vistos["max_tokens"] == 800 and "reasoning_effort" not in vistos
+
+
+def test_padrao_do_env_e_1200_e_low_e_vem_do_settings():
+    base = dict(llm_provider="groq", llm_model="modelo-g", groq_api_key=CHAVE)
+    c = _cfg(**base)
+    assert (c.llm_max_tokens, c.llm_reasoning_effort) == (1200, "low")
+    r = criar_redator(c)
+    assert (r._provedor.max_tokens, r._provedor.reasoning_effort) == (1200, "low")
+    r2 = criar_redator(_cfg(**base, llm_max_tokens=900, llm_reasoning_effort="HIGH"))
+    assert (r2._provedor.max_tokens, r2._provedor.reasoning_effort) == (900, "high")
+    r3 = criar_redator(_cfg(**base, llm_max_tokens=0, llm_reasoning_effort=""))
+    assert (r3._provedor.max_tokens, r3._provedor.reasoning_effort) == (None, None)
+
+
+def test_modelo_que_nao_aceita_reasoning_effort_nao_vira_erro():
+    """Groq/llama nao lista `reasoning_effort`: com `drop_params` o LiteLLM descarta e a chamada segue."""
+    p = ProvedorLiteLLM("groq", "llama-3.3-70b-versatile", CHAVE, dict(mock_response="Texto."), max_tokens=1200, reasoning_effort="low")
+    res = Redator(p, "groq", "llama-3.3-70b-versatile").redigir("s", "p")
+    assert (res.texto, res.motivo) == ("Texto.", None)
+
+
+def test_texto_vazio_com_teto_continua_erro_e_nada_e_gravado():
+    """O modelo de raciocinio que gasta a saida pensando devolve vazio: vira `provedor_erro`, sem texto."""
+    p = ProvedorLiteLLM("groq", "openai/gpt-oss-120b", CHAVE, dict(mock_response=" "), max_tokens=1200, reasoning_effort="low")
+    res = Redator(p, "groq", "m").redigir("s", "p")
+    assert (res.texto, res.motivo) == (None, "provedor_erro")
