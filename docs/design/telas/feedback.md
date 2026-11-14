@@ -2,7 +2,7 @@
 tipo: design
 status: rascunho
 dono: lia
-atualizado: 2026-11-10
+atualizado: 2026-11-14
 links: [[design/guia-visual]], [[design/tokens]], [[design/telas/treino]], [[design/telas/checkin]], [[produto/plano-mvp-execucao]], [[produto/roadmap]], [[decisoes/0012-check-in-pos-treino]], [[modulos/mobile]], [[glossario]]
 ---
 # Tela: cartão "Feedback" na tela de um treino
@@ -62,7 +62,7 @@ O app **não** gera, não corta, não reformata e não confere o texto: as checa
 são do backend. O app mostra `texto` como veio, preservando parágrafos. Não calcula `desatualizado` nem `sem_checkin`:
 lê o `estado`. A frase vem pronta da API (como `carga_pse.texto`) e o cartão a mostra como veio; as frases desta nota
 são só o **texto de reserva do app**, para o caso de a `mensagem` faltar. A API pode variar a frase por `motivo` sem criar
-estado (por exemplo, "sem provedor"); o cartão só mostra a `mensagem`.
+estado (por exemplo, "sem provedor", ou a noite que chegou em `desatualizado`, #396); o cartão só mostra a `mensagem`. O texto de reserva do app segue sendo o do check-in.
 
 O app **não** mostra: o `motivo`, o motivo técnico da reprovação, nome do provedor ou do modelo, versão do pacote, nada do pacote de
 fatos. O app **não guarda** o texto: nem em log, nem em armazenamento local, nem em URL, nem em cache do navegador além
@@ -145,7 +145,7 @@ já está na tela não some quando "Atualizar" busca de novo.
 | **sem check-in** (`sem_checkin`, `checkin_aberto` verdadeiro) | ícone `assignment`, a `mensagem` e o botão secundário "Fazer check-in" (abre `/checkin/<id>`) | "Faça o check-in para ver o feedback." |
 | **sem check-in, prazo vencido** (`sem_checkin`, `checkin_aberto` falso) | ícone `info-outline` e a `mensagem`, **sem botão** | "O prazo do check-in deste treino acabou, então ele fica sem feedback." (reserva; a ADR 0013 só fixa a frase do caso com prazo aberto) |
 | **pendente** (`pendente`) | ícone `info-outline`, a `mensagem` e o botão de texto "Atualizar" (`refresh`) | "O feedback deste treino ainda não foi gerado. Toque em Atualizar para ver se já está pronto." |
-| **desatualizado** (`desatualizado`) | ícone `info-outline` e a `mensagem`; a API **não devolve** o texto antigo; botão de texto "Atualizar" | "Você editou o check-in. O feedback será refeito." |
+| **desatualizado** (`desatualizado`) | ícone `info-outline` e a `mensagem`; a API **não devolve** o texto antigo; botão de texto "Atualizar" | "Você editou o check-in. O feedback será refeito." (check-in editado, versão do pacote nova, ou os dois com a noite) ou, só quando a noite do treino chegou ou mudou, "Os dados da noite anterior foram atualizados. O feedback será refeito." (#396, frase da Lia; cobre a noite nova e a corrigida pelo Garmin) |
 | **indisponível** (`indisponivel`, para texto reprovado, provedor fora ou limite de chamadas) | ícone `info-outline` e a `mensagem`; **nunca** o texto reprovado nem o `motivo` | "Ainda não foi possível gerar o feedback deste treino. Uma nova tentativa será feita mais tarde." |
 | **indisponível, sem provedor** (`indisponivel`, `motivo = provedor_nao_configurado`) | o mesmo cartão, só a `mensagem` (a ADR 0013 permite uma frase própria para esse motivo); o app **não** olha o `motivo` | "O feedback automático não está ligado neste app." |
 | `feedback: null` ou sem o campo | o cartão não aparece | |
@@ -156,7 +156,7 @@ Detalhes de cada estado:
   ("daqui a pouco") nem diz que está "sendo preparado": diz só que ainda não foi gerado. Sem esqueleto nem indicador
   girando (prometeriam que o texto está para aparecer). "Atualizar" busca a atividade de novo e o leitor de tela fala o
   resultado. Sem busca automática.
-- **Desatualizado.** Editar o check-in (ou subir a versão dos fatos) marca o feedback e o worker o refaz. A API não devolve o
+- **Desatualizado.** Editar o check-in (ou subir a versão dos fatos) marca o feedback, e a noite do treino que chega ou muda (#396) também; o worker o refaz. A `mensagem` diz qual foi o motivo: a do check-in vale quando ele mudou (sozinho ou junto com a noite), a da noite só quando foi a noite. A API não devolve o
   texto antigo, que poderia contradizer o check-in novo. O app não tem o que esconder.
 - **Indisponível.** Sem texto de reserva escrito por regra (decisão 8 do Angelo); a nova tentativa é do `worker.gerar_feedback`.
   Texto reprovado e provedor fora têm a mesma frase: o atleta não precisa do motivo e o texto reprovado **nunca** chega ao app.
