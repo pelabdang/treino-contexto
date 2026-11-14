@@ -56,6 +56,8 @@ BONS = {
     "B11": ("U03", _t(L1, L2, "Na noite anterior você dormiu 6 h 20 min.", "A FC de repouso foi 52 bpm e a VFC, 47 ms. Ainda aprendendo o seu normal: 9 de 14 noites.", CK)),
     # @7 (rodada da #403): as três aprendendo em duas linhas curtas (numa linha só passam de 140 caracteres)
     "B13": ("U03", _t(L1, L2, "Na noite anterior você dormiu 6 h 20 min, a FC de repouso foi 52 bpm e a VFC, 47 ms.", "Ainda aprendendo o seu normal de sono, FC de repouso e VFC: 9 de 14 noites.", CK)),
+    # @5: adjetivos sem gênero depois da sigla não são defeito ("FC maior", "FC menor")
+    "B14": ("R01", _t(L1, "A FC maior do treino foi 171 bpm e a menor, 120 bpm: ambas dentro do seu normal.", CK)),
     # @5: concordância certa
     "B12": ("R01", _t(L1, "Sua FC média foi 146 bpm e a carga por hora, 49,1 pontos/h: ambas dentro do seu normal.", CK)),
     # @6: aprendendo com a noite anterior antes, e n de minimo_noites

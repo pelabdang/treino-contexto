@@ -87,7 +87,7 @@ def test_unidades_ms_e_composta():
 def test_concordancia_nao_pega_o_que_esta_certo():
     pacote = _pacote("R01")
     for ok in ("A FC do melhor tiro foi 171 bpm.", "Sua FC média foi 146 bpm.", "Natação de 1.600 m em 40 min, com FC média de 128 bpm.",
-               "A VFC foi 41 ms, dentro do seu normal.", "A FC de repouso foi 58 bpm."):
+               "A VFC foi 41 ms, dentro do seu normal.", "A FC de repouso foi 58 bpm.", "A FC maior foi 171 bpm.", "A FC menor foi 120 bpm.", "A FC é igual à do treino anterior.", "A FC estável e normal."):
         assert "concordancia_sigla" not in ck.checar_texto(pacote, ok + "\nLinha dois.\nLinha três.").motivos
 
 

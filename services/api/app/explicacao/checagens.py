@@ -119,7 +119,7 @@ TERMOS_DO_ATALHO = {
 # --- Concordância (checagens_feedback@5, #403): FC, VFC e PSE são femininas ("a FC média", "sua VFC"), nunca "seu FC médio" ---------------
 _SIGLAS_FEMININAS = r"(?:fc|vfc|pse)"
 _ARTIGO_MASCULINO = re.compile(rf"(?<!\w)(?:o|um|seu|meu|nosso|esse|este|aquele|do|no|ao|pelo|dele) {_SIGLAS_FEMININAS}(?!\w)")
-_ADJETIVO_MASCULINO = re.compile(rf"(?<!\w){_SIGLAS_FEMININAS}(?: de repouso)? (?:medio|minimo|maximo|alto|baixo|elevado|maior|menor)(?!\w)")
+_ADJETIVO_MASCULINO = re.compile(rf"(?<!\w){_SIGLAS_FEMININAS}(?: de repouso)? (?:medio|minimo|maximo|alto|baixo|elevado)(?!\w)")
 # --- Forma da frase (checagens_feedback@2, #355) --------------------------------------------------------------------------------
 # Verbos aceitos, minúsculos e COM acento ("é" não é a conjunção "e"). Heurística: uma lista fechada mais a terminação do pretérito.
 VERBOS = frozenset({
