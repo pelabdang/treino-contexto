@@ -47,5 +47,6 @@ RUINS = {
     "X08": ("sem_posicao", _t(L1, L2, CK, "O clima falhou."), "clima_estado"),
     "X09": ("ok", _t(L1, L2, CK, "O clima está indisponível."), "clima_estado"),
     "X10": ("indoor", _t(L1, L2, CK, "O clima do treino indoor ainda está pendente."), "clima_estado"),
+    "X12": ("indoor", _t(L1, L2, CK, "Sem a posição de início, sem dados de clima."), "clima_estado"),
     "X11": ("indoor", _t(L1, L2, CK, "Sensação térmica de 19 °C."), "clima_estado"),
 }

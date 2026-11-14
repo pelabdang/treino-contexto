@@ -128,7 +128,7 @@ _ADJETIVO_MASCULINO = re.compile(rf"(?<!\w){_SIGLAS_FEMININAS}(?: de repouso)? (
 _ESTADO_DO_CLIMA = {
     "pendente": re.compile(r"(?<!\w)(pendente|pendentes|aguardando)(?!\w)"),
     "indoor": re.compile(r"(?<!\w)clima (?:(?!treino)\w+ ){0,2}indoor(?!\w)"),
-    "sem_posicao": re.compile(r"(?<!\w)(sem posicao|sem localizacao|sem gps|sem coordenada)"),
+    "sem_posicao": re.compile(r"(?<!\w)(sem (?:a )?(?:posicao|localizacao)|sem gps|sem coordenada)"),
     "falha": re.compile(r"(?<!\w)(falha|falhou|indisponivel|nao foi possivel)(?!\w)"),
 }
 _NUMERO_DE_CLIMA = re.compile(r"\d\s?°\s?c|(?<!\w)(umidade|vento|sensacao termica)(?!\w)")

@@ -5,7 +5,7 @@ dono: caio
 atualizado: 2026-11-15
 links: [[decisoes/0013-feedback-automatico]], [[decisoes/0014-recuperacao-diaria]], [[metricas/recuperacao]], [[metricas/recuperacao-oraculo]], [[modulos/camada-llm]], [[metricas/fatos-treino]], [[metricas/fatos-treino-oraculo]], [[produto/roadmap]], [[glossario]]
 ---
-# Checagens do texto do feedback (`checagens_feedback@5`) e lista de linguagem proibida
+# Checagens do texto do feedback (`checagens_feedback@6`) e lista de linguagem proibida
 
 ## O que mede
 Se um texto escrito pela camada de LLM pode chegar ao atleta (ADR 0013, item 4). Não é uma métrica de treino: é a **guarda em código** entre o texto e o app. Função pura
@@ -51,6 +51,13 @@ Dois defeitos do primeiro feedback real da Meta 10 (só descritos aqui, sem text
 **Duas frases numa linha da recuperação** ("Na noite anterior você dormiu 6 h 20 min. Ainda aprendendo o seu normal de sono: 10 de 14 noites.") **não é defeito**: a ADR 0014 (item 6) traz exemplos assim, a regra mecânica é o limite de 140 caracteres por linha e de 5 linhas, e não há checagem de "uma frase por linha". Teste `test_duas_frases_na_mesma_linha_da_recuperacao_passam_se_cabem_nos_140_caracteres`. O `feedback_prompt@7` pede a frase do `aprendendo` como obrigatória (também com as três medidas, em duas linhas curtas) e traz a concordância das siglas. Fixtures: B11 a B13 e M31 a M37 em `tests/fixtures/meta10/textos_recuperacao.py`.
 O feedback já `pronto` com versão antiga de checagens ou de prompt não é refeito sozinho (a versão do prompt e das checagens não entra no "desatualizado"): só `worker.gerar_feedback --refazer`.
 
+## Versão `@6` (15/11, #405): o estado do clima no texto
+No feedback real de um pedal virtual o pacote tinha `clima.estado = indoor` e o texto disse "O clima ainda está pendente." e passou: nenhuma checagem conferia o que o texto diz do clima, só os números. Um código novo, no fim de `MOTIVOS`: `clima_estado`.
+- **Palavra de estado:** na frase que fala de "clima", a palavra de outro estado reprova: `pendente`/`pendentes`/`aguardando`; "clima ... indoor" (preso a "clima", até duas palavras no meio, sem "treino"); "sem posição", "sem localização", "sem GPS"; `falha`, `falhou`, `indisponível`, "não foi possível". Com o pacote `ok` a frase "clima 19 °C e a carga do relógio ainda está pendente" passa (o pendente é da carga).
+- **Valores:** temperatura (`°C`), umidade, vento ou sensação térmica só com `clima.estado = ok`; sem o bloco (natação) também reprovam.
+- **Limites:** "O treino foi indoor, sem dados de clima." (frase do prompt `@8`) passa porque "indoor" descreve o treino. "O clima foi indoor" com o pacote `indoor` também passa (é estranho, mas o fato está certo; o `@8` pede a outra frase). Só a frase que contém a palavra "clima" é conferida: "A carga do relógio ainda está pendente" com o clima `indoor` passa. Omitir o clima continua permitido.
+- Fixtures `tests/fixtures/meta10/textos_clima.py` (9 bons, 11 ruins, um de cada estado), teste `services/api/tests/explicacao/test_checagens_clima.py`. O feedback já `pronto` não é refeito sozinho (só com `--refazer`).
+
 ## Regras
 Todas rodam sempre; o resultado reúne os códigos de todas as que reprovam, na ordem da tabela.
 
@@ -86,7 +93,7 @@ aparece nos textos bons ("nos 11 treinos"). Antes das listas, tiram-se do texto 
 Os testes do worker injetam a própria `checar`; só o teste de `services/api/tests/llm/test_camada.py` (`test_texto_do_provedor_falso_nas_checagens_reais`) roda a `checar_texto` real contra o texto fixo do provedor falso. Mudou a forma, os verbos ou a lista? Confira esse texto e o teste. Ver [[modulos/camada-llm]] e [[modulos/worker]].
 
 ## Lista de linguagem proibida (`checagens_feedback@1`)
-Ponto de partida: a lista da ADR 0013 (item 4.2), ampliada. Mudar qualquer lista abaixo, ou um limite, **sobe a versão** (hoje `checagens_feedback@5`).
+Ponto de partida: a lista da ADR 0013 (item 4.2), ampliada. Mudar qualquer lista abaixo, ou um limite, **sobe a versão** (hoje `checagens_feedback@6`).
 - **Diagnóstico (`linguagem_diagnostico`):** lesão, lesões, lesionado(a), inflamação, tendinite, fratura, distensão, overtraining, sobretreino, supertreino, doença, infecção, sintoma(s), diagnóstico, síndrome, arritmia, desidratação, desidratado, fadiga, esgotamento, exaustão, risco.
 - **Culpa e juízo (`linguagem_culpa`):** falhou, fracasso, fracassou, preguiça, desleixo, culpa, fraco(a), decepcionante, "você deveria", "você devia", péssimo, horrível, "treino ruim", "mau treino", ruim, mau, preocupante, alerta, problema, pior, erro, **mal** (só passa como rótulo da sensação do pacote; ver "Rótulos do check-in").
 - **Promessa (`linguagem_promessa`):** "vai melhorar", "com certeza", certamente, garanto, prometo, garantido, "você vai conseguir", "na próxima será", "em breve você".
@@ -102,7 +109,7 @@ Ponto de partida: a lista da ADR 0013 (item 4.2), ampliada. Mudar qualquer lista
 Regra própria do projeto, sem artigo (ADR 0013, "Fontes"). Decisões do Angelo de 10/11: tom aprovado como está, observação positiva só quando um fato a sustenta, clima e check-in lado a lado, dor em uma frase neutra.
 
 ## Código e teste
-- Código: `services/api/app/explicacao/checagens.py` (`VERSAO = "checagens_feedback@5"`; as listas são constantes nomeadas no topo).
+- Código: `services/api/app/explicacao/checagens.py` (`VERSAO = "checagens_feedback@6"`; as listas são constantes nomeadas no topo).
 - Teste: `services/api/tests/explicacao/test_checagens.py`. **Os 13 textos bons passam e os 84 ruins reprovam com o motivo certo** (listas da #323, [[metricas/fatos-treino-oraculo]], escritas à mão contra os pacotes do oráculo;
   cada ruim tem exatamente um motivo). Mais casos pequenos de cada regra: unidade, número por extenso, acento e maiúscula, palavra inteira, "nós" e "nos", "sono ruim", rótulos da sensação, rótulos da sensação do pacote e de fora dele, "quente" e "frio", um ruim por termo novo da revisão da Nina, elogio com e sem fato, limites de linhas e de
   caracteres, Markdown, dor marcada e não marcada, atalhos, nome próprio e siglas, ordem dos motivos, pureza do módulo.
