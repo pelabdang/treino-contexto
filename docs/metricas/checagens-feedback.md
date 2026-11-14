@@ -2,7 +2,7 @@
 tipo: metrica
 status: em-uso
 dono: caio
-atualizado: 2026-11-13
+atualizado: 2026-11-14
 links: [[decisoes/0013-feedback-automatico]], [[decisoes/0014-recuperacao-diaria]], [[metricas/recuperacao]], [[metricas/recuperacao-oraculo]], [[modulos/camada-llm]], [[metricas/fatos-treino]], [[metricas/fatos-treino-oraculo]], [[produto/roadmap]], [[glossario]]
 ---
 # Checagens do texto do feedback (`checagens_feedback@4`) e lista de linguagem proibida
@@ -41,6 +41,7 @@ Regras do item 6 da [[decisoes/0014-recuperacao-diaria]], com o pacote `fatos_tr
 - `recuperacao_sem_pacote` (regra 5): o texto cita recuperação com o bloco ausente ou `sem_dado`; a frase pronta "Sem dado de sono, VFC e FC de repouso da noite anterior." só passa em `sem_dado` com `sem_noite`.
 Mudanças nas outras regras: a unidade `ms` entra; "5 h 40 min" vale como **um** número e só passa se está escrito assim no pacote (`numero_fora_do_pacote` caso contrário); "VFC" entra nas siglas; "durma", "dormir mais", "dormir cedo", "vá dormir" e "o ideal é dormir" entram em `linguagem_conselho`; os termos fisiológicos ("sistema nervoso", "prontidão", "Body Battery"...) entram em `linguagem_diagnostico`;
 a repetição de "dentro do seu normal" (`conclusao_repetida`) conta separado para as linhas da recuperação e as do resultado. Textos em `tests/fixtures/meta10/textos_recuperacao.py` (6 bons e 25 ruins, cada ruim com o motivo esperado), teste `services/api/tests/explicacao/test_checagens_recuperacao.py`.
+**`feedback_prompt@6` (#394):** a recuperação em duas linhas passa nas `@4` sem mudança; a fixture ganhou B07 a B10 e M26 a M30 (B10, M29 e M30 vêm da rodada com o provedor).
 Feedback `pronto` com `checagens_feedback@3` não é refeito sozinho por isso (a versão das checagens não entra no "desatualizado"); o `fatos_treino@2` já os refaz.
 
 ## Regras

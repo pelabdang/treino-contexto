@@ -1,4 +1,4 @@
-"""Prompt fixo do feedback (`feedback_prompt@5`, ADR 0013 itens 3 e 5 e ADR 0014 item 6). Regras, guia de tom e os 6 exemplos aprovados: nenhum dado real.
+"""Prompt fixo do feedback (`feedback_prompt@6`, ADR 0013 itens 3 e 5 e ADR 0014 item 6). Regras, guia de tom e os 6 exemplos aprovados: nenhum dado real.
 
 A mensagem do usuário é o pacote de fatos em JSON. Os exemplos vêm de `app.llm.exemplos_feedback` (fonte única, conferida por teste contra as
 fixtures da meta 9). As checagens em código (`checagens_feedback@4`) continuam sendo quem decide se o texto chega ao atleta; o prompt só orienta.
@@ -9,7 +9,7 @@ import json
 
 from app.llm.exemplos_feedback import EXEMPLOS
 
-VERSAO = "feedback_prompt@5"
+VERSAO = "feedback_prompt@6"
 
 _REGRAS = """Você escreve um feedback curto, em português do Brasil, sobre um treino de um atleta, a partir de um pacote de fatos em JSON.
 
@@ -23,7 +23,7 @@ Regras:
 - Nomes das métricas, com o gênero certo: `pace_medio` é "seu pace médio"; `melhor_pace` é "seu melhor tiro"; `fc_media` é "a FC média" ou "sua FC média" (nunca "seu FC médio"); `fc_melhor_tiro` é "a FC do melhor tiro"; `carga_hora` é "a carga por hora". Não use a chave do pacote como nome.
 - Não repita a mesma conclusão sobre a mesma coisa. Use "dentro do seu normal" (ou "fora do seu normal") em UMA linha só do texto: se duas métricas estão dentro do normal, junte-as na mesma linha ("A FC média foi 146 bpm e a carga por hora, 49,1 pontos/h: ambas dentro do seu normal."). "Perto da mediana" numa linha e "dentro do seu normal" em outra, sobre métricas diferentes, pode. Nunca escreva "dentro da mediana".
 - Esforço (PSE): `checkin.pse_texto` é o rótulo da PSE quando existe ("difícil"): escreva "esforço 5 (difícil)". Sem rótulo (PSE 6, 8 ou 9), `pse_texto` vem nulo ou ausente: escreva só o número de `checkin.pse`, "esforço 6", NUNCA "esforço 6 (6)": não repita o número entre parênteses.
-- Recuperação (bloco `recuperacao`): a noite anterior ao treino contra o normal do atleta, ao lado do resultado, nunca ligada a ele. Numa linha PRÓPRIA, sem pace, FC média, carga, clima nem check-in. Copie `valor_texto`, `normal_texto` e `diferenca_texto`: "Na noite anterior você dormiu 5 h 40 min, 1 h 30 min abaixo do seu normal de 7 h 10 min." / "Na noite anterior, a FC de repouso foi 55 bpm, 3 bpm acima do seu normal de 52 bpm. A VFC foi 47 ms, dentro do seu normal." ("5 h 40 min" é um número só.) Só "abaixo", "acima" ou "dentro do seu normal". Medida `aprendendo`: valor sem comparar ("Ainda aprendendo o seu normal de sono: 9 de 14 noites."); medida `sem_dado` num bloco `ok`: não cite. Bloco `sem_dado` com `sem_noite`: a linha "Sem dado de sono, VFC e FC de repouso da noite anterior."; com `treino_de_madrugada`, `fora_do_periodo` ou sem o bloco: nada sobre sono, VFC ou FC de repouso. Nunca ligue a noite ao resultado ("por isso", "mas", "mesmo com", "pesou"), nem aconselhe ("durma", "descanse"), nem julgue ("noite ruim", "VFC baixa", "melhor", "pior"), nem fale de outro dia ("ontem", "nos últimos dias") ou de saúde ("fadiga", "sistema nervoso"). "Dentro do seu normal" pode repetir na linha da recuperação. Para caber, junte as medidas dela numa linha e enxugue as outras.
+- Recuperação (bloco `recuperacao`, estado `ok`): a noite anterior contra o normal do atleta, ao lado do resultado, nunca ligada a ele. Use DUAS linhas próprias (sem pace, FC média, carga, clima nem check-in), copiando `valor_texto`, `normal_texto` e `diferenca_texto`; a primeira começa com "Na noite anterior". Linha 1, sono: "Na noite anterior você dormiu 5 h 40 min, 1 h 30 min abaixo do seu normal de 7 h 10 min." Linha 2, FC de repouso e VFC: "A FC de repouso foi 55 bpm, 3 bpm acima do seu normal de 52 bpm, e a VFC, 47 ms, dentro do seu normal." Com as três dentro, uma linha só, sem repetir a conclusão: "Na noite anterior você dormiu 7 h 20 min, a FC de repouso foi 52 bpm e a VFC, 46 ms: todas dentro do seu normal." Com uma medida só, uma linha que TAMBÉM começa com "Na noite anterior": "Na noite anterior, a VFC foi 47 ms, dentro do seu normal." Só "abaixo", "acima" ou "dentro do seu normal". Medida `dentro`: só o valor e "dentro do seu normal", sem diferença e sem "abaixo" nem "acima" (ex.: "o sono foi 7 h 20 min, dentro do seu normal"), mesmo que o valor seja um pouco maior ou menor que o normal. Medida `aprendendo`: valor sem comparar, depois de "Na noite anterior você dormiu 6 h 20 min.": "Ainda aprendendo o seu normal de sono: 9 de 14 noites." (`n` de `minimo_noites`). Medida `sem_dado`: não cite. Bloco `sem_dado` com `sem_noite`: a linha "Sem dado de sono, VFC e FC de repouso da noite anterior."; com `treino_de_madrugada`, `fora_do_periodo` ou sem o bloco: nada sobre sono, VFC ou FC de repouso. Nunca ligue a noite ao resultado ("por isso", "mas", "mesmo com", "pesou"), nem aconselhe ("durma", "descanse"), nem julgue ("noite ruim", "VFC baixa", "melhor", "pior"), nem fale de outro dia ("ontem", "nos últimos dias") ou de saúde ("fadiga", "sistema nervoso"). "Dentro do seu normal" pode repetir na linha da recuperação. O máximo continua 5 linhas: com recuperação, junte clima e carga numa linha e corte o menos importante (a ordem acima manda).
 - Escolha o essencial: do clima basta a temperatura (e a sensação térmica e a umidade quando o atalho `calor` foi marcado); não despeje todos os campos do pacote numa linha.
 - Quando falta um dado, diga o que falta com dois-pontos ou em frase direta ("Sem comparação com o seu histórico: o treino não tem tipo."), sem "pois", "porque" ou "já que".
 - Elogio: não use "ótimo", "excelente", "parabéns", "bom treino" nem palavra parecida sem um fato que a sustente; com fato, diga só o fato ("dentro do seu normal"). Não use a palavra "ruim", exceto na expressão "sono ruim" quando o atalho foi marcado.
@@ -36,10 +36,23 @@ Regras:
 - Responda só com o texto do feedback."""
 
 
+# Campos numéricos que repetem o `*_texto` ao lado (ou são falsos): saem do pacote DOS EXEMPLOS para o prompt caber no limite de tokens do
+# plano gratuito. O pacote real continua com eles; os textos aprovados não mudam. (feedback_prompt@6)
+_REDUNDANTES = frozenset({"parte_de_transicao", "valor", "distancia_m", "duracao_s", "sensacao_nivel", "treino_chave"})
+
+
+def _enxuto(x):
+    if isinstance(x, dict):
+        return {k: _enxuto(v) for k, v in x.items() if k not in _REDUNDANTES}
+    if isinstance(x, list):
+        return [_enxuto(v) for v in x]
+    return x
+
+
 def _exemplos() -> str:
     blocos = ["Exemplos aprovados (nos pacotes dos exemplos, os campos nulos foram omitidos):"]
     for i, e in enumerate(EXEMPLOS, 1):
-        pacote = json.dumps(e["pacote"], ensure_ascii=False, separators=(",", ":"))
+        pacote = json.dumps(_enxuto(e["pacote"]), ensure_ascii=False, separators=(",", ":"))
         blocos.append(f"Exemplo {i}\nPacote: {pacote}\nTexto:\n{e['texto']}")
     return "\n\n".join(blocos)
 
