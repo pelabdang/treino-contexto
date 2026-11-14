@@ -2,7 +2,7 @@
 tipo: decisao
 status: em-uso
 dono: theo
-atualizado: 2026-11-11
+atualizado: 2026-11-14
 links: [[decisoes/0013-feedback-automatico]], [[modulos/api]], [[modulos/grafico-tiros]], [[modulos/mobile]], [[modulos/worker]], [[metricas/tiros-1km]], [[decisoes/0002-segmento-intensidade-e-versao]], [[decisoes/0003-fuso-da-atividade]], [[decisoes/0005-serie-de-tiros-o-que-entra]], [[decisoes/0006-upload-de-fit]], [[decisoes/0007-clima-da-atividade]], [[produto/roadmap]], [[design/telas/treino]], [[decisoes/0009-treino-de-transicao]]
 ---
 # ADR: 0004 Contrato da tela de evolução dos tiros (Meta 2)
@@ -247,7 +247,7 @@ só em `pronto`; `mensagem` (**frase pronta em português, escrita pela API**, q
 `sem_checkin` (falso = prazo vencido, sem botão); `motivo` (código fechado: `texto_reprovado`, `provedor_erro`, `provedor_tempo_limite`,
 `provedor_nao_configurado`, `limite_de_chamadas`) só em `indisponivel`, para quem cuida do app: o app **não** o mostra. As frases: `sem_checkin` com prazo aberto
 "Faça o check-in para ver o feedback."; com prazo vencido "O prazo do check-in deste treino acabou, então ele fica sem feedback."; `pendente` "O feedback deste
-treino ainda não foi gerado. Toque em Atualizar para ver se já está pronto."; `desatualizado` "Você editou o check-in. O feedback será refeito."; `indisponivel`
+treino ainda não foi gerado. Toque em Atualizar para ver se já está pronto."; `desatualizado` "Você editou o check-in. O feedback será refeito." quando o check-in ou a versão dos fatos mudou (sozinho ou junto com a noite) e "Os dados da noite anterior foram atualizados. O feedback será refeito." só quando foi só a noite do treino que chegou ou mudou (#396; a mesma `mensagem`, sem estado novo e sem mudar o contrato); `indisponivel`
 "Ainda não foi possível gerar o feedback deste treino. Uma nova tentativa será feita mais tarde." (a mesma para texto reprovado, provedor fora e limite de chamadas) e, só para
 `provedor_nao_configurado`, "O feedback automático não está ligado neste app." A API **nunca** devolve o texto de um feedback desatualizado, o texto reprovado (que nem é
 gravado), o provedor, o modelo nem as versões; só o `GET` da própria atividade traz o campo (nunca lista; outro atleta recebe `404`). Dado de saúde derivado do
