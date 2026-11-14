@@ -523,3 +523,102 @@ def test_o_comando_nao_conhece_campos_do_garmin_nem_rotas_de_faixa():
                   "get_hrv_data_range", "get_rhr_daily", "BLOCO"):
         assert campo not in fonte
     assert garmin_cliente.VERSAO_LEITURA == "recuperacao_leitura@1"
+
+
+# ---------- #397: --fixtures (sem rede, sem login, sem token) ----------
+
+NOITES_R01 = FIX / "noites_r01"
+
+
+@pytest.fixture
+def sem_cliente_real(monkeypatch):
+    """Prova que o modo --fixtures nao cria o cliente de verdade nem le o ambiente do Garmin."""
+    def proibido(*a, **k):
+        raise AssertionError("--fixtures tentou criar o cliente real")
+
+    monkeypatch.setattr(ClienteGarminConnect, "entrar", staticmethod(proibido))
+    monkeypatch.setattr(garmin_cliente, "ler_ambiente", proibido)
+
+
+def _fx(factory, *args, hoje=D(2026, 11, 13)):
+    return main(["--atleta", "Atleta Ficticio", *args], session_factory=factory, hoje=hoje)
+
+
+def _oraculo():
+    import sys
+
+    sys.path.insert(0, str(FIX))
+    import oraculo_fatos_recuperacao as o
+
+    return o
+
+
+def test_fixtures_carrega_as_15_noites_do_oraculo_r01(engine, factory, atleta, capsys, sem_cliente_real):
+    o = _oraculo()
+    assert _fx(factory, "--fixtures", str(NOITES_R01)) == 0
+    assert "recuperacao: noites_novas=15 atualizadas=0 iguais=0 sem_dado=0 falhas=0" in capsys.readouterr().out
+    esperado = {n["noite"]: (n["sono_s"], n["vfc_ms"], n["fc_repouso_bpm"]) for n in o.CASOS["R01"]["noites"]}
+    assert _linhas(engine) == esperado  # inclusive a FC de repouso da ultima noite
+    with Session(engine) as s:
+        assert set(s.scalars(select(RecuperacaoDia.versao_leitura))) == {"fixture"}
+
+
+def test_fixtures_e_idempotente(engine, factory, atleta, capsys, sem_cliente_real):
+    assert _fx(factory, "--fixtures", str(NOITES_R01)) == 0
+    capsys.readouterr()
+    assert _fx(factory, "--fixtures", str(NOITES_R01)) == 0
+    out = capsys.readouterr().out
+    assert "noites_novas=0 atualizadas=0 iguais=15 sem_dado=0 falhas=0" in out
+    assert len(_linhas(engine)) == 15
+
+
+def test_fixtures_da_pasta_meta10_com_desde_e_ate(engine, factory, atleta, capsys, sem_cliente_real):
+    args = ("--fixtures", str(FIX), "--desde", "2026-03-10", "--ate", "2026-03-13")
+    assert _fx(factory, *args) == 0
+    assert "noites_novas=4 atualizadas=0 iguais=0 sem_dado=0 falhas=0" in capsys.readouterr().out
+    assert _fx(factory, *args) == 0
+    assert "noites_novas=0 atualizadas=0 iguais=4" in capsys.readouterr().out
+    assert set(_linhas(engine)) == {D(2026, 3, d) for d in (10, 11, 12, 13)}
+
+
+def test_fixtures_alinhadas_ao_treino_levam_a_ultima_noite_ao_dia_do_treino(engine, factory, atleta, capsys, sem_cliente_real):
+    with Session(engine) as s:
+        s.add(Atividade(atleta_id=atleta, fonte="t", fonte_id="2026-11-09/cor2", modalidade="corrida",
+                        inicio=datetime(2026, 11, 13, 11, 0, tzinfo=timezone.utc), fuso_min=-180, duracao_s=2700.0))
+        s.commit()
+    assert _fx(factory, "--fixtures", str(NOITES_R01), "--alinhar-ao-treino", "2026-11-09/cor2") == 0
+    linhas = _linhas(engine)
+    assert min(linhas) == D(2026, 10, 30) and max(linhas) == D(2026, 11, 13)
+    assert linhas[D(2026, 11, 13)] == (345 * 60, 41, 58)  # a noite do treino, FC de repouso incluida mesmo sendo "hoje"
+    assert _fx(factory, "--fixtures", str(NOITES_R01), "--alinhar-ao-treino", "nao-existe") == 1
+    assert "treino nao encontrado" in capsys.readouterr().err
+
+
+def test_fixtures_recusa_atleta_com_noite_que_nao_e_de_fixture(engine, factory, atleta, capsys, sem_cliente_real):
+    with Session(engine) as s:
+        banco.gravar_noite(s, atleta, D(2026, 3, 1), 25000, 50.0, 55, garmin_cliente.VERSAO_LEITURA,
+                           datetime(2026, 3, 2, tzinfo=timezone.utc))
+        s.commit()
+    assert _fx(factory, "--fixtures", str(NOITES_R01)) == 1
+    cap = capsys.readouterr()
+    assert cap.err.startswith("erro: ") and "noites_novas" not in cap.out
+    assert set(_linhas(engine)) == {D(2026, 3, 1)}  # nada foi gravado
+
+
+def test_fixtures_erros_de_pasta_e_de_argumento(engine, factory, atleta, capsys, tmp_path, sem_cliente_real):
+    assert _fx(factory, "--fixtures", str(tmp_path / "nao-existe")) == 1
+    assert _fx(factory, "--fixtures", str(tmp_path)) == 1  # sem nenhuma noite
+    assert _fx(factory, "--alinhar-ao-treino", "x") == 1  # so vale com --fixtures
+    (tmp_path / "a.json").write_text((NOITES_R01 / "sono_2030-03-15.json").read_text())
+    (tmp_path / "b.json").write_text((NOITES_R01 / "sono_2030-03-15.json").read_text())
+    assert _fx(factory, "--fixtures", str(tmp_path)) == 1  # duas respostas para a mesma noite
+    assert _linhas(engine) == {} and "2030" not in capsys.readouterr().err
+
+
+def test_noites_r01_batem_com_o_oraculo():
+    """A pasta `noites_r01` e a entrada do caso R01 escrita como resposta do sono (lida pelo `ler_noite` de verdade)."""
+    o = _oraculo()
+    cli = garmin_cliente.ClienteFixtures.de_pasta(NOITES_R01)
+    for n in o.CASOS["R01"]["noites"]:
+        lida = cli.recuperacao(n["noite"])
+        assert (lida.sono_s, lida.vfc_ms, lida.fc_repouso_bpm) == (n["sono_s"], n["vfc_ms"], n["fc_repouso_bpm"])

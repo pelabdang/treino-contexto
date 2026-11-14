@@ -1,6 +1,13 @@
 """Busca sono, VFC noturna e FC de repouso no Garmin Connect e guarda por noite (issue #372, ADR 0014, item 5).
 
     uv run python -m worker.buscar_recuperacao --atleta "<nome>" [--desde AAAA-MM-DD] [--ate AAAA-MM-DD]
+    uv run python -m worker.buscar_recuperacao --atleta "<nome>" --fixtures <pasta> [--alinhar-ao-treino <fonte_id>] [--desde ..] [--ate ..]
+
+`--fixtures` (#397) carrega noites SINTETICAS de uma pasta de respostas do sono (`tests/fixtures/meta10/...`) com o leitor de
+verdade (`ler_noite`), sem rede, sem login e sem token: o `ClienteGarminConnect` nem e criado e `.env`/token nao sao lidos. Grava com
+`versao_leitura = "fixture"`. Recusa (codigo 1, mensagem fixa) atleta que ja tem alguma noite que nao seja de fixture, para nunca
+misturar dado sintetico com dado real. `--alinhar-ao-treino` leva a ultima noite da pasta para o dia local daquele treino (as outras
+vao junto). Sem `--desde`/`--ate`, busca todas as noites da pasta. A saida continua so de contagens.
 
 So local, na conta do proprio atleta, com a mesma biblioteca nao oficial e o mesmo token do `worker.buscar_garmin` (nao
 rodar os dois ao mesmo tempo). UM login por execucao. Guarda so tres numeros por noite (`recuperacao_dia`); dado de saude:
@@ -26,6 +33,7 @@ import sys
 import time
 from dataclasses import dataclass, field
 from datetime import date, datetime, timedelta, timezone
+from pathlib import Path
 
 from app.db.models import Atividade, Atleta, CheckinTreino
 from app.servicos import recuperacao_banco as banco
@@ -36,7 +44,10 @@ from sqlalchemy.orm import Session
 from worker.garmin_cliente import (
     VERSAO_LEITURA,
     ClienteGarmin,
+    VERSAO_FIXTURE,
+    ClienteFixtures,
     ClienteGarminConnect,
+    ErroConfiguracao,
     ErroGarmin,
     ErroLimite,
     ErroLogin,
@@ -124,7 +135,7 @@ def _pior(atual: int, novo: int) -> int:
 
 
 def buscar(session: Session, cliente: ClienteGarmin, atleta_id: int, desde: date, ate: date, hoje: date,
-           agora: datetime | None = None, pausa=time.sleep) -> RelatorioRecuperacao:
+           agora: datetime | None = None, pausa=time.sleep, versao_leitura: str = VERSAO_LEITURA) -> RelatorioRecuperacao:
     """Uma chamada por noite, em ordem crescente; cada noite e gravada e confirmada. Nunca levanta `ErroGarmin`: devolve o codigo."""
     rel = RelatorioRecuperacao()
     agora = agora or datetime.now(timezone.utc)
@@ -151,7 +162,7 @@ def buscar(session: Session, cliente: ClienteGarmin, atleta_id: int, desde: date
             continue
         seguidas = 0
         fc = None if dia >= hoje else n.fc_repouso_bpm  # a FC de repouso e a do DIA: so vale quando a noite ja passou
-        r = banco.gravar_noite(session, atleta_id, dia, n.sono_s, n.vfc_ms, fc, VERSAO_LEITURA, agora)
+        r = banco.gravar_noite(session, atleta_id, dia, n.sono_s, n.vfc_ms, fc, versao_leitura, agora)
         if r == "nova":
             rel.noites_novas += 1
         elif r == "atualizada":
@@ -180,7 +191,13 @@ def main(argv: list[str] | None = None, cliente: ClienteGarmin | None = None, se
     p.add_argument("--atleta", required=True, help="nome do atleta (precisa existir)")
     p.add_argument("--desde", type=_data, help="primeira noite, AAAA-MM-DD (vai alem do teto de noites)")
     p.add_argument("--ate", type=_data, help="ultima noite, AAAA-MM-DD (padrao: hoje)")
+    p.add_argument("--fixtures", type=Path, help="pasta de respostas sinteticas do sono: carrega sem rede, sem login e sem token")
+    p.add_argument("--alinhar-ao-treino", metavar="FONTE_ID",
+                   help="com --fixtures: leva a ultima noite da pasta para o dia local deste treino (fonte_id da atividade)")
     args = p.parse_args(argv)
+    if args.alinhar_ao_treino and not args.fixtures:
+        print("erro: --alinhar-ao-treino so vale com --fixtures", file=sys.stderr)
+        return 1
 
     dia = hoje or hoje_local()
     if args.desde and (args.ate or dia) < args.desde:
@@ -195,14 +212,32 @@ def main(argv: list[str] | None = None, cliente: ClienteGarmin | None = None, se
             if atleta is None:
                 print("erro: atleta nao encontrado (importe a exportacao antes ou crie o atleta)", file=sys.stderr)
                 return 1
-            desde, ate, avisos = escolher_faixa(session, atleta.id, dia, args.desde, args.ate)
+            versao = VERSAO_LEITURA
+            if args.fixtures:
+                cliente = ClienteFixtures.de_pasta(args.fixtures)  # sem rede, sem login, sem token
+                if banco.ha_noite_de_outra_versao(session, atleta.id, VERSAO_FIXTURE):
+                    print("erro: o atleta ja tem noites que nao sao de fixture; --fixtures so grava em banco de teste", file=sys.stderr)
+                    return 1
+                if args.alinhar_ao_treino:
+                    ativ = session.scalars(select(Atividade).where(Atividade.atleta_id == atleta.id,
+                                                                   Atividade.fonte_id == args.alinhar_ao_treino)).first()
+                    if ativ is None:
+                        print("erro: treino nao encontrado", file=sys.stderr)
+                        return 1
+                    cliente = cliente.com_deslocamento(data_local(ativ.inicio, ativ.fuso_min) - cliente.faixa()[1])
+                primeira, ultima_fx = cliente.faixa()
+                desde, ate, avisos = args.desde or primeira, args.ate or ultima_fx, []
+                dia = ate + timedelta(days=1)  # sintetica: toda noite conta como ja passada (a FC de repouso e gravada)
+                versao, pausa = VERSAO_FIXTURE, (lambda s: None)
+            else:
+                desde, ate, avisos = escolher_faixa(session, atleta.id, dia, args.desde, args.ate)
             if desde > ate:
                 print("erro: faixa vazia (--desde depois de --ate)", file=sys.stderr)
                 return 1
             if cliente is None:
                 cliente = ClienteGarminConnect.entrar(env)  # a unica tentativa de login; antes de qualquer gravacao
-            ultima = banco.ultima_noite(session, atleta.id) if args.desde is None else None
-            rel = buscar(session, cliente, atleta.id, desde, ate, dia, agora=agora, pausa=pausa)
+            ultima = banco.ultima_noite(session, atleta.id) if args.desde is None and not args.fixtures else None
+            rel = buscar(session, cliente, atleta.id, desde, ate, dia, agora=agora, pausa=pausa, versao_leitura=versao)
             rel.avisos[:0] = avisos
             if ultima is not None and desde < ultima - timedelta(days=RECUO_SEGUINTES):
                 rel.rebuscadas = (ultima - timedelta(days=RECUO_SEGUINTES) - desde).days

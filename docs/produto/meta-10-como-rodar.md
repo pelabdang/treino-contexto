@@ -2,7 +2,7 @@
 tipo: guia
 status: em-uso
 dono: nina
-atualizado: 2026-11-13
+atualizado: 2026-11-14
 links: [[produto/meta-9-como-rodar]], [[produto/meta-8-como-rodar]], [[produto/roadmap]], [[decisoes/0014-recuperacao-diaria]], [[decisoes/0013-feedback-automatico]], [[metricas/recuperacao]], [[metricas/recuperacao-oraculo]], [[metricas/fatos-treino]], [[metricas/fatos-treino-oraculo]], [[metricas/checagens-feedback]], [[modulos/banco]], [[modulos/worker]], [[modulos/api]], [[modulos/camada-llm]], [[modulos/ingestao-garmin]], [[diario/2026-11-13]], [[glossario]]
 ---
 # Meta 10: como rodar a recuperação da noite no feedback
@@ -22,7 +22,7 @@ e nada usou a rede. **Não rodado aqui:**
   seção "Rodada com o provedor de verdade, Meta 10" de [[modulos/camada-llm]] (PR #393).
   **Hoje o provedor de verdade com a recuperação não fecha** sem os ajustes propostos lá: a linha com as três medidas passa de 140
   caracteres, e a camada não fecha no limite por minuto do plano gratuito. Este guia não repete a rodada;
-- a busca com **conta real** do Garmin (`worker.buscar_recuperacao` sem cliente falso): passo 11, opcional e só local;
+- a busca com **conta real** do Garmin (`worker.buscar_recuperacao` sem `--fixtures`): passo 11, opcional e só local;
 - a conferência local (#379), a QA (#378) e o resultado da meta (#380).
 
 ## Antes de começar
@@ -93,37 +93,16 @@ e nada usou a rede. **Não rodado aqui:**
    `estado` `sem_dado` e `motivo` `sem_noite`. Atleta sem nenhuma noite **não quebra o feedback**: o bloco existe e diz que não há dado
    ([[metricas/fatos-treino]]). No banco, `recuperacao_importada_em` está vazio nos nove feedbacks:
    `docker exec treino-meta10-postgres-1 psql -U treino -d treino -At -c "select count(*) filter (where recuperacao_importada_em is not null), count(*) from feedback_treino"` dá `0|9`.
-6. **Gravar as noites sintéticas.** Os valores vêm do oráculo à mão `tests/fixtures/meta10/oraculo_fatos_recuperacao.py` (14 noites de
-   normal e a noite do treino do caso R01). **Não há comando de linha de comando que leia essas fixtures sem a conta**: este
-   trecho chama a função de gravação do próprio código (`gravar_noite`, a mesma que o `buscar_recuperacao` usa). Salve
-   `/caminho/saida/noites.py` (copie como está):
-   ```python
-   import sys
-   from datetime import UTC, datetime, timedelta
-
-   from app.db.models import Atividade
-   from app.db.session import SessionLocal
-   from app.servicos.fuso import inicio_local
-   from app.servicos.recuperacao_banco import gravar_noite
-   from sqlalchemy import select
-
-   sys.path.insert(0, "tests/fixtures/meta10")
-   import oraculo_fatos_recuperacao as o  # séries e valores sintéticos, escritos à mão
-
-   with SessionLocal() as s:
-       a = s.scalars(select(Atividade).where(Atividade.fonte_id == "2026-11-09/cor2")).one()
-       dia = inicio_local(a.inicio, a.fuso_min).date()  # o dia local do treino 18
-       agora = datetime.now(UTC)
-       novas = 0
-       for i in range(14):  # D-14 a D-1: o normal do atleta
-           r = gravar_noite(s, a.atleta_id, dia - timedelta(days=14 - i), o.SONO_MIN[i] * 60, o.VFC_MS[i], o.FC_BPM[i], "fixture", agora)
-           novas += r == "nova"
-       r = gravar_noite(s, a.atleta_id, dia, 345 * 60, 41, 58, "fixture", agora)  # a noite do treino (caso R01)
-       novas += r == "nova"
-       s.commit()
-       print(f"noites gravadas: {novas}")
+6. **Carregar as noites sintéticas.** São as 14 noites de normal e a noite do treino do caso R01 do oráculo à mão
+   (`tests/fixtures/meta10/oraculo_fatos_recuperacao.py`), escritas como respostas do sono em `tests/fixtures/meta10/noites_r01/`. O
+   `worker.buscar_recuperacao --fixtures` lê essa pasta com o leitor de verdade (`ler_noite`), **sem rede, sem login e sem token**, e leva a
+   última noite para o dia do treino 18 (`--alinhar-ao-treino`), então as datas acompanham o relógio do passo 3:
    ```
-   Rode `uv run python - < /caminho/saida/noites.py`. Esperado: `noites gravadas: 15`. Rode o `pacote.py` de novo. Esperado: o bloco da
+   uv run python -m worker.buscar_recuperacao --atleta "Atleta Fictício" --fixtures tests/fixtures/meta10/noites_r01 --alinhar-ao-treino 2026-11-09/cor2
+   ```
+   Esperado: `recuperacao: noites_novas=15 atualizadas=0 iguais=0 sem_dado=0 falhas=0` e, rodando de novo, `noites_novas=0 atualizadas=0 iguais=15`
+   (idempotente). As noites ficam com `versao_leitura` `fixture`, e o comando **recusa** (código 1) um atleta que já tem noites que não são de
+   fixture, para nunca misturar dado sintético com dado real. Rode o `pacote.py` de novo. Esperado: o bloco da
    atividade 18 com `estado` `ok`, `janela_noites` 28, `minimo_noites` 14 e três medidas, nesta ordem:
    - `sono` `abaixo`: valor "5 h 45 min", normal "7 h 15 min", diferença "1 h 30 min abaixo", `n` 14;
    - `vfc` `dentro`: valor "41 ms", normal "47 ms", sem diferença, `n` 14;
@@ -154,38 +133,11 @@ e nada usou a rede. **Não rodado aqui:**
    ([[metricas/checagens-feedback]]). Texto reprovado nunca é gravado. Rodar isso à mão exige o provedor de verdade, e hoje ele não fecha com a recuperação (a rodada e os ajustes propostos estão na seção da
    [[modulos/camada-llm]], citada no começo); sem ele, a conferência é o conjunto de frases de teste do passo 12 (6 boas e 25 ruins, cada ruim com o motivo esperado).
 9. **Busca com o cliente Garmin falso** (sem rede e sem conta; as respostas são as fixtures de `tests/fixtures/meta10`). O
-   `worker.buscar_recuperacao` não tem opção de cliente falso na linha de comando, então este trecho chama o `main` do worker com um
-   cliente falso que passa as respostas sintéticas do sono pelo leitor de verdade (`ler_noite`). Salve `/caminho/saida/busca_falsa.py`:
-   ```python
-   import json
-   import sys
-   from pathlib import Path
-
-   from worker.buscar_recuperacao import main
-   from worker.garmin_cliente import ler_noite
-
-   FIX = Path("tests/fixtures/meta10")
-   # as respostas sintéticas do sono são de março de 2026 (noites 10 a 13); outra noite volta sem dado
-   POR_NOITE = {"2026-03-10": "sono_noite_completa.json", "2026-03-11": "sono_noite_sem_vfc.json",
-                "2026-03-12": "sono_noite_sem_vfc_none.json", "2026-03-13": "sono_dto_sem_duracao.json"}
-
-
-   class ClienteFalso:
-       def recuperacao(self, noite):
-           arq = POR_NOITE.get(noite.isoformat())
-           resposta = json.loads((FIX / arq).read_text(encoding="utf-8")) if arq else {}
-           return ler_noite(resposta, noite)
-
-       def listar(self, desde, ate):
-           return []
-
-       def baixar_fit(self, atividade_id):
-           raise NotImplementedError
-
-
-   sys.exit(main(sys.argv[1:], cliente=ClienteFalso(), pausa=lambda s: None))
+   `--fixtures` passa as respostas sintéticas do sono pelo leitor de verdade (`ler_noite`); as de março de 2026 são as noites 10 a 13 (as
+   outras fixtures da pasta, de faixa, não são respostas do sono e são ignoradas). Rode duas vezes:
    ```
-   Rode duas vezes: `uv run python - --atleta "Atleta Fictício" --desde 2026-03-10 --ate 2026-03-13 < /caminho/saida/busca_falsa.py`.
+   uv run python -m worker.buscar_recuperacao --atleta "Atleta Fictício" --fixtures tests/fixtures/meta10 --desde 2026-03-10 --ate 2026-03-13
+   ```
    Esperado: `recuperacao: noites_novas=4 atualizadas=0 iguais=0 sem_dado=0 falhas=0` e, na segunda vez, `noites_novas=0 atualizadas=0 iguais=4`
    (idempotente). A saída é só de contagens, nunca valores nem datas. Em seguida o `gerar_feedback` dá `gerados=0 ... ignorados=8`: essas
    noites estão fora da janela de todos os treinos, e nenhum feedback é refeito à toa.
@@ -219,8 +171,7 @@ docker compose -p treino-meta10 -f infra/docker-compose.yml -f /caminho/saida/po
 e pare a API (Ctrl+C no terminal do passo 4). Isso apaga o banco `treino-meta10` e o volume; o seu banco do dia a dia não é tocado.
 
 ## Achados do guia
-- **Sem comando para carregar as fixtures de recuperação.** Não existe opção de linha de comando para gravar as noites sintéticas nem para
-  passar um cliente falso ao `buscar_recuperacao`; os passos 6 e 9 usam trechos em Python. Se virar rotina, vale uma issue.
+- **Sem comando para carregar as fixtures de recuperação (resolvido na #397).** Os passos 6 e 9 usavam trechos em Python; agora são o `worker.buscar_recuperacao --fixtures`. Os passos 6 a 10 foram rodados de verdade com ele (14/11, Duda, Postgres temporário na 5463, derrubado no fim) e deram os mesmos números.
 - **A mensagem do `GET` não diz que foi a noite.** Quando a noite chega e o feedback fica `desatualizado`, o `mensagem` é a mesma da
   edição do check-in: "Você editou o check-in. O feedback será refeito.". Está certo no estado, mas o texto fala de uma ação que o atleta
   não fez.
