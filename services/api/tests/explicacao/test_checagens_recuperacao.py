@@ -1,4 +1,4 @@
-"""`checagens_feedback@4` (issue #375, ADR 0014, item 6): a linguagem e as regras mecânicas da recuperação da noite.
+"""`checagens_feedback@5` (issue #375, ADR 0014, item 6): a linguagem e as regras mecânicas da recuperação da noite.
 Textos e pacotes em `tests/fixtures/meta10/textos_recuperacao.py`; tudo sintético."""
 
 import importlib.util
@@ -31,7 +31,7 @@ def _pacote(caso):
 
 
 def test_codigos_novos_e_versao():
-    assert ck.VERSAO == "checagens_feedback@4"
+    assert ck.VERSAO == "checagens_feedback@5"
     novos = {"linguagem_julgamento", "recuperacao_mistura", "recuperacao_forma", "recuperacao_outro_dia", "recuperacao_sem_pacote"}
     assert novos <= set(ck.MOTIVOS) and len(set(ck.MOTIVOS)) == len(ck.MOTIVOS)
 
@@ -82,3 +82,17 @@ def test_unidades_ms_e_composta():
     from app.explicacao.checagens import _numeros_do_texto
 
     assert list(_numeros_do_texto("a vfc foi 41 ms")) == [("41", "ms")]
+
+
+def test_concordancia_nao_pega_o_que_esta_certo():
+    pacote = _pacote("R01")
+    for ok in ("A FC do melhor tiro foi 171 bpm.", "Sua FC média foi 146 bpm.", "Natação de 1.600 m em 40 min, com FC média de 128 bpm.",
+               "A VFC foi 41 ms, dentro do seu normal.", "A FC de repouso foi 58 bpm."):
+        assert "concordancia_sigla" not in ck.checar_texto(pacote, ok + "\nLinha dois.\nLinha três.").motivos
+
+
+def test_duas_frases_na_mesma_linha_da_recuperacao_passam_se_cabem_nos_140_caracteres():
+    """A ADR 0014 (item 6) já traz 'Na noite anterior você dormiu 6 h 20 min. Ainda aprendendo ...' numa linha: não é defeito."""
+    caso, texto = T.BONS["B03"]
+    assert "Ainda aprendendo" in texto and "6 h 20 min. Ainda" in texto
+    assert ck.checar_texto(_pacote(caso), texto).motivos == ()

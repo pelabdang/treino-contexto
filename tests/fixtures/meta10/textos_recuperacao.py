@@ -18,6 +18,11 @@ FC_VFC = "A FC de repouso foi 58 bpm, 6 bpm acima do seu normal de 52 bpm, e a V
 DUAS_LINHAS_FC_VFC = "A FC de repouso foi 58 bpm, 6 bpm acima do seu normal de 52 bpm, e a VFC, 41 ms, dentro do seu normal."
 # Caso só com a VFC (sono e FC de repouso sem dado na noite): bloco à mão, números sintéticos (normal 47 ms, hoje 46 ms).
 BLOCOS_EXTRA = {
+    # U03: as três medidas aprendendo (9 de 14 noites): valores sem normal nem comparação
+    "U03": {"versao": "recuperacao@1", "estado": "ok", "motivo": None, "janela_noites": 28, "minimo_noites": 14, "medidas": [
+        {"chave": "sono", "estado": "aprendendo", "valor": 22800, "valor_texto": "6 h 20 min", "normal_texto": None, "diferenca_texto": None, "n": 9},
+        {"chave": "vfc", "estado": "aprendendo", "valor": 47, "valor_texto": "47 ms", "normal_texto": None, "diferenca_texto": None, "n": 9},
+        {"chave": "fc_repouso", "estado": "aprendendo", "valor": 52, "valor_texto": "52 bpm", "normal_texto": None, "diferenca_texto": None, "n": 9}]},
     # U02: as três dentro do normal (sono 7 h 20 min contra 7 h 15 min; VFC 46 ms contra 47 ms; FC de repouso 52 bpm contra 52 bpm)
     "U02": {"versao": "recuperacao@1", "estado": "ok", "motivo": None, "janela_noites": 28, "minimo_noites": 14, "medidas": [
         {"chave": "sono", "estado": "dentro", "valor": 26400, "valor_texto": "7 h 20 min", "normal_texto": "7 h 15 min", "diferenca_texto": None, "n": 14},
@@ -47,6 +52,10 @@ BONS = {
     "B08": ("U01", _t(L1, L2, "Na noite anterior, a VFC foi 46 ms, dentro do seu normal.", CK)),
     # @6: as três dentro, uma linha só (rodada da #394: duas linhas com "dentro do seu normal" repetiam a conclusão)
     "B10": ("U02", _t(L1, L2, "Na noite anterior você dormiu 7 h 20 min, a FC de repouso foi 52 bpm e a VFC, 46 ms: todas dentro do seu normal.", CK)),
+    # @5 (#403): as três medidas aprendendo, com a frase obrigatória (duas linhas)
+    "B11": ("U03", _t(L1, L2, "Na noite anterior você dormiu 6 h 20 min.", "A FC de repouso foi 52 bpm e a VFC, 47 ms. Ainda aprendendo o seu normal: 9 de 14 noites.", CK)),
+    # @5: concordância certa
+    "B12": ("R01", _t(L1, "Sua FC média foi 146 bpm e a carga por hora, 49,1 pontos/h: ambas dentro do seu normal.", CK)),
     # @6: aprendendo com a noite anterior antes, e n de minimo_noites
     "B09": ("R02", _t(L1, L2, "Na noite anterior você dormiu 6 h 20 min.", "Ainda aprendendo o seu normal de sono: 13 de 14 noites.", CK)),
 }
@@ -86,5 +95,13 @@ RUINS = {
     "M29": ("U02", _t(L1, L2, "Na noite anterior você dormiu 7 h 20 min, dentro do seu normal.", "A FC de repouso foi 52 bpm e a VFC, 46 ms, dentro do seu normal.", CK), "conclusao_repetida"),
     # rodada da #394: diferença inventada em medida dentro
     "M30": ("U02", _t(L1, L2, "Na noite anterior você dormiu 7 h 20 min, 5 min acima do seu normal de 7 h 15 min.", "A FC de repouso foi 52 bpm e a VFC, 46 ms.", CK), "recuperacao_forma"),
+    # checagens_feedback@5 (#403): aprendendo sem a frase que explica a falta de comparação (caso do feedback real, com valores sintéticos)
+    "M31": ("R02", _t(L1, L2, "Na noite anterior você dormiu 6 h 20 min.", CK), "recuperacao_sem_aprendendo"),
+    "M32": ("U03", _t(L1, L2, "Na noite anterior você dormiu 6 h 20 min.", "Na noite anterior a FC de repouso foi 52 bpm e a VFC, 47 ms.", CK), "recuperacao_sem_aprendendo"),
+    # concordância das siglas femininas
+    "M33": ("R01", _t("Seu FC médio foi 146 bpm.", L1, L2, CK), "concordancia_sigla"),
+    "M34": ("R01", _t(L1, "O FC médio foi 146 bpm e a carga por hora, 49,1 pontos/h: ambas dentro do seu normal.", CK), "concordancia_sigla"),
+    "M35": ("R01", _t(L1, L2, SONO, "Na noite anterior o VFC foi 41 ms, dentro do seu normal.", CK), "concordancia_sigla"),
+    "M36": ("R01", _t(L1, "Foi um FC alto de 146 bpm e a carga por hora, 49,1 pontos/h: ambas dentro do seu normal.", CK), "concordancia_sigla"),
     "M25": ("R01", _t(L1, L2, "Seu sono ruim marcado combina com 5 h 45 min na noite anterior.", CK), "linguagem_julgamento"),
 }
