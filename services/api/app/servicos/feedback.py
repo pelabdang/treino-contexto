@@ -70,6 +70,14 @@ def desatualizado(fb: FeedbackTreino, checkin: CheckinTreino, versao_fatos: str,
     return recuperacao_hoje is not _NAO_SEI and not mesmo_instante(fb.recuperacao_importada_em, recuperacao_hoje)
 
 
+def so_a_noite_mudou(fb: FeedbackTreino, checkin: CheckinTreino, versao_fatos: str, recuperacao_hoje: Any = _NAO_SEI) -> bool:
+    """Desatualizado SO porque a noite do treino chegou ou mudou (#396): o check-in e a versao do pacote seguem os mesmos.
+    Se o check-in tambem mudou, e `False` (vale a frase do check-in)."""
+    if (para_utc(fb.checkin_atualizado_em) != para_utc(checkin.atualizado_em)) or fb.versao_fatos != versao_fatos:
+        return False
+    return recuperacao_hoje is not _NAO_SEI and not mesmo_instante(fb.recuperacao_importada_em, recuperacao_hoje)
+
+
 def _hoje(recuperacao_hoje: RecuperacaoHoje | None, ativ: Atividade) -> Any:
     return _NAO_SEI if recuperacao_hoje is None else recuperacao_hoje(ativ)
 

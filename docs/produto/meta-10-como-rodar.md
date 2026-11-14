@@ -172,7 +172,5 @@ e pare a API (Ctrl+C no terminal do passo 4). Isso apaga o banco `treino-meta10`
 
 ## Achados do guia
 - **Sem comando para carregar as fixtures de recuperação (resolvido na #397).** Os passos 6 e 9 usavam trechos em Python; agora são o `worker.buscar_recuperacao --fixtures`. Os passos 6 a 10 foram rodados de verdade com ele (14/11, Duda, Postgres temporário na 5463, derrubado no fim) e deram os mesmos números.
-- **A mensagem do `GET` não diz que foi a noite.** Quando a noite chega e o feedback fica `desatualizado`, o `mensagem` é a mesma da
-  edição do check-in: "Você editou o check-in. O feedback será refeito.". Está certo no estado, mas o texto fala de uma ação que o atleta
-  não fez.
+- **A mensagem do `GET` não dizia que foi a noite (resolvido na #396).** Quando só a noite chega ou muda, o `mensagem` agora é "Os dados da noite anterior foram atualizados. O feedback será refeito."; check-in editado (sozinho ou junto com a noite) mantém "Você editou o check-in. O feedback será refeito.".
 - **O provedor falso não exercita a linha de recuperação.** O texto fixo não cita a noite; só o provedor de verdade mostra o texto, e a rodada da #376 mostrou que ele ainda reprova por tamanho com as três medidas.
