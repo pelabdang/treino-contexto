@@ -56,6 +56,12 @@ def ultima_noite(session: Session, atleta_id: int, origem: str = ORIGEM) -> date
         RecuperacaoDia.atleta_id == atleta_id, RecuperacaoDia.origem == origem))
 
 
+def ha_noite_de_outra_versao(session: Session, atleta_id: int, versao_leitura: str) -> bool:
+    """O atleta tem alguma noite cuja `versao_leitura` e outra (ex.: do Garmin de verdade)? Usado para recusar `--fixtures`."""
+    return session.scalar(select(func.count()).select_from(RecuperacaoDia).where(
+        RecuperacaoDia.atleta_id == atleta_id, RecuperacaoDia.versao_leitura != versao_leitura)) > 0
+
+
 def gravar_noite(session: Session, atleta_id: int, noite: date, sono_s: int | None, vfc_ms: float | None,
                  fc_repouso_bpm: int | None, versao_leitura: str, agora: datetime, origem: str = ORIGEM) -> str | None:
     """*Upsert* por `(atleta_id, origem, noite)`. Devolve `nova`, `atualizada`, `igual` ou `None` (nada a gravar).
