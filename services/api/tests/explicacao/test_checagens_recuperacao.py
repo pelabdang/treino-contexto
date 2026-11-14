@@ -26,7 +26,8 @@ T = _carregar("meta10", "textos_recuperacao.py", "textos_meta10_checagens_rec")
 
 def _pacote(caso):
     """O F01 da meta 9 com o bloco `recuperacao` do caso do oráculo da meta 10."""
-    return {**O9.PACOTES["F01"], "recuperacao": R.CASOS[caso]["bloco"]}
+    bloco = T.BLOCOS_EXTRA[caso] if caso in T.BLOCOS_EXTRA else R.CASOS[caso]["bloco"]
+    return {**O9.PACOTES["F01"], "recuperacao": bloco}
 
 
 def test_codigos_novos_e_versao():

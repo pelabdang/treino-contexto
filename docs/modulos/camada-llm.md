@@ -2,7 +2,7 @@
 tipo: modulo
 status: em-uso
 dono: duda
-atualizado: 2026-11-13
+atualizado: 2026-11-14
 links: [[decisoes/0013-feedback-automatico]], [[metricas/checagens-feedback]], [[modulos/api]], [[modulos/worker]], [[produto/roadmap]]
 ---
 # Módulo: camada de LLM
@@ -38,8 +38,10 @@ São os mesmos códigos do `CHECK` previsto para `feedback_treino` ([[decisoes/0
 
 Na linha de comando, os padrões são os reais: `app.servicos.feedback_fatos.fatos_da_atividade` (o **adaptador** que lê o banco e chama a função pura `app.explicacao.fatos_treino.fatos_treino`, #324), `app.explicacao.checagens.checar` (#325) e as `VERSAO` dos dois módulos. O adaptador usa os serviços de leitura que a API já tem (`linha_base_resultado`, `clima_da_atividade`, `carga_da_atividade`, `esforcos_da_atividade`, rótulo de transição) e não recalcula nada; natação fica sem bloco de clima. Desde a #374 ele também passa a recuperação (`app/servicos/recuperacao_pacote.py`, ver [[metricas/fatos-treino]]). Teste: o pacote que sai do banco semeado com as fixtures da meta 9 é igual ao do oráculo, com `recuperacao = sem_noite` (`services/api/tests/servicos/test_feedback_fatos.py`).
 
-## Prompt `feedback_prompt@5` (`app/llm/prompt_feedback.py`)
+## Prompt `feedback_prompt@6` (`app/llm/prompt_feedback.py`)
 Regras de forma, tom e do que falta no pacote, mais os **6 exemplos aprovados** (G01 a G06, pacote reduzido sem campos nulos e texto da ADR 0013). Os exemplos têm **fonte única** em `app/llm/exemplos_feedback.py`; um teste confere o texto contra `tests/fixtures/meta9/textos.py`, o pacote contra o oráculo e que cada texto passa nas checagens. O prompt tem uns 2,5 mil tokens (estimativa), para caber no limite por minuto do plano gratuito (não conferido). Se o texto mudar de forma relevante, a `VERSAO` sobe.
+
+**`@6` (14/11, #394):** a recuperação em **duas linhas**, decisão do Angelo de 13/11 depois da rodada da #376 (as três medidas numa linha passavam de 140 caracteres): linha 1 o sono, linha 2 a FC de repouso e a VFC; uma medida só, uma linha; `aprendendo` com "Na noite anterior você dormiu X." antes de "Ainda aprendendo o seu normal de sono: N de 14 noites."; o máximo de 5 linhas continua e o prompt manda juntar clima e carga e cortar o menos importante quando há recuperação. As `checagens_feedback@4` **não mudaram** (a forma nova já passava; textos novos em `tests/fixtures/meta10/textos_recuperacao.py`, 3 bons e 3 ruins). Tamanho: os exemplos aprovados saem do prompt **sem os campos numéricos que repetem o `*_texto`** (`valor`, `duracao_s`, `distancia_m`, `sensacao_nivel`, `parte_de_transicao`, `treino_chave`); os textos aprovados e as regras ficaram. O prompt foi de 13.766 para 13.311 caracteres (cerca de 4.030 tokens a 3,3 caracteres por token, contra 4.170); a nova rodada com o provedor de verdade espera a #395 (camada).
 
 **`@5` (13/11, #375):** a regra da recuperação (ADR 0014, item 6): a noite anterior numa linha própria, com os `*_texto` do pacote e só "abaixo/acima/dentro do seu normal"; `aprendendo` sem comparar; frase pronta do `sem_noite`; nada sobre recuperação em madrugada, `fora_do_periodo` ou sem o bloco; sem causa, conselho, julgamento nem outro dia. Os 6 exemplos aprovados não mudaram (as frases da regra são as da ADR). Cabe em 3500 tokens (conferido por teste). Checagens em [[metricas/checagens-feedback]] (`@4`).
 

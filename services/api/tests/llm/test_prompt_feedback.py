@@ -1,4 +1,4 @@
-"""Prompt `feedback_prompt@5` e seus 6 exemplos (issue #327, revisão do Caio no PR #348): fonte única conferida contra as fixtures da meta 9."""
+"""Prompt `feedback_prompt@6` e seus 6 exemplos (issue #327, revisão do Caio no PR #348): fonte única conferida contra as fixtures da meta 9."""
 
 import importlib.util
 import sys
@@ -57,7 +57,7 @@ def test_os_seis_exemplos_estao_no_prompt_e_o_prompt_nao_tem_dado():
     for e in EXEMPLOS:
         assert e["texto"] in prompt_feedback.TEXTO
     assert O.MARCADOR_TEXTO_LIVRE not in prompt_feedback.TEXTO
-    assert prompt_feedback.VERSAO == "feedback_prompt@5"
+    assert prompt_feedback.VERSAO == "feedback_prompt@6"
 
 
 def test_prompt_com_acentos_e_sem_a_ortografia_sem_acento():
@@ -93,5 +93,24 @@ def test_prompt_traz_as_regras_da_recuperacao_da_adr_0014():
     t = prompt_feedback.TEXTO
     assert FRASE_SEM_DADO in t
     for trecho in ("noite anterior", "abaixo", "acima", "dentro do seu normal", "aprendendo", "treino_de_madrugada", "fora_do_periodo",
-                   "linha PRÓPRIA", "nunca ligada", "ontem"):
+                   "linhas próprias", "nunca ligada", "ontem"):
         assert trecho in t, trecho
+
+
+def test_prompt_6_traz_a_recuperacao_em_duas_linhas_e_o_aprendendo_com_a_noite_antes():
+    t = prompt_feedback.TEXTO
+    for trecho in ("DUAS linhas próprias", "Linha 1, sono:", "Linha 2, FC de repouso e VFC:", "Com uma medida só, uma linha",
+                   'depois de "Na noite anterior você dormiu 6 h 20 min."', "O máximo continua 5 linhas"):
+        assert trecho in t, trecho
+    assert "numa linha só" not in t and "junte as medidas" not in t  # a regra da @5 que estourava os 140 caracteres
+
+
+def test_exemplos_do_prompt_sao_os_mesmos_sem_os_campos_redundantes():
+    import json
+    from app.llm.exemplos_feedback import EXEMPLOS
+
+    for e in EXEMPLOS:
+        enxuto = json.dumps(prompt_feedback._enxuto(e["pacote"]), ensure_ascii=False, separators=(",", ":"))
+        assert enxuto in prompt_feedback.TEXTO and e["texto"] in prompt_feedback.TEXTO
+        for k in prompt_feedback._REDUNDANTES:
+            assert f'"{k}"' not in enxuto
