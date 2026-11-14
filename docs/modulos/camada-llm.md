@@ -91,7 +91,7 @@ Mesmo formato da #376, só pacotes sintéticos (fixtures da meta 9 com os blocos
 
 ## Rodada com o provedor de verdade, `feedback_prompt@7` (15/11, #403)
 Mesmo formato, camada do `main`, pacotes sintéticos (fixtures da meta 9 com as noites do oráculo e as noites "três aprendendo" da fixture da meta 10). 9 chamadas ao todo (6 e 3 de repetição de casos que reprovaram por tamanho), 65 s entre elas.
-- **A frase do `aprendendo` saiu em todos os textos com medida `aprendendo` (5 de 5); "Seu FC" não saiu em nenhum.** As duas checagens novas não reprovaram nada nesta rodada: sem falso positivo e sem o defeito de volta.
+- **A frase do `aprendendo` saiu em todos os textos com medida `aprendendo` (6 de 6); "Seu FC" não saiu em nenhum.** As duas checagens novas não reprovaram nada nesta rodada: sem falso positivo e sem o defeito de volta.
 - **Resultado: 3 aprovadas, 5 reprovadas e 1 sem texto** (`provedor_erro`, uma chamada). Reprovações: 4 por `forma_tamanho_linha` (as três medidas `aprendendo` com as duas frases na mesma linha, ou a primeira linha de um treino com pace e FC média, que passa de 140 caracteres) e 1 por `recuperacao_mistura` (clima e carga na mesma linha da recuperação). São variações do modelo que as checagens pegam; o worker tenta de novo na próxima execução.
 - **Ajuste de redação no prompt, depois da primeira passada:** com as três `aprendendo` o modelo juntava tudo numa linha; o prompt ganhou o par de linhas curtas (B13). Repetidas, 1 de 2 passou (a outra voltou a juntar as frases).
 - Não há mais ajuste de redação em vista que não custe tokens: o prompt está em 4.320 tokens estimados.
