@@ -221,7 +221,5 @@ e pare a API (Ctrl+C no terminal do passo 4). Isso apaga o banco `treino-meta10`
 ## Achados do guia
 - **Sem comando para carregar as fixtures de recuperação.** Não existe opção de linha de comando para gravar as noites sintéticas nem para
   passar um cliente falso ao `buscar_recuperacao`; os passos 6 e 9 usam trechos em Python. Se virar rotina, vale uma issue.
-- **A mensagem do `GET` não diz que foi a noite.** Quando a noite chega e o feedback fica `desatualizado`, o `mensagem` é a mesma da
-  edição do check-in: "Você editou o check-in. O feedback será refeito.". Está certo no estado, mas o texto fala de uma ação que o atleta
-  não fez.
+- **A mensagem do `GET` não dizia que foi a noite (resolvido na #396).** Quando só a noite chega ou muda, o `mensagem` agora é "Chegou o dado de sono da noite anterior. O feedback será refeito."; check-in editado (sozinho ou junto com a noite) mantém "Você editou o check-in. O feedback será refeito.".
 - **O provedor falso não exercita a linha de recuperação.** O texto fixo não cita a noite; só o provedor de verdade mostra o texto, e a rodada da #376 mostrou que ele ainda reprova por tamanho com as três medidas.

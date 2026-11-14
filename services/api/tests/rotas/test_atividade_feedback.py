@@ -31,6 +31,7 @@ FRASES = {
     "prazo": "O prazo do check-in deste treino acabou, então ele fica sem feedback.",
     "pendente": "O feedback deste treino ainda não foi gerado. Toque em Atualizar para ver se já está pronto.",
     "desatualizado": "Você editou o check-in. O feedback será refeito.",
+    "desatualizado_noite": "Chegou o dado de sono da noite anterior. O feedback será refeito.",
     "indisponivel": "Ainda não foi possível gerar o feedback deste treino. Uma nova tentativa será feita mais tarde.",
     "sem_provedor": "O feedback automático não está ligado neste app.",
 }
@@ -177,3 +178,63 @@ def test_nao_ha_feedback_nas_listas(session, client, atleta):
     _feedback(session, _checkin(session, a))
     for url in (f"/atletas/{atleta.id}/checkins/pendentes", f"/atletas/{atleta.id}/treinos-de-transicao"):
         assert TEXTO not in client.get(url).text
+
+
+# ---------- #396: a frase depende do motivo (check-in editado, noite nova, os dois) ----------
+
+def _noite(session, atleta, quando=AGORA):
+    from app.servicos import recuperacao_banco as banco
+
+    banco.gravar_noite(session, atleta.id, date(2026, 11, 9), 25200, 48.0, 52, "fixture", quando)  # a noite do treino (dia local 09/11)
+    session.commit()
+
+
+def test_noite_que_chegou_diz_isso_e_nao_fala_do_check_in(session, client, atleta):
+    a = _atividade(session, atleta)
+    _feedback(session, _checkin(session, a))  # feedback gerado sem noite (recuperacao_importada_em nulo)
+    _noite(session, atleta)  # a noite chega depois
+    f = _get(client, atleta, a)["feedback"]
+    assert f["estado"] == "desatualizado" and f["texto"] is None
+    assert f["mensagem"] == FRASES["desatualizado_noite"] and "check-in" not in f["mensagem"]
+
+
+def test_noite_alterada_diz_a_frase_da_noite(session, client, atleta):
+    a = _atividade(session, atleta)
+    _noite(session, atleta)
+    _feedback(session, _checkin(session, a), recuperacao_importada_em=AGORA)  # gerado com a noite de AGORA
+    assert _get(client, atleta, a)["feedback"]["estado"] == "pronto"
+    from app.db.models import RecuperacaoDia
+
+    n = session.query(RecuperacaoDia).one()
+    n.importado_em = AGORA + timedelta(hours=3)  # o Garmin corrigiu a noite
+    session.commit()
+    f = _get(client, atleta, a)["feedback"]
+    assert f["estado"] == "desatualizado" and f["mensagem"] == FRASES["desatualizado_noite"]
+
+
+def test_check_in_editado_com_noite_igual_mantem_a_frase_do_check_in(session, client, atleta):
+    a = _atividade(session, atleta)
+    _noite(session, atleta)
+    c = _checkin(session, a)
+    _feedback(session, c, recuperacao_importada_em=AGORA)
+    c.atualizado_em = AGORA + timedelta(minutes=5)
+    session.commit()
+    assert _get(client, atleta, a)["feedback"]["mensagem"] == FRASES["desatualizado"]
+
+
+def test_check_in_editado_e_noite_nova_juntos_usam_a_frase_do_check_in(session, client, atleta):
+    a = _atividade(session, atleta)
+    c = _checkin(session, a)
+    _feedback(session, c)
+    c.atualizado_em = AGORA + timedelta(minutes=5)
+    session.commit()
+    _noite(session, atleta)
+    f = _get(client, atleta, a)["feedback"]
+    assert f["estado"] == "desatualizado" and f["mensagem"] == FRASES["desatualizado"]
+
+
+def test_versao_dos_fatos_e_noite_nova_juntas_usam_a_frase_do_check_in(session, atleta):
+    a = _atividade(session, atleta)
+    _feedback(session, _checkin(session, a))
+    f = fl.feedback_da_atividade(a, a.checkin, True, versao_fatos="fatos_treino@3", recuperacao_hoje=AGORA)
+    assert f.mensagem == FRASES["desatualizado"]

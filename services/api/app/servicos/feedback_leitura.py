@@ -12,12 +12,13 @@ from dataclasses import dataclass
 from app.db.models import Atividade, CheckinTreino
 from app.explicacao.fatos_treino import VERSAO as VERSAO_FATOS
 from app.servicos.checkin import elegivel
-from app.servicos.feedback import _NAO_SEI, desatualizado
+from app.servicos.feedback import _NAO_SEI, desatualizado, so_a_noite_mudou
 
 MSG_SEM_CHECKIN = "Faça o check-in para ver o feedback."
 MSG_PRAZO_VENCIDO = "O prazo do check-in deste treino acabou, então ele fica sem feedback."
 MSG_PENDENTE = "O feedback deste treino ainda não foi gerado. Toque em Atualizar para ver se já está pronto."
 MSG_DESATUALIZADO = "Você editou o check-in. O feedback será refeito."
+MSG_DESATUALIZADO_NOITE = "Chegou o dado de sono da noite anterior. O feedback será refeito."  # #396: so a noite mudou
 MSG_INDISPONIVEL = "Ainda não foi possível gerar o feedback deste treino. Uma nova tentativa será feita mais tarde."
 MSG_SEM_PROVEDOR = "O feedback automático não está ligado neste app."
 
@@ -48,5 +49,7 @@ def feedback_da_atividade(a: Atividade, checkin: CheckinTreino | None, checkin_a
         sem_provedor = fb.motivo == "provedor_nao_configurado"
         return FeedbackLido("indisponivel", mensagem=MSG_SEM_PROVEDOR if sem_provedor else MSG_INDISPONIVEL, motivo=fb.motivo)
     if desatualizado(fb, checkin, versao_fatos, recuperacao_hoje):
-        return FeedbackLido("desatualizado", mensagem=MSG_DESATUALIZADO)
+        # a frase do check-in vale sempre que o check-in (ou a versao do pacote) mudou; a da noite, so quando foi SO a noite (#396)
+        so_noite = so_a_noite_mudou(fb, checkin, versao_fatos, recuperacao_hoje)
+        return FeedbackLido("desatualizado", mensagem=MSG_DESATUALIZADO_NOITE if so_noite else MSG_DESATUALIZADO)
     return FeedbackLido("pronto", texto=fb.texto, origem="teste" if fb.provedor == "falso" else "automatico")
