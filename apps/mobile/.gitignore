@@ -33,6 +33,9 @@ yarn-error.*
 # local env files
 .env*.local
 
+# capturas geradas por npm run capturas (#418)
+/capturas/
+
 # typescript
 *.tsbuildinfo
 

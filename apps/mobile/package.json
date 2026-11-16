@@ -32,6 +32,7 @@
     "eslint-config-expo": "~58.0.4",
     "jest": "~30.5.2",
     "jest-expo": "~58.0.13",
+    "playwright": "1.65.1",
     "typescript": "~6.0.3"
   },
   "scripts": {
@@ -43,7 +44,8 @@
     "lint": "expo lint",
     "typecheck": "tsc --noEmit",
     "verificar:web": "node scripts/verificar-web.mjs",
-    "api-falsa": "node scripts/api-falsa.mjs"
+    "api-falsa": "node scripts/api-falsa.mjs",
+    "capturas": "node scripts/capturas.mjs"
   },
   "private": true,
   "jest": {
