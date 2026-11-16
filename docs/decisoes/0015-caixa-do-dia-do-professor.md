@@ -48,7 +48,7 @@ Atletas fictícios. Hoje é quinta; a data local manda o nome do dia (ADR 0003).
 |---|---|
 | `dor` | Treino de terça com dor marcada no check-in. |
 | `fora_do_normal` | Treino de terça fora do normal: FC média acima do habitual. |
-| `fora_do_normal` (mais de uma medida) | Treino de quarta fora do normal: pace médio mais lento e FC média acima do habitual. |
+| `fora_do_normal` (mais de uma medida) | Treino de quarta fora do normal: FC média acima do habitual e pace médio mais lento. |
 | `divergencia` | Treino de terça diferente da semana-padrão: previsto intervalado, sem esforço detectado. |
 | `divergencia` | Treino de sábado diferente da semana-padrão: previsto longo, com tiros detectados. |
 | `checkin_vencendo` | Treino de segunda sem check-in; o prazo termina em 2 dias. |

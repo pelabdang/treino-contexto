@@ -1,0 +1,234 @@
+{
+ "hoje": "2026-11-18",
+ "treinos": [
+  {
+   "id": "ana-1",
+   "atleta": "Atleta Fixture Ana",
+   "dia": "2026-11-17",
+   "modalidade": "corrida",
+   "subtipo": null,
+   "tipo_treino": "leve",
+   "tipo_origem": "sugestao",
+   "tipo_confirmado": false,
+   "tipo_divergencia": null,
+   "metricas_fora": [
+    {
+     "chave": "fc_media",
+     "z": 3.1
+    }
+   ],
+   "checkin": {
+    "dor": true
+   }
+  },
+  {
+   "id": "ana-2",
+   "atleta": "Atleta Fixture Ana",
+   "dia": "2026-11-15",
+   "modalidade": "corrida",
+   "subtipo": null,
+   "tipo_treino": "longo",
+   "tipo_origem": "sugestao",
+   "tipo_confirmado": false,
+   "tipo_divergencia": null,
+   "metricas_fora": [],
+   "checkin": {
+    "dor": false
+   }
+  },
+  {
+   "id": "igor-1",
+   "atleta": "Atleta Fixture Igor",
+   "dia": "2026-11-15",
+   "modalidade": "ciclismo",
+   "subtipo": null,
+   "tipo_treino": null,
+   "tipo_origem": null,
+   "tipo_confirmado": false,
+   "tipo_divergencia": null,
+   "metricas_fora": [],
+   "checkin": {
+    "dor": true
+   }
+  },
+  {
+   "id": "hel-1",
+   "atleta": "Atleta Fixture Helena",
+   "dia": "2026-11-16",
+   "modalidade": "corrida",
+   "subtipo": null,
+   "tipo_treino": "leve",
+   "tipo_origem": "sugestao",
+   "tipo_confirmado": false,
+   "tipo_divergencia": null,
+   "metricas_fora": [
+    {
+     "chave": "pace_medio",
+     "z": 2.8
+    },
+    {
+     "chave": "fc_media",
+     "z": -2.6
+    }
+   ],
+   "checkin": {
+    "dor": false
+   }
+  },
+  {
+   "id": "bru-1",
+   "atleta": "Atleta Fixture Bruno",
+   "dia": "2026-11-14",
+   "modalidade": "corrida",
+   "subtipo": null,
+   "tipo_treino": "longo",
+   "tipo_origem": "semana_padrao",
+   "tipo_confirmado": false,
+   "tipo_divergencia": "tem_tiros",
+   "metricas_fora": [],
+   "checkin": {
+    "dor": false
+   }
+  },
+  {
+   "id": "bru-2",
+   "atleta": "Atleta Fixture Bruno",
+   "dia": "2026-11-15",
+   "modalidade": "corrida",
+   "subtipo": null,
+   "tipo_treino": "intervalado",
+   "tipo_origem": "semana_padrao",
+   "tipo_confirmado": true,
+   "tipo_divergencia": "sem_esforco",
+   "metricas_fora": [],
+   "checkin": {
+    "dor": false
+   }
+  },
+  {
+   "id": "car-1",
+   "atleta": "Atleta Fixture Carla",
+   "dia": "2026-11-13",
+   "modalidade": "corrida",
+   "subtipo": null,
+   "tipo_treino": "leve",
+   "tipo_origem": "sugestao",
+   "tipo_confirmado": false,
+   "tipo_divergencia": null,
+   "metricas_fora": [],
+   "checkin": null
+  },
+  {
+   "id": "car-2",
+   "atleta": "Atleta Fixture Carla",
+   "dia": "2026-11-17",
+   "modalidade": "corrida",
+   "subtipo": null,
+   "tipo_treino": "leve",
+   "tipo_origem": "sugestao",
+   "tipo_confirmado": false,
+   "tipo_divergencia": null,
+   "metricas_fora": [],
+   "checkin": null
+  },
+  {
+   "id": "car-3",
+   "atleta": "Atleta Fixture Carla",
+   "dia": "2026-11-10",
+   "modalidade": "corrida",
+   "subtipo": null,
+   "tipo_treino": "leve",
+   "tipo_origem": "sugestao",
+   "tipo_confirmado": false,
+   "tipo_divergencia": null,
+   "metricas_fora": [],
+   "checkin": null
+  },
+  {
+   "id": "car-4",
+   "atleta": "Atleta Fixture Carla",
+   "dia": "2026-11-13",
+   "modalidade": "corrida",
+   "subtipo": "multiesporte_pai",
+   "tipo_treino": null,
+   "tipo_origem": null,
+   "tipo_confirmado": false,
+   "tipo_divergencia": null,
+   "metricas_fora": [],
+   "checkin": null
+  },
+  {
+   "id": "car-5",
+   "atleta": "Atleta Fixture Carla",
+   "dia": "2026-11-11",
+   "modalidade": "natacao",
+   "subtipo": null,
+   "tipo_treino": null,
+   "tipo_origem": null,
+   "tipo_confirmado": false,
+   "tipo_divergencia": null,
+   "metricas_fora": [],
+   "checkin": null
+  },
+  {
+   "id": "dav-0",
+   "atleta": "Atleta Fixture Davi",
+   "dia": "2026-11-02",
+   "modalidade": "corrida",
+   "subtipo": null,
+   "tipo_treino": "leve",
+   "tipo_origem": "sugestao",
+   "tipo_confirmado": false,
+   "tipo_divergencia": null,
+   "metricas_fora": [],
+   "checkin": {
+    "dor": true
+   }
+  },
+  {
+   "id": "dav-1",
+   "atleta": "Atleta Fixture Davi",
+   "dia": "2026-11-16",
+   "modalidade": "corrida",
+   "subtipo": null,
+   "tipo_treino": "moderado",
+   "tipo_origem": "sugestao",
+   "tipo_confirmado": false,
+   "tipo_divergencia": null,
+   "metricas_fora": [],
+   "checkin": {
+    "dor": false
+   }
+  },
+  {
+   "id": "eva-1",
+   "atleta": "Atleta Fixture Eva Sem Consentimento",
+   "dia": "2026-11-17",
+   "modalidade": "corrida",
+   "subtipo": null,
+   "tipo_treino": "leve",
+   "tipo_origem": "sugestao",
+   "tipo_confirmado": false,
+   "tipo_divergencia": null,
+   "metricas_fora": [],
+   "checkin": {
+    "dor": true
+   }
+  },
+  {
+   "id": "fab-1",
+   "atleta": "Atleta Fixture Fabio De Outro Professor",
+   "dia": "2026-11-17",
+   "modalidade": "corrida",
+   "subtipo": null,
+   "tipo_treino": "leve",
+   "tipo_origem": "sugestao",
+   "tipo_confirmado": false,
+   "tipo_divergencia": null,
+   "metricas_fora": [],
+   "checkin": {
+    "dor": true
+   }
+  }
+ ]
+}
