@@ -32,6 +32,8 @@ FRASES = {
     "pendente": "O feedback deste treino ainda não foi gerado. Toque em Atualizar para ver se já está pronto.",
     "desatualizado": "Você editou o check-in. O feedback será refeito.",
     "desatualizado_noite": "Os dados da noite anterior foram atualizados. O feedback será refeito.",
+    "desatualizado_clima": "Os dados do clima foram atualizados. O feedback será refeito.",
+    "desatualizado_noite_clima": "Os dados da noite anterior e do clima foram atualizados. O feedback será refeito.",
     "indisponivel": "Ainda não foi possível gerar o feedback deste treino. Uma nova tentativa será feita mais tarde.",
     "sem_provedor": "O feedback automático não está ligado neste app.",
 }
@@ -238,3 +240,74 @@ def test_versao_dos_fatos_e_noite_nova_juntas_usam_a_frase_do_check_in(session, 
     _feedback(session, _checkin(session, a))
     f = fl.feedback_da_atividade(a, a.checkin, True, versao_fatos="fatos_treino@3", recuperacao_hoje=AGORA)
     assert f.mensagem == FRASES["desatualizado"]
+
+
+# ---------- #409: o clima que chegou depois ----------
+
+def _com_posicao(session, a):
+    a.inicio_lat, a.inicio_lon = -10.0, -20.0
+    session.commit()
+
+
+def _linha_clima(session, a, estado="ok"):
+    from app.db.models import ClimaAtividade
+    from app.servicos.clima import entrada_de
+
+    ok = estado == "ok"
+    session.add(ClimaAtividade(atividade_id=a.id, entrada=entrada_de(a), estado=estado, tentativas=1,
+                               temperatura_c=21.0 if ok else None, sensacao_c=20.0 if ok else None,
+                               umidade_pct=60.0 if ok else None, vento_kmh=8.0 if ok else None))
+    session.commit()
+
+
+def _visto(a):
+    from app.servicos.clima import assinatura_clima
+
+    return assinatura_clima(a, None)  # o clima que o pacote viu: sem linha (pendente, ou indoor)
+
+
+def test_clima_que_chegou_diz_isso_e_nao_fala_do_check_in(session, client, atleta):
+    a = _atividade(session, atleta)
+    _com_posicao(session, a)
+    _feedback(session, _checkin(session, a), clima_visto=_visto(a))  # gerado com o clima pendente (sem linha)
+    assert _get(client, atleta, a)["feedback"]["estado"] == "pronto"
+    _linha_clima(session, a)
+    f = _get(client, atleta, a)["feedback"]
+    assert f["estado"] == "desatualizado" and f["texto"] is None
+    assert f["mensagem"] == FRASES["desatualizado_clima"] and "check-in" not in f["mensagem"]
+
+
+def test_clima_igual_indoor_ou_linha_antiga_nao_desatualiza(session, client, atleta):
+    a = _atividade(session, atleta, fid="1")
+    _com_posicao(session, a)
+    _feedback(session, _checkin(session, a), clima_visto=_visto(a))
+    assert _get(client, atleta, a)["feedback"]["estado"] == "pronto"  # nada mudou
+    b = _atividade(session, atleta, subtipo="esteira", fid="2")
+    _com_posicao(session, b)  # uma posicao solta nao muda: indoor e calculado na leitura
+    _feedback(session, _checkin(session, b), clima_visto=_visto(b))
+    _linha_clima(session, b)
+    assert _get(client, atleta, b)["feedback"]["estado"] == "pronto"
+    c = _atividade(session, atleta, fid="3")
+    _com_posicao(session, c)
+    _feedback(session, _checkin(session, c))  # clima_visto nulo: linha de antes da migracao 0015
+    _linha_clima(session, c)
+    assert _get(client, atleta, c)["feedback"]["estado"] == "pronto"
+
+
+def test_clima_e_noite_juntos_tem_frase_propria(session, client, atleta):
+    a = _atividade(session, atleta)
+    _com_posicao(session, a)
+    _feedback(session, _checkin(session, a), clima_visto=_visto(a))
+    _linha_clima(session, a)
+    _noite(session, atleta)
+    assert _get(client, atleta, a)["feedback"]["mensagem"] == FRASES["desatualizado_noite_clima"]
+
+
+def test_check_in_editado_e_clima_juntos_usam_a_frase_do_check_in(session, client, atleta):
+    a = _atividade(session, atleta)
+    _com_posicao(session, a)
+    c = _checkin(session, a)
+    _feedback(session, c, clima_visto=_visto(a))
+    c.atualizado_em = AGORA + timedelta(minutes=5)
+    _linha_clima(session, a)
+    assert _get(client, atleta, a)["feedback"]["mensagem"] == FRASES["desatualizado"]

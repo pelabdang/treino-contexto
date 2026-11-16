@@ -9,9 +9,10 @@ from typing import Literal
 
 from fastapi import APIRouter, Depends, File, HTTPException, Response, UploadFile
 from pydantic import BaseModel, Field
+from sqlalchemy import select
 from sqlalchemy.orm import Session, joinedload
 
-from app.db.models import Atividade, Atleta, CheckinTreino
+from app.db.models import Atividade, Atleta, CheckinTreino, ClimaAtividade
 from app.db.session import get_session
 from app.ingestao.fit_guardado import AtletaInexistente
 from app.ingestao.importacao import (
@@ -29,7 +30,7 @@ from app.rotas.transicao import TransicaoOut, transicao_da_atividade
 from app.servicos import checkin as checkin_svc
 from app.servicos.carga_leitura import CargaLida, carga_da_atividade
 from app.servicos.carga_pse_leitura import CargaPseLida, carga_pse_da_atividade
-from app.servicos.clima import ClimaDaAtividade, EstadoClima, clima_da_atividade
+from app.servicos.clima import ClimaDaAtividade, EstadoClima, assinatura_clima, clima_da_atividade
 from app.servicos.distancia_texto import distancia_da_atividade
 from app.servicos.esforcos_leitura import esforcos_da_atividade
 from app.servicos.feedback_leitura import FeedbackLido, feedback_da_atividade
@@ -296,7 +297,8 @@ def _feedback(session: Session, a: Atividade) -> FeedbackLido | None:
     if a.checkin is None or a.checkin.feedback is None:
         return feedback_da_atividade(a, a.checkin, aberto)
     hoje = importado_em_de_hoje(carregar_da_atividade(session, a), a)
-    return feedback_da_atividade(a, a.checkin, aberto, recuperacao_hoje=hoje)
+    linha = session.scalars(select(ClimaAtividade).where(ClimaAtividade.atividade_id == a.id)).first()
+    return feedback_da_atividade(a, a.checkin, aberto, recuperacao_hoje=hoje, clima_hoje=assinatura_clima(a, linha))
 
 
 def _feedback_out(f: FeedbackLido | None) -> FeedbackOut | None:
