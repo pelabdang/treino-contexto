@@ -41,7 +41,7 @@ describe("caixa do dia: lista de atenção", () => {
     expect(screen.getByText("Para olhar hoje")).toBeTruthy();
     expect(screen.getByText("Treinos novos")).toBeTruthy();
     expect(screen.getByText(/^Últimos 7 dias\. Primeiro quem tem dor marcada/)).toBeTruthy();
-    expect(screen.getByText("Últimos 14 dias, com tipo sugerido.")).toBeTruthy();
+    expect(screen.getByText("Últimos 14 dias, com tipo sugerido. Confirme como está ou mude o tipo.")).toBeTruthy();
   });
 
   it("resumo no singular", async () => {

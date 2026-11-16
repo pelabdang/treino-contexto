@@ -327,6 +327,10 @@ const caixaComConteudo = {
   ],
 };
 const professorInexistente = { detail: [{ loc: ["path", "professor_id"], msg: "professor inexistente", type: "professor_inexistente" }] };
+// `PUT /professores/{id}/tipos-de-treino` (#427): ids aceitos e tipos sugeridos dos treinos novos acima; o lote não é gravado.
+const TIPOS_LOTE = ["leve", "moderado", "longo", "intervalado", "fartlek"];
+const NOVOS_DA_CAIXA = [511, 512];
+const SUGERIDO_DA_CAIXA = { 511: "intervalado", 512: "leve" };
 const caixaDe = (id) => {
   if (id === 2) return { ...caixaComConteudo, alunos: [], novos: [] };
   if (id === 3) return { ...caixaComConteudo, alunos: caixaComConteudo.alunos.filter((a) => a.sem_motivo), novos: [] };
@@ -343,6 +347,33 @@ createServer((req, res) => {
   if (req.method === "OPTIONS") return res.writeHead(204, cabecalhos).end();
   const { pathname, searchParams } = new URL(req.url, "http://x");
   let corpo = null;
+  const tp = pathname.match(/^\/professores\/(\d+)\/tipos-de-treino$/);
+  if (tp && req.method === "PUT") {
+    const id = Number(tp[1]);
+    let texto = "";
+    req.on("data", (c) => (texto += c));
+    req.on("end", () => {
+      if (id > 6 || id === 5) return res.writeHead(404, cabecalhos).end(JSON.stringify(professorInexistente));
+      if (id === 4) return req.destroy();
+      if (id === 6) return res.writeHead(500, cabecalhos).end(JSON.stringify({ detail: "erro sintético" }));
+      let itens;
+      try {
+        itens = JSON.parse(texto);
+      } catch {
+        itens = null;
+      }
+      const ids = Array.isArray(itens) ? itens.map((i) => i?.atividade_id) : [];
+      const tiposOk = Array.isArray(itens) && itens.every((i) => TIPOS_LOTE.includes(i?.tipo_treino));
+      if (!Array.isArray(itens) || itens.length < 1 || itens.length > 200 || new Set(ids).size !== ids.length || !tiposOk) {
+        return res.writeHead(422, cabecalhos).end(JSON.stringify(erro422("value_error")));
+      }
+      if (ids.some((i) => !NOVOS_DA_CAIXA.includes(i))) return res.writeHead(404, cabecalhos).end(JSON.stringify({ detail: [{ loc: ["body"], msg: "atividade não encontrada", type: "atividade_nao_encontrada" }] }));
+      // Não grava nada: a API falsa devolve só as contagens (confirmar = tipo igual ao sugerido; corrigir = diferente).
+      const confirmados = itens.filter((i) => i.tipo_treino === SUGERIDO_DA_CAIXA[i.atividade_id]).length;
+      res.writeHead(200, cabecalhos).end(JSON.stringify({ confirmados, corrigidos: itens.length - confirmados }));
+    });
+    return;
+  }
   const cx = pathname.match(/^\/professores\/(\d+)\/caixa-do-dia$/);
   if (cx) {
     const id = Number(cx[1]);

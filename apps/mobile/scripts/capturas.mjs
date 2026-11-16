@@ -128,7 +128,7 @@ async function principal() {
     });
     const pagina = await ctx.newPage();
     const sim = rota.simular ? SIMULACOES[rota.simular] : null;
-    if (sim) {
+    if (sim?.abortar || sim?.alterar || sim?.status) {
       await pagina.route("**/professores/*/caixa-do-dia", async (r) => {
         if (sim.abortar) return r.abort("connectionrefused");
         if (sim.alterar) {
@@ -138,9 +138,23 @@ async function principal() {
         return r.fulfill({ status: sim.status, json: sim.corpo, headers: { "access-control-allow-origin": "*" } });
       });
     }
+    if (sim?.depois) {
+      let leituras = 0;
+      await pagina.route("**/professores/*/caixa-do-dia", async (r) => {
+        const original = await r.fetch();
+        return r.fulfill({ response: original, json: leituras++ === 0 ? await original.json() : sim.depois(await original.json()) });
+      });
+    }
+    if (sim?.put) {
+      await pagina.route("**/professores/*/tipos-de-treino", async (r) => {
+        if (sim.put.pendurar) return; // nunca responde
+        return r.fulfill({ status: sim.put.status, json: sim.put.corpo, headers: { "access-control-allow-origin": "*" } });
+      });
+    }
     await pagina.goto(base + rota.caminho, { waitUntil: "networkidle" });
     await pagina.evaluate(() => document.fonts.ready);
     for (const id of rota.clicar ?? []) await pagina.getByTestId(id).click();
+    for (const tecla of rota.teclar ?? []) await pagina.keyboard.press(tecla);
     await pagina.waitForTimeout(300);
     if (tamanho.alto) {
       // O conteúdo rola dentro de um elemento da tela, não na página: mede o maior scrollHeight e redimensiona a janela.
