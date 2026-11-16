@@ -1,10 +1,11 @@
 // Folha "Tipo do treino" (#427, spec docs/design/telas/caixa-do-dia.md). Abre com "Mudar tipo"; escolher fecha na hora.
 // Celular: folha de baixo; computador: caixa centrada de 400. Fecha com "Fechar", Esc (onRequestClose) e toque fora.
 import { MaterialIcons } from "@expo/vector-icons";
-import { useMemo } from "react";
+import { type ComponentRef, useEffect, useMemo, useRef } from "react";
 import { Modal, Pressable, StyleSheet, Text, useWindowDimensions, View } from "react-native";
 
 import { TIPOS, type TipoTreino } from "../caixa/api";
+import { FOCAVEL, focar } from "../navegacao/foco";
 import { comFoco } from "../tema/foco";
 import { borda, espaco, fonte, raio, tamanho, useTema, type Tema } from "../tema";
 
@@ -21,6 +22,13 @@ type Props = {
 
 export function FolhaTipo({ visivel, subtitulo, sugerido, escolhido, aoEscolher, aoFechar }: Props) {
   const tema = useTema();
+  const titulo = useRef<ComponentRef<typeof Text>>(null);
+  // Ao abrir, o foco vai ao título (o `Modal` do react-native-web já prende o Tab dentro dele).
+  useEffect(() => {
+    if (!visivel) return;
+    const t = setTimeout(() => focar(titulo.current), 0);
+    return () => clearTimeout(t);
+  }, [visivel]);
   const computador = useWindowDimensions().width >= 900;
   const styles = useMemo(() => criarEstilos(tema, computador), [tema, computador]);
   return (
@@ -28,7 +36,7 @@ export function FolhaTipo({ visivel, subtitulo, sugerido, escolhido, aoEscolher,
       <Pressable testID="fundo-folha" accessibilityLabel="Fechar" onPress={aoFechar} style={styles.fundo}>
         <Pressable role="dialog" aria-modal aria-label="Tipo do treino" accessible={false} onPress={() => {}} style={styles.folha}>
           <View style={styles.topo}>
-            <Text accessibilityRole="header" style={styles.titulo}>
+            <Text ref={titulo} {...FOCAVEL} accessibilityRole="header" style={styles.titulo}>
               Tipo do treino
             </Text>
             <Pressable accessibilityRole="button" accessibilityLabel="Fechar" onPress={aoFechar} style={comFoco(styles.fechar, styles.foco)}>

@@ -3,7 +3,7 @@
 // Privacidade: nada de aluno, PSE, sensação, atalho, observação ou feedback vai para log, URL, rota ou armazenamento;
 // a observação só aparece dentro do detalhe aberto e nunca em rótulo de acessibilidade nem anúncio. O estado aberto fica só na memória.
 import { MaterialIcons } from "@expo/vector-icons";
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, type ComponentRef, useEffect, useMemo, useRef, useState } from "react";
 import { AccessibilityInfo, ActivityIndicator, Platform, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 
 import {
@@ -20,6 +20,7 @@ import {
   type TreinoNovo,
 } from "../caixa/api";
 import { SENSACOES } from "../checkin/escala";
+import { FOCAVEL, focar, rolarAte } from "../navegacao/foco";
 import { comFoco } from "../tema/foco";
 import { borda, espaco, fonte, larguraConteudoMax, raio, tamanho, useMargemTela, useTema, type Tema } from "../tema";
 import { BarraLote, type ErroLote } from "./BarraLote";
@@ -94,6 +95,10 @@ export function TelaCaixaDoDia({ apiUrl, professorId, fetchFn }: Props) {
   const [sucesso, setSucesso] = useState<string | null>(null);
   const [folha, setFolha] = useState<number | null>(null);
   const [anuncio, setAnuncio] = useState("");
+  const rolagem = useRef<ComponentRef<typeof ScrollView>>(null);
+  const tituloNovos = useRef<ComponentRef<typeof Text>>(null);
+  const linhasNovas = useRef(new Map<number, ComponentRef<typeof View> | null>());
+  const origemFolha = useRef<unknown>(null);
   const manual = useRef(false);
   const temConteudo = useRef(false);
   // Sem professor configurado: o mesmo estado do 404, sem chamar a API.
@@ -159,6 +164,11 @@ export function TelaCaixaDoDia({ apiUrl, professorId, fetchFn }: Props) {
     });
   }, []);
 
+  // Depois de salvar, as linhas onde estava o foco saíram: o foco vai ao título "Treinos novos" (e o leitor de tela o lê).
+  useEffect(() => {
+    if (sucesso) focar(tituloNovos.current);
+  }, [sucesso]);
+
   const dados = estado.tipo === "ok" ? estado.dados : null;
   const podeAtualizar = professorId !== null && estado.tipo !== "carregando" && !atualizando && !salvando;
 
@@ -177,6 +187,9 @@ export function TelaCaixaDoDia({ apiUrl, professorId, fetchFn }: Props) {
     // Escolher outro tipo seleciona a linha; escolher o sugerido equivale a confirmar sem mudar.
     setSelecao((atual) => new Map(atual).set(novo.atividade_id, tipo === novo.tipo_sugerido ? null : tipo));
     setFolha(null);
+    const origem = origemFolha.current;
+    origemFolha.current = null;
+    if (origem) setTimeout(() => focar(origem), 0);
   }, []);
   const todosMarcados = !!dados && dados.novos.length > 0 && selecao.size === Math.min(dados.novos.length, LIMITE_LOTE);
   const alternarTodos = () => {
@@ -225,12 +238,30 @@ export function TelaCaixaDoDia({ apiUrl, professorId, fetchFn }: Props) {
     setErroLote(null);
     buscarDeNovo();
   };
+  /** Abre a folha guardando quem tinha o foco ("Mudar tipo" da linha), para devolvê-lo ao fechar. */
+  const abrirFolha = (id: number) => {
+    origemFolha.current = Platform.OS === "web" && typeof document !== "undefined" ? document.activeElement : null;
+    setFolha(id);
+  };
+  const fecharFolha = () => {
+    setFolha(null);
+    const origem = origemFolha.current;
+    origemFolha.current = null;
+    if (origem) setTimeout(() => focar(origem), 0);
+  };
+  /** "Confirmar ou corrigir em Treinos novos": rola até a linha do treino e leva o foco a ela. */
+  const irParaNovo = (id: number) => {
+    const linha = linhasNovas.current.get(id);
+    rolarAte(rolagem.current, linha);
+    focar(linha);
+  };
+  const idsNovos = new Set(dados?.novos.map((n) => n.atividade_id) ?? []);
   const noFolha = dados?.novos.find((n) => n.atividade_id === folha) ?? null;
   const barra = selecao.size > 0 || salvando;
 
   return (
     <View style={styles.raiz}>
-    <ScrollView testID="rolagem-tela" contentContainerStyle={[styles.container, barra && { paddingBottom: erroLote ? 240 : 150 }]}>
+    <ScrollView ref={rolagem} testID="rolagem-tela" contentContainerStyle={[styles.container, barra && { paddingBottom: erroLote ? 240 : 150 }]}>
       <View style={styles.cabecalho}>
         <View style={styles.cabecalhoTextos}>
           <Text accessibilityRole="header" aria-level={1} style={styles.titulo}>
@@ -319,13 +350,13 @@ export function TelaCaixaDoDia({ apiUrl, professorId, fetchFn }: Props) {
                   <Text style={styles.texto}>{aluno.texto_sem_motivo ?? `Nada a destacar nos últimos ${dados.janela_atencao_dias} dias.`}</Text>
                 </View>
               ) : (
-                <CartaoAluno key={aluno.atleta_id} aluno={aluno} abertos={abertos} alternar={alternar} styles={styles} tema={tema} />
+                <CartaoAluno key={aluno.atleta_id} aluno={aluno} abertos={abertos} alternar={alternar} novosIds={idsNovos} irParaNovo={irParaNovo} styles={styles} tema={tema} />
               ),
             )}
           </View>
 
           <View role="region" aria-label="Treinos novos" style={styles.secao}>
-            <Text accessibilityRole="header" aria-level={2} style={styles.secaoTitulo}>
+            <Text ref={tituloNovos} {...FOCAVEL} accessibilityRole="header" aria-level={2} style={styles.secaoTitulo}>
               Treinos novos
             </Text>
             <Text style={styles.legenda}>{`Últimos ${dados.janela_novos_dias} dias, com tipo sugerido. Confirme como está ou mude o tipo.`}</Text>
@@ -367,7 +398,8 @@ export function TelaCaixaDoDia({ apiUrl, professorId, fetchFn }: Props) {
                   corrigidoPara={selecao.get(n.atividade_id) ?? null}
                   desligado={salvando}
                   aoMarcar={() => marcar(n.atividade_id)}
-                  aoMudarTipo={() => setFolha(n.atividade_id)}
+                  aoMudarTipo={() => abrirFolha(n.atividade_id)}
+                  refLinha={(el) => void linhasNovas.current.set(n.atividade_id, el)}
                   aoVoltar={() => setSelecao((atual) => new Map(atual).set(n.atividade_id, null))}
                   styles={styles}
                   tema={tema}
@@ -386,7 +418,7 @@ export function TelaCaixaDoDia({ apiUrl, professorId, fetchFn }: Props) {
         sugerido={noFolha.tipo_sugerido}
         escolhido={selecao.get(noFolha.atividade_id) ?? noFolha.tipo_sugerido}
         aoEscolher={(t) => escolherTipo(noFolha, t)}
-        aoFechar={() => setFolha(null)}
+        aoFechar={fecharFolha}
       />
     )}
     <Text testID="anuncio" accessibilityLiveRegion="polite" aria-live="polite" style={styles.anuncio}>
@@ -417,7 +449,7 @@ function EstadoDeErro({ falha, styles, tema, aoTentar }: { falha: Falha; styles:
   );
 }
 
-function CartaoAluno({ aluno, abertos, alternar, styles, tema }: { aluno: AlunoCaixa; abertos: ReadonlySet<string>; alternar: (c: string) => void; styles: Estilos; tema: Tema }) {
+function CartaoAluno({ aluno, abertos, alternar, novosIds, irParaNovo, styles, tema }: { aluno: AlunoCaixa; abertos: ReadonlySet<string>; alternar: (c: string) => void; novosIds: ReadonlySet<number>; irParaNovo: (id: number) => void; styles: Estilos; tema: Tema }) {
   return (
     <View testID={`aluno-${aluno.atleta_id}`} style={styles.cartao}>
       <Text accessibilityRole="header" aria-level={3} style={styles.secaoTitulo}>
@@ -454,7 +486,16 @@ function CartaoAluno({ aluno, abertos, alternar, styles, tema }: { aluno: AlunoC
               </View>
               <MaterialIcons name={aberto ? "expand-less" : "expand-more"} size={tamanho.iconeGrande} color={tema.cor["texto-2"]} accessible={false} />
             </Pressable>
-            {aberto && <Detalhe detalhe={t.detalhe} testID={`detalhe-${t.atividade_id}`} styles={styles} tema={tema} />}
+            {aberto && (
+              <Detalhe
+                detalhe={t.detalhe}
+                testID={`detalhe-${t.atividade_id}`}
+                // Só treino com divergência que ainda está em "Treinos novos" tem para onde ir.
+                irParaNovo={t.motivos.some((m) => m.codigo === "divergencia") && novosIds.has(t.atividade_id) ? () => irParaNovo(t.atividade_id) : undefined}
+                styles={styles}
+                tema={tema}
+              />
+            )}
           </View>
         );
       })}
@@ -472,11 +513,12 @@ type PropsNovo = {
   aoMarcar: () => void;
   aoMudarTipo: () => void;
   aoVoltar: () => void;
+  refLinha: (el: ComponentRef<typeof View> | null) => void;
   styles: Estilos;
   tema: Tema;
 };
 
-function LinhaNovo({ novo, aberto, alternar, selecionado, corrigidoPara, desligado, aoMarcar, aoMudarTipo, aoVoltar, styles, tema }: PropsNovo) {
+function LinhaNovo({ novo, aberto, alternar, selecionado, corrigidoPara, desligado, aoMarcar, aoMudarTipo, aoVoltar, refLinha, styles, tema }: PropsNovo) {
   const mod = MODALIDADES[novo.modalidade];
   const resumo = `${mod?.nome ?? novo.modalidade} · ${novo.duracao_texto} · ${dataCurta(novo.data_local)}`;
   const rotulo = `${novo.atleta_nome}, ${mod?.nome ?? novo.modalidade}, ${novo.duracao_texto}, ${dataPorExtenso(novo.data_local)}. Tipo sugerido ${novo.tipo_sugerido_texto}, ${novo.origem_texto}.`;
@@ -496,6 +538,7 @@ function LinhaNovo({ novo, aberto, alternar, selecionado, corrigidoPara, desliga
       </Pressable>
       <View style={styles.novoCorpo}>
         <Pressable
+          ref={refLinha}
           testID={`treino-novo-${novo.atividade_id}`}
           accessibilityRole="button"
           accessibilityLabel={rotulo}
@@ -512,7 +555,7 @@ function LinhaNovo({ novo, aberto, alternar, selecionado, corrigidoPara, desliga
               <Text style={styles.rotulo}>{resumo}</Text>
             </View>
             <View style={styles.tipoLinha}>
-              <View style={styles.chip}>
+              <View style={[styles.chip, selecionado && styles.chipSelecionado]}>
                 <Text style={styles.chipTexto}>{novo.tipo_sugerido_texto}</Text>
               </View>
               <Text style={styles.legenda}>{`(${novo.origem_texto})`}</Text>
@@ -542,7 +585,7 @@ function LinhaNovo({ novo, aberto, alternar, selecionado, corrigidoPara, desliga
   );
 }
 
-function Detalhe({ detalhe, testID, styles, tema }: { detalhe: DetalheTreino; testID: string; styles: Estilos; tema: Tema }) {
+function Detalhe({ detalhe, testID, irParaNovo, styles, tema }: { detalhe: DetalheTreino; testID: string; irParaNovo?: () => void; styles: Estilos; tema: Tema }) {
   const c = detalhe.checkin;
   const sensacao = c ? SENSACOES.find((s) => s.valor === c.sensacao) : undefined;
   const f = detalhe.feedback;
@@ -582,6 +625,14 @@ function Detalhe({ detalhe, testID, styles, tema }: { detalhe: DetalheTreino; te
           </View>
         </View>
       ) : null}
+      {irParaNovo && (
+        <Pressable testID={`ir-para-novos-${testID}`} accessibilityRole="button" onPress={irParaNovo} style={comFoco(styles.botaoLink, styles.foco)}>
+          <View style={styles.linhaModalidade}>
+            <Text style={styles.link}>Confirmar ou corrigir em Treinos novos</Text>
+            <MaterialIcons name="chevron-right" size={tamanho.iconeMedio} color={tema.cor.destaque} accessible={false} />
+          </View>
+        </Pressable>
+      )}
     </View>
   );
 }
@@ -610,6 +661,7 @@ function criarEstilos({ cor }: Tema, margem: number = espaco[4]) {
     selecionarTodos: { minHeight: tamanho.alvoMinimo, flexDirection: "row", alignItems: "center", gap: espaco[2], marginTop: espaco[2], borderRadius: raio.medio },
     sucesso: { flexDirection: "row", alignItems: "flex-start", gap: espaco[2], backgroundColor: cor["sucesso-suave"], padding: espaco[3], borderRadius: raio.medio, marginTop: espaco[3] },
     sucessoTexto: { ...fonte.corpo, color: cor.sucesso, flex: 1 },
+    chipSelecionado: { backgroundColor: cor.superficie },
     cabecalho: { flexDirection: "row", alignItems: "flex-start", justifyContent: "space-between", gap: espaco[3] },
     cabecalhoTextos: { flex: 1 },
     titulo: { ...fonte["titulo-tela"], color: cor.texto },
