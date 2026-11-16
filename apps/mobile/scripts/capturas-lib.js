@@ -12,7 +12,23 @@ const ROTAS = [
   { nome: "treino-sem-checkin", caminho: "/treino/101" },
   { nome: "treino-prazo-vencido", caminho: "/treino/108" },
   { nome: "checkin-pergunta1", caminho: "/checkin/101" },
+  // Caixa do dia do professor (#426). O professor vem de EXPO_PUBLIC_PROFESSOR_ID (1 no export das capturas). `clicar` abre linhas
+  // do acordeão (testID) antes da captura; `simular` troca a resposta da caixa no navegador (ver SIMULACOES), sem outro export.
+  { nome: "caixa-do-dia", caminho: "/caixa-do-dia" },
+  { nome: "caixa-do-dia-detalhe", caminho: "/caixa-do-dia", clicar: ["treino-501", "treino-novo-512"] }, // observação só com o texto marcador
+  { nome: "caixa-do-dia-sem-alunos", caminho: "/caixa-do-dia", simular: "vazio" },
+  { nome: "caixa-do-dia-sem-motivo", caminho: "/caixa-do-dia", simular: "sem-motivo" },
+  { nome: "caixa-do-dia-erro-rede", caminho: "/caixa-do-dia", simular: "rede" },
+  { nome: "caixa-do-dia-404", caminho: "/caixa-do-dia", simular: "404" },
 ];
+
+// Respostas simuladas da caixa do dia (só dado sintético). `alterar` recebe o JSON da API falsa; `abortar` derruba a conexão.
+const SIMULACOES = {
+  vazio: { alterar: (c) => ({ ...c, alunos: [], novos: [] }) },
+  "sem-motivo": { alterar: (c) => ({ ...c, alunos: c.alunos.filter((a) => a.sem_motivo), novos: [] }) },
+  rede: { abortar: true },
+  "404": { status: 404, corpo: { type: "professor_inexistente", detail: "professor inexistente" } },
+};
 const TAMANHOS = [
   { nome: "390", largura: 390, altura: 844 },
   { nome: "1280", largura: 1280, altura: 900 },
@@ -89,4 +105,4 @@ function criarEncerramento(limpezas) {
   };
 }
 
-module.exports = { TAMANHO_ALTO, ALTURA_MAXIMA, alturaAlta, criarEncerramento, ROTAS, TAMANHOS, TEMAS, PORTAS_PROIBIDAS, nomeArquivo, planoDeCapturas, validarApiUrl, arquivoDaRota };
+module.exports = { SIMULACOES, TAMANHO_ALTO, ALTURA_MAXIMA, alturaAlta, criarEncerramento, ROTAS, TAMANHOS, TEMAS, PORTAS_PROIBIDAS, nomeArquivo, planoDeCapturas, validarApiUrl, arquivoDaRota };
