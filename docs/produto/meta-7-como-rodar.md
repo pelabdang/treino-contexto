@@ -2,7 +2,7 @@
 tipo: guia
 status: em-uso
 dono: nina
-atualizado: 2026-11-09
+atualizado: 2026-11-16
 links: [[produto/meta-6-como-rodar]], [[produto/meta-5-como-rodar]], [[produto/roadmap]], [[decisoes/0011-linha-de-base-e-semana-padrao]], [[decisoes/0004-contrato-tela-evolucao]], [[decisoes/0003-fuso-da-atividade]], [[metricas/tipo-treino]], [[metricas/linha-base]], [[metricas/tipo-linha-base-oraculo]], [[design/telas/semana-padrao]], [[modulos/banco]], [[modulos/api]], [[modulos/api-client]], [[modulos/mobile]], [[modulos/worker]], [[diario/2026-11-09]]
 ---
 # Meta 7: como rodar a semana-padrão, o tipo de treino e a linha de base
@@ -46,7 +46,7 @@ o app foram derrubados no fim. **Nada usou a rede.** **Não rodado aqui:** o app
    uv sync
    (cd services/api && uv run alembic upgrade head && uv run alembic current)
    ```
-   Esperado: onze linhas `Running upgrade` e `0011 (head)`. A `0011` cria `semana_padrao` e `semana_padrao_item` e põe
+   Esperado: uma linha `Running upgrade` por migração, até o head atual (na Meta 7 eram 11 linhas e `0011`; hoje há mais). A `0011` cria `semana_padrao` e `semana_padrao_item` e põe
    `tipo_versao` e `tipo_divergencia` em `atividade` ([[modulos/banco]]).
 3. **Carregar as 81 atividades sintéticas** de `tests/fixtures/meta7/atividades.json` (04/01 a 28/03/2026; o oráculo é o
    [[metricas/tipo-linha-base-oraculo]]). As fixtures resumem os blocos em `estrutura`; este trecho os transforma em blocos de

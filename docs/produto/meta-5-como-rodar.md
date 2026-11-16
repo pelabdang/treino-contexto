@@ -2,7 +2,7 @@
 tipo: guia
 status: em-uso
 dono: nina
-atualizado: 2026-11-06
+atualizado: 2026-11-16
 links: [[produto/meta-4-como-rodar]], [[produto/meta-3-como-rodar]], [[produto/meta-2-como-rodar]], [[produto/meta-1-como-reproduzir]], [[decisoes/0008-deteccao-de-esforcos]], [[decisoes/0009-treino-de-transicao]], [[decisoes/0004-contrato-tela-evolucao]], [[metricas/esforcos]], [[metricas/esforcos-oraculo]], [[metricas/tiros-1km]], [[metricas/transicao]], [[modulos/banco]], [[modulos/worker]], [[modulos/api]], [[modulos/api-client]], [[modulos/ingestao-garmin]], [[modulos/mobile]], [[design/telas/treino]], [[diario/2026-11-06]]
 ---
 # Meta 5: como rodar a detecção de esforços
@@ -47,7 +47,7 @@ ponta é da #172 (Bia).
    uv sync
    (cd services/api && uv run alembic upgrade head && uv run alembic current)
    ```
-   Esperado: sete linhas `Running upgrade` e `0007 (head)`. A `0006` cria `bloco_atividade` (esforços) e a `0007`,
+   Esperado: uma linha `Running upgrade` por migração, até o head atual (na Meta 5 eram 7 linhas e `0007`; hoje há mais). A `0006` cria `bloco_atividade` (esforços) e a `0007`,
    `rotulo_transicao` ([[modulos/banco]]).
 3. **Fixtures.** A exportação mínima da Meta 1 e os sete FIT sintéticos dos esforços ([[metricas/esforcos-oraculo]]):
    ```

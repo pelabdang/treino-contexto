@@ -2,7 +2,7 @@
 tipo: guia
 status: em-uso
 dono: nina
-atualizado: 2026-11-10
+atualizado: 2026-11-16
 links: [[produto/meta-7-como-rodar]], [[produto/meta-6-como-rodar]], [[produto/roadmap]], [[produto/metas/meta-8-check-in]], [[decisoes/0012-check-in-pos-treino]], [[decisoes/0004-contrato-tela-evolucao]], [[decisoes/0003-fuso-da-atividade]], [[metricas/carga-pse]], [[metricas/carga-pse-oraculo]], [[design/telas/checkin]], [[modulos/banco]], [[modulos/api]], [[modulos/api-client]], [[modulos/mobile]], [[modulos/worker]], [[diario/2026-11-09]]
 ---
 # Meta 8: como rodar o check-in pós-treino e a carga pela PSE
@@ -50,7 +50,7 @@ A Bia segue o guia como revisão independente.
    uv sync
    (cd services/api && uv run alembic upgrade head && uv run alembic current)
    ```
-   Esperado: doze linhas `Running upgrade` e `0012 (head)`. A `0012` cria `checkin_treino` ([[modulos/banco]]).
+   Esperado: uma linha `Running upgrade` por migração, até o head atual (na Meta 8 eram 12 linhas e `0012`; hoje há mais). A `0012` cria `checkin_treino` ([[modulos/banco]]).
 3. **Carregar as 18 atividades sintéticas** de `tests/fixtures/meta8/atividades.json` (15/10 a 09/11/2026: corrida, natação, ciclismo, `outra`, um
    multiesporte com pai e duas trocas, um treino de 0 s). Este trecho grava as atividades e **um** check-in: o de 15/10, que está
    **fora do prazo de criação**, então a API o recusaria (passo 6); os outros oito entram pela API no passo 4. Salve como `/caminho/saida/carregar.py`
