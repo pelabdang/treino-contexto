@@ -1,13 +1,13 @@
 ---
 tipo: decisao
-status: proposta
+status: aceita
 dono: caio
 atualizado: 2026-11-16
 links: [[decisoes/0001-modelo-de-dados-minimo]], [[decisoes/0003-fuso-da-atividade]], [[decisoes/0004-contrato-tela-evolucao]], [[decisoes/0011-linha-de-base-e-semana-padrao]], [[decisoes/0012-check-in-pos-treino]], [[decisoes/0013-feedback-automatico]], [[decisoes/0014-recuperacao-diaria]], [[metricas/linha-base]], [[modulos/banco]], [[modulos/api]], [[produto/roadmap]], [[produto/plano-mvp-execucao]], [[glossario]]
 ---
 # ADR: 0015 Caixa do dia do professor no piloto local (identidade, vínculo, `atencao@1` e correção do tipo)
 
-> **Proposta** (issue #419, Meta 11), para o Theo aprovar o **modelo de dados** (item 1) antes de qualquer migração, com a revisão da Duda sobre banco e API.
+> **Aceita em 16/11** (issue #419, Meta 11). Modelo de dados aprovado pelo Theo (PR #435, com a revisão da Duda sobre banco e API); o Angelo respondeu **"ok para as 7"** aos itens 1, 2, 5, 6, 7, 8 e 10 de "A confirmar" (valem as recomendações).
 > As dez decisões do Angelo de 16/11 ("ok para as 10") estão no Contexto e esta ADR as respeita. **Nenhuma linha de código nem migração muda neste PR.**
 > Todos os nomes, números, datas e textos são **sintéticos** (atletas fictícios). Esta ADR não consultou conta nem banco de ninguém.
 > Check-in, observação, feedback e recuperação são dado pessoal e de saúde: nada disso, real, no repositório, em log, em captura ou em fixture gravada.
@@ -20,7 +20,7 @@ Princípio que organiza tudo, o mesmo das ADRs 0010 a 0014: **quem calcula é o 
 
 ### Decisões do Angelo (16/11, "ok para as 10"), que esta ADR respeita
 1. Abrir as issues e começar a Meta 11 (P1 a P14).
-2. **Sem login** nesta meta: o professor do piloto local é **fixo por configuração**, como o atleta fixo da Meta 2. Login, contas e controle de acesso vêm com a meta de deploy.
+2. **Sem login** nesta meta: o professor do piloto local é **fixo por configuração**, como o atleta fixo da Meta 2. Login, contas e controle de acesso vêm com a meta de deploy. **Resolvido em 16/11 (Angelo, "ok para as 7"): vale a recomendação.**
 3. **Só atletas sintéticos** (fictícios, escritos à mão). Nenhum dado de outro aluno real até o termo de consentimento, o contrato com a assessoria e a consulta de LGPD.
 4. Atleta **sem vínculo** com o professor, ou com vínculo **sem `consentimento_em`**, **nunca** aparece na caixa nem nos treinos dele. O texto do termo fica para a consulta jurídica.
 5. A conta do Angelo pode ser ligada a um professor de teste **só no banco local**, com nada no repositório (#431).
@@ -138,7 +138,7 @@ Sem `CHECK` novo: `tipo_confirmado = verdadeiro` com `_por` e `_em` nulos é **l
 `PUT` em lote do tipo (#425): uma lista de `{atividade_id, tipo_treino}`; `tipo_treino` é **um dos cinco** (`leve`, `moderado`, `longo`, `intervalado`, `fartlek`) ou, para **confirmar sem mudar**, o mesmo que a atividade já tem (ou ausente, e a API usa o atual). **Tudo ou nada** (uma transação). Cada atividade tem que ser de um atleta do filtro do item 3. **Validações do lote (revisão da Duda e decisões do Theo), nesta ordem:** (1) o tipo fora dos cinco é `422` de validação, antes de tocar no banco; lote vazio é `422`; `atividade_id` repetido é `422`; máximo de **200** itens (`422` acima); (2) qualquer atividade inexistente **ou** fora do filtro é `404` com **um só** `type`, `atividade_nao_encontrada` (o item do `PUT` é a atividade, não o atleta), **antes** de qualquer `422` que dependa do estado da atividade; (3) só então o `422 atividade_sem_tipo` (multiesporte ou sem tipo para confirmar), para ele não revelar que a atividade existe. **Concorrência:** tudo ou nada em uma transação; o piloto **ignora** duas confirmações simultâneas (no Postgres bastaria `SELECT ... FOR UPDATE`; fica para quando houver mais de um professor). **Efeito no mesmo dia:** a atividade corrigida ou confirmada **continua consumindo** o item da semana-padrão do dia (ADR 0011, E13); corrigir a dona não libera o item para as irmãs, que seguem pela reserva. A FK nova leva constraint nomeada; o `GET` monta "confirmado" por `tipo_confirmado`, não pela origem. Sem índice novo em `vinculo_professor_atleta` (a consulta parte do prefixo da chave `(professor_id, atleta_id)`).
 
 **Precedência do tipo, de cima para baixo** (completa a ADR 0011, item 2, que já tem os passos 1 a 4):
-1. **Correção do professor** (`tipo_origem = 'professor'`) e **tipo confirmado**: não mudam por semana-padrão nem por regra (versão nova incluída).
+1. **Correção do professor** (`tipo_origem = 'professor'`) e **tipo confirmado**: não mudam por semana-padrão nem por regra (versão nova incluída). **Resolvido em 16/11 (Angelo, "ok para as 7"): vale a recomendação.**
 2. `trainingpeaks` (mesma proteção, ainda sem fonte).
 3. Semana-padrão (`semana_padrao`).
 4. Regra de reserva (`sugestao`).
@@ -224,20 +224,20 @@ Login, contas, controle de acesso e deploy; dado de aluno real; o texto do termo
 - Produto: [[produto/plano-mvp-execucao]], seções 1 e 5.1 (caixa do dia), e as decisões do Angelo de 16/11.
 
 ## A confirmar
-Cada item tem a **recomendação** (o padrão que vale se o Angelo responder "ok"). Os itens 3, 4 e 9 eram do **Theo** e estão resolvidos; faltam as respostas do **Angelo** aos itens **1, 2, 5, 6, 7, 8 e 10**.
+Cada item tem a **recomendação** (o padrão que vale se o Angelo responder "ok"). Os itens 3, 4 e 9 eram do **Theo** e estão resolvidos; as respostas do **Angelo** aos itens **1, 2, 5, 6, 7, 8 e 10** vieram em 16/11 ("ok para as 7").
 1. **O `professor_id` configurado basta para o piloto, se a API só roda na máquina local?** *Recomendação:* sim, e a API local **escuta só em `127.0.0.1`**. Se ele quiser abrir a outra máquina antes do login, é um assunto novo (deploy). *Angelo.*
 2. **Janelas.** Atenção olha os **últimos 7 dias** (o mesmo prazo do check-in) e os **treinos novos** os **últimos 14**. *Recomendação:* 7 e 14. Alternativa: 14 nos dois (mais ruído, o motivo "check-in vencendo" já tem seu próprio corte); ou 7 nos dois (quem folga 8 dias perde treino sem confirmar). *Angelo.*
 3. **A migração `0016` (`tipo_confirmado_por`, `tipo_confirmado_em`, `feedback_treino.tipo_visto`).** **Resolvido em 16/11 (Theo, PR #435): aprovado, com a FK nomeada.** *Recomendação:* sim, as três colunas. Alternativa: só `tipo_visto` (sem quem nem quando, porque só há um professor no piloto) ou nenhuma (aceitar o feedback velho depois da correção). *Theo.*
 4. **Corrigir o tipo desatualiza o feedback (motivo `tipo`).** **Resolvido em 16/11 (Theo): sim; entra na fila normal, o limite por execução segue valendo e o resto fica em `adiados`.** *Recomendação:* sim, e o worker refaz (consome o limite de 20 chamadas por execução, como o clima e a noite). Alternativa: não refazer e mostrar "tipo corrigido depois do feedback". *Theo e Caio.*
-5. **O professor vê o feedback, que pode citar a recuperação (sono, VFC) em frase.** A decisão 7 lista o feedback, mas não a recuperação. *Recomendação:* aceitar (é o texto aprovado pelas checagens) e levar à consulta de LGPD junto com a observação. Alternativa: o professor vê o feedback só quando ele não menciona recuperação, o que exige marcar o texto (mais código). *Angelo.*
-6. **Dispensar um aviso ("já vi")?** Hoje um treino com `dor` fica na caixa até sair da janela (7 dias), mesmo depois de o professor falar com o aluno. *Recomendação:* **não** nesta meta (seria estado novo e o piloto é pequeno); medir no ensaio se atrapalha. Alternativa: coluna `visto_em` por treino e professor. *Angelo.*
-7. **"Voltar ao automático" (desfazer uma correção).** *Recomendação:* **não** nesta meta; o professor corrige de novo. A decisão 8 diz que a correção "não é desfeita" por reimportação nem regra, e isso inclui o botão. Alternativa: `DELETE` que volta ao que a regra daria. *Angelo.*
-8. **Consentimento retirado depois de o professor ter corrigido tipos:** a correção **fica** na atividade (é dado do treino, e o atleta é dono do treino). *Recomendação:* fica; o texto do termo (consulta jurídica) diz o que acontece com o que o professor gravou. Alternativa: limpar `tipo_confirmado_por` ao retirar (perde a auditoria, mantém o tipo). *Angelo e consulta de LGPD.*
+5. **O professor vê o feedback, que pode citar a recuperação (sono, VFC) em frase.** A decisão 7 lista o feedback, mas não a recuperação. *Recomendação:* aceitar (é o texto aprovado pelas checagens) e levar à consulta de LGPD junto com a observação. Alternativa: o professor vê o feedback só quando ele não menciona recuperação, o que exige marcar o texto (mais código). *Angelo.* **Resolvido em 16/11 (Angelo, "ok para as 7"): vale a recomendação.**
+6. **Dispensar um aviso ("já vi")?** Hoje um treino com `dor` fica na caixa até sair da janela (7 dias), mesmo depois de o professor falar com o aluno. *Recomendação:* **não** nesta meta (seria estado novo e o piloto é pequeno); medir no ensaio se atrapalha. Alternativa: coluna `visto_em` por treino e professor. *Angelo.* **Resolvido em 16/11 (Angelo, "ok para as 7"): vale a recomendação.**
+7. **"Voltar ao automático" (desfazer uma correção).** *Recomendação:* **não** nesta meta; o professor corrige de novo. A decisão 8 diz que a correção "não é desfeita" por reimportação nem regra, e isso inclui o botão. Alternativa: `DELETE` que volta ao que a regra daria. *Angelo.* **Resolvido em 16/11 (Angelo, "ok para as 7"): vale a recomendação.**
+8. **Consentimento retirado depois de o professor ter corrigido tipos:** a correção **fica** na atividade (é dado do treino, e o atleta é dono do treino). *Recomendação:* fica; o texto do termo (consulta jurídica) diz o que acontece com o que o professor gravou. Alternativa: limpar `tipo_confirmado_por` ao retirar (perde a auditoria, mantém o tipo). *Angelo e consulta de LGPD.* **Resolvido em 16/11 (Angelo, "ok para as 7"): vale a recomendação.**
 9. **Correção de tipo para ciclismo e natação (sem regra de tipo hoje).** **Resolvido em 16/11 (Theo): sim, os cinco tipos em qualquer modalidade elegível.** *Recomendação:* aceitar os cinco tipos em qualquer modalidade elegível, como o item da semana-padrão aceita (a linha de base de ciclismo e natação ignora o tipo). Alternativa: só corrida. *Theo e Duda.*
-10. **"Treino fora do normal" para treino sem linha de base (sem tipo, divergente, `aprendendo`):** *Recomendação:* sem motivo 2 (a regra não inventa comparação); o treino segue na lista de novos para o professor dar o tipo, e depois a linha de base existe. Alternativa: motivo próprio "sem comparação". *Angelo.*
+10. **"Treino fora do normal" para treino sem linha de base (sem tipo, divergente, `aprendendo`):** *Recomendação:* sem motivo 2 (a regra não inventa comparação); o treino segue na lista de novos para o professor dar o tipo, e depois a linha de base existe. Alternativa: motivo próprio "sem comparação". *Angelo.* **Resolvido em 16/11 (Angelo, "ok para as 7"): vale a recomendação.**
 
 ## Revisão da Duda (incorporada em 16/11)
 Comentário no PR #435. Bloqueantes resolvidos: `PROFESSOR_ID` vazio (comentado no `.env.example` e validador `""` para `None`) e ordem `404` antes de `422`. Sem índice novo em `vinculo_professor_atleta` (a consulta parte do prefixo da chave). Os demais pontos estão nos itens 1, 2, 3, 5 e 6 e em "Limitações".
 
 ## Data e quem decidiu
-2026-11-16. Proposta do Caio (ciência), com revisão da Duda (banco e API) pedida no PR. Decisões do Angelo de 16/11 ("ok para as 10") no Contexto. Issue #419. **Modelo de dados: aprovado pelo Theo em 2026-11-16** (comentário no PR #435), com a revisão da Duda incorporada no mesmo dia. **Status `proposta`:** vira `aceita` quando o Angelo responder aos itens 1, 2, 5, 6, 7, 8 e 10 de "A confirmar".
+2026-11-16. Proposta do Caio (ciência), com revisão da Duda (banco e API) pedida no PR. Decisões do Angelo de 16/11 ("ok para as 10") no Contexto. Issue #419. **Modelo de dados: aprovado pelo Theo em 2026-11-16** (comentário no PR #435), com a revisão da Duda incorporada no mesmo dia. O Angelo respondeu **"ok para as 7"** (16/11) aos itens 1, 2, 5, 6, 7, 8 e 10, com as recomendações. **Aceita em 2026-11-16.**

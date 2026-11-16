@@ -65,7 +65,7 @@ App de análise de treinos com contexto (corrida, natação, ciclismo) para atle
   - [[decisoes/0012-check-in-pos-treino]]: check-in pós-treino e `carga_pse@1` (Meta 8), aceita em 10/11
   - [[decisoes/0013-feedback-automatico]]: feedback automático por treino (Meta 9): pacote de fatos, banco, camada de LLM, checagens e dado de saúde; aceita em 10/11
   - [[decisoes/0014-recuperacao-diaria]]: recuperação diária (Meta 10): tabela `recuperacao_dia`, `recuperacao@1`, `fatos_treino@2` e regras de linguagem; aceita em 12/11
-  - [[decisoes/0015-caixa-do-dia-do-professor]]: caixa do dia do professor no piloto local (Meta 11): professor fixo por configuração, filtro de vínculo e consentimento, `atencao@1` (quatro motivos), correção do tipo pelo professor; **proposta** em 16/11, aguarda o Theo
+  - [[decisoes/0015-caixa-do-dia-do-professor]]: caixa do dia do professor no piloto local (Meta 11): professor fixo por configuração, filtro de vínculo e consentimento, `atencao@1` (quatro motivos), correção do tipo pelo professor; aceita em 16/11
 
 ## Ciência e especialistas
 - Artigos: pasta [[ciencia/artigos/]]
