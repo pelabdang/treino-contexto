@@ -213,6 +213,7 @@ Os nomes abaixo foram conferidos no mapa de glifos do pacote (versão 15.1.1).
 | caixa do dia: abrir e fechar o detalhe | `expand-more`, `expand-less` |
 | caixa do dia: correção ainda não salva | `edit` |
 | caixa do dia: estado sem alunos | `group` |
+| caixa do dia: opção da folha "Tipo do treino" (#427) | `radio-button-checked`, `radio-button-unchecked`, `close` |
 
 Os nomes da semana-padrão foram conferidos no mapa de glifos do `@expo/vector-icons` pelo Rafa (#268, ver [[modulos/mobile]]). Os do
 check-in são do conjunto padrão do Material Icons e ainda precisam ser conferidos pelo Rafa na #299.
