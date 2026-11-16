@@ -2,7 +2,7 @@
 tipo: modulo
 status: em-uso
 dono: theo
-atualizado: 2026-11-12
+atualizado: 2026-11-16
 links: [[decisoes/0014-recuperacao-diaria]], [[decisoes/0013-feedback-automatico]], [[decisoes/0012-check-in-pos-treino]], [[decisoes/0011-linha-de-base-e-semana-padrao]], [[decisoes/0001-modelo-de-dados-minimo]], [[decisoes/0002-segmento-intensidade-e-versao]], [[decisoes/0003-fuso-da-atividade]], [[decisoes/0007-clima-da-atividade]], [[decisoes/0008-deteccao-de-esforcos]], [[decisoes/0009-treino-de-transicao]], [[decisoes/0010-carga-de-treino]], [[modulos/ingestao-garmin]], [[modulos/api]], [[modulos/infra]], [[produto/meta-4-como-rodar]]
 ---
 # Módulo: banco
@@ -34,6 +34,8 @@ Motivos da escolha em [[decisoes/0001-modelo-de-dados-minimo]].
 - `recuperacao_dia` (migração 0014, [[decisoes/0014-recuperacao-diaria]], item 1): **uma linha por atleta, origem e noite** (`UNIQUE (atleta_id, origem, noite)`; `atleta_id` FK `ON DELETE CASCADE`, indexada). `origem` (`ORIGENS_RECUPERACAO = ("garmin_connect",)`, `CHECK`), `noite` (`Date`: a **data local de acordar**), `sono_s` (inteiro, segundos, `CHECK` 1 a 86400), `vfc_ms` (real, ms, `CHECK` de 0 (exclusivo) a 500), `fc_repouso_bpm` (inteiro, `CHECK` 20 a 150), todos **anuláveis**, `versao_leitura` (`recuperacao_leitura@1`) e `importado_em` (com fuso, **definido pela aplicação**, só muda quando um dos três valores muda). `CHECK alguma_medida`: ao menos uma das três não é nula (noite sem dado não vira linha). **Dado de saúde:** só no banco local, nunca em log, sem rota que o devolva; `worker.apagar_recuperacao` apaga. O `downgrade` da 0014 remove a coluna e a tabela. Camada de leitura e gravação: `app/servicos/recuperacao_banco.py` (`noites_do_atleta`, `primeira_noite`, `gravar_noite`, `apagar_recuperacao_do_atleta`).
 
 ## Arquivos principais
+- `feedback_treino.clima_visto` (migração 0015, [[decisoes/0013-feedback-automatico]] adendo 4, #409): `String(64)` anulável, a impressão (SHA-256) do clima que o pacote viu; o clima que chega depois (`pendente` para `ok`) deixa o feedback desatualizado. Nulo (linha anterior à 0015) não compara. Não guarda valor de clima.
+- `services/api/alembic/versions/0015_feedback_clima_visto.py`: a coluna `feedback_treino.clima_visto` (`batch_alter_table` no SQLite). Sobe e desce; as linhas existentes ficam com nulo.
 - `services/api/alembic/versions/0014_recuperacao_dia.py`: tabela `recuperacao_dia` (cinco `CHECK`, FK com cascata, `UNIQUE`) e a coluna `feedback_treino.recuperacao_importada_em` (`batch_alter_table` no SQLite). Sobe e desce no SQLite e no Postgres (`test_migracao_0014.py`).
 - `services/api/alembic/versions/0012_checkin_treino.py`: tabela `checkin_treino`, os quatro `CHECK`, FK com cascata e unicidade de `atividade_id`. Sobe e desce no SQLite e no Postgres (`test_migracoes.py`).
 - `services/api/alembic/versions/0013_feedback_treino.py`: tabela `feedback_treino`, os quatro `CHECK` (`estado`, `motivo`, `texto_tamanho`, `estado_campos`), FK com cascata e unicidade de `checkin_id`. Sobe e desce no SQLite e no Postgres (`test_migracoes.py`).

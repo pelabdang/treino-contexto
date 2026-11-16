@@ -24,6 +24,19 @@ from sqlalchemy import create_engine, text
 from sqlalchemy.orm import Session
 
 RAIZ = Path(__file__).resolve().parents[1]
+
+
+def _head_do_alembic() -> str:
+    """O head das migracoes lido do alembic: o teste nao quebra a cada migracao nova."""
+    from alembic.config import Config
+    from alembic.script import ScriptDirectory
+
+    cfg = Config(str(RAIZ / "services" / "api" / "alembic.ini"))
+    cfg.set_main_option("script_location", str(RAIZ / "services" / "api" / "alembic"))
+    return ScriptDirectory.from_config(cfg).get_current_head()
+
+
+_HEAD = _head_do_alembic()
 FIXTURES = RAIZ / "tests" / "fixtures"
 ZIP = FIXTURES / "garmin" / "exportacao_minima.zip"
 PASTA_FIT = FIXTURES / "garmin" / "esforcos"
@@ -137,7 +150,7 @@ def _ids_fit(ctx):
 # ---------------------------------------------------------------- 1. migracoes e importacao
 def test_1_migracoes_ate_a_0010(ctx):
     # a 0008 a 0010 (Meta 6, #140, #174 e #141) so acrescentam tabelas de saude e de carga; o fluxo da Meta 5 nao as usa
-    assert _sql(ctx, "select version_num from alembic_version") == [("0014",)]  # head (0014, recuperacao, #372); a 0011 a 0014 nao afetam o fluxo da Meta 5
+    assert _sql(ctx, "select version_num from alembic_version") == [(_HEAD,)]  # head lido do alembic; as migracoes 0011 em diante nao afetam o fluxo da Meta 5
     tabelas = {t for (t,) in _sql(ctx, "select name from sqlite_master where type='table'")}
     assert {"bloco_atividade", "rotulo_transicao", "limiar_atleta", "zona_fc_atleta", "carga_atividade"} <= tabelas
 

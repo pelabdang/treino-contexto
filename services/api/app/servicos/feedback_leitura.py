@@ -12,13 +12,15 @@ from dataclasses import dataclass
 from app.db.models import Atividade, CheckinTreino
 from app.explicacao.fatos_treino import VERSAO as VERSAO_FATOS
 from app.servicos.checkin import elegivel
-from app.servicos.feedback import _NAO_SEI, desatualizado, so_a_noite_mudou
+from app.servicos.feedback import _NAO_SEI, motivos_desatualizado
 
 MSG_SEM_CHECKIN = "Faça o check-in para ver o feedback."
 MSG_PRAZO_VENCIDO = "O prazo do check-in deste treino acabou, então ele fica sem feedback."
 MSG_PENDENTE = "O feedback deste treino ainda não foi gerado. Toque em Atualizar para ver se já está pronto."
 MSG_DESATUALIZADO = "Você editou o check-in. O feedback será refeito."
 MSG_DESATUALIZADO_NOITE = "Os dados da noite anterior foram atualizados. O feedback será refeito."  # #396: so a noite mudou
+MSG_DESATUALIZADO_CLIMA = "Os dados do clima foram atualizados. O feedback será refeito."  # #409: so o clima mudou
+MSG_DESATUALIZADO_NOITE_CLIMA = "Os dados da noite anterior e do clima foram atualizados. O feedback será refeito."
 MSG_INDISPONIVEL = "Ainda não foi possível gerar o feedback deste treino. Uma nova tentativa será feita mais tarde."
 MSG_SEM_PROVEDOR = "O feedback automático não está ligado neste app."
 
@@ -34,9 +36,10 @@ class FeedbackLido:
 
 
 def feedback_da_atividade(a: Atividade, checkin: CheckinTreino | None, checkin_aberto: bool,
-                          versao_fatos: str = VERSAO_FATOS, recuperacao_hoje=_NAO_SEI) -> FeedbackLido | None:
+                          versao_fatos: str = VERSAO_FATOS, recuperacao_hoje=_NAO_SEI, clima_hoje=_NAO_SEI) -> FeedbackLido | None:
     """`None` para atividade que nao pede check-in (`multiesporte_pai` e `troca`): o cartao nao aparece.
-    `recuperacao_hoje`: o `importado_em` da noite do treino hoje (ADR 0014, item 4b); omitido, a noite nao entra na conta."""
+    `recuperacao_hoje`: o `importado_em` da noite do treino hoje (ADR 0014, item 4b); omitido, a noite nao entra na conta.
+    `clima_hoje`: a assinatura do clima hoje (#409); omitido, o clima nao entra na conta."""
     if not elegivel(a):
         return None
     if checkin is None:
@@ -48,8 +51,17 @@ def feedback_da_atividade(a: Atividade, checkin: CheckinTreino | None, checkin_a
     if fb.estado == "sem_feedback":
         sem_provedor = fb.motivo == "provedor_nao_configurado"
         return FeedbackLido("indisponivel", mensagem=MSG_SEM_PROVEDOR if sem_provedor else MSG_INDISPONIVEL, motivo=fb.motivo)
-    if desatualizado(fb, checkin, versao_fatos, recuperacao_hoje):
-        # a frase do check-in vale sempre que o check-in (ou a versao do pacote) mudou; a da noite, so quando foi SO a noite (#396)
-        so_noite = so_a_noite_mudou(fb, checkin, versao_fatos, recuperacao_hoje)
-        return FeedbackLido("desatualizado", mensagem=MSG_DESATUALIZADO_NOITE if so_noite else MSG_DESATUALIZADO)
+    motivos = motivos_desatualizado(fb, checkin, versao_fatos, recuperacao_hoje, clima_hoje)
+    if motivos:
+        return FeedbackLido("desatualizado", mensagem=_mensagem_desatualizado(motivos))
     return FeedbackLido("pronto", texto=fb.texto, origem="teste" if fb.provedor == "falso" else "automatico")
+
+
+def _mensagem_desatualizado(motivos: frozenset[str]) -> str:
+    """A frase do check-in vale sempre que ele (ou a versao do pacote, ainda a #402) mudou (#396); senao, a dos dados que chegaram:
+    noite, clima ou os dois (#409)."""
+    if "checkin" in motivos or "versao" in motivos:
+        return MSG_DESATUALIZADO
+    if {"noite", "clima"} <= motivos:
+        return MSG_DESATUALIZADO_NOITE_CLIMA
+    return MSG_DESATUALIZADO_NOITE if "noite" in motivos else MSG_DESATUALIZADO_CLIMA

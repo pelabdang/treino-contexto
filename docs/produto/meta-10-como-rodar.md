@@ -2,7 +2,7 @@
 tipo: guia
 status: em-uso
 dono: nina
-atualizado: 2026-11-14
+atualizado: 2026-11-16
 links: [[produto/meta-9-como-rodar]], [[produto/meta-8-como-rodar]], [[produto/roadmap]], [[decisoes/0014-recuperacao-diaria]], [[decisoes/0013-feedback-automatico]], [[metricas/recuperacao]], [[metricas/recuperacao-oraculo]], [[metricas/fatos-treino]], [[metricas/fatos-treino-oraculo]], [[metricas/checagens-feedback]], [[modulos/banco]], [[modulos/worker]], [[modulos/api]], [[modulos/camada-llm]], [[modulos/ingestao-garmin]], [[diario/2026-11-13]], [[glossario]]
 ---
 # Meta 10: como rodar a recuperação da noite no feedback
@@ -128,6 +128,14 @@ e nada usou a rede. **Não rodado aqui:**
    barra o treino). O worker lê as noites do atleta **uma vez** por execução.
    **O que este passo não mostra:** o texto fixo do provedor falso não fala de sono, então o `GET` e o cartão não ganham uma linha de
    recuperação aqui. A linha da recuperação no texto só aparece com o provedor de verdade e o `feedback_prompt@5`, e hoje o texto com as três medidas reprova por tamanho (rodada da #376).
+   **O clima que chega depois também refaz o feedback** (#409, adendo 4 da ADR 0013, migração `0015`). As atividades sintéticas do guia não têm
+   posição, então o clima delas é `sem_posicao` e **nada entra na fila por clima** (é o esperado: indoor, sem posição e natação nunca desatualizam
+   por clima). Para ver o caso de verdade, ponha uma posição inventada numa atividade já com feedback (por exemplo a 18):
+   `update atividade set inicio_lat = -10, inicio_lon = -20 where id = 18`. O `GET` dela passa a `desatualizado` com
+   "Os dados do clima foram atualizados. O feedback será refeito." (o feedback foi gerado com `sem_posicao` e agora o clima é `pendente`).
+   Rodar o `worker.gerar_feedback` refaz só essa e soma 1 em `tentativas`; rodar de novo não faz chamada. Quando o `preencher_clima` grava o
+   clima (`pendente` para `ok`), acontece de novo uma vez. Feedback gerado **antes** da `0015` tem `clima_visto` vazio e **não** entra por clima:
+   para pôr o clima novo no texto dele, `--refazer`.
 8. **Sem dado, sem recuperação no texto.** As `checagens_feedback@6` barram o texto que fala de sono, VFC ou FC de repouso quando o bloco é
    `sem_dado` (a frase pronta só passa em `sem_dado` com `sem_noite`) e usam cinco códigos novos de motivo
    ([[metricas/checagens-feedback]]). Texto reprovado nunca é gravado. Rodar isso à mão exige o provedor de verdade, e hoje ele não fecha com a recuperação (a rodada e os ajustes propostos estão na seção da

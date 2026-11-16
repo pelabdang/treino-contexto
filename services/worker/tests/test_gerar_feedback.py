@@ -499,6 +499,19 @@ def test_refazer_que_falha_mantem_o_texto_pronto(fabrica, modo):
     assert (fb.estado, fb.texto, fb.tentativas) == ("pronto", "Texto bom.", 1)
 
 
+def test_refazer_que_falha_e_mantem_o_texto_antigo_preenche_o_clima_visto(fabrica):
+    at = _atleta(fabrica, 1)
+    _posicionar(fabrica)
+    _gerar(fabrica, at, _redator(falso=ProvedorFalso(texto="Texto bom."))[0])
+    with fabrica() as s:  # linha de antes da 0015
+        s.scalars(select(FeedbackTreino)).one().clima_visto = None
+        s.commit()
+    rel = _gerar(fabrica, at, _redator(falso=ProvedorFalso(modo="erro"))[0], refazer=True)
+    assert rel.mantidos == 1
+    (fb,) = _linhas(fabrica)
+    assert fb.texto == "Texto bom." and fb.tentativas == 1 and fb.clima_visto is not None
+
+
 def test_falha_em_checkin_editado_nao_mantem_o_texto_antigo(fabrica):
     at = _atleta(fabrica, 1)
     _gerar(fabrica, at, _redator(falso=ProvedorFalso(texto="Texto bom."))[0])
@@ -663,3 +676,120 @@ def test_apagar_a_recuperacao_apaga_o_feedback_que_a_usou(fabrica):
     assert _linhas(fabrica) == []
     _rodar(fabrica)  # gerado de novo, sem a recuperacao
     assert _linhas(fabrica)[0].recuperacao_importada_em is None
+
+
+# ---------- #409: o clima que chega depois deixa o feedback desatualizado (adendo 4 da ADR 0013) ----------
+
+def _posicionar(fabrica, **mudancas):
+    """Poe posicao (e o que mais vier em `mudancas`) nas atividades do banco."""
+    with fabrica() as s:
+        for a in s.scalars(select(Atividade)):
+            a.inicio_lat, a.inicio_lon = -10.0, -20.0
+            for k, v in mudancas.items():
+                setattr(a, k, v)
+        s.commit()
+
+
+def _clima(fabrica, estado, temperatura=21.0, consultado_em=AGORA):
+    """Grava (ou troca) a linha de clima da unica atividade, como o `preencher_clima` faz."""
+    from app.db.models import ClimaAtividade
+    from app.servicos.clima import entrada_de
+
+    with fabrica() as s:
+        a = s.scalars(select(Atividade)).one()
+        linha = s.scalars(select(ClimaAtividade)).first() or ClimaAtividade(atividade_id=a.id)
+        linha.entrada, linha.estado, linha.consultado_em, linha.tentativas = entrada_de(a), estado, consultado_em, 1
+        ok = estado == "ok"
+        linha.temperatura_c, linha.sensacao_c, linha.umidade_pct, linha.vento_kmh = (temperatura, 20.0, 60.0, 8.0) if ok else (None,) * 4
+        linha.fonte = "fonte-sintetica" if ok else None
+        s.add(linha)
+        s.commit()
+
+
+def test_clima_pendente_que_vira_ok_refaz_o_feedback_sem_refazer(fabrica):
+    _atleta(fabrica, 1)
+    _posicionar(fabrica)
+    assert _rodar(fabrica)[1].chamadas == 1  # gerado com o clima pendente (sem linha)
+    assert _linhas(fabrica)[0].clima_visto is not None
+    assert _rodar(fabrica)[1].chamadas == 0
+    _clima(fabrica, "ok")  # o preencher_clima gravou
+    codigo, falso = _rodar(fabrica)
+    assert codigo == 0 and falso.chamadas == 1 and _linhas(fabrica)[0].tentativas == 2
+    assert _rodar(fabrica)[1].chamadas == 0  # em dia de novo
+
+
+def test_clima_que_nao_mudou_nao_entra_na_fila(fabrica):
+    _atleta(fabrica, 1)
+    _posicionar(fabrica)
+    _clima(fabrica, "pendente")
+    _rodar(fabrica)
+    _clima(fabrica, "pendente", consultado_em=AGORA + timedelta(days=1))  # outra rodada, ainda pendente
+    assert _rodar(fabrica)[1].chamadas == 0
+    _clima(fabrica, "ok")
+    assert _rodar(fabrica)[1].chamadas == 1
+    _clima(fabrica, "ok", consultado_em=AGORA + timedelta(days=2))  # mesmos valores, outra data de consulta
+    assert _rodar(fabrica)[1].chamadas == 0
+    _clima(fabrica, "ok", temperatura=25.0)  # valor novo
+    assert _rodar(fabrica)[1].chamadas == 1
+
+
+def test_pendente_que_vira_falha_tambem_refaz(fabrica):
+    _atleta(fabrica, 1)
+    _posicionar(fabrica)
+    _rodar(fabrica)
+    _clima(fabrica, "falha")  # o texto dizia "pendente"; agora o estado e outro
+    assert _rodar(fabrica)[1].chamadas == 1
+
+
+def test_indoor_nao_entra_na_fila(fabrica):
+    _atleta(fabrica, 1)
+    _posicionar(fabrica, subtipo="esteira")
+    _rodar(fabrica)
+    _clima(fabrica, "ok")  # mesmo uma linha solta nao muda nada
+    assert _rodar(fabrica)[1].chamadas == 0
+
+
+def test_sem_posicao_nao_entra_na_fila(fabrica):
+    from app.db.models import ClimaAtividade
+
+    _atleta(fabrica, 1)  # sem posicao
+    _rodar(fabrica)
+    with fabrica() as s:  # uma linha solta, de outra entrada
+        s.add(ClimaAtividade(atividade_id=s.scalars(select(Atividade.id)).one(), entrada="x", estado="ok", temperatura_c=20.0, tentativas=1))
+        s.commit()
+    assert _rodar(fabrica)[1].chamadas == 0
+
+
+def test_natacao_nao_tem_bloco_de_clima_e_nao_entra_na_fila(fabrica):
+    _atleta(fabrica, 1)
+    _posicionar(fabrica, modalidade="natacao")
+    _rodar(fabrica)
+    _clima(fabrica, "ok")
+    assert _rodar(fabrica)[1].chamadas == 0
+
+
+def test_linha_anterior_a_migracao_nao_entra_na_fila_e_o_refazer_a_atualiza(fabrica):
+    from app.db.models import ClimaAtividade
+    from app.servicos.clima import entrada_de
+
+    _atleta(fabrica, 2)
+    _posicionar(fabrica)
+    _rodar(fabrica)
+    with fabrica() as s:  # como ficaram as linhas de antes da 0015
+        for fb in s.scalars(select(FeedbackTreino)):
+            fb.clima_visto = None
+        a = s.scalars(select(Atividade)).first()  # o clima de uma das atividades chega
+        s.add(ClimaAtividade(atividade_id=a.id, entrada=entrada_de(a), estado="ok", temperatura_c=20.0, tentativas=1))
+        s.commit()
+    assert _rodar(fabrica)[1].chamadas == 0  # NULL nao compara: nenhuma entra
+    assert _rodar(fabrica, args=["--refazer"])[1].chamadas == 2
+    assert all(fb.clima_visto is not None for fb in _linhas(fabrica))
+
+
+def test_clima_visto_e_so_uma_impressao_sem_valor_de_clima(fabrica):
+    _atleta(fabrica, 1)
+    _posicionar(fabrica)
+    _clima(fabrica, "ok", temperatura=21.0)
+    _rodar(fabrica)
+    visto = _linhas(fabrica)[0].clima_visto
+    assert len(visto) == 64 and "21" not in visto and "ok" not in visto

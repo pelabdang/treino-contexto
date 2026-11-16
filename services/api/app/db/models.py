@@ -553,6 +553,8 @@ class FeedbackTreino(Base):
     checkin_atualizado_em: Mapped[datetime] = mapped_column(DateTime(timezone=True))
     # ADR 0014, item 1: copia do `importado_em` da noite usada no pacote; NULL = o pacote saiu sem noite
     recuperacao_importada_em: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    # #409 (adendo 4 da ADR 0013): impressao (SHA-256) do clima que o pacote viu; NULL = linha anterior a migracao 0015 (nao compara)
+    clima_visto: Mapped[str | None] = mapped_column(String(64))
     tentado_em: Mapped[datetime] = mapped_column(DateTime(timezone=True))
 
     checkin: Mapped[CheckinTreino] = relationship(back_populates="feedback")

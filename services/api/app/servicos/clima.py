@@ -71,6 +71,18 @@ def estado_clima(a: Atividade, linha: ClimaAtividade | None) -> ClimaDaAtividade
     return ClimaDaAtividade(linha.estado)  # type: ignore[arg-type]
 
 
+def assinatura_clima(a: Atividade, linha: ClimaAtividade | None) -> str:
+    """Impressao do clima que o pacote do feedback ve (#409): SHA-256 do estado e dos valores (so em `ok`); natacao nao tem bloco
+    de clima no pacote. Muda quando o pacote mudaria: `pendente` -> `ok`, valores novos. Outra tentativa que segue `pendente`
+    ou `falha`, `indoor` e `sem_posicao` nao mudam a assinatura, entao nao desatualizam o feedback."""
+    if a.modalidade == "natacao":
+        texto = "sem_clima"
+    else:
+        c = estado_clima(a, linha)
+        texto = f"{c.estado}|{c.temperatura_c}|{c.sensacao_c}|{c.umidade_pct}|{c.vento_kmh}"
+    return hashlib.sha256(texto.encode()).hexdigest()
+
+
 def clima_da_atividade(session: Session, atividade_id: int) -> ClimaDaAtividade | None:
     """O clima da atividade (para a API). `None` se a atividade nao existe."""
     a = session.get(Atividade, atividade_id)
