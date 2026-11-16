@@ -33,8 +33,18 @@ export function FolhaTipo({ visivel, subtitulo, sugerido, escolhido, aoEscolher,
   const styles = useMemo(() => criarEstilos(tema, computador), [tema, computador]);
   return (
     <Modal visible={visivel} transparent animationType="none" onRequestClose={aoFechar} accessibilityViewIsModal>
-      <Pressable testID="fundo-folha" accessibilityLabel="Fechar" onPress={aoFechar} style={styles.fundo}>
-        <Pressable role="dialog" aria-modal aria-label="Tipo do treino" accessible={false} onPress={() => {}} style={styles.folha}>
+      <View style={styles.fundo}>
+        {/* O fundo só fecha com toque: fora da ordem de foco e da árvore de acessibilidade (Esc e o botão "Fechar" fecham pelo teclado e pelo leitor). */}
+        <Pressable
+          testID="fundo-folha"
+          accessible={false}
+          focusable={false}
+          importantForAccessibility="no"
+          aria-hidden
+          onPress={aoFechar}
+          style={StyleSheet.absoluteFill}
+        />
+        <View role="dialog" aria-modal aria-label="Tipo do treino" style={styles.folha}>
           <View style={styles.topo}>
             <Text ref={titulo} {...FOCAVEL} accessibilityRole="header" style={styles.titulo}>
               Tipo do treino
@@ -65,8 +75,8 @@ export function FolhaTipo({ visivel, subtitulo, sugerido, escolhido, aoEscolher,
               );
             })}
           </View>
-        </Pressable>
-      </Pressable>
+        </View>
+      </View>
     </Modal>
   );
 }

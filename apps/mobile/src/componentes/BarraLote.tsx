@@ -17,17 +17,19 @@ type Props = {
   aoSalvar: () => void;
   /** "Atualizar" do erro: atualiza a lista e limpa a seleção. */
   aoAtualizar: () => void;
+  /** Altura medida da barra (`onLayout`), para a lista reservar o espaço certo no fim. */
+  aoMedir?: (altura: number) => void;
 };
 
 export const textoSelecionados = (n: number, c: number) => `${n} ${n === 1 ? "selecionado" : "selecionados"} · ${c} ${c === 1 ? "corrigido" : "corrigidos"}`;
 export const textoSalvar = (n: number) => `Salvar ${n} ${n === 1 ? "tipo" : "tipos"}`;
 
-export function BarraLote({ selecionados, corrigidos, salvando, erro, aoLimpar, aoSalvar, aoAtualizar }: Props) {
+export function BarraLote({ selecionados, corrigidos, salvando, erro, aoLimpar, aoSalvar, aoAtualizar, aoMedir }: Props) {
   const tema = useTema();
   const margem = useMargemTela();
   const styles = useMemo(() => criarEstilos(tema, margem), [tema, margem]);
   return (
-    <View role="region" aria-label="Ações do lote" testID="barra-lote" style={styles.barra}>
+    <View role="region" aria-label="Ações do lote" testID="barra-lote" style={styles.barra} onLayout={(e) => aoMedir?.(e.nativeEvent.layout.height)}>
       <View style={styles.miolo}>
         {erro && (
           <View testID="erro-lote" accessibilityRole="alert" style={styles.erro}>

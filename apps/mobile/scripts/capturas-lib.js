@@ -20,9 +20,9 @@ const ROTAS = [
   { nome: "caixa-do-dia-sem-motivo", caminho: "/caixa-do-dia", simular: "sem-motivo" },
   { nome: "caixa-do-dia-erro-rede", caminho: "/caixa-do-dia", simular: "rede" },
   { nome: "caixa-do-dia-404", caminho: "/caixa-do-dia", simular: "404" },
-  // Lote (#427): `teclar` aperta teclas (anel de foco por teclado); as demais abrem a folha, selecionam e salvam.
+  // Lote (#427): `rolarAoFim` rola a lista até o fim (o último cartão tem de caber inteiro acima da barra); `teclar` aperta teclas (anel de foco por teclado); as demais abrem a folha, selecionam e salvam.
   { nome: "caixa-do-dia-foco", caminho: "/caixa-do-dia", teclar: ["Tab", "Tab"] },
-  { nome: "caixa-do-dia-selecao", caminho: "/caixa-do-dia", clicar: ["selecionar-511", "mudar-tipo-512", "tipo-longo"] },
+  { nome: "caixa-do-dia-selecao", caminho: "/caixa-do-dia", clicar: ["selecionar-511", "mudar-tipo-512", "tipo-longo"], rolarAoFim: true },
   { nome: "caixa-do-dia-folha", caminho: "/caixa-do-dia", clicar: ["selecionar-511", "mudar-tipo-512"] },
   { nome: "caixa-do-dia-salvando", caminho: "/caixa-do-dia", simular: "salvando", clicar: ["selecionar-511", "selecionar-512", "salvar-lote"] },
   { nome: "caixa-do-dia-lote-erro", caminho: "/caixa-do-dia", simular: "lote-erro", clicar: ["selecionar-511", "selecionar-512", "salvar-lote"] },

@@ -59,6 +59,9 @@ describe("rotas da caixa do dia (#426)", () => {
       "caixa-do-dia-escuro-390-alto.png",
     ]);
   });
+  it("a captura -selecao rola a lista até o fim", () => {
+    expect(caixa.find((r: any) => r.nome === "caixa-do-dia-selecao").rolarAoFim).toBe(true);
+  });
   it("toda simulação pedida existe", () => {
     for (const r of caixa) if (r.simular) expect(SIMULACOES[r.simular]).toBeDefined();
   });

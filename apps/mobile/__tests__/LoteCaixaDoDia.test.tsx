@@ -130,7 +130,7 @@ describe("lote: folha de tipo", () => {
   it("'Fechar' fecha sem mudar nada", async () => {
     await aberta(api(ok({})));
     await fireEvent.press(screen.getByTestId("mudar-tipo-511"));
-    await fireEvent.press(screen.getAllByLabelText("Fechar")[1]);
+    await fireEvent.press(screen.getByLabelText("Fechar"));
     expect(screen.queryByText("Tipo do treino")).toBeNull();
     expect(screen.queryByTestId("barra-lote")).toBeNull();
   });
