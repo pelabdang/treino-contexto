@@ -26,6 +26,19 @@ from sqlalchemy import create_engine, text
 from sqlalchemy.orm import Session
 
 RAIZ = Path(__file__).resolve().parents[1]
+
+
+def _head_do_alembic() -> str:
+    """O head das migracoes lido do alembic: o teste nao quebra a cada migracao nova."""
+    from alembic.config import Config
+    from alembic.script import ScriptDirectory
+
+    cfg = Config(str(RAIZ / "services" / "api" / "alembic.ini"))
+    cfg.set_main_option("script_location", str(RAIZ / "services" / "api" / "alembic"))
+    return ScriptDirectory.from_config(cfg).get_current_head()
+
+
+_HEAD = _head_do_alembic()
 PASTA = RAIZ / "tests" / "fixtures" / "meta7"
 FIT = RAIZ / "tests" / "fixtures" / "garmin" / "esforcos"
 API = RAIZ / "services" / "api"
@@ -259,7 +272,7 @@ def _esperado_do_oraculo(f):
 # ---------------------------------------------------------------- migracao e carga
 
 def test_01_migracao_0011_cria_as_tabelas_e_as_colunas(ctx):
-    assert _sql(ctx, "select version_num from alembic_version") == [("0014",)]  # head: a 0014 (recuperacao_dia, #372) so acrescenta tabela e coluna
+    assert _sql(ctx, "select version_num from alembic_version") == [(_HEAD,)]  # head lido do alembic
     tabelas = {t for (t,) in _sql(ctx, "select name from sqlite_master where type = 'table'")}
     assert {"semana_padrao", "semana_padrao_item"} <= tabelas
     colunas = {c[1] for c in _sql(ctx, "pragma table_info(atividade)")}

@@ -30,6 +30,19 @@ from sqlalchemy import create_engine, text
 from sqlalchemy.orm import Session, sessionmaker
 
 RAIZ = Path(__file__).resolve().parents[1]
+
+
+def _head_do_alembic() -> str:
+    """O head das migracoes lido do alembic: o teste nao quebra a cada migracao nova."""
+    from alembic.config import Config
+    from alembic.script import ScriptDirectory
+
+    cfg = Config(str(RAIZ / "services" / "api" / "alembic.ini"))
+    cfg.set_main_option("script_location", str(RAIZ / "services" / "api" / "alembic"))
+    return ScriptDirectory.from_config(cfg).get_current_head()
+
+
+_HEAD = _head_do_alembic()
 PASTA8 = RAIZ / "tests" / "fixtures" / "meta8"
 PASTA9 = RAIZ / "tests" / "fixtures" / "meta9"
 API = RAIZ / "services" / "api"
@@ -255,7 +268,7 @@ def _worker(ctx, modulo, *args, env_extra=None, esperado=0):
 
 def test_01_migracao_0013_cria_feedback_treino_um_por_checkin(ctx):
     """Item: feedback guardado no banco, um por check-in (ADR 0013, item 2)."""
-    assert _sql(ctx, "select version_num from alembic_version") == [("0014",)]
+    assert _sql(ctx, "select version_num from alembic_version") == [(_HEAD,)]
     colunas = {c[1] for c in _sql(ctx, "pragma table_info(feedback_treino)")}
     assert {"checkin_id", "estado", "motivo", "texto", "provedor", "modelo", "versao_fatos", "versao_prompt", "versao_checagens"} <= colunas
     unicos = [r for r in _sql(ctx, "pragma index_list(feedback_treino)") if r[2]]

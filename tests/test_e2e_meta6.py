@@ -28,6 +28,19 @@ from sqlalchemy import create_engine, text
 from sqlalchemy.orm import Session
 
 RAIZ = Path(__file__).resolve().parents[1]
+
+
+def _head_do_alembic() -> str:
+    """O head das migracoes lido do alembic: o teste nao quebra a cada migracao nova."""
+    from alembic.config import Config
+    from alembic.script import ScriptDirectory
+
+    cfg = Config(str(RAIZ / "services" / "api" / "alembic.ini"))
+    cfg.set_main_option("script_location", str(RAIZ / "services" / "api" / "alembic"))
+    return ScriptDirectory.from_config(cfg).get_current_head()
+
+
+_HEAD = _head_do_alembic()
 FIXTURES = RAIZ / "tests" / "fixtures"
 ZIP = FIXTURES / "garmin" / "carga" / "exportacao_carga.zip"
 ZIP_SEM_SAUDE = FIXTURES / "garmin" / "carga" / "exportacao_carga_sem_saude.zip"
@@ -206,7 +219,7 @@ def _perto(a, b):
 
 # ---------------------------------------------------------------- 1. migracoes e importacao com saude
 def test_1_migracoes_ate_a_0010(ctx):
-    assert _sql(ctx, "select version_num from alembic_version") == [("0014",)]  # head (0014, recuperacao, #372); a 0011 a 0014 nao afetam o fluxo da Meta 6
+    assert _sql(ctx, "select version_num from alembic_version") == [(_HEAD,)]  # head lido do alembic; as migracoes 0011 em diante nao afetam o fluxo da Meta 6
     tabelas = {t for (t,) in _sql(ctx, "select name from sqlite_master where type = 'table'")}
     assert {"limiar_atleta", "zona_fc_atleta", "recorde_pessoal", "carga_garmin_dia", "carga_atividade"} <= tabelas
 

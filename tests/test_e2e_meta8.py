@@ -27,6 +27,19 @@ from sqlalchemy import create_engine, text
 from sqlalchemy.orm import Session
 
 RAIZ = Path(__file__).resolve().parents[1]
+
+
+def _head_do_alembic() -> str:
+    """O head das migracoes lido do alembic: o teste nao quebra a cada migracao nova."""
+    from alembic.config import Config
+    from alembic.script import ScriptDirectory
+
+    cfg = Config(str(RAIZ / "services" / "api" / "alembic.ini"))
+    cfg.set_main_option("script_location", str(RAIZ / "services" / "api" / "alembic"))
+    return ScriptDirectory.from_config(cfg).get_current_head()
+
+
+_HEAD = _head_do_alembic()
 PASTA = RAIZ / "tests" / "fixtures" / "meta8"
 API = RAIZ / "services" / "api"
 MARCADOR = "MARCADOR-SINTETICO-123"
@@ -230,7 +243,7 @@ def _worker(ctx, *args, esperado=0):
 # ---------------------------------------------------------------- migração e carga (passos 2 e 3)
 
 def test_01_migracao_0012_cria_checkin_treino_um_por_atividade(ctx):
-    assert _sql(ctx, "select version_num from alembic_version") == [("0014",)]
+    assert _sql(ctx, "select version_num from alembic_version") == [(_HEAD,)]
     colunas = {c[1] for c in _sql(ctx, "pragma table_info(checkin_treino)")}
     assert {"atividade_id", "pse", "sensacao", "nada_a_relatar", "texto", "versao", "registrado_em", "atualizado_em",
             "dor", "cansaco", "sono_ruim", "calor", "trabalho_estresse"} <= colunas
