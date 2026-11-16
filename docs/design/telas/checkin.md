@@ -159,16 +159,19 @@ fica logo abaixo do check-in.
 │ │ Semana puxada no trabalho.   │  campo de texto, 3 linhas
 │ └──────────────────────────────┘
 │                        26 de 500   fonte.legenda
+│ Toque em Salvar check-in para guardar.   dica, 2 linhas fixas (36)
 │ [        Salvar check-in       ]   primário, 48
 │ [        Nada a relatar        ]   secundário, 48
-│ "Nada a relatar" salva na hora.
+│ "Nada a relatar" salva na hora.   (sem atalho nem texto; com algum marcado, abre o diálogo de descartar)
 ```
 - **Atalhos** (chips tocáveis, altura 48, vários ao mesmo tempo): "Dor", "Cansaço", "Sono ruim", "Calor", "Trabalho ou
   estresse". Marcado: fundo `cor.destaque-suave`, contorno 2 e `check` (nunca só cor). Desmarcado: contorno 1 em `cor.borda-forte`.
 - **Texto livre**: campo multilinha de 3 linhas, `maxLength` 500, rótulo "Quer acrescentar algo? (opcional)", contador
   "N de 500" em `fonte.legenda`. Sem preenchimento automático (`autoComplete="off"` na web). Acima de 450, o contador passa a `cor.alerta` com ícone `warning-amber`.
 - **"Salvar check-in"** (primário, único primário): desligado até haver **um atalho ou texto**; o motivo vem em texto:
-  "Marque um atalho, escreva algo ou toque em Nada a relatar."
+  "Marque um atalho, escreva algo ou toque em Nada a relatar." A dica fica **sempre** num contêiner de **2 linhas de altura
+  fixa (36 px)** e só troca o texto: com atalho ou texto, vira "Toque em Salvar check-in para guardar." Assim o Salvar e o
+  "Nada a relatar" não mudam de lugar ao marcar um atalho (#382, aprovado pela Lia).
 - **"Nada a relatar"** (secundário): salva na hora com `nada_a_relatar: true`, sem atalhos e sem texto. Se houver
   atalho marcado ou texto escrito, o toque abre o diálogo "Descartar o que você marcou?" ("Nada a relatar apaga os
   atalhos e o texto desta pergunta." botões "Cancelar" e "Nada a relatar"), para não apagar texto sem querer.
@@ -323,7 +326,7 @@ navegador): o check-in é dado de saúde ([[decisoes/0012-check-in-pos-treino]],
 ## Textos (resumo)
 Perguntas: "Qual foi o esforço do treino?", "Como você se sentiu no treino?", "Quer registrar mais alguma coisa?".
 Apoios: "0 é repouso e 10 é o máximo. É a sua percepção.", "A PSE é só sua: não se compara com a de outros atletas.",
-"Toque no que combina. Pode marcar mais de um.", "Nada a relatar salva na hora.".
+"Toque no que combina. Pode marcar mais de um.", "Nada a relatar salva na hora.", "Toque em Salvar check-in para guardar.".
 Botões: "Fazer check-in", "Editar", "Apagar check-in", "Salvar check-in", "Salvar alterações", "Nada a relatar", "Voltar".
 Cartão: "Check-in", "Carga pela PSE" (UA, nunca "pontos").
 
