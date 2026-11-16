@@ -2,7 +2,7 @@
 tipo: decisao
 status: em-uso
 dono: theo
-atualizado: 2026-11-14
+atualizado: 2026-11-16
 links: [[decisoes/0013-feedback-automatico]], [[modulos/api]], [[modulos/grafico-tiros]], [[modulos/mobile]], [[modulos/worker]], [[metricas/tiros-1km]], [[decisoes/0002-segmento-intensidade-e-versao]], [[decisoes/0003-fuso-da-atividade]], [[decisoes/0005-serie-de-tiros-o-que-entra]], [[decisoes/0006-upload-de-fit]], [[decisoes/0007-clima-da-atividade]], [[produto/roadmap]], [[design/telas/treino]], [[decisoes/0009-treino-de-transicao]]
 ---
 # ADR: 0004 Contrato da tela de evolução dos tiros (Meta 2)
@@ -253,7 +253,7 @@ treino ainda não foi gerado. Toque em Atualizar para ver se já está pronto.";
 gravado), o provedor, o modelo nem as versões; só o `GET` da própria atividade traz o campo (nunca lista; outro atleta recebe `404`). Dado de saúde derivado do
 check-in. Tipos no cliente: `FeedbackTreino` e `EstadoFeedback`. Detalhes em [[modulos/api]].
 
-## Adendo 11 (2026-11-18): caixa do dia do professor e `PUT` do tipo em lote (#424, #425)
+## Adendo 11 (2026-11-16): caixa do dia do professor e `PUT` do tipo em lote (#424, #425)
 **Status: aceito (Theo, [[decisoes/0015-caixa-do-dia-do-professor]]).** Duas rotas novas, sem mudar nenhuma existente (a API formata, o app mostra; adendo 2). Ambas entram por `/professores/{professor_id}` e respondem `404` com `type` `professor_inexistente` (mesmo corpo para id sem linha, id diferente do configurado e `PROFESSOR_ID` vazio).
 - **`GET /professores/{professor_id}/caixa-do-dia`** (`buscarCaixaDoDia`, `Cache-Control: no-store`): `versao` (`atencao@1`), `hoje` (`AAAA-MM-DD`, `America/Sao_Paulo`), `janela_atencao_dias` (7), `janela_novos_dias` (14), `alunos[]` (ordem da API: `atleta_id`, `nome`, `sem_motivo`, `texto_sem_motivo`, `treinos[]` só com motivo, do mais recente ao mais antigo, cada um com `atividade_id`, `modalidade`, `data_local`, `hora_local`, `duracao_texto`, `motivos[]` `{codigo, texto}` e `detalhe`) e `novos[]` (mais recente primeiro: os mesmos campos do treino mais `atleta_id`, `atleta_nome`, `tipo_sugerido`, `tipo_sugerido_texto`, `origem_texto`). `detalhe`: `tipo_texto` e `tipo_origem_texto` (nulos sem tipo), `tipo_confirmado`, `checkin` (`null` sem check-in; `pse_texto`, `sensacao`, `sensacao_texto`, `atalhos[]`, `nada_a_relatar`, `observacao`) e `feedback` (os estados do adendo 10). A `observacao` só existe em `detalhe.checkin.observacao`.
 - **`PUT /professores/{professor_id}/tipos-de-treino`**: corpo lista de `{atividade_id, tipo_treino?}` (1 a 200); resposta `{confirmados, corrigidos}`; erros `404 atividade_nao_encontrada`, `422 atividade_sem_tipo` e `422` de validação.
