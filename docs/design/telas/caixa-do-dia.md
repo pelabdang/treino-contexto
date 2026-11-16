@@ -123,7 +123,7 @@ da Meta 2, por exemplo `EXPO_PUBLIC_PROFESSOR_ID`; o nome fica com o Rafa). Sem 
 
 Por que assim: a lista serve para decidir onde olhar e precisa caber em poucas telas; o dado de saúde (PSE,
 sensação, atalho, observação) fica atrás de um toque, **uma exposição intencional por treino**, e não numa tela
-aberta numa mesa de assessoria. Se o ensaio mostrar que o professor sempre abre, reabrimos a pergunta (pergunta 1).
+aberta numa mesa de assessoria. Se o ensaio mostrar que o professor sempre abre, reabrimos a decisão 1 (ver "Perguntas de produto").
 
 ## Layout
 
@@ -290,7 +290,7 @@ Bloco de detalhe (`cor.superficie-2`, `raio.medio`, padding `espaco.3`; rótulo 
   (nem no título do cartão, nem no anúncio de acessibilidade do lote).
 - O professor **não vê** recuperação (sono, VFC, FC de repouso), clima, posição, carga numérica, arquivo FIT, semana-padrão
   do aluno nem recordes (ADR 0015, item 7). O feedback pode citar recuperação **em frase**; isso vem do texto aprovado e a
-  tela não separa nada (pergunta 5 da ADR, do Angelo).
+  tela não separa nada (pergunta 5 da ADR 0015, do Angelo).
 - Quando o treino tem motivo `divergencia` ou está em "Treinos novos", o detalhe ganha, no fim, o botão de texto "Confirmar ou
   corrigir em Treinos novos" (`chevron-right`, alvo 44). Ele rola até a linha do treino e leva o foco a ela. É só atalho de
   navegação: a ação em si fica **num lugar só**, em "Treinos novos".
@@ -307,7 +307,7 @@ Cada linha de "Treinos novos" tem um **estado local** (só na tela, nada guardad
 
 - Escolher outro tipo na folha **seleciona a linha sozinha** (quem corrige quer salvar). "Voltar à sugestão" tira a correção
   e **mantém a linha selecionada**; a caixa desmarca com um toque.
-- **Nenhuma linha vem selecionada** ao abrir (pergunta 2). "Selecionar todos (N)" marca todas, **no máximo 200**; com mais de
+- **Nenhuma linha vem selecionada** ao abrir (decisão 2). "Selecionar todos (N)" marca todas, **no máximo 200**; com mais de
   200 novos, marca os 200 primeiros da lista e mostra o aviso "Foram selecionados os 200 primeiros. Salve e selecione os próximos."
 - A **barra de lote** diz o que vai acontecer **antes** de salvar: "2 selecionados · 1 corrigido" (o número de confirmados é o
   resto). Botão "Salvar 2 tipos" (1: "Salvar 1 tipo"). Só aparece com seleção.
@@ -318,7 +318,7 @@ Cada linha de "Treinos novos" tem um **estado local** (só na tela, nada guardad
   se perde são poucos toques).
 - **Depois de salvar, não há desfazer** ([[decisoes/0015-caixa-do-dia-do-professor]], itens 6 e 7 de "A confirmar": a correção não
   é desfeita; sem "voltar ao automático"). A tela diz isso **antes**, em texto fixo sob a barra: "Depois de salvar, para mudar de novo
-  é só corrigir o tipo outra vez." (com a pergunta 4, sem diálogo de confirmação).
+  é só corrigir o tipo outra vez." (decisão 4: sem diálogo de confirmação).
 
 ### Salvar
 1. Toque em "Salvar N tipos": a barra vira "Salvando..." com indicador; botões e linhas ficam desligados; **nada some** da tela.
@@ -525,34 +525,19 @@ novos, erro de rede, erro `404`, lote salvo, lote com erro. As capturas ficam em
 | o tipo do treino só muda pela semana-padrão e pela regra | confirmar e corrigir em lote | #425 (API), #427 (tela) |
 | ícones de motivo e de seleção | `healing`, `show-chart`, `schedule`, `check-box`, `check-box-outline-blank`, `expand-more`, `expand-less` e `group` em [[design/tokens]] | #426 e #427 |
 
-## Perguntas de produto
-Todas com recomendação e **padrão assumido** na spec; se o Theo ou o Angelo decidirem diferente, só a seção citada muda.
+## Decisões de produto
+As sete perguntas desta spec foram respondidas em 16/11 e **todas seguiram a recomendação**. O Angelo respondeu "ok para as 4"
+(perguntas 2, 4, 5 e 7); o Theo decidiu as perguntas 1, 3 e 6 (comentário no PR #437). O corpo da nota já está de acordo.
 
-1. **Detalhe do treino: dentro da lista ou numa tela própria?** (decisão 7 pede só "onde")
-   *Recomendação:* **dentro da lista** (acordeão), fechado por padrão. Mantém a lista curta, não cria rota com id de treino de outra
-   pessoa e não deixa a observação em endereço. *Alternativa:* rota `/caixa-do-dia/treino/<id>`, melhor para link e voltar, pior para
-   comparar dois treinos e mais endereço com dado de saúde por trás. *Theo.*
-2. **Nenhum treino novo vem selecionado.** Quem quer confirmar tudo toca "Selecionar todos (N)" e "Salvar".
-   *Recomendação:* **nenhum selecionado** (confirmar é ação sobre dado de outro; um toque a mais evita confirmar sem olhar).
-   *Alternativa:* todos selecionados ao abrir, "Salvar" de um toque (mais rápido, mais risco de confirmar sem ler). *Angelo.*
-3. **Ordem dos treinos novos.** A ADR não define.
-   *Recomendação:* **mais recente primeiro** (data local, depois início), com o nome do aluno em cada linha. É a ordem que o professor
-   lê ("o que entrou hoje"). *Alternativa:* agrupar por aluno, na ordem da lista de atenção (mais fácil de olhar um aluno, mistura
-   duas ordens). Quem ordena é a **API** (#424), o app não reordena. *Theo e Duda.*
-4. **Salvar sem diálogo de confirmação.** A barra diz "N selecionados · N corrigido" antes, e corrigir de novo desfaz depois.
-   *Recomendação:* **sem diálogo** (menos um toque num fluxo que o professor repete todo dia; o texto da barra já diz o que
-   vai acontecer; a correção não tem custo). *Alternativa:* diálogo "Salvar 12 tipos?" só quando o lote tiver mais de 10 linhas
-   ou mais de uma correção. *Angelo.*
-5. **O professor só abre treino com motivo ou novo.** Treino da janela já confirmado e **sem** motivo não aparece (abrir o histórico
-   do aluno é a "ficha completa", fora da Meta 11). Isso significa que o professor não vê o PSE de um treino normal da semana de um
-   aluno qualquer. *Recomendação:* **aceitar** na Meta 11 e medir no ensaio com professor se faz falta. *Alternativa:* um "Ver
-   treinos da semana" por aluno (mais tela, mais dado de saúde exposto). *Angelo.*
-6. **Computador: uma coluna de 720 ou duas colunas.** *Recomendação:* **uma coluna de 720** (token que já existe; as duas seções
-   são leitura em sequência e a barra de lote funciona igual). *Alternativa:* duas colunas a partir de 1100 (atenção à esquerda, novos
-   à direita), que pede um tamanho novo no guia. *Theo.*
-7. **O texto "Só você vê. Não vai ao provedor de IA." sob a observação.** Diz o que a ADR garante, em linguagem do professor.
-   *Recomendação:* **manter**, com o texto aprovado pelo Angelo/Theo (a consulta de LGPD pode pedir outro); troca por texto do termo
-   quando ele existir. *Alternativa:* só "Só você vê.", que não se compromete com o que o sistema faz com o texto. *Angelo.*
+| # | pergunta | decisão | quem |
+|---|---|---|---|
+| 1 | Onde abre o detalhe do treino | **Dentro da lista** (acordeão), fechado por padrão; sem rota com id de treino | Theo |
+| 2 | Seleção inicial dos treinos novos | **Nenhum selecionado**; "Selecionar todos (N)" marca (máx. 200) | Angelo |
+| 3 | Ordem dos treinos novos | **Mais recente primeiro** (data local, depois início), nome do aluno em cada linha; quem ordena é a API (#424) | Theo |
+| 4 | Diálogo ao salvar o lote | **Sem diálogo**: a barra diz "N selecionados · N corrigido" antes; corrigir de novo desfaz depois | Angelo |
+| 5 | Treino sem motivo e já confirmado não aparece | **Aceito** na Meta 11 (ficha completa fora); medir no ensaio com professor se faz falta | Angelo |
+| 6 | Computador | **Uma coluna de 720** (`largura.conteudo-max`); duas colunas só se o ensaio pedir | Theo |
+| 7 | Frase sob a observação | **Mantida**: "Só você vê. Não vai ao provedor de IA."; troca pelo texto do termo quando ele existir (consulta de LGPD) | Angelo |
 
 ## Referências ao contrato para quem implementa
 - Nada de motivo, janela, ordem ou "novo" calculado no app. Tudo vem pronto no `GET` (#424).
