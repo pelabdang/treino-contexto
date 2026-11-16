@@ -52,7 +52,7 @@ describe("folha de tipo", () => {
     await aberta(api());
     await fireEvent.press(screen.getByTestId("mudar-tipo-511"));
     await waitFor(() => expect(foco.focar).toHaveBeenCalled());
-    await fireEvent.press(screen.getAllByLabelText("Fechar")[1]);
+    await fireEvent.press(screen.getByLabelText("Fechar"));
     expect(screen.queryByText("Tipo do treino")).toBeNull();
   });
 });

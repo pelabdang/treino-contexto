@@ -154,6 +154,13 @@ async function principal() {
     await pagina.goto(base + rota.caminho, { waitUntil: "networkidle" });
     await pagina.evaluate(() => document.fonts.ready);
     for (const id of rota.clicar ?? []) await pagina.getByTestId(id).click();
+    if (rota.rolarAoFim) {
+      // A rolagem é de um elemento da tela, não da página: leva o que mais rola até o fim.
+      await pagina.evaluate(() => {
+        const rola = [...document.querySelectorAll("*")].sort((x, y) => y.scrollHeight - x.scrollHeight)[0];
+        rola.scrollTop = rola.scrollHeight;
+      });
+    }
     for (const tecla of rota.teclar ?? []) await pagina.keyboard.press(tecla);
     await pagina.waitForTimeout(300);
     if (tamanho.alto) {

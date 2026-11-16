@@ -95,6 +95,8 @@ export function TelaCaixaDoDia({ apiUrl, professorId, fetchFn }: Props) {
   const [sucesso, setSucesso] = useState<string | null>(null);
   const [folha, setFolha] = useState<number | null>(null);
   const [anuncio, setAnuncio] = useState("");
+  // Altura medida da barra de lote: o fim da lista reserva essa altura mais `espaco.4` (muda com o aviso de erro aberto).
+  const [alturaBarra, setAlturaBarra] = useState(0);
   const rolagem = useRef<ComponentRef<typeof ScrollView>>(null);
   const tituloNovos = useRef<ComponentRef<typeof Text>>(null);
   const linhasNovas = useRef(new Map<number, ComponentRef<typeof View> | null>());
@@ -261,7 +263,7 @@ export function TelaCaixaDoDia({ apiUrl, professorId, fetchFn }: Props) {
 
   return (
     <View style={styles.raiz}>
-    <ScrollView ref={rolagem} testID="rolagem-tela" contentContainerStyle={[styles.container, barra && { paddingBottom: erroLote ? 240 : 150 }]}>
+    <ScrollView ref={rolagem} testID="rolagem-tela" contentContainerStyle={[styles.container, barra && { paddingBottom: alturaBarra + espaco[4] }]}>
       <View style={styles.cabecalho}>
         <View style={styles.cabecalhoTextos}>
           <Text accessibilityRole="header" aria-level={1} style={styles.titulo}>
@@ -410,7 +412,7 @@ export function TelaCaixaDoDia({ apiUrl, professorId, fetchFn }: Props) {
         </View>
       )}
     </ScrollView>
-    {barra && <BarraLote selecionados={selecao.size} corrigidos={corrigidos} salvando={salvando} erro={erroLote} aoLimpar={limparSelecao} aoSalvar={() => void salvar()} aoAtualizar={atualizarDoErro} />}
+    {barra && <BarraLote selecionados={selecao.size} corrigidos={corrigidos} salvando={salvando} erro={erroLote} aoLimpar={limparSelecao} aoSalvar={() => void salvar()} aoAtualizar={atualizarDoErro} aoMedir={setAlturaBarra} />}
     {noFolha && (
       <FolhaTipo
         visivel
@@ -589,7 +591,8 @@ function Detalhe({ detalhe, testID, irParaNovo, styles, tema }: { detalhe: Detal
   const c = detalhe.checkin;
   const sensacao = c ? SENSACOES.find((s) => s.valor === c.sensacao) : undefined;
   const f = detalhe.feedback;
-  const feedback = f ? (f.estado === "pronto" && f.texto ? f.texto : f.mensagem) : null;
+  // A mensagem de "pendente" da API fala com o atleta ("Toque em Atualizar..."); na caixa o único "Atualizar" é o ícone do topo.
+  const feedback = f ? (f.estado === "pronto" && f.texto ? f.texto : f.estado === "pendente" ? "O feedback ainda não está pronto." : f.mensagem) : null;
   const tipo = detalhe.tipo_texto ?? "Sem tipo";
   const linha = (rotulo: string, valor: string, extra?: string, icone?: (typeof SENSACOES)[number]["icone"]) => (
     <View style={styles.detalheLinha}>
