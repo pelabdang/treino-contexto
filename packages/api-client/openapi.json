@@ -1,6 +1,49 @@
 {
   "components": {
     "schemas": {
+      "AlunoOut": {
+        "properties": {
+          "atleta_id": {
+            "title": "Atleta Id",
+            "type": "integer"
+          },
+          "nome": {
+            "title": "Nome",
+            "type": "string"
+          },
+          "sem_motivo": {
+            "title": "Sem Motivo",
+            "type": "boolean"
+          },
+          "texto_sem_motivo": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Texto Sem Motivo"
+          },
+          "treinos": {
+            "items": {
+              "$ref": "#/components/schemas/TreinoComMotivoOut"
+            },
+            "title": "Treinos",
+            "type": "array"
+          }
+        },
+        "required": [
+          "atleta_id",
+          "nome",
+          "sem_motivo",
+          "texto_sem_motivo",
+          "treinos"
+        ],
+        "title": "AlunoOut",
+        "type": "object"
+      },
       "AtalhoOut": {
         "properties": {
           "chave": {
@@ -457,6 +500,50 @@
         "title": "Body_enviarAtividadeFit",
         "type": "object"
       },
+      "CaixaDoDiaOut": {
+        "properties": {
+          "alunos": {
+            "items": {
+              "$ref": "#/components/schemas/AlunoOut"
+            },
+            "title": "Alunos",
+            "type": "array"
+          },
+          "hoje": {
+            "title": "Hoje",
+            "type": "string"
+          },
+          "janela_atencao_dias": {
+            "title": "Janela Atencao Dias",
+            "type": "integer"
+          },
+          "janela_novos_dias": {
+            "title": "Janela Novos Dias",
+            "type": "integer"
+          },
+          "novos": {
+            "items": {
+              "$ref": "#/components/schemas/NovoOut"
+            },
+            "title": "Novos",
+            "type": "array"
+          },
+          "versao": {
+            "title": "Versao",
+            "type": "string"
+          }
+        },
+        "required": [
+          "versao",
+          "hoje",
+          "janela_atencao_dias",
+          "janela_novos_dias",
+          "alunos",
+          "novos"
+        ],
+        "title": "CaixaDoDiaOut",
+        "type": "object"
+      },
       "CargaAtividadeOut": {
         "description": "Carga de treino da atividade (ADR 0010, item 7). So carga, metodo, motivo e cobertura: nunca limiar nem zonas.",
         "properties": {
@@ -667,6 +754,54 @@
           "totais"
         ],
         "title": "CargaSerieOut",
+        "type": "object"
+      },
+      "CheckinDetalheOut": {
+        "properties": {
+          "atalhos": {
+            "items": {
+              "$ref": "#/components/schemas/AtalhoOut"
+            },
+            "title": "Atalhos",
+            "type": "array"
+          },
+          "nada_a_relatar": {
+            "title": "Nada A Relatar",
+            "type": "boolean"
+          },
+          "observacao": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Observacao"
+          },
+          "pse_texto": {
+            "title": "Pse Texto",
+            "type": "string"
+          },
+          "sensacao": {
+            "title": "Sensacao",
+            "type": "integer"
+          },
+          "sensacao_texto": {
+            "title": "Sensacao Texto",
+            "type": "string"
+          }
+        },
+        "required": [
+          "pse_texto",
+          "sensacao",
+          "sensacao_texto",
+          "atalhos",
+          "nada_a_relatar",
+          "observacao"
+        ],
+        "title": "CheckinDetalheOut",
         "type": "object"
       },
       "CheckinIn": {
@@ -918,6 +1053,65 @@
           "transicao"
         ],
         "title": "CorrecaoIn",
+        "type": "object"
+      },
+      "DetalheOut": {
+        "properties": {
+          "checkin": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/CheckinDetalheOut"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "feedback": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/FeedbackOut"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "tipo_confirmado": {
+            "title": "Tipo Confirmado",
+            "type": "boolean"
+          },
+          "tipo_origem_texto": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Tipo Origem Texto"
+          },
+          "tipo_texto": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Tipo Texto"
+          }
+        },
+        "required": [
+          "tipo_texto",
+          "tipo_origem_texto",
+          "tipo_confirmado",
+          "checkin",
+          "feedback"
+        ],
+        "title": "DetalheOut",
         "type": "object"
       },
       "DiaCargaOut": {
@@ -1919,6 +2113,104 @@
         "title": "MetricaBaseOut",
         "type": "object"
       },
+      "MotivoOut": {
+        "properties": {
+          "codigo": {
+            "enum": [
+              "dor",
+              "fora_do_normal",
+              "divergencia",
+              "checkin_vencendo"
+            ],
+            "title": "Codigo",
+            "type": "string"
+          },
+          "texto": {
+            "title": "Texto",
+            "type": "string"
+          }
+        },
+        "required": [
+          "codigo",
+          "texto"
+        ],
+        "title": "MotivoOut",
+        "type": "object"
+      },
+      "NovoOut": {
+        "properties": {
+          "atividade_id": {
+            "title": "Atividade Id",
+            "type": "integer"
+          },
+          "atleta_id": {
+            "title": "Atleta Id",
+            "type": "integer"
+          },
+          "atleta_nome": {
+            "title": "Atleta Nome",
+            "type": "string"
+          },
+          "data_local": {
+            "title": "Data Local",
+            "type": "string"
+          },
+          "detalhe": {
+            "$ref": "#/components/schemas/DetalheOut"
+          },
+          "duracao_texto": {
+            "title": "Duracao Texto",
+            "type": "string"
+          },
+          "hora_local": {
+            "title": "Hora Local",
+            "type": "string"
+          },
+          "modalidade": {
+            "enum": [
+              "corrida",
+              "ciclismo",
+              "natacao"
+            ],
+            "title": "Modalidade",
+            "type": "string"
+          },
+          "origem_texto": {
+            "title": "Origem Texto",
+            "type": "string"
+          },
+          "tipo_sugerido": {
+            "enum": [
+              "leve",
+              "moderado",
+              "longo",
+              "intervalado",
+              "fartlek"
+            ],
+            "title": "Tipo Sugerido",
+            "type": "string"
+          },
+          "tipo_sugerido_texto": {
+            "title": "Tipo Sugerido Texto",
+            "type": "string"
+          }
+        },
+        "required": [
+          "atividade_id",
+          "modalidade",
+          "data_local",
+          "hora_local",
+          "duracao_texto",
+          "detalhe",
+          "atleta_id",
+          "atleta_nome",
+          "tipo_sugerido",
+          "tipo_sugerido_texto",
+          "origem_texto"
+        ],
+        "title": "NovoOut",
+        "type": "object"
+      },
       "ParteOut": {
         "properties": {
           "atividade_id": {
@@ -2531,6 +2823,56 @@
           "valor"
         ],
         "title": "TransicaoOut",
+        "type": "object"
+      },
+      "TreinoComMotivoOut": {
+        "properties": {
+          "atividade_id": {
+            "title": "Atividade Id",
+            "type": "integer"
+          },
+          "data_local": {
+            "title": "Data Local",
+            "type": "string"
+          },
+          "detalhe": {
+            "$ref": "#/components/schemas/DetalheOut"
+          },
+          "duracao_texto": {
+            "title": "Duracao Texto",
+            "type": "string"
+          },
+          "hora_local": {
+            "title": "Hora Local",
+            "type": "string"
+          },
+          "modalidade": {
+            "enum": [
+              "corrida",
+              "ciclismo",
+              "natacao"
+            ],
+            "title": "Modalidade",
+            "type": "string"
+          },
+          "motivos": {
+            "items": {
+              "$ref": "#/components/schemas/MotivoOut"
+            },
+            "title": "Motivos",
+            "type": "array"
+          }
+        },
+        "required": [
+          "atividade_id",
+          "modalidade",
+          "data_local",
+          "hora_local",
+          "duracao_texto",
+          "detalhe",
+          "motivos"
+        ],
+        "title": "TreinoComMotivoOut",
         "type": "object"
       },
       "TreinosDeTransicaoOut": {
@@ -3818,6 +4160,59 @@
           }
         },
         "summary": "Health"
+      }
+    },
+    "/professores/{professor_id}/caixa-do-dia": {
+      "get": {
+        "description": "Os alunos do professor com consentimento, por `atencao@1`, e os treinos novos com tipo sugerido (calculado a cada leitura).",
+        "operationId": "buscarCaixaDoDia",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "professor_id",
+            "required": true,
+            "schema": {
+              "title": "Professor Id",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CaixaDoDiaOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Erro"
+                }
+              }
+            },
+            "description": "Professor inexistente (`professor_inexistente`, uniforme: sem configuracao, id diferente do configurado ou sem linha)"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Buscar Caixa Do Dia",
+        "tags": [
+          "professor"
+        ]
       }
     },
     "/professores/{professor_id}/tipos-de-treino": {
