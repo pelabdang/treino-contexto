@@ -1,0 +1,12 @@
+{
+  "assessoria": "Assessoria Fixture",
+  "professores": [{"nome": "Professor Fixture"}, {"nome": "Outro Professor Fixture"}],
+  "professor_do_piloto": "Professor Fixture",
+  "atletas": [
+    {"nome": "Atleta Fixture Consentido", "vinculos": [{"professor": "Professor Fixture", "consentimento_em": "2026-11-01T12:00:00+00:00"}]},
+    {"nome": "Atleta Fixture Sem Consentimento", "vinculos": [{"professor": "Professor Fixture", "consentimento_em": null}]},
+    {"nome": "Atleta Fixture Consentimento Futuro", "vinculos": [{"professor": "Professor Fixture", "consentimento_em": "2099-01-01T00:00:00+00:00"}]},
+    {"nome": "Atleta Fixture De Outro Professor", "vinculos": [{"professor": "Outro Professor Fixture", "consentimento_em": "2026-11-01T12:00:00+00:00"}]},
+    {"nome": "Atleta Fixture Sem Vinculo", "vinculos": []}
+  ]
+}

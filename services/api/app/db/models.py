@@ -145,6 +145,12 @@ class Atividade(Base):
     tipo_treino: Mapped[str | None] = mapped_column(String(20))
     tipo_origem: Mapped[str | None] = mapped_column(String(20))
     tipo_confirmado: Mapped[bool] = mapped_column(Boolean, default=False, server_default="false")
+    # ADR 0015, item 1: quem (professor) e quando confirmou ou corrigiu o tipo. Nulos em tudo anterior a migracao 0016; `_por`
+    # volta a NULL se o professor for apagado (SET NULL). `_em` e definido pela aplicacao.
+    tipo_confirmado_por: Mapped[int | None] = mapped_column(
+        ForeignKey("professor.id", ondelete="SET NULL", name="fk_atividade_tipo_confirmado_por")
+    )
+    tipo_confirmado_em: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
     # versao da regra que escreveu o tipo (ex.: tipo_treino@1) quando a origem e `sugestao` ou `semana_padrao`; ADR 0011
     tipo_versao: Mapped[str | None] = mapped_column(String(40))
     tipo_divergencia: Mapped[str | None] = mapped_column(String(20))  # sem_esforco ou tem_tiros (ADR 0011, item 4)
@@ -555,6 +561,8 @@ class FeedbackTreino(Base):
     recuperacao_importada_em: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
     # #409 (adendo 4 da ADR 0013): impressao (SHA-256) do clima que o pacote viu; NULL = linha anterior a migracao 0015 (nao compara)
     clima_visto: Mapped[str | None] = mapped_column(String(64))
+    # ADR 0015, item 1: o tipo que o pacote viu na geracao (`sem_tipo` sem tipo); NULL = linha anterior a migracao 0016 (nao compara)
+    tipo_visto: Mapped[str | None] = mapped_column(String(20))
     tentado_em: Mapped[datetime] = mapped_column(DateTime(timezone=True))
 
     checkin: Mapped[CheckinTreino] = relationship(back_populates="feedback")

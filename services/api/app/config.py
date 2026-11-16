@@ -1,6 +1,6 @@
 from pathlib import Path
 
-from pydantic import SecretStr
+from pydantic import SecretStr, field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -30,6 +30,15 @@ class Settings(BaseSettings):
     groq_api_key: SecretStr | None = None
     openai_api_key: SecretStr | None = None
     anthropic_api_key: SecretStr | None = None
+    # Professor do piloto local (ADR 0015, item 2): sem valor padrao. Ausente ou vazio = `None` (a API sobe; as rotas do
+    # professor respondem 404 uniforme). Nao e segredo e tambem nao e autenticacao.
+    professor_id: int | None = None
+
+    @field_validator("professor_id", mode="before")
+    @classmethod
+    def _professor_id_vazio_e_none(cls, v):
+        # `PROFESSOR_ID=` vazio no .env faria o pydantic-settings falhar ao importar o modulo
+        return None if isinstance(v, str) and not v.strip() else v
 
 
 def lista_origens(texto: str) -> list[str]:

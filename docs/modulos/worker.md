@@ -105,6 +105,8 @@ da importação e do cálculo de métricas, fora da [[modulos/api]].
 - `services/worker/tests/test_reclassificar_subtipo.py`
 - `services/worker/tests/test_reclassificar_multiesporte.py`
 - `services/worker/tests/test_grafico_tiros_1km.py`
+- `services/worker/worker/carregar_professor.py` (CLI `python -m worker.carregar_professor --fixtures <pasta>`, #423, [[decisoes/0015-caixa-do-dia-do-professor]]): lê `identidade.json` (professores, atletas **fictícios** e vínculos com `consentimento_em`) e grava só a identidade; idempotente, recusa atleta de mesmo nome que não veio da carga, imprime só contagens e `PROFESSOR_ID=<id>` para o `.env`. Fixture em `tests/fixtures/professor_piloto/`
+- `services/worker/tests/test_carregar_professor.py`
 - `services/worker/tests/test_health.py`
 - `services/api/tests/ingestao/test_garmin_parser.py` (testes do parser, na API)
 
