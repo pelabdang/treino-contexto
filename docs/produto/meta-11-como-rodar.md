@@ -16,8 +16,7 @@ tipo e a tela `/caixa-do-dia`. **Só dado sintético, sem rede, sem conta do Gar
 **Situação da verificação (#428, Nina, 16/11):** os passos 1 a 6 foram rodados de verdade num clone limpo do `main` (`b3b7f34`, depois do #447), com o
 banco `treino-meta11` (Postgres na 5461, API na 8061). Os números abaixo são os que saíram. Banco e API foram derrubados no fim e nada usou a rede.
 **Não rodado aqui:**
-- a **tela** (`/caixa-do-dia` no Expo web) e o `npm run capturas`: os passos 7 e 8 seguem as notas de [[modulos/mobile]] e do PR #447; a Bia segue
-  o guia inteiro na #429;
+- a **tela** (`/caixa-do-dia` no Expo web) e o `npm run capturas`: não foram rodados por mim; a Bia rodou os passos 7 e 8 na QA (#429, PR #450) e achou a falha da CORS (#449, corrigida no passo 5);
 - **dois dos quatro motivos** (`fora_do_normal` e `divergencia`): precisam de linha de base com treinos suficientes e de semana-padrão; este guia usa
   só `dor` e `checkin_vencendo`. Os quatro estão no oráculo à mão ([[metricas/atencao-oraculo]], `tests/test_fixtures_meta11.py`);
 - **celular de verdade** (Expo Go, iOS, Android, toque, leitor de tela): amarrado ao ensaio com professor e atletas (decisão 10 da Meta 11);
@@ -46,7 +45,7 @@ banco `treino-meta11` (Postgres na 5461, API na 8061). Os números abaixo são o
    docker compose -p treino-meta11 -f infra/docker-compose.yml -f /caminho/saida/porta.yml up -d
    export DATABASE_URL="postgresql+psycopg://treino:treino@localhost:5461/treino"
    ```
-   Esperado: `treino-meta11-postgres-1` `healthy`.
+   Esperado: o container `<projeto>-postgres-1` (aqui `treino-meta11-postgres-1`; o nome segue o `-p`) `healthy`.
 2. **Instalar e migrar:**
    ```
    uv sync
@@ -106,10 +105,10 @@ with SessionLocal() as s:
    3 (Carla, ciclismo de 6 dias atrás, **sem check-in e sem tipo**), 4 (Carla, corrida), 5 (o atleta **sem consentimento**, com dor).
 5. **Subir a API e ler a caixa:**
    ```
-   (cd services/api && uv run uvicorn app.main:app --port 8061)
+   (cd services/api && CORS_ORIGENS=http://localhost:8084 uv run uvicorn app.main:app --port 8061)
    curl -s -i localhost:8061/professores/1/caixa-do-dia
    ```
-   Esperado: `200`, `cache-control: no-store`, `versao` `atencao@1`, `hoje` com a data de hoje, `janela_atencao_dias` 7 e `janela_novos_dias` 14. Em `alunos[]`
+   `CORS_ORIGENS` é a origem do Expo web do passo 7 (`http://localhost:8084`, a mesma porta): sem ela o navegador bloqueia o `GET` e a tela mostra "Não foi possível falar com o servidor". O `curl` não precisa dela. Esperado: `200`, `cache-control: no-store`, `versao` `atencao@1`, `hoje` com a data de hoje, `janela_atencao_dias` 7 e `janela_novos_dias` 14. Em `alunos[]`
    (a ordem é a da API; o app não reordena):
    - **Ana** (id 1), com o treino 1 e o motivo `dor`: "Treino de <dia> com dor marcada no check-in.";
    - **Carla** (id 5), com o treino 3 e o motivo `checkin_vencendo`: "Treino de <dia> sem check-in; o prazo termina em 1 dia." (6 dias atrás: restam
@@ -133,17 +132,17 @@ with SessionLocal() as s:
    - `[]`: `422` (lote vazio); mais de 200 itens, `atividade_id` repetido ou tipo fora dos cinco também dão `422`;
    - `[{"atividade_id":3}]` (sem tipo para confirmar): `422` `atividade_sem_tipo`.
 
-   Para ver o efeito no banco: `docker exec treino-meta11-postgres-1 psql -U treino -d treino -c "select id, tipo_treino, tipo_origem, tipo_confirmado from atividade order by id"`.
+   Para ver o efeito no banco: `docker exec <projeto>-postgres-1 psql -U treino -d treino -c "select id, tipo_treino, tipo_origem, tipo_confirmado from atividade order by id"`.
    Esperado: a linha 2 `intervalado|sugestao|t`, a 4 `longo|professor|t` e as demais sem mudança. Repetir o mesmo `PUT` não muda nada e não renova o
    `tipo_confirmado_em`. O feedback de um treino cujo tipo foi corrigido fica `desatualizado` pelo motivo `tipo` ("O tipo do treino mudou depois deste
    feedback. O feedback será refeito."); este guia não gera feedback (é do `worker.gerar_feedback`, [[produto/meta-9-como-rodar]]).
-7. **A tela** (não rodado nesta verificação). Em `apps/mobile`, `npm ci` e, apontando para a API do passo 5:
+7. **A tela** (rodada pela Bia na #429). Em `apps/mobile`, `npm ci` e, apontando para a API do passo 5:
    `CI=1 EXPO_PUBLIC_API_URL=http://localhost:8061 EXPO_PUBLIC_PROFESSOR_ID=1 npx expo start --web --port 8084`. A tela abre **só pelo endereço**
-   `http://localhost:8084/caixa-do-dia` (o `/` continua sendo a home do atleta, sem link para a caixa). Sem `EXPO_PUBLIC_PROFESSOR_ID` a tela mostra
+   `http://localhost:8084/caixa-do-dia` (o `/` continua sendo a home do atleta, sem link para a caixa). Se a tela mostrar "Não foi possível falar com o servidor", reinicie a API do passo 5 com `CORS_ORIGENS` igual à origem do Expo (esquema, host e porta). Sem `EXPO_PUBLIC_PROFESSOR_ID` a tela mostra
    "Caixa do dia não encontrada" sem chamar a API. O que ver: "Para olhar hoje" com um cartão por aluno com motivo, os alunos sem motivo em linha
    compacta, "Treinos novos" com a caixa de seleção, o botão "Mudar tipo" (folha "Tipo do treino") e a barra "N selecionados · N corrigidos" com "Salvar N tipos".
    Ao salvar, a tela anuncia "N treinos salvos: N confirmados e N corrigido." (números da resposta). Detalhe em [[modulos/mobile]] e na spec [[design/telas/caixa-do-dia]].
-8. **Capturas por comando** (não rodado nesta verificação). `npm run capturas` (em `apps/mobile`; `npx playwright install chromium-headless-shell` na
+8. **Capturas por comando** (rodadas pela Bia na #429: 16 capturas das quatro telas). `npm run capturas` (em `apps/mobile`; `npx playwright install chromium-headless-shell` na
    primeira vez) usa a **API falsa** do app, com alunos "Atleta Fixture ...", e não o banco deste guia. Só as da caixa:
    `npm run capturas -- --so=caixa-do-dia,caixa-do-dia-selecao,caixa-do-dia-folha,caixa-do-dia-lote-salvo`. Saem em `apps/mobile/capturas/` (fora do git);
    as de referência estão em `docs/design/telas/caixa-do-dia/`.
@@ -151,7 +150,7 @@ with SessionLocal() as s:
    quatro motivos, sem banco e sem rede) e `uv run pytest services/api/tests/rotas/test_caixa_do_dia.py services/api/tests/rotas/test_professor_tipos.py
    services/api/tests/rotas/test_professor_filtro.py` (a matriz rota x situação do filtro de vínculo e consentimento).
 10. **Limpar.** Pare a API (Ctrl+C) e derrube o banco: `docker compose -p treino-meta11 -f infra/docker-compose.yml -f /caminho/saida/porta.yml down -v`.
-    Isso apaga o volume `treino-meta11_pgdata`; nada do banco do dia a dia é tocado.
+    Isso apaga o volume `<projeto>_pgdata` (aqui `treino-meta11_pgdata`); nada do banco do dia a dia é tocado.
 
 ## Limitações da conferência local (#431)
 *(Espaço reservado: as limitações genéricas entram aqui depois das respostas do Angelo, sem data, nome, número nem tipo de atividade de nenhum aluno.)*
@@ -162,4 +161,5 @@ with SessionLocal() as s:
   da Meta 11 seria uma issue à parte.
 - **Só `dor` e `checkin_vencendo` aparecem pelo banco sintético deste guia.** `fora_do_normal` exige a linha de base (8 treinos do mesmo tipo) e
   `divergencia`, a semana-padrão do atleta; o oráculo cobre os quatro.
+- **O passo 7 falhava sem `CORS_ORIGENS` (#449, achado da QA #429).** A API só libera `http://localhost:8081` por padrão; a tela em outra porta fica bloqueada pelo navegador. O passo 5 agora sobe a API com a origem do Expo, como os guias das Metas 9 e 10. iOS e Android não precisam de CORS.
 - **A API falsa do app não é o banco.** A tela e as capturas do passo 8 usam a API falsa; o passo 7 aponta o app para a API de verdade.
