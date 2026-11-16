@@ -3,17 +3,15 @@ tipo: meta
 status: em-uso
 dono: paulo
 atualizado: 2026-11-16
-links: [[produto/roadmap]], [[produto/meta-10-como-rodar]], [[decisoes/0014-recuperacao-diaria]], [[decisoes/0013-feedback-automatico]], [[decisoes/0004-contrato-tela-evolucao]], [[metricas/recuperacao]], [[metricas/recuperacao-oraculo]], [[metricas/fatos-treino]], [[metricas/fatos-treino-oraculo]], [[metricas/checagens-feedback]], [[modulos/camada-llm]], [[modulos/banco]], [[modulos/worker]], [[modulos/ingestao-garmin]], [[produto/metas/meta-9-feedback-automatico]], [[diario/2026-11-12]], [[diario/2026-11-13]], [[diario/2026-11-16]], [[glossario]]
+links: [[produto/roadmap]], [[design/telas/conferencia-369]], [[produto/meta-10-como-rodar]], [[decisoes/0014-recuperacao-diaria]], [[decisoes/0013-feedback-automatico]], [[decisoes/0004-contrato-tela-evolucao]], [[metricas/recuperacao]], [[metricas/recuperacao-oraculo]], [[metricas/fatos-treino]], [[metricas/fatos-treino-oraculo]], [[metricas/checagens-feedback]], [[modulos/camada-llm]], [[modulos/banco]], [[modulos/worker]], [[modulos/ingestao-garmin]], [[produto/metas/meta-9-feedback-automatico]], [[diario/2026-11-12]], [[diario/2026-11-13]], [[diario/2026-11-16]], [[glossario]]
 ---
 # Meta 10: sono, VFC e FC de repouso no contexto do treino
 
-> **Situação: fechando.** Código, documentação, QA e conferência local no `main` (PRs #381 a #414, entre 12/11 e 16/11). A Bia conferiu o
-> critério de pronto com `tests/test_e2e_meta10.py` (23 testes, um por item, só dado sintético, sem rede) e seguiu o
-> [[produto/meta-10-como-rodar]] do zero com um Postgres descartável (#378, PR #413). A [[decisoes/0014-recuperacao-diaria]] foi **aceita em
-> 12/11** (PR #383), antes da migração 0014 (PR #388).
->
-> **#369 (conferência visual no Chrome em 390x844, com a Lia): em curso em 16/11.** Quando fechar, trocar esta linha, a linha da #369 na
-> tabela do critério e a seção "O que não foi verificado". Fechamento: #380.
+> **Situação: feita, com o celular de verdade não verificado.** Código, documentação, QA, conferência local e conferência visual no `main` ou em
+> revisão (PRs #381 a #416, entre 12/11 e 16/11). A Bia conferiu o critério de pronto com `tests/test_e2e_meta10.py` (23 testes, um por
+> item, só dado sintético, sem rede) e seguiu o [[produto/meta-10-como-rodar]] do zero com um Postgres descartável (#378, PR #413). A Lia
+> fez a conferência visual no Chrome em 390 px, sem bloqueantes, com 34 capturas sintéticas (#369, PR #416, [[design/telas/conferencia-369]]). A
+> [[decisoes/0014-recuperacao-diaria]] foi **aceita em 12/11** (PR #383), antes da migração 0014 (PR #388). Fechamento: #380.
 
 ## Objetivo
 O pacote de fatos ganha a recuperação da noite anterior ao treino (duração do sono, VFC noturna e FC de repouso), comparada com o normal do
@@ -35,7 +33,7 @@ Resultado de cada item conforme a QA da Bia na #378 (PR #413), só com fixtures 
 
 | Item | Onde | Resultado |
 |---|---|---|
-| Conferência visual do cartão e do check-in no Chrome em tamanho de celular, com a API real e o provedor falso, e revisão da Lia sobre a tela rodando; registrado que a simulação não é celular de verdade | #369 | **em curso** (Lia, 16/11, Chrome em 390x844). A simulação do Theo de 12/11 (janela de 606 px, API falsa) viu os nove estados do cartão e um check-in de ponta a ponta, sem texto cortado; achou a #382. Faltam a largura de celular, a API real, o tema claro e a revisão da Lia |
+| Conferência visual do cartão e do check-in no Chrome em tamanho de celular, com a API real e o provedor falso, e revisão da Lia sobre a tela rodando; registrado que a simulação não é celular de verdade | #369 | **ok, sem bloqueantes** (Lia, 16/11; revisão na #369, 34 capturas sintéticas no PR #416, [[design/telas/conferencia-369]]). Cobriu também o passo do navegador da QA #378: cartão `pronto` com a linha da recuperação e texto de teste rotulado. Limites: 390 px dentro de um iframe (altura 690), contraste só olhado, não medido; a simulação não é celular de verdade. Antes, a simulação do Theo de 12/11 (606 px, API falsa) |
 | ADR 0014 aprovada pelo Theo antes da migração; "A confirmar" com padrões | #370 | **ok**. Modelo aprovado e ADR aceita em 12/11 (PR #383); o Angelo respondeu "ok para as cinco"; migração 0014 em 13/11 (PR #388) (e2e 01 e 21) |
 | `recuperacao@1` como função pura, nota em `docs/metricas/` e oráculo sobre fixtures sintéticas escritas à mão | #371, #373 | **ok** ([[metricas/recuperacao]], [[metricas/recuperacao-oraculo]]; PRs #385 e #387; e2e 06 e 07) |
 | `fatos_treino@2` com a recuperação; prompt e checagens com versão nova e textos bons e ruins novos; a checagem real roda sobre o texto do provedor falso | #374, #375 | **ok** (PRs #390 e #391; e2e 10 e 12). Hoje em `feedback_prompt@8` e `checagens_feedback@6`, depois das issues que entraram durante a meta |
@@ -67,6 +65,7 @@ Resultado de cada item conforme a QA da Bia na #378 (PR #413), só com fixtures 
 | #409 | O clima que chega depois desatualiza o feedback (migração 0015) | #410 |
 | #379 | Conferência local da recuperação; limitações genéricas na nota da métrica | #411 |
 | #378 | QA de ponta a ponta e `tests/test_e2e_meta10.py` | #413 |
+| #369 | Conferência visual no Chrome em 390 px, revisão da Lia e 34 capturas sintéticas ([[design/telas/conferencia-369]]) | #416 |
 | (sem issue) | Diário de 16/11; guias sem head fixo das migrações | #412, #414 |
 | #380 | Resultado da meta e roteiro | este |
 
@@ -85,8 +84,8 @@ pausa sugerida na camada (#395); o desatualizado pela noite e pelo clima com men
 texto mantido (#407).
 
 ## O que não foi verificado
-- **A tela rodando em largura de celular, com a API real, e a revisão da Lia sobre ela:** é a #369, **em curso** em 16/11. A QA conferiu a
-  linha da recuperação só pelo `GET` da API (a extensão do navegador não estava disponível na sessão dela).
+- **Largura de celular só por simulação:** a #369 viu a tela em 390 px dentro de um iframe (altura 690), no Chrome; não é a janela nem o
+  aparelho. **Contraste** só olhado nas capturas, não medido.
 - **Celular de verdade:** nenhuma tela foi aberta num iOS ou Android. Fora do critério por decisão do Angelo (decisão 6); é a **terceira
   meta seguida** com o item aberto (Metas 8, 9 e 10). A simulação não é celular de verdade.
 - **Leitor de tela real** (VoiceOver, TalkBack).
@@ -122,7 +121,10 @@ Todos genéricos; nada do dado real.
   "Você editou o check-in" (resolvido na #396; o caso só de versão do pacote é a #402, em aberto).
 - **Teste e guia com o head da migração fixo quebram na migração seguinte:** o primeiro CI do #410 falhou por isso; os testes passaram a ler
   o head do alembic e os guias não fixam mais o número (#414).
-- **A conferência visual dependeu de novo da extensão do navegador**, que não estava disponível na sessão da QA.
+- **A conferência visual dependeu de novo da extensão do navegador:** não estava disponível na sessão da QA, e a tela só foi vista no fim,
+  pela Lia (#369), que cobriu o passo do navegador da QA.
+- **O botão Salvar do check-in sobe quando a dica some (#382)**, confirmado na #369 e pior em 390 px: sobe 48 px e "Nada a relatar" fica
+  onde ele estava (risco de toque errado).
 
 ## O que se aprendeu
 - **Cada dado que chega depois do feedback precisa de regra de desatualizado e de mensagem própria**, decididas na ADR, não descobertas
@@ -135,8 +137,8 @@ Todos genéricos; nada do dado real.
 - **O `--refazer` é uma promessa:** o que ele mantém tem de passar nas checagens de hoje.
 - **Nunca fixar o head da migração** em teste ou guia.
 - **"A confirmar" com padrões funcionou pela quinta meta seguida** (ADR 0014, "ok para as cinco").
-- **Conferência visual não pode depender da extensão do navegador.** Três metas seguidas sem a tela vista na hora certa; a próxima meta
-  com tela precisa de capturas que rodem sem a extensão (proposta P1 da Meta 11).
+- **Conferência visual não pode depender da extensão do navegador.** Três metas seguidas com a tela vista tarde ou não vista; na Meta 10
+  ela só foi vista no fim da meta. A próxima meta com tela precisa de capturas que rodem sem a extensão (proposta P1 da Meta 11).
 
 ## PRECISA DO ANGELO
 - **Celular de verdade:** pendência das Metas 8, 9 e 10 (pergunta 10 da Meta 11 no [[produto/roadmap]]).
@@ -144,7 +146,7 @@ Todos genéricos; nada do dado real.
 - **Meta 11:** proposta e perguntas no [[produto/roadmap]] ("Meta 11, proposta"). Nenhuma issue da Meta 11 foi aberta.
 
 ## Resultado
-**Meta 10 fechando: feita no código, nos testes, na QA e na conferência local; falta a #369 (em curso).** Com fixtures sintéticas, o
+**Meta 10 feita, com o celular de verdade não verificado.** A conferência visual no Chrome em 390 px (#369) não teve bloqueantes. Com fixtures sintéticas, o
 `worker.buscar_recuperacao` grava as noites, a `recuperacao@1` compara a noite anterior ao treino com o normal do atleta, o `fatos_treino@2`
 leva só essa comparação ao provedor, e o feedback põe a noite lado a lado com o resultado, sem causa nem conselho, passando por
 `checagens_feedback@6`. Falta de dado nunca vira número; nada da recuperação vai a log; apagar leva as noites e os feedbacks que as usaram.

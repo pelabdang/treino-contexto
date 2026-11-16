@@ -3,7 +3,7 @@ tipo: roteiro
 status: em-uso
 dono: paulo
 atualizado: 2026-11-16
-links: [[produto/plano-mvp-execucao]], [[produto/metas/meta-10-recuperacao]], [[produto/meta-10-como-rodar]], [[decisoes/0014-recuperacao-diaria]], [[metricas/recuperacao]], [[diario/2026-11-12]], [[diario/2026-11-13]], [[diario/2026-11-16]], [[produto/metas/meta-9-feedback-automatico]], [[produto/meta-9-como-rodar]], [[decisoes/0013-feedback-automatico]], [[diario/2026-11-11]], [[decisoes/0001-modelo-de-dados-minimo]], [[decisoes/0005-serie-de-tiros-o-que-entra]], [[produto/metas/meta-1-tiros-1km]], [[produto/metas/meta-2-evolucao-tiros-app]], [[produto/metas/meta-3-upload-fit]], [[decisoes/0004-contrato-tela-evolucao]], [[decisoes/0006-upload-de-fit]], [[decisoes/0003-fuso-da-atividade]], [[diario/2026-11-03]], [[00-inicio]], [[produto/metas/meta-4-clima-atividade]], [[decisoes/0007-clima-da-atividade]], [[produto/meta-4-como-rodar]], [[metricas/tiros-1km]], [[decisoes/0008-deteccao-de-esforcos]], [[diario/2026-11-04]], [[produto/metas/meta-5-deteccao-esforcos]], [[produto/meta-5-como-rodar]], [[decisoes/0009-treino-de-transicao]], [[metricas/esforcos]], [[metricas/transicao]], [[modulos/ingestao-garmin]], [[diario/2026-11-06]], [[produto/metas/meta-6-carga-treino]], [[produto/meta-6-como-rodar]], [[decisoes/0010-carga-de-treino]], [[metricas/carga-treino]], [[metricas/serie-carga]], [[metricas/conferencia-carga]], [[diario/2026-11-07]], [[diario/2026-11-08]], [[diario/2026-11-09]], [[produto/metas/meta-7-linha-de-base-semana-padrao]], [[produto/meta-7-como-rodar]], [[decisoes/0011-linha-de-base-e-semana-padrao]], [[metricas/linha-base]], [[metricas/tipo-treino]], [[design/tokens]], [[produto/metas/meta-8-check-in]], [[produto/meta-8-como-rodar]], [[decisoes/0012-check-in-pos-treino]], [[metricas/carga-pse]], [[design/telas/checkin]], [[diario/2026-11-10]]
+links: [[produto/plano-mvp-execucao]], [[design/telas/conferencia-369]], [[produto/metas/meta-10-recuperacao]], [[produto/meta-10-como-rodar]], [[decisoes/0014-recuperacao-diaria]], [[metricas/recuperacao]], [[diario/2026-11-12]], [[diario/2026-11-13]], [[diario/2026-11-16]], [[produto/metas/meta-9-feedback-automatico]], [[produto/meta-9-como-rodar]], [[decisoes/0013-feedback-automatico]], [[diario/2026-11-11]], [[decisoes/0001-modelo-de-dados-minimo]], [[decisoes/0005-serie-de-tiros-o-que-entra]], [[produto/metas/meta-1-tiros-1km]], [[produto/metas/meta-2-evolucao-tiros-app]], [[produto/metas/meta-3-upload-fit]], [[decisoes/0004-contrato-tela-evolucao]], [[decisoes/0006-upload-de-fit]], [[decisoes/0003-fuso-da-atividade]], [[diario/2026-11-03]], [[00-inicio]], [[produto/metas/meta-4-clima-atividade]], [[decisoes/0007-clima-da-atividade]], [[produto/meta-4-como-rodar]], [[metricas/tiros-1km]], [[decisoes/0008-deteccao-de-esforcos]], [[diario/2026-11-04]], [[produto/metas/meta-5-deteccao-esforcos]], [[produto/meta-5-como-rodar]], [[decisoes/0009-treino-de-transicao]], [[metricas/esforcos]], [[metricas/transicao]], [[modulos/ingestao-garmin]], [[diario/2026-11-06]], [[produto/metas/meta-6-carga-treino]], [[produto/meta-6-como-rodar]], [[decisoes/0010-carga-de-treino]], [[metricas/carga-treino]], [[metricas/serie-carga]], [[metricas/conferencia-carga]], [[diario/2026-11-07]], [[diario/2026-11-08]], [[diario/2026-11-09]], [[produto/metas/meta-7-linha-de-base-semana-padrao]], [[produto/meta-7-como-rodar]], [[decisoes/0011-linha-de-base-e-semana-padrao]], [[metricas/linha-base]], [[metricas/tipo-treino]], [[design/tokens]], [[produto/metas/meta-8-check-in]], [[produto/meta-8-como-rodar]], [[decisoes/0012-check-in-pos-treino]], [[metricas/carga-pse]], [[design/telas/checkin]], [[diario/2026-11-10]]
 ---
 # Roteiro de metas
 
@@ -22,8 +22,8 @@ Ao fechar uma meta, o Paulo registra o resultado em `docs/produto/metas/` e revi
 | 7 | Linha de base pessoal e semana-padrão (tipo de treino pelo plano, regra como reserva) | feita (fixtures, sem rede; conferência local com o histórico real; [[produto/metas/meta-7-linha-de-base-semana-padrao]]) |
 | 8 | Check-in pós-treino e carga pela PSE | feita (fixtures, sem rede; celular não verificado; [[produto/metas/meta-8-check-in]]) |
 | 9 | Feedback automático por treino | feita (fixtures e provedor falso; tela rodando, celular e revisão da Lia na tela não verificados; [[produto/metas/meta-9-feedback-automatico]]) |
-| **10** | **Sono, VFC e FC de repouso no contexto do treino** | **fechando:** código, QA e conferência local feitos; falta a #369 (conferência visual, em curso em 16/11) ([[produto/metas/meta-10-recuperacao]]) |
-| 11 | Caixa do dia do professor (piloto local, sem login, atletas sintéticos) | **proposta**, esperando o "ok" do Angelo (perguntas em "PRECISA DO ANGELO") |
+| 10 | Sono, VFC e FC de repouso no contexto do treino | feita (fixtures, sem rede; conferência visual no Chrome em 390 px sem bloqueantes; celular de verdade não verificado; [[produto/metas/meta-10-recuperacao]]) |
+| **11** | **Caixa do dia do professor (piloto local, sem login, atletas sintéticos)** | **proposta**, esperando o "ok" do Angelo (perguntas em "PRECISA DO ANGELO") |
 | 12 | Agente do atleta (primeiras perguntas) | esboço (era a Meta 11) |
 
 Numeração: em 03/11 a linha de base virou meta própria e as metas seguintes andaram um número. Em 04/11 (decisão do
@@ -669,9 +669,9 @@ Revisadas ao fim de cada meta com o que se aprendeu. Ordem tirada da "Fundação
   depois da camada e do prompt; "A confirmar" com padrões funcionou pela quarta vez; passo que depende de pessoa (celular) ou de
   ferramenta (extensão do navegador) não pode ficar para a QA: vira issue própria na largada, com data marcada.
 
-### Meta 10: sono, VFC e FC de repouso no contexto do treino (fechando)
-> **Fechando em 16/11:** código, QA (#378, PR #413) e conferência local (#379, PR #411) no `main`; **falta a #369** (conferência visual no
-> Chrome em 390x844, com a Lia), **em curso em 16/11**. Proposta do Paulo na #333; o Angelo respondeu "ok para as nove" em 12/11, com uma
+### Meta 10: sono, VFC e FC de repouso no contexto do treino (feita)
+> **Feita em 16/11, com o celular de verdade não verificado:** código, QA (#378, PR #413), conferência local (#379, PR #411) e conferência
+> visual no Chrome em 390 px com a Lia, sem bloqueantes (#369, PR #416, [[design/telas/conferencia-369]]). Proposta do Paulo na #333; o Angelo respondeu "ok para as nove" em 12/11, com uma
 > mudança na pergunta 6 (celular). Issues #369 a #380; roteiro na #368. Paralela fora do critério: #367. Resultado completo em
 > [[produto/metas/meta-10-recuperacao]].
 
@@ -720,7 +720,7 @@ Revisadas ao fim de cada meta com o que se aprendeu. Ordem tirada da "Fundação
 
   | Proposta | Issue | Título | Dono | Depende de | Situação |
   |---|---|---|---|---|---|
-  | P1 | #369 | Conferência visual do check-in e do cartão de feedback no Chrome em tamanho de celular, com revisão da Lia (simulação adiantada pelo Theo em 12/11) | bia-qa com lia-design | nenhuma | **em curso** (Lia, 16/11, 390x844) |
+  | P1 | #369 | Conferência visual do check-in e do cartão de feedback no Chrome em tamanho de celular, com revisão da Lia (simulação adiantada pelo Theo em 12/11) | bia-qa com lia-design | nenhuma | feita (Lia, 16/11, sem bloqueantes; PR #416, [[design/telas/conferencia-369]]) |
   | P2 | (sem issue) | Sessão do celular com o Angelo: **saiu da meta** (decisão 6); celular de verdade é pendência conhecida, sem data | | | fora |
   | P3 | #370 | ADR 0014: recuperação diária (sono, VFC, FC de repouso) no contexto do treino | caio-ciencia com duda-dados (aprovação do Theo) | nenhuma | feita (PR #383, aceita em 12/11) |
   | P4 | #371 | Formato da recuperação, fixtures sintéticas e oráculo | duda-dados (formato) e caio-ciencia (oráculo) | #370 (adianta à mão) | feita (PR #385) |
@@ -756,21 +756,23 @@ Revisadas ao fim de cada meta com o que se aprendeu. Ordem tirada da "Fundação
 - **Fora:** sessão no celular de verdade (decisão 6); tela própria da recuperação; estágios do sono, estresse, prontidão e estado de treino do Garmin (métricas proprietárias, sem
   fórmula aberta); motor de explicação com o peso de cada fator ("provável", "possível"); treinos planejados do Garmin; a exportação
   Garmin como segunda fonte da recuperação, salvo se a ADR mostrar que sai de graça; alerta de recuperação baixa; outros atletas.
-- **Resultado:** fechando (16/11). Com fixtures sintéticas, a Bia conferiu o critério com `tests/test_e2e_meta10.py` (23 testes, um por
+- **Resultado:** feita (16/11), com o celular de verdade não verificado. Com fixtures sintéticas, a Bia conferiu o critério com `tests/test_e2e_meta10.py` (23 testes, um por
   item) e seguiu o [[produto/meta-10-como-rodar]] do zero com um Postgres descartável (#378, PR #413); a única diferença do guia (head da
   migração) foi corrigida no PR #414. Conferência local feita (#379, PR #411): regras da `recuperacao@1` mantidas, três limitações
   genéricas em [[metricas/recuperacao]]. Versões no fechamento: `fatos_treino@2`, `recuperacao@1`, `feedback_prompt@8`,
-  `checagens_feedback@6`; migrações até 0015. `uv run pytest` no `main` em `4773722`: 2682 verdes e 2 pulados. **#369: em curso** (Lia,
-  Chrome em 390x844); a simulação não é celular de verdade. **Não verificados:** celular de verdade (decisão 6, terceira meta seguida) e
+  `checagens_feedback@6`; migrações até 0015. `uv run pytest` no `main` em `4773722`: 2682 verdes e 2 pulados. **#369: feita** (Lia, 16/11):
+  conferência no Chrome sem bloqueantes, 34 capturas sintéticas ([[design/telas/conferencia-369]]); cobriu o passo do navegador da QA (cartão `pronto` com a linha
+  da recuperação, texto de teste rotulado) e confirmou a #382, pior em 390 px. Limites: 390 px dentro de um iframe (altura 690), contraste só
+  olhado; a simulação não é celular de verdade. **Não verificados:** celular de verdade (decisão 6, terceira meta seguida) e
   leitor de tela real. Resultado completo em [[produto/metas/meta-10-recuperacao]].
-- **Pendências que seguem:** a #369 fecha a meta; #402 e #382 como paralelas da Meta 11 (proposta); celular de verdade (pergunta 10 da Meta
+- **Pendências que seguem:** #402 e #382 (confirmada na #369, pior em 390 px) como paralelas da Meta 11 (proposta); celular de verdade (pergunta 10 da Meta
   11).
 - **Aprendido na Meta 10:** cada dado que chega depois do feedback (check-in, noite, clima, versão do pacote) precisa de regra de
   desatualizado e de mensagem própria, decididas na ADR; cada versão nova do prompt pede a sua rodada com o provedor de verdade; o uso
   local com o dado real, antes da QA, achou defeitos de forma que o sintético não achou (#403, #405); o `--refazer` só pode manter texto
   que passe nas checagens de hoje (#407); teste e guia não fixam o head da migração (#414); o limite do plano gratuito do provedor (por
   minuto e por dia) é parte do desenho (teto de saída, pausa de 65 s; #395); conferência visual que depende da extensão do navegador
-  falhou pela terceira meta, e a próxima tela precisa de capturas que rodem sem ela.
+  ficou para o fim pela terceira meta (na Meta 10 a Lia a fez no fechamento), e a próxima tela precisa de capturas que rodem sem ela.
 
 ### Meta 11: caixa do dia do professor (proposta)
 > **Proposta do Paulo na #380, esperando o "ok" do Angelo.** Nenhuma issue aberta. As perguntas estão em "PRECISA DO ANGELO", "Meta 11",
@@ -861,13 +863,13 @@ Revisadas ao fim de cada meta com o que se aprendeu. Ordem tirada da "Fundação
   e não foi feito. Em 12/11 o Angelo decidiu não fazer a sessão agora: **pendência conhecida, sem data**. No lugar, a simulação no
   Chrome em tamanho de celular (#369), que não substitui o aparelho (Expo Go, iOS, Android, leitor de tela). Terceira meta seguida em
   aberto (Metas 8, 9 e 10); pergunta 10 da Meta 11.
-- **Cartão de feedback na tela rodando** (bia-qa, com a Lia): ninguém viu o cartão fora dos testes e das capturas na Meta 9. É a #369
-  da Meta 10, em curso em 16/11.
+- **Cartão de feedback na tela rodando** (bia-qa, com a Lia): ninguém viu o cartão fora dos testes e das capturas na Meta 9. Feita na
+  #369 da Meta 10 (PR #416), no Chrome em 390 px.
 - **`--reconferir`** (caio-ciencia, com a Duda): reconferir os textos prontos com as checagens atuais sem chamar o provedor; ficou fora da
   #407 ([[diario/2026-11-16]]). Sem issue.
 - **Feedback anterior à migração 0015 na fila pelo clima** (duda-dados): hoje só com `--refazer` (#409). Sem issue.
 - **Capturas do check-in no tema escuro e nos estados de erro:** feita na Meta 9 (#334, PR #351).
-- **Sono, VFC e FC de repouso do Garmin Connect:** viraram a Meta 10 (fechando). **Estado de treino, prontidão, estágios do sono e
+- **Sono, VFC e FC de repouso do Garmin Connect:** viraram a Meta 10 (feita). **Estado de treino, prontidão, estágios do sono e
   estresse** (métricas proprietárias do Garmin) ficam aqui, sem issue. **Treinos planejados do Garmin Connect** (duda-dados, com o
   Caio): podem alimentar a semana-padrão e o motivo de falta; modelo de dados novo, sem issue.
 - **Feedback: gatilho depois do `PUT` do check-in** (duda-dados): hoje o feedback fica `pendente` até alguém rodar o worker (aceito
