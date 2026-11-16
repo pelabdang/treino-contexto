@@ -211,6 +211,7 @@ def gerar(session: Session, atleta_id: int, redator: Redator, montar_pacote: Mon
                 return None
             if antigo is None:
                 fb_antes.versao_checagens = versoes.checagens  # o texto foi conferido por ela; nao conta tentativa
+                fb_antes.clima_visto = clima_visto  # linha anterior a 0015 (nulo) passa a comparar o clima daqui em diante
                 session.commit()
                 rel.mantidos += 1
                 return True

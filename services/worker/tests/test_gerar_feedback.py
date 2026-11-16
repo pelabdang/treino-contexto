@@ -499,6 +499,19 @@ def test_refazer_que_falha_mantem_o_texto_pronto(fabrica, modo):
     assert (fb.estado, fb.texto, fb.tentativas) == ("pronto", "Texto bom.", 1)
 
 
+def test_refazer_que_falha_e_mantem_o_texto_antigo_preenche_o_clima_visto(fabrica):
+    at = _atleta(fabrica, 1)
+    _posicionar(fabrica)
+    _gerar(fabrica, at, _redator(falso=ProvedorFalso(texto="Texto bom."))[0])
+    with fabrica() as s:  # linha de antes da 0015
+        s.scalars(select(FeedbackTreino)).one().clima_visto = None
+        s.commit()
+    rel = _gerar(fabrica, at, _redator(falso=ProvedorFalso(modo="erro"))[0], refazer=True)
+    assert rel.mantidos == 1
+    (fb,) = _linhas(fabrica)
+    assert fb.texto == "Texto bom." and fb.tentativas == 1 and fb.clima_visto is not None
+
+
 def test_falha_em_checkin_editado_nao_mantem_o_texto_antigo(fabrica):
     at = _atleta(fabrica, 1)
     _gerar(fabrica, at, _redator(falso=ProvedorFalso(texto="Texto bom."))[0])
