@@ -53,11 +53,12 @@ class RelatorioFeedback:
     sem_feedback: int = 0  # linhas `sem_feedback` gravadas (qualquer motivo)
     ignorados: int = 0  # em dia, ou nao elegiveis
     adiados: int = 0  # sobraram por causa do limite de chamadas (nosso ou do provedor); entram na proxima execucao
-    mantidos: int = 0  # `--refazer` falhou (provedor ou checagens) e o texto pronto e em dia foi mantido
+    mantidos: int = 0  # `--refazer` falhou (provedor ou checagens) e o texto pronto e em dia passou nas checagens atuais: mantido
+    mantido_reprovado: int = 0  # idem, mas o texto antigo NAO passou nas checagens atuais (#407): caiu e a linha ficou `sem_feedback`
     limite_do_provedor: bool = False  # o provedor recusou por limite por minuto: a execucao parou ali
     erros: int = 0  # falha ao montar o pacote ou checar: nada gravado (so a contagem, nunca a mensagem)
-    motivos: dict[str, int] = field(default_factory=dict)  # codigos das falhas: soma = `sem_feedback` + `mantidos`
-    reprovacoes: dict[str, int] = field(default_factory=dict)  # codigos devolvidos pelas checagens (nao gravados)
+    motivos: dict[str, int] = field(default_factory=dict)  # codigos das falhas: soma = `sem_feedback` + `mantidos` (o texto antigo que caiu ja esta em `sem_feedback`)
+    reprovacoes: dict[str, int] = field(default_factory=dict)  # codigos devolvidos pelas checagens (nao gravados), do texto novo e do antigo que caiu
 
 
 def desatualizado(fb: FeedbackTreino, checkin: CheckinTreino, versao_fatos: str, recuperacao_hoje: Any = _NAO_SEI) -> bool:
@@ -172,9 +173,37 @@ def gerar(session: Session, atleta_id: int, redator: Redator, montar_pacote: Mon
             _gravar(session, checkin, atualizado_em, estado=estado, motivo=motivo, texto=texto, provedor=res.provedor,
                     modelo=res.modelo, versoes=versoes, agora=momento, recuperacao_em=recuperacao_em)
 
+        def mantem_ou_cai() -> bool | None:
+            """A nova tentativa falhou: o texto pronto antigo so fica se passar nas checagens ATUAIS com o pacote desta
+            tentativa (#407). Passou: fica e `versao_checagens` vira a atual. Reprovou: a linha vira `sem_feedback`
+            (`texto_reprovado`) e o codigo soma em `reprovacoes`. `True` = manteve, `False` = caiu, `None` = a checagem levantou (nada gravado)."""
+            try:
+                antigo = checar(pacote, fb_antes.texto) if len(fb_antes.texto) <= FEEDBACK_TEXTO_MAX else "tamanho"
+            except Exception:  # noqa: BLE001
+                session.rollback()
+                rel.erros += 1
+                return None
+            if antigo is None:
+                fb_antes.versao_checagens = versoes.checagens  # o texto foi conferido por ela; nao conta tentativa
+                session.commit()
+                rel.mantidos += 1
+                return True
+            else:
+                grava("sem_feedback", "texto_reprovado", None)
+                rel.sem_feedback += 1
+                rel.mantido_reprovado += 1
+                codigo_antigo = str(antigo) if _CODIGO.fullmatch(str(antigo)) else "outro"
+                rel.reprovacoes[codigo_antigo] = rel.reprovacoes.get(codigo_antigo, 0) + 1
+                return False
+
         if res.texto is None:
             if manter:
-                rel.mantidos += 1
+                mantido = mantem_ou_cai()
+                if mantido is None:
+                    continue
+                if not mantido:  # o texto antigo caiu: o motivo da linha e o da reprovacao
+                    rel.motivos["texto_reprovado"] = rel.motivos.get("texto_reprovado", 0) + 1
+                    continue
             else:
                 grava("sem_feedback", res.motivo, None)
                 rel.sem_feedback += 1
@@ -187,14 +216,16 @@ def gerar(session: Session, atleta_id: int, redator: Redator, montar_pacote: Mon
             rel.erros += 1
             continue
         if reprovado is not None:  # o texto e descartado; guarda-se so o codigo de motivo da linha
+            codigo = str(reprovado) if _CODIGO.fullmatch(str(reprovado)) else "outro"  # nunca texto livre nem o termo
+            rel.reprovacoes[codigo] = rel.reprovacoes.get(codigo, 0) + 1
             if manter:
-                rel.mantidos += 1
+                mantido = mantem_ou_cai()
+                if mantido is None:
+                    continue
             else:
                 grava("sem_feedback", "texto_reprovado", None)
                 rel.sem_feedback += 1
             rel.motivos["texto_reprovado"] = rel.motivos.get("texto_reprovado", 0) + 1
-            codigo = str(reprovado) if _CODIGO.fullmatch(str(reprovado)) else "outro"  # nunca texto livre nem o termo
-            rel.reprovacoes[codigo] = rel.reprovacoes.get(codigo, 0) + 1
             continue
         grava("pronto", None, res.texto)
         rel.gerados += 1

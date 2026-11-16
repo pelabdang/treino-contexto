@@ -490,7 +490,7 @@ def test_refazer_que_falha_mantem_o_texto_pronto(fabrica, modo):
     at = _atleta(fabrica, 1)
     _gerar(fabrica, at, _redator(falso=ProvedorFalso(texto="Texto bom."))[0])
     if modo == "checagem":
-        rel = _gerar(fabrica, at, _redator(falso=ProvedorFalso(texto="Texto novo."))[0], checar=lambda p, t: "numero_fora_do_pacote",
+        rel = _gerar(fabrica, at, _redator(falso=ProvedorFalso(texto="Texto novo."))[0], checar=lambda p, t: "numero_fora_do_pacote" if t == "Texto novo." else None,
                      refazer=True)
     else:
         rel = _gerar(fabrica, at, _redator(falso=ProvedorFalso(modo=modo))[0], refazer=True)
@@ -537,6 +537,75 @@ def test_refazer_sem_provedor_configurado_mantem_o_texto(fabrica):
     assert (rel.sem_feedback, rel.mantidos, rel.motivos) == (0, 1, {"provedor_nao_configurado": 1})
     (fb,) = _linhas(fabrica)
     assert (fb.estado, fb.texto) == ("pronto", "Texto bom.")
+
+
+# ---------- #407: o texto mantido passa pelas checagens atuais ----------
+
+def _com_versao_antiga(fabrica):
+    with fabrica() as s:
+        s.scalars(select(FeedbackTreino)).one().versao_checagens = "checagens_feedback@0"
+        s.commit()
+
+
+@pytest.mark.parametrize("modo", ["erro", "tempo", "checagem"])
+def test_refazer_falho_com_texto_antigo_reprovado_cai(fabrica, modo):
+    at = _atleta(fabrica, 1)
+    _gerar(fabrica, at, _redator(falso=ProvedorFalso(texto="Texto bom."))[0])
+    _com_versao_antiga(fabrica)
+    reprova = lambda p, t: "clima_estado"  # noqa: E731  (a checagem atual reprova o texto antigo e o novo)
+    falso = ProvedorFalso(texto="Texto novo.") if modo == "checagem" else ProvedorFalso(modo=modo)
+    rel = _gerar(fabrica, at, _redator(falso=falso)[0], checar=reprova, refazer=True)
+    assert (rel.mantidos, rel.mantido_reprovado, rel.sem_feedback, rel.motivos) == (0, 1, 1, {"texto_reprovado": 1})
+    assert rel.reprovacoes == ({"clima_estado": 2} if modo == "checagem" else {"clima_estado": 1})
+    (fb,) = _linhas(fabrica)
+    assert (fb.estado, fb.motivo, fb.texto) == ("sem_feedback", "texto_reprovado", None)
+    assert fb.versao_checagens == V.checagens
+
+
+def test_refazer_falho_com_texto_antigo_aprovado_mantem_e_atualiza_a_versao(fabrica):
+    at = _atleta(fabrica, 1)
+    _gerar(fabrica, at, _redator(falso=ProvedorFalso(texto="Texto bom."))[0])
+    _com_versao_antiga(fabrica)
+    rel = _gerar(fabrica, at, _redator(falso=ProvedorFalso(modo="erro"))[0], refazer=True)
+    assert (rel.mantidos, rel.mantido_reprovado, rel.sem_feedback) == (1, 0, 0)
+    (fb,) = _linhas(fabrica)
+    assert (fb.estado, fb.texto, fb.versao_checagens, fb.tentativas) == ("pronto", "Texto bom.", V.checagens, 1)
+
+
+def test_refazer_no_limite_do_provedor_nao_grava_nem_confere(fabrica):
+    at = _atleta(fabrica, 1)
+    _gerar(fabrica, at, _redator(falso=ProvedorFalso(texto="Texto bom."))[0])
+    _com_versao_antiga(fabrica)
+    conferidos = []
+    rel = _gerar(fabrica, at, _redator(falso=ProvedorFalso(modo="limite"))[0],
+                 checar=lambda p, t: conferidos.append(t) or "clima_estado", refazer=True)
+    assert (rel.limite_do_provedor, rel.mantidos, rel.mantido_reprovado, rel.adiados) == (True, 0, 0, 1)
+    (fb,) = _linhas(fabrica)
+    assert (fb.estado, fb.texto, fb.versao_checagens) == ("pronto", "Texto bom.", "checagens_feedback@0") and conferidos == []
+
+
+def test_mudar_so_a_versao_das_checagens_nao_poe_na_fila(fabrica):
+    at = _atleta(fabrica, 1)
+    _gerar(fabrica, at, _redator(falso=ProvedorFalso(texto="Texto bom."))[0])
+    outras = Versoes(fatos=V.fatos, prompt=V.prompt, checagens="checagens_feedback@9")
+    r, falso = _redator()
+    from app.llm import prompt_feedback
+    from app.servicos.feedback import gerar
+
+    with fabrica() as s:
+        rel = gerar(s, at, r, Pacotes(), _aprova, outras, prompt_feedback.TEXTO)
+    assert (rel.gerados, rel.ignorados) == (0, 1) and falso.chamadas == 0
+
+
+def test_comando_mostra_mantido_reprovado(fabrica, capsys):
+    at = _atleta(fabrica, 1, nome="Cris")
+    _gerar(fabrica, at, _redator(falso=ProvedorFalso(texto="Texto bom."))[0])
+    r, _ = _redator(falso=ProvedorFalso(modo="erro"))
+    assert gerar_feedback.main(["--atleta", "Cris", "--refazer"], redator=r, montar_pacote=Pacotes(),
+                               checar=lambda p, t: "clima_estado", versoes=V, session_factory=fabrica) == 0
+    saida = capsys.readouterr().out
+    assert "sem_feedback=1" in saida and "mantido_reprovado=1" in saida and "mantidos=" not in saida
+    assert "reprovacoes: clima_estado=1" in saida
 
 
 # ---------- recuperacao (#374, ADR 0014) ----------

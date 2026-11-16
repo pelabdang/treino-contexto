@@ -83,7 +83,8 @@ def main(argv: list[str] | None = None, redator: Redator | None = None, montar_p
                     refazer=args.refazer, recuperacao_hoje=recuperacao_hoje)
 
     print(f"feedback: gerados={rel.gerados} sem_feedback={rel.sem_feedback} ignorados={rel.ignorados}"
-          f" adiados={rel.adiados} erros={rel.erros}" + (f" mantidos={rel.mantidos}" if rel.mantidos else ""))
+          f" adiados={rel.adiados} erros={rel.erros}" + (f" mantidos={rel.mantidos}" if rel.mantidos else "")
+          + (f" mantido_reprovado={rel.mantido_reprovado}" if rel.mantido_reprovado else ""))
     for nome, mapa in (("motivos", rel.motivos), ("reprovacoes", rel.reprovacoes)):
         if mapa:
             print(f"  {nome}: " + " ".join(f"{k}={v}" for k, v in sorted(mapa.items())))
