@@ -43,7 +43,7 @@ A Bia também rodou o provedor de verdade em 11/11, só com fixtures sintéticas
    uv sync
    (cd services/api && uv run alembic upgrade head && uv run alembic current)
    ```
-   Esperado: treze linhas `Running upgrade` e `0013 (head)`. A `0013` cria `feedback_treino` ([[modulos/banco]]).
+   Esperado: uma linha `Running upgrade` por migração, até o head atual (na Meta 9 eram 13 linhas e `0013`; hoje há mais migrações, ver o passo 2 do [[produto/meta-10-como-rodar]]). A `0013` cria `feedback_treino` ([[modulos/banco]]).
 3. **Carregar as 18 atividades sintéticas.** Use o `carregar.py` do passo 3 do [[produto/meta-8-como-rodar]], sem mudar nada:
    `uv run python - < /caminho/saida/carregar.py`. Esperado: `atleta 1: 18 atividades, 1 check-in, deslocamento N dias`. A tabela
    de ids é a mesma daquele guia.

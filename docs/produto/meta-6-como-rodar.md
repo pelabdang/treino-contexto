@@ -2,7 +2,7 @@
 tipo: guia
 status: em-uso
 dono: nina
-atualizado: 2026-11-09
+atualizado: 2026-11-16
 links: [[produto/meta-5-como-rodar]], [[produto/meta-4-como-rodar]], [[produto/roadmap]], [[decisoes/0010-carga-de-treino]], [[decisoes/0003-fuso-da-atividade]], [[metricas/carga-treino]], [[metricas/serie-carga]], [[metricas/carga-oraculo]], [[metricas/conferencia-carga]], [[modulos/grafico-carga]], [[modulos/banco]], [[modulos/worker]], [[modulos/api]], [[modulos/api-client]], [[modulos/ingestao-garmin]], [[diario/2026-11-07]], [[diario/2026-11-08]]
 ---
 # Meta 6: como rodar a carga de treino
@@ -47,7 +47,7 @@ não tem tela de carga), `npm test` e `uv run pytest -q` completo. A QA de ponta
    uv sync
    (cd services/api && uv run alembic upgrade head && uv run alembic current)
    ```
-   Esperado: dez linhas `Running upgrade` e `0010 (head)`. A `0008` cria `limiar_atleta` e `zona_fc_atleta`, a `0009`,
+   Esperado: uma linha `Running upgrade` por migração, até o head atual (na Meta 6 eram 10 linhas e `0010`; hoje há mais). A `0008` cria `limiar_atleta` e `zona_fc_atleta`, a `0009`,
    `recorde_pessoal` e `carga_garmin_dia`, e a `0010`, `carga_atividade` ([[modulos/banco]]).
 3. **Importar a exportação sintética com saúde.** O zip de `tests/fixtures/garmin/carga/` é o do oráculo: 23 atividades de
    março e abril de 2025 e os arquivos de saúde ([[metricas/carga-oraculo]]):

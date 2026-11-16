@@ -56,8 +56,8 @@ e nada usou a rede. **Não rodado aqui:**
    uv sync
    (cd services/api && uv run alembic upgrade head && uv run alembic current)
    ```
-   Esperado: catorze linhas `Running upgrade` e `0014 (head)`. A `0014` cria `recuperacao_dia` e a coluna
-   `feedback_treino.recuperacao_importada_em` ([[modulos/banco]]).
+   Esperado: uma linha `Running upgrade` por migração, até o head atual (hoje 15 linhas e `0015 (head)`; confira com `ls services/api/alembic/versions`). A `0014` cria `recuperacao_dia` e a coluna
+   `feedback_treino.recuperacao_importada_em`; a `0015`, a coluna `feedback_treino.clima_visto` ([[modulos/banco]]).
 3. **Carregar as 18 atividades sintéticas.** Use o `carregar.py` do passo 3 do [[produto/meta-8-como-rodar]], sem mudar nada:
    `uv run python - < /caminho/saida/carregar.py`. Esperado: `atleta 1: 18 atividades, 1 check-in, deslocamento N dias`. A tabela
    de ids é a mesma daquele guia (a 18 é a corrida de 45 min do dia 09/11 da fixture, deslocada para o seu "hoje").
