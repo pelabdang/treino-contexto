@@ -237,7 +237,7 @@ Cada item tem a **recomendação** (o padrão que vale se o Angelo responder "ok
 10. **"Treino fora do normal" para treino sem linha de base (sem tipo, divergente, `aprendendo`):** *Recomendação:* sem motivo 2 (a regra não inventa comparação); o treino segue na lista de novos para o professor dar o tipo, e depois a linha de base existe. Alternativa: motivo próprio "sem comparação". *Angelo.*
 
 ## Revisão da Duda (incorporada em 16/11)
-Modelo de dados (item 1: três colunas, `ON DELETE SET NULL`, `consentimento_em` com futuro), filtro (item 3: a função única e a matriz de teste), identidade (item 2), o `PUT` tudo ou nada, o `CHECK tipo_divergencia_origem` e o que a correção apaga (item 5), o conflito com `ORIGENS_PROTEGIDAS` e a tabela do item 6 (reimportação e `aplicar_tipos`). Pontos em aberto para ela: o índice em `vinculo_professor_atleta(atleta_id)` (a chave é `(professor_id, atleta_id)`) e se `consentimento_em <= agora` cabe na consulta do filtro sem mudar o plano.
+Comentário no PR #435. Bloqueantes resolvidos: `PROFESSOR_ID` vazio (comentado no `.env.example` e validador `""` para `None`) e ordem `404` antes de `422`. Sem índice novo em `vinculo_professor_atleta` (a consulta parte do prefixo da chave). Os demais pontos estão nos itens 1, 2, 3, 5 e 6 e em "Limitações".
 
 ## Data e quem decidiu
 2026-11-16. Proposta do Caio (ciência), com revisão da Duda (banco e API) pedida no PR. Decisões do Angelo de 16/11 ("ok para as 10") no Contexto. Issue #419. **Modelo de dados: aprovado pelo Theo em 2026-11-16** (comentário no PR #435), com a revisão da Duda incorporada no mesmo dia. **Status `proposta`:** vira `aceita` quando o Angelo responder aos itens 1, 2, 5, 6, 7, 8 e 10 de "A confirmar".
