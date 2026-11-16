@@ -1,0 +1,86 @@
+"""Professor do piloto local e o filtro de vinculo e consentimento (ADR 0015, itens 2 e 3; issue #423).
+
+Duas pecas, usadas por TODA rota do professor (a Meta 11 nao tem rota de professor que leia atleta fora daqui):
+
+- `professor_da_rota`: dependencia que confere o `professor_id` do caminho contra o `PROFESSOR_ID` configurado e contra a
+  tabela `professor`. Os tres jeitos de falhar (sem configuracao, id diferente, sem linha) dao o MESMO `404`, byte a byte, e
+  o log nao diz qual deles foi: a resposta nao confirma que um id existe. Devolve o id da CONFIGURACAO, nunca o do caminho.
+- `atletas_do_professor(professor_id, agora)`: expressao SQL (subconsulta de `atleta_id`) com o vinculo E o consentimento
+  (`consentimento_em` nao nulo e `<= agora`). Entra como condicao da consulta, nunca como filtro depois de ler.
+
+Dado de saude: nada de nome, tipo, PSE ou texto de atleta em log; o log leva so ids e contagens.
+"""
+
+from __future__ import annotations
+
+from datetime import datetime, timezone
+
+from fastapi import Depends, HTTPException
+from sqlalchemy import Select, select
+from sqlalchemy.orm import Session
+
+from app.config import settings
+from app.db.models import Atleta, Professor, VinculoProfessorAtleta
+from app.db.session import get_session
+
+# Corpo unico do 404 do professor: a mesma forma e os mesmos bytes nos tres casos (ADR 0015, item 2).
+PROFESSOR_INEXISTENTE = {
+    "detail": [{"loc": ["path", "professor_id"], "msg": "professor inexistente", "type": "professor_inexistente"}]
+}
+ATLETA_NAO_ENCONTRADO = {
+    "detail": [{"loc": ["path", "atleta_id"], "msg": "atleta não encontrado", "type": "atleta_nao_encontrado"}]
+}
+
+
+def agora_utc() -> datetime:
+    """O instante da requisicao (UTC com fuso). Dependencia, para o teste fixar a hora; um so por requisicao."""
+    return datetime.now(timezone.utc)
+
+
+def atletas_do_professor(professor_id: int, agora: datetime):
+    """Subconsulta com os `atleta_id` visiveis ao professor: vinculo com consentimento dado ate `agora`.
+
+    `agora` precisa ter fuso (nunca `now()` no SQL). Sem atalho por `assessoria_id`.
+    """
+    if agora.tzinfo is None:
+        raise ValueError("agora precisa ter fuso (UTC)")
+    return (
+        select(VinculoProfessorAtleta.atleta_id)
+        .where(
+            VinculoProfessorAtleta.professor_id == professor_id,
+            VinculoProfessorAtleta.consentimento_em.is_not(None),
+            VinculoProfessorAtleta.consentimento_em <= agora,
+        )
+        .scalar_subquery()
+    )
+
+
+def professor_configurado(session: Session, professor_id_do_caminho: int) -> int | None:
+    """O id da configuracao se o do caminho for o mesmo e houver linha em `professor`; senao `None` (sem dizer por que)."""
+    configurado = settings.professor_id
+    if configurado is None or professor_id_do_caminho != configurado:
+        return None
+    return configurado if session.get(Professor, configurado) is not None else None
+
+
+def professor_da_rota(professor_id: int, session: Session = Depends(get_session)) -> int:
+    """Dependencia das rotas `/professores/{professor_id}/...`: devolve o id da CONFIGURACAO ou levanta o 404 uniforme."""
+    valido = professor_configurado(session, professor_id)
+    if valido is None:
+        raise HTTPException(status_code=404, detail=PROFESSOR_INEXISTENTE["detail"])
+    return valido
+
+
+def atleta_visivel(session: Session, professor_id: int, atleta_id: int, agora: datetime) -> Atleta:
+    """O atleta, se estiver no filtro; senao o mesmo `404` de atleta inexistente (nunca 403)."""
+    atleta = session.scalars(
+        select(Atleta).where(Atleta.id == atleta_id, Atleta.id.in_(atletas_do_professor(professor_id, agora)))
+    ).first()
+    if atleta is None:
+        raise HTTPException(status_code=404, detail=ATLETA_NAO_ENCONTRADO["detail"])
+    return atleta
+
+
+def so_atletas_visiveis(consulta: Select, coluna_atleta_id, professor_id: int, agora: datetime) -> Select:
+    """Aplica o filtro a uma consulta (`atividade.atleta_id`, `atleta.id`...): o jeito de uma rota de professor ler dados."""
+    return consulta.where(coluna_atleta_id.in_(atletas_do_professor(professor_id, agora)))
