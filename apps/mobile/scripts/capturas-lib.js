@@ -27,7 +27,7 @@ const SIMULACOES = {
   vazio: { alterar: (c) => ({ ...c, alunos: [], novos: [] }) },
   "sem-motivo": { alterar: (c) => ({ ...c, alunos: c.alunos.filter((a) => a.sem_motivo), novos: [] }) },
   rede: { abortar: true },
-  "404": { status: 404, corpo: { type: "professor_inexistente", detail: "professor inexistente" } },
+  "404": { status: 404, corpo: { detail: [{ loc: ["path", "professor_id"], msg: "professor inexistente", type: "professor_inexistente" }] } },
 };
 const TAMANHOS = [
   { nome: "390", largura: 390, altura: 844 },
