@@ -2,7 +2,7 @@
 tipo: metrica
 status: rascunho
 dono: caio
-atualizado: 2026-11-12
+atualizado: 2026-11-16
 links: [[decisoes/0014-recuperacao-diaria]], [[decisoes/0011-linha-de-base-e-semana-padrao]], [[decisoes/0003-fuso-da-atividade]], [[metricas/linha-base]], [[metricas/recuperacao-oraculo]], [[produto/roadmap]], [[glossario]]
 ---
 # Recuperação da noite anterior (`recuperacao@1`)
@@ -43,3 +43,11 @@ Noite de 345 min: `z = -4,138`, abaixo. A de 420 min: `z = -0,690`, dentro. Com 
 ## Limitações e quando não usar
 Os parâmetros são escolhas nossas, não calibradas. A janela de 28 noites acompanha mudanças lentas de rotina (uma fase longa fora do padrão vira o normal). Início
 frio de cerca de duas semanas com o relógio no pulso. A função não sabe se uma noite foi recalculada pelo Garmin: isso é do `importado_em` (#372, #374).
+
+### Conferência local (#379)
+A conferência com a conta real do atleta foi feita só no computador dele, com o relatório fora do git. As regras da `recuperacao@1` **ficaram como estão**: corte das 06:00, noite da manhã para treino noturno, mesma noite para dois treinos no mesmo dia e mínimo de 14 noites em 28. A versão não mudou. Três limitações genéricas apareceram:
+1. **O corte das 06:00 é aproximado.** A hora real do fim do sono não é guardada, só o dia em que o atleta acordou. Um treino logo depois das 06:00 pode ter vindo antes de a noite terminar, ou o contrário.
+2. **O normal exige metade das noites da janela com valor.** Numa conta com muitos buracos, a medida alterna entre `aprendendo` e normal de uma semana para outra.
+3. **Em medida muito estável, o piso relativo domina o desvio.** O limite de 2 desvios fica largo, e a leitura serve só como direção ("acima" ou "abaixo"), não como tamanho do desvio.
+
+Nenhuma data, número nem resposta da conta entra no repositório (ver [[decisoes/0014-recuperacao-diaria]]).
