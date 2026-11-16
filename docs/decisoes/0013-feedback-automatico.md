@@ -2,7 +2,7 @@
 tipo: decisao
 status: aceita
 dono: caio
-atualizado: 2026-11-10
+atualizado: 2026-11-16
 links: [[decisoes/0004-contrato-tela-evolucao]], [[decisoes/0007-clima-da-atividade]], [[decisoes/0008-deteccao-de-esforcos]], [[decisoes/0010-carga-de-treino]], [[decisoes/0011-linha-de-base-e-semana-padrao]], [[decisoes/0012-check-in-pos-treino]], [[metricas/linha-base]], [[metricas/carga-treino]], [[metricas/carga-pse]], [[metricas/esforcos]], [[modulos/banco]], [[modulos/api]], [[modulos/worker]], [[produto/roadmap]], [[produto/plano-mvp-execucao]], [[glossario]]
 ---
 # ADR: 0013 Feedback automático por treino (pacote de fatos, guarda, camada de LLM, checagens)
@@ -443,3 +443,11 @@ Aceita em 2026-11-10: o Angelo aprovou o tom dos 6 exemplos e resolveu os itens 
 
 ## Adendo 2 (2026-11-14): teto de saída e esforço de raciocínio na camada (#395)
 A interface do resto do app não muda (`redigir(...) -> ResultadoLLM`). Muda o que a camada passa ao provedor, pelo LiteLLM: o **teto de saída** (`max_tokens`) e o **esforço de raciocínio** (`reasoning_effort`), lidos do `.env` em `LLM_MAX_TOKENS` (padrão 1200) e `LLM_REASONING_EFFORT` (padrão `low`). Motivo: o provedor soma o teto de saída ao pedido contra o limite por minuto do plano gratuito, e sem teto o pedido passava de 8.000 tokens; o modelo de raciocínio que gasta a saída pensando devolve texto vazio (`provedor_erro`). Modelo que não aceita `reasoning_effort`: a camada manda `drop_params=True` junto, e o LiteLLM descarta o parâmetro em vez de levantar `UnsupportedParamsError` (conferido na 1.108.4). Variável vazia (ou `0` no teto) = o parâmetro não é enviado. O item 3 acima segue valendo: nenhum provedor é chamado direto.
+
+## Adendo 3 (2026-11-16): o texto mantido no `--refazer` passa pelas checagens atuais (#407)
+Completa o adendo da decisão 6 (#357). Quando o `--refazer` falha (provedor ou checagens), o texto `pronto` antigo só é mantido se passar em `checar(pacote, texto_antigo)` com o pacote da própria tentativa.
+- **Passa:** fica, e `versao_checagens` da linha vira a atual (o texto foi conferido por ela). Não conta tentativa.
+- **Reprova:** não fica. A linha vira `sem_feedback` com motivo `texto_reprovado` (texto apagado) e o código entra em `reprovacoes`, como um texto novo. Se o texto novo também reprovou, os dois códigos entram.
+- **Limite do provedor:** continua sem gravar nada e sem conferir.
+- **Relatório:** `mantidos` conta só os que passaram; `mantido_reprovado` conta os que caíram (já somados em `sem_feedback`). O worker imprime `mantido_reprovado=N` quando há algum.
+- **Mudar só a `versao_checagens` não deixa o feedback desatualizado** (não entra na fila sem `--refazer`; não gasta chamada do provedor). Reconferir os textos gravados sem chamar o provedor (opção `--reconferir`) fica **fora** desta issue; se o Angelo e o Theo quiserem, abre-se issue própria.
