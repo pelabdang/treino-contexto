@@ -1,7 +1,7 @@
 """Rotas do professor do piloto (Meta 11, ADR 0015). Por enquanto: o `PUT` em lote do tipo do treino (#425).
 
 Toda rota daqui entra por `professor_da_rota` (404 uniforme) e le atleta so pelo filtro de `servicos/professor.py`.
-O `422` nao repete o que foi enviado (so `loc`, `msg`, `type`) e o `500` e de texto fixo, como no check-in (`RotaCheckin`).
+O `422` nao repete o que foi enviado (so `loc`, `msg`, `type`) e o `500` e de texto fixo e neutro, "erro ao processar o pedido" (`RotaProfessor`, filha da `RotaCheckin`).
 O log leva so `professor_id` e contagens.
 """
 
@@ -16,7 +16,7 @@ from pydantic import BaseModel
 from sqlalchemy.orm import Session
 
 from app.db.session import get_session
-from app.rotas.checkin import RotaCheckin
+from app.rotas.checkin import RotaCheckin as _RotaSemEco
 from app.rotas.evolucao import Erro
 from app.servicos import tipo_professor as tp
 from app.servicos.professor import agora_utc, professor_da_rota
@@ -25,7 +25,14 @@ log = logging.getLogger(__name__)
 
 TipoTreino = Literal["leve", "moderado", "longo", "intervalado", "fartlek"]
 
-router = APIRouter(prefix="/professores/{professor_id}", tags=["professor"], route_class=RotaCheckin)
+class RotaProfessor(_RotaSemEco):
+    """422 sem eco da entrada e 500 de texto neutro (nada de "check-in" para o professor), so para as rotas do professor."""
+
+    MSG_500 = "erro ao processar o pedido"
+    LOG_500 = "professor"
+
+
+router = APIRouter(prefix="/professores/{professor_id}", tags=["professor"], route_class=RotaProfessor)
 
 
 class TipoItemIn(BaseModel):
