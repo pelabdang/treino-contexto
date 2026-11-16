@@ -62,6 +62,7 @@ describe("fundo da folha de tipo", () => {
     expect(fundo.props.accessible).toBe(false);
     expect(fundo.props.focusable).toBe(false);
     expect(fundo.props["aria-hidden"]).toBe(true);
+    expect(fundo.props.tabIndex).toBe(-1); // na web o Pressable vira div com tabindex=0; -1 o tira do Tab
     expect(fundo.props.importantForAccessibility).toBe("no");
     expect(fundo.props.accessibilityLabel).toBeUndefined();
     expect(screen.getAllByLabelText("Fechar")).toHaveLength(1);

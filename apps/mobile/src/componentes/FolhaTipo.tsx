@@ -39,6 +39,7 @@ export function FolhaTipo({ visivel, subtitulo, sugerido, escolhido, aoEscolher,
           testID="fundo-folha"
           accessible={false}
           focusable={false}
+          {...FOCAVEL}
           importantForAccessibility="no"
           aria-hidden
           onPress={aoFechar}
