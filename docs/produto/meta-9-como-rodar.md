@@ -2,7 +2,7 @@
 tipo: guia
 status: em-uso
 dono: nina
-atualizado: 2026-11-13
+atualizado: 2026-11-16
 links: [[produto/meta-8-como-rodar]], [[produto/roadmap]], [[decisoes/0013-feedback-automatico]], [[decisoes/0012-check-in-pos-treino]], [[decisoes/0004-contrato-tela-evolucao]], [[metricas/fatos-treino]], [[metricas/fatos-treino-oraculo]], [[metricas/checagens-feedback]], [[design/telas/feedback]], [[modulos/camada-llm]], [[modulos/banco]], [[modulos/api]], [[modulos/mobile]], [[modulos/worker]], [[modulos/ingestao-garmin]], [[diario/2026-11-11]], [[glossario]]
 ---
 # Meta 9: como rodar o feedback automático por treino
@@ -108,7 +108,7 @@ A Bia também rodou o provedor de verdade em 11/11, só com fixtures sintéticas
    `curl -s -o /dev/null -w '%{http_code}\n' -X DELETE localhost:8059/atletas/1/atividades/17/checkin` dá `204`, e o `GET` da 17
    volta a `sem_checkin` com `checkin_aberto` `true`: apagar o check-in apaga o feedback (cascata no banco).
    `--refazer` refaz também o que está pronto, ainda dentro do limite: com `--refazer --limite 2`, `gerados=2 ... adiados=6`. Se o
-   provedor ou as checagens falharem no `--refazer`, o texto que já estava pronto e em dia é **mantido** (a saída ganha `mantidos=N`).
+   provedor ou as checagens falharem no `--refazer`, o texto que já estava pronto e em dia só é **mantido** se passar nas checagens atuais (a saída ganha `mantidos=N`). Se reprovar, a linha vira `sem_feedback` (`texto_reprovado`) e a saída mostra `mantido_reprovado=N` (#407, adendo 3 da [[decisoes/0013-feedback-automatico]]).
 10. **O cartão no app web** (não rodado nesta verificação). Como no passo 11 do [[produto/meta-8-como-rodar]], apontando para a
     API do passo 4: em `apps/mobile`, `npm ci` e
     `CI=1 EXPO_PUBLIC_API_URL=http://localhost:8059 EXPO_PUBLIC_ATLETA_ID=1 npx expo start --web --port 8083`. Em `/treino/18` o

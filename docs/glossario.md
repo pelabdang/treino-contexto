@@ -2,7 +2,7 @@
 tipo: glossario
 status: em-uso
 dono: nina
-atualizado: 2026-11-13
+atualizado: 2026-11-16
 ---
 # Glossário
 
@@ -73,5 +73,6 @@ atualizado: 2026-11-13
 - **Linguagem proibida**: lista de palavras e expressões que o feedback não pode usar (diagnóstico, culpa, promessa, causa afirmada, conselho, quem fala, elogio sem fato, número por extenso). Ver [[metricas/checagens-feedback]].
 - **Provedor de LLM**: serviço externo que redige o feedback (padrão: Groq, plano gratuito). Só entra pela camada de LLM, trocável pelo `.env` (`LLM_PROVIDER`, `LLM_MODEL` e a chave). Com o provedor de verdade, o pacote de fatos (dado de saúde) sai da máquina. Ver [[modulos/camada-llm]].
 - **Provedor falso**: provedor dos testes e do guia (`LLM_PROVIDER=falso`): sem rede e sem chave, devolve um texto fixo. O texto vai com `origem = teste` e o cartão mostra o selo "Texto de teste". Ver [[produto/meta-9-como-rodar]].
-- **Estados do feedback**: `pronto` (com texto), `sem_checkin`, `pendente` (tem check-in, o worker ainda não gerou), `desatualizado` (o check-in foi editado; o texto antigo não é devolvido) e `indisponivel` (texto reprovado, provedor fora, sem provedor ou limite de chamadas). Atividade que não pede check-in vem com `feedback` nulo. Ver [[modulos/api]].
+- **Estados do feedback**: `pronto` (com texto), `sem_checkin`, `pendente` (tem check-in, o worker ainda não gerou), `desatualizado` (o check-in foi editado, ou a noite anterior ou o clima chegaram ou mudaram depois do texto; o texto antigo não é devolvido) e `indisponivel` (texto reprovado, provedor fora, sem provedor ou limite de chamadas). Atividade que não pede check-in vem com `feedback` nulo. Ver [[modulos/api]].
 - **`origem` (do feedback)**: `automatico` ou `teste`; é só o que a API diz sobre quem escreveu o texto (nunca o provedor, o modelo nem as versões).
+- **Clima visto (`clima_visto`)**: a impressão (SHA-256) do clima que o pacote do feedback viu, guardada em `feedback_treino` (migração `0015`, #409). Se o clima de hoje dá outra impressão (por exemplo `pendente` virou `ok`), o feedback fica `desatualizado`. Nulo (linha anterior à `0015`) não compara. Não guarda valor de clima. Ver [[decisoes/0013-feedback-automatico]], adendo 4, e [[modulos/banco]].
