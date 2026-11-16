@@ -34,7 +34,7 @@ from app.metricas import tipo_treino as tt
 
 log = logging.getLogger(__name__)
 
-ORIGENS_PROTEGIDAS = ("professor", "trainingpeaks")
+# `ORIGENS_PROTEGIDAS` e unica: `app.metricas.tipo_treino` (ADR 0015, item 5).
 ORIGENS_DA_REGRA = ("sugestao", "semana_padrao")  # as que a `tipo_treino@1` escreve (e regrava)
 # Fora da série (continuam guardadas e classificadas): decisão do Angelo, issue #51.
 SUBTIPOS_FORA_DA_SERIE = ("esteira",)
