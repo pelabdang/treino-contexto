@@ -280,6 +280,13 @@ Sem login: o professor do piloto é o `PROFESSOR_ID` do `.env` local (`Settings.
 - `atleta_visivel` (`404 atleta_nao_encontrado`, nunca `403`, igual ao atleta inexistente) e `so_atletas_visiveis(consulta, coluna, professor_id, agora)` (a condição entra na consulta, não é filtro depois de ler).
 Testes: `tests/rotas/test_professor_filtro.py` (matriz rota x situação: consentido, consentimento nulo, no futuro, só de outro professor, sem vínculo; 404 uniforme; configuração ausente e vazia). As rotas da #424 e da #425 entram na mesma matriz. A carga sintética é `worker.carregar_professor` ([[modulos/worker]]).
 
+## Professor: `PUT /professores/{professor_id}/tipos-de-treino` (#425, [[decisoes/0015-caixa-do-dia-do-professor]] item 5)
+Corpo: lista de `{atividade_id, tipo_treino}` (1 a 200; `tipo_treino` é um dos cinco ou ausente para confirmar o tipo atual). Resposta `200 {confirmados, corrigidos}`. Entra por `professor_da_rota` e lê só pelo filtro de vínculo e consentimento (`servicos/tipo_professor.py`). **Tudo ou nada**, uma transação. Ordem das recusas: `404` do professor (uniforme) antes de tudo; `422` de forma (vazio, mais de 200, `atividade_id` repetido, tipo fora dos cinco) sem tocar no banco e sem repetir o enviado; `404 atividade_nao_encontrada` (inexistente **ou** fora do filtro, mesmo corpo, sem dizer quais ids); só então `422 atividade_sem_tipo` (multiesporte/troca, ou sem tipo para confirmar).
+- **Corrigir** (tipo diferente do atual): grava `tipo_treino`, `tipo_origem = professor`, `tipo_confirmado`, `tipo_confirmado_por`/`_em` e zera `tipo_versao` e `tipo_divergencia` na mesma gravação (o `CHECK tipo_divergencia_origem` exige).
+- **Confirmar** (mesmo tipo): só `tipo_confirmado`, `_por` e `_em`; origem, versão e divergência ficam. Repetir não renova `_em`.
+- A reimportação do FIT, a reaplicação da semana-padrão e a regra nova não mexem no tipo corrigido; a irmã do mesmo dia não ganha o item do dia. `ORIGENS_PROTEGIDAS` é uma só (`metricas/tipo_treino.py`).
+- **Feedback:** `motivos_desatualizado` ganhou o motivo `tipo` (`tipo_hoje` = `tipo_atual(atividade)`; `tipo_visto` nulo não compara); a geração grava `tipo_visto`; o cartão diz "O tipo do treino mudou depois deste feedback. O feedback será refeito.".
+
 ## Contrato da tela de evolução (Meta 2)
 O contrato que o app consome está em [[decisoes/0004-contrato-tela-evolucao]], com a lista "antes e depois".
 Já valem aqui (#64): D2 a D11 (erro `404` declarado, `versao_calculo` fixa mais `reclassificacao_pendente`, `Unidades`

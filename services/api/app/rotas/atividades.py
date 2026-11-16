@@ -33,6 +33,7 @@ from app.servicos.carga_pse_leitura import CargaPseLida, carga_pse_da_atividade
 from app.servicos.clima import ClimaDaAtividade, EstadoClima, assinatura_clima, clima_da_atividade
 from app.servicos.distancia_texto import distancia_da_atividade
 from app.servicos.esforcos_leitura import esforcos_da_atividade
+from app.servicos.feedback import tipo_atual
 from app.servicos.feedback_leitura import FeedbackLido, feedback_da_atividade
 from app.servicos.recuperacao_pacote import carregar_da_atividade, importado_em_de_hoje
 from app.servicos.fuso import inicio_local
@@ -298,7 +299,7 @@ def _feedback(session: Session, a: Atividade) -> FeedbackLido | None:
         return feedback_da_atividade(a, a.checkin, aberto)
     hoje = importado_em_de_hoje(carregar_da_atividade(session, a), a)
     linha = session.scalars(select(ClimaAtividade).where(ClimaAtividade.atividade_id == a.id)).first()
-    return feedback_da_atividade(a, a.checkin, aberto, recuperacao_hoje=hoje, clima_hoje=assinatura_clima(a, linha))
+    return feedback_da_atividade(a, a.checkin, aberto, recuperacao_hoje=hoje, clima_hoje=assinatura_clima(a, linha), tipo_hoje=tipo_atual(a))
 
 
 def _feedback_out(f: FeedbackLido | None) -> FeedbackOut | None:
