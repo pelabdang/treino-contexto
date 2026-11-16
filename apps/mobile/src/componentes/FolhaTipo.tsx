@@ -2,9 +2,10 @@
 // Celular: folha de baixo; computador: caixa centrada de 400. Fecha com "Fechar", Esc (onRequestClose) e toque fora.
 import { MaterialIcons } from "@expo/vector-icons";
 import { useMemo } from "react";
-import { Modal, Pressable, StyleSheet, Text, View } from "react-native";
+import { Modal, Pressable, StyleSheet, Text, useWindowDimensions, View } from "react-native";
 
 import { TIPOS, type TipoTreino } from "../caixa/api";
+import { comFoco } from "../tema/foco";
 import { borda, espaco, fonte, raio, tamanho, useTema, type Tema } from "../tema";
 
 type Props = {
@@ -20,7 +21,8 @@ type Props = {
 
 export function FolhaTipo({ visivel, subtitulo, sugerido, escolhido, aoEscolher, aoFechar }: Props) {
   const tema = useTema();
-  const styles = useMemo(() => criarEstilos(tema), [tema]);
+  const computador = useWindowDimensions().width >= 900;
+  const styles = useMemo(() => criarEstilos(tema, computador), [tema, computador]);
   return (
     <Modal visible={visivel} transparent animationType="none" onRequestClose={aoFechar} accessibilityViewIsModal>
       <Pressable testID="fundo-folha" accessibilityLabel="Fechar" onPress={aoFechar} style={styles.fundo}>
@@ -29,7 +31,7 @@ export function FolhaTipo({ visivel, subtitulo, sugerido, escolhido, aoEscolher,
             <Text accessibilityRole="header" style={styles.titulo}>
               Tipo do treino
             </Text>
-            <Pressable accessibilityRole="button" accessibilityLabel="Fechar" onPress={aoFechar} style={styles.fechar}>
+            <Pressable accessibilityRole="button" accessibilityLabel="Fechar" onPress={aoFechar} style={comFoco(styles.fechar, styles.foco)}>
               <MaterialIcons name="close" size={tamanho.iconeGrande} color={tema.cor["texto-2"]} accessible={false} />
             </Pressable>
           </View>
@@ -45,7 +47,7 @@ export function FolhaTipo({ visivel, subtitulo, sugerido, escolhido, aoEscolher,
                   accessibilityState={{ checked: marcado, selected: marcado }}
                   accessibilityLabel={t.valor === sugerido ? `${t.texto}, sugerido` : t.texto}
                   onPress={() => aoEscolher(t.valor)}
-                  style={[styles.opcao, marcado && styles.opcaoMarcada]}
+                  style={comFoco([styles.opcao, marcado && styles.opcaoMarcada], styles.foco)}
                 >
                   <MaterialIcons name={marcado ? "radio-button-checked" : "radio-button-unchecked"} size={tamanho.iconeGrande} color={marcado ? tema.cor.destaque : tema.cor["borda-forte"]} accessible={false} />
                   <Text style={styles.opcaoTexto}>{t.texto}</Text>
@@ -61,9 +63,9 @@ export function FolhaTipo({ visivel, subtitulo, sugerido, escolhido, aoEscolher,
   );
 }
 
-function criarEstilos({ cor }: Tema) {
+function criarEstilos({ cor }: Tema, computador: boolean) {
   return StyleSheet.create({
-    fundo: { flex: 1, backgroundColor: "rgba(0,0,0,0.5)", justifyContent: "flex-end", alignItems: "center" },
+    fundo: { flex: 1, backgroundColor: "rgba(0,0,0,0.5)", justifyContent: computador ? "center" : "flex-end", alignItems: "center" },
     folha: {
       width: "100%",
       maxWidth: 400,
@@ -72,11 +74,13 @@ function criarEstilos({ cor }: Tema) {
       backgroundColor: cor.superficie,
       borderTopLeftRadius: raio.grande,
       borderTopRightRadius: raio.grande,
+      ...(computador ? { borderBottomLeftRadius: raio.grande, borderBottomRightRadius: raio.grande } : {}),
       borderWidth: borda.fina,
       borderColor: cor.borda,
     },
     topo: { flexDirection: "row", alignItems: "center", justifyContent: "space-between" },
     titulo: { ...fonte["titulo-secao"], color: cor.texto },
+    foco: { outlineWidth: borda.foco, outlineStyle: "solid", outlineColor: cor.foco, outlineOffset: 2 },
     fechar: { width: tamanho.alvoMinimo, height: tamanho.alvoMinimo, alignItems: "center", justifyContent: "center" },
     subtitulo: { ...fonte.rotulo, color: cor["texto-2"] },
     opcao: { minHeight: 56, flexDirection: "row", alignItems: "center", gap: espaco[3], paddingHorizontal: espaco[3], borderRadius: raio.medio, borderWidth: 2, borderColor: "transparent" },

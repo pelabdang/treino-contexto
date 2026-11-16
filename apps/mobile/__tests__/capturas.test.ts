@@ -41,6 +41,12 @@ describe("rotas da caixa do dia (#426)", () => {
       "caixa-do-dia-sem-motivo",
       "caixa-do-dia-erro-rede",
       "caixa-do-dia-404",
+      "caixa-do-dia-foco",
+      "caixa-do-dia-selecao",
+      "caixa-do-dia-folha",
+      "caixa-do-dia-salvando",
+      "caixa-do-dia-lote-erro",
+      "caixa-do-dia-lote-salvo",
     ]);
     expect(caixa.every((r: any) => r.caminho === "/caixa-do-dia")).toBe(true);
     const plano = planoDeCapturas(["caixa-do-dia"], true);
@@ -61,6 +67,17 @@ describe("rotas da caixa do dia (#426)", () => {
     expect(SIMULACOES.vazio.alterar(base)).toEqual({ alunos: [], novos: [] });
     expect(SIMULACOES["sem-motivo"].alterar(base)).toEqual({ alunos: [{ sem_motivo: true }], novos: [] });
     expect(SIMULACOES["404"].status).toBe(404);
+  });
+  it("as simulações do lote: PUT pendurado, PUT recusado e leituras seguintes sem novos", () => {
+    expect(SIMULACOES.salvando.put.pendurar).toBe(true);
+    expect(SIMULACOES["lote-erro"].put.status).toBe(404);
+    expect(SIMULACOES["lote-salvo"].depois({ alunos: [1], novos: [1, 2] })).toEqual({ alunos: [1], novos: [] });
+  });
+  it("toda rota que clica ou tecla tem só testIDs e teclas conhecidas", () => {
+    for (const r of caixa) {
+      for (const id of r.clicar ?? []) expect(id).toMatch(/^[a-z0-9-]+$/);
+      for (const t of r.teclar ?? []) expect(["Tab", "Enter", "Escape"]).toContain(t);
+    }
   });
 });
 

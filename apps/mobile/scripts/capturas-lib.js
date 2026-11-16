@@ -20,6 +20,13 @@ const ROTAS = [
   { nome: "caixa-do-dia-sem-motivo", caminho: "/caixa-do-dia", simular: "sem-motivo" },
   { nome: "caixa-do-dia-erro-rede", caminho: "/caixa-do-dia", simular: "rede" },
   { nome: "caixa-do-dia-404", caminho: "/caixa-do-dia", simular: "404" },
+  // Lote (#427): `teclar` aperta teclas (anel de foco por teclado); as demais abrem a folha, selecionam e salvam.
+  { nome: "caixa-do-dia-foco", caminho: "/caixa-do-dia", teclar: ["Tab", "Tab"] },
+  { nome: "caixa-do-dia-selecao", caminho: "/caixa-do-dia", clicar: ["selecionar-511", "mudar-tipo-512", "tipo-longo"] },
+  { nome: "caixa-do-dia-folha", caminho: "/caixa-do-dia", clicar: ["selecionar-511", "mudar-tipo-512"] },
+  { nome: "caixa-do-dia-salvando", caminho: "/caixa-do-dia", simular: "salvando", clicar: ["selecionar-511", "selecionar-512", "salvar-lote"] },
+  { nome: "caixa-do-dia-lote-erro", caminho: "/caixa-do-dia", simular: "lote-erro", clicar: ["selecionar-511", "selecionar-512", "salvar-lote"] },
+  { nome: "caixa-do-dia-lote-salvo", caminho: "/caixa-do-dia", simular: "lote-salvo", clicar: ["selecionar-511", "mudar-tipo-512", "tipo-longo", "salvar-lote"] },
 ];
 
 // Respostas simuladas da caixa do dia (só dado sintético). `alterar` recebe o JSON da API falsa; `abortar` derruba a conexão.
@@ -27,6 +34,10 @@ const SIMULACOES = {
   vazio: { alterar: (c) => ({ ...c, alunos: [], novos: [] }) },
   "sem-motivo": { alterar: (c) => ({ ...c, alunos: c.alunos.filter((a) => a.sem_motivo), novos: [] }) },
   rede: { abortar: true },
+  // Lote: `put` troca a resposta do `PUT` (`pendurar` nunca responde: estado "salvando"); `depois` altera as leituras seguintes da caixa.
+  salvando: { put: { pendurar: true } },
+  "lote-erro": { put: { status: 404, corpo: { detail: [{ loc: ["body"], msg: "atividade não encontrada", type: "atividade_nao_encontrada" }] } } },
+  "lote-salvo": { depois: (c) => ({ ...c, novos: [] }) },
   "404": { status: 404, corpo: { detail: [{ loc: ["path", "professor_id"], msg: "professor inexistente", type: "professor_inexistente" }] } },
 };
 const TAMANHOS = [
