@@ -233,3 +233,26 @@ def test_a_rota_nao_chama_modelo_de_linguagem():
 
     fonte = Path(m.__file__).read_text(encoding="utf-8")
     assert "app.llm" not in fonte and "litellm" not in fonte and "redator" not in fonte.lower()
+
+
+@pytest.mark.parametrize("metodo,url,corpo,alvo", [
+    ("get", URL, None, "app.rotas.caixa_do_dia.montar_caixa"),
+    ("put", f"/professores/{PROF}/tipos-de-treino", [{"atividade_id": 10}], "app.servicos.tipo_professor.confirmar_ou_corrigir"),
+])
+def test_500_das_rotas_do_professor_tem_texto_neutro_e_sem_detalhe(client, monkeypatch, caplog, metodo, url, corpo, alvo):
+    def quebra(*a, **k):
+        raise RuntimeError(f"detalhe com {OBS}")
+
+    monkeypatch.setattr(alvo, quebra)
+    caplog.set_level(logging.DEBUG)
+    r = client.request(metodo.upper(), url, json=corpo)
+    assert r.status_code == 500 and r.json() == {"detail": "erro ao processar o pedido"}
+    assert "check-in" not in r.text and OBS not in r.text
+    assert OBS not in " ".join(x.getMessage() for x in caplog.records)
+
+
+def test_500_das_rotas_de_checkin_continua_com_o_texto_do_checkin():
+    from app.rotas.checkin import RotaCheckin
+    from app.rotas.professor import RotaProfessor
+
+    assert RotaCheckin.MSG_500 == "erro ao processar o check-in" and RotaProfessor.MSG_500 == "erro ao processar o pedido"
