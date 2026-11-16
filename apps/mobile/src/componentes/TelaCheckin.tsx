@@ -69,6 +69,7 @@ type Carga =
 
 type Passo = 1 | 2 | 3;
 type Dialogos = "nada" | "sair" | "apagar" | null;
+const ALTURA_DICA = 36; // 2 linhas da legenda (lineHeight 18)
 const OBS_VAZIA: Observacao = { nadaARelatar: false, atalhos: [], texto: "" };
 
 function mensagemCarga(erro: ErroApi): string {
@@ -526,9 +527,15 @@ function Pergunta(props: {
           <ChipsAtalhos marcados={props.obs.atalhos} aoAlternar={props.aoAlternarAtalho} desligado={ocupado} />
           <CampoObservacao styles={styles} tema={tema} texto={props.obs.texto} aoDigitar={props.aoDigitar} desligado={ocupado} />
           {props.erro && <Aviso erro styles={styles} tema={tema} texto={props.erro} />}
-          {!(props.obs.atalhos.length > 0 || props.obs.texto.trim().length > 0) && (
-            <Text style={[styles.legenda, { marginTop: espaco[3] }]}>Marque um atalho, escreva algo ou toque em Nada a relatar.</Text>
-          )}
+          {/* #382: a dica troca de texto, mas o contêiner tem altura fixa (2 linhas), para o Salvar e o
+              "Nada a relatar" não mudarem de lugar ao marcar um atalho. */}
+          <View testID="dica-observacao" style={{ marginTop: espaco[3], minHeight: ALTURA_DICA }}>
+            <Text style={styles.legenda}>
+              {props.obs.atalhos.length > 0 || props.obs.texto.trim().length > 0
+                ? "Toque em Salvar check-in para guardar."
+                : "Marque um atalho, escreva algo ou toque em Nada a relatar."}
+            </Text>
+          </View>
           <Pressable
             testID="salvar-checkin"
             accessibilityRole="button"

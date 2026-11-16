@@ -120,6 +120,7 @@ describe("tela de check-in: criar", () => {
     expect(metodos(f, "PUT")).toHaveLength(0);
     expect(screen.getByTestId("atalho-dor").props.accessibilityState.checked).toBe(true);
     expect(screen.queryByText("Marque um atalho, escreva algo ou toque em Nada a relatar.")).toBeNull();
+    expect(screen.getByText("Toque em Salvar check-in para guardar.")).toBeTruthy();
     await fireEvent.press(screen.getByTestId("salvar-checkin"));
     await screen.findByText("Check-in salvo");
     // atalhos na ordem fixa da lista, não na ordem dos toques
@@ -130,6 +131,36 @@ describe("tela de check-in: criar", () => {
       atalhos: ["dor", "sono_ruim"],
       texto: null,
     });
+  });
+
+  it("a dica da pergunta 3 troca de texto sem mudar de altura, e os botões não mudam de lugar (#382)", async () => {
+    const f = servidor({});
+    await abrir(f);
+    await pergunta1();
+    await fireEvent.press(screen.getByTestId("pse-5"));
+    await screen.findByText("Como você se sentiu no treino?");
+    await fireEvent.press(screen.getByTestId("sensacao-4"));
+    await screen.findByText("Quer registrar mais alguma coisa?");
+    const altura = () => (StyleSheet.flatten(screen.getByTestId("dica-observacao").props.style) as { minHeight: number }).minHeight;
+    const antes = altura();
+    expect(antes).toBeGreaterThanOrEqual(36);
+    const dica = screen.getByTestId("dica-observacao");
+    const irmaos = () => dica.parent!.children.map((c) => (typeof c === "string" ? c : (c as { props: { testID?: string } }).props.testID));
+    const ordemAntes = irmaos();
+    await fireEvent.press(screen.getByTestId("atalho-dor"));
+    expect(screen.getByTestId("dica-observacao")).toBeTruthy();
+    expect(altura()).toBe(antes);
+    expect(irmaos()).toEqual(ordemAntes);
+    // o texto da dica continua na tela (anunciado), só muda
+    expect(screen.getByText("Toque em Salvar check-in para guardar.")).toBeTruthy();
+    await fireEvent.press(screen.getByTestId("atalho-dor"));
+    expect(altura()).toBe(antes);
+    expect(screen.getByText("Marque um atalho, escreva algo ou toque em Nada a relatar.")).toBeTruthy();
+    // nenhum dos dois botões fica abaixo de 44 px
+    for (const id of ["salvar-checkin", "nada-a-relatar"]) {
+      const est = StyleSheet.flatten(screen.getByTestId(id).props.style) as { minHeight?: number; height?: number };
+      expect(est.minHeight ?? est.height ?? 0).toBeGreaterThanOrEqual(44);
+    }
   });
 
   it("botão desligado e 'Salvando...' usam o texto de desligado, legível nos dois temas (#334)", async () => {
