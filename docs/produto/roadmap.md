@@ -23,7 +23,7 @@ Ao fechar uma meta, o Paulo registra o resultado em `docs/produto/metas/` e revi
 | 8 | Check-in pós-treino e carga pela PSE | feita (fixtures, sem rede; celular não verificado; [[produto/metas/meta-8-check-in]]) |
 | 9 | Feedback automático por treino | feita (fixtures e provedor falso; tela rodando, celular e revisão da Lia na tela não verificados; [[produto/metas/meta-9-feedback-automatico]]) |
 | 10 | Sono, VFC e FC de repouso no contexto do treino | feita (fixtures, sem rede; conferência visual no Chrome em 390 px sem bloqueantes; celular de verdade não verificado; [[produto/metas/meta-10-recuperacao]]) |
-| **11** | **Caixa do dia do professor (piloto local, sem login, atletas sintéticos)** | **proposta**, esperando o "ok" do Angelo (perguntas em "PRECISA DO ANGELO") |
+| **11** | **Caixa do dia do professor (piloto local, sem login, atletas sintéticos)** | **atual: em curso** ("ok para as 10" do Angelo em 16/11; #417 a #431) |
 | 12 | Agente do atleta (primeiras perguntas) | esboço (era a Meta 11) |
 
 Numeração: em 03/11 a linha de base virou meta própria e as metas seguintes andaram um número. Em 04/11 (decisão do
@@ -774,10 +774,30 @@ Revisadas ao fim de cada meta com o que se aprendeu. Ordem tirada da "Fundação
   minuto e por dia) é parte do desenho (teto de saída, pausa de 65 s; #395); conferência visual que depende da extensão do navegador
   ficou para o fim pela terceira meta (na Meta 10 a Lia a fez no fechamento), e a próxima tela precisa de capturas que rodem sem ela.
 
-### Meta 11: caixa do dia do professor (proposta)
-> **Proposta do Paulo na #380, esperando o "ok" do Angelo.** Nenhuma issue aberta. As perguntas estão em "PRECISA DO ANGELO", "Meta 11",
-> cada uma com a recomendação. A proposta foi feita **em volta** das decisões de login, vínculo e consentimento: nada nela precisa de
-> conta, serviço pago ou dado de outro aluno real.
+### Meta 11: caixa do dia do professor (atual, em curso)
+> **Em curso desde 16/11.** Proposta do Paulo na #380; o Angelo respondeu **"ok para as 10"** no mesmo dia, todas com a recomendação
+> (inclusive a P1, com a dependência só de desenvolvimento, e o "sim" da pergunta 5, que trouxe a P14). Issues #418 a #431; roteiro na #417.
+> Nada na meta precisa de conta, serviço pago ou dado de outro aluno real.
+
+- **Decisões do Angelo (16/11, "ok para as 10"):**
+  1. abrir as issues e começar a Meta 11 (P1 a P14; paralelas #382 e #402);
+  2. **sem login** nesta meta: o professor do piloto local é fixo por configuração, como o atleta fixo da Meta 2; login, contas e controle
+     de acesso vêm com a meta de deploy;
+  3. **só atletas sintéticos** (fictícios, escritos à mão); nenhum dado de outro aluno real até o termo de consentimento, o contrato com a
+     assessoria e a consulta de LGPD;
+  4. atleta sem vínculo com o professor, ou com vínculo sem consentimento registrado, **nunca** aparece na caixa nem nos treinos dele; o
+     texto do termo fica para a consulta jurídica;
+  5. a conta dele ligada a um professor de teste **só no banco local**, para conferir os motivos, com nada no repositório (#431);
+  6. `atencao@1` com **quatro motivos**: divergência da semana-padrão, fora do normal na linha de base, atalho "dor" no check-in, treino sem
+     check-in perto do fim do prazo de 7 dias; recuperação abaixo do normal e motivo de falta ficam fora;
+  7. o professor vê tipo, PSE, sensação, atalhos, feedback e a observação livre; a observação **nunca** vai ao provedor de LLM; rever na
+     consulta de LGPD antes do primeiro aluno real;
+  8. a correção do professor **vence** a sugestão e a semana-padrão e **não é desfeita** pela reimportação nem por versão nova da regra;
+     confirmar sem mudar só marca o tipo como confirmado;
+  9. fora: rascunho de devolutiva, revisão de amostra do feedback, feedback com o nome do professor, semana-padrão por grupo, ficha
+     completa do aluno;
+  10. **celular de verdade amarrado ao ensaio** com professor e atletas (plano, seção 9); sai da lista de cada meta. Até lá valem a
+      conferência no Chrome em tamanho de celular e as capturas da #418.
 
 - **Por que esta e não outra.** O MVP é vendido pela assessoria com o professor no meio (plano, seção 1), e a hipótese a validar é que o
   professor gasta menos tempo por aluno com o contexto pronto. Até aqui tudo é do atleta; a semana-padrão (Meta 7), o check-in (Meta 8),
@@ -795,7 +815,7 @@ Revisadas ao fim de cada meta com o que se aprendeu. Ordem tirada da "Fundação
   - a tela "Caixa do dia" no app web (Expo web), com a lista de atenção e a confirmação em lote;
   - `GET` da caixa do dia de um professor e o `PUT` em lote do tipo, no OpenAPI, com o cliente regerado;
   - capturas da tela em 390x844 e em largura de computador, claro e escuro, geradas por um comando, sem a extensão do navegador.
-- **Critério de pronto (proposto):**
+- **Critério de pronto:**
   - ADR 0015 aprovada pelo Theo antes de qualquer migração: identidade do professor no piloto local, vínculo e consentimento como filtro,
     regra de atenção com versão, confirmação em lote (o que vence o quê), o que o professor vê, o que nunca sai do banco local; "A
     confirmar" com padrões; uma tabela de "o que muda a caixa e quando" (aprendido na Meta 10);
@@ -807,35 +827,36 @@ Revisadas ao fim de cada meta com o que se aprendeu. Ordem tirada da "Fundação
     tela rodando**;
   - testes e CI sem rede; nada de dado de saúde em log;
   - QA com fixtures num clone limpo, seguindo só o guia; registrado que nada disso é login de verdade nem celular de verdade.
-- **Issues propostas** (cada uma até 1 dia; **nenhuma aberta** até o "ok" do Angelo):
+- **Issues e ordem** (cada uma até 1 dia; abertas em 16/11; o critério curto de cada uma está na própria issue):
 
-  | Proposta | Título | Dono | Depende de |
-  |---|---|---|---|
-  | P1 | Capturas da tela web por comando (navegador sem janela, 390x844 e largura de computador, claro e escuro), sem depender da extensão; dependência só de desenvolvimento, sem conta (aprovação do Theo) | rafa-app com bia-qa | nenhuma |
-  | P2 | ADR 0015: caixa do dia do professor no piloto local | caio-ciencia com duda-dados (aprovação do Theo) | nenhuma |
-  | P3 | Desenho da caixa do dia (lista de atenção, motivo em uma linha, confirmação em lote, estados vazio e de erro) | lia-design | P2 (adianta) |
-  | P4 | Fixtures sintéticas (um professor, cerca de 6 atletas fictícios, um sem consentimento e um de outro professor) e oráculo de `atencao@1` à mão | caio-ciencia | P2 (adianta à mão) |
-  | P5 | `atencao@1`: motivos de "precisa de atenção" como função pura, com nota | caio-ciencia | P2, P4 |
-  | P6 | Professor do piloto por configuração e filtro de vínculo e consentimento na API (migração só se a ADR pedir) | duda-dados | P2 |
-  | P7 | `GET` da caixa do dia, adendo da ADR 0004, cliente regerado | duda-dados | P5, P6 |
-  | P8 | `PUT` em lote do tipo de treino pelo professor (origem `professor`, não desfeita pela reimportação) | duda-dados | P6 |
-  | P9 | Tela da caixa do dia: lista de atenção | rafa-app (revisão da Lia) | P1, P3, P7 |
-  | P10 | Tela da caixa do dia: confirmação e correção em lote | rafa-app (revisão da Lia) | P8, P9 |
-  | P11 | Documentação, guia `meta-11-como-rodar` e diário | nina-docs | P7, P10 |
-  | P12 | QA de ponta a ponta com fixtures, com as capturas da P1 e a revisão da Lia na tela rodando | bia-qa com lia-design | P11 |
-  | P13 | Resultado da meta e roteiro | paulo-planejador | P12 |
+  | Proposta | Issue | Título | Dono | Depende de |
+  |---|---|---|---|---|
+  | P1 | #418 | Capturas da tela web por comando (navegador sem janela, 390x844 e largura de computador, claro e escuro), sem depender da extensão; dependência só de desenvolvimento, sem conta (aprovação do Theo) | rafa-app com bia-qa | nenhuma |
+  | P2 | #419 | ADR 0015: caixa do dia do professor no piloto local | caio-ciencia com duda-dados (aprovação do Theo) | nenhuma |
+  | P3 | #420 | Desenho da caixa do dia (lista de atenção, motivo em uma linha, confirmação em lote, estados vazio e de erro) | lia-design | #419 (adianta) |
+  | P4 | #421 | Fixtures sintéticas (um professor, cerca de 6 atletas fictícios, um sem consentimento e um de outro professor) e oráculo de `atencao@1` à mão | caio-ciencia | #419 (adianta à mão) |
+  | P5 | #422 | `atencao@1`: motivos de "precisa de atenção" como função pura, com nota | caio-ciencia | #419, #421 |
+  | P6 | #423 | Professor do piloto por configuração e filtro de vínculo e consentimento na API (migração só se a ADR pedir) | duda-dados | #419 |
+  | P7 | #424 | `GET` da caixa do dia, adendo da ADR 0004, cliente regerado | duda-dados | #422, #423 |
+  | P8 | #425 | `PUT` em lote do tipo de treino pelo professor (origem `professor`, não desfeita pela reimportação) | duda-dados | #423 |
+  | P9 | #426 | Tela da caixa do dia: lista de atenção | rafa-app (revisão da Lia) | #418, #420, #424 |
+  | P10 | #427 | Tela da caixa do dia: confirmação e correção em lote | rafa-app (revisão da Lia) | #425, #426 |
+  | P11 | #428 | Documentação, guia `meta-11-como-rodar` e diário | nina-docs | #424, #427 |
+  | P12 | #429 | QA de ponta a ponta com fixtures, com as capturas da P1 e a revisão da Lia na tela rodando | bia-qa com lia-design | #428 |
+  | P13 | #430 | Resultado da meta e roteiro | paulo-planejador | #429 (e #431) |
+  | P14 | #431 | Conferência local da caixa do dia com a conta do Angelo (nada no repositório; decisão 5) | caio-ciencia com duda-dados | #424 |
 
-  **Ordem:** P1 e P2 na largada, em paralelo (a P1 tira a conferência visual do fim da meta, aprendido nas Metas 8 a 10); P3 e P4 adiantam
-  enquanto a ADR não entra. Depois da ADR, P5 (Caio) em paralelo com P6 e P8 (Duda); P7 é o encontro; P9 e P10 em sequência. Caminho
-  crítico: P2 → P6 → P7 → P9 → P10 → P11 → P12 → P13. Se o Angelo quiser o atleta real dele na caixa (pergunta 5), uma conferência local
-  entra como P14, com nada no repositório.
+  **Ordem:** #418 e #419 na largada, em paralelo (a #418 tira a conferência visual do fim da meta, aprendido nas Metas 8 a 10); #420 e
+  #421 adiantam enquanto a ADR não entra. Depois da ADR, #422 (Caio) em paralelo com #423 e #425 (Duda); #424 é o encontro; #426 e #427 em
+  sequência; #431 depois da #424, só no banco local. Caminho crítico: #419 → #423 → #424 → #426 → #427 → #428 → #429 → #430.
 - **Paralelas (fora do critério, sem dependência):** #382 (rafa-app com a Lia; o Rafa já mexe no app) e #402 (caio-ciencia; só a
   `mensagem`, sem estado novo).
 - **Quem:** caio-ciencia (ADR, regra de atenção, oráculo; #402), duda-dados (identidade, filtro, API, lote), lia-design (desenho e revisão),
-  rafa-app (capturas e tela; #382), nina-docs, bia-qa, Theo (ADR 0015, adendo da ADR 0004, a dependência da P1), Angelo (respostas).
+  rafa-app (capturas e tela; #382), nina-docs, bia-qa, Theo (ADR 0015, adendo da ADR 0004, a dependência da #418), Angelo (conferência
+  local da #431).
 - **Fora:** login e contas de verdade, deploy e banco gerenciado; dado de outro aluno real; ficha completa do aluno; rascunho de devolutiva
   e roteiros do manual; revisão de amostra do feedback pelo professor e feedback com o nome dele; semana-padrão por grupo; aviso por
-  WhatsApp ou e-mail; painel da coordenação; alerta de recuperação baixa (Meta 10); motivo de falta; celular de verdade.
+  WhatsApp ou e-mail; painel da coordenação; alerta de recuperação baixa (Meta 10); motivo de falta; celular de verdade (decisão 10).
 
 ### Meta 12: agente do atleta, primeiras perguntas (esboço; era a Meta 11)
 - **Objetivo:** atalhos para as perguntas mais comuns ("minha evolução nos tiros de 1 km"), respondidos por consultas estruturadas.
@@ -996,8 +1017,9 @@ stack Expo). A chave do provedor de LLM foi entregue e está no `.env` (fora do 
   Angelo". Issues #368 a #380; paralela #367, aberta a pedido dele. "A confirmar" da ADR 0014: "ok para as cinco" (12/11); recuperação
   em duas linhas (13/11, #394).
 
-- **Meta 11 (caixa do dia do professor): proposta em 16/11 (#380), esperando resposta.** O time segue em volta: nenhuma issue da Meta 11
-  é aberta antes do "ok". Cada pergunta traz a recomendação; "ok para todas" vale como "sim" a cada uma.
+- **Meta 11 (caixa do dia do professor): respondida em 16/11 ("ok para as 10").** As dez perguntas da #380 valeram com as recomendações,
+  sem mudança; na 5 (sim) entrou a P14 (#431). Issues #417 a #431. Resumo em "Meta 11", "Decisões do Angelo"; as perguntas, como foram
+  feitas:
    1. **Abrir as issues e começar a Meta 11** com a lista P1 a P13 da seção "Meta 11" (paralelas #382 e #402). *Recomendação:* sim. Alternativa: uma
       meta de telas do atleta (carga, linha de base, esforços, com #213 e #237).
    2. **Login.** *Recomendação:* sem login nesta meta; o professor do piloto local é fixo por configuração, como o atleta fixo da Meta 2.
@@ -1024,12 +1046,13 @@ stack Expo). A chave do provedor de LLM foi entregue e está no `.env` (fora do 
        celular e as capturas da P1. Alternativa: marcar 15 minutos (Expo Go, rede de casa, dado sintético) numa data dentro da Meta 11.
 
 Pendentes com o Angelo (o time segue em volta delas):
-1. **Celular de verdade** (Expo Go, iOS ou Android): pendência conhecida das Metas 8, 9 e 10, **sem data**, por decisão dele em 12/11;
-   pergunta 10 da Meta 11.
+1. **Celular de verdade** (Expo Go, iOS ou Android): amarrado ao ensaio com professor e atletas (decisão 10 da Meta 11, 16/11); sai da
+   lista de cada meta.
 2. **Antes de gerar o feedback dos treinos reais dele:** ler os termos do provedor sobre o uso dos dados para treinar modelos (item 10
    de "A confirmar" da ADR 0013). Segue não conferido por nós.
-3. **Meta 11:** as dez perguntas acima (login, dado de outros alunos, consentimento, motivos, o que o professor vê). A ADR 0014 já foi
-   respondida (12/11).
+3. **"A confirmar" da ADR 0015** (#419), quando a ADR trouxer os padrões.
+4. **Antes do primeiro aluno real:** termo de consentimento, contrato com a assessoria e consulta de LGPD (decisões 3, 4 e 7 da Meta 11);
+   login e deploy (decisão 2), com conta e serviço novos.
 
 Em aberto:
 1. **Próximas metas, sem pressa:** CNPJ e pedido da API da Garmin; pedido da API do TrainingPeaks com a assessoria;
