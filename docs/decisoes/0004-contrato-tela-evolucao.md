@@ -2,7 +2,7 @@
 tipo: decisao
 status: em-uso
 dono: theo
-atualizado: 2026-11-14
+atualizado: 2026-11-16
 links: [[decisoes/0013-feedback-automatico]], [[modulos/api]], [[modulos/grafico-tiros]], [[modulos/mobile]], [[modulos/worker]], [[metricas/tiros-1km]], [[decisoes/0002-segmento-intensidade-e-versao]], [[decisoes/0003-fuso-da-atividade]], [[decisoes/0005-serie-de-tiros-o-que-entra]], [[decisoes/0006-upload-de-fit]], [[decisoes/0007-clima-da-atividade]], [[produto/roadmap]], [[design/telas/treino]], [[decisoes/0009-treino-de-transicao]]
 ---
 # ADR: 0004 Contrato da tela de evolução dos tiros (Meta 2)
