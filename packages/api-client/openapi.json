@@ -2337,6 +2337,55 @@
         "title": "SessaoOut",
         "type": "object"
       },
+      "TipoItemIn": {
+        "properties": {
+          "atividade_id": {
+            "title": "Atividade Id",
+            "type": "integer"
+          },
+          "tipo_treino": {
+            "anyOf": [
+              {
+                "enum": [
+                  "leve",
+                  "moderado",
+                  "longo",
+                  "intervalado",
+                  "fartlek"
+                ],
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Tipo Treino"
+          }
+        },
+        "required": [
+          "atividade_id"
+        ],
+        "title": "TipoItemIn",
+        "type": "object"
+      },
+      "TiposConfirmadosOut": {
+        "properties": {
+          "confirmados": {
+            "title": "Confirmados",
+            "type": "integer"
+          },
+          "corrigidos": {
+            "title": "Corrigidos",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "confirmados",
+          "corrigidos"
+        ],
+        "title": "TiposConfirmadosOut",
+        "type": "object"
+      },
       "TiroOut": {
         "properties": {
           "distancia_m": {
@@ -3769,6 +3818,68 @@
           }
         },
         "summary": "Health"
+      }
+    },
+    "/professores/{professor_id}/tipos-de-treino": {
+      "put": {
+        "description": "Confirma ou corrige, em lote e tudo ou nada, o tipo de treinos de alunos com vinculo e consentimento (ADR 0015, item 5).",
+        "operationId": "confirmar_tipos_professores__professor_id__tipos_de_treino_put",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "professor_id",
+            "required": true,
+            "schema": {
+              "title": "Professor Id",
+              "type": "integer"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "items": {
+                  "$ref": "#/components/schemas/TipoItemIn"
+                },
+                "maxItems": 200,
+                "minItems": 1,
+                "title": "Itens",
+                "type": "array"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TiposConfirmadosOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Erro"
+                }
+              }
+            },
+            "description": "Professor inexistente (`professor_inexistente`, uniforme) ou alguma atividade inexistente ou fora do vinculo e consentimento (`atividade_nao_encontrada`); lote nao salvo"
+          },
+          "422": {
+            "description": "Lote vazio, com mais de 200 itens, com `atividade_id` repetido ou tipo fora dos cinco (validacao); ou `atividade_sem_tipo` (multiesporte ou sem tipo para confirmar). Lote nao salvo. Nunca repete o enviado"
+          }
+        },
+        "summary": "Confirmar Tipos",
+        "tags": [
+          "professor"
+        ]
       }
     }
   }
