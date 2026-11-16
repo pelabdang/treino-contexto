@@ -1,0 +1,15 @@
+{
+  "assessoria": "Assessoria Fixture",
+  "professores": [{"nome": "Professor Fixture"}, {"nome": "Outro Professor Fixture"}],
+  "professor_do_piloto": "Professor Fixture",
+  "atletas": [
+    {"nome": "Atleta Fixture Ana", "vinculos": [{"professor": "Professor Fixture", "consentimento_em": "2026-11-01T12:00:00+00:00"}]},
+    {"nome": "Atleta Fixture Igor", "vinculos": [{"professor": "Professor Fixture", "consentimento_em": "2026-11-01T12:00:00+00:00"}]},
+    {"nome": "Atleta Fixture Helena", "vinculos": [{"professor": "Professor Fixture", "consentimento_em": "2026-11-01T12:00:00+00:00"}]},
+    {"nome": "Atleta Fixture Bruno", "vinculos": [{"professor": "Professor Fixture", "consentimento_em": "2026-11-01T12:00:00+00:00"}]},
+    {"nome": "Atleta Fixture Carla", "vinculos": [{"professor": "Professor Fixture", "consentimento_em": "2026-11-01T12:00:00+00:00"}]},
+    {"nome": "Atleta Fixture Davi", "vinculos": [{"professor": "Professor Fixture", "consentimento_em": "2026-11-01T12:00:00+00:00"}]},
+    {"nome": "Atleta Fixture Eva Sem Consentimento", "vinculos": [{"professor": "Professor Fixture", "consentimento_em": null}]},
+    {"nome": "Atleta Fixture Fabio De Outro Professor", "vinculos": [{"professor": "Outro Professor Fixture", "consentimento_em": "2026-11-01T12:00:00+00:00"}]}
+  ]
+}

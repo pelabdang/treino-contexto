@@ -2,7 +2,7 @@
 tipo: design
 status: rascunho
 dono: lia
-atualizado: 2026-11-09
+atualizado: 2026-11-16
 links: [[design/guia-visual]], [[design/telas/evolucao-tiros]], [[modulos/mobile]]
 ---
 # Design: tokens do tema
@@ -205,6 +205,15 @@ Os nomes abaixo foram conferidos no mapa de glifos do pacote (versão 15.1.1).
 | check-in: editar | `edit` |
 | check-in: escolhido | `check` |
 | sensação 1 a 5 | `sentiment-very-dissatisfied`, `sentiment-dissatisfied`, `sentiment-neutral`, `sentiment-satisfied`, `sentiment-very-satisfied` |
+| caixa do dia: motivo `dor` (Meta 11, [[design/telas/caixa-do-dia]]) | `healing` |
+| caixa do dia: motivo `fora_do_normal` | `show-chart` |
+| caixa do dia: motivo `divergencia` | `event` (o mesmo da semana-padrão) |
+| caixa do dia: motivo `checkin_vencendo` | `schedule` |
+| caixa do dia: seleção de treino novo | `check-box`, `check-box-outline-blank` |
+| caixa do dia: abrir e fechar o detalhe | `expand-more`, `expand-less` |
+| caixa do dia: correção ainda não salva | `edit` |
+| caixa do dia: estado sem alunos | `group` |
 
 Os nomes da semana-padrão foram conferidos no mapa de glifos do `@expo/vector-icons` pelo Rafa (#268, ver [[modulos/mobile]]). Os do
 check-in são do conjunto padrão do Material Icons e ainda precisam ser conferidos pelo Rafa na #299.
+Os da caixa do dia foram conferidos no mapa de glifos do `@expo/vector-icons` (Lia, 16/11); o Rafa reconfere na #426.
