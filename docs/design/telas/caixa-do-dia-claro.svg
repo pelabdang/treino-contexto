@@ -1,0 +1,110 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="800" height="844" viewBox="0 0 800 844" font-family="Inter, system-ui, sans-serif" role="img" aria-labelledby="t d">
+<title id="t">Esboço da caixa do dia do professor, tema claro</title>
+<desc id="d">Esboço da issue 420. Dados sintéticos (alunos fictícios). Duas telas de 390 por 844: a lista "Para olhar hoje" com um detalhe aberto e os "Treinos novos" com seleção e barra de lote.</desc>
+<rect width="800" height="844" fill="#CFCCC4"/>
+<g transform="translate(5,0)">
+<clipPath id="cl5"><rect x="0" y="0" width="390" height="844"/></clipPath><g clip-path="url(#cl5)">
+<rect x="0" y="0" width="390" height="844" rx="0" fill="#F6F5F1"/>
+<text x="16" y="44" font-size="24" font-weight="700" fill="#1A1D1F" text-anchor="start">Caixa do dia</text>
+<g fill="none" stroke="#0B6A6E" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" transform="translate(350,26)"><path d="M16 10 a6 6 0 1 1 -2 -4.5 M16 3 v4 h-4"/></g>
+<text x="16" y="66" font-size="14" font-weight="500" fill="#4C5257" text-anchor="start">Quinta, 13/11/25</text>
+<text x="16" y="90" font-size="16" font-weight="600" fill="#1A1D1F" text-anchor="start">3 alunos para olhar · 4 treinos novos</text>
+<text x="16" y="124" font-size="18" font-weight="600" fill="#1A1D1F" text-anchor="start">Para olhar hoje</text>
+<text x="16" y="144" font-size="13" font-weight="400" fill="#4C5257" text-anchor="start">Últimos 7 dias. Primeiro quem tem dor marcada,</text>
+<text x="16" y="161" font-size="13" font-weight="400" fill="#4C5257" text-anchor="start">depois fora do normal, diferença da</text>
+<text x="16" y="178" font-size="13" font-weight="400" fill="#4C5257" text-anchor="start">semana-padrão e check-in perto do prazo.</text>
+<rect x="16.5" y="200.5" width="357" height="372" rx="12" fill="#FFFFFF" stroke="#DEDBD3" stroke-width="1"/>
+<text x="32" y="228" font-size="18" font-weight="600" fill="#1A1D1F" text-anchor="start">Ana Exemplo</text>
+<g fill="none" stroke="#B4470F" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" transform="translate(32,240)"><circle cx="11" cy="4" r="2"/><path d="M5 17 l3 -5 l3 2 l1 -5 M8 12 l-3 -1 M12 9 l4 1"/></g>
+<text x="58" y="255" font-size="14" font-weight="500" fill="#4C5257" text-anchor="start">Corrida · 45 min · 11/11/25</text>
+<g fill="none" stroke="#4C5257" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" transform="translate(346,240)"><path d="M5 12 l5 -5 l5 5"/></g>
+<g fill="none" stroke="#4C5257" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" transform="translate(32,268)"><path d="M4 10 l6 -6 l4 4 l-6 6 z"/><path d="M10 4 l4 4"/></g>
+<text x="58" y="283" font-size="15" font-weight="400" fill="#1A1D1F" text-anchor="start">Treino de terça com dor marcada no</text>
+<text x="58" y="302" font-size="15" font-weight="400" fill="#1A1D1F" text-anchor="start">check-in.</text>
+<g fill="none" stroke="#4C5257" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" transform="translate(32,314)"><path d="M2 14 l5 -5 l3 3 l7 -8"/></g>
+<text x="58" y="329" font-size="15" font-weight="400" fill="#1A1D1F" text-anchor="start">Treino de terça fora do normal: FC</text>
+<text x="58" y="348" font-size="15" font-weight="400" fill="#1A1D1F" text-anchor="start">média acima do habitual.</text>
+<rect x="32" y="372" width="325" height="186" rx="8" fill="#ECEAE4"/>
+<text x="44" y="396" font-size="13" font-weight="500" fill="#4C5257" text-anchor="start">Tipo</text>
+<text x="130" y="396" font-size="14" font-weight="400" fill="#1A1D1F" text-anchor="start">Intervalado, sugerido pela regra</text>
+<text x="44" y="420" font-size="13" font-weight="500" fill="#4C5257" text-anchor="start">Esforço</text>
+<text x="130" y="420" font-size="14" font-weight="400" fill="#1A1D1F" text-anchor="start">8</text>
+<text x="44" y="444" font-size="13" font-weight="500" fill="#4C5257" text-anchor="start">Sensação</text>
+<text x="130" y="444" font-size="14" font-weight="400" fill="#1A1D1F" text-anchor="start">Mal</text>
+<text x="44" y="468" font-size="13" font-weight="500" fill="#4C5257" text-anchor="start">Atalhos</text>
+<text x="130" y="468" font-size="14" font-weight="400" fill="#1A1D1F" text-anchor="start">Dor, Cansaço</text>
+<text x="44" y="492" font-size="13" font-weight="500" fill="#4C5257" text-anchor="start">Feedback</text>
+<text x="130" y="492" font-size="14" font-weight="400" fill="#1A1D1F" text-anchor="start">Perto do habitual para o tipo</text>
+<text x="44" y="524" font-size="13" font-weight="500" fill="#4C5257" text-anchor="start">Observação do aluno</text>
+<rect x="44" y="532" width="2" height="18" rx="0" fill="#7D7A72"/>
+<text x="54" y="546" font-size="14" font-weight="400" fill="#1A1D1F" text-anchor="start">Texto de exemplo escrito à mão.</text>
+<rect x="16.5" y="584.5" width="357" height="132" rx="12" fill="#FFFFFF" stroke="#DEDBD3" stroke-width="1"/>
+<text x="32" y="612" font-size="18" font-weight="600" fill="#1A1D1F" text-anchor="start">Bruno Exemplo</text>
+<g fill="none" stroke="#B4470F" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" transform="translate(32,624)"><circle cx="11" cy="4" r="2"/><path d="M5 17 l3 -5 l3 2 l1 -5 M8 12 l-3 -1 M12 9 l4 1"/></g>
+<text x="58" y="639" font-size="14" font-weight="500" fill="#4C5257" text-anchor="start">Corrida · 50 min · 12/11/25</text>
+<g fill="none" stroke="#4C5257" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" transform="translate(346,624)"><path d="M5 8 l5 5 l5 -5"/></g>
+<g fill="none" stroke="#4C5257" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" transform="translate(32,652)"><rect x="3" y="4" width="14" height="13" rx="2"/><path d="M3 8 h14 M7 2 v4 M13 2 v4"/></g>
+<text x="58" y="667" font-size="15" font-weight="400" fill="#1A1D1F" text-anchor="start">Treino de quarta diferente da</text>
+<text x="58" y="686" font-size="15" font-weight="400" fill="#1A1D1F" text-anchor="start">semana-padrão: previsto intervalado,</text>
+<text x="58" y="705" font-size="15" font-weight="400" fill="#1A1D1F" text-anchor="start">sem esforço detectado.</text>
+<rect x="16.5" y="728.5" width="357" height="108" rx="12" fill="#FFFFFF" stroke="#DEDBD3" stroke-width="1"/>
+<text x="32" y="756" font-size="18" font-weight="600" fill="#1A1D1F" text-anchor="start">Carla Exemplo</text>
+<g fill="none" stroke="#4C5257" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" transform="translate(32,768)"><circle cx="4.5" cy="14" r="3.5"/><circle cx="15.5" cy="14" r="3.5"/><path d="M4.5 14 l4 -7 h4 l3 7 M8.5 7 l3 7"/></g>
+<text x="58" y="783" font-size="14" font-weight="500" fill="#4C5257" text-anchor="start">Ciclismo · 1 h 10 · 08/11/25</text>
+<g fill="none" stroke="#4C5257" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" transform="translate(32,796)"><circle cx="10" cy="10" r="7.5"/><path d="M10 5 v5 l3 2"/></g>
+<text x="58" y="811" font-size="15" font-weight="400" fill="#1A1D1F" text-anchor="start">Treino de sábado sem check-in; o</text>
+<text x="58" y="830" font-size="15" font-weight="400" fill="#1A1D1F" text-anchor="start">prazo termina em 2 dias.</text>
+</g></g>
+<g transform="translate(405,0)">
+<clipPath id="cl405"><rect x="0" y="0" width="390" height="844"/></clipPath><g clip-path="url(#cl405)">
+<rect x="0" y="0" width="390" height="844" rx="0" fill="#F6F5F1"/>
+<text x="16" y="44" font-size="18" font-weight="600" fill="#1A1D1F" text-anchor="start">Treinos novos</text>
+<text x="16" y="64" font-size="13" font-weight="400" fill="#4C5257" text-anchor="start">Últimos 14 dias, com tipo sugerido.</text>
+<text x="16" y="81" font-size="13" font-weight="400" fill="#4C5257" text-anchor="start">Confirme como está ou mude o tipo.</text>
+<rect x="17" y="99" width="20" height="20" rx="4" fill="none" stroke="#7D7A72" stroke-width="2"/>
+<text x="52" y="115" font-size="16" font-weight="600" fill="#1A1D1F" text-anchor="start">Selecionar todos (4)</text>
+<rect x="16" y="138" width="358" height="104" rx="12" fill="#DCEFEE" stroke="#0B6A6E" stroke-width="2"/>
+<rect x="28" y="152" width="22" height="22" rx="4" fill="#0B6A6E"/>
+<path d="M33 163 l4 4 l8 -9" stroke="#FFFFFF" stroke-width="2.4" fill="none"/>
+<text x="64" y="168" font-size="16" font-weight="600" fill="#1A1D1F" text-anchor="start">Ana Exemplo</text>
+<g fill="none" stroke="#B4470F" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" transform="translate(64,178)"><circle cx="11" cy="4" r="2"/><path d="M5 17 l3 -5 l3 2 l1 -5 M8 12 l-3 -1 M12 9 l4 1"/></g>
+<text x="90" y="193" font-size="14" font-weight="500" fill="#4C5257" text-anchor="start">Corrida · 45 min · 11/11/25</text>
+<g fill="none" stroke="#0B6A6E" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" transform="translate(64,204)"><path d="M3 17 l1 -4 l9 -9 l3 3 l-9 9 z"/></g>
+<text x="90" y="219" font-size="14" font-weight="600" fill="#1A1D1F" text-anchor="start">Corrigido para Longo</text>
+<text x="240" y="236" font-size="14" font-weight="600" fill="#0B6A6E" text-anchor="start">Voltar à sugestão</text>
+<rect x="16" y="254" width="358" height="104" rx="12" fill="#DCEFEE" stroke="#0B6A6E" stroke-width="2"/>
+<rect x="28" y="268" width="22" height="22" rx="4" fill="#0B6A6E"/>
+<path d="M33 279 l4 4 l8 -9" stroke="#FFFFFF" stroke-width="2.4" fill="none"/>
+<text x="64" y="284" font-size="16" font-weight="600" fill="#1A1D1F" text-anchor="start">Bruno Exemplo</text>
+<g fill="none" stroke="#B4470F" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" transform="translate(64,294)"><circle cx="11" cy="4" r="2"/><path d="M5 17 l3 -5 l3 2 l1 -5 M8 12 l-3 -1 M12 9 l4 1"/></g>
+<text x="90" y="309" font-size="14" font-weight="500" fill="#4C5257" text-anchor="start">Corrida · 50 min · 12/11/25</text>
+<text x="64" y="334" font-size="15" font-weight="600" fill="#1A1D1F" text-anchor="start">Intervalado</text>
+<text x="160" y="334" font-size="13" font-weight="400" fill="#4C5257" text-anchor="start">sugerido pela semana-padrão</text>
+<text x="300" y="352" font-size="14" font-weight="600" fill="#0B6A6E" text-anchor="start">Mudar tipo</text>
+<rect x="16.5" y="370.5" width="357" height="103" rx="12" fill="#FFFFFF" stroke="#DEDBD3" stroke-width="1"/>
+<rect x="29" y="385" width="20" height="20" rx="4" fill="none" stroke="#7D7A72" stroke-width="2"/>
+<text x="64" y="400" font-size="16" font-weight="600" fill="#1A1D1F" text-anchor="start">Diego Exemplo</text>
+<g fill="none" stroke="#B4470F" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" transform="translate(64,410)"><circle cx="11" cy="4" r="2"/><path d="M5 17 l3 -5 l3 2 l1 -5 M8 12 l-3 -1 M12 9 l4 1"/></g>
+<text x="90" y="425" font-size="14" font-weight="500" fill="#4C5257" text-anchor="start">Corrida · 40 min · 12/11/25</text>
+<text x="64" y="450" font-size="15" font-weight="600" fill="#1A1D1F" text-anchor="start">Leve</text>
+<text x="104" y="450" font-size="13" font-weight="400" fill="#4C5257" text-anchor="start">sugerido pela regra</text>
+<text x="300" y="468" font-size="14" font-weight="600" fill="#0B6A6E" text-anchor="start">Mudar tipo</text>
+<rect x="16.5" y="486.5" width="357" height="103" rx="12" fill="#FFFFFF" stroke="#DEDBD3" stroke-width="1"/>
+<rect x="29" y="501" width="20" height="20" rx="4" fill="none" stroke="#7D7A72" stroke-width="2"/>
+<text x="64" y="516" font-size="16" font-weight="600" fill="#1A1D1F" text-anchor="start">Fábio Exemplo</text>
+<g fill="none" stroke="#4C5257" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" transform="translate(64,526)"><circle cx="4.5" cy="14" r="3.5"/><circle cx="15.5" cy="14" r="3.5"/><path d="M4.5 14 l4 -7 h4 l3 7 M8.5 7 l3 7"/></g>
+<text x="90" y="541" font-size="14" font-weight="500" fill="#4C5257" text-anchor="start">Ciclismo · 1 h 30 · 09/11/25</text>
+<text x="64" y="566" font-size="15" font-weight="600" fill="#1A1D1F" text-anchor="start">Longo</text>
+<text x="112" y="566" font-size="13" font-weight="400" fill="#4C5257" text-anchor="start">sugerido pela regra</text>
+<text x="300" y="584" font-size="14" font-weight="600" fill="#0B6A6E" text-anchor="start">Mudar tipo</text>
+<text x="16" y="618" font-size="13" font-weight="400" fill="#4C5257" text-anchor="start">Depois de salvar, para mudar de novo é só</text>
+<text x="16" y="635" font-size="13" font-weight="400" fill="#4C5257" text-anchor="start">corrigir o tipo outra vez.</text>
+<rect x="0" y="720" width="390" height="124" rx="0" fill="#FFFFFF"/>
+<line x1="0" x2="390" y1="720" y2="720" stroke="#DEDBD3"/>
+<text x="16" y="748" font-size="16" font-weight="600" fill="#1A1D1F" text-anchor="start">3 selecionados · 1 corrigido</text>
+<rect x="16.5" y="762.5" width="119" height="48" rx="8" fill="none" stroke="#7D7A72" stroke-width="1"/>
+<text x="76" y="792" font-size="16" font-weight="600" fill="#1A1D1F" text-anchor="middle">Limpar</text>
+<rect x="150" y="762" width="224" height="48" rx="8" fill="#0B6A6E"/>
+<text x="262" y="792" font-size="16" font-weight="600" fill="#FFFFFF" text-anchor="middle">Salvar 3 tipos</text>
+</g></g>
+</svg>
