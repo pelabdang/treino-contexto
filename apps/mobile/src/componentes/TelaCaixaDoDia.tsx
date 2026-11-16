@@ -4,7 +4,7 @@
 // a observação só aparece dentro do detalhe aberto e nunca em rótulo de acessibilidade nem anúncio. O estado aberto fica só na memória.
 import { MaterialIcons } from "@expo/vector-icons";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { AccessibilityInfo, Platform, Pressable, ScrollView, type PressableStateCallbackType, StyleSheet, Text, View } from "react-native";
+import { AccessibilityInfo, ActivityIndicator, Platform, Pressable, ScrollView, type PressableStateCallbackType, StyleSheet, Text, View } from "react-native";
 
 import { buscarCaixaDoDia, type AlunoCaixa, type CaixaDoDia, type DetalheTreino, type MotivoCaixa, type TreinoNovo } from "../caixa/api";
 import { SENSACOES } from "../checkin/escala";
@@ -45,6 +45,8 @@ function dataPorExtenso(data: string): string {
 }
 /** Estilo de Pressable com fundo no hover (só a web manda `hovered`). */
 const comHover = (base: object, hover: object) => (e: PressableStateCallbackType) => [base, (e as { hovered?: boolean }).hovered && hover];
+/** A linha de treino tem alvo de toque de 72 sem crescer o cartão: a área extra é só de toque. */
+const ALVO_LINHA = { top: 16, bottom: 16 };
 const plural = (n: number, um: string, varios: string) => `${n} ${n === 1 ? um : varios}`;
 
 export function TelaCaixaDoDia({ apiUrl, professorId, fetchFn }: Props) {
@@ -138,7 +140,11 @@ export function TelaCaixaDoDia({ apiUrl, professorId, fetchFn }: Props) {
             onPress={buscarDeNovo}
             style={comHover(styles.atualizar, styles.hover)}
           >
-            <MaterialIcons name="refresh" size={tamanho.iconeGrande} color={podeAtualizar ? tema.cor.destaque : tema.cor["texto-desligado"]} accessible={false} />
+            {atualizando ? (
+              <ActivityIndicator testID="atualizando" size="small" color={tema.cor.destaque} />
+            ) : (
+              <MaterialIcons name="refresh" size={tamanho.iconeGrande} color={podeAtualizar ? tema.cor.destaque : tema.cor["texto-desligado"]} accessible={false} />
+            )}
           </Pressable>
         )}
       </View>
@@ -155,9 +161,10 @@ export function TelaCaixaDoDia({ apiUrl, professorId, fetchFn }: Props) {
       {estado.tipo === "erro" && <EstadoDeErro falha={estado.falha} styles={styles} tema={tema} aoTentar={buscarDeNovo} />}
 
       {falhaAoAtualizar && (
-        <Text testID="aviso-atualizar" accessibilityRole="alert" style={styles.aviso}>
-          Não foi possível atualizar. Você está vendo a caixa de antes.
-        </Text>
+        <View testID="aviso-atualizar" accessibilityRole="alert" style={styles.aviso}>
+          <MaterialIcons name="error-outline" size={tamanho.iconeMedio} color={tema.cor.erro} accessible={false} />
+          <Text style={styles.avisoTexto}>Não foi possível atualizar. Você está vendo a caixa de antes.</Text>
+        </View>
       )}
 
       {dados && dados.alunos.length === 0 && dados.novos.length === 0 && (
@@ -263,6 +270,7 @@ function CartaoAluno({ aluno, abertos, alternar, styles, tema }: { aluno: AlunoC
               accessibilityLabel={rotulo}
               accessibilityState={{ expanded: aberto }}
               onPress={() => alternar(chave)}
+              hitSlop={ALVO_LINHA}
               style={comHover(styles.linhaTreino, styles.hover)}
             >
               <View style={styles.linhaTextos}>
@@ -299,7 +307,8 @@ function LinhaNovo({ novo, aberto, alternar, styles, tema }: { novo: TreinoNovo;
         accessibilityLabel={rotulo}
         accessibilityState={{ expanded: aberto }}
         onPress={() => alternar(`n-${novo.atividade_id}`)}
-        style={comHover(styles.linhaTreino, styles.hover)}
+        hitSlop={ALVO_LINHA}
+              style={comHover(styles.linhaTreino, styles.hover)}
       >
         <View style={styles.linhaTextos}>
           <Text style={styles.corpoForte}>{novo.atleta_nome}</Text>
@@ -399,7 +408,7 @@ function criarEstilos({ cor }: Tema, margem: number = espaco[4]) {
       backgroundColor: cor.superficie,
     },
     divisor: { borderTopWidth: borda.fina, borderTopColor: cor.borda, paddingTop: espaco[2] },
-    linhaTreino: { minHeight: 72, flexDirection: "row", alignItems: "flex-start", gap: espaco[3], borderRadius: raio.medio },
+    linhaTreino: { flexDirection: "row", alignItems: "flex-start", gap: espaco[3], borderRadius: raio.medio },
     linhaTextos: { flex: 1, gap: espaco[1] },
     linhaModalidade: { flexDirection: "row", alignItems: "center", gap: espaco[2] },
     motivo: { flexDirection: "row", alignItems: "flex-start", gap: espaco[2] },
@@ -414,7 +423,8 @@ function criarEstilos({ cor }: Tema, margem: number = espaco[4]) {
     detalheRotulo: { ...fonte.rotulo, color: cor["texto-2"], minWidth: 96 },
     detalheValor: { flex: 1, minWidth: 160 },
     observacao: { marginTop: espaco[1], paddingLeft: espaco[3], borderLeftWidth: 2, borderLeftColor: cor["borda-forte"] },
-    aviso: { ...fonte.corpo, color: cor.erro, backgroundColor: cor["erro-suave"], padding: espaco[3], borderRadius: raio.medio, marginTop: espaco[3] },
+    aviso: { flexDirection: "row", alignItems: "flex-start", gap: espaco[2], backgroundColor: cor["erro-suave"], padding: espaco[3], borderRadius: raio.medio, marginTop: espaco[3] },
+    avisoTexto: { ...fonte.corpo, color: cor.erro, flex: 1 },
     estado: { alignItems: "center", paddingVertical: espaco[7], gap: espaco[2] },
     estadoTitulo: { ...fonte["titulo-secao"], color: cor.texto, textAlign: "center" },
     botao: { minHeight: tamanho.botaoAltura, justifyContent: "center", paddingHorizontal: espaco[4], borderRadius: raio.medio, backgroundColor: cor.destaque, marginTop: espaco[3] },

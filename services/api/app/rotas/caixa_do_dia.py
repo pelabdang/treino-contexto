@@ -26,7 +26,8 @@ from app.db.models import Atividade, Atleta, CheckinTreino
 from app.db.session import get_session
 from app.metricas import atencao as at
 from app.rotas.atividades import FeedbackOut, _feedback, _feedback_out
-from app.rotas.checkin import AtalhoOut, RotaCheckin, checkin_out
+from app.rotas.checkin import AtalhoOut, checkin_out
+from app.rotas.professor import RotaProfessor
 from app.rotas.evolucao import Erro
 from app.servicos.carga_pse_leitura import duracao_pt
 from app.servicos.fuso import FUSO_PADRAO, data_local, inicio_local
@@ -35,7 +36,7 @@ from app.servicos.professor import agora_utc, atletas_do_professor, professor_da
 
 log = logging.getLogger(__name__)
 
-router = APIRouter(prefix="/professores/{professor_id}", tags=["professor"], route_class=RotaCheckin)
+router = APIRouter(prefix="/professores/{professor_id}", tags=["professor"], route_class=RotaProfessor)
 
 TIPO_TEXTO = {"leve": "Leve", "moderado": "Moderado", "longo": "Longo", "intervalado": "Intervalado", "fartlek": "Fartlek"}
 ORIGEM_TEXTO = {

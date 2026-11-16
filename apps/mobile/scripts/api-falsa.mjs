@@ -326,6 +326,7 @@ const caixaComConteudo = {
     },
   ],
 };
+const professorInexistente = { detail: [{ loc: ["path", "professor_id"], msg: "professor inexistente", type: "professor_inexistente" }] };
 const caixaDe = (id) => {
   if (id === 2) return { ...caixaComConteudo, alunos: [], novos: [] };
   if (id === 3) return { ...caixaComConteudo, alunos: caixaComConteudo.alunos.filter((a) => a.sem_motivo), novos: [] };
@@ -347,8 +348,8 @@ createServer((req, res) => {
     const id = Number(cx[1]);
     if (id === 4) return req.destroy();
     if (id === 6) return res.writeHead(500, cabecalhos).end(JSON.stringify({ detail: "erro sintético" }));
-    if (id > 6) return res.writeHead(404, cabecalhos).end(JSON.stringify({ type: "professor_inexistente", detail: "professor inexistente" }));
-    if (id === 5) return res.writeHead(404, cabecalhos).end(JSON.stringify({ type: "professor_inexistente", detail: "professor inexistente" }));
+    if (id > 6) return res.writeHead(404, cabecalhos).end(JSON.stringify(professorInexistente));
+    if (id === 5) return res.writeHead(404, cabecalhos).end(JSON.stringify(professorInexistente));
     return res.writeHead(200, cabecalhos).end(JSON.stringify(caixaDe(id)));
   }
   const sp = pathname.match(/^\/atletas\/(\d+)\/semana-padrao$/);

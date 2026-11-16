@@ -32,7 +32,10 @@ Atalho = Literal["dor", "cansaco", "sono_ruim", "calor", "trabalho_estresse"]
 
 
 class RotaCheckin(APIRoute):
-    """422 sem eco da entrada e 500 sem detalhe, so para as rotas do check-in."""
+    """422 sem eco da entrada e 500 sem detalhe, so para as rotas do check-in. As rotas do professor herdam e trocam o texto."""
+
+    MSG_500 = "erro ao processar o check-in"
+    LOG_500 = "checkin"
 
     def get_route_handler(self) -> Callable:
         original = super().get_route_handler()
@@ -46,8 +49,8 @@ class RotaCheckin(APIRoute):
             except HTTPException:
                 raise
             except Exception as e:  # noqa: BLE001 - a mensagem de um erro de banco pode trazer os parametros (o texto do check-in)
-                log.error("checkin: erro inesperado (%s) em %s", type(e).__name__, request.url.path)
-                return JSONResponse(status_code=500, content={"detail": "erro ao processar o check-in"})
+                log.error("%s: erro inesperado (%s) em %s", self.LOG_500, type(e).__name__, request.url.path)
+                return JSONResponse(status_code=500, content={"detail": self.MSG_500})
 
         return handler
 

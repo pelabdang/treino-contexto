@@ -264,12 +264,26 @@ describe("caixa do dia: estados", () => {
     await screen.findByTestId("resumo");
     await fireEvent.press(screen.getByTestId("atualizar"));
     await waitFor(() => expect(anuncio).toHaveBeenCalledWith("Caixa do dia atualizada."));
+    expect(screen.queryByTestId("atualizando")).toBeNull();
     expect(anuncio).toHaveBeenCalledWith("Atualizando...");
     await fireEvent.press(screen.getByTestId("atualizar"));
     await screen.findByText("Não foi possível atualizar. Você está vendo a caixa de antes.");
+    expect(within(screen.getByTestId("aviso-atualizar")).getByText("error-outline:20")).toBeTruthy();
     expect(screen.getByTestId("resumo")).toBeTruthy();
     expect(screen.getByTestId("aluno-1")).toBeTruthy();
     anuncio.mockRestore();
+  });
+
+  it("enquanto atualiza, um indicador pequeno no lugar do ícone e o botão desligado; o conteúdo continua", async () => {
+    const f = jest.fn().mockResolvedValueOnce(resposta(200, caixa)).mockReturnValueOnce(new Promise<Response>(() => {})) as unknown as typeof fetch & jest.Mock;
+    await render(tela(f));
+    await screen.findByTestId("resumo");
+    expect(screen.getByText("refresh:24")).toBeTruthy();
+    await fireEvent.press(screen.getByTestId("atualizar"));
+    expect(screen.getByTestId("atualizando")).toBeTruthy();
+    expect(screen.queryByText("refresh:24")).toBeNull();
+    expect(screen.getByTestId("atualizar").props.accessibilityState.disabled).toBe(true);
+    expect(screen.getByTestId("resumo")).toBeTruthy();
   });
 
   it("o botão de atualizar tem rótulo e alvo de 44", async () => {

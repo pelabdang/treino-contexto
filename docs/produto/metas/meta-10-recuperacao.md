@@ -70,7 +70,7 @@ Resultado de cada item conforme a QA da Bia na #378 (PR #413), só com fixtures 
 | #380 | Resultado da meta e roteiro | este |
 
 Paralela, fora do critério: #367 (espaços no fim da linha e "esforço N (N)" no texto, PR #384). Em aberto, fora do caminho: #402 (frase
-quando só a versão do pacote desatualiza) e #382 (botão Salvar do check-in sobe quando a dica some).
+quando só a versão do pacote desatualiza) (a #382, botão Salvar do check-in que subia quando a dica sumia, foi **feita** no PR #432).
 
 ## Decisões (regra de produto)
 **Do Angelo (12/11, "ok para as nove"):** tema = recuperação; guardar só duração do sono, VFC noturna e FC de repouso, com a regra do dado de
@@ -123,7 +123,7 @@ Todos genéricos; nada do dado real.
   o head do alembic e os guias não fixam mais o número (#414).
 - **A conferência visual dependeu de novo da extensão do navegador:** não estava disponível na sessão da QA, e a tela só foi vista no fim,
   pela Lia (#369), que cobriu o passo do navegador da QA.
-- **O botão Salvar do check-in sobe quando a dica some (#382)**, confirmado na #369 e pior em 390 px: sobe 48 px e "Nada a relatar" fica
+- **O botão Salvar do check-in sobe quando a dica some (#382, resolvido no PR #432: a dica tem altura fixa de 2 linhas)**, confirmado na #369 e pior em 390 px: sobe 48 px e "Nada a relatar" fica
   onde ele estava (risco de toque errado).
 
 ## O que se aprendeu

@@ -739,7 +739,7 @@ Revisadas ao fim de cada meta com o que se aprendeu. Ordem tirada da "Fundação
   tamanho fiel; PR #399); #397 (`buscar_recuperacao --fixtures`, PR #400); #396 (mensagem própria do desatualizado pela noite, PR #401);
   #403 (frase do "aprendendo" e concordância de "FC", `@7`/`@5`; PR #404); #405 (estado do clima no texto, `@8`/`@6`; PR #406); #407
   (`--refazer` reconfere o texto mantido, PR #408); #409 (clima que chega depois desatualiza, migração 0015; PR #410); PRs #412 (diário de
-  16/11) e #414 (guias sem head fixo). Em aberto, fora do caminho: #402 (frase quando só a versão do pacote desatualiza) e #382 (botão
+  16/11) e #414 (guias sem head fixo). Em aberto, fora do caminho: #402 (frase quando só a versão do pacote desatualiza); #382 foi feita no PR #432 (botão
   Salvar do check-in).
 
   **Ordem:** #369 e #370 na largada, em paralelo; #371 adianta à mão enquanto a ADR não entra. Depois da ADR, #372 (Duda) e #373 (Caio)
@@ -747,7 +747,7 @@ Revisadas ao fim de cada meta com o que se aprendeu. Ordem tirada da "Fundação
   #374 → #375 → #377 → #378 → #380. Sem tela nova: a recuperação aparece só no texto do cartão que já existe.
 - **Paralela (fora do critério de pronto):** #367, pedida pelo Angelo: espaços no fim da linha e PSE sem rótulo repetida ("esforço 6
   (6)") no texto do feedback (caio-ciencia). Se mudar prompt ou checagens antes da #375, a #375 parte da versão dela.
-- **Candidata, fora do critério de pronto:** #382 (app, rafa-app com a Lia): no check-in, o botão Salvar sobe quando a dica some e
+- **Candidata, fora do critério de pronto (feita no PR #432, 16/11):** #382 (app, rafa-app com a Lia): no check-in, o botão Salvar sobe quando a dica some e
   "Nada a relatar" fica onde ele estava. Achada na simulação no Chrome em tamanho de celular; o resultado da simulação está em
   comentário na #369. Entra na Meta 10 só se a #369 pedir o ajuste.
 - **Quem:** caio-ciencia (ADR, métrica, pacote, prompt, checagens; a #367), duda-dados (formato, banco, busca, adaptador), bia-qa
@@ -765,7 +765,7 @@ Revisadas ao fim de cada meta com o que se aprendeu. Ordem tirada da "Fundação
   da recuperação, texto de teste rotulado) e confirmou a #382, pior em 390 px. Limites: 390 px dentro de um iframe (altura 690), contraste só
   olhado; a simulação não é celular de verdade. **Não verificados:** celular de verdade (decisão 6, terceira meta seguida) e
   leitor de tela real. Resultado completo em [[produto/metas/meta-10-recuperacao]].
-- **Pendências que seguem:** #402 e #382 (confirmada na #369, pior em 390 px) como paralelas da Meta 11 (proposta); celular de verdade (pergunta 10 da Meta
+- **Pendências que seguem:** #402 como paralela da Meta 11 (a #382, confirmada na #369, foi feita no PR #432); celular de verdade (pergunta 10 da Meta
   11).
 - **Aprendido na Meta 10:** cada dado que chega depois do feedback (check-in, noite, clima, versão do pacote) precisa de regra de
   desatualizado e de mensagem própria, decididas na ADR; cada versão nova do prompt pede a sua rodada com o provedor de verdade; o uso
@@ -849,7 +849,7 @@ Revisadas ao fim de cada meta com o que se aprendeu. Ordem tirada da "Fundação
   **Ordem:** #418 e #419 na largada, em paralelo (a #418 tira a conferência visual do fim da meta, aprendido nas Metas 8 a 10); #420 e
   #421 adiantam enquanto a ADR não entra. Depois da ADR, #422 (Caio) em paralelo com #423 e #425 (Duda); #424 é o encontro; #426 e #427 em
   sequência; #431 depois da #424, só no banco local. Caminho crítico: #419 → #423 → #424 → #426 → #427 → #428 → #429 → #430.
-- **Paralelas (fora do critério, sem dependência):** #382 (rafa-app com a Lia; o Rafa já mexe no app) e #402 (caio-ciencia; só a
+- **Paralelas (fora do critério, sem dependência):** #382 (feita em 16/11, PR #432) e #402 (caio-ciencia; só a
   `mensagem`, sem estado novo).
 - **Quem:** caio-ciencia (ADR, regra de atenção, oráculo; #402), duda-dados (identidade, filtro, API, lote), lia-design (desenho e revisão),
   rafa-app (capturas e tela; #382), nina-docs, bia-qa, Theo (ADR 0015, adendo da ADR 0004, a dependência da #418), Angelo (conferência
