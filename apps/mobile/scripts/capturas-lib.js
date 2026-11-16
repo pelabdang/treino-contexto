@@ -17,16 +17,20 @@ const TAMANHOS = [
   { nome: "390", largura: 390, altura: 844 },
   { nome: "1280", largura: 1280, altura: 900 },
 ];
+const TAMANHO_ALTO = { nome: "390-alto", largura: 390, altura: 844, alto: true };
+const ALTURA_MAXIMA = 3000;
 const TEMAS = ["claro", "escuro"];
 const PORTAS_PROIBIDAS = [8000, 5433];
 
 const nomeArquivo = (rota, tema, tamanho) => `${rota.nome}-${tema}-${tamanho.nome}.png`;
 
 // Todas as combinações rota x tema x tamanho, na ordem rota, tema, tamanho. `so` filtra rotas pelo nome.
-function planoDeCapturas(so = []) {
+// `alto` acrescenta o 390 com a altura do conteúdo (sufixo -390-alto), sem mudar os tamanhos padrão.
+function planoDeCapturas(so = [], alto = false) {
   const rotas = so.length ? ROTAS.filter((r) => so.includes(r.nome)) : ROTAS;
   const plano = [];
-  for (const rota of rotas) for (const tema of TEMAS) for (const tamanho of TAMANHOS) plano.push({ rota, tema, tamanho });
+  const tamanhos = alto ? [...TAMANHOS, TAMANHO_ALTO] : TAMANHOS;
+  for (const rota of rotas) for (const tema of TEMAS) for (const tamanho of tamanhos) plano.push({ rota, tema, tamanho });
   return plano;
 }
 
@@ -64,4 +68,25 @@ function arquivoDaRota(raiz, caminho) {
   return candidatos.find(ehArquivo) ?? padrao;
 }
 
-module.exports = { ROTAS, TAMANHOS, TEMAS, PORTAS_PROIBIDAS, nomeArquivo, planoDeCapturas, validarApiUrl, arquivoDaRota };
+// Altura da janela para o modo alto: a do conteúdo medido (scrollHeight), no mínimo a do celular e no máximo ALTURA_MAXIMA.
+function alturaAlta(medida, minima = 844) {
+  const n = Number.isFinite(medida) ? Math.ceil(medida) : minima;
+  return Math.min(ALTURA_MAXIMA, Math.max(minima, n));
+}
+
+// Encerramento idempotente: roda as limpezas (em ordem inversa) uma só vez, mesmo chamado várias vezes.
+function criarEncerramento(limpezas) {
+  let promessa = null;
+  return () => {
+    promessa ??= (async () => {
+      for (const f of limpezas.splice(0).reverse()) {
+        try {
+          await f();
+        } catch {}
+      }
+    })();
+    return promessa;
+  };
+}
+
+module.exports = { TAMANHO_ALTO, ALTURA_MAXIMA, alturaAlta, criarEncerramento, ROTAS, TAMANHOS, TEMAS, PORTAS_PROIBIDAS, nomeArquivo, planoDeCapturas, validarApiUrl, arquivoDaRota };

@@ -4,7 +4,7 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 
 // eslint-disable-next-line @typescript-eslint/no-require-imports
-const { ROTAS, TAMANHOS, TEMAS, arquivoDaRota, nomeArquivo, planoDeCapturas, validarApiUrl } = require("../scripts/capturas-lib.js");
+const { ALTURA_MAXIMA, alturaAlta, criarEncerramento, ROTAS, TAMANHOS, TEMAS, arquivoDaRota, nomeArquivo, planoDeCapturas, validarApiUrl } = require("../scripts/capturas-lib.js");
 
 describe("plano de capturas", () => {
   it("combina cada rota com os dois temas e os dois tamanhos (390 x 844 e 1280)", () => {
@@ -62,5 +62,38 @@ describe("arquivoDaRota", () => {
   it("cai no index.html em rota desconhecida e não sai da pasta", () => {
     expect(arquivoDaRota(raiz, "/nada")).toBe(join(raiz, "index.html"));
     expect(arquivoDaRota(raiz, "/../../etc/passwd")).toBe(join(raiz, "index.html"));
+  });
+});
+
+describe("modo alto", () => {
+  it("não muda o plano padrão e acrescenta o 390-alto por rota e tema", () => {
+    expect(planoDeCapturas()).toHaveLength(ROTAS.length * 4);
+    const plano = planoDeCapturas(["treino-pronto"], true);
+    expect(plano).toHaveLength(6);
+    const nomes = plano.map((p: any) => nomeArquivo(p.rota, p.tema, p.tamanho));
+    expect(nomes).toContain("treino-pronto-claro-390-alto.png");
+    expect(nomes).toContain("treino-pronto-escuro-390-alto.png");
+  });
+  it("limita a altura entre a do celular e o teto", () => {
+    expect(alturaAlta(100)).toBe(844);
+    expect(alturaAlta(1500.2)).toBe(1501);
+    expect(alturaAlta(99999)).toBe(ALTURA_MAXIMA);
+    expect(alturaAlta(NaN)).toBe(844);
+  });
+});
+
+describe("criarEncerramento", () => {
+  it("roda as limpezas uma só vez, em ordem inversa, mesmo chamado duas vezes", async () => {
+    const ordem: string[] = [];
+    const limpezas = [() => ordem.push("a"), async () => void ordem.push("b")];
+    const encerrar = criarEncerramento(limpezas);
+    await Promise.all([encerrar(), encerrar()]);
+    await encerrar();
+    expect(ordem).toEqual(["b", "a"]);
+  });
+  it("segue em frente se uma limpeza falhar", async () => {
+    const ordem: string[] = [];
+    await criarEncerramento([() => ordem.push("a"), () => { throw new Error("x"); }])();
+    expect(ordem).toEqual(["a"]);
   });
 });
