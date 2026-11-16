@@ -170,6 +170,28 @@ export function EsqueletoPendentes() {
   );
 }
 
+/** Esqueleto da caixa do dia: resumo e dois cartões de aluno. Só decorativo. */
+export function EsqueletoCaixa() {
+  const { styles, opacidade, barra } = useBase();
+  return (
+    <Animated.View
+      testID="esqueleto-caixa"
+      accessibilityElementsHidden
+      importantForAccessibility="no-hide-descendants"
+      style={{ opacity: opacidade }}
+    >
+      {barra("60%", 20, "resumo")}
+      {[0, 1].map((i) => (
+        <View key={i} style={styles.cartao}>
+          {barra("40%", 20, `n${i}`)}
+          {barra("70%", 16, `a${i}`)}
+          {barra("100%", 40, `b${i}`)}
+        </View>
+      ))}
+    </Animated.View>
+  );
+}
+
 function criarEstilos({ cor }: Tema) {
   return StyleSheet.create({
     cartao: {

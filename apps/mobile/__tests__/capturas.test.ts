@@ -4,7 +4,7 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 
 // eslint-disable-next-line @typescript-eslint/no-require-imports
-const { ALTURA_MAXIMA, alturaAlta, criarEncerramento, ROTAS, TAMANHOS, TEMAS, arquivoDaRota, nomeArquivo, planoDeCapturas, validarApiUrl } = require("../scripts/capturas-lib.js");
+const { SIMULACOES, ALTURA_MAXIMA, alturaAlta, criarEncerramento, ROTAS, TAMANHOS, TEMAS, arquivoDaRota, nomeArquivo, planoDeCapturas, validarApiUrl } = require("../scripts/capturas-lib.js");
 
 describe("plano de capturas", () => {
   it("combina cada rota com os dois temas e os dois tamanhos (390 x 844 e 1280)", () => {
@@ -28,6 +28,39 @@ describe("plano de capturas", () => {
     const nomes = ROTAS.map((r: any) => r.nome);
     expect(new Set(nomes).size).toBe(nomes.length);
     expect(ROTAS.some((r: any) => r.caminho === "/treino/107")).toBe(true);
+  });
+});
+
+describe("rotas da caixa do dia (#426)", () => {
+  const caixa = ROTAS.filter((r: any) => r.nome.startsWith("caixa-do-dia"));
+  it("tem a rota principal, o detalhe aberto e os estados simulados, em 390 e 1280, claro e escuro", () => {
+    expect(caixa.map((r: any) => r.nome)).toEqual([
+      "caixa-do-dia",
+      "caixa-do-dia-detalhe",
+      "caixa-do-dia-sem-alunos",
+      "caixa-do-dia-sem-motivo",
+      "caixa-do-dia-erro-rede",
+      "caixa-do-dia-404",
+    ]);
+    expect(caixa.every((r: any) => r.caminho === "/caixa-do-dia")).toBe(true);
+    const plano = planoDeCapturas(["caixa-do-dia"], true);
+    expect(plano.map((p: any) => nomeArquivo(p.rota, p.tema, p.tamanho))).toEqual([
+      "caixa-do-dia-claro-390.png",
+      "caixa-do-dia-claro-1280.png",
+      "caixa-do-dia-claro-390-alto.png",
+      "caixa-do-dia-escuro-390.png",
+      "caixa-do-dia-escuro-1280.png",
+      "caixa-do-dia-escuro-390-alto.png",
+    ]);
+  });
+  it("toda simulação pedida existe", () => {
+    for (const r of caixa) if (r.simular) expect(SIMULACOES[r.simular]).toBeDefined();
+  });
+  it("as simulações de lista só tiram dados da caixa", () => {
+    const base = { alunos: [{ sem_motivo: false }, { sem_motivo: true }], novos: [1] };
+    expect(SIMULACOES.vazio.alterar(base)).toEqual({ alunos: [], novos: [] });
+    expect(SIMULACOES["sem-motivo"].alterar(base)).toEqual({ alunos: [{ sem_motivo: true }], novos: [] });
+    expect(SIMULACOES["404"].status).toBe(404);
   });
 });
 

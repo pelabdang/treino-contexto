@@ -14,7 +14,7 @@ import { dirname, extname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import lib from "./capturas-lib.js";
 
-const { arquivoDaRota, nomeArquivo, planoDeCapturas, validarApiUrl, alturaAlta, criarEncerramento } = lib;
+const { SIMULACOES, arquivoDaRota, nomeArquivo, planoDeCapturas, validarApiUrl, alturaAlta, criarEncerramento } = lib;
 
 const app = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 const pasta = resolve(process.env.CAPTURAS_PASTA ?? join(app, "capturas"));
@@ -93,7 +93,7 @@ async function principal() {
   await executar("npx", ["expo", "export", "--platform", "web", "--output-dir", saida], {
     cwd: app,
     stdio: "inherit",
-    env: { ...process.env, CI: "1", EXPO_PUBLIC_API_URL: apiUrl, EXPO_PUBLIC_ATLETA_ID: "1" },
+    env: { ...process.env, CI: "1", EXPO_PUBLIC_API_URL: apiUrl, EXPO_PUBLIC_ATLETA_ID: "1", EXPO_PUBLIC_PROFESSOR_ID: "1" },
   });
 
   const web = createServer((req, res) => {
@@ -127,8 +127,20 @@ async function principal() {
       deviceScaleFactor: 1,
     });
     const pagina = await ctx.newPage();
+    const sim = rota.simular ? SIMULACOES[rota.simular] : null;
+    if (sim) {
+      await pagina.route("**/professores/*/caixa-do-dia", async (r) => {
+        if (sim.abortar) return r.abort("connectionrefused");
+        if (sim.alterar) {
+          const original = await r.fetch();
+          return r.fulfill({ response: original, json: sim.alterar(await original.json()) });
+        }
+        return r.fulfill({ status: sim.status, json: sim.corpo, headers: { "access-control-allow-origin": "*" } });
+      });
+    }
     await pagina.goto(base + rota.caminho, { waitUntil: "networkidle" });
     await pagina.evaluate(() => document.fonts.ready);
+    for (const id of rota.clicar ?? []) await pagina.getByTestId(id).click();
     await pagina.waitForTimeout(300);
     if (tamanho.alto) {
       // O conteúdo rola dentro de um elemento da tela, não na página: mede o maior scrollHeight e redimensiona a janela.

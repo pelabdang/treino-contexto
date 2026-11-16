@@ -254,6 +254,85 @@ const erro422 = (type) => ({ detail: [{ loc: ["body"], msg: "sintético", type }
 iniciarCheckins();
 const atividade = (id, atleta = 1) => comCheckin(id === 106 ? natacao(id) : corrida(id), atleta);
 
+// Caixa do dia sintética (#426, ADR 0015): `GET /professores/{id}/caixa-do-dia`. Alunos fictícios "Atleta Fixture ...", texto marcador na observação.
+// Professor de teste (EXPO_PUBLIC_PROFESSOR_ID=<id>): 1 = com conteúdo; 2 = sem alunos; 3 = ninguém com motivo e sem novos;
+// 4 = derruba a conexão; 5 = 404 uniforme `professor_inexistente`; 6 = 500. Outros ids: 404 uniforme (o servidor de verdade não diz a causa).
+const detalheCheckin = {
+  tipo_confirmado: false,
+  tipo_texto: "Intervalado",
+  tipo_origem_texto: "sugerido pela regra",
+  checkin: {
+    pse_texto: "8",
+    sensacao: 2,
+    sensacao_texto: "Mal",
+    atalhos: [{ chave: "dor", texto: "Dor" }, { chave: "cansaco", texto: "Cansaço" }],
+    nada_a_relatar: false,
+    observacao: "Texto de exemplo escrito à mão.",
+  },
+  feedback: { estado: "pronto", texto: "Texto de exemplo do feedback.", origem: "automatico" },
+};
+const detalheSemCheckin = {
+  tipo_confirmado: false,
+  tipo_texto: null,
+  tipo_origem_texto: null,
+  checkin: null,
+  feedback: { estado: "sem_checkin", mensagem: "O prazo do check-in deste treino acabou, então ele fica sem feedback.", checkin_aberto: false },
+};
+const caixaComConteudo = {
+  versao: "atencao@1",
+  hoje: "2025-11-13",
+  janela_atencao_dias: 7,
+  janela_novos_dias: 14,
+  alunos: [
+    {
+      atleta_id: 1, nome: "Atleta Fixture Ana", sem_motivo: false, texto_sem_motivo: null,
+      treinos: [{
+        atividade_id: 501, modalidade: "corrida", data_local: "2025-11-11", hora_local: "06:30", duracao_texto: "45 min",
+        motivos: [
+          { codigo: "dor", texto: "Treino de terça com dor marcada no check-in." },
+          { codigo: "fora_do_normal", texto: "Treino de terça fora do normal: FC média acima do habitual." },
+        ],
+        detalhe: detalheCheckin,
+      }],
+    },
+    {
+      atleta_id: 2, nome: "Atleta Fixture Bruno", sem_motivo: false, texto_sem_motivo: null,
+      treinos: [{
+        atividade_id: 502, modalidade: "corrida", data_local: "2025-11-12", hora_local: "07:00", duracao_texto: "50 min",
+        motivos: [{ codigo: "divergencia", texto: "Treino de quarta diferente da semana-padrão: previsto intervalado, sem esforço detectado." }],
+        detalhe: { ...detalheSemCheckin, tipo_texto: "Leve", tipo_origem_texto: "confirmado por você", tipo_confirmado: true },
+      }],
+    },
+    {
+      atleta_id: 3, nome: "Atleta Fixture Carla", sem_motivo: false, texto_sem_motivo: null,
+      treinos: [{
+        atividade_id: 503, modalidade: "ciclismo", data_local: "2025-11-08", hora_local: "08:00", duracao_texto: "1 h 10",
+        motivos: [{ codigo: "checkin_vencendo", texto: "Treino de sábado sem check-in; o prazo termina em 2 dias." }],
+        detalhe: detalheSemCheckin,
+      }],
+    },
+    { atleta_id: 4, nome: "Atleta Fixture Diego", sem_motivo: true, texto_sem_motivo: "Nada a destacar nos últimos 7 dias.", treinos: [] },
+    { atleta_id: 5, nome: "Atleta Fixture Elisa", sem_motivo: true, texto_sem_motivo: "Nada a destacar nos últimos 7 dias.", treinos: [] },
+  ],
+  novos: [
+    {
+      atividade_id: 511, atleta_id: 1, atleta_nome: "Atleta Fixture Ana", modalidade: "corrida", data_local: "2025-11-11", hora_local: "06:30",
+      duracao_texto: "45 min", tipo_sugerido: "intervalado", tipo_sugerido_texto: "Intervalado", origem_texto: "sugerido pela regra", detalhe: detalheCheckin,
+    },
+    {
+      atividade_id: 512, atleta_id: 4, atleta_nome: "Atleta Fixture Diego", modalidade: "natacao", data_local: "2025-11-10", hora_local: "18:00",
+      duracao_texto: "40 min", tipo_sugerido: "leve", tipo_sugerido_texto: "Leve", origem_texto: "sugerido pela semana-padrão",
+      detalhe: { ...detalheSemCheckin, tipo_texto: "Leve", tipo_origem_texto: "sugerido pela semana-padrão" },
+    },
+  ],
+};
+const professorInexistente = { detail: [{ loc: ["path", "professor_id"], msg: "professor inexistente", type: "professor_inexistente" }] };
+const caixaDe = (id) => {
+  if (id === 2) return { ...caixaComConteudo, alunos: [], novos: [] };
+  if (id === 3) return { ...caixaComConteudo, alunos: caixaComConteudo.alunos.filter((a) => a.sem_motivo), novos: [] };
+  return caixaComConteudo;
+};
+
 createServer((req, res) => {
   const cabecalhos = {
     "content-type": "application/json",
@@ -264,6 +343,15 @@ createServer((req, res) => {
   if (req.method === "OPTIONS") return res.writeHead(204, cabecalhos).end();
   const { pathname, searchParams } = new URL(req.url, "http://x");
   let corpo = null;
+  const cx = pathname.match(/^\/professores\/(\d+)\/caixa-do-dia$/);
+  if (cx) {
+    const id = Number(cx[1]);
+    if (id === 4) return req.destroy();
+    if (id === 6) return res.writeHead(500, cabecalhos).end(JSON.stringify({ detail: "erro sintético" }));
+    if (id > 6) return res.writeHead(404, cabecalhos).end(JSON.stringify(professorInexistente));
+    if (id === 5) return res.writeHead(404, cabecalhos).end(JSON.stringify(professorInexistente));
+    return res.writeHead(200, cabecalhos).end(JSON.stringify(caixaDe(id)));
+  }
   const sp = pathname.match(/^\/atletas\/(\d+)\/semana-padrao$/);
   if (sp) {
     const id = Number(sp[1]);
