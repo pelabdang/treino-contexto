@@ -40,7 +40,7 @@ O professor do piloto é fixo por configuração: não há login nem tela de esc
 ## Onde fica e como se chega
 | rota | tela | entrada |
 |---|---|---|
-| `/caixa-do-dia` | caixa do dia | endereço direto e página inicial quando o professor estiver configurado (o Rafa decide o redirecionamento; ver "Dados") |
+| `/caixa-do-dia` | caixa do dia | **só pelo endereço direto** (decisão do Theo, 16/11): o `/` continua sendo a home do atleta e a tela do atleta **não** ganha link para a caixa do professor. Quem configura o piloto abre o endereço (o guia da #428 diz como). Entrada própria do professor fica para a meta de login |
 
 - Uma tela só, com rolagem. **Sem rota de detalhe do treino:** o detalhe abre dentro da própria lista (ver "Detalhe
   do treino"). Menos telas, e a observação livre nunca vai parar em endereço, histórico ou parâmetro de rota.
