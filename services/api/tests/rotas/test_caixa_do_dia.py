@@ -91,7 +91,7 @@ def _caixa(client):
 
 def test_forma_da_resposta_e_ordem_dos_alunos(client):
     j = _caixa(client)
-    assert (j["versao"], j["hoje"], j["janela_atencao_dias"], j["janela_novos_dias"]) == ("atencao@1", "2026-11-18", 7, 14)
+    assert (j["versao"], j["hoje"], j["janela_atencao_dias"], j["janela_novos_dias"]) == ("atencao@2", "2026-11-18", 7, 14)
     assert [a["nome"] for a in j["alunos"]] == ["Ana Teste", "Bruno Teste", "Carla Teste", "Davi Teste"]  # dor, divergencia, checkin; depois sem motivo
     ana, bruno, carla, davi = j["alunos"]
     assert [m["codigo"] for m in ana["treinos"][0]["motivos"]] == ["dor"]

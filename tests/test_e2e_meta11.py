@@ -484,7 +484,7 @@ def test_10_get_da_caixa_ordem_motivos_novos_e_cabecalhos_como_no_guia(mundo):
     assert r.status_code == 200 and r.headers["cache-control"] == "no-store"
     j = r.json()
     hoje = datetime.now(UTC).astimezone(__import__("zoneinfo").ZoneInfo("America/Sao_Paulo")).date()
-    assert (j["versao"], j["janela_atencao_dias"], j["janela_novos_dias"]) == ("atencao@1", 7, 14)
+    assert (j["versao"], j["janela_atencao_dias"], j["janela_novos_dias"]) == ("atencao@2", 7, 14)
     assert date.fromisoformat(j["hoje"]) == hoje  # a data LOCAL, como as datas dos treinos (#458)
     assert [a["nome"] for a in j["alunos"]] == [
         "Atleta Fixture Ana", "Atleta Fixture Carla", "Atleta Fixture Igor", "Atleta Fixture Helena", "Atleta Fixture Bruno",
