@@ -27,7 +27,7 @@ com o banco `treino-meta12` (Postgres na 5471, API na 8071). Os números abaixo 
 - Mesmas ferramentas e cuidados do [[produto/meta-7-como-rodar]] e do [[produto/meta-11-como-rodar]]: comandos na **raiz** do repositório, pasta de trabalho
   fora do git (abaixo, `/caminho/saida`), `uv`, Docker, `curl`, `python3` e, para as capturas, `node` com `npm`.
 - **Não use o banco do seu dia a dia** (porta 5433) nem as portas 8000 e 8081. Rode sempre com `-p treino-meta12`. Abaixo: 5471 (Postgres) e 8071 (API).
-- **Sem login.** O rótulo de transição pode ser corrigido por quem abrir a tela; quem corrige sem login é a pergunta B, "a confirmar" no fim.
+- **Sem login.** O rótulo de transição pode ser corrigido por quem abrir a tela; quem corrige sem login foi a pergunta B, decidida pelo Angelo em 17/11 (no fim).
 
 ## Passo a passo
 1. **Subir o Postgres.** Salve `/caminho/saida/porta.yml` com
@@ -73,7 +73,7 @@ com o banco `treino-meta12` (Postgres na 5471, API na 8071). Os números abaixo 
      e `sem_carga_no_dia` 0.
 
    Um treino cedo na série, como `.../atividades/10` (ciclismo com carga de 30,0 em 10 de janeiro), dá `forma_do_dia.estado` `aprendendo`, **sem CTL, ATL nem TSB**, e
-   `texto_aprendendo` "Ainda aprendendo a sua forma: faltam 39 dias de histórico para estimar." (menos de 42 dias de série). Se isso deve mudar é a pergunta A.
+   `texto_aprendendo` "Ainda aprendendo a sua forma: faltam 39 dias de histórico para estimar." (menos de 42 dias de série). Esconder foi a decisão do Angelo (pergunta A, 17/11).
 7. **Corrigir o rótulo de transição.** Uma corrida comum aceita a correção:
    ```
    curl -s -X PUT localhost:8071/atletas/1/atividades/81/transicao -H 'content-type: application/json' -d '{"transicao":true}' -w ' [%{http_code}]\n'
@@ -82,7 +82,7 @@ com o banco `treino-meta12` (Postgres na 5471, API na 8071). Os números abaixo 
    (transição compara só com transição: as três métricas com valor passam a `aprendendo`). Desfazer: `curl -s -X DELETE localhost:8071/atletas/1/atividades/81/transicao -w ' [%{http_code}]\n'`
    dá `{"valor":false,"origem":null,"editavel":true} [200]`. Onde a API não aceita rótulo (atividade `outra`, `troca` ou `multiesporte_pai`; aqui as de id 7, 9 e 11),
    o `GET` traz `editavel: false`, `carga` e `forma_do_dia` `null`, e o `PUT` e o `DELETE` respondem `409` com `{"detail":"Este treino não tem rótulo de transição."} [409]`, sem gravar nada.
-   O app não decide pela modalidade: segue o `editavel`. Que o feedback fique `desatualizado` depois de corrigir a transição é a pergunta C.
+   O app não decide pela modalidade: segue o `editavel`. Que o feedback fique `desatualizado` depois de corrigir a transição foi decidido (pergunta C, 17/11), mas **ainda não está implementado**: hoje o feedback não muda.
 8. **A tela (capturas por comando).** Em `apps/mobile`: `npm ci` e, na primeira vez, `npx playwright install chromium-headless-shell`. Depois:
    ```
    CAPTURAS_PASTA=/caminho/saida/capturas npm run capturas -- --so=treino-normal-fora,treino-forma-aprendendo,treino-esforcos-muitos
@@ -112,12 +112,12 @@ com o banco `treino-meta12` (Postgres na 5471, API na 8071). Os números abaixo 
 - **Frase do feedback `desatualizado`** só pela versão do pacote: "O feedback será refeito." (#402, adendo 10 da ADR 0004).
 - **`atencao@2` nas fixtures do app** (#471) e a distância e o pace em linhas iguais (#237).
 
-## A confirmar com o Angelo
-Nada aqui é decidido; a spec adotou a recomendação da Lia e o Paulo leva ao Angelo. Sem conteúdo do dado real.
-- **A. Forma do dia em `aprendendo`.** A tela esconde CTL, ATL e TSB nas primeiras semanas e mostra o aviso, porque o TSB sai muito negativo por construção. Alternativa: mostrar os números com um selo "ainda aprendendo".
-- **B. Quem corrige sem login.** Sem login, professor e atleta veem a mesma tela, então qualquer um pode corrigir o rótulo. Recomendação: aceitar na Meta 12 (a correção se desfaz com `DELETE`) e fechar com o login, na Meta 13.
-- **C. Efeito da correção no feedback.** Corrigir a transição muda a linha de base, que entra no pacote de fatos. O feedback já gerado fica `desatualizado` (o atleta vê o aviso e o texto é refeito), como acontece com o check-in editado e com o tipo corrigido pelo professor?
-- **D. Manter a `linha_base@3` ou buscar uma taxa menor de "fora do normal".** Só genérico: a `@3` reduz o "fora" por dispersão pequena; um piso maior ou um limite maior cortaria mais, ao custo de esconder desvios reais. Ela vale como está até haver uso real para calibrar (conferência local na máquina do Angelo, #462).
+## Decidido pelo Angelo (17/11, "ok para as quatro")
+O Angelo respondeu "ok para as quatro" (A a D), todas com a recomendação. Sem conteúdo do dado real.
+- **A. Forma do dia em `aprendendo`: esconder.** A tela esconde CTL, ATL e TSB nas primeiras semanas e mostra o aviso, porque o TSB sai muito negativo por construção. Alternativa: mostrar os números com um selo "ainda aprendendo".
+- **B. Quem corrige sem login: aceito na Meta 12.** Sem login, professor e atleta veem a mesma tela, então qualquer um pode corrigir o rótulo. A correção se desfaz com `DELETE`; fecha com o login, na Meta 13.
+- **C. Efeito da correção no feedback: sim, fica `desatualizado`; ainda não implementado.** Corrigir a transição muda a linha de base, que entra no pacote de fatos. O feedback já gerado deve ficar `desatualizado` (o atleta vê o aviso e o texto é refeito), como acontece com o check-in editado e com o tipo corrigido pelo professor. Vira issue paralela da Meta 13 (o Paulo abre).
+- **D. Manter a `linha_base@3` (decidido).** Só genérico: a `@3` reduz o "fora" por dispersão pequena; um piso maior ou um limite maior cortaria mais, ao custo de esconder desvios reais. Ela vale como está até haver uso real para calibrar (conferência local na máquina do Angelo, #462).
 
 ## Achados do guia
 - **Resolvido (#487):** a frase da FC dizia "abaixo que a mediana"; agora diz "abaixo da mediana" e o texto de `aprendendo` começa pela contagem ("5 de 8 treinos do tipo leve nas últimas 12 semanas."), porque a palavra do estado é do app. A janela de 12 semanas (84 dias) agora aparece nos textos.

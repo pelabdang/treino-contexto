@@ -277,7 +277,7 @@ Tudo como **estimativa**, dito no cartão (chip no alto e nota no fim).
 
 Por que **não** mostrar CTL, ATL e TSB enquanto "aprendendo": nas primeiras semanas o condicionamento sai baixo por construção
 (a série parte de zero) e o TSB sai muito negativo sem que o atleta tenha feito algo demais. Mostrar "−28,0" a quem acabou de
-chegar é um falso alarme, o oposto do tom da meta. Recomendação: esconder (**a confirmar com o Angelo**, pergunta A).
+chegar é um falso alarme, o oposto do tom da meta. Esconder (**decidido: Angelo, 17/11**, pergunta A).
 
 Textos dos motivos de `sem_carga` (a API manda pronto; esta é a redação pedida): frases curtas, sem culpar.
 | `motivo` | texto |
@@ -324,7 +324,7 @@ Responde: "o app entendeu direito que isto foi um treino de transição (brick)?
 - **Erros:** de rede, texto `cor.erro` com `error-outline` abaixo do botão: "Não foi possível salvar. Tente de novo." O estado
   anterior fica e o botão volta a ficar ativo. `404`: "Treino não encontrado." `422`: o mesmo texto genérico.
 - **Quem vê:** a decisão de 17/11 é que o atleta corrige e o professor continua vendo o tipo pela caixa. A tela é a mesma para os
-  dois e, **antes do login, o app não sabe quem está olhando**; sem login, o cartão aparece a quem abrir a tela (**a confirmar com o Angelo**, pergunta B).
+  dois e, **antes do login, o app não sabe quem está olhando**; sem login, o cartão aparece a quem abrir a tela (**decidido: Angelo, 17/11**, pergunta B; com o login, na Meta 13, só o atleta dono corrige).
 - **Quando o cartão não aparece:** quando `transicao.editavel = false`. **A API decide** (decisão do Theo, 17/11); o app não olha a
   modalidade nem o subtipo. Hoje isso cobre `outra`, `multiesporte_pai` e `troca`, mas a regra é da API.
 - Acessibilidade: o botão tem alvo 48, `accessibilityRole="button"` e rótulo completo ("Marcar este treino como treino de
@@ -403,14 +403,14 @@ Para a #464. Todas como a Lia recomendou.
 5. Bloco novo `forma_do_dia` no `GET` da atividade, calculado na leitura pela mesma `calcular_serie`, só para o dia local do treino,
    com textos prontos e `sem_carga_no_dia`.
 
-### Perguntas ao Angelo (a confirmar)
-Cada cartão abaixo vale com a recomendação da Lia até a resposta; quando ele responder, esta nota é atualizada.
-- **A. Forma do dia em "aprendendo".** Recomendo **esconder** CTL, ATL e TSB e mostrar só o aviso. Se ele preferir mostrar, entra o
-  selo "ainda aprendendo" junto dos números.
-- **B. Quem corrige a transição sem login.** Sem login, professor e atleta veem a mesma tela. Recomendo aceitar na Meta 12 e fechar
+### Perguntas ao Angelo (decididas em 17/11)
+O Angelo respondeu **"ok para as quatro"** (A a D da Meta 12) em 17/11, todas com a recomendação. Cada cartão abaixo vale como está.
+- **A. Forma do dia em "aprendendo" (decidido, Angelo 17/11).** **Esconder** CTL, ATL e TSB e mostrar só o aviso. Alternativa descartada: mostrar os números com o
+  selo "ainda aprendendo".
+- **B. Quem corrige a transição sem login (decidido, Angelo 17/11).** Sem login, professor e atleta veem a mesma tela. **Aceito na Meta 12**; fecha
   na Meta 13, com o login; o rótulo é reversível (DELETE).
-- **C. Efeito da correção no feedback.** Corrigir a transição muda a linha de base, que entra no pacote de fatos do feedback.
-  Recomendo que o feedback já gerado fique `desatualizado`, pelo mesmo caminho do check-in editado.
+- **C. Efeito da correção no feedback (decidido, Angelo 17/11; ainda não implementado).** Corrigir a transição muda a linha de base, que entra no pacote de fatos do feedback.
+  O feedback já gerado deve ficar `desatualizado`, pelo mesmo caminho do check-in editado. **Hoje a tela não faz isso**: vira issue paralela da Meta 13 (o Paulo abre).
 
 ## O que muda em relação ao app de hoje
 | hoje | proposta | issue |

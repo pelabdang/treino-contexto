@@ -11,7 +11,7 @@ links: [[produto/roadmap]], [[produto/meta-12-como-rodar]], [[design/telas/trein
 > reais ainda não refeito com a `linha_base@3`). Código, documentação e QA no `main` (PRs #473 a #492, em 17/11). A Bia conferiu o critério
 > de pronto com `tests/test_e2e_meta12.py` (16 testes, só dado sintético, sem rede) e seguiu o [[produto/meta-12-como-rodar]] do zero num
 > projeto Docker próprio, com a **tela viva contra a API de um banco limpo** (#469, PR #492). A Lia deu **design-ok sobre a tela rodando**.
-> Quatro perguntas ao Angelo (A a D) seguem "a confirmar", com a recomendação valendo até a resposta. Fechamento: #470.
+> As quatro perguntas ao Angelo (A a D) foram respondidas em 17/11 (**"ok para as quatro"**, todas com a recomendação); a C ainda não está implementada. Fechamento: #470.
 
 ## Objetivo
 Na tela de um treino, o atleta vê, além do check-in e do feedback, como o treino ficou em relação ao normal dele (linha de base), a carga
@@ -34,7 +34,7 @@ Resultado de cada item conforme a QA da Bia na #469 (PR #492), só com fixtures 
 |---|---|---|
 | Spec da Lia antes da tela: cada seção em cada estado, palavras sem alarme nem diagnóstico, carga como estimativa | #463 | **ok** (PR #476; [[design/telas/treino]], seção "Meta 12"), antes das telas |
 | `linha_base@3` com nota, oráculo e testes sintéticos, e conferência local só em `entregas/`, antes de a seção do normal mostrar o "fora do normal" | #462 | **ok** (PR #479; fecha também a #455). Conferência local feita na máquina do Angelo, com os números só em `entregas/`; aqui, só o achado genérico (pergunta D) |
-| Carga do treino e CTL, ATL e TSB em números, sem gráfico | #464, #466 | **ok** (PRs #480 e #483). Em "aprendendo" os três números não aparecem (recomendação da pergunta A, a confirmar) |
+| Carga do treino e CTL, ATL e TSB em números, sem gráfico | #464, #466 | **ok** (PRs #480 e #483). Em "aprendendo" os três números não aparecem (pergunta A, decidida pelo Angelo em 17/11) |
 | O app não calcula: só textos e números do `GET`; adendo da ADR 0004 e cliente regerado | #464 | **ok** (PR #480, adendo 12) |
 | Rótulo de transição corrigido pelo atleta com a rota que já existe; a correção vence a sugestão | #467 | **ok** (PR #484; `PUT` e `DELETE` existentes; `409` quando o treino não tem rótulo) |
 | Cada seção com teste por estado e revisão da Lia sobre as capturas do comando e sobre a tela rodando | #465, #466, #467, #237 | **ok**. Telas nos PRs #483, #484, #485 e #477; design-ok da Lia na tela viva (390 px) dentro da QA |
@@ -82,14 +82,14 @@ CTL, ATL e TSB em números, sem gráfico; rótulo de transição corrigível pel
 ## O que não foi verificado
 - **Celular de verdade** (Expo Go, iOS, Android, toque): amarrado ao ensaio (decisão 10 da Meta 11). Tela vista no navegador em 390 px.
 - **Leitor de tela real:** rótulos e ordem conferidos nos testes e na revisão da Lia, não com VoiceOver ou TalkBack.
-- **Login:** não existe; qualquer um que abra a tela corrige o rótulo de transição (pergunta B).
+- **Login:** não existe; qualquer um que abra a tela corrige o rótulo de transição (pergunta B, aceito pelo Angelo até a Meta 13).
 - **Aluno real:** nenhum, além da conferência local na máquina do Angelo, com nada no repositório.
 - **Feedback dos treinos reais com a `@3`:** os textos já gerados localmente para os treinos do Angelo ainda usam a `@2`; não foram
   refeitos. O `@9` do prompt vale para os próximos.
 
 ## O que ficou de fora
 Como planejado: gráfico da série de carga; tela da evolução e #213; motivo de falta; resumos; login e deploy (Meta 13); agente (Meta 14);
-alerta de qualquer tipo; celular de verdade. **Não implementado, à espera da pergunta C:** a correção da transição deixar o feedback
+alerta de qualquer tipo; celular de verdade. **Decidido (pergunta C, Angelo 17/11) e ainda não implementado; vira issue paralela da Meta 13:** a correção da transição deixar o feedback
 `desatualizado`.
 
 ## Limitações conhecidas
@@ -118,11 +118,11 @@ Todos genéricos; nada do dado real.
   como padrão de toda tela nova, junto das capturas por comando.
 - **Versão nova de métrica mexe em textos aprovados de outro módulo** (exemplos do feedback). Quem sobe a versão procura também nos
   exemplos do LLM e nas ADRs.
-- **Perguntas que aparecem no meio da meta seguem com a recomendação valendo** ("a confirmar" na spec e no guia) e não pararam o time.
+- **Perguntas que aparecem no meio da meta seguem com a recomendação valendo** ("a confirmar" na spec e no guia, depois respondidas pelo Angelo com "ok para as quatro") e não pararam o time.
 - **Texto pronto da API precisa de revisão de português** como a tela tem revisão visual: a Lia revisou as frases do app, não as da API.
 
 ## PRECISA DO ANGELO
-As quatro perguntas abaixo estão "a confirmar" desde a spec (#463) e o guia; a recomendação vale até a resposta.
+**Respondidas em 17/11:** o Angelo disse **"ok para as quatro"** (A a D), todas com a recomendação. Ficam aqui como registro; a C ainda não está implementada e vira issue paralela da Meta 13 (o Paulo abre).
 - **A. Forma do dia em "aprendendo".** *Recomendação:* esconder CTL, ATL e TSB e mostrar só o aviso (é o que está no `main`).
   Alternativa: mostrar os números com o selo "ainda aprendendo".
 - **B. Quem corrige a transição sem login.** *Recomendação:* aceitar na Meta 12 que qualquer um que abra a tela corrija, e fechar na
