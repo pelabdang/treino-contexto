@@ -108,7 +108,7 @@ class CaixaDoDiaOut(BaseModel):
     novos: list[NovoOut]  # mais recente primeiro
 
 
-def _detalhe(session: Session, a: Atividade) -> DetalheOut:
+def _detalhe(session: Session, a: Atividade, hoje: date) -> DetalheOut:
     c = a.checkin
     checkin = None
     if c is not None:
@@ -120,14 +120,14 @@ def _detalhe(session: Session, a: Atividade) -> DetalheOut:
         tipo_origem_texto=ORIGEM_TEXTO.get(a.tipo_origem) if a.tipo_treino and a.tipo_origem else None,
         tipo_confirmado=bool(a.tipo_confirmado),
         checkin=checkin,
-        feedback=_feedback_out(_feedback(session, a)),
+        feedback=_feedback_out(_feedback(session, a, hoje)),
     )
 
 
-def _campos(session: Session, a: Atividade) -> dict:
+def _campos(session: Session, a: Atividade, hoje: date) -> dict:
     local = inicio_local(a.inicio, a.fuso_min)
     return dict(atividade_id=a.id, modalidade=a.modalidade, data_local=local.date().isoformat(), hora_local=local.strftime("%H:%M"),
-                duracao_texto=duracao_pt(a.duracao_s / 60), detalhe=_detalhe(session, a))
+                duracao_texto=duracao_pt(a.duracao_s / 60), detalhe=_detalhe(session, a, hoje))
 
 
 def _treino_atencao(session: Session, a: Atividade, dia: date, hoje: date) -> at.TreinoAtencao:
@@ -168,7 +168,7 @@ def montar_caixa(session: Session, professor_id: int, agora: datetime) -> CaixaD
 
     alunos: list[AlunoOut] = []
     for item in resultado.com_atencao:
-        treinos = [TreinoComMotivoOut(**_campos(session, por_id[t.id]), motivos=[MotivoOut(codigo=m.codigo, texto=m.texto) for m in t.motivos])
+        treinos = [TreinoComMotivoOut(**_campos(session, por_id[t.id], hoje), motivos=[MotivoOut(codigo=m.codigo, texto=m.texto) for m in t.motivos])
                    for t in item.treinos]
         alunos.append(AlunoOut(atleta_id=item.atleta, nome=nomes[item.atleta], sem_motivo=False, texto_sem_motivo=None, treinos=treinos))
     for aid in resultado.sem_atencao:
@@ -179,7 +179,7 @@ def montar_caixa(session: Session, professor_id: int, agora: datetime) -> CaixaD
     novos = []
     for tid in at.treinos_novos(todos, hoje):
         a = por_id[tid]
-        novos.append(NovoOut(**_campos(session, a), atleta_id=a.atleta_id, atleta_nome=nomes[a.atleta_id], tipo_sugerido=a.tipo_treino,
+        novos.append(NovoOut(**_campos(session, a, hoje), atleta_id=a.atleta_id, atleta_nome=nomes[a.atleta_id], tipo_sugerido=a.tipo_treino,
                              tipo_sugerido_texto=TIPO_TEXTO[a.tipo_treino], origem_texto=ORIGEM_TEXTO[a.tipo_origem]))
     log.info("caixa-do-dia: professor=%s alunos=%s com_motivo=%s novos=%s", professor_id, len(alunos), len(resultado.com_atencao), len(novos))
     return CaixaDoDiaOut(versao=resultado.versao, hoje=hoje.isoformat(), janela_atencao_dias=at.JANELA_DIAS,
