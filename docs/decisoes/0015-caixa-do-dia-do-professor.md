@@ -37,7 +37,7 @@ Princípio que organiza tudo, o mesmo das ADRs 0010 a 0014: **quem calcula é o 
 - **A proteção que a decisão 8 pede já existe no código:** `servicos/tipo_treino.aplicar_tipos` pula a atividade com `tipo_confirmado` ou origem em `ORIGENS_PROTEGIDAS = {professor, trainingpeaks}` ("nunca muda, nem a versão"). A reimportação (`ingestao/importacao.py`) atualiza a linha **no lugar** (o `id` não muda) e não escreve nenhum dos campos de tipo. O que **falta** é quem escreva `tipo_origem = 'professor'` (hoje ninguém escreve) e a regra do que acontece em volta (itens 5 e 6).
 - Nada no `main` escreve `tipo_confirmado`: a coluna só é lida.
 - O check-in: prazo de **7 dias** (`PRAZO_DIAS`, `no_prazo`, `dias_ate_hoje`) com "hoje" em `America/Sao_Paulo`; `checkin.elegivel` exclui `multiesporte_pai` e `troca`; o atalho `dor` é booleano; `texto` é a observação livre.
-- A linha de base (`linha_base@2`) devolve por métrica `estado` (`fora`, `dentro`, `aprendendo`, `sem_valor`) e o `z` assinado, com limite de 2,5. Já existe cálculo por treino na leitura (`servicos/linha_base_leitura.py`), com as chaves `pace_medio`, `melhor_pace`, `fc_media`, `fc_melhor_tiro` e `carga_hora`.
+- A linha de base (`linha_base@3`) devolve por métrica `estado` (`fora`, `dentro`, `aprendendo`, `sem_valor`) e o `z` assinado, com limite de 2,5. Já existe cálculo por treino na leitura (`servicos/linha_base_leitura.py`), com as chaves `pace_medio`, `melhor_pace`, `fc_media`, `fc_melhor_tiro` e `carga_hora`.
 - O feedback fica **desatualizado** só por `checkin`, `versao`, `noite` e `clima` (`servicos/feedback.motivos_desatualizado`). **Mudar o tipo do treino não desatualiza o feedback**, e o pacote de fatos leva `tipo_treino` e a linha de base daquele tipo. Isso vira um buraco real com a correção do professor (item 6).
 - `Settings` (`app/config.py`) lê o `.env` da raiz; não há variável de professor nem de atleta fixo (o atleta é sempre o `atleta_id` da rota).
 
@@ -110,11 +110,11 @@ Sem `CHECK` novo: `tipo_confirmado = verdadeiro` com `_por` e `_em` nulos é **l
 | # | `codigo` | Quando dispara | Fonte (nada novo) | Para de disparar quando |
 |---|---|---|---|---|
 | 1 | `dor` | o treino tem check-in com `dor = verdadeiro` | `checkin_treino.dor` | sai da janela; o atleta edita o check-in e tira o atalho; o check-in é apagado |
-| 2 | `fora_do_normal` | `linha_base@2` com `estado = ok` e **ao menos uma** métrica com `estado = fora` (|z| >= 2,5, ADR 0011) | `linha_base@2`; a direção é o **sinal do `z`** | sai da janela; a linha de base deixa de ter a medida fora (reimportação ou tipo mudou); o treino fica sem linha de base (por exemplo `divergente`) |
+| 2 | `fora_do_normal` | `linha_base@3` com `estado = ok` e **ao menos uma** métrica com `estado = fora` (|z| >= 2,5, ADR 0011) | `linha_base@3`; a direção é o **sinal do `z`** | sai da janela; a linha de base deixa de ter a medida fora (reimportação ou tipo mudou); o treino fica sem linha de base (por exemplo `divergente`) |
 | 3 | `divergencia` | `tipo_origem = 'semana_padrao'`, `tipo_divergencia` preenchida e **tipo não confirmado** | `atividade.tipo_divergencia` (ADR 0011, item 4: `sem_esforco` ou `tem_tiros`) | o professor confirma ou corrige (item 5); a semana-padrão muda e a divergência some (a regra regrava); sai da janela |
 | 4 | `checkin_vencendo` | treino elegível a check-in, **sem check-in**, com `dias_desde_o_treino >= 5` e ainda no prazo (`<= 7`). Restam `7 - dias` dias; `0` = "termina hoje" | `checkin.elegivel`, `no_prazo`, `dias_ate_hoje` | o atleta faz o check-in; o prazo vence (ver "Limitações") |
 
-**Constantes de `atencao@1`** (escolha nossa, sem fonte; não é limiar clínico nem de desempenho): `JANELA_DIAS = 7`, `AVISO_CHECKIN_DIAS = 5` (avisa nos 3 últimos dias do prazo, 5, 6 e 7). O limite de "fora do normal" **não é novo**: é o da `linha_base@2` (2,5). Nada se re-calibra aqui. **Fonte das regras:** produto (plano seção 5.1) e ADRs 0011 e 0012; sem artigo.
+**Constantes de `atencao@1`** (escolha nossa, sem fonte; não é limiar clínico nem de desempenho): `JANELA_DIAS = 7`, `AVISO_CHECKIN_DIAS = 5` (avisa nos 3 últimos dias do prazo, 5, 6 e 7). O limite de "fora do normal" **não é novo**: é o da `linha_base@3` (2,5). Nada se re-calibra aqui. **Fonte das regras:** produto (plano seção 5.1) e ADRs 0011 e 0012; sem artigo.
 
 **A linha do motivo 2 diz a direção e a métrica, nunca a causa.** Vocabulário fixo por chave (o sinal do `z` escolhe a palavra):
 

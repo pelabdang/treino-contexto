@@ -553,3 +553,33 @@ Cliente regerado.
 
 **Efeito nos dados.** Nada é gravado: a linha de base é calculada na leitura, então a `@2` vale na hora.
 
+## Adendo 3 (2026-11-17): `linha_base@3` (issues #455 e #462)
+**Status: decidido pelo Angelo em 17/11 (perguntas da #455 e roteiro da Meta 12).** Sobe `linha_base@2` para
+`linha_base@3`. Janela de 84 dias, mínimo de 8 treinos do mesmo tipo, limite 2,5, base própria da transição, métricas e contrato **não mudam**
+(a `@2` segue reproduzível: `PARAMETROS_V2` em `linha_base.py`).
+
+**Por quê (em termos genéricos).** A caixa do dia mostrou "fora do normal" com `z` grande quando a dispersão do tipo de treino era pequena
+(MAD baixo) ou quando os valores da janela formavam dois grupos e a mediana caía num deles. O piso único de 2% da mediana não segurava isso. O
+caso de FC era real pela regra, mas a dispersão de poucos bpm é menor que a variação do dia a dia.
+
+**O que muda.** O piso do desvio passa a ser **por métrica**: `desvio = max(1,4826 x MAD, piso da métrica)`.
+
+| Métrica | Piso |
+|---|---|
+| `fc_media`, `fc_melhor_tiro` | 4 bpm (absoluto) |
+| `pace_medio`, `melhor_pace` | 3% da mediana |
+| `carga_hora` | 5% da mediana |
+
+Quando o `1,4826 x MAD` já é maior que o piso, o resultado é igual ao da `@2`. Os valores (4 bpm, 3%, 5%) são **escolha do projeto**, sem fonte
+externa; ficam em `Parametros` e sobem a versão se mudarem. O piso relativo é sobre a **mediana** da janela (como na `@2`).
+
+**Mínimo de 8 amostras:** mantido. Com 7 ou menos do mesmo tipo na janela a métrica fica `aprendendo` (sem mediana nem `z`), como na `@2`.
+
+**Exemplo sintético à mão.** Janela de carga por hora: 50, 50, 52, 54, 61, 62, 62, 62, 62 (dois grupos). Mediana 61; MAD 1; `1,4826 x MAD` = 1,4826.
+Sessão a 55: `@2` desvio `max(1,4826; 0,02 x 61 = 1,22)` = 1,4826, `z` = -4,05, **fora**; `@3` desvio `max(1,4826; 0,05 x 61 = 3,05)` = 3,05, `z` = -1,97,
+**dentro**. Sessão a 53: `@3` `z` = -2,62, continua **fora**.
+
+**Limite que fica.** Um piso não cura a distribuição em dois grupos: com valor longe dos dois, o `z` ainda sai alto. Registrado como limitação.
+
+**Efeito nos dados.** Nada é gravado: a linha de base é calculada na leitura, então a `@3` vale na hora. O feedback já gravado com a `@2` é refeito
+quando o pacote muda (ADR 0013, item 2).

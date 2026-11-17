@@ -1,9 +1,9 @@
 // Atividades sintéticas (nada de dado real) para os testes e para o servidor falso das capturas.
 import type { Atividade, LinhaBase } from "@treino/api-client";
 
-// Linha de base sintética (`linha_base@2`): corrida leve comparada com o próprio histórico.
+// Linha de base sintética (`linha_base@3`): corrida leve comparada com o próprio histórico.
 const linhaBaseCorrida: LinhaBase = {
-  versao: "linha_base@2",
+  versao: "linha_base@3",
   estado: "ok",
   modalidade: "corrida",
   tipo_treino: "leve",
@@ -116,7 +116,7 @@ export const atividades = {
     tipo_origem: "sugestao",
     tipo_divergencia: null,
     linha_base: {
-      versao: "linha_base@2",
+      versao: "linha_base@3",
       estado: "sem_linha_base",
       modalidade: "natacao",
       tipo_treino: "leve",

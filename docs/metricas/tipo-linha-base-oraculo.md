@@ -50,23 +50,23 @@ Vigência A (desde 05/01, `definido_por` atleta) e B (desde 02/03, `professor`).
 | E15 troca de vigência | quintas: `fartlek` até 26/02, `moderado` de 05/03 | cada uma usa a vigência da sua data |
 | divergência `tem_tiros` | 28/03 sábado com 6 tiros | `longo` por plano, divergência `tem_tiros` |
 
-## Linha de base nas sessões-alvo (`linha_base@2`)
-Janela de 84 dias, só treinos anteriores à sessão, mínimo de 8, mesmo grupo (isolada x parte de transição); `desvio = max(1,4826 x MAD, 0,02 x mediana)`;
+## Linha de base nas sessões-alvo (`linha_base@3`)
+Janela de 84 dias, só treinos anteriores à sessão, mínimo de 8, mesmo grupo (isolada x parte de transição); `desvio = max(1,4826 x MAD, piso da métrica)` (FC 4 bpm; pace 3% x mediana; carga por hora 5% x mediana);
 `z = (valor - mediana) / desvio`; fora quando `|z| >= 2,5`. A carga é por hora (as pedaladas das fixtures têm 1 h, então carga por hora = carga).
 As contas estão comentadas em `oraculo.py`.
 
 | Sessão | Métrica | n | Mediana | Desvio | z | Estado |
 |---|---|---|---|---|---|---|
-| 13/03 corrida `leve` (306 s/km) | pace médio | 11 | 330 | 8,8956 | -2,698 | fora |
-| 13/03 corrida `leve` (FC 160) | FC média | 8 | 149 | 2,98 (piso) | 3,691 | fora |
-| 20/03 corrida `leve` (330 s/km, FC 150) | pace médio / FC média | 12 / 9 | 330 / 150 | 8,8956 / 3,0 (piso) | 0 / 0 | dentro |
-| 14/03 corrida `longo` (324 s/km) | pace médio | 9 | 335 | 6,7 (piso) | -1,642 | dentro |
-| 21/03 corrida `longo` (315 s/km) | pace médio | 10 | 334 | 6,68 (piso) | -2,844 | fora |
-| 17/03 `intervalado` (249 s/km) | melhor pace | 9 | 264 | 5,28 (piso) | -2,841 | fora |
-| 17/03 `intervalado` | FC do melhor tiro / FC média | 9 / 10 | 172 / 160 | 3,44 / 3,2 (piso) | 0 / 0 | dentro |
-| 10/03 `intervalado` (255 s/km) | melhor pace | 8 | 264 | 5,28 (piso) | -1,705 | dentro (a de 13/01 é divergente) |
-| 18/03 ciclismo `leve` (carga 55 em 1 h) | carga por hora | 10 | 42 | 2,9652 | 4,384 | fora |
-| 18/03 ciclismo `leve` (FC 133) | FC média | 10 | 130 | 2,6 (piso) | 1,154 | dentro |
+| 13/03 corrida `leve` (306 s/km) | pace médio | 11 | 330 | 9,9 (piso) | -2,424 | dentro (`@2`: fora) |
+| 13/03 corrida `leve` (FC 160) | FC média | 8 | 149 | 4 (piso) | 2,75 | fora |
+| 20/03 corrida `leve` (330 s/km, FC 150) | pace médio / FC média | 12 / 9 | 330 / 150 | 9,9 / 4 (pisos) | 0 / 0 | dentro |
+| 14/03 corrida `longo` (324 s/km) | pace médio | 9 | 335 | 10,05 (piso) | -1,095 | dentro |
+| 21/03 corrida `longo` (315 s/km) | pace médio | 10 | 334 | 10,02 (piso) | -1,896 | dentro (`@2`: fora) |
+| 17/03 `intervalado` (249 s/km) | melhor pace | 9 | 264 | 7,92 (piso) | -1,894 | dentro (`@2`: fora) |
+| 17/03 `intervalado` | FC do melhor tiro / FC média | 9 / 10 | 172 / 160 | 4 / 4 (pisos) | 0 / 0 | dentro |
+| 10/03 `intervalado` (255 s/km) | melhor pace | 8 | 264 | 7,92 (piso) | -1,136 | dentro (a de 13/01 é divergente) |
+| 18/03 ciclismo `leve` (carga 55 em 1 h) | carga por hora | 10 | 42 | 2,9652 (o piso de 2,1 não age) | 4,384 | fora |
+| 18/03 ciclismo `leve` (FC 133) | FC média | 10 | 130 | 4 (piso) | 0,75 | dentro |
 | 16/03 natação `leve` | FC média | 2 | | | | aprendendo |
 | 19/03 corrida `moderado` | pace médio e FC | 4 | | | | aprendendo |
 | 06/01 esteira `intervalado` | melhor pace | 0 | | | | sem valor (esteira) |
@@ -74,6 +74,10 @@ As contas estão comentadas em `oraculo.py`.
 
 Sem linha de base (com motivo): multiesporte (pai e trocas de 10/01), `sem_tipo` (natação das segundas até 23/02, a corrida solta
 de 20/01 e a natação de 10/01), `divergente` (13/01 e 28/03). O motivo `transicao` não existe mais na `@2`: o brick de 10/01 tem linha de base própria.
+
+Efeito da `@3` nas sessões-alvo: três linhas deixam de ser `fora` pela dispersão pequena do pace (13/03, 21/03 e o intervalado de 17/03) e a FC de 13/03
+passa a ser calculada com o piso de 4 bpm (continua fora). O caso de 7 amostras (`aprendendo`) e os exemplos sintéticos de cada piso
+estão em `services/api/tests/metricas/test_linha_base.py`.
 
 ## Como conferir
 `uv run pytest tests/test_fixtures_meta7.py` (sem rede).

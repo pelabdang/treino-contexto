@@ -103,7 +103,7 @@ def _get(client, banco, chave):
 @pytest.mark.parametrize("chave", sorted(O.LINHA_BASE_ESPERADA))
 def test_linha_de_base_igual_ao_oraculo(client, banco, chave):
     lb = _get(client, banco, chave)["linha_base"]
-    assert lb["versao"] == "linha_base@2" and lb["estado"] == "ok" and lb["motivo"] is None
+    assert lb["versao"] == "linha_base@3" and lb["estado"] == "ok" and lb["motivo"] is None
     assert lb["janela_semanas"] == 12 and lb["minimo_treinos"] == 8
     esperado = O.LINHA_BASE_ESPERADA[chave]
     assert sorted(m["chave"] for m in lb["metricas"]) == sorted(esperado)  # as metricas do tipo
@@ -127,11 +127,17 @@ def test_sem_linha_de_base_traz_o_motivo(client, banco, chave):
 def test_texto_de_fora_e_o_da_adr(client, banco):
     j = _get(client, banco, "2026-03-13/cor1")
     assert j["tipo_treino"] == "leve" and j["tipo_origem"] == "sugestao" and j["tipo_divergencia"] is None
-    m = j["linha_base"]["metricas"][0]
-    assert (m["valor"], m["valor_texto"], m["mediana_texto"], m["diferenca_texto"]) == (306.0, "5:06/km", "5:30/km", "24 s/km mais rápido")
+    ms = {m["chave"]: m for m in j["linha_base"]["metricas"]}
+    # @3: o piso de 3% do pace faz o 5:06/km (z = -2,42) ficar dentro; a FC (160 contra 149, piso de 4 bpm, z = 2,75) fica fora
+    p = ms["pace_medio"]
+    assert (p["estado"], p["valor_texto"], p["mediana_texto"], p["diferenca_texto"]) == ("dentro", "5:06/km", "5:30/km", None)
+    assert p["texto"] == ("Pace médio dentro do seu normal para treino leve: 5:06/km, perto da mediana de 5:30/km "
+                          "(11 treinos nas últimas 12 semanas).")
+    m = ms["fc_media"]
+    assert (m["estado"], m["valor_texto"], m["mediana_texto"], m["diferenca_texto"]) == ("fora", "160 bpm", "149 bpm", "11 bpm acima")
     assert m["texto"] == (
-        "Pace médio fora do seu normal para treino leve: 5:06/km, 24 s/km mais rápido que a mediana de 5:30/km "
-        "(11 treinos nas últimas 12 semanas). Isto compara com o seu histórico; não diz se o treino foi bom ou ruim.")
+        "FC média fora do seu normal para treino leve: 160 bpm, 11 bpm acima que a mediana de 149 bpm "
+        "(8 treinos nas últimas 12 semanas). Isto compara com o seu histórico; não diz se o treino foi bom ou ruim.")
 
 
 def test_texto_de_dentro_e_de_aprendendo(client, banco):

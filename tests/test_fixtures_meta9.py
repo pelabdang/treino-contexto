@@ -1,7 +1,7 @@
 """Oráculo do pacote de fatos `fatos_treino@2` (issue #323, ADR 0013): confere o oráculo escrito à mão.
 
 NÃO roda a função pura do pacote (#324, ainda não existe): confere que o oráculo é coerente com o que o código **já calcula**
-(`linha_base@2`, `carga_pse@1`, formatos de texto da API) e que nenhum caso carrega dado pessoal que não deve ir ao provedor
+(`linha_base@3`, `carga_pse@1`, formatos de texto da API) e que nenhum caso carrega dado pessoal que não deve ir ao provedor
 (texto livre, identificador, data, posição). A #324 passa a comparar a função pura com ``PACOTES``.
 Tudo sintético; nenhum check-in é real.
 """

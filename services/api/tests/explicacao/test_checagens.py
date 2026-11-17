@@ -289,8 +289,8 @@ def test_dor_nao_marcada_reprova_em_qualquer_forma():
 def test_atalho_so_pode_ser_citado_se_marcado():
     # F04 marcou calor e cansaço
     f4 = O.PACOTES["F04"]
-    base = ("Seu pace médio foi 6:00/km, 18 s/km mais lento que a mediana de 5:42/km nos 9 treinos longos das últimas 12 semanas.\n"
-            "A FC média foi 158 bpm, 8 bpm acima da mediana de 150 bpm.\n")
+    base = ("Seu pace médio foi 6:00/km, 26 s/km mais lento que a mediana de 5:34/km nos 9 treinos longos das últimas 12 semanas.\n"
+            "A FC média foi 158 bpm, 11 bpm acima da mediana de 147 bpm.\n")
     assert ck.checar_texto(f4, base + "Você marcou calor e cansaço.").aprovado
     assert ck.checar_texto(f4, base + "Você marcou calor e sono ruim.").motivos == ("atalho_nao_marcado",)
     assert ck.checar_texto(f4, base + "Você marcou estresse.").motivos == ("atalho_nao_marcado",)

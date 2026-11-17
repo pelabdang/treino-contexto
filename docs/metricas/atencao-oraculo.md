@@ -20,7 +20,7 @@ Arquivos em `tests/fixtures/meta11/`:
 - `oraculo.json`: a lista esperada (quem aparece, em que ordem, com que linha), quem não aparece e por quê, o que não tem motivo e por quê, e os treinos novos.
 
 Parâmetros (ADR 0015, item 4): janela de atenção 7 dias (`hoje - 7` a `hoje`), aviso de check-in a partir de 5 dias, janela dos novos 14 dias, limite de "fora"
-2,5 (o da `linha_base@2`).
+2,5 (o da `linha_base@3`).
 
 ## Atletas e casos
 | Atleta | Treino (dia) | Caso | Esperado |

@@ -4,7 +4,7 @@ Cada caso tem uma ENTRADA (o que o código já calcula: atividade, histórico po
 Nenhum número vem de IA nem de dado real, e nenhum check-in é real. O texto livre do check-in só existe na ENTRADA (com um marcador
 sintético) e **nunca** pode aparecer no pacote.
 
-As contas à mão da linha de base (`linha_base@2`: mediana, MAD, desvio = max(1,4826 x MAD, 2% x |mediana|), z = (valor - mediana) / desvio,
+As contas à mão da linha de base (`linha_base@3`: mediana, MAD, desvio = max(1,4826 x MAD, piso da métrica: pace 3%, carga/h 5% da mediana, FC 4 bpm), z = (valor - mediana) / desvio,
 "fora" com |z| >= 2,5, mínimo de 8 treinos) estão nos comentários de ``LINHA_BASE_ESPERADA``. Os textos prontos (`*_texto`) usam os
 mesmos formatos que a API já tem. Rascunho até a função pura (#324) existir.
 """
@@ -36,7 +36,7 @@ def _m(chave, estado, valor_texto=None, mediana_texto=None, n=0, diferenca_texto
 
 
 def _lb(metricas, estado="ok", motivo=None):
-    return {"versao": "linha_base@2", "estado": estado, "motivo": motivo, "janela_semanas": 12, "minimo_treinos": 8,
+    return {"versao": "linha_base@3", "estado": estado, "motivo": motivo, "janela_semanas": 12, "minimo_treinos": 8,
             "metricas": metricas}
 
 
@@ -90,7 +90,7 @@ ENTRADAS = {
     "F02": {"descricao": "intervalado, melhor pace fora do normal (exemplo 2)",
             "atividade": {"modalidade": "corrida", "subtipo": None, "tipo_treino": "intervalado", "duracao_s": 3120, "distancia_m": 9500, "fc_media": 158},
             "melhor_tiro": {"pace_s_km": 262, "fc_bpm": 171}, "tiros": [("1 km", 5)],
-            "historico": {"melhor_pace": [245, 246, 247, 248, 249, 249, 250, 251, 252, 253],
+            "historico": {"melhor_pace": [239, 240, 241, 242, 243, 243, 244, 245, 246, 247],
                           "fc_melhor_tiro": [168, 169, 170, 171, 172, 172, 173, 174, 175, 176],
                           "fc_media": [154, 155, 156, 157, 157, 157, 158, 159, 160, 161],
                           "carga_hora": [67.0, 68.0, 68.8, 69.4, 70.0, 70.0, 70.6, 71.2, 72.0, 73.0]},
@@ -103,8 +103,8 @@ ENTRADAS = {
             "checkin": {"pse": 6, "sensacao": 4, "nada_a_relatar": False, "atalhos": ["sono_ruim"], "texto": None}},
     "F04": {"descricao": "longo com calor: pace e FC fora do normal, calor marcado (exemplo 4)",
             "atividade": {"modalidade": "corrida", "subtipo": None, "tipo_treino": "longo", "duracao_s": 5400, "distancia_m": 15000, "fc_media": 158},
-            "historico": {"pace_medio": [338, 339, 340, 341, 342, 342, 343, 345, 346],
-                          "fc_media": [147, 148, 149, 150, 150, 150, 151, 152, 153],
+            "historico": {"pace_medio": [330, 331, 332, 333, 334, 334, 335, 337, 338],
+                          "fc_media": [144, 145, 146, 147, 147, 147, 148, 149, 150],
                           "carga_hora": [58.5, 59.0, 59.6, 60.2, 60.5, 60.9, 61.4, 62.0, 62.6]},
             "carga": 93.0, "clima": (33, 37, 58, 6),
             "checkin": {"pse": 7, "sensacao": 2, "nada_a_relatar": False, "atalhos": ["calor", "cansaco"], "texto": None}},
@@ -142,40 +142,40 @@ ENTRADAS = {
 SEM_PACOTE = ("F07", "F08")
 
 # --- LINHA DE BASE ESPERADA, contas à mão ---------------------------------------------------------------------------------
-# (id, chave) -> (estado, n, mediana, desvio, z). Mediana e MAD do histórico acima; desvio = max(1,4826 x MAD, 0,02 x mediana).
-# F01 pace: mediana 348, MAD 4 (5,93), piso 6,96 -> desvio 6,96; valor 2820/8200 x 1000 = 343,902; z = -4,098/6,96 = -0,589.
-# F01 fc: mediana 148, MAD 2 (2,965), piso 2,96 -> 2,965; z = -2/2,965 = -0,675.
-# F01 carga/h: valor 38,5/(2820/3600) = 49,149; mediana 50,3, MAD 1,3 (1,927); z = -1,151/1,927 = -0,597.
-# F02 melhor pace: mediana 249, MAD 2 (2,965), piso 4,98 -> 4,98; z = 13/4,98 = 2,610 -> fora.
-# F02 fc melhor tiro: mediana 172, MAD 2, piso 3,44 -> 3,44; z = -1/3,44 = -0,291.
-# F02 fc media: mediana 157, MAD 1,5 (2,224), piso 3,14 -> 3,14; z = 1/3,14 = 0,318.
-# F02 carga/h: valor 61,3/(3120/3600) = 70,731; mediana 70, MAD 1,2 (1,779), piso 1,4; z = 0,731/1,779 = 0,411.
-# F04 pace: mediana 342, MAD 2 (2,965), piso 6,84 -> 6,84; valor 360; z = 18/6,84 = 2,632 -> fora.
-# F04 fc: mediana 150, MAD 1 (1,483), piso 3,0 -> 3,0; z = 8/3 = 2,667 -> fora.
-# F04 carga/h: valor 93/1,5 = 62,0; mediana 60,5, MAD 0,9 (1,334), piso 1,21; z = 1,5/1,334 = 1,124.
-# F05 pace: valor 360; mediana 356, MAD 2,5 (3,707), piso 7,12 -> 7,12; z = 4/7,12 = 0,562.
-# F05 fc: valor 139; mediana 141, MAD 2 (2,965), piso 2,82; z = -2/2,965 = -0,675.
-# F09 fc: valor 140; mediana 142, MAD 2 (2,965), piso 2,84; z = -0,675. F09 carga/h: valor 20/0,5 = 40,0; mediana 40,5, MAD 1,1 (1,631); z = -0,307.
+# (id, chave) -> (estado, n, mediana, desvio, z). Mediana e MAD do histórico acima; desvio = max(1,4826 x MAD, piso da métrica: pace 3% x mediana, carga/h 5% x mediana, FC 4 bpm).
+# F01 pace: mediana 348, MAD 4 (5,93), piso 3% = 10,44 -> desvio 10,44; valor 2820/8200 x 1000 = 343,902; z = -4,098/10,44 = -0,393.
+# F01 fc: mediana 148, MAD 2 (2,965), piso 4 bpm -> 4; z = -2/4 = -0,5.
+# F01 carga/h: valor 38,5/(2820/3600) = 49,149; mediana 50,3, MAD 1,3 (1,927), piso 5% = 2,515 -> 2,515; z = -1,151/2,515 = -0,458.
+# F02 melhor pace: mediana 243 (histórico de 239 a 247), MAD 2 (2,965), piso 3% = 7,29 -> 7,29; z = (262 - 243)/7,29 = 2,606 -> fora.
+# F02 fc melhor tiro: mediana 172, MAD 2, piso 4 -> 4; z = -1/4 = -0,25.
+# F02 fc media: mediana 157, MAD 1,5 (2,224), piso 4 -> 4; z = 1/4 = 0,25.
+# F02 carga/h: valor 61,3/(3120/3600) = 70,731; mediana 70, MAD 1,2 (1,779), piso 5% = 3,5 -> 3,5; z = 0,731/3,5 = 0,209.
+# F04 pace: mediana 334 (histórico de 330 a 338), MAD 2 (2,965), piso 3% = 10,02 -> 10,02; valor 360; z = 26/10,02 = 2,595 -> fora.
+# F04 fc: mediana 147 (histórico de 144 a 150), MAD 1 (1,483), piso 4 -> 4; z = (158 - 147)/4 = 2,75 -> fora.
+# F04 carga/h: valor 93/1,5 = 62,0; mediana 60,5, MAD 0,9 (1,334), piso 5% = 3,025 -> 3,025; z = 1,5/3,025 = 0,496.
+# F05 pace: valor 360; mediana 356, MAD 2,5 (3,707), piso 3% = 10,68 -> 10,68; z = 4/10,68 = 0,375.
+# F05 fc: valor 139; mediana 141, MAD 2 (2,965), piso 4 -> 4; z = -2/4 = -0,5.
+# F09 fc: valor 140; mediana 142, MAD 2 (2,965), piso 4 -> 4; z = -0,5. F09 carga/h: valor 20/0,5 = 40,0; mediana 40,5, MAD 1,1 (1,631), piso 5% = 2,025 -> 2,025; z = -0,5/2,025 = -0,247.
 LINHA_BASE_ESPERADA = {
-    ("F01", "pace_medio"): ("dentro", 11, 348.0, 6.96, -0.589),
-    ("F01", "fc_media"): ("dentro", 11, 148.0, 2.965, -0.675),
-    ("F01", "carga_hora"): ("dentro", 11, 50.3, 1.927, -0.597),
-    ("F02", "melhor_pace"): ("fora", 10, 249.0, 4.98, 2.610),
-    ("F02", "fc_melhor_tiro"): ("dentro", 10, 172.0, 3.44, -0.291),
-    ("F02", "fc_media"): ("dentro", 10, 157.0, 3.14, 0.318),
-    ("F02", "carga_hora"): ("dentro", 10, 70.0, 1.779, 0.411),
+    ("F01", "pace_medio"): ("dentro", 11, 348.0, 10.44, -0.393),
+    ("F01", "fc_media"): ("dentro", 11, 148.0, 4.0, -0.5),
+    ("F01", "carga_hora"): ("dentro", 11, 50.3, 2.515, -0.458),
+    ("F02", "melhor_pace"): ("fora", 10, 243.0, 7.29, 2.606),
+    ("F02", "fc_melhor_tiro"): ("dentro", 10, 172.0, 4.0, -0.25),
+    ("F02", "fc_media"): ("dentro", 10, 157.0, 4.0, 0.25),
+    ("F02", "carga_hora"): ("dentro", 10, 70.0, 3.5, 0.209),
     ("F03", "pace_medio"): ("aprendendo", 3, None, None, None),
     ("F03", "fc_media"): ("aprendendo", 3, None, None, None),
     ("F03", "carga_hora"): ("aprendendo", 3, None, None, None),
-    ("F04", "pace_medio"): ("fora", 9, 342.0, 6.84, 2.632),
-    ("F04", "fc_media"): ("fora", 9, 150.0, 3.0, 2.667),
-    ("F04", "carga_hora"): ("dentro", 9, 60.5, 1.334, 1.124),
-    ("F05", "pace_medio"): ("dentro", 10, 356.0, 7.12, 0.562),
-    ("F05", "fc_media"): ("dentro", 10, 141.0, 2.965, -0.675),
+    ("F04", "pace_medio"): ("fora", 9, 334.0, 10.02, 2.595),
+    ("F04", "fc_media"): ("fora", 9, 147.0, 4.0, 2.75),
+    ("F04", "carga_hora"): ("dentro", 9, 60.5, 3.025, 0.496),
+    ("F05", "pace_medio"): ("dentro", 10, 356.0, 10.68, 0.375),
+    ("F05", "fc_media"): ("dentro", 10, 141.0, 4.0, -0.5),
     ("F05", "carga_hora"): ("sem_valor", 10, None, None, None),  # carga pendente
     ("F09", "pace_medio"): ("sem_valor", 0, None, None, None),  # esteira
-    ("F09", "fc_media"): ("dentro", 9, 142.0, 2.965, -0.675),
-    ("F09", "carga_hora"): ("dentro", 9, 40.5, 1.631, -0.307),
+    ("F09", "fc_media"): ("dentro", 9, 142.0, 4.0, -0.5),
+    ("F09", "carga_hora"): ("dentro", 9, 40.5, 2.025, -0.247),
 }
 
 _V = "fatos_treino@2"
@@ -191,7 +191,7 @@ PACOTES = {
             "carga_pse": _pse(188), "checkin": _ck(4, "um pouco difícil", 4, "bem", True)},
     "F02": {"versao": _V,
             "treino": _treino("corrida", "intervalado", 3120, "52 min", 9500, "9,50 km", 158),
-            "linha_base": _lb([_m("melhor_pace", "fora", "4:22/km", "4:09/km", 10, diferenca_texto="13 s/km mais lento"),
+            "linha_base": _lb([_m("melhor_pace", "fora", "4:22/km", "4:03/km", 10, diferenca_texto="19 s/km mais lento"),
                                _m("fc_melhor_tiro", "dentro", "171 bpm", "172 bpm", 10),
                                _m("fc_media", "dentro", "158 bpm", "157 bpm", 10),
                                _m("carga_hora", "dentro", "70,7 pontos/h", "70,0 pontos/h", 10)]),
@@ -206,8 +206,8 @@ PACOTES = {
             "carga_pse": _pse(240), "checkin": _ck(6, None, 4, "bem", False, ["sono_ruim"])},
     "F04": {"versao": _V,
             "treino": _treino("corrida", "longo", 5400, "90 min", 15000, "15,00 km", 158),
-            "linha_base": _lb([_m("pace_medio", "fora", "6:00/km", "5:42/km", 9, diferenca_texto="18 s/km mais lento"),
-                               _m("fc_media", "fora", "158 bpm", "150 bpm", 9, diferenca_texto="8 bpm acima"),
+            "linha_base": _lb([_m("pace_medio", "fora", "6:00/km", "5:34/km", 9, diferenca_texto="26 s/km mais lento"),
+                               _m("fc_media", "fora", "158 bpm", "147 bpm", 9, diferenca_texto="11 bpm acima"),
                                _m("carga_hora", "dentro", "62,0 pontos/h", "60,5 pontos/h", 9)]),
             "esforcos": _esf(), "clima": _clima(33, 37, 58, 6), "carga": _carga(93.0, "93,0 pontos", "rtss"),
             "carga_pse": _pse(630), "checkin": _ck(7, "muito difícil", 2, "mal", False, ["calor", "cansaco"])},

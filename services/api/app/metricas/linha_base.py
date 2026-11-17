@@ -5,12 +5,14 @@ janela, mínimo, medida, limite, condições de entrada ou lista de métricas ex
 
 Fórmulas e fontes:
   mediana = mediana(x) ;  MAD = mediana(|x_i - mediana|) ;
-  desvio = max(1,4826 x MAD, PISO_REL x |mediana|) ;  z = (valor - mediana) / desvio ; "fora" quando |z| >= LIMITE_FORA.
+  desvio = max(1,4826 x MAD, piso da métrica) ;  z = (valor - mediana) / desvio ; "fora" quando |z| >= LIMITE_FORA.
   Mediana e MAD no lugar de média e desvio padrão: Leys, C. et al. (2013), "Detecting outliers: do not use standard
   deviation around the mean, use absolute deviation around the median", J. Exp. Soc. Psychol. 49(4):764-766 (limite 2,5
   "moderadamente conservador"). Constante 1,4826: Rousseeuw, P. J. e Croux, C. (1993), JASA 88(424):1273-1283.
   (Citações ainda a conferir nos textos, ADR 0011 "Fontes".) O piso de 2% da mediana, a janela e o mínimo de 8 treinos
-  são regra própria do projeto (Angelo, 09/11). ``linha_base@2`` (Angelo, 09/11, issue #288, adendo 2 da ADR 0011): janela de
+  são regra própria do projeto (Angelo, 09/11). ``linha_base@3`` (Angelo, 17/11, issues #455 e #462, adendo 3 da ADR 0011): o
+  piso de dispersão passa a ser por métrica (FC 4 bpm absolutos; pace 3% da mediana; carga por hora 5% da mediana), regra própria
+  do projeto, sem fonte externa; janela, mínimo de 8 e limite 2,5 ficam como na @2 (``PARAMETROS_V2`` reproduz a @2). ``linha_base@2`` (Angelo, 09/11, issue #288, adendo 2 da ADR 0011): janela de
   12 semanas, partes de treino de transição com base própria e carga por hora no lugar da carga absoluta.
 """
 
@@ -20,8 +22,9 @@ import statistics
 from collections.abc import Hashable, Mapping, Sequence
 from dataclasses import dataclass, field
 from datetime import date, datetime, timedelta
+from types import MappingProxyType
 
-VERSAO = "linha_base@2"
+VERSAO = "linha_base@3"
 
 
 @dataclass(frozen=True)
@@ -29,12 +32,21 @@ class Parametros:
     janela_dias: int = 84  # 12 semanas (@2; era 56 na @1)
     minimo_treinos: int = 8  # (Angelo, 09/11)
     limite_fora: float = 2.5  # ADR 0011 "A confirmar" 3
-    piso_rel: float = 0.02  # calibração #269
+    piso_rel: float = 0.02  # calibração #269; vale para a métrica sem piso próprio (e para a @2 inteira)
     mad_escala: float = 1.4826
     divergente_fora_da_base: bool = True  # "A confirmar" 2
+    versao: str = VERSAO
+    # @3: piso por métrica. Relativo = fração de |mediana|; absoluto = unidade da métrica (bpm). Se houver os dois, vale o maior.
+    piso_rel_por_metrica: Mapping[str, float] = field(default_factory=lambda: MappingProxyType(
+        {"pace_medio": 0.03, "melhor_pace": 0.03, "carga_hora": 0.05}))
+    piso_abs_por_metrica: Mapping[str, float] = field(default_factory=lambda: MappingProxyType(
+        {"fc_media": 4.0, "fc_melhor_tiro": 4.0}))
 
 
 PADRAO = Parametros()
+# A @2 segue reproduzível: piso único de 2% da mediana para toda métrica.
+PARAMETROS_V2 = Parametros(versao="linha_base@2", piso_rel_por_metrica=MappingProxyType({}),
+                           piso_abs_por_metrica=MappingProxyType({}))
 
 SUBTIPOS_MULTIESPORTE = frozenset({"multiesporte_pai", "troca"})
 
@@ -109,11 +121,20 @@ def motivo_sem_linha_base(t: Treino, p: Parametros = PADRAO) -> str | None:
     return None
 
 
-def medida_robusta(valores: Sequence[float], p: Parametros = PADRAO) -> tuple[float, float]:
-    """(mediana, desvio) com o piso; precisa de ao menos um valor."""
+def piso_dispersao(mediana: float, chave: str | None, p: Parametros = PADRAO) -> float:
+    """Piso do desvio da métrica ``chave``: o maior entre o relativo e o absoluto dela; sem piso próprio, ``piso_rel``.
+
+    ``p`` pode ser de outra regra (recuperação) que só tem ``piso_rel``: aí vale ele."""
+    rel = getattr(p, "piso_rel_por_metrica", {}).get(chave, p.piso_rel)
+    absoluto = getattr(p, "piso_abs_por_metrica", {}).get(chave, 0.0)
+    return max(rel * abs(mediana), absoluto)
+
+
+def medida_robusta(valores: Sequence[float], p: Parametros = PADRAO, chave: str | None = None) -> tuple[float, float]:
+    """(mediana, desvio) com o piso da métrica; precisa de ao menos um valor."""
     mediana = statistics.median(valores)
     mad = statistics.median(abs(x - mediana) for x in valores)
-    return mediana, max(p.mad_escala * mad, p.piso_rel * abs(mediana))
+    return mediana, max(p.mad_escala * mad, piso_dispersao(mediana, chave, p))
 
 
 def _metrica(chave: str, valor: float | None, janela: Sequence[float], p: Parametros) -> MetricaBase:
@@ -122,7 +143,7 @@ def _metrica(chave: str, valor: float | None, janela: Sequence[float], p: Parame
         return MetricaBase(chave, "sem_valor", None, n)
     if n < p.minimo_treinos:
         return MetricaBase(chave, "aprendendo", valor, n)
-    mediana, desvio = medida_robusta(janela, p)
+    mediana, desvio = medida_robusta(janela, p, chave)
     z = (valor - mediana) / desvio
     return MetricaBase(chave, "fora" if abs(z) >= p.limite_fora else "dentro", valor, n, mediana, desvio, z)
 
@@ -137,7 +158,7 @@ def linha_base(sessao: Treino, historico: Sequence[Treino], p: Parametros = PADR
     """
     motivo = motivo_sem_linha_base(sessao, p)
     if motivo is not None:
-        return LinhaBase(VERSAO, "sem_linha_base", motivo, ())
+        return LinhaBase(p.versao, "sem_linha_base", motivo, ())
     desde = sessao.dia - timedelta(days=p.janela_dias)
     janela = [
         t for t in historico
@@ -149,4 +170,4 @@ def linha_base(sessao: Treino, historico: Sequence[Treino], p: Parametros = PADR
     for chave in metricas_do_tipo(sessao.modalidade, sessao.tipo_treino):
         xs = [v for v in (t.valores.get(chave) for t in janela) if v is not None]
         metricas.append(_metrica(chave, sessao.valores.get(chave), xs, p))
-    return LinhaBase(VERSAO, "ok", None, tuple(metricas))
+    return LinhaBase(p.versao, "ok", None, tuple(metricas))
