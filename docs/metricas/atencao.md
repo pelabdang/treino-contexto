@@ -50,19 +50,11 @@ normal" não é novo: é o da `linha_base@2` ([[decisoes/0011-linha-de-base-e-se
 O motivo 4 some no oitavo dia (prazo vencido). Mudar qualquer coisa acima exige subir `VERSAO` (`atencao@2`).
 
 ## Limitações (conferência local da Meta 11, #431)
+A conferência com a conta real foi feita só no computador do Angelo; as regras ficaram como estão. Dois achados já foram resolvidos na `atencao@2` (#454): a modalidade `outra` saiu do aviso e o aviso de check-in virou uma linha por aluno. Os que seguem, em texto genérico:
 - `fora_do_normal` depende da `linha_base@2`: com poucas amostras do tipo de treino ou dispersão muito pequena, o valor z pode ser grande; o limite de 2,5 não mede relevância esportiva (investigação na #455).
 - O aviso de check-in resume vários treinos numa linha: o professor vê quantos faltam e o prazo do mais antigo, não a lista deles.
 - A regra só enxerga o que foi ingerido: sem treinos novos, a lista fica parada nos últimos 7 dias.
 - `dor` e `divergencia` só têm teste sintético; sem validação com treino real até agora.
 - A divergência da semana-padrão fica como está até 4 semanas de uso.
-
-## Limitações da conferência local (#431)
-A conferência com a conta real foi feita só no computador do Angelo, e as regras da `atencao@1` ficaram como estão. Em texto genérico:
-1. **`fora_do_normal` depende da `linha_base@2`.** Com poucas amostras do tipo, ou com dispersão muito pequena, o `z` pode sair grande, e o limite de 2,5 não mede relevância esportiva. Investigação na #455.
-2. **`checkin_vencendo` hoje inclui a modalidade "outra".** Ela vai sair do motivo (#454).
-3. **Quem faz poucos check-ins gera um aviso por treino.** Isso vai virar uma linha por aluno (#454).
-4. **A regra só enxerga o que foi ingerido.** Sem treinos novos, a lista fica parada.
-5. **`dor` e `divergencia` só têm teste sintético.** A conferência local não os exercitou.
-6. **A regra de divergência fica como está até 4 semanas de uso.**
 
 Testes: `uv run pytest services/api/tests/metricas/test_atencao.py`.
