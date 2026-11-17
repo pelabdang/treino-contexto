@@ -5,7 +5,9 @@ import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 
 import { borda, espaco, fonte, larguraConteudoMax, raio, tamanho, useMargemTela, useTema, type Tema } from "../tema";
 import { CartaoCargaForma } from "./CartaoCargaForma";
+import { CartaoEsforcos } from "./CartaoEsforcos";
 import { CartaoFeedback } from "./CartaoFeedback";
+import { CartaoTransicao } from "./CartaoTransicao";
 import { CartoesCheckin } from "./CartoesCheckin";
 import { EsqueletoTreino } from "./Esqueleto";
 import { MODALIDADES } from "./modalidades";
@@ -116,6 +118,7 @@ export function TelaTreino({ apiUrl, atletaId, atividadeId, aoVoltar, aoFazerChe
           styles={styles}
           tema={tema}
           aoAtualizarFeedback={recarregar}
+          conexao={{ apiUrl, atletaId, atividadeId, fetchFn }}
           checkin={
             aoFazerCheckin && aoEditarCheckin
               ? {
@@ -149,9 +152,10 @@ type PropsTreino = {
   tema: Tema;
   checkin?: PropsCheckin;
   aoAtualizarFeedback: () => Promise<FeedbackTreino | null | undefined>;
+  conexao: { apiUrl: string; atletaId: number; atividadeId: number; fetchFn?: typeof fetch };
 };
 
-function Treino({ atividade, styles, tema, checkin, aoAtualizarFeedback }: PropsTreino) {
+function Treino({ atividade, styles, tema, checkin, aoAtualizarFeedback, conexao }: PropsTreino) {
   // Ordem da spec: dados > Check-in > Feedback > Carga pela PSE > Clima. Sem as rotas do check-in, o feedback vem logo depois dos dados.
   const feedback = (
     <CartaoFeedback feedback={atividade.feedback} aoFazerCheckin={checkin?.aoFazerCheckin} aoAtualizar={aoAtualizarFeedback} />
@@ -189,7 +193,18 @@ function Treino({ atividade, styles, tema, checkin, aoAtualizarFeedback }: Props
 
       {checkin ? <CartoesCheckin atividade={atividade} {...checkin} entreCartoes={feedback} /> : feedback}
 
+      <CartaoEsforcos esforcos={atividade.esforcos} />
+
       <CartaoCargaForma carga={atividade.carga} forma={atividade.forma_do_dia} />
+
+      <CartaoTransicao
+        transicao={atividade.transicao}
+        apiUrl={conexao.apiUrl}
+        atletaId={conexao.atletaId}
+        atividadeId={conexao.atividadeId}
+        fetchFn={conexao.fetchFn}
+        aoCorrigido={aoAtualizarFeedback}
+      />
 
       {atividade.clima && <CartaoClima clima={atividade.clima} styles={styles} tema={tema} />}
     </View>

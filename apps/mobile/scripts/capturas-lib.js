@@ -14,6 +14,8 @@ const ROTAS = [
   { nome: "treino-carga-sem-fc", caminho: "/treino/106" }, // carga sem_carga com o motivo; forma calculada com treino sem carga no dia
   { nome: "treino-forma-aprendendo", caminho: "/treino/108" }, // carga calculada; forma aprendendo (sem CTL, ATL, TSB)
   { nome: "treino-carga-pendente", caminho: "/treino/109" },
+  { nome: "treino-esforcos-ciclismo", caminho: "/treino/109" }, // velocidade no lugar do pace
+  { nome: "treino-esforcos-muitos", caminho: "/treino/130" }, // 12 esforços: mostra 8 e "Ver todos"
   { nome: "checkin-pergunta1", caminho: "/checkin/101" },
   // Caixa do dia do professor (#426). O professor vem de EXPO_PUBLIC_PROFESSOR_ID (1 no export das capturas). `clicar` abre linhas
   // do acordeão (testID) antes da captura; `simular` troca a resposta da caixa no navegador (ver SIMULACOES), sem outro export.
