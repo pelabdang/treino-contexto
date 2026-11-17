@@ -31,6 +31,7 @@ FRASES = {
     "prazo": "O prazo do check-in deste treino acabou, então ele fica sem feedback.",
     "pendente": "O feedback deste treino ainda não foi gerado. Toque em Atualizar para ver se já está pronto.",
     "desatualizado": "Você editou o check-in. O feedback será refeito.",
+    "desatualizado_versao": "O feedback será refeito.",
     "desatualizado_noite": "Os dados da noite anterior foram atualizados. O feedback será refeito.",
     "desatualizado_clima": "Os dados do clima foram atualizados. O feedback será refeito.",
     "desatualizado_noite_clima": "Os dados da noite anterior e do clima foram atualizados. O feedback será refeito.",
@@ -140,6 +141,7 @@ def test_versao_nova_dos_fatos_deixa_desatualizado(session, client, atleta):
     _feedback(session, _checkin(session, a))
     f = fl.feedback_da_atividade(a, a.checkin, True, versao_fatos="fatos_treino@3")
     assert f.estado == "desatualizado" and f.texto is None
+    assert f.mensagem == FRASES["desatualizado_versao"]  # #402: ninguem editou o check-in
 
 
 @pytest.mark.parametrize("motivo,frase", [
@@ -235,10 +237,20 @@ def test_check_in_editado_e_noite_nova_juntos_usam_a_frase_do_check_in(session, 
     assert f["estado"] == "desatualizado" and f["mensagem"] == FRASES["desatualizado"]
 
 
-def test_versao_dos_fatos_e_noite_nova_juntas_usam_a_frase_do_check_in(session, atleta):
+def test_versao_dos_fatos_e_noite_nova_juntas_usam_a_frase_da_noite(session, atleta):
     a = _atividade(session, atleta)
     _feedback(session, _checkin(session, a))
     f = fl.feedback_da_atividade(a, a.checkin, True, versao_fatos="fatos_treino@3", recuperacao_hoje=AGORA)
+    assert f.mensagem == FRASES["desatualizado_noite"]
+
+
+def test_versao_dos_fatos_e_check_in_editado_juntos_usam_a_frase_do_check_in(session, atleta):
+    a = _atividade(session, atleta)
+    c = _checkin(session, a)
+    _feedback(session, c)
+    c.atualizado_em = AGORA + timedelta(minutes=5)
+    session.commit()
+    f = fl.feedback_da_atividade(a, a.checkin, True, versao_fatos="fatos_treino@3")
     assert f.mensagem == FRASES["desatualizado"]
 
 

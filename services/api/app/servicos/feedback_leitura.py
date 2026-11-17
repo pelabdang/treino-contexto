@@ -18,6 +18,7 @@ MSG_SEM_CHECKIN = "Faça o check-in para ver o feedback."
 MSG_PRAZO_VENCIDO = "O prazo do check-in deste treino acabou, então ele fica sem feedback."
 MSG_PENDENTE = "O feedback deste treino ainda não foi gerado. Toque em Atualizar para ver se já está pronto."
 MSG_DESATUALIZADO = "Você editou o check-in. O feedback será refeito."
+MSG_DESATUALIZADO_VERSAO = "O feedback será refeito."  # #402: so a versao do pacote de fatos mudou; o atleta nao fez nada
 MSG_DESATUALIZADO_NOITE = "Os dados da noite anterior foram atualizados. O feedback será refeito."  # #396: so a noite mudou
 MSG_DESATUALIZADO_CLIMA = "Os dados do clima foram atualizados. O feedback será refeito."  # #409: so o clima mudou
 MSG_DESATUALIZADO_TIPO = "O tipo do treino mudou depois deste feedback. O feedback será refeito."  # #425: o professor corrigiu o tipo
@@ -60,10 +61,13 @@ def feedback_da_atividade(a: Atividade, checkin: CheckinTreino | None, checkin_a
 
 
 def _mensagem_desatualizado(motivos: frozenset[str]) -> str:
-    """A frase do check-in vale sempre que ele (ou a versao do pacote, ainda a #402) mudou (#396); senao, a dos dados que chegaram:
-    noite, clima ou os dois (#409)."""
-    if "checkin" in motivos or "versao" in motivos:
+    """A frase do check-in vale sempre que ele mudou (#396). A versao do pacote nao e acao de ninguem (#402): sozinha tem a frase
+    curta; junto de outro motivo some e vale a frase do outro. Senao, a dos dados que chegaram: noite, clima, tipo (#409, #425)."""
+    if "checkin" in motivos:
         return MSG_DESATUALIZADO
+    motivos = motivos - {"versao"}
+    if not motivos:
+        return MSG_DESATUALIZADO_VERSAO
     if "tipo" in motivos and not ({"noite", "clima"} & motivos):
         return MSG_DESATUALIZADO_TIPO
     if {"noite", "clima"} <= motivos:
