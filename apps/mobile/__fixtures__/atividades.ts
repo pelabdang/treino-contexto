@@ -64,6 +64,25 @@ const corrida: Atividade = {
   tipo_origem: "professor",
   tipo_divergencia: null,
   linha_base: linhaBaseCorrida,
+  carga: {
+    versao: "carga@2",
+    estado: "calculada",
+    carga: 87.43,
+    valor_texto: "87,4",
+    metodo: "hrtss",
+    metodo_texto: "Estimada pela FC.",
+    cobertura_pct: 98,
+    texto: null,
+  },
+  forma_do_dia: {
+    estado: "calculada",
+    data_local: "2025-03-18",
+    ctl_texto: "41,2",
+    atl_texto: "52,8",
+    tsb_texto: "−11,6",
+    sem_carga_no_dia: 0,
+    texto_sem_carga: null,
+  },
   clima: {
     estado: "ok",
     temperatura_c: 24.3,
@@ -76,6 +95,43 @@ const corrida: Atividade = {
 
 export const atividades = {
   ok: corrida,
+  formaAprendendo: {
+    ...corrida,
+    atividade_id: 120,
+    forma_do_dia: {
+      estado: "aprendendo",
+      data_local: "2025-03-18",
+      sem_carga_no_dia: 0,
+      texto_aprendendo: "Ainda aprendendo a sua forma: faltam 23 dias de histórico para estimar.",
+    },
+  } as Atividade,
+  formaSemCargaNoDia: {
+    ...corrida,
+    atividade_id: 121,
+    forma_do_dia: {
+      ...corrida.forma_do_dia!,
+      tsb_texto: "+3,2",
+      sem_carga_no_dia: 1,
+      texto_sem_carga: "Há 1 treino deste dia sem carga calculada; a forma pode estar subestimada.",
+    },
+  } as Atividade,
+  semCarga: {
+    ...corrida,
+    atividade_id: 122,
+    carga: {
+      versao: "carga@2",
+      estado: "sem_carga",
+      motivo: "sem_fc",
+      texto: "Este treino não tem frequência cardíaca, então não dá para estimar a carga pela FC.",
+    },
+  } as Atividade,
+  cargaPendente: {
+    ...corrida,
+    atividade_id: 123,
+    carga: { versao: "carga@2", estado: "pendente", texto: "A carga deste treino ainda não foi calculada." },
+    forma_do_dia: { estado: "sem_serie", data_local: "2025-03-18", sem_carga_no_dia: 0 },
+  } as Atividade,
+  semCargaNemForma: { ...corrida, atividade_id: 124, carga: null, forma_do_dia: null } as Atividade,
   indoor: {
     ...corrida,
     atividade_id: 102,

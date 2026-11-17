@@ -181,4 +181,68 @@ describe("tela de um treino", () => {
     const estilo = StyleSheet.flatten(screen.getByLabelText("Voltar").props.style);
     expect(estilo.minHeight).toBeGreaterThanOrEqual(44);
   });
+
+  describe("carga e forma do dia (#466)", () => {
+    const abrir = async (a: unknown) => {
+      await render(tela(fetchCom(200, a)));
+      return screen.findByTestId("cartao-carga-forma");
+    };
+
+    it("com carga e forma: números prontos, a palavra estimativa e a nota fixa", async () => {
+      const c = await abrir(atividades.ok);
+      expect(within(c).getByText("estimativa")).toBeTruthy();
+      expect(within(c).getByText("87,4", { exact: false })).toBeTruthy();
+      expect(within(c).getByText("pontos")).toBeTruthy();
+      expect(within(c).getByText("Estimada pela FC.")).toBeTruthy();
+      expect(within(c).getByText("No fim do dia 18/03/25")).toBeTruthy();
+      expect(within(c).getByLabelText("Condicionamento (CTL), 41,2")).toBeTruthy();
+      expect(within(c).getByLabelText("Fadiga (ATL), 52,8")).toBeTruthy();
+      expect(within(c).getByLabelText("Forma (TSB), \u221211,6")).toBeTruthy();
+      expect(within(c).getByText(/Não são medidas e não são diagnóstico/)).toBeTruthy();
+      expect(within(c).queryByTestId("aviso-sem-carga-no-dia")).toBeNull();
+    });
+
+    it("cada linha da forma abre a definição fixa e fecha de novo", async () => {
+      const c = await abrir(atividades.ok);
+      const linha = within(c).getByLabelText("Fadiga (ATL), 52,8");
+      expect(within(c).queryByText(/últimos 7 dias/)).toBeNull();
+      await fireEvent.press(linha);
+      expect(within(c).getByText("Fadiga: média da sua carga nos últimos 7 dias.")).toBeTruthy();
+      await fireEvent.press(linha);
+      expect(within(c).queryByText(/últimos 7 dias/)).toBeNull();
+    });
+
+    it("dia com treino sem carga: mostra o texto pronto da API", async () => {
+      const c = await abrir(atividades.formaSemCargaNoDia);
+      expect(within(c).getByText("+3,2")).toBeTruthy();
+      expect(within(c).getByText(/Há 1 treino deste dia sem carga calculada/)).toBeTruthy();
+    });
+
+    it("aprendendo: a carga do treino e o aviso, sem CTL, ATL nem TSB", async () => {
+      const c = await abrir(atividades.formaAprendendo);
+      expect(within(c).getByText("87,4", { exact: false })).toBeTruthy();
+      expect(within(c).getByText("Ainda aprendendo a sua forma: faltam 23 dias de histórico para estimar.")).toBeTruthy();
+      expect(within(c).getByText("hourglass-empty:16")).toBeTruthy();
+      expect(within(c).queryByText(/CTL|ATL|TSB/)).toBeNull();
+    });
+
+    it("sem carga: o motivo da API no lugar do número, e a forma continua", async () => {
+      const c = await abrir(atividades.semCarga);
+      expect(within(c).getByText(/não tem frequência cardíaca/)).toBeTruthy();
+      expect(within(c).queryByText("pontos")).toBeNull();
+      expect(within(c).getByLabelText("Forma (TSB), \u221211,6")).toBeTruthy();
+    });
+
+    it("carga pendente e forma sem série: só o aviso da carga", async () => {
+      const c = await abrir(atividades.cargaPendente);
+      expect(within(c).getByText("A carga deste treino ainda não foi calculada.")).toBeTruthy();
+      expect(within(c).queryByText(/Condicionamento/)).toBeNull();
+    });
+
+    it("carga e forma ausentes: o cartão não aparece", async () => {
+      await render(tela(fetchCom(200, atividades.semCargaNemForma)));
+      await screen.findByTestId("cartao-resumo");
+      expect(screen.queryByTestId("cartao-carga-forma")).toBeNull();
+    });
+  });
 });
