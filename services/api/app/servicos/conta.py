@@ -175,10 +175,10 @@ def desativar(session: Session, conta: Conta, agora: datetime | None = None) -> 
 
 
 def limpar_expiradas(session: Session, agora: datetime | None = None) -> tuple[int, int]:
-    """Apaga sessoes expiradas ou revogadas e tentativas de login com mais de um dia. Devolve (sessoes, tentativas)."""
+    """Apaga sessoes expiradas ou revogadas e tentativas de login com mais de 30 dias. Devolve (sessoes, tentativas)."""
     agora = agora or agora_utc()
     s = session.execute(delete(Sessao).where((Sessao.expira_em < agora) | (Sessao.revogada_em.is_not(None)))).rowcount
-    t = session.execute(delete(TentativaLogin).where(TentativaLogin.ocorrida_em < agora - timedelta(days=1))).rowcount
+    t = session.execute(delete(TentativaLogin).where(TentativaLogin.ocorrida_em < agora - timedelta(days=30))).rowcount
     return s, t
 
 
