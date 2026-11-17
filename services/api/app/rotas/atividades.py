@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from dataclasses import asdict
-from datetime import datetime
+from datetime import date, datetime
 from pathlib import Path
 from typing import Literal
 
@@ -292,9 +292,10 @@ def _carga_pse_out(c: CargaPseLida | None) -> CargaPseOut | None:
     return None if c is None else CargaPseOut.model_validate(asdict(c))
 
 
-def _feedback(session: Session, a: Atividade) -> FeedbackLido | None:
-    """O cartao do feedback; a noite do treino so e lida quando ja ha feedback gravado (ADR 0014, item 4b)."""
-    aberto = checkin_svc.checkin_aberto(a, a.checkin is not None)
+def _feedback(session: Session, a: Atividade, hoje: date | None = None) -> FeedbackLido | None:
+    """O cartao do feedback; a noite do treino so e lida quando ja ha feedback gravado (ADR 0014, item 4b).
+    `hoje`: a data local (America/Sao_Paulo) do prazo do check-in; omitida, e a do relogio. A caixa do dia passa a dela (#458)."""
+    aberto = checkin_svc.checkin_aberto(a, a.checkin is not None, hoje)
     if a.checkin is None or a.checkin.feedback is None:
         return feedback_da_atividade(a, a.checkin, aberto)
     hoje = importado_em_de_hoje(carregar_da_atividade(session, a), a)

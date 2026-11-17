@@ -33,6 +33,15 @@ from fastapi.testclient import TestClient
 from sqlalchemy import create_engine, text
 from sqlalchemy.orm import Session
 
+
+def _inicio(dias_atras: int, hora_local: int) -> datetime:
+    """O inicio (UTC) de um treino de `hoje local - dias_atras`, as `hora_local` h de Brasilia (fuso_min=-180). As datas dos treinos sao
+    relativas ao dia LOCAL, como a caixa conta; `datetime.now(UTC)` viraria o dia 3 h antes (#458)."""
+    from zoneinfo import ZoneInfo
+
+    dia = datetime.now(ZoneInfo("America/Sao_Paulo")).date() - timedelta(days=dias_atras)
+    return datetime(dia.year, dia.month, dia.day, hora_local, tzinfo=ZoneInfo("America/Sao_Paulo")).astimezone(UTC)
+
 RAIZ = Path(__file__).resolve().parents[1]
 API = RAIZ / "services" / "api"
 WORKER = RAIZ / "services" / "worker"
@@ -164,7 +173,7 @@ def _carrega_treinos(url: str) -> None:
             atleta = s.scalars(__import__("sqlalchemy").select(Atleta).where(Atleta.nome == nome)).one()
             a = Atividade(
                 atleta_id=atleta.id, fonte="fixture", fonte_id=fonte_id, modalidade=modalidade, subtipo=None,
-                inicio=(agora - timedelta(days=dias)).replace(hour=10, minute=0, second=0, microsecond=0),
+                inicio=_inicio(dias, 10),
                 fuso_min=-180, duracao_s=minutos * 60.0, tipo_treino=tipo, tipo_origem="sugestao" if tipo else None)
             s.add(a)
             s.flush()
@@ -258,7 +267,7 @@ def _novo_atleta(m, nome, *, treino_dias=1, vinculo="valido"):
         elif vinculo == "outro_professor":
             s.add(VinculoProfessorAtleta(professor_id=2, atleta_id=a.id, consentimento_em=agora - timedelta(days=30)))
         ativ = Atividade(atleta_id=a.id, fonte="fixture", fonte_id=f"m11-{a.id}", modalidade="corrida",
-                         inicio=(agora - timedelta(days=treino_dias)).replace(hour=10, minute=0, second=0, microsecond=0),
+                         inicio=_inicio(treino_dias, 10),
                          fuso_min=-180, duracao_s=2700.0, tipo_treino="intervalado", tipo_origem="sugestao")
         s.add(ativ)
         s.flush()
@@ -476,7 +485,7 @@ def test_10_get_da_caixa_ordem_motivos_novos_e_cabecalhos_como_no_guia(mundo):
     j = r.json()
     hoje = datetime.now(UTC).astimezone(__import__("zoneinfo").ZoneInfo("America/Sao_Paulo")).date()
     assert (j["versao"], j["janela_atencao_dias"], j["janela_novos_dias"]) == ("atencao@2", 7, 14)
-    assert abs((date.fromisoformat(j["hoje"]) - hoje).days) <= 1
+    assert date.fromisoformat(j["hoje"]) == hoje  # a data LOCAL, como as datas dos treinos (#458)
     assert [a["nome"] for a in j["alunos"]] == [
         "Atleta Fixture Ana", "Atleta Fixture Carla", "Atleta Fixture Igor", "Atleta Fixture Helena", "Atleta Fixture Bruno",
         "Atleta Fixture Davi"]
@@ -484,7 +493,7 @@ def test_10_get_da_caixa_ordem_motivos_novos_e_cabecalhos_como_no_guia(mundo):
     assert [m["codigo"] for m in ana["treinos"][0]["motivos"]] == ["dor"]
     assert re.fullmatch(r"Treino de \w+ com dor marcada no check-in\.", ana["treinos"][0]["motivos"][0]["texto"])
     assert [m["codigo"] for m in carla["treinos"][0]["motivos"]] == ["checkin_vencendo"]
-    assert re.fullmatch(r"Treino de \w+ sem check-in; o prazo termina em [12] dias?\.", carla["treinos"][0]["motivos"][0]["texto"])
+    assert re.fullmatch(r"Treino de \w+ sem check-in; o prazo termina em 1 dia\.", carla["treinos"][0]["motivos"][0]["texto"])
     assert carla["treinos"][0]["modalidade"] == "ciclismo"
     for a in resto:
         assert (a["sem_motivo"], a["texto_sem_motivo"], a["treinos"]) == (True, "Nada a destacar nos últimos 7 dias.", [])
@@ -572,11 +581,11 @@ def test_15_os_quatro_motivos_pelo_banco_dor_checkin_vencendo_divergencia_e_fora
         helena = s.scalars(__import__("sqlalchemy").select(Atleta).where(Atleta.nome == "Atleta Fixture Helena")).one()
         for i in range(9):
             s.add(Atividade(atleta_id=helena.id, fonte="fixture", fonte_id=f"m11-lb-{i}", modalidade="corrida",
-                            inicio=(agora - timedelta(days=15 + 4 * i)).replace(hour=9, minute=0, second=0, microsecond=0), fuso_min=-180,
+                            inicio=_inicio(15 + 4 * i, 9), fuso_min=-180,
                             duracao_s=2700.0 + 30 * (i % 3), fc_media=138.0 + (i % 4), tipo_treino="leve", tipo_origem="professor",
                             tipo_confirmado=True))
         atual = Atividade(atleta_id=helena.id, fonte="fixture", fonte_id="m11-lb-atual", modalidade="corrida",
-                          inicio=(agora - timedelta(days=1)).replace(hour=9, minute=0, second=0, microsecond=0), fuso_min=-180,
+                          inicio=_inicio(1, 9), fuso_min=-180,
                           duracao_s=2700.0, fc_media=178.0, tipo_treino="leve", tipo_origem="professor", tipo_confirmado=True)
         s.add(atual)
         s.flush()
@@ -585,11 +594,11 @@ def test_15_os_quatro_motivos_pelo_banco_dor_checkin_vencendo_divergencia_e_fora
                             trabalho_estresse=False))
         s.commit()
     # divergencia: semana-padrao manda 'intervalado' naquele dia, mas o treino do Davi e uma rodagem sem esforco
-    dia = (agora - timedelta(days=2)).astimezone().date()
+    dia = _inicio(2, 10).astimezone(__import__("zoneinfo").ZoneInfo("America/Sao_Paulo")).date()
     with Session(mundo.eng) as s:
         davi = s.scalars(__import__("sqlalchemy").select(Atleta).where(Atleta.nome == "Atleta Fixture Davi")).one()
         trein = Atividade(atleta_id=davi.id, fonte="fixture", fonte_id="m11-dv-1", modalidade="corrida",
-                          inicio=(agora - timedelta(days=2)).replace(hour=10, minute=0, second=0, microsecond=0), fuso_min=-180,
+                          inicio=_inicio(2, 10), fuso_min=-180,
                           duracao_s=2700.0)
         s.add(trein)
         s.flush()
