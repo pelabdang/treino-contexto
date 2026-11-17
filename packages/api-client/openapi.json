@@ -4164,7 +4164,7 @@
     },
     "/professores/{professor_id}/caixa-do-dia": {
       "get": {
-        "description": "Os alunos do professor com consentimento, por `atencao@1`, e os treinos novos com tipo sugerido (calculado a cada leitura).",
+        "description": "Os alunos do professor com consentimento, por `atencao@2`, e os treinos novos com tipo sugerido (calculado a cada leitura).",
         "operationId": "buscarCaixaDoDia",
         "parameters": [
           {
