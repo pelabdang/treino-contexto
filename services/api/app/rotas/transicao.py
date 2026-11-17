@@ -7,6 +7,8 @@ from typing import Literal
 
 from app.db.models import Atividade, Atleta, RotuloTransicao
 from app.db.session import get_session
+from app.metricas.carga import SUBTIPOS_IGNORADOS
+from app.metricas.transicao import MODALIDADES_DE_TRANSICAO
 from app.metricas.tiros_1km import formatar_pace
 from app.rotas.evolucao import Erro, Periodo, _periodo_valido
 from app.servicos.distancia_texto import distancia_da_atividade
@@ -27,6 +29,7 @@ class TransicaoOut(BaseModel):
 
     valor: bool
     origem: Literal["sugerido", "atleta"] | None = None
+    editavel: bool = True  # false: modalidade `outra`, multiesporte_pai e troca; a tela nao mostra o cartao (Meta 12, #464)
 
 
 class CorrecaoIn(BaseModel):
@@ -307,9 +310,15 @@ def comparar_treinos_de_transicao(
     )
 
 
-def transicao_da_atividade(session: Session, atividade_id: int) -> TransicaoOut:
-    linha = session.query(RotuloTransicao).filter_by(atividade_id=atividade_id).one_or_none()
-    return TransicaoOut(valor=False) if linha is None else TransicaoOut(valor=linha.transicao, origem=linha.origem)
+def transicao_editavel(a: Atividade) -> bool:
+    """A regra so vale para corrida, natacao e ciclismo e nao para as partes-pai/troca do multiesporte (ADR 0009)."""
+    return a.modalidade in MODALIDADES_DE_TRANSICAO and a.subtipo not in SUBTIPOS_IGNORADOS
+
+
+def transicao_da_atividade(session: Session, a: Atividade) -> TransicaoOut:
+    linha = session.query(RotuloTransicao).filter_by(atividade_id=a.id).one_or_none()
+    ed = transicao_editavel(a)
+    return TransicaoOut(valor=False, editavel=ed) if linha is None else TransicaoOut(valor=linha.transicao, origem=linha.origem, editavel=ed)
 
 
 def _atividade_do_atleta(session: Session, atleta_id: int, atividade_id: int) -> Atividade:
@@ -320,7 +329,18 @@ def _atividade_do_atleta(session: Session, atleta_id: int, atividade_id: int) ->
     return a
 
 
-_404_ATIVIDADE = {404: {"model": Erro, "description": "Atleta ou atividade não encontrados (atividade de outro atleta também)"}}
+_404_ATIVIDADE = {
+    404: {"model": Erro, "description": "Atleta ou atividade não encontrados (atividade de outro atleta também)"},
+    409: {"model": Erro, "description": "A atividade não é editável (`transicao.editavel = false`): modalidade `outra`, multiesporte_pai ou troca"},
+}
+MSG_NAO_EDITAVEL = "Este treino não tem rótulo de transição."
+
+
+def _atividade_editavel(session: Session, atleta_id: int, atividade_id: int) -> Atividade:
+    a = _atividade_do_atleta(session, atleta_id, atividade_id)
+    if not transicao_editavel(a):
+        raise HTTPException(status_code=409, detail=MSG_NAO_EDITAVEL)
+    return a
 
 
 @router.put(
@@ -336,7 +356,7 @@ def corrigir_transicao(
     session: Session = Depends(get_session),
 ) -> TransicaoOut:
     """O atleta marca "sim" ou "não" na atividade, tenha a regra sugerido ou não. Grava `origem = atleta`; a regra nunca mexe nela."""
-    _atividade_do_atleta(session, atleta_id, atividade_id)
+    a = _atividade_editavel(session, atleta_id, atividade_id)
     agora = datetime.now(timezone.utc)
     linha = session.query(RotuloTransicao).filter_by(atividade_id=atividade_id).one_or_none()
     if linha is None:
@@ -344,7 +364,7 @@ def corrigir_transicao(
         session.add(linha)
     linha.transicao, linha.origem, linha.versao_regra, linha.definido_em = corpo.transicao, ORIGEM_ATLETA, None, agora
     session.commit()
-    return TransicaoOut(valor=corpo.transicao, origem=ORIGEM_ATLETA)
+    return TransicaoOut(valor=corpo.transicao, origem=ORIGEM_ATLETA, editavel=transicao_editavel(a))
 
 
 @router.delete(
@@ -360,10 +380,10 @@ def desfazer_correcao_de_transicao(
 ) -> TransicaoOut:
     """Apaga a correção do atleta e roda a regra (`sugerir_transicao`) para ele; devolve o estado real da atividade
     (`sugerido` se a regra a sugere, senão `valor = false`). Sem correção, só devolve o estado e nunca apaga uma linha `sugerido`."""
-    _atividade_do_atleta(session, atleta_id, atividade_id)
+    a = _atividade_editavel(session, atleta_id, atividade_id)
     linha = session.query(RotuloTransicao).filter_by(atividade_id=atividade_id).one_or_none()
     if linha is not None and linha.origem == ORIGEM_ATLETA:
         session.delete(linha)
         session.commit()
         aplicar_sugestao(session, atleta_id)
-    return transicao_da_atividade(session, atividade_id)
+    return transicao_da_atividade(session, a)
