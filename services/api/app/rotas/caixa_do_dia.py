@@ -1,12 +1,12 @@
 """`GET /professores/{professor_id}/caixa-do-dia` (issue #424, ADR 0015 itens 3 a 7, adendo da ADR 0004).
 
-A caixa e CALCULADA a cada leitura (nada guardado): os alunos do professor ordenados por `atencao@1` (`metricas/atencao.py`) e os
+A caixa e CALCULADA a cada leitura (nada guardado): os alunos do professor ordenados por `atencao@2` (`metricas/atencao.py`) e os
 treinos novos com tipo sugerido. A API formata, o app mostra (ADR 0004, adendo 2): o app nao ordena, nao escolhe janela nem monta frase.
 
 Regras de privacidade (ADR 0015, itens 3 e 7):
 - O unico filtro de atleta e `atletas_do_professor` (vinculo E consentimento ate `agora`); nenhuma consulta de atividade, check-in ou
   feedback acontece fora dele. O id do professor e o da CONFIGURACAO (`professor_da_rota`).
-- A observacao livre do check-in so existe em `detalhe.checkin.observacao`: nunca entra na `atencao@1` (a funcao nem recebe o campo),
+- A observacao livre do check-in so existe em `detalhe.checkin.observacao`: nunca entra na `atencao@2` (a funcao nem recebe o campo),
   nunca vai a um modelo de linguagem (esta rota nao chama nenhum) e nunca vai a log. O log leva so `professor_id` e contagens.
 - `Cache-Control: no-store`: a resposta tem dado de saude.
 """
@@ -199,6 +199,6 @@ def buscar_caixa_do_dia(
     session: Session = Depends(get_session),
     agora: datetime = Depends(agora_utc),
 ) -> CaixaDoDiaOut:
-    """Os alunos do professor com consentimento, por `atencao@1`, e os treinos novos com tipo sugerido (calculado a cada leitura)."""
+    """Os alunos do professor com consentimento, por `atencao@2`, e os treinos novos com tipo sugerido (calculado a cada leitura)."""
     response.headers["Cache-Control"] = "no-store"
     return montar_caixa(session, professor_id, agora)
