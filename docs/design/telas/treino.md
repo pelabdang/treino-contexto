@@ -260,7 +260,7 @@ Tudo como **estimativa**, dito no cartão (chip no alto e nota no fim).
   do app, sem adjetivo de valor.
 - **Sinal do TSB:** sempre explícito: "−11,6" (sinal de menos U+2212) e "+3,2". Zero é "0,0". Sem cor por sinal: negativo não é erro.
 - **Arredondamento:** 1 casa, com vírgula, para carga, CTL, ATL e TSB (proposta do Caio e do Theo na #142). **Quem arredonda é a
-  API** (texto pronto): o app não formata. Ver pergunta 3.
+  API** (texto pronto): o app não formata (decidido pelo Theo em 17/11).
 - **Dia com treino sem carga:** se o dia tem treino sem carga (`sem_carga > 0` na série), uma linha `info-outline` abaixo das três:
   "Há 1 treino deste dia sem carga calculada; a forma pode estar subestimada." (texto pronto da API; evita um número limpo demais
   sobre dado incompleto).
@@ -277,7 +277,7 @@ Tudo como **estimativa**, dito no cartão (chip no alto e nota no fim).
 
 Por que **não** mostrar CTL, ATL e TSB enquanto "aprendendo": nas primeiras semanas o condicionamento sai baixo por construção
 (a série parte de zero) e o TSB sai muito negativo sem que o atleta tenha feito algo demais. Mostrar "−28,0" a quem acabou de
-chegar é um falso alarme, o oposto do tom da meta. Recomendação: esconder. Ver pergunta 4.
+chegar é um falso alarme, o oposto do tom da meta. Recomendação: esconder (**a confirmar com o Angelo**, pergunta A).
 
 Textos dos motivos de `sem_carga` (a API manda pronto; esta é a redação pedida): frases curtas, sem culpar.
 | `motivo` | texto |
@@ -324,9 +324,9 @@ Responde: "o app entendeu direito que isto foi um treino de transição (brick)?
 - **Erros:** de rede, texto `cor.erro` com `error-outline` abaixo do botão: "Não foi possível salvar. Tente de novo." O estado
   anterior fica e o botão volta a ficar ativo. `404`: "Treino não encontrado." `422`: o mesmo texto genérico.
 - **Quem vê:** a decisão de 17/11 é que o atleta corrige e o professor continua vendo o tipo pela caixa. A tela é a mesma para os
-  dois e, **antes do login, o app não sabe quem está olhando**; sem login, o cartão aparece a quem abrir a tela. Ver pergunta 6.
-- **Quando o cartão não aparece:** modalidade `outra` (a regra só vale para corrida, natação e ciclismo), `multiesporte_pai` e
-  `troca` (não são treinos próprios). Ver pergunta 5.
+  dois e, **antes do login, o app não sabe quem está olhando**; sem login, o cartão aparece a quem abrir a tela (**a confirmar com o Angelo**, pergunta B).
+- **Quando o cartão não aparece:** quando `transicao.editavel = false`. **A API decide** (decisão do Theo, 17/11); o app não olha a
+  modalidade nem o subtipo. Hoje isso cobre `outra`, `multiesporte_pai` e `troca`, mas a regra é da API.
 - Acessibilidade: o botão tem alvo 48, `accessibilityRole="button"` e rótulo completo ("Marcar este treino como treino de
   transição"). O estado atual é lido antes do botão.
 
@@ -355,7 +355,7 @@ Se a natação passar a ter pace (por 100 m), a unidade deixa de ser fixa; aí v
 ("1:45 min/100 m"). Não é desta meta.
 
 ### Campos que a tela precisa (entrada da #464)
-"Hoje" é o `GET /atletas/{id}/atividades/{id}` no `main`; "falta" é o que a tela pede e a API ainda não manda.
+"Hoje" é o `GET /atletas/{id}/atividades/{id}` no `main`; "decidido" é o que a tela pede e o Theo decidiu em 17/11 que a API passa a mandar (#464).
 
 | cartão | campo | hoje | para a tela |
 |---|---|---|---|
@@ -364,15 +364,15 @@ Se a natação passar a ter pace (por 100 m), a unidade deixa de ser fixa; aí v
 | Esforços | `esforcos.referencia_da_atividade` | existe | ler |
 | Normal | `linha_base.estado`, `motivo`, `texto` (só sem base) | existe | ler |
 | Normal | `linha_base.metricas[]`: `chave`, `rotulo`, `estado`, `texto`, `diferenca_texto`, `mediana_texto`, `n`, `unidade` | existe | ler |
-| Normal | **`metricas[].valor_texto`** | **falta** (existe na camada de serviço, não sai no `MetricaBaseOut`) | pedir à Duda |
+| Normal | **`metricas[].valor_texto`** | existe na camada de serviço, não sai no `MetricaBaseOut` | **decidido (Theo, 17/11):** expor |
 | Normal | `linha_base.versao` (`linha_base@3`) | existe | a tela não usa; a QA confere |
-| Carga | `carga.estado`, `carga` (número), `metodo`, `motivo` | existe, **número sem arredondar** e motivo só em código | **`carga.valor_texto`** (1 casa, vírgula, "87,4") e **`carga.texto`** (redação da tabela de motivos) |
-| Carga | `carga.metodo` | existe (código) | **`carga.metodo_texto`** ("Estimada pela FC."); recomendo texto da API |
-| Forma do dia | CTL, ATL e TSB do dia local do treino | **falta** (só em `GET /atletas/{id}/carga`, que devolve a série inteira) | novo bloco **`forma_do_dia`** no `GET` da atividade |
-| Forma do dia | `estado` (`calculada`, `aprendendo`, `sem_serie`), `data_local`, `ctl_texto`, `atl_texto`, `tsb_texto` (1 casa, sinal U+2212), `texto_aprendendo` | **falta** | idem |
-| Forma do dia | `sem_carga_no_dia` (inteiro) e `texto_sem_carga` | **falta** | idem |
+| Carga | `carga.estado`, `carga` (número), `metodo`, `motivo` | existe, **número sem arredondar** e motivo só em código | **decidido (Theo, 17/11):** `carga.valor_texto` (1 casa, vírgula, "87,4") e `carga.texto` (redação da tabela de motivos) |
+| Carga | `carga.metodo` | existe (código) | **decidido (Theo, 17/11):** `carga.metodo_texto` ("Estimada pela FC.") |
+| Forma do dia | CTL, ATL e TSB do dia local do treino | só em `GET /atletas/{id}/carga`, que devolve a série inteira | **decidido (Theo, 17/11):** bloco novo `forma_do_dia` no `GET` da atividade, calculado na leitura |
+| Forma do dia | `estado` (`calculada`, `aprendendo`, `sem_serie`), `data_local`, `ctl_texto`, `atl_texto`, `tsb_texto` (1 casa, sinal U+2212), `texto_aprendendo` | falta | **decidido**, idem |
+| Forma do dia | `sem_carga_no_dia` (inteiro) e `texto_sem_carga` | falta | **decidido**, idem |
 | Transição | `transicao.valor`, `transicao.origem` | existe | ler; recarregar o `GET` após `PUT` e `DELETE` |
-| Transição | quando o cartão não vale (`outra`, `multiesporte_pai`, `troca`) | `modalidade` existe; o papel de multiesporte, a confirmar | pergunta 5 |
+| Transição | `transicao.editavel` (booleano) | falta | **decidido (Theo, 17/11):** a API manda; o app só segue |
 
 O que **o app guarda** como texto fixo (não vem da API): as quatro palavras do estado da métrica e a nota do cartão do normal;
 os títulos e a nota "Estimativas a partir dos seus treinos..." do cartão de carga; as definições de CTL, ATL e TSB (vêm do
@@ -394,22 +394,23 @@ em 390 e em 1280.
 - Alvos de 44 nas linhas que abrem explicação e 48 nos botões. Contraste: pares já em [[design/tokens]]; o chip de estado usa
   `cor.texto` sobre `cor.superficie-2` (14,08 no claro, 12,28 no escuro) e o resto `cor.texto-2` sobre `cor.superficie` (7,92 e 8,44).
 
-### Perguntas abertas (para o Theo, 17/11)
-Cada uma com a recomendação da Lia. A #464 (Duda) depende das de contrato.
-1. **`valor_texto` na métrica da linha de base.** A camada de serviço já o monta; o `MetricaBaseOut` não o expõe. Recomendo expor.
-2. **Textos da carga.** `CargaAtividadeOut` traz só códigos (`motivo`, `metodo`) e o número sem arredondar. Recomendo `valor_texto`,
-   `texto` (motivo) e `metodo_texto` prontos, como já é no resto do `GET` (adendo 2 da ADR 0004).
-3. **Arredondamento da carga e de CTL, ATL e TSB.** Recomendo 1 casa com vírgula, feita pela API (proposta da #142); o TSB com sinal U+2212.
-4. **Forma do dia em `aprendendo`.** Recomendo **esconder** os três números e mostrar o aviso (primeiras semanas dão TSB muito
-   negativo por construção). Se o Angelo preferir mostrar, entra o selo "ainda aprendendo" junto dos números.
-5. **Transição em `multiesporte_pai`, `troca` e `outra`.** A rota `corrigirTransicao` aceita essas atividades? Recomendo a API mandar
-   um campo (`transicao.editavel`) em vez de o app decidir pela modalidade e pelo subtipo.
-6. **Quem corrige.** Sem login, professor e atleta veem a mesma tela, então o professor pode corrigir. Recomendo aceitar na Meta
-   12 e fechar na Meta 13, com o login; o rótulo é reversível (DELETE).
-7. **Efeito da correção no feedback.** Corrigir a transição muda a linha de base, que entra no pacote de fatos do feedback. O
-   feedback já gerado fica `desatualizado` (e o atleta vê o aviso)? Recomendo que sim, pelo mesmo caminho do check-in editado.
-8. **`forma_do_dia` no `GET` da atividade.** Recomendo calcular na leitura pela mesma `calcular_serie`, só para o dia local do
-   treino, e devolver os textos prontos (sem a série inteira, que fica fora desta meta).
+### Decisões de contrato (Theo, 17/11)
+Para a #464. Todas como a Lia recomendou.
+1. `valor_texto` entra no `MetricaBaseOut` (linha de base).
+2. A carga manda `valor_texto`, `texto` do motivo e `metodo_texto` prontos (redação dos seis motivos nesta spec).
+3. Arredondamento de 1 casa com vírgula, feito pela API; o TSB com o sinal de menos U+2212.
+4. `transicao.editavel` vem da API; o app não decide pela modalidade.
+5. Bloco novo `forma_do_dia` no `GET` da atividade, calculado na leitura pela mesma `calcular_serie`, só para o dia local do treino,
+   com textos prontos e `sem_carga_no_dia`.
+
+### Perguntas ao Angelo (a confirmar)
+Cada cartão abaixo vale com a recomendação da Lia até a resposta; quando ele responder, esta nota é atualizada.
+- **A. Forma do dia em "aprendendo".** Recomendo **esconder** CTL, ATL e TSB e mostrar só o aviso. Se ele preferir mostrar, entra o
+  selo "ainda aprendendo" junto dos números.
+- **B. Quem corrige a transição sem login.** Sem login, professor e atleta veem a mesma tela. Recomendo aceitar na Meta 12 e fechar
+  na Meta 13, com o login; o rótulo é reversível (DELETE).
+- **C. Efeito da correção no feedback.** Corrigir a transição muda a linha de base, que entra no pacote de fatos do feedback.
+  Recomendo que o feedback já gerado fique `desatualizado`, pelo mesmo caminho do check-in editado.
 
 ## O que muda em relação ao app de hoje
 | hoje | proposta | issue |
