@@ -1,19 +1,20 @@
 ---
-source_file: "docs/00-inicio.md"
+source_file: "docs/modulos/infra.md"
 type: "document"
-community: "Comunidade 2"
+community: "Mapa, upload de FIT e ADRs"
 tags:
   - graphify/document
   - graphify/EXTRACTED
-  - community/Comunidade_2
+  - community/Mapa_upload_de_FIT_e_ADRs
 ---
 
-# Módulo: infra
+# Módulo infra
 
 ## Connections
-- [[00-inicio (mapa do projeto)]] - `references` [EXTRACTED]
-- [[ADR 0004 Contrato da tela de evolucao dos tiros (Meta 2)]] - `references` [INFERRED]
-- [[Diário de 2026-11-04]] - `references` [EXTRACTED]
-- [[Mapa de modulos]] - `references` [EXTRACTED]
+- [[Meta 2 como rodar a API e o app]] - `references` [EXTRACTED]
+- [[Módulo API]] - `references` [EXTRACTED]
+- [[Módulo banco]] - `references` [EXTRACTED]
+- [[Treino Contexto mapa do projeto]] - `references` [EXTRACTED]
+- [[Índice de módulos]] - `references` [EXTRACTED]
 
-#graphify/document #graphify/EXTRACTED #community/Comunidade_2
+#graphify/document #graphify/EXTRACTED #community/Mapa_upload_de_FIT_e_ADRs

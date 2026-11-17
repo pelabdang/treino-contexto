@@ -1,19 +1,16 @@
 ---
 source_file: "docs/_templates/metrica.md"
 type: "document"
-community: "Comunidade 3"
+community: "Templates de regra e texto"
 tags:
   - graphify/document
   - graphify/EXTRACTED
-  - community/Comunidade_3
+  - community/Templates_de_regra_e_texto
 ---
 
 # Template: métrica
 
 ## Connections
-- [[AGENTS.md (regras do time)]] - `references` [EXTRACTED]
-- [[Agente Nina (documentação)]] - `references` [EXTRACTED]
-- [[Artigos científicos (cienciaartigos)]] - `references` [EXTRACTED]
-- [[docsmetricas (notas de métrica)]] - `conceptually_related_to` [EXTRACTED]
+- [[Template artigo]] - `references` [EXTRACTED]
 
-#graphify/document #graphify/EXTRACTED #community/Comunidade_3
+#graphify/document #graphify/EXTRACTED #community/Templates_de_regra_e_texto

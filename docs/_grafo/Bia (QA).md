@@ -1,16 +1,16 @@
 ---
-source_file: "docs/diario/2026-11-03.md"
-type: "document"
-community: "Comunidade 4"
+source_file: "docs/time.md"
+type: "concept"
+community: "Time e papéis"
 tags:
-  - graphify/document
+  - graphify/concept
   - graphify/EXTRACTED
-  - community/Comunidade_4
+  - community/Time_e_papis
 ---
 
 # Bia (QA)
 
 ## Connections
-- [[Diario 2026-11-03]] - `references` [EXTRACTED]
+- [[Time e papéis]] - `references` [EXTRACTED]
 
-#graphify/document #graphify/EXTRACTED #community/Comunidade_4
+#graphify/concept #graphify/EXTRACTED #community/Time_e_papis
