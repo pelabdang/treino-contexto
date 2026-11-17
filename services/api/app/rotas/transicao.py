@@ -329,7 +329,18 @@ def _atividade_do_atleta(session: Session, atleta_id: int, atividade_id: int) ->
     return a
 
 
-_404_ATIVIDADE = {404: {"model": Erro, "description": "Atleta ou atividade não encontrados (atividade de outro atleta também)"}}
+_404_ATIVIDADE = {
+    404: {"model": Erro, "description": "Atleta ou atividade não encontrados (atividade de outro atleta também)"},
+    409: {"model": Erro, "description": "A atividade não é editável (`transicao.editavel = false`): modalidade `outra`, multiesporte_pai ou troca"},
+}
+MSG_NAO_EDITAVEL = "Este treino não tem rótulo de transição."
+
+
+def _atividade_editavel(session: Session, atleta_id: int, atividade_id: int) -> Atividade:
+    a = _atividade_do_atleta(session, atleta_id, atividade_id)
+    if not transicao_editavel(a):
+        raise HTTPException(status_code=409, detail=MSG_NAO_EDITAVEL)
+    return a
 
 
 @router.put(
@@ -345,7 +356,7 @@ def corrigir_transicao(
     session: Session = Depends(get_session),
 ) -> TransicaoOut:
     """O atleta marca "sim" ou "não" na atividade, tenha a regra sugerido ou não. Grava `origem = atleta`; a regra nunca mexe nela."""
-    a = _atividade_do_atleta(session, atleta_id, atividade_id)
+    a = _atividade_editavel(session, atleta_id, atividade_id)
     agora = datetime.now(timezone.utc)
     linha = session.query(RotuloTransicao).filter_by(atividade_id=atividade_id).one_or_none()
     if linha is None:
@@ -369,7 +380,7 @@ def desfazer_correcao_de_transicao(
 ) -> TransicaoOut:
     """Apaga a correção do atleta e roda a regra (`sugerir_transicao`) para ele; devolve o estado real da atividade
     (`sugerido` se a regra a sugere, senão `valor = false`). Sem correção, só devolve o estado e nunca apaga uma linha `sugerido`."""
-    a = _atividade_do_atleta(session, atleta_id, atividade_id)
+    a = _atividade_editavel(session, atleta_id, atividade_id)
     linha = session.query(RotuloTransicao).filter_by(atividade_id=atividade_id).one_or_none()
     if linha is not None and linha.origem == ORIGEM_ATLETA:
         session.delete(linha)

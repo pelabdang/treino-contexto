@@ -3576,6 +3576,16 @@
             },
             "description": "Atleta ou atividade não encontrados (atividade de outro atleta também)"
           },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Erro"
+                }
+              }
+            },
+            "description": "A atividade não é editável (`transicao.editavel = false`): modalidade `outra`, multiesporte_pai ou troca"
+          },
           "422": {
             "content": {
               "application/json": {
@@ -3645,6 +3655,16 @@
               }
             },
             "description": "Atleta ou atividade não encontrados (atividade de outro atleta também)"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Erro"
+                }
+              }
+            },
+            "description": "A atividade não é editável (`transicao.editavel = false`): modalidade `outra`, multiesporte_pai ou troca"
           },
           "422": {
             "content": {
@@ -4296,7 +4316,7 @@
     },
     "/professores/{professor_id}/caixa-do-dia": {
       "get": {
-        "description": "Os alunos do professor com consentimento, por `atencao@1`, e os treinos novos com tipo sugerido (calculado a cada leitura).",
+        "description": "Os alunos do professor com consentimento, por `atencao@2`, e os treinos novos com tipo sugerido (calculado a cada leitura).",
         "operationId": "buscarCaixaDoDia",
         "parameters": [
           {

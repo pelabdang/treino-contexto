@@ -1,19 +1,16 @@
 ---
-source_file: "docs/modulos/worker.md"
-type: "document"
-community: "Comunidade 0"
+source_file: "docs/produto/meta-4-como-rodar.md"
+type: "concept"
+community: "Mapa, upload de FIT e ADRs"
 tags:
-  - graphify/document
+  - graphify/concept
   - graphify/EXTRACTED
-  - community/Comunidade_0
+  - community/Mapa_upload_de_FIT_e_ADRs
 ---
 
 # worker.preencher_clima
 
 ## Connections
-- [[Guia Meta 4 como rodar o clima]] - `references` [EXTRACTED]
-- [[Janela de 7 dias do clima (atraso da API)]] - `implements` [EXTRACTED]
-- [[Módulo clima]] - `implements` [EXTRACTED]
-- [[Módulo worker]] - `implements` [EXTRACTED]
+- [[meta 4 como rodar]] - `references` [EXTRACTED]
 
-#graphify/document #graphify/EXTRACTED #community/Comunidade_0
+#graphify/concept #graphify/EXTRACTED #community/Mapa_upload_de_FIT_e_ADRs

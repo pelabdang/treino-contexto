@@ -1,0 +1,85 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 760 760" width="760" height="760" role="img" aria-labelledby="t d" font-family="Inter, Arial, sans-serif">
+  <title id="t">Tela do treino, Meta 12: cartões novos, tema claro</title>
+  <desc id="d">Esboço sintético em 360 de largura: à esquerda os cartões Esforços e Comparado com o seu normal; à direita Carga e forma do dia e Treino de transição.</desc>
+  <rect x="10" y="10" width="360" height="740" fill="#F6F5F1"/>
+  <rect x="390" y="10" width="360" height="740" fill="#F6F5F1"/>
+
+  <!-- coluna esquerda: Esforços -->
+  <rect x="26" y="26" width="328" height="238" rx="12" fill="#FFFFFF" stroke="#DEDBD3"/>
+  <text x="42" y="56" font-size="18" font-weight="600" fill="#1A1D1F">Esforços</text>
+  <text x="42" y="80" font-size="14" font-weight="500" fill="#4C5257">Aquecimento 0:12:10</text>
+  <g font-size="14" font-weight="500" fill="#4C5257">
+    <text x="42" y="108">Esforço</text><text x="206" y="108" text-anchor="end">Pace</text><text x="330" y="108" text-anchor="end">FC</text>
+    <text x="206" y="124" text-anchor="end">min/km</text><text x="330" y="124" text-anchor="end">bpm</text>
+  </g>
+  <line x1="42" y1="132" x2="338" y2="132" stroke="#DEDBD3"/>
+  <g font-size="16" font-weight="600" fill="#1A1D1F">
+    <text x="42" y="158">1 · 1 km</text><text x="206" y="158" text-anchor="end">4:05</text><text x="330" y="158" text-anchor="end">172</text>
+    <text x="42" y="188">2 · 1 km</text><text x="206" y="188" text-anchor="end">4:03</text><text x="330" y="188" text-anchor="end">175</text>
+    <text x="42" y="218">3 · 1 km</text><text x="206" y="218" text-anchor="end">4:06</text><text x="330" y="218" text-anchor="end">176</text>
+  </g>
+  <text x="42" y="248" font-size="14" font-weight="500" fill="#4C5257">Desaquecimento 0:08:40</text>
+
+  <!-- coluna esquerda: Comparado com o seu normal -->
+  <rect x="26" y="284" width="328" height="360" rx="12" fill="#FFFFFF" stroke="#DEDBD3"/>
+  <text x="42" y="314" font-size="18" font-weight="600" fill="#1A1D1F">Comparado com o seu normal</text>
+  <text x="42" y="342" font-size="14" font-weight="500" fill="#4C5257">FC média</text>
+  <text x="42" y="368" font-size="16" font-weight="600" fill="#1A1D1F">148 bpm</text>
+  <g fill="none" stroke="#4C5257" stroke-width="1.6"><circle cx="150" cy="362" r="7"/><circle cx="150" cy="362" r="2.5"/></g>
+  <text x="166" y="368" font-size="14" font-weight="500" fill="#4C5257">Dentro do seu normal</text>
+  <text x="42" y="394" font-size="16" fill="#4C5257">Mediana de 150 bpm, em 12</text>
+  <text x="42" y="416" font-size="16" fill="#4C5257">treinos.</text>
+  <line x1="42" y1="432" x2="338" y2="432" stroke="#DEDBD3"/>
+  <text x="42" y="458" font-size="14" font-weight="500" fill="#4C5257">Carga por hora</text>
+  <text x="42" y="486" font-size="16" font-weight="600" fill="#1A1D1F">61,0 pontos/h</text>
+  <rect x="164" y="470" width="168" height="24" rx="12" fill="#ECEAE4"/>
+  <g stroke="#1A1D1F" stroke-width="1.6" fill="none"><path d="M178 477l3-3 3 3M178 487l3 3 3-3"/></g>
+  <text x="192" y="487" font-size="14" font-weight="600" fill="#1A1D1F">Fora do seu normal</text>
+  <text x="42" y="512" font-size="16" fill="#4C5257">9,0 pontos/h maior que a</text>
+  <text x="42" y="534" font-size="16" fill="#4C5257">mediana de 52,0 pontos/h (12</text>
+  <text x="42" y="556" font-size="16" fill="#4C5257">treinos). Compara com o seu</text>
+  <text x="42" y="578" font-size="16" fill="#4C5257">histórico; não diz se foi bom</text>
+  <text x="42" y="600" font-size="16" fill="#4C5257">ou ruim.</text>
+  <line x1="42" y1="612" x2="338" y2="612" stroke="#DEDBD3"/>
+  <text x="42" y="632" font-size="13" fill="#4C5257">Compara com o seu histórico no mesmo tipo de treino.</text>
+
+  <!-- coluna direita: Carga e forma do dia -->
+  <rect x="406" y="26" width="328" height="372" rx="12" fill="#FFFFFF" stroke="#DEDBD3"/>
+  <text x="422" y="56" font-size="18" font-weight="600" fill="#1A1D1F">Carga e forma do dia</text>
+  <rect x="422" y="66" width="88" height="24" rx="12" fill="#ECEAE4"/>
+  <text x="434" y="83" font-size="14" font-weight="500" fill="#1A1D1F">estimativa</text>
+  <text x="422" y="116" font-size="14" font-weight="500" fill="#4C5257">Carga deste treino</text>
+  <text x="422" y="160" font-size="40" font-weight="700" fill="#1A1D1F">87,4</text>
+  <text x="520" y="160" font-size="14" font-weight="500" fill="#4C5257">pontos</text>
+  <text x="422" y="186" font-size="16" fill="#4C5257">Estimada pela FC.</text>
+  <line x1="422" y1="202" x2="718" y2="202" stroke="#DEDBD3"/>
+  <text x="422" y="226" font-size="14" font-weight="500" fill="#4C5257">No fim do dia 18/03/25</text>
+  <g font-size="16" fill="#1A1D1F">
+    <text x="422" y="260">Condicionamento (CTL)</text><text x="718" y="260" text-anchor="end" font-weight="600">41,2</text>
+    <text x="422" y="304">Fadiga (ATL)</text><text x="718" y="304" text-anchor="end" font-weight="600">52,8</text>
+    <text x="422" y="348">Forma (TSB)</text><text x="718" y="348" text-anchor="end" font-weight="600">−11,6</text>
+  </g>
+  <g stroke="#DEDBD3"><line x1="422" y1="274" x2="718" y2="274"/><line x1="422" y1="318" x2="718" y2="318"/></g>
+  <g font-size="13" fill="#4C5257">
+    <text x="422" y="374">Estimativas a partir dos seus treinos. Não são</text>
+    <text x="422" y="391">medidas e não são diagnóstico.</text>
+  </g>
+
+  <!-- coluna direita: Treino de transição -->
+  <rect x="406" y="418" width="328" height="226" rx="12" fill="#FFFFFF" stroke="#DEDBD3"/>
+  <text x="422" y="448" font-size="18" font-weight="600" fill="#1A1D1F">Treino de transição</text>
+  <g font-size="16" fill="#1A1D1F">
+    <text x="422" y="478">Este treino faz parte de um treino</text>
+    <text x="422" y="500">de transição.</text>
+  </g>
+  <g font-size="16" fill="#4C5257">
+    <text x="422" y="526">O app sugeriu isso porque outro treino</text>
+    <text x="422" y="548">começou logo depois.</text>
+  </g>
+  <rect x="422" y="562" width="296" height="48" rx="8" fill="#FFFFFF" stroke="#7D7A72"/>
+  <text x="570" y="591" font-size="16" font-weight="600" fill="#1A1D1F" text-anchor="middle">Não é transição</text>
+  <text x="422" y="630" font-size="13" fill="#4C5257">Isso muda com quais treinos este é comparado.</text>
+
+  <text x="26" y="706" font-size="13" fill="#4C5257">Claro. Esboço sintético; ordem na tela: Esforços, Normal,</text>
+  <text x="26" y="724" font-size="13" fill="#4C5257">Carga e forma do dia, Transição (depois do Feedback).</text>
+</svg>

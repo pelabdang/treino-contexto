@@ -1,25 +1,25 @@
 ---
 source_file: "docs/modulos/grafico-tiros.md"
 type: "document"
-community: "Comunidade 0"
+community: "Mapa, upload de FIT e ADRs"
 tags:
   - graphify/document
   - graphify/EXTRACTED
-  - community/Comunidade_0
+  - community/Mapa_upload_de_FIT_e_ADRs
 ---
 
 # Módulo gráfico dos tiros de 1 km
 
 ## Connections
-- [[Caio (ciência do esporte regras e gráfico)]] - `references` [EXTRACTED]
-- [[Funcao escala_eixo (regra unica da escala)]] - `implements` [EXTRACTED]
-- [[GET evolucao tiros-1km (JSON e PNG)]] - `shares_data_with` [EXTRACTED]
-- [[Guia Meta 1 como reproduzir]] - `references` [EXTRACTED]
-- [[Meta 1 tiros de 1 km a partir da exportação Garmin]] - `implements` [EXTRACTED]
-- [[Métrica tiros de 1 km]] - `references` [EXTRACTED]
-- [[Módulo api]] - `references` [EXTRACTED]
-- [[formatar_pace (pace em mss)]] - `implements` [EXTRACTED]
-- [[render_png (desenho do gráfico)]] - `implements` [EXTRACTED]
-- [[worker.grafico_tiros_1km]] - `shares_data_with` [EXTRACTED]
+- [[ADR 0004 Contrato da tela de evolução dos tiros (Meta 2)]] - `references` [EXTRACTED]
+- [[ADR 0005 Série de tiros o que entra e como a regra muda]] - `references` [EXTRACTED]
+- [[Componente GraficoTiros]] - `semantically_similar_to` [INFERRED]
+- [[Meta 1 como reproduzir]] - `references` [EXTRACTED]
+- [[Métrica tiros de 1 km]] - `implements` [EXTRACTED]
+- [[Módulo API]] - `references` [EXTRACTED]
+- [[Módulo worker]] - `references` [EXTRACTED]
+- [[Treino Contexto mapa do projeto]] - `references` [EXTRACTED]
+- [[grafico carga]] - `semantically_similar_to` [INFERRED]
+- [[Índice de módulos]] - `references` [EXTRACTED]
 
-#graphify/document #graphify/EXTRACTED #community/Comunidade_0
+#graphify/document #graphify/EXTRACTED #community/Mapa_upload_de_FIT_e_ADRs

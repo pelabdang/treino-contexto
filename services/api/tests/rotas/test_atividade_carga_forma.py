@@ -110,7 +110,7 @@ def test_formatacao():
     assert ct.sem_carga_texto(0) is None and "2 treinos deste dia" in ct.sem_carga_texto(2)
 
 
-def test_editavel_pela_modalidade_no_get_put_e_delete(session, client):
+def test_editavel_pela_modalidade_e_409_quando_nao(session, client):
     a = Atleta(nome="Ana")
     session.add(a)
     session.commit()
@@ -119,9 +119,23 @@ def test_editavel_pela_modalidade_no_get_put_e_delete(session, client):
                        inicio=datetime(2025, 3, 5 + i, 9, tzinfo=timezone.utc))
         session.add(at)
         session.commit()
-        j = client.get(f"/atletas/{a.id}/atividades/{at.id}").json()
-        assert j["transicao"] == {"valor": False, "origem": None, "editavel": esperado}
-        p = client.put(f"/atletas/{a.id}/atividades/{at.id}/transicao", json={"transicao": True}).json()
-        assert p["editavel"] is esperado and p["origem"] == "atleta"
-        d = client.delete(f"/atletas/{a.id}/atividades/{at.id}/transicao").json()
-        assert d["editavel"] is esperado
+        url = f"/atletas/{a.id}/atividades/{at.id}"
+        assert client.get(url).json()["transicao"] == {"valor": False, "origem": None, "editavel": esperado}
+        p = client.put(url + "/transicao", json={"transicao": True})
+        d = client.delete(url + "/transicao")
+        if esperado:
+            assert p.json()["editavel"] is True and p.json()["origem"] == "atleta" and d.json()["editavel"] is True
+        else:
+            assert (p.status_code, d.status_code) == (409, 409)
+            assert p.json() == {"detail": "Este treino não tem rótulo de transição."}
+            assert client.get(url).json()["transicao"] == {"valor": False, "origem": None, "editavel": False}  # nada gravado
+
+
+def test_pai_e_troca_do_multiesporte_tambem_dao_409(session, client):
+    atleta_id = _atleta(session)
+    ign = session.scalars(select(Atividade).where(Atividade.subtipo.in_(["multiesporte_pai", "troca"]))).all()
+    assert ign
+    for at in ign:
+        r = client.put(f"/atletas/{atleta_id}/atividades/{at.id}/transicao", json={"transicao": True})
+        assert r.status_code == 409
+        assert client.delete(f"/atletas/{atleta_id}/atividades/{at.id}/transicao").status_code == 409

@@ -1,18 +1,16 @@
 ---
 source_file: "docs/_templates/entrevista.md"
 type: "document"
-community: "Comunidade 3"
+community: "Templates de regra e texto"
 tags:
   - graphify/document
   - graphify/EXTRACTED
-  - community/Comunidade_3
+  - community/Templates_de_regra_e_texto
 ---
 
 # Template: entrevista
 
 ## Connections
-- [[Agente Nina (documentação)]] - `references` [EXTRACTED]
-- [[Entrevistas com treinadores]] - `conceptually_related_to` [INFERRED]
-- [[Regras da base de conhecimento (cienciaregras)]] - `references` [EXTRACTED]
+- [[Template regra]] - `references` [EXTRACTED]
 
-#graphify/document #graphify/EXTRACTED #community/Comunidade_3
+#graphify/document #graphify/EXTRACTED #community/Templates_de_regra_e_texto

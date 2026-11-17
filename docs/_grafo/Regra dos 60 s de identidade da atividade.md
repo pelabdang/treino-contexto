@@ -1,18 +1,16 @@
 ---
-source_file: "docs/modulos/ingestao-garmin.md"
-type: "document"
-community: "Comunidade 0"
+source_file: "docs/decisoes/0006-upload-de-fit.md"
+type: "concept"
+community: "Mapa, upload de FIT e ADRs"
 tags:
-  - graphify/document
+  - graphify/concept
   - graphify/EXTRACTED
-  - community/Comunidade_0
+  - community/Mapa_upload_de_FIT_e_ADRs
 ---
 
-# Regra dos 60 s de identidade da atividade
+# regra dos 60 s de identidade da atividade
 
 ## Connections
 - [[ADR 0006 Upload de arquivo FIT (Meta 3)]] - `references` [EXTRACTED]
-- [[Identidade de FIT avulso importado depois do JSON]] - `conceptually_related_to` [EXTRACTED]
-- [[Módulo ingestão Garmin]] - `implements` [EXTRACTED]
 
-#graphify/document #graphify/EXTRACTED #community/Comunidade_0
+#graphify/concept #graphify/EXTRACTED #community/Mapa_upload_de_FIT_e_ADRs

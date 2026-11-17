@@ -1,22 +1,16 @@
 ---
-source_file: "docs/decisoes/0007-clima-da-atividade.md"
-type: "document"
-community: "Comunidade 4"
+source_file: "docs/produto/metas/meta-4-clima-atividade.md"
+type: "concept"
+community: "Mapa, upload de FIT e ADRs"
 tags:
-  - graphify/document
+  - graphify/concept
   - graphify/EXTRACTED
-  - community/Comunidade_4
+  - community/Mapa_upload_de_FIT_e_ADRs
 ---
 
 # Estados do clima (ok, indoor, sem_posicao, pendente, falha)
 
 ## Connections
-- [[ADR 0007 Clima da atividade (Meta 4)]] - `implements` [EXTRACTED]
-- [[Clima da atividade fixtures e oraculo]] - `references` [EXTRACTED]
-- [[Glossário]] - `references` [EXTRACTED]
-- [[Modulo clima (Open-Meteo)]] - `references` [EXTRACTED]
-- [[Objeto clima na resposta da API]] - `references` [EXTRACTED]
-- [[Open-Meteo Historical Weather API]] - `references` [INFERRED]
-- [[Tabela clima_atividade]] - `references` [EXTRACTED]
+- [[Meta 4 clima da atividade]] - `references` [EXTRACTED]
 
-#graphify/document #graphify/EXTRACTED #community/Comunidade_4
+#graphify/concept #graphify/EXTRACTED #community/Mapa_upload_de_FIT_e_ADRs
