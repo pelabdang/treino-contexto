@@ -8,7 +8,7 @@ links: [[produto/meta-10-como-rodar]], [[produto/meta-8-como-rodar]], [[produto/
 # Meta 11: como rodar a caixa do dia do professor
 
 Passo a passo da Meta 11 com dado sintético: Postgres próprio, migrações até a 0016, o professor do piloto e oito atletas **fictícios** com vínculo e
-consentimento (`worker.carregar_professor`), alguns treinos sintéticos, o `GET /professores/{id}/caixa-do-dia` com a `atencao@1`, o `PUT` em lote do
+consentimento (`worker.carregar_professor`), alguns treinos sintéticos, o `GET /professores/{id}/caixa-do-dia` com a `atencao@2`, o `PUT` em lote do
 tipo e a tela `/caixa-do-dia`. **Só dado sintético, sem rede, sem conta do Garmin e sem dado de aluno real.** As regras estão na
 [[decisoes/0015-caixa-do-dia-do-professor]] (aceita em 16/11) e a nota da regra em [[metricas/atencao]].
 **Check-in, observação e feedback são dado de saúde:** use só os valores sintéticos daqui e das fixtures.
@@ -153,11 +153,17 @@ with SessionLocal() as s:
     Isso apaga o volume `<projeto>_pgdata` (aqui `treino-meta11_pgdata`); nada do banco do dia a dia é tocado.
 
 ## Limitações da conferência local (#431)
-*(Espaço reservado: as limitações genéricas entram aqui depois das respostas do Angelo, sem data, nome, número nem tipo de atividade de nenhum aluno.)*
+A conferência local da caixa do dia (#431) foi feita só na máquina do Angelo, com nada no repositório. Em texto genérico (sem data, nome, número nem tipo de atividade de nenhum aluno):
+1. **`fora_do_normal` depende da `linha_base@2`.** Com poucas amostras do tipo, ou com dispersão muito pequena, o `z` pode sair grande, e o limite de 2,5 não mede relevância esportiva. Investigação na #455.
+2. **A regra só enxerga o que foi ingerido.** Sem treinos novos, a lista fica parada.
+3. **`dor` e `divergencia` só têm teste sintético.** A conferência local não os exercitou.
+4. **A regra de divergência fica como está até 4 semanas de uso.**
+
+Resolvidas na `atencao@2` (#454): a modalidade `outra` saiu do aviso `checkin_vencendo`, e quem tem poucos check-ins agora recebe **uma linha por aluno** (preso ao treino mais antigo), não um aviso por treino. Um treino ainda diz "Treino de <dia> sem check-in; o prazo termina em N dia(s)."; vários dizem "N treinos sem check-in; o prazo do mais antigo termina hoje.". Mesma lista, junto da regra, em [[metricas/atencao]].
 
 ## Achados do guia
 - **O `carregar_professor` só grava identidade.** Não existe comando que carregue os treinos de `tests/fixtures/meta11/treinos.json`: aquele arquivo é a
-  **entrada da `atencao@1`** no oráculo, não linhas do banco. Por isso o passo 4 usa um script próprio (`carregar_treinos.py`). Um comando de carga dos treinos
+  **entrada da `atencao@2`** no oráculo, não linhas do banco. Por isso o passo 4 usa um script próprio (`carregar_treinos.py`). Um comando de carga dos treinos
   da Meta 11 seria uma issue à parte.
 - **Só `dor` e `checkin_vencendo` aparecem pelo banco sintético deste guia.** `fora_do_normal` exige a linha de base (8 treinos do mesmo tipo) e
   `divergencia`, a semana-padrão do atleta; o oráculo cobre os quatro.

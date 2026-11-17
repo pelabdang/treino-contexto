@@ -50,6 +50,7 @@ normal" não é novo: é o da `linha_base@2` ([[decisoes/0011-linha-de-base-e-se
 O motivo 4 some no oitavo dia (prazo vencido). Mudar qualquer coisa acima exige subir `VERSAO` (`atencao@2`).
 
 ## Limitações (conferência local da Meta 11, #431)
+A conferência com a conta real foi feita só no computador do Angelo; as regras ficaram como estão. Dois achados já foram resolvidos na `atencao@2` (#454): a modalidade `outra` saiu do aviso e o aviso de check-in virou uma linha por aluno. Os que seguem, em texto genérico:
 - `fora_do_normal` depende da `linha_base@2`: com poucas amostras do tipo de treino ou dispersão muito pequena, o valor z pode ser grande; o limite de 2,5 não mede relevância esportiva (investigação na #455).
 - O aviso de check-in resume vários treinos numa linha: o professor vê quantos faltam e o prazo do mais antigo, não a lista deles.
 - A regra só enxerga o que foi ingerido: sem treinos novos, a lista fica parada nos últimos 7 dias.
