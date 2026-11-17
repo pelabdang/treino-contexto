@@ -1,6 +1,6 @@
-"""Confere as fixtures sintéticas da Meta 11 e o oráculo à mão de `atencao@1` (issue #421, ADR 0015).
+"""Confere as fixtures sintéticas da Meta 11 e o oráculo à mão de `atencao@2` (issue #421, ADR 0015).
 
-NÃO roda código de produção (a `atencao@1` é a #422): confere a forma das fixtures, que cobrem os casos da ADR e que o oráculo
+NÃO roda código de produção (a `atencao@2` é a #422 e a #454): confere a forma das fixtures, que cobrem os casos da ADR e que o oráculo
 escrito à mão é coerente com uma referência curta e independente das regras (`_referencia`), escrita só para este teste.
 Tabela legível em `docs/metricas/atencao-oraculo.md`. Tudo sintético, atletas fictícios.
 """
@@ -55,11 +55,20 @@ def _motivos(t):
     if t["tipo_origem"] == "semana_padrao" and t["tipo_divergencia"] and not t["tipo_confirmado"]:
         det = "sem esforço detectado" if t["tipo_divergencia"] == "sem_esforco" else "com tiros detectados"
         out.append(("divergencia", f"Treino de {nome} diferente da semana-padrão: previsto {t['tipo_treino']}, {det}."))
-    if t["checkin"] is None and t["subtipo"] not in NAO_ELEGIVEIS and AVISO_CHECKIN_DIAS <= dias <= PRAZO_DIAS:
-        resta = PRAZO_DIAS - dias
-        quando = "hoje" if resta == 0 else f"em {resta} dia" + ("s" if resta > 1 else "")
-        out.append(("checkin_vencendo", f"Treino de {nome} sem check-in; o prazo termina {quando}."))
     return out
+
+
+def _aviso_checkin(treinos):
+    """`checkin_vencendo` (atencao@2): uma linha por aluno, no treino mais antigo sem check-in; `outra` não conta."""
+    pend = sorted((t for t in treinos if t["checkin"] is None and t["subtipo"] not in NAO_ELEGIVEIS and t["modalidade"] != "outra"
+                   and AVISO_CHECKIN_DIAS <= (HOJE - date.fromisoformat(t["dia"])).days <= PRAZO_DIAS), key=lambda t: (t["dia"], t["id"]))
+    if not pend:
+        return None
+    resta = PRAZO_DIAS - (HOJE - date.fromisoformat(pend[0]["dia"])).days
+    quando = "hoje" if resta == 0 else f"em {resta} dia" + ("s" if resta > 1 else "")
+    if len(pend) == 1:
+        return pend[0]["id"], f"Treino de {DIAS[date.fromisoformat(pend[0]['dia']).weekday()]} sem check-in; o prazo termina {quando}."
+    return pend[0]["id"], f"{len(pend)} treinos sem check-in; o prazo do mais antigo termina {quando}."
 
 
 def _referencia(ident, treinos):
@@ -71,8 +80,11 @@ def _referencia(ident, treinos):
     com, sem = [], []
     for atleta in sorted(ok):
         itens = []
+        aviso = _aviso_checkin(por_atleta.get(atleta, []))
         for t in sorted(por_atleta.get(atleta, []), key=lambda x: x["dia"], reverse=True):
             mot = _motivos(t)
+            if aviso and aviso[0] == t["id"]:
+                mot.append(("checkin_vencendo", aviso[1]))
             if mot:
                 itens.append((t, mot))
         if itens:
@@ -119,6 +131,7 @@ def test_cobre_os_casos_da_adr():
     assert codigos == set(PRIORIDADE)
     assert any(len(t["motivos"]) == 2 for it in orac["lista"] for t in it["treinos"])  # um treino com dois motivos
     assert "car-2" in orac["sem_motivo_e_por_que"]  # treino de ontem sem check-in, longe do prazo
+    assert {"car-1", "car-6"} <= set(orac["sem_motivo_e_por_que"])  # uma linha por aluno; modalidade outra não conta
     assert set(orac["nao_aparecem"]) == {"Atleta Fixture Eva Sem Consentimento", "Atleta Fixture Fabio De Outro Professor"}
     assert not set(orac["nao_aparecem"]) & _consentidos(ident)
     assert orac["sem_atencao"]["atletas"] == ["Atleta Fixture Davi"]

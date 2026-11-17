@@ -1,4 +1,4 @@
-"""Atenção da caixa do dia do professor: os quatro motivos de `atencao@1` (issue #422, ADR 0015, item 4).
+"""Atenção da caixa do dia do professor: os quatro motivos de `atencao@2` (issue #422, ADR 0015, item 4).
 
 Função pura: sem banco, sem rede, sem IA, sem relógio (o `hoje` entra por parâmetro, a data local de `America/Sao_Paulo`).
 Regra, exemplos e limites em docs/metricas/atencao.md. Qualquer mudança de motivo, janela, ordem ou texto exige subir ``VERSAO``.
@@ -20,7 +20,7 @@ from datetime import date
 from app.metricas.carga_pse import elegivel
 from app.metricas.linha_base import PADRAO
 
-VERSAO = "atencao@1"
+VERSAO = "atencao@2"  # @2 (issue #454): checkin_vencendo vira uma linha por aluno e a modalidade `outra` não gera o aviso
 
 JANELA_DIAS = 7  # treinos de hoje - 7 a hoje; o mesmo prazo do check-in (ADR 0012)
 PRAZO_CHECKIN_DIAS = 7  # `servicos.checkin.PRAZO_DIAS`
@@ -40,6 +40,7 @@ MEDIDAS = (
     ("melhor_pace", "melhor pace mais lento", "melhor pace mais rápido"),
     ("carga_hora", "carga por hora acima do habitual", "carga por hora abaixo do habitual"),
 )
+MODALIDADE_SEM_AVISO = "outra"  # sem modalidade definida: não gera `checkin_vencendo` (o check-in do atleta continua aberto)
 ORIGENS_SUGERIDAS = ("sugestao", "semana_padrao")
 
 
@@ -95,7 +96,9 @@ def _juntar(partes: Sequence[str]) -> str:
 
 
 def motivos_do_treino(t: TreinoAtencao, hoje: date) -> tuple[Motivo, ...]:
-    """Os motivos de um treino, na ordem fixa `dor`, `fora_do_normal`, `divergencia`, `checkin_vencendo`. Fora da janela: nenhum."""
+    """Os motivos de UM treino: `dor`, `fora_do_normal` e `divergencia`, nessa ordem. Fora da janela: nenhum.
+
+    O `checkin_vencendo` não é por treino desde a `atencao@2`: é uma linha por aluno (`checkin_vencendo_do_atleta`)."""
     dias = _dias_desde(t, hoje)
     if not 0 <= dias <= JANELA_DIAS:
         return ()
@@ -110,11 +113,29 @@ def motivos_do_treino(t: TreinoAtencao, hoje: date) -> tuple[Motivo, ...]:
     if t.tipo_origem == "semana_padrao" and t.tipo_divergencia and not t.tipo_confirmado:
         detalhe = "sem esforço detectado" if t.tipo_divergencia == "sem_esforco" else "com tiros detectados"
         saida.append(Motivo(DIVERGENCIA, f"Treino de {nome} diferente da semana-padrão: previsto {t.tipo_treino}, {detalhe}."))
-    if t.dor is None and elegivel(t.subtipo) and AVISO_CHECKIN_DIAS <= dias <= PRAZO_CHECKIN_DIAS:
-        resta = PRAZO_CHECKIN_DIAS - dias
-        quando = "hoje" if resta == 0 else f"em {resta} dia{'s' if resta > 1 else ''}"
-        saida.append(Motivo(CHECKIN_VENCENDO, f"Treino de {nome} sem check-in; o prazo termina {quando}."))
     return tuple(saida)
+
+
+def _pede_aviso_de_checkin(t: TreinoAtencao, hoje: date) -> bool:
+    """Sem check-in, elegível, não é `outra` (sem modalidade definida) e de 5 a 7 dias depois do treino."""
+    return (t.dor is None and elegivel(t.subtipo) and t.modalidade != MODALIDADE_SEM_AVISO
+            and AVISO_CHECKIN_DIAS <= _dias_desde(t, hoje) <= PRAZO_CHECKIN_DIAS)
+
+
+def checkin_vencendo_do_atleta(treinos: Sequence[TreinoAtencao], hoje: date) -> tuple[Hashable, Motivo] | None:
+    """O motivo `checkin_vencendo` de UM aluno, numa linha só, preso ao treino mais antigo sem check-in (o de prazo mais curto).
+
+    Um treino: "Treino de sexta sem check-in; o prazo termina em 2 dias." Vários: "3 treinos sem check-in; o prazo do mais antigo
+    termina hoje." Empate de dia: o menor `id`. Sem treino a avisar: `None`."""
+    pend = sorted((t for t in treinos if _pede_aviso_de_checkin(t, hoje)), key=lambda t: (t.dia, t.id))
+    if not pend:
+        return None
+    antigo = pend[0]
+    resta = PRAZO_CHECKIN_DIAS - _dias_desde(antigo, hoje)
+    quando = "hoje" if resta == 0 else f"em {resta} dia{'s' if resta > 1 else ''}"
+    if len(pend) == 1:
+        return antigo.id, Motivo(CHECKIN_VENCENDO, f"Treino de {DIAS_SEMANA[antigo.dia.weekday()]} sem check-in; o prazo termina {quando}.")
+    return antigo.id, Motivo(CHECKIN_VENCENDO, f"{len(pend)} treinos sem check-in; o prazo do mais antigo termina {quando}.")
 
 
 def atencao(treinos_por_atleta: Mapping[Hashable, Sequence[TreinoAtencao]], hoje: date) -> Atencao:
@@ -127,8 +148,11 @@ def atencao(treinos_por_atleta: Mapping[Hashable, Sequence[TreinoAtencao]], hoje
     sem: list[Hashable] = []
     for atleta, treinos in treinos_por_atleta.items():
         itens = []
+        aviso = checkin_vencendo_do_atleta(treinos, hoje)  # uma linha por aluno, no treino mais antigo a avisar
         for t in sorted(treinos, key=lambda x: x.dia, reverse=True):
             motivos = motivos_do_treino(t, hoje)
+            if aviso is not None and aviso[0] == t.id:
+                motivos = (*motivos, aviso[1])
             if motivos:
                 itens.append(TreinoComMotivos(t.id, t.dia, motivos))
         if not itens:

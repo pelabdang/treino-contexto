@@ -171,6 +171,19 @@
    "checkin": null
   },
   {
+   "id": "car-6",
+   "atleta": "Atleta Fixture Carla",
+   "dia": "2026-11-12",
+   "modalidade": "outra",
+   "subtipo": null,
+   "tipo_treino": null,
+   "tipo_origem": null,
+   "tipo_confirmado": false,
+   "tipo_divergencia": null,
+   "metricas_fora": [],
+   "checkin": null
+  },
+  {
    "id": "dav-0",
    "atleta": "Atleta Fixture Davi",
    "dia": "2026-11-02",

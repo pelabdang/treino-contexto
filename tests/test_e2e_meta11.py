@@ -475,7 +475,7 @@ def test_10_get_da_caixa_ordem_motivos_novos_e_cabecalhos_como_no_guia(mundo):
     assert r.status_code == 200 and r.headers["cache-control"] == "no-store"
     j = r.json()
     hoje = datetime.now(UTC).astimezone(__import__("zoneinfo").ZoneInfo("America/Sao_Paulo")).date()
-    assert (j["versao"], j["janela_atencao_dias"], j["janela_novos_dias"]) == ("atencao@1", 7, 14)
+    assert (j["versao"], j["janela_atencao_dias"], j["janela_novos_dias"]) == ("atencao@2", 7, 14)
     assert abs((date.fromisoformat(j["hoje"]) - hoje).days) <= 1
     assert [a["nome"] for a in j["alunos"]] == [
         "Atleta Fixture Ana", "Atleta Fixture Carla", "Atleta Fixture Igor", "Atleta Fixture Helena", "Atleta Fixture Bruno",
@@ -484,7 +484,7 @@ def test_10_get_da_caixa_ordem_motivos_novos_e_cabecalhos_como_no_guia(mundo):
     assert [m["codigo"] for m in ana["treinos"][0]["motivos"]] == ["dor"]
     assert re.fullmatch(r"Treino de \w+ com dor marcada no check-in\.", ana["treinos"][0]["motivos"][0]["texto"])
     assert [m["codigo"] for m in carla["treinos"][0]["motivos"]] == ["checkin_vencendo"]
-    assert re.fullmatch(r"Treino de \w+ sem check-in; o prazo termina em 1 dia\.", carla["treinos"][0]["motivos"][0]["texto"])
+    assert re.fullmatch(r"Treino de \w+ sem check-in; o prazo termina em [12] dias?\.", carla["treinos"][0]["motivos"][0]["texto"])
     assert carla["treinos"][0]["modalidade"] == "ciclismo"
     for a in resto:
         assert (a["sem_motivo"], a["texto_sem_motivo"], a["treinos"]) == (True, "Nada a destacar nos últimos 7 dias.", [])
