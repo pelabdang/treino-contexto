@@ -53,12 +53,13 @@ def _motivo(j, atividade_id):
     return [m["texto"] for t in treinos for m in t["motivos"]]
 
 
-# (instante UTC, hoje local esperado, texto do treino de sexta, texto do treino de quarta)
+# atencao@2 junta os treinos sem check-in da janela do aviso num motivo so, no mais antigo (o de quarta, atividade 2).
+# (instante UTC, hoje local esperado, motivo na atividade de sexta (1), motivo na atividade de quarta (2))
+JUNTO = "2 treinos sem check-in; o prazo do mais antigo termina hoje."
 CASOS = {
-    "20h locais, antes da virada UTC": (_utc(18, 23), "2026-11-18", ["Treino de sexta sem check-in; o prazo termina em 2 dias."],
-                                        ["Treino de quarta sem check-in; o prazo termina hoje."]),
-    "23h locais, depois da virada UTC e antes da local": (_utc(19, 2), "2026-11-18", ["Treino de sexta sem check-in; o prazo termina em 2 dias."],
-                                                          ["Treino de quarta sem check-in; o prazo termina hoje."]),
+    "20h locais, antes da virada UTC": (_utc(18, 23), "2026-11-18", [], [JUNTO]),
+    "23h locais, depois da virada UTC e antes da local": (_utc(19, 2), "2026-11-18", [], [JUNTO]),
+    # o treino de quarta ja venceu (8 dias): so o de sexta avisa, e faltam 1 dia (e nao 2: a data e a local)
     "01h locais, depois das duas viradas": (_utc(19, 4), "2026-11-19", ["Treino de sexta sem check-in; o prazo termina em 1 dia."], []),
 }
 
@@ -79,3 +80,14 @@ def test_mensagem_de_prazo_do_feedback_usa_a_mesma_data_local(app):
 
     assert mensagem(_utc(19, 2)) == MSG_SEM_CHECKIN  # 23h do dia 18: o treino de 11/11 ainda esta no 7o dia
     assert mensagem(_utc(19, 4)) == MSG_PRAZO_VENCIDO  # 01h do dia 19: venceu
+
+
+@pytest.mark.parametrize("agora,texto", [
+    (_utc(18, 23), "Treino de sexta sem check-in; o prazo termina em 2 dias."),  # 20h locais
+    (_utc(19, 2), "Treino de sexta sem check-in; o prazo termina em 2 dias."),  # 23h locais: o dia UTC ja virou, o local nao
+    (_utc(19, 4), "Treino de sexta sem check-in; o prazo termina em 1 dia."),  # 01h locais
+])
+def test_um_treino_so_sem_checkin_texto_exato_antes_e_depois_da_virada(app, session, agora, texto):
+    session.delete(session.get(Atividade, 2))
+    session.commit()
+    assert _motivo(_get(app, agora), 1) == [texto]
