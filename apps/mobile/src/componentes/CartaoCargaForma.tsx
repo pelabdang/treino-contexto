@@ -72,7 +72,7 @@ export function CartaoCargaForma({ carga, forma }: Props) {
               <View key={chave}>
                 <Pressable
                   accessibilityRole="button"
-                  accessibilityLabel={`${rotulo}, ${valor}`}
+                  accessibilityLabel={`${rotulo}, ${valor.replace("\u2212", "menos ")}`}
                   accessibilityHint="Mostra o que significa"
                   accessibilityState={{ expanded: expandida }}
                   onPress={() => setAberta(expandida ? null : chave)}

@@ -197,9 +197,15 @@ describe("tela de um treino", () => {
       expect(within(c).getByText("No fim do dia 18/03/25")).toBeTruthy();
       expect(within(c).getByLabelText("Condicionamento (CTL), 41,2")).toBeTruthy();
       expect(within(c).getByLabelText("Fadiga (ATL), 52,8")).toBeTruthy();
-      expect(within(c).getByLabelText("Forma (TSB), \u221211,6")).toBeTruthy();
+      expect(within(c).getByLabelText("Forma (TSB), menos 11,6")).toBeTruthy();
       expect(within(c).getByText(/Não são medidas e não são diagnóstico/)).toBeTruthy();
       expect(within(c).queryByTestId("aviso-sem-carga-no-dia")).toBeNull();
+    });
+
+    it("leitor de tela: o sinal de menos do TSB é lido como 'menos' e o de mais continua", async () => {
+      const c = await abrir(atividades.ok);
+      expect(within(c).getByLabelText("Forma (TSB), menos 11,6")).toBeTruthy();
+      expect(within(c).queryByLabelText(/\u2212/)).toBeNull();
     });
 
     it("cada linha da forma abre a definição fixa e fecha de novo", async () => {
@@ -230,7 +236,7 @@ describe("tela de um treino", () => {
       const c = await abrir(atividades.semCarga);
       expect(within(c).getByText(/não tem frequência cardíaca/)).toBeTruthy();
       expect(within(c).queryByText("pontos")).toBeNull();
-      expect(within(c).getByLabelText("Forma (TSB), \u221211,6")).toBeTruthy();
+      expect(within(c).getByLabelText("Forma (TSB), menos 11,6")).toBeTruthy();
     });
 
     it("carga pendente e forma sem série: só o aviso da carga", async () => {
