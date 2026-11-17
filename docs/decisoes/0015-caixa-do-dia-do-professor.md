@@ -254,3 +254,6 @@ Origem: conferência local da #431, decisões do Angelo de 16/11 ("ok para as se
 
 ## Data e quem decidiu
 2026-11-16. Proposta do Caio (ciência), com revisão da Duda (banco e API) pedida no PR. Decisões do Angelo de 16/11 ("ok para as 10") no Contexto. Issue #419. **Modelo de dados: aprovado pelo Theo em 2026-11-16** (comentário no PR #435), com a revisão da Duda incorporada no mesmo dia. O Angelo respondeu **"ok para as 7"** (16/11) aos itens 1, 2, 5, 6, 7, 8 e 10, com as recomendações. **Aceita em 2026-11-16.**
+
+## Adendo (2026-11-17): a caixa lê a `linha_base@3`
+Desde 17/11 o "fora do normal" vem da `linha_base@3` (piso de dispersão por métrica, adendo 3 da [[decisoes/0011-linha-de-base-e-semana-padrao]]). As regras, o limite de 2,5 e as constantes desta decisão não mudam; onde o texto acima diz `linha_base@2`, leia-se a versão vigente.

@@ -1,6 +1,6 @@
 """Pacote de fatos `fatos_treino@2` (issues #324 e #374, ADR 0013 item 1 e ADR 0014 item 4): a única coisa que o provedor de LLM recebe sobre o treino.
 
-Função pura: sem banco, sem rede, sem IA. Recebe o que o código **já calculou** (a atividade, o resultado da `linha_base@2` com os valores da
+Função pura: sem banco, sem rede, sem IA. Recebe o que o código **já calculou** (a atividade, o resultado da `linha_base@3` com os valores da
 sessão, o clima, a `carga@2`, os esforços e o check-in) e devolve um dicionário com os fatos lado a lado e os textos prontos (`*_texto`),
 com as mesmas funções de formatação que a API já usa. **Não inventa número, não faz conta nova e não afirma causa**: o calor, p. ex., aparece
 como dois fatos separados (a temperatura medida e o atalho "calor"), sem ligação.
@@ -209,7 +209,7 @@ def fatos_treino(
 
     - ``atividade``: lê só `modalidade`, `subtipo`, `tipo_treino`, `duracao_s`, `distancia_m` e `fc_media`.
     - ``checkin``: lê só `pse`, `sensacao`, `nada_a_relatar` e os atalhos (`atalhos` ou as colunas `dor`, `cansaco`...). **Nunca** o texto livre.
-    - ``linha_base``: o resultado da `linha_base@2`; ``motivos_sem_valor``: o motivo de cada métrica `sem_valor` (como `valores_e_motivos`).
+    - ``linha_base``: o resultado da `linha_base@3`; ``motivos_sem_valor``: o motivo de cada métrica `sem_valor` (como `valores_e_motivos`).
     - ``recuperacao``: o resultado da `recuperacao@1` da noite do treino (ou ``None``: o bloco sai ``None``).
     - ``clima``, ``carga`` e ``esforcos``: o que a API já lê; ``None`` em clima e esforços onde não se aplica (natação).
     Chaves sempre presentes, na ordem da ADR; ausente é ``None``. Nada é alterado nos argumentos.

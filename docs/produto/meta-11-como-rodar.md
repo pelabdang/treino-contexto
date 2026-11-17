@@ -154,7 +154,7 @@ with SessionLocal() as s:
 
 ## Limitações da conferência local (#431)
 A conferência local da caixa do dia (#431) foi feita só na máquina do Angelo, com nada no repositório. Em texto genérico (sem data, nome, número nem tipo de atividade de nenhum aluno):
-1. **`fora_do_normal` depende da `linha_base@2`.** Com poucas amostras do tipo, ou com dispersão muito pequena, o `z` pode sair grande, e o limite de 2,5 não mede relevância esportiva. Investigação na #455.
+1. **`fora_do_normal` depende da `linha_base@2`.** Com poucas amostras do tipo, ou com dispersão muito pequena, o `z` pode sair grande, e o limite de 2,5 não mede relevância esportiva. Investigação na #455; a `linha_base@3` (#462) usa piso por métrica.
 2. **A regra só enxerga o que foi ingerido.** Sem treinos novos, a lista fica parada.
 3. **`dor` e `divergencia` só têm teste sintético.** A conferência local não os exercitou.
 4. **A regra de divergência fica como está até 4 semanas de uso.**

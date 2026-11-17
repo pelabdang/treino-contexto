@@ -40,7 +40,7 @@ BONS: dict[str, tuple[str, str]] = {
 A FC média foi 146 bpm e a carga por hora, 49,1 pontos/h: ambas dentro do seu normal.
 Você marcou esforço 4 (um pouco difícil), sensação 4 (bem) e nada a relatar.
 Foram 47 min a 19 °C, com carga pela PSE de 188 UA."""),
-    "G02": ("F02", """Seu melhor tiro foi 4:22/km, 13 s/km mais lento que a mediana de 4:09/km nos 10 treinos intervalados das últimas 12 semanas.
+    "G02": ("F02", """Seu melhor tiro foi 4:22/km, 19 s/km mais lento que a mediana de 4:03/km nos 10 treinos intervalados das últimas 12 semanas.
 É uma comparação com o seu histórico, não um julgamento do treino.
 A FC do melhor tiro foi 171 bpm, dentro do seu normal (mediana de 172 bpm).
 Você registrou esforço 8 e sensação 3 (normal), sem nada a relatar.
@@ -50,8 +50,8 @@ Sem comparação com o seu histórico por enquanto.
 Seu pace médio foi 5:43/km e a FC média, 152 bpm.
 Você marcou esforço 6, sensação 4 (bem) e sono ruim.
 A carga pela PSE foi 240 UA em 40 min."""),
-    "G04": ("F04", """Seu pace médio foi 6:00/km, 18 s/km mais lento que a mediana de 5:42/km nos 9 treinos longos das últimas 12 semanas.
-A FC média foi 158 bpm, 8 bpm acima da mediana de 150 bpm.
+    "G04": ("F04", """Seu pace médio foi 6:00/km, 26 s/km mais lento que a mediana de 5:34/km nos 9 treinos longos das últimas 12 semanas.
+A FC média foi 158 bpm, 11 bpm acima da mediana de 147 bpm.
 O clima registrado foi 33 °C, com sensação térmica de 37 °C e umidade de 58%.
 Você marcou calor e cansaço, esforço 7 (muito difícil) e sensação 2 (mal).
 A carga pela PSE foi 630 UA em 90 min."""),
@@ -85,8 +85,8 @@ Você registrou dor neste treino.
 Você marcou esforço 3 (moderado) e sensação 3 (normal).
 A carga pela PSE foi 90 UA em 30 min; a carga do relógio ainda está pendente."""),
     # clima e atalho calor lado a lado, sem ligação
-    "G11": ("F04", """Seu pace médio foi 6:00/km, 18 s/km mais lento que a mediana de 5:42/km nos 9 treinos longos das últimas 12 semanas.
-A FC média foi 158 bpm, 8 bpm acima da mediana de 150 bpm.
+    "G11": ("F04", """Seu pace médio foi 6:00/km, 26 s/km mais lento que a mediana de 5:34/km nos 9 treinos longos das últimas 12 semanas.
+A FC média foi 158 bpm, 11 bpm acima da mediana de 147 bpm.
 O clima registrado foi 33 °C e você marcou calor; os fatos aparecem lado a lado.
 A carga pela PSE foi 630 UA em 90 min."""),
     # o rótulo da sensação do pacote ("muito bem") passa também fora de parênteses
@@ -95,8 +95,8 @@ Sem comparação com o seu histórico: o treino não tem tipo.
 Você marcou esforço 0 (repouso), sensação 5, muito bem, e nada a relatar.
 A carga pela PSE foi 0 UA."""),
     # "quente" é o mesmo fato do atalho calor: passa quando o calor foi marcado; "mal" é o rótulo da sensação 2 do pacote
-    "G13": ("F04", """Seu pace médio foi 6:00/km, 18 s/km mais lento que a mediana de 5:42/km nos 9 treinos longos das últimas 12 semanas.
-A FC média foi 158 bpm, 8 bpm acima da mediana de 150 bpm.
+    "G13": ("F04", """Seu pace médio foi 6:00/km, 26 s/km mais lento que a mediana de 5:34/km nos 9 treinos longos das últimas 12 semanas.
+A FC média foi 158 bpm, 11 bpm acima da mediana de 147 bpm.
 Você marcou dia quente e cansaço, esforço 7 (muito difícil) e sensação 2, mal.
 A carga pela PSE foi 630 UA em 90 min."""),
 }
@@ -124,8 +124,8 @@ RUINS: dict[str, tuple[str, str, str, str]] = {
     "R04": _ruim("G01", "Foram 47 min a 19 °C", "Foram 47 min a 19 °C, em 08/11/2026", "numero_fora_do_pacote", "data real (2026) não vai ao pacote nem ao texto"),
     # --- número por extenso ---
     "R05": _ruim("G02", "Foram 5 tiros de 1 km", "Foram cinco tiros de 1 km", "numero_por_extenso", "'cinco' escapa da conferência de números"),
-    "R06": _ruim("G04", "A FC média foi 158 bpm, 8 bpm acima da mediana de 150 bpm.",
-                 "A FC média foi 158 bpm, 8 bpm acima da mediana de 150 bpm, quase o dobro do normal.",
+    "R06": _ruim("G04", "A FC média foi 158 bpm, 11 bpm acima da mediana de 147 bpm.",
+                 "A FC média foi 158 bpm, 11 bpm acima da mediana de 147 bpm, quase o dobro do normal.",
                  "numero_por_extenso", "'dobro' é uma conta escrita em palavras"),
     # --- unidade trocada ---
     "R07": _ruim("G01", "Seu pace médio foi 5:44/km", "Seu pace médio foi 5:44 bpm", "unidade_trocada", "5:44 está no pacote, mas em /km"),

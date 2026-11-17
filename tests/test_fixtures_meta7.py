@@ -3,7 +3,7 @@
 NÃO roda o código de produção da `tipo_treino@1` nem da `linha_base@1` (que ainda não existem, #262 e #263): confere que as
 fixtures são a saída do gerador, que cobrem cada caso do encaixe (E1 a E16) e que o oráculo escrito à mão é coerente
 com uma referência curta e independente das regras da ADR (`_tipo_referencia`, `_linha_base_referencia`).
-Os valores que dependem do "A confirmar" vêm de `PARAMETROS` em `oraculo.py`. Desde a #288 o oráculo é o da `linha_base@2`.
+Os valores que dependem do "A confirmar" vêm de `PARAMETROS` em `oraculo.py`. Desde a #462 o oráculo é o da `linha_base@3` (a #288 era a `@2`).
 """
 
 import importlib.util
@@ -163,7 +163,8 @@ def _linha_base_referencia(sessao_id, tipos):
         else:
             med = statistics.median(xs)
             mad = statistics.median(abs(x - med) for x in xs)
-            desvio = max(P["MAD_ESCALA"] * mad, P["PISO_REL"] * abs(med))
+            piso = max(P["PISO_REL_POR_METRICA"].get(chave, P["PISO_REL"]) * abs(med), P["PISO_ABS_POR_METRICA"].get(chave, 0.0))
+            desvio = max(P["MAD_ESCALA"] * mad, piso)
             z = (v - med) / desvio
             saida[chave] = ("fora" if abs(z) >= P["LIMITE_FORA"] else "dentro", n, med, desvio, z)
     return saida

@@ -126,7 +126,7 @@ def valores_e_motivos(a: Atividade) -> tuple[dict[str, float | None], dict[str, 
     if c is None or c.versao != cg.VERSAO:
         v["carga_hora"], m["carga_hora"] = None, "carga_pendente"
     elif c.estado == "calculada" and a.duracao_s > 0:
-        v["carga_hora"] = c.carga / (a.duracao_s / 3600.0)  # carga@2 por hora de tempo em movimento (linha_base@2)
+        v["carga_hora"] = c.carga / (a.duracao_s / 3600.0)  # carga@2 por hora de tempo em movimento (linha_base@3)
     elif c.estado == "calculada":
         v["carga_hora"], m["carga_hora"] = None, "sem_duracao"
     else:
@@ -190,7 +190,7 @@ def _treinos(n: int) -> str:
 
 
 def _nome_tipo(t: lb.Treino) -> str:
-    """Tipo como entra nos textos: a parte de treino de transição compara só com partes de transição (linha_base@2)."""
+    """Tipo como entra nos textos: a parte de treino de transição compara só com partes de transição (linha_base@3)."""
     return f"{t.tipo_treino} (parte de transição)" if t.transicao else str(t.tipo_treino)
 
 
@@ -218,7 +218,7 @@ def _metrica_texto(m: lb.MetricaBase, tipo_treino: str, motivos: dict[str, str])
 
 
 def linha_base_resultado(session: Session, a: Atividade) -> lb.LinhaBase:
-    """O resultado cru da `linha_base@2` da atividade (valores, medianas, estados), sem textos. Calculado na leitura; nunca grava.
+    """O resultado cru da `linha_base@3` da atividade (valores, medianas, estados), sem textos. Calculado na leitura; nunca grava.
     Usado pela API (`linha_base_da_atividade`) e pelo pacote de fatos do feedback (`feedback_fatos`)."""
     sessao = _treino(a)
     motivo = lb.motivo_sem_linha_base(sessao)

@@ -48,7 +48,7 @@ feedback: nunca um texto de reserva escrito por regra.
 - A próxima migração é a **`0013`** (a última é a `0012_checkin_treino`).
 - `CheckinTreino` (ADR 0012) já existe, com `UNIQUE (atividade_id)`, `atualizado_em` definido pela aplicação a cada `PUT` e `versao = checkin@1`.
   `Atividade.fc_media`, `distancia_m`, `duracao_s`, `tipo_treino` e `subtipo` estão no banco.
-- Já são calculados por código: `linha_base@2` (`app/metricas/linha_base.py`, janela de 12 semanas, mínimo de 8 treinos, `fora` com |z| >= 2,5;
+- Já são calculados por código: `linha_base@3` (`app/metricas/linha_base.py`, janela de 12 semanas, mínimo de 8 treinos, `fora` com |z| >= 2,5;
   textos prontos em `app/servicos/linha_base_leitura.py`), `carga@2`, `carga_pse@1`, `esforcos@1`, `tiros_1km@6`, clima (`clima_atividade`,
   estados `ok`, `pendente`, `falha`; `indoor` e `sem_posicao` na leitura) e `tipo_treino@1`.
 - **Não existe** no código: pace ajustado por calor ou subida, estimativa de quanto cada fator pesa (motor de explicação, passo 3 da seção 4.3),
@@ -67,7 +67,7 @@ Cada número do texto é um dos `*_texto` ou valores do pacote, copiado sem cont
 ```json
 {"versao": "fatos_treino@1",
  "treino": {"modalidade": "corrida", "tipo_treino": "leve", "duracao_s": 2820, "duracao_texto": "47 min", "distancia_m": 8200, "distancia_texto": "8,20 km", "fc_media_bpm": 146},
- "linha_base": {"versao": "linha_base@2", "estado": "ok", "janela_semanas": 12, "minimo_treinos": 8, "metricas": [
+ "linha_base": {"versao": "linha_base@3", "estado": "ok", "janela_semanas": 12, "minimo_treinos": 8, "metricas": [
    {"chave": "pace_medio", "estado": "dentro", "valor_texto": "5:44/km", "mediana_texto": "5:48/km", "n": 11},
    {"chave": "fc_media", "estado": "dentro", "valor_texto": "146 bpm", "mediana_texto": "148 bpm", "n": 11},
    {"chave": "carga_hora", "estado": "dentro", "valor_texto": "49,1 pontos/h", "mediana_texto": "50,3 pontos/h", "n": 11}]},
@@ -86,8 +86,8 @@ Cada número do texto é um dos `*_texto` ou valores do pacote, copiado sem cont
 ```json
 {"versao": "fatos_treino@1",
  "treino": {"modalidade": "corrida", "tipo_treino": "intervalado", "duracao_s": 3120, "duracao_texto": "52 min", "distancia_m": 9500, "distancia_texto": "9,50 km", "fc_media_bpm": 158},
- "linha_base": {"versao": "linha_base@2", "estado": "ok", "janela_semanas": 12, "minimo_treinos": 8, "metricas": [
-   {"chave": "melhor_pace", "estado": "fora", "valor_texto": "4:22/km", "mediana_texto": "4:09/km", "diferenca_texto": "13 s/km mais lento", "n": 10},
+ "linha_base": {"versao": "linha_base@3", "estado": "ok", "janela_semanas": 12, "minimo_treinos": 8, "metricas": [
+   {"chave": "melhor_pace", "estado": "fora", "valor_texto": "4:22/km", "mediana_texto": "4:03/km", "diferenca_texto": "19 s/km mais lento", "n": 10},
    {"chave": "fc_melhor_tiro", "estado": "dentro", "valor_texto": "171 bpm", "mediana_texto": "172 bpm", "n": 10},
    {"chave": "fc_media", "estado": "dentro", "valor_texto": "158 bpm", "mediana_texto": "157 bpm", "n": 10}]},
  "esforcos": {"versao": "esforcos@1", "treino_chave": false, "series": [{"faixa_rotulo": "1 km", "quantidade": 5}]},
@@ -97,7 +97,7 @@ Cada número do texto é um dos `*_texto` ou valores do pacote, copiado sem cont
  "checkin": {"pse": 8, "pse_texto": "8", "sensacao_nivel": 3, "sensacao_texto": "normal", "nada_a_relatar": true, "atalhos": []}}
 ```
 **Texto esperado**
-> Seu melhor tiro foi 4:22/km, 13 s/km mais lento que a mediana de 4:09/km nos 10 treinos intervalados das últimas 12 semanas.
+> Seu melhor tiro foi 4:22/km, 19 s/km mais lento que a mediana de 4:03/km nos 10 treinos intervalados das últimas 12 semanas.
 > É uma comparação com o seu histórico, não um julgamento do treino.
 > A FC do melhor tiro foi 171 bpm, dentro do seu normal (mediana de 172 bpm).
 > Você registrou esforço 8 e sensação 3 (normal), sem nada a relatar.
@@ -107,7 +107,7 @@ Cada número do texto é um dos `*_texto` ou valores do pacote, copiado sem cont
 ```json
 {"versao": "fatos_treino@1",
  "treino": {"modalidade": "corrida", "tipo_treino": "moderado", "duracao_s": 2400, "duracao_texto": "40 min", "distancia_m": 7000, "distancia_texto": "7,00 km", "fc_media_bpm": 152},
- "linha_base": {"versao": "linha_base@2", "estado": "ok", "janela_semanas": 12, "minimo_treinos": 8, "metricas": [
+ "linha_base": {"versao": "linha_base@3", "estado": "ok", "janela_semanas": 12, "minimo_treinos": 8, "metricas": [
    {"chave": "pace_medio", "estado": "aprendendo", "valor_texto": "5:43/km", "n": 3},
    {"chave": "fc_media", "estado": "aprendendo", "valor_texto": "152 bpm", "n": 3},
    {"chave": "carga_hora", "estado": "aprendendo", "valor_texto": "52,2 pontos/h", "n": 3}]},
@@ -127,9 +127,9 @@ Cada número do texto é um dos `*_texto` ou valores do pacote, copiado sem cont
 ```json
 {"versao": "fatos_treino@1",
  "treino": {"modalidade": "corrida", "tipo_treino": "longo", "duracao_s": 5400, "duracao_texto": "90 min", "distancia_m": 15000, "distancia_texto": "15,00 km", "fc_media_bpm": 158},
- "linha_base": {"versao": "linha_base@2", "estado": "ok", "janela_semanas": 12, "minimo_treinos": 8, "metricas": [
-   {"chave": "pace_medio", "estado": "fora", "valor_texto": "6:00/km", "mediana_texto": "5:42/km", "diferenca_texto": "18 s/km mais lento", "n": 9},
-   {"chave": "fc_media", "estado": "fora", "valor_texto": "158 bpm", "mediana_texto": "150 bpm", "diferenca_texto": "8 bpm acima", "n": 9},
+ "linha_base": {"versao": "linha_base@3", "estado": "ok", "janela_semanas": 12, "minimo_treinos": 8, "metricas": [
+   {"chave": "pace_medio", "estado": "fora", "valor_texto": "6:00/km", "mediana_texto": "5:34/km", "diferenca_texto": "26 s/km mais lento", "n": 9},
+   {"chave": "fc_media", "estado": "fora", "valor_texto": "158 bpm", "mediana_texto": "147 bpm", "diferenca_texto": "11 bpm acima", "n": 9},
    {"chave": "carga_hora", "estado": "dentro", "valor_texto": "62,0 pontos/h", "mediana_texto": "60,5 pontos/h", "n": 9}]},
  "clima": {"estado": "ok", "temperatura_c": 33, "sensacao_termica_c": 37, "umidade_pct": 58, "vento_kmh": 6},
  "carga": {"versao": "carga@2", "estado": "calculada", "valor": 93.0, "valor_texto": "93,0 pontos", "metodo": "rtss"},
@@ -137,8 +137,8 @@ Cada número do texto é um dos `*_texto` ou valores do pacote, copiado sem cont
  "checkin": {"pse": 7, "pse_texto": "muito difícil", "sensacao_nivel": 2, "sensacao_texto": "mal", "nada_a_relatar": false, "atalhos": ["calor", "cansaco"]}}
 ```
 **Texto esperado**
-> Seu pace médio foi 6:00/km, 18 s/km mais lento que a mediana de 5:42/km nos 9 treinos longos das últimas 12 semanas.
-> A FC média foi 158 bpm, 8 bpm acima da mediana de 150 bpm.
+> Seu pace médio foi 6:00/km, 26 s/km mais lento que a mediana de 5:34/km nos 9 treinos longos das últimas 12 semanas.
+> A FC média foi 158 bpm, 11 bpm acima da mediana de 147 bpm.
 > O clima registrado foi 33 °C, com sensação térmica de 37 °C e umidade de 58%.
 > Você marcou calor e cansaço, esforço 7 (muito difícil) e sensação 2 (mal).
 > A carga pela PSE foi 630 UA em 90 min.
@@ -150,7 +150,7 @@ Não há "observação positiva" porque nenhum fato do pacote a sustenta (ver "A
 ```json
 {"versao": "fatos_treino@1",
  "treino": {"modalidade": "corrida", "tipo_treino": "leve", "duracao_s": 1800, "duracao_texto": "30 min", "distancia_m": 5000, "distancia_texto": "5,00 km", "fc_media_bpm": 139},
- "linha_base": {"versao": "linha_base@2", "estado": "ok", "janela_semanas": 12, "minimo_treinos": 8, "metricas": [
+ "linha_base": {"versao": "linha_base@3", "estado": "ok", "janela_semanas": 12, "minimo_treinos": 8, "metricas": [
    {"chave": "pace_medio", "estado": "dentro", "valor_texto": "6:00/km", "mediana_texto": "5:56/km", "n": 10},
    {"chave": "fc_media", "estado": "dentro", "valor_texto": "139 bpm", "mediana_texto": "141 bpm", "n": 10}]},
  "clima": {"estado": "ok", "temperatura_c": 21, "sensacao_termica_c": 21, "umidade_pct": 50, "vento_kmh": 8},
@@ -171,7 +171,7 @@ Uma só frase sobre a dor, sempre esta, sem conselho, sem parte do corpo, sem el
 ```json
 {"versao": "fatos_treino@1",
  "treino": {"modalidade": "natacao", "tipo_treino": null, "duracao_s": 2400, "duracao_texto": "40 min", "distancia_m": 1600, "distancia_texto": "1.600 m", "fc_media_bpm": 128},
- "linha_base": {"versao": "linha_base@2", "estado": "sem_linha_base", "motivo": "sem_tipo", "metricas": []},
+ "linha_base": {"versao": "linha_base@3", "estado": "sem_linha_base", "motivo": "sem_tipo", "metricas": []},
  "carga": {"versao": "carga@2", "estado": "sem_carga", "motivo": "modalidade_sem_carga"},
  "carga_pse": {"versao": "carga_pse@1", "estado": "calculada", "valor": 200, "valor_texto": "200 UA"},
  "checkin": {"pse": 5, "pse_texto": "difícil", "sensacao_nivel": 4, "sensacao_texto": "bem", "nada_a_relatar": true, "atalhos": []}}
@@ -202,14 +202,14 @@ nome do professor; qualquer coisa fora desta lista de campos.
 | `versao` | texto, `fatos_treino@1` | constante; sobe quando muda um campo, uma unidade, um estado ou o que fica de fora (ver "Versão") |
 | `treino.modalidade` | `corrida`, `natacao`, `ciclismo`, `outra` | `atividade.modalidade` |
 | `treino.tipo_treino` | `intervalado`, `leve`, `longo`, `moderado`, `fartlek` ou `null` | `atividade.tipo_treino` (`tipo_treino@1`, semana-padrão ou confirmado). A **origem** do tipo não entra |
-| `treino.parte_de_transicao` | booleano | rótulo de transição (ADR 0009); a linha de base da parte de transição é própria (`linha_base@2`) |
+| `treino.parte_de_transicao` | booleano | rótulo de transição (ADR 0009); a linha de base da parte de transição é própria (`linha_base@3`) |
 | `treino.ambiente` | `esteira` ou `null` | `atividade.subtipo = esteira`; os demais subtipos ficam de fora |
 | `treino.duracao_s`, `duracao_texto` | s; "47 min" | `atividade.duracao_s` (cronômetro, ADR 0012 item 6) |
 | `treino.distancia_m`, `distancia_texto` | m; "8,20 km" ou "1.600 m" | `atividade.distancia_m`; texto de `distancia_da_atividade` |
 | `treino.fc_media_bpm` | bpm, inteiro | `atividade.fc_media` |
-| `linha_base.versao`, `estado`, `motivo` | `linha_base@2`; `ok` ou `sem_linha_base`; motivo (`multiesporte`, `modalidade_sem_metricas`, `sem_tipo`, `divergente`) | `app/metricas/linha_base.py` |
-| `linha_base.janela_semanas`, `minimo_treinos` | 12; 8 | `Parametros` da `linha_base@2` |
-| `linha_base.metricas[]` | uma por métrica do tipo | `linha_base@2` (as chaves e unidades da ADR 0011, item 7) |
+| `linha_base.versao`, `estado`, `motivo` | `linha_base@3`; `ok` ou `sem_linha_base`; motivo (`multiesporte`, `modalidade_sem_metricas`, `sem_tipo`, `divergente`) | `app/metricas/linha_base.py` |
+| `linha_base.janela_semanas`, `minimo_treinos` | 12; 8 | `Parametros` da `linha_base@3` |
+| `linha_base.metricas[]` | uma por métrica do tipo | `linha_base@3` (as chaves e unidades da ADR 0011, item 7) |
 | `...metricas[].chave` | `pace_medio`, `melhor_pace`, `fc_media`, `fc_melhor_tiro`, `carga_hora` | idem |
 | `...metricas[].estado` | `fora`, `dentro`, `aprendendo`, `sem_valor` | idem |
 | `...metricas[].valor_texto`, `mediana_texto` | "5:44/km", "146 bpm", "49,1 pontos/h" | os mesmos textos que `linha_base_leitura.py` já monta para a API |
@@ -236,7 +236,7 @@ repouso, não traz pace ajustado por calor ou subida: nada disso existe no códi
 O calor aparece como **dois fatos separados** (a temperatura medida e o atalho "calor"), sem ligação entre eles.
 
 **Versão.** `VERSAO = "fatos_treino@1"` em `app/explicacao/fatos_treino.py` (#324). **Sobe** quando mudar: um campo, uma unidade, um estado, a lista de
-métricas ou o que fica de fora. Ao subir, os feedbacks gravados com a versão antiga ficam desatualizados e são refeitos (item 2). A `linha_base@2`, a
+métricas ou o que fica de fora. Ao subir, os feedbacks gravados com a versão antiga ficam desatualizados e são refeitos (item 2). A `linha_base@3`, a
 `carga@2` e as demais versões entram **dentro** do pacote (cada bloco carrega a sua); mudar uma delas muda o pacote, não a `fatos_treino`.
 
 ### 2. Onde o feedback fica guardado, quando é gerado e quando fica desatualizado
@@ -345,7 +345,7 @@ Função pura (`app/explicacao/checagens.py`, #325, `checagens_feedback@1`): rec
 não chega ao app, e o feedback daquele treino fica `sem_feedback` com `motivo = texto_reprovado` (decisão 8). Nova tentativa na próxima execução do worker. **Não há texto de reserva escrito por regra.**
 
 1. **Todo número do texto está no pacote.** Extrai-se do texto cada número (inteiro, decimal com vírgula, ponto de milhar, `m:ss`, porcentagem), junto da unidade quando há; cada um precisa ser um valor do pacote ou aparecer
-   num `*_texto` dele. **Nenhuma conta**: "18 s/km mais lento" só vale porque o pacote traz `diferenca_texto`; "metade" ou "o dobro" não. **Números por extenso** (dois a dez, vinte, cem, mil, metade, dobro...)
+   num `*_texto` dele. **Nenhuma conta**: "26 s/km mais lento" só vale porque o pacote traz `diferenca_texto`; "metade" ou "o dobro" não. **Números por extenso** (dois a dez, vinte, cem, mil, metade, dobro...)
    reprovam, para o número não escapar da checagem escrito em palavras ("um" e "uma" como artigo passam). A checagem também confere que o número e a unidade andam juntos (a conferir na #325: ver "A confirmar", item 5).
 2. **Linguagem proibida.** Palavras e expressões, sem acento e sem diferença de maiúscula, em **lista própria** (nota em `docs/metricas/`, #325; a lista abaixo é o ponto de partida, com os exemplos que precisam reprovar):
    - **Diagnóstico médico:** lesão, lesionado, inflamação, tendinite, fratura, distensão, overtraining, sobretreino, supertreino, doença, infecção, sintoma, diagnóstico, síndrome, arritmia, desidratação.

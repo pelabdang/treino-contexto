@@ -153,7 +153,7 @@ class MetricaBaseOut(BaseModel):
 
 
 class LinhaBaseOut(BaseModel):
-    """Linha de base da atividade contra o proprio historico, so no mesmo tipo de treino (`linha_base@2`, ADR 0011).
+    """Linha de base da atividade contra o proprio historico, so no mesmo tipo de treino (`linha_base@3`, ADR 0011).
     Calculada na leitura. Compara com o historico do atleta; nao diz se o treino foi bom ou ruim."""
 
     versao: str

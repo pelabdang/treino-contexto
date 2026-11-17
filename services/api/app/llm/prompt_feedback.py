@@ -1,4 +1,4 @@
-"""Prompt fixo do feedback (`feedback_prompt@8`, ADR 0013 itens 3 e 5 e ADR 0014 item 6). Regras, guia de tom e os 6 exemplos aprovados: nenhum dado real.
+"""Prompt fixo do feedback (`feedback_prompt@9`, ADR 0013 itens 3 e 5 e ADR 0014 item 6). Regras, guia de tom e os 6 exemplos aprovados: nenhum dado real.
 
 A mensagem do usuário é o pacote de fatos em JSON. Os exemplos vêm de `app.llm.exemplos_feedback` (fonte única, conferida por teste contra as
 fixtures da meta 9). As checagens em código (`checagens_feedback@6`) continuam sendo quem decide se o texto chega ao atleta; o prompt só orienta.
@@ -9,7 +9,7 @@ import json
 
 from app.llm.exemplos_feedback import EXEMPLOS
 
-VERSAO = "feedback_prompt@8"
+VERSAO = "feedback_prompt@9"
 
 _REGRAS = """Você escreve um feedback curto, em português do Brasil, sobre um treino de um atleta, a partir de um pacote de fatos em JSON.
 

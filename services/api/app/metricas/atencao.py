@@ -3,10 +3,10 @@
 Função pura: sem banco, sem rede, sem IA, sem relógio (o `hoje` entra por parâmetro, a data local de `America/Sao_Paulo`).
 Regra, exemplos e limites em docs/metricas/atencao.md. Qualquer mudança de motivo, janela, ordem ou texto exige subir ``VERSAO``.
 
-Nada de número novo e nada de causa: cada motivo usa só o que o código já calcula (check-in `dor`, `linha_base@2`, divergência da
+Nada de número novo e nada de causa: cada motivo usa só o que o código já calcula (check-in `dor`, `linha_base@3`, divergência da
 semana-padrão da ADR 0011, prazo do check-in da ADR 0012). Os limiares ``JANELA_DIAS``, ``AVISO_CHECKIN_DIAS`` e
 ``JANELA_NOVOS_DIAS`` são escolha nossa do produto (regra própria do projeto, sem artigo); o limite de "fora do normal" é o da
-`linha_base@2` (``PADRAO.limite_fora``, 2,5; mediana e MAD: Leys et al., 2013, citação ainda a conferir, ADR 0011).
+`linha_base@3` (``PADRAO.limite_fora``, 2,5; mediana e MAD: Leys et al., 2013, citação ainda a conferir, ADR 0011).
 
 A entrada NÃO tem campo de observação nem de texto livre: só o booleano `dor` do check-in (ADR 0015, item 7).
 """
@@ -56,7 +56,7 @@ class TreinoAtencao:
     tipo_origem: str | None
     tipo_confirmado: bool
     tipo_divergencia: str | None  # sem_esforco | tem_tiros (só com origem semana_padrao)
-    metricas_fora: tuple[tuple[str, float], ...] = ()  # (chave, z assinado) das métricas com estado `fora` na linha_base@2
+    metricas_fora: tuple[tuple[str, float], ...] = ()  # (chave, z assinado) das métricas com estado `fora` na linha_base@3
     dor: bool | None = None  # None = sem check-in
 
 

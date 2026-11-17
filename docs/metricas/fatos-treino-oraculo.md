@@ -19,7 +19,7 @@ O teste desta nota confere o oráculo contra `linha_base@2`, `carga_pse@1`, os f
 | Caso | O que cobre |
 |---|---|
 | F01 | corrida leve, as três métricas **dentro** do normal (exemplo 1 da ADR) |
-| F02 | intervalado, melhor pace **fora** (4:22/km contra a mediana de 4:09/km, 13 s/km mais lento, z = 2,61), com 5 tiros de 1 km (exemplo 2) |
+| F02 | intervalado, melhor pace **fora** (4:22/km contra a mediana de 4:03/km, 19 s/km mais lento, z = 2,61), com 5 tiros de 1 km (exemplo 2) |
 | F03 | moderado com linha de base **aprendendo** (3 de 8 treinos) e o atalho sono ruim (exemplo 3) |
 | F04 | longo com **calor** (33 °C, sensação 37 °C) e atalhos calor e cansaço; pace e FC **fora** (exemplo 4) |
 | F05 | leve com o atalho **dor** e **texto livre** com marcador sintético; carga do relógio ainda pendente (exemplo 5) |
@@ -30,19 +30,22 @@ O teste desta nota confere o oráculo contra `linha_base@2`, `carga_pse@1`, os f
 | F10 | ciclismo sem tipo, clima e carga **pendentes**, PSE 0 (0 UA) |
 
 Cada caso traz o histórico da janela de 12 semanas (um treino por semana), o valor da sessão e as contas. A conta de cada métrica está nos comentários de
-`LINHA_BASE_ESPERADA` (mediana, MAD, desvio com o piso de 2% da mediana, z e o corte de 2,5). Exemplo, F04 pace: mediana 342 s/km, MAD 2 (1,4826 x 2 = 2,97), piso 0,02 x 342 = 6,84, desvio 6,84;
-valor 5400/15000 x 1000 = 360; z = 18/6,84 = 2,63, **fora**.
+`LINHA_BASE_ESPERADA` (mediana, MAD, desvio com o piso da métrica da `linha_base@3`: FC 4 bpm, pace 3%, carga por hora 5%, z e o corte de 2,5). Exemplo, F04 pace: mediana 334 s/km, MAD 2 (1,4826 x 2 = 2,97), piso 0,03 x 334 = 10,02, desvio 10,02;
+valor 5400/15000 x 1000 = 360; z = 26/10,02 = 2,59, **fora**.
 
 ## O que o teste confere
 - Os 10 casos cobrem o que a #323 pede (sem check-in, aprendendo, fora, com e sem clima, natação, dor).
 - As chaves de cada bloco do pacote são as do ADR 0013, na ordem, com `null` no lugar do que falta.
 - **Nunca no pacote:** o texto livre (o marcador sintético não aparece), chaves de identificador, nome, data, posição ou professor, e nenhuma data nem hora real.
-- A linha de base do pacote bate com `linha_base@2` (estado e `n` de cada métrica) e as contas à mão (mediana, desvio, z) com tolerância de 0,005.
+- A linha de base do pacote bate com `linha_base@3` (estado e `n` de cada métrica) e as contas à mão (mediana, desvio, z) com tolerância de 0,005.
 - Os `*_texto` são os mesmos formatos da API (pace, FC, carga por hora, diferença, duração, distância, UA, âncoras da PSE e da sensação).
 - A carga pela PSE do pacote é a da `carga_pse@1`; pai do multiesporte e atividade sem check-in não têm pacote.
 
 ## Ajuste na ADR 0013 vindo daqui
 O exemplo 2 da ADR tinha 4:21/km (12 s/km): com o piso de 2% da mediana o z dava 2,41 e a métrica ficaria **dentro**. Passou a 4:22/km, 13 s/km (z = 2,61), que é **fora** de verdade.
+Com a `linha_base@3` (#462) os pisos são maiores e os exemplos 2 e 4 foram reajustados pelo **histórico** da janela (o valor da sessão não mudou): no 2 a mediana
+é 4:03/km (19 s/km mais lento, z = 2,61); no 4 o pace tem mediana 5:34/km (26 s/km, z = 2,59) e a FC, 147 bpm (11 bpm acima, z = 2,75). Os textos G02, G04, G11 e G13 e os
+exemplos do prompt seguiram.
 
 ## Textos bons e ruins para as checagens (#323, parte 2)
 Arquivos: `tests/fixtures/meta9/textos.py` (a lista) e `tests/test_textos_meta9.py` (confere a lista). Quem decide se cada texto passa ou reprova são as checagens da #325 ([[metricas/checagens-feedback]]); esta lista é o que elas precisam acertar.

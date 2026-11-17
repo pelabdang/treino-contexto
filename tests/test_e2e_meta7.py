@@ -3,7 +3,7 @@
 Segue o roteiro de `docs/produto/meta-7-como-rodar.md`: migracoes (alembic, ate a 0011) -> as 81 atividades sinteticas
 de `tests/fixtures/meta7/` com a regra de reserva (`aplicar_tipos`, como numa importacao, ainda sem plano) -> API
 (TestClient): `PUT` das duas vigencias da semana-padrao -> tipo, origem e divergencia de cada atividade contra o oraculo
-`TIPO_ESPERADO` -> `linha_base@2` contra `LINHA_BASE_ESPERADA` e `SEM_LINHA_BASE` -> idempotencia, passado intacto, tipo
+`TIPO_ESPERADO` -> `linha_base@3` contra `LINHA_BASE_ESPERADA` e `SEM_LINHA_BASE` -> idempotencia, passado intacto, tipo
 confirmado intocado, nada gravado na leitura -> `worker.reclassificar` num segundo atleta, com blocos de FIT de verdade.
 Num SQLite temporario; so dado sintetico. Sem rede: os subprocessos rodam com uma guarda de socket (`sitecustomize`) e o
 teste tem a mesma guarda.
@@ -295,7 +295,7 @@ def test_03_antes_do_plano_as_duas_atividades_do_guia_tem_so_a_reserva(ctx):
         j = _atividade(ctx, 1, ids[chave])
         assert (j["tipo_treino"], j["tipo_origem"]) == (tipo, "sugestao")
         lb = j["linha_base"]
-        assert (lb["versao"], lb["estado"], lb["janela_semanas"], lb["minimo_treinos"]) == ("linha_base@2", "ok", 12, 8)
+        assert (lb["versao"], lb["estado"], lb["janela_semanas"], lb["minimo_treinos"]) == ("linha_base@3", "ok", 12, 8)
     pace = {m["chave"]: m for m in _atividade(ctx, 1, ids["2026-03-13/cor1"])["linha_base"]["metricas"]}
     assert (pace["pace_medio"]["estado"], pace["pace_medio"]["n"]) == ("fora", 12)  # ainda nao e o do oraculo
     assert pace["fc_media"]["n"] == 9
@@ -405,7 +405,7 @@ def _metricas(ctx, chave):
 @pytest.mark.parametrize("chave", sorted(O.LINHA_BASE_ESPERADA))
 def test_14_linha_de_base_igual_ao_oraculo(ctx, chave):
     lb, ms = _metricas(ctx, chave)
-    assert (lb["versao"], lb["estado"], lb["motivo"], lb["janela_semanas"], lb["minimo_treinos"]) == ("linha_base@2", "ok", None, 12, 8)
+    assert (lb["versao"], lb["estado"], lb["motivo"], lb["janela_semanas"], lb["minimo_treinos"]) == ("linha_base@3", "ok", None, 12, 8)
     esperado = O.LINHA_BASE_ESPERADA[chave]
     assert sorted(ms) == sorted(esperado)
     for nome, (estado, n, mediana, desvio, z) in esperado.items():
@@ -428,12 +428,15 @@ def test_15_sem_linha_de_base_traz_o_motivo(ctx, chave):
 def test_16_textos_do_guia_passo_7(ctx):
     _, m68 = _metricas(ctx, "2026-03-13/cor1")
     assert m68["pace_medio"]["texto"] == (
-        "Pace médio fora do seu normal para treino leve: 5:06/km, 24 s/km mais rápido que a mediana de 5:30/km "
-        "(11 treinos nas últimas 12 semanas). Isto compara com o seu histórico; não diz se o treino foi bom ou ruim.")
+        "Pace médio dentro do seu normal para treino leve: 5:06/km, perto da mediana de 5:30/km "
+        "(11 treinos nas últimas 12 semanas).")  # @3: piso de 3% do pace (z = -2,42)
+    assert m68["fc_media"]["texto"] == (
+        "FC média fora do seu normal para treino leve: 160 bpm, 11 bpm acima que a mediana de 149 bpm "
+        "(8 treinos nas últimas 12 semanas). Isto compara com o seu histórico; não diz se o treino foi bom ou ruim.")
     assert (m68["fc_media"]["estado"], m68["fc_media"]["n"], m68["fc_media"]["valor_texto"]) == ("fora", 8, "160 bpm")
     assert (m68["carga_hora"]["estado"], m68["carga_hora"]["motivo"]) == ("sem_valor", "carga_pendente")
     _, m71 = _metricas(ctx, "2026-03-17/cor1")
-    assert (m71["melhor_pace"]["estado"], m71["melhor_pace"]["valor_texto"], m71["melhor_pace"]["mediana_texto"]) == ("fora", "4:09/km", "4:24/km")
+    assert (m71["melhor_pace"]["estado"], m71["melhor_pace"]["valor_texto"], m71["melhor_pace"]["mediana_texto"]) == ("dentro", "4:09/km", "4:24/km")  # @3: piso de 3% (z = -1,89)
     assert m71["fc_melhor_tiro"]["estado"] == "dentro" and m71["fc_media"]["estado"] == "dentro"
     _, m72 = _metricas(ctx, "2026-03-18/cic1")
     assert (m72["carga_hora"]["estado"], m72["carga_hora"]["valor_texto"], m72["carga_hora"]["mediana_texto"]) == ("fora", "55,0 pontos/h", "42,0 pontos/h")

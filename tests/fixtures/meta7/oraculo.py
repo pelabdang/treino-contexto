@@ -14,7 +14,10 @@ PARAMETROS = {
     "JANELA_DIAS": 84,  # 12 semanas (linha_base@2, Angelo 09/11, #288)
     "MINIMO_TREINOS": 8,  # (Angelo, 09/11)
     "LIMITE_FORA": 2.5,  # A confirmar 3
-    "PISO_REL": 0.02,  # calibração #269
+    "PISO_REL": 0.02,  # calibração #269; vale para a métrica sem piso próprio
+    # linha_base@3 (Angelo, 17/11, #462): piso por métrica; o maior entre o relativo (x |mediana|) e o absoluto (bpm)
+    "PISO_REL_POR_METRICA": {"pace_medio": 0.03, "melhor_pace": 0.03, "carga_hora": 0.05},
+    "PISO_ABS_POR_METRICA": {"fc_media": 4.0, "fc_melhor_tiro": 4.0},
     "MAD_ESCALA": 1.4826,
     "LEVE_MIN_S": 1200,  # calibração #269
     "LONGO_MIN_S": 4500,  # calibração #269
@@ -88,84 +91,84 @@ SEM_LINHA_BASE = {
     "2026-01-20/cor1": "sem_tipo",
 }
 
-# Linha de base esperada nas sessões-alvo (linha_base@2): id -> métrica -> (estado, n, mediana, desvio, z).
+# Linha de base esperada nas sessões-alvo (linha_base@3): id -> métrica -> (estado, n, mediana, desvio, z).
 # estado: fora | dentro | aprendendo | sem_valor. Para aprendendo e sem_valor, mediana, desvio e z são None.
 # Janela de 84 dias, só treinos anteriores à sessão, mínimo 8, mesmo grupo (isolada x transição).
-# desvio = max(1,4826 x MAD, 0,02 x |mediana|); z = (valor - mediana) / desvio. A carga por hora das fixtures é a carga da
+# desvio = max(1,4826 x MAD, piso da métrica: pace 3% x |mediana|, carga/h 5% x |mediana|, FC 4 bpm); z = (valor - mediana) / desvio. A carga por hora das fixtures é a carga da
 # pedalada de 1 h (3600 s), então carga/h = carga; a corrida não tem carga (sem dados de saúde): carga_hora sem valor.
 LINHA_BASE_ESPERADA = {
     # L1: corrida leve 13/03 (306 s/km). Janela 19/12 a 13/03, 11 leves isolados: domingos 04/01 (348) e 11/01 (318), terça
     #   13/01 às 18:00 (336) e as 8 sextas 330, 324, 336, 330, 342, 318, 330, 336.
     #   ordenados 318 318 324 330 330 330 336 336 336 342 348 -> mediana (6o) 330.
     #   |x - 330|: 12 12 6 0 0 0 6 6 6 12 18 -> ordenados 0 0 0 6 6 6 6 12 12 12 18 -> MAD (6o) 6.
-    #   desvio = max(8,8956; 6,6) = 8,8956. z = (306 - 330) / 8,8956 = -2,69799 -> fora.
+    #   desvio = max(8,8956; 0,03 x 330 = 9,9) = 9,9 (piso; na @2 era 8,8956, z -2,698, fora). z = (306 - 330) / 9,9 = -2,42424 -> dentro.
     #   FC: 8 valores (148, 148, 150, 150, 148, 152, 146, 151; as sextas 30/01, 13/02, 27/02 não têm FC):
     #   ordenados 146 148 148 148 150 150 151 152 -> mediana (148 + 150) / 2 = 149; |x - 149|: 1 1 1 1 1 2 3 3 -> MAD 1;
-    #   desvio = max(1,4826; 2,98) = 2,98 (piso). z = (160 - 149) / 2,98 = 3,69128 -> fora.
+    #   desvio = max(1,4826; 4) = 4 (piso de 4 bpm; na @2 era 2,98). z = (160 - 149) / 4 = 2,75 -> fora.
     "2026-03-13/cor1": {
-        "pace_medio": ("fora", 11, 330.0, 8.8956, -2.69799),
-        "fc_media": ("fora", 8, 149.0, 2.98, 3.69128),
+        "pace_medio": ("dentro", 11, 330.0, 9.9, -2.42424),
+        "fc_media": ("fora", 8, 149.0, 4.0, 2.75),
         "carga_hora": ("sem_valor", 0, None, None, None),
     },
     # L2: corrida leve 20/03 (330 s/km, FC 150). Janela 26/12 a 20/03, 12 leves (os 11 da L1 e o 306 de 13/03; 04/01 ainda entra):
     #   348, 318, 336, 330, 324, 336, 330, 342, 318, 330, 336, 306 (12) -> ordenados 306 318 318 324 330 330 330 336 336 336 342 348,
-    #   mediana (330 + 330) / 2 = 330; |x - 330|: 0 0 0 6 6 6 6 12 12 12 18 24 -> MAD (6 + 6) / 2 = 6; desvio 8,8956; z = 0 -> dentro.
+    #   mediana (330 + 330) / 2 = 330; |x - 330|: 0 0 0 6 6 6 6 12 12 12 18 24 -> MAD (6 + 6) / 2 = 6; desvio = max(8,8956; 9,9) = 9,9 (@3); z = 0 -> dentro.
     #   FC: 148 148 150 150 148 152 146 151 160 (9) -> ordenados 146 148 148 148 150 150 151 152 160, mediana 150;
-    #   |x - 150|: 0 0 1 2 2 2 2 4 10 -> MAD 2; desvio = max(2,9652; 3,0) = 3,0 (piso); z = 0 -> dentro.
+    #   |x - 150|: 0 0 1 2 2 2 2 4 10 -> MAD 2; desvio = max(2,9652; 4) = 4 (piso de 4 bpm); z = 0 -> dentro.
     "2026-03-20/cor1": {
-        "pace_medio": ("dentro", 12, 330.0, 8.8956, 0.0),
-        "fc_media": ("dentro", 9, 150.0, 3.0, 0.0),
+        "pace_medio": ("dentro", 12, 330.0, 9.9, 0.0),
+        "fc_media": ("dentro", 9, 150.0, 4.0, 0.0),
         "carga_hora": ("sem_valor", 0, None, None, None),
     },
     # L3: corrida longa 14/03 (324 s/km, FC 145). Janela 20/12 a 14/03, 9 longos isolados: quinta 08/01 do professor (335, FC 155)
     #   e os 8 sábados 342, 336, 339, 333, 330, 336, 330, 333 (o brick de 10/01 tem base própria e não entra).
     #   ordenados 330 330 333 333 335 336 336 339 342 -> mediana (5o) 335; |x - 335|: 5 5 2 2 0 1 1 4 7,
-    #   ordenados 0 1 1 2 2 4 5 5 7 -> MAD (5o) 2; desvio = max(2,9652; 6,7) = 6,7 (piso). z = (324 - 335) / 6,7 = -1,64179 -> dentro.
-    #   FC: oito 145 e um 155 -> mediana 145, MAD 0, desvio 2,9 (piso); a sessão 145: z 0.
+    #   ordenados 0 1 1 2 2 4 5 5 7 -> MAD (5o) 2; desvio = max(2,9652; 0,03 x 335 = 10,05) = 10,05 (piso). z = (324 - 335) / 10,05 = -1,09453 -> dentro.
+    #   FC: oito 145 e um 155 -> mediana 145, MAD 0, desvio 4 (piso de 4 bpm); a sessão 145: z 0.
     "2026-03-14/cor1": {
-        "pace_medio": ("dentro", 9, 335.0, 6.7, -1.64179),
-        "fc_media": ("dentro", 9, 145.0, 2.9, 0.0),
+        "pace_medio": ("dentro", 9, 335.0, 10.05, -1.09453),
+        "fc_media": ("dentro", 9, 145.0, 4.0, 0.0),
         "carga_hora": ("sem_valor", 0, None, None, None),
     },
     # L4: corrida longa 21/03 (315 s/km). Janela 27/12 a 21/03, 10 longos: 335 (08/01) e 342, 336, 339, 333, 330, 336, 330, 333, 324.
     #   ordenados 324 330 330 333 333 335 336 336 339 342 -> mediana (333 + 335) / 2 = 334;
-    #   |x - 334|: 1 1 1 2 2 4 4 5 8 10 (ordenados) -> MAD (2 + 4) / 2 = 3; desvio = max(4,4478; 6,68) = 6,68 (piso).
-    #   z = (315 - 334) / 6,68 = -2,84431 -> fora. FC: 155 e nove 145 -> mediana 145, desvio 2,9, z 0.
+    #   |x - 334|: 1 1 1 2 2 4 4 5 8 10 (ordenados) -> MAD (2 + 4) / 2 = 3; desvio = max(4,4478; 0,03 x 334 = 10,02) = 10,02 (piso).
+    #   z = (315 - 334) / 10,02 = -1,89621 -> dentro (na @2 era fora, desvio 6,68). FC: 155 e nove 145 -> mediana 145, desvio 4, z 0.
     "2026-03-21/cor1": {
-        "pace_medio": ("fora", 10, 334.0, 6.68, -2.84431),
-        "fc_media": ("dentro", 10, 145.0, 2.9, 0.0),
+        "pace_medio": ("dentro", 10, 334.0, 10.02, -1.89621),
+        "fc_media": ("dentro", 10, 145.0, 4.0, 0.0),
         "carga_hora": ("sem_valor", 0, None, None, None),
     },
     # L5: intervalado 17/03 (melhor tiro 249 s/km). Janela 23/12 a 17/03. melhor_pace: sexta 09/01 (270, reserva) e as terças
     #   270, 264, 267, 261, 264, 258, 261, 255 (a esteira de 06/01 não tem pace; a de 13/01 é divergente): 9 valores,
     #   ordenados 255 258 261 261 264 264 267 270 270 -> mediana 264; |x - 264|: 0 0 3 3 3 6 6 6 9 -> MAD 3;
-    #   desvio = max(4,4478; 5,28) = 5,28 (piso). z = (249 - 264) / 5,28 = -2,84091 -> fora.
-    #   fc_melhor_tiro: 06/01, 09/01 e 7 terças (a de 24/02 não tem FC), todas 172: 9 valores, desvio 3,44 (piso), z 0.
-    #   fc_media: 06/01, 09/01 e 8 terças, todas 160: 10 valores, desvio 3,2, z 0.
+    #   desvio = max(4,4478; 0,03 x 264 = 7,92) = 7,92 (piso). z = (249 - 264) / 7,92 = -1,89394 -> dentro (na @2 era fora, desvio 5,28).
+    #   fc_melhor_tiro: 06/01, 09/01 e 7 terças (a de 24/02 não tem FC), todas 172: 9 valores, desvio 4 (piso de 4 bpm), z 0.
+    #   fc_media: 06/01, 09/01 e 8 terças, todas 160: 10 valores, desvio 4, z 0.
     "2026-03-17/cor1": {
-        "melhor_pace": ("fora", 9, 264.0, 5.28, -2.84091),
-        "fc_melhor_tiro": ("dentro", 9, 172.0, 3.44, 0.0),
-        "fc_media": ("dentro", 10, 160.0, 3.2, 0.0),
+        "melhor_pace": ("dentro", 9, 264.0, 7.92, -1.89394),
+        "fc_melhor_tiro": ("dentro", 9, 172.0, 4.0, 0.0),
+        "fc_media": ("dentro", 10, 160.0, 4.0, 0.0),
         "carga_hora": ("sem_valor", 0, None, None, None),
     },
     # L6: intervalado 10/03 (255 s/km). Janela 16/12 a 10/03; a terça de 13/01 é divergente e fica fora.
     #   melhor_pace: 270 (09/01), 270, 264, 267, 261, 264, 258, 261 (8) -> ordenados 258 261 261 264 264 267 270 270, mediana 264;
-    #   |x - 264|: 0 0 3 3 3 6 6 6 -> MAD (3 + 3) / 2 = 3; desvio 5,28 (piso); z = (255 - 264) / 5,28 = -1,70455 -> dentro.
-    #   fc_melhor_tiro: 06/01, 09/01 e 6 terças = 8 valores (172): dentro, z 0. fc_media: 9 valores (160): dentro, z 0.
+    #   |x - 264|: 0 0 3 3 3 6 6 6 -> MAD (3 + 3) / 2 = 3; desvio = max(4,4478; 7,92) = 7,92 (piso); z = (255 - 264) / 7,92 = -1,13636 -> dentro.
+    #   fc_melhor_tiro: 06/01, 09/01 e 6 terças = 8 valores (172): desvio 4, dentro, z 0. fc_media: 9 valores (160): desvio 4, dentro, z 0.
     "2026-03-10/cor1": {
-        "melhor_pace": ("dentro", 8, 264.0, 5.28, -1.70455),
-        "fc_melhor_tiro": ("dentro", 8, 172.0, 3.44, 0.0),
-        "fc_media": ("dentro", 9, 160.0, 3.2, 0.0),
+        "melhor_pace": ("dentro", 8, 264.0, 7.92, -1.13636),
+        "fc_melhor_tiro": ("dentro", 8, 172.0, 4.0, 0.0),
+        "fc_media": ("dentro", 9, 160.0, 4.0, 0.0),
         "carga_hora": ("sem_valor", 0, None, None, None),
     },
     # L7: ciclismo leve 18/03, carga 55 em 1 h, FC 133. Janela 24/12 a 18/03, 10 quartas (inclui o pedal virtual de 14/01):
     #   carga/h 41, 41, 40, 44, 42, 46, 38, 44, 42, 48 -> ordenados 38 40 41 41 42 42 44 44 46 48, mediana (42 + 42) / 2 = 42;
-    #   |x - 42|: 4 2 1 1 0 0 2 2 4 6 -> ordenados 0 0 1 1 2 2 2 4 4 6 -> MAD (2 + 2) / 2 = 2; desvio = max(2,9652; 0,84) = 2,9652.
-    #   z = (55 - 42) / 2,9652 = 4,38419 -> fora. FC: dez 130, MAD 0, desvio 2,6 (piso); z = 3 / 2,6 = 1,15385 -> dentro.
+    #   |x - 42|: 4 2 1 1 0 0 2 2 4 6 -> ordenados 0 0 1 1 2 2 2 4 4 6 -> MAD (2 + 2) / 2 = 2; desvio = max(2,9652; 0,05 x 42 = 2,1) = 2,9652 (o piso de 5% não age).
+    #   z = (55 - 42) / 2,9652 = 4,38419 -> fora. FC: dez 130, MAD 0, desvio 4 (piso de 4 bpm; na @2 era 2,6); z = 3 / 4 = 0,75 -> dentro.
     #   O brick (ciclismo moderado) é outro tipo e outro grupo.
     "2026-03-18/cic1": {
         "carga_hora": ("fora", 10, 42.0, 2.9652, 4.38419),
-        "fc_media": ("dentro", 10, 130.0, 2.6, 1.15385),
+        "fc_media": ("dentro", 10, 130.0, 4.0, 0.75),
     },
     # L8: natação leve 16/03 (vigência B). Só 02/03 e 09/03 estão no tipo -> aprendendo (2 de 8).
     "2026-03-16/nat1": {

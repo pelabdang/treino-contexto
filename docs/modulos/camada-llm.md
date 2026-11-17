@@ -38,8 +38,10 @@ São os mesmos códigos do `CHECK` previsto para `feedback_treino` ([[decisoes/0
 
 Na linha de comando, os padrões são os reais: `app.servicos.feedback_fatos.fatos_da_atividade` (o **adaptador** que lê o banco e chama a função pura `app.explicacao.fatos_treino.fatos_treino`, #324), `app.explicacao.checagens.checar` (#325) e as `VERSAO` dos dois módulos. O adaptador usa os serviços de leitura que a API já tem (`linha_base_resultado`, `clima_da_atividade`, `carga_da_atividade`, `esforcos_da_atividade`, rótulo de transição) e não recalcula nada; natação fica sem bloco de clima. Desde a #374 ele também passa a recuperação (`app/servicos/recuperacao_pacote.py`, ver [[metricas/fatos-treino]]). Teste: o pacote que sai do banco semeado com as fixtures da meta 9 é igual ao do oráculo, com `recuperacao = sem_noite` (`services/api/tests/servicos/test_feedback_fatos.py`).
 
-## Prompt `feedback_prompt@8` (`app/llm/prompt_feedback.py`)
+## Prompt `feedback_prompt@9` (`app/llm/prompt_feedback.py`)
 Regras de forma, tom e do que falta no pacote, mais os **6 exemplos aprovados** (G01 a G06, pacote reduzido sem campos nulos e texto da ADR 0013). Os exemplos têm **fonte única** em `app/llm/exemplos_feedback.py`; um teste confere o texto contra `tests/fixtures/meta9/textos.py`, o pacote contra o oráculo e que cada texto passa nas checagens. Estimativa da época do `@1`: uns 2,5 mil tokens. Medido na rodada da #376 com o `@5`: cerca de 4.300 tokens (ver a seção da rodada e o teste de tamanho, abaixo). Se o texto mudar de forma relevante, a `VERSAO` sobe.
+
+**`@9` (17/11, #462):** só os números dos exemplos G02 e G04 (mediana e diferença), por causa da `linha_base@3` (piso de dispersão por métrica); regras, tom e estrutura iguais à `@8`.
 
 **`@8` (15/11, #405):** uma frase pronta por estado do clima, sem trocar um pelo outro: `pendente` "O clima ainda está pendente."; `indoor` "O treino foi indoor, sem dados de clima." (nunca "o clima foi indoor"); `sem_posicao` "Sem a posição de início, sem dados de clima."; `falha` "Não foi possível obter o clima."; temperatura, sensação, umidade e vento só com `ok`. Acompanha as `checagens_feedback@6`.
 
