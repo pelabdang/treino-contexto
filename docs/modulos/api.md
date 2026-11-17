@@ -242,7 +242,7 @@ modelos Pydantic em `app/rotas/atividades.py`. **Calculada na leitura, nada é g
 - `tipo_treino`, `tipo_origem` (`sugestao`, `professor`, `trainingpeaks`, `semana_padrao`), `tipo_confirmado` e `tipo_divergencia` (`null` ou `{motivo, texto}`;
   `sem_esforco`: "O plano diz intervalado, mas o treino não teve esforço detectado."; `tem_tiros`: "O plano diz leve, mas o treino teve 6 tiros de 1 km.").
 - `linha_base`: `versao`, `estado` (`ok` ou `sem_linha_base`), `motivo`, `texto` (só em `sem_linha_base`), `modalidade`, `tipo_treino`, `janela_semanas`, `minimo_treinos` e `metricas`.
-  Sem linha de base, o `motivo` é o primeiro de `multiesporte`, `modalidade_sem_metricas`, `sem_tipo`, `divergente`, com `metricas: []` (a parte de treino de transição tem base própria desde a `linha_base@3`).
+  Sem linha de base, o `motivo` é o primeiro de `multiesporte`, `modalidade_sem_metricas`, `sem_tipo`, `divergente`, com `metricas: []` (a parte de treino de transição tem base própria desde a `linha_base@2`).
   Por métrica (as do tipo, ADR 0011 item 7): `chave` (`pace_medio`, `melhor_pace`, `fc_media`, `fc_melhor_tiro`, `carga_hora`), `rotulo`, `unidade`, `estado`
   (`fora`, `dentro`, `aprendendo`, `sem_valor`), `motivo` (em `sem_valor`: `esteira`, `sem_tiros`, `sem_fc`, `sem_distancia`, `carga_pendente` ou o motivo da carga), `valor`,
   `valor_texto`, `mediana`, `mediana_texto`, `desvio`, `z`, `n`, `diferenca_texto` (só em `fora`) e `texto` pronto. Os números brutos saem **sem arredondar**; em `aprendendo` e `sem_valor` não há mediana, desvio nem z.
