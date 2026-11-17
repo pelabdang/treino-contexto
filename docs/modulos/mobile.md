@@ -23,7 +23,7 @@ O app não calcula pace: todo `m:ss` virá da [[modulos/api]].
 | `src/app/_layout.tsx` | (raiz) | `Stack` sem cabeçalho |
 | `src/app/index.tsx` | `/` | `TelaEvolucao` com `config.apiUrl` e `config.atletaId` |
 | `src/app/semana-padrao.tsx` | `/semana-padrao` | `TelaSemanaPadrao` (#268); aberta pelo botão "Semana-padrão" da evolução |
-| `src/app/treino/[id].tsx` | `/treino/<atividade_id>` | `TelaTreino` (#159); ainda sem link vindo da lista (#217, ver abaixo); com os cartões "Check-in" e "Carga pela PSE" (#299) "Esforços", "Carga e forma do dia" (#466) e "Treino de transição" (#467) |
+| `src/app/treino/[id].tsx` | `/treino/<atividade_id>` | `TelaTreino` (#159); ainda sem link vindo da lista (#217, ver abaixo); com os cartões "Check-in" e "Carga pela PSE" (#299), "Esforços" (#467), "Carga e forma do dia" (#466) e "Treino de transição" (#467) |
 | `src/app/checkin/[id].tsx` | `/checkin/<atividade_id>` | `TelaCheckin` (#299): criar (3 perguntas) ou editar (tela única); `?origem=pendentes` só troca o texto do botão de "Salvo" |
 | `src/app/checkins-pendentes.tsx` | `/checkins-pendentes` | `TelaCheckinsPendentes` (#299); aberta pela linha "Check-ins pendentes" da evolução |
 | `src/app/caixa-do-dia.tsx` | `/caixa-do-dia` | `TelaCaixaDoDia` (#426), com `config.apiUrl` e `config.professorId`; ainda não é a página inicial (a `/` segue a evolução do atleta) |
