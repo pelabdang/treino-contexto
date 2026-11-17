@@ -251,4 +251,155 @@ describe("tela de um treino", () => {
       expect(screen.queryByTestId("cartao-carga-forma")).toBeNull();
     });
   });
+
+  describe("esforços (#467)", () => {
+    const abrir = async (a: unknown) => {
+      await render(tela(fetchCom(200, a)));
+      return screen.findByTestId("cartao-esforcos");
+    };
+
+    it("com esforços: aquecimento, uma linha por esforço, pausa e desaquecimento, na ordem da API", async () => {
+      const c = await abrir(atividades.comEsforcos);
+      expect(within(c).getByText("Aquecimento 12:10")).toBeTruthy();
+      expect(within(c).getByText("Desaquecimento 8:40")).toBeTruthy();
+      expect(within(c).getByText("min/km", { includeHiddenElements: true })).toBeTruthy();
+      expect(within(c).getByLabelText("Esforço 1 · 1 km, pace 4:01 por quilômetro, FC 171, pausa 1:00")).toBeTruthy();
+      expect(within(c).getByText("pausa 1:00")).toBeTruthy();
+      expect(within(c).getByLabelText("Esforço 2 · 1 km, pace 4:03 por quilômetro, FC 173")).toBeTruthy();
+      // FC null vira "sem dado"; a recuperação não tem linha.
+      expect(within(c).getByLabelText("Esforço 3 · 1 km, pace 4:04 por quilômetro, FC sem dado")).toBeTruthy();
+      expect(within(c).getByText("sem dado")).toBeTruthy();
+      expect(within(c).queryByTestId("esforco-4")).toBeNull();
+    });
+
+    it("mais de 8: mostra 8 e 'Ver todos os 12 esforços'; aberto vira 'Ver menos'", async () => {
+      const c = await abrir(atividades.esforcosMuitos);
+      expect(within(c).getAllByTestId(/^esforco-/)).toHaveLength(8);
+      await fireEvent.press(within(c).getByText("Ver todos os 12 esforços"));
+      expect(within(c).getAllByTestId(/^esforco-/)).toHaveLength(12);
+      await fireEvent.press(within(c).getByText("Ver menos"));
+      expect(within(c).getAllByTestId(/^esforco-/)).toHaveLength(8);
+    });
+
+    it("ciclismo: a coluna vira Velocidade (km/h) pela presença do campo", async () => {
+      const c = await abrir(atividades.esforcosCiclismo);
+      expect(within(c).getByText("Velocidade", { includeHiddenElements: true })).toBeTruthy();
+      expect(within(c).getByText("km/h", { includeHiddenElements: true })).toBeTruthy();
+      expect(within(c).queryByText("Pace", { includeHiddenElements: true })).toBeNull();
+      expect(within(c).getByText("32,5")).toBeTruthy();
+    });
+
+    it("referência da atividade: aviso fixo", async () => {
+      const c = await abrir(atividades.esforcosReferencia);
+      expect(within(c).getByText("Sem treinos anteriores parecidos: os esforços foram detectados só com este treino.")).toBeTruthy();
+    });
+
+    it("sem nenhum esforço, mas com outras categorias: aviso neutro", async () => {
+      const c = await abrir(atividades.semEsforco);
+      expect(within(c).getByText("Nenhum esforço detectado neste treino.")).toBeTruthy();
+      expect(within(c).queryByText("Esforço", { includeHiddenElements: true })).toBeNull();
+    });
+
+    it("só rodagem, ausente ou null: o cartão não aparece", async () => {
+      for (const a of [atividades.soRodagem, atividades.ok, { ...atividades.ok, esforcos: null }]) {
+        const r = await render(tela(fetchCom(200, a)));
+        await screen.findByTestId("cartao-resumo");
+        expect(screen.queryByTestId("cartao-esforcos")).toBeNull();
+        await r.unmount();
+      }
+    });
+  });
+
+  describe("treino de transição (#467)", () => {
+    const abrir = async (a: unknown, f: typeof fetch = fetchCom(200, a)) => {
+      await render(tela(f));
+      return { c: await screen.findByTestId("cartao-transicao"), f };
+    };
+    // GET inicial, depois a resposta da correção e o GET de novo com o estado novo.
+    const comCorrecao = (inicial: unknown, depois: unknown, status = 200): typeof fetch & jest.Mock => {
+      let get = 0;
+      return jest.fn(async (_url: unknown, init?: RequestInit) => {
+        if (init?.method === "PUT" || init?.method === "DELETE") return resposta(status, status === 200 ? (depois as { transicao: unknown }).transicao : { detail: "x" });
+        return resposta(200, get++ === 0 ? inicial : depois);
+      }) as unknown as typeof fetch & jest.Mock;
+    };
+
+    it("sugerida: texto da regra e 'Não é transição'; sem 'Voltar à sugestão'", async () => {
+      const { c } = await abrir(atividades.transicaoSugerida);
+      expect(within(c).getByText("Este treino faz parte de um treino de transição.")).toBeTruthy();
+      expect(within(c).getByText("O app sugeriu isso porque outro treino começou logo depois.")).toBeTruthy();
+      expect(within(c).getByText("Não é transição")).toBeTruthy();
+      expect(within(c).queryByText("Voltar à sugestão do app")).toBeNull();
+    });
+
+    it("do atleta (sim): sem botão principal, só 'Voltar à sugestão do app'", async () => {
+      const { c } = await abrir(atividades.transicaoDoAtleta);
+      expect(within(c).getByText("Você marcou assim.")).toBeTruthy();
+      expect(within(c).queryByText("Não é transição")).toBeNull();
+      expect(within(c).getByText("Voltar à sugestão do app")).toBeTruthy();
+    });
+
+    it("do atleta (não) e sem marca: textos e botões da spec", async () => {
+      const { c } = await abrir(atividades.transicaoNegada);
+      expect(within(c).getByText("Você marcou que este treino não é de transição.")).toBeTruthy();
+      expect(within(c).getByText("Marcar como transição")).toBeTruthy();
+      expect(within(c).getByText("Voltar à sugestão do app")).toBeTruthy();
+    });
+
+    it("sem marca: 'Marcar como transição' e nenhum 'Voltar'", async () => {
+      const { c } = await abrir(atividades.semTransicao);
+      expect(within(c).getByText("Este treino não está marcado como de transição.")).toBeTruthy();
+      expect(within(c).queryByText("Voltar à sugestão do app")).toBeNull();
+    });
+
+    it("editavel false ou transicao ausente: o cartão não aparece", async () => {
+      for (const a of [atividades.transicaoNaoEditavel, { ...atividades.ok, transicao: undefined }]) {
+        const r = await render(tela(fetchCom(200, a)));
+        await screen.findByTestId("cartao-resumo");
+        expect(screen.queryByTestId("cartao-transicao")).toBeNull();
+        await r.unmount();
+      }
+    });
+
+    it("corrigir: PUT com o corpo certo, busca o treino de novo e mostra a origem 'atleta'", async () => {
+      const f = comCorrecao(atividades.transicaoSugerida, atividades.transicaoDoAtleta);
+      const { c } = await abrir(null, f);
+      await fireEvent.press(within(c).getByText("Não é transição"));
+      expect(await screen.findByText("Você marcou assim.")).toBeTruthy();
+      const put = f.mock.calls.find((x) => x[1]?.method === "PUT")!;
+      expect(put[0]).toBe("http://api.teste/atletas/1/atividades/101/transicao");
+      expect(JSON.parse(put[1]!.body as string)).toEqual({ transicao: false });
+      expect(f.mock.calls.filter((x) => !x[1]?.method)).toHaveLength(2);
+    });
+
+    it("voltar à sugestão: DELETE e o estado da API", async () => {
+      const f = comCorrecao(atividades.transicaoDoAtleta, atividades.transicaoSugerida);
+      const { c } = await abrir(null, f);
+      await fireEvent.press(within(c).getByText("Voltar à sugestão do app"));
+      expect(await screen.findByText("O app sugeriu isso porque outro treino começou logo depois.")).toBeTruthy();
+      expect(f.mock.calls.some((x) => x[1]?.method === "DELETE")).toBe(true);
+    });
+
+    it("erro ao enviar: mensagem, estado anterior e botão ativo de novo", async () => {
+      const f = comCorrecao(atividades.transicaoSugerida, atividades.transicaoSugerida, 500);
+      const { c } = await abrir(null, f);
+      await fireEvent.press(within(c).getByText("Não é transição"));
+      expect(await screen.findByText("Não foi possível salvar. Tente de novo.")).toBeTruthy();
+      expect(within(c).getByText("O app sugeriu isso porque outro treino começou logo depois.")).toBeTruthy();
+      expect(within(c).getByText("Não é transição")).toBeTruthy();
+      expect(f.mock.calls.filter((x) => !x[1]?.method)).toHaveLength(1);
+    });
+
+    it("enquanto salva: o botão mostra 'Salvando...' e fica desligado", async () => {
+      let solta: (r: Response) => void = () => {};
+      const f = jest.fn(async (_u: unknown, init?: RequestInit) =>
+        init?.method === "PUT" ? new Promise<Response>((ok) => (solta = ok)) : resposta(200, atividades.transicaoSugerida),
+      ) as unknown as typeof fetch;
+      const { c } = await abrir(null, f);
+      void fireEvent.press(within(c).getByText("Não é transição"));
+      expect(await within(c).findByText("Salvando...")).toBeTruthy();
+      expect(within(c).getByRole("button", { name: "Marcar este treino como não sendo de transição" }).props.accessibilityState.disabled).toBe(true);
+      await solta(resposta(500, { detail: "x" }));
+    });
+  });
 });

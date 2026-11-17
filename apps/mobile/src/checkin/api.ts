@@ -14,7 +14,7 @@ import type {
 
 const BASE_PADRAO = "http://localhost:8000";
 
-async function chamar<T>(
+export async function chamar<T>(
   caminho: string,
   init: RequestInit,
   opcoes: OpcoesCliente,

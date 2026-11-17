@@ -234,6 +234,28 @@ const cargaForma = (a) => {
   }
   return { carga: { versao: "carga@2", estado: "calculada", carga: 87.43, valor_texto: "87,4", metodo: "hrtss", metodo_texto: "Estimada pela FC.", cobertura_pct: 98, texto: null }, forma_do_dia: forma };
 };
+// Esforços e transição sintéticos (#467, ADR 0004 adendo 12). Esforços: 107 com aquecimento, quatro esforços e desaquecimento;
+// 109 (ciclismo) com velocidade; 130 com 12 esforços; os demais sem. Transição: 107 sugerida pela regra, 110 (multiesporte_pai) não editável,
+// o resto "sem marca". PUT e DELETE em memória (por atleta e atividade); atleta 21 = PUT dá 500, atleta 22 = PUT demora 6 s.
+const transicoes = new Map();
+const TRANSICAO_BASE = { 107: { valor: true, origem: "sugerido", editavel: true }, 110: { valor: false, origem: null, editavel: false } };
+const chaveTransicao = (atleta, id) => `${atleta}:${id}`;
+const transicaoDe = (atleta, id) => transicoes.get(chaveTransicao(atleta, id)) ?? TRANSICAO_BASE[id] ?? { valor: false, origem: null, editavel: true };
+const bloco = (ordem, categoria, extra = {}) => ({
+  ordem, categoria, faixa: null, faixa_rotulo: null, treino_chave: false, inicio_offset_s: ordem * 300, duracao_s: 300, distancia_m: 1000,
+  parada_apos_s: null, fc_media: null, pace_s_km: null, duracao: "5:00", distancia: "1,00 km", pace: null, parada_apos: null, ...extra,
+});
+const esforco = (ordem, extra = {}) =>
+  bloco(ordem, "esforco", { faixa: "d1000", faixa_rotulo: "1 km", fc_media: 170 + (ordem % 10), pace: `4:0${ordem % 10}`, pace_s_km: 245, ...extra });
+const esforcosDe = (id) => {
+  const wrap = (blocos) => ({ versao: "esforcos@1", referencia_da_atividade: false, treino_chave: false, blocos });
+  if (id === 107) {
+    return wrap([bloco(0, "aquecimento", { duracao: "12:10" }), esforco(1, { parada_apos: "1:00", parada_apos_s: 60 }), bloco(2, "recuperacao"), esforco(3), bloco(4, "recuperacao"), esforco(5), bloco(6, "desaquecimento", { duracao: "8:40" })]);
+  }
+  if (id === 109) return wrap([esforco(1, { pace: null, velocidade: "32,5", velocidade_kmh: 32.5 }), esforco(2, { pace: null, velocidade: "33,1", velocidade_kmh: 33.1 })]);
+  if (id === 130) return wrap(Array.from({ length: 12 }, (_, i) => esforco(i + 1)));
+  return null;
+};
 const comCheckin = (a, atleta) => {
   const id = a.atividade_id;
   const e = checkins.get(chaveCheckin(atleta, id)) ?? null;
@@ -253,6 +275,8 @@ const comCheckin = (a, atleta) => {
     feedback: feedbackDe(id, !!e, !naoPedeCheckin(id) && !prazoVencido(id)),
     pse_sugerida: id === 109 && !e ? 5 : null,
     ...cargaForma(a),
+    esforcos: esforcosDe(id),
+    transicao: transicaoDe(atleta, id),
   };
 };
 const pendentesDe = (atleta) => {
@@ -417,6 +441,33 @@ createServer((req, res) => {
     if (id === 3) return req.destroy();
     if (id === 5) return res.writeHead(404, cabecalhos).end(JSON.stringify({ detail: "atleta não encontrado" }));
     return res.writeHead(200, cabecalhos).end(JSON.stringify(semanaPadrao(id, searchParams.get("em"))));
+  }
+  const tr = pathname.match(/^\/atletas\/(\d+)\/atividades\/(\d+)\/transicao$/);
+  if (tr && (req.method === "PUT" || req.method === "DELETE")) {
+    const atleta = Number(tr[1]);
+    const id = Number(tr[2]);
+    let texto = "";
+    req.on("data", (c) => (texto += c));
+    req.on("end", () => {
+      if (atleta === 21) return res.writeHead(500, cabecalhos).end(JSON.stringify({ detail: "erro sintético" }));
+      const responder = () => {
+        const chave = chaveTransicao(atleta, id);
+        if (req.method === "DELETE") transicoes.delete(chave);
+        else {
+          let corpoIn;
+          try {
+            corpoIn = JSON.parse(texto);
+          } catch {
+            corpoIn = null;
+          }
+          if (typeof corpoIn?.transicao !== "boolean") return res.writeHead(422, cabecalhos).end(JSON.stringify(erro422("value_error")));
+          transicoes.set(chave, { valor: corpoIn.transicao, origem: "atleta", editavel: transicaoDe(atleta, id).editavel });
+        }
+        res.writeHead(200, cabecalhos).end(JSON.stringify(transicaoDe(atleta, id)));
+      };
+      return atleta === 22 ? void setTimeout(responder, 6000) : responder();
+    });
+    return;
   }
   const ck = pathname.match(/^\/atletas\/(\d+)\/atividades\/(\d+)\/checkin$/);
   if (ck) {

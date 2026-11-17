@@ -37,6 +37,35 @@ const linhaBaseCorrida: LinhaBase = {
   ],
 };
 
+type Bloco = NonNullable<Atividade["esforcos"]>["blocos"][number];
+const bloco = (ordem: number, categoria: Bloco["categoria"], extra: Partial<Bloco> = {}): Bloco => ({
+  ordem,
+  categoria,
+  faixa: null,
+  faixa_rotulo: null,
+  treino_chave: false,
+  inicio_offset_s: ordem * 300,
+  duracao_s: 300,
+  distancia_m: 1000,
+  parada_apos_s: null,
+  fc_media: null,
+  pace_s_km: null,
+  duracao: "5:00",
+  distancia: "1,00 km",
+  pace: null,
+  parada_apos: null,
+  ...extra,
+});
+const esforco = (ordem: number, extra: Partial<Bloco> = {}) =>
+  bloco(ordem, "esforco", { faixa: "d1000", faixa_rotulo: "1 km", fc_media: 170 + ordem, pace: `4:0${ordem % 10}`, pace_s_km: 245, ...extra });
+const esforcos = (blocos: Bloco[], extra = {}): NonNullable<Atividade["esforcos"]> => ({
+  versao: "esforcos@1",
+  referencia_da_atividade: false,
+  treino_chave: false,
+  blocos,
+  ...extra,
+});
+
 const corrida: Atividade = {
   atividade_id: 101,
   modalidade: "corrida",
@@ -95,6 +124,41 @@ const corrida: Atividade = {
 
 export const atividades = {
   ok: corrida,
+  comEsforcos: {
+    ...corrida,
+    atividade_id: 130,
+    esforcos: esforcos([
+      bloco(0, "aquecimento", { duracao: "12:10" }),
+      esforco(1, { parada_apos: "1:00", parada_apos_s: 60 }),
+      bloco(2, "recuperacao"),
+      esforco(3),
+      esforco(4, { fc_media: null }),
+      bloco(5, "desaquecimento", { duracao: "8:40" }),
+    ]),
+  } as Atividade,
+  esforcosMuitos: {
+    ...corrida,
+    atividade_id: 131,
+    esforcos: esforcos(Array.from({ length: 12 }, (_, i) => esforco(i + 1))),
+  } as Atividade,
+  esforcosCiclismo: {
+    ...corrida,
+    atividade_id: 132,
+    modalidade: "ciclismo",
+    esforcos: esforcos([esforco(1, { pace: null, velocidade: "32,5", velocidade_kmh: 32.5 })]),
+  } as Atividade,
+  esforcosReferencia: {
+    ...corrida,
+    atividade_id: 133,
+    esforcos: esforcos([esforco(1)], { referencia_da_atividade: true }),
+  } as Atividade,
+  semEsforco: { ...corrida, atividade_id: 134, esforcos: esforcos([bloco(0, "aquecimento"), bloco(1, "leve")]) } as Atividade,
+  soRodagem: { ...corrida, atividade_id: 135, esforcos: esforcos([bloco(0, "leve")]) } as Atividade,
+  transicaoSugerida: { ...corrida, atividade_id: 140, transicao: { valor: true, origem: "sugerido", editavel: true } } as Atividade,
+  transicaoDoAtleta: { ...corrida, atividade_id: 141, transicao: { valor: true, origem: "atleta", editavel: true } } as Atividade,
+  transicaoNegada: { ...corrida, atividade_id: 142, transicao: { valor: false, origem: "atleta", editavel: true } } as Atividade,
+  semTransicao: { ...corrida, atividade_id: 143, transicao: { valor: false, origem: null, editavel: true } } as Atividade,
+  transicaoNaoEditavel: { ...corrida, atividade_id: 144, transicao: { valor: true, origem: "sugerido", editavel: false } } as Atividade,
   formaAprendendo: {
     ...corrida,
     atividade_id: 120,
