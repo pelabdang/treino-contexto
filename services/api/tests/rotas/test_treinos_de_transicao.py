@@ -145,13 +145,13 @@ def test_corrigir_para_nao_tira_da_lista_e_a_regra_nao_devolve(client, session, 
     a1, a2, b1, b2 = dois_bricks
     for x in (b1, b2):
         r = client.put(URL_TRANS.format(atleta.id, x.id), json={"transicao": False})
-        assert r.status_code == 200 and r.json() == {"valor": False, "origem": "atleta"}
+        assert r.status_code == 200 and r.json() == {"valor": False, "origem": "atleta", "editavel": True}
     grupos = client.get(BASE.format(atleta.id)).json()["grupos"]
     assert [g["grupo_id"] for g in grupos] == [a1.id]
     rel = aplicar_sugestao(session, atleta.id)  # a regra roda de novo
     assert rel.do_atleta == 2
     assert [g["grupo_id"] for g in client.get(BASE.format(atleta.id)).json()["grupos"]] == [a1.id]
-    assert client.get(URL_ATIV.format(atleta.id, b1.id)).json()["transicao"] == {"valor": False, "origem": "atleta"}
+    assert client.get(URL_ATIV.format(atleta.id, b1.id)).json()["transicao"] == {"valor": False, "origem": "atleta", "editavel": True}
 
 
 def test_nao_so_numa_parte_deixa_a_outra_incompleta(client, atleta, dois_bricks):
@@ -163,9 +163,9 @@ def test_nao_so_numa_parte_deixa_a_outra_incompleta(client, atleta, dois_bricks)
 
 def test_sim_avulso_aparece_incompleto(client, session, atleta):
     solta = _ativ(session, atleta, 1, "corrida", utc(4, 10), 1800, 5000, 150)
-    assert client.get(URL_ATIV.format(atleta.id, solta.id)).json()["transicao"] == {"valor": False, "origem": None}
+    assert client.get(URL_ATIV.format(atleta.id, solta.id)).json()["transicao"] == {"valor": False, "origem": None, "editavel": True}
     r = client.put(URL_TRANS.format(atleta.id, solta.id), json={"transicao": True})
-    assert r.json() == {"valor": True, "origem": "atleta"}
+    assert r.json() == {"valor": True, "origem": "atleta", "editavel": True}
     g = client.get(BASE.format(atleta.id)).json()["grupos"][0]
     assert g["incompleto"] is True and g["forma"] == "corrida" and len(g["partes"]) == 1
     row = session.query(RotuloTransicao).one()
@@ -174,7 +174,7 @@ def test_sim_avulso_aparece_incompleto(client, session, atleta):
 
 def test_put_troca_a_linha_sugerida_pela_do_atleta(client, session, atleta, dois_bricks):
     a1, *_ = dois_bricks
-    assert client.get(URL_ATIV.format(atleta.id, a1.id)).json()["transicao"] == {"valor": True, "origem": "sugerido"}
+    assert client.get(URL_ATIV.format(atleta.id, a1.id)).json()["transicao"] == {"valor": True, "origem": "sugerido", "editavel": True}
     client.put(URL_TRANS.format(atleta.id, a1.id), json={"transicao": True})
     session.expire_all()
     row = session.query(RotuloTransicao).filter_by(atividade_id=a1.id).one()
@@ -184,17 +184,17 @@ def test_put_troca_a_linha_sugerida_pela_do_atleta(client, session, atleta, dois
 def test_delete_desfaz_a_correcao_e_a_sugestao_volta(client, session, atleta, dois_bricks):
     a1, a2, *_ = dois_bricks
     client.put(URL_TRANS.format(atleta.id, a1.id), json={"transicao": False})
-    assert client.get(URL_ATIV.format(atleta.id, a1.id)).json()["transicao"] == {"valor": False, "origem": "atleta"}
+    assert client.get(URL_ATIV.format(atleta.id, a1.id)).json()["transicao"] == {"valor": False, "origem": "atleta", "editavel": True}
     r = client.delete(URL_TRANS.format(atleta.id, a1.id))
-    assert r.status_code == 200 and r.json() == {"valor": True, "origem": "sugerido"}  # estado real, sem esperar o worker
-    assert client.get(URL_ATIV.format(atleta.id, a1.id)).json()["transicao"] == {"valor": True, "origem": "sugerido"}
+    assert r.status_code == 200 and r.json() == {"valor": True, "origem": "sugerido", "editavel": True}  # estado real, sem esperar o worker
+    assert client.get(URL_ATIV.format(atleta.id, a1.id)).json()["transicao"] == {"valor": True, "origem": "sugerido", "editavel": True}
     # sem correcao: devolve o estado e nao apaga a linha sugerida
     r = client.delete(URL_TRANS.format(atleta.id, a1.id))
-    assert r.status_code == 200 and r.json() == {"valor": True, "origem": "sugerido"}
+    assert r.status_code == 200 and r.json() == {"valor": True, "origem": "sugerido", "editavel": True}
     # desfazer o "sim" avulso numa atividade que a regra nao sugere volta a false/null
     solta = _ativ(session, atleta, 20, "corrida", utc(20, 10), 1800, 5000, None)
     client.put(URL_TRANS.format(atleta.id, solta.id), json={"transicao": True})
-    assert client.delete(URL_TRANS.format(atleta.id, solta.id)).json() == {"valor": False, "origem": None}
+    assert client.delete(URL_TRANS.format(atleta.id, solta.id)).json() == {"valor": False, "origem": None, "editavel": True}
 
 
 def test_put_e_delete_404_e_422(client, session, atleta, dois_bricks):

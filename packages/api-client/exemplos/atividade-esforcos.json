@@ -103,7 +103,8 @@
   },
   "transicao": {
     "valor": false,
-    "origem": null
+    "origem": null,
+    "editavel": true
   },
   "carga": {
     "estado": "pendente",
@@ -111,7 +112,20 @@
     "metodo": null,
     "cobertura_pct": null,
     "motivo": null,
-    "versao": null
+    "versao": null,
+    "valor_texto": null,
+    "metodo_texto": null,
+    "texto": "A carga deste treino ainda não foi calculada."
+  },
+  "forma_do_dia": {
+    "estado": "sem_serie",
+    "data_local": "2025-05-07",
+    "ctl_texto": null,
+    "atl_texto": null,
+    "tsb_texto": null,
+    "texto_aprendendo": null,
+    "sem_carga_no_dia": 0,
+    "texto_sem_carga": null
   },
   "tipo_treino": null,
   "tipo_origem": null,

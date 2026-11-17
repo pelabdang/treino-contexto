@@ -29,7 +29,7 @@ const detalheSemCheckin: DetalheTreino = {
 };
 
 export const caixa: CaixaDoDia = {
-  versao: "atencao@1",
+  versao: "atencao@2",
   hoje: "2025-11-13",
   janela_atencao_dias: 7,
   janela_novos_dias: 14,

@@ -362,7 +362,7 @@ def test_12_corrigir_desfazer_e_erros(ctx):
     cli = ctx["client"]
     base = "/atletas/1/atividades"
     r = cli.put(f"{base}/14/transicao", json={"transicao": False})
-    assert (r.status_code, r.json()) == (200, {"valor": False, "origem": "atleta"})
+    assert (r.status_code, r.json()) == (200, {"valor": False, "origem": "atleta", "editavel": True})
     # a regra rodando de novo nao desfaz a correcao do atleta; o treino deixa de ser par: a parte que sobra
     # (o pedal 13) fica como grupo incompleto (comportamento coberto por test_nao_so_numa_parte_deixa_a_outra_incompleta)
     s = _worker(ctx, "sugerir_transicao", "--atleta-id", "1")
@@ -371,11 +371,11 @@ def test_12_corrigir_desfazer_e_erros(ctx):
     assert [(g["grupo_id"], g["forma"], g["incompleto"]) for g in grupos] == [
         (15, "ciclismo>corrida", False), (13, "ciclismo", True)]
     r = cli.delete(f"{base}/14/transicao")
-    assert (r.status_code, r.json()) == (200, {"valor": True, "origem": "sugerido"})
+    assert (r.status_code, r.json()) == (200, {"valor": True, "origem": "sugerido", "editavel": True})
     assert [g["grupo_id"] for g in _get(ctx, "/atletas/1/treinos-de-transicao").json()["grupos"]] == [15, 13]
     # "sim" numa atividade que a regra nao sugeriu: vira grupo incompleto de uma modalidade
     r = cli.put(f"{base}/9/transicao", json={"transicao": True})
-    assert (r.status_code, r.json()) == (200, {"valor": True, "origem": "atleta"})
+    assert (r.status_code, r.json()) == (200, {"valor": True, "origem": "atleta", "editavel": True})
     grupos = _get(ctx, "/atletas/1/treinos-de-transicao").json()["grupos"]
     assert ("corrida", True) in [(g["forma"], g["incompleto"]) for g in grupos]
     r = cli.get("/atletas/1/treinos-de-transicao/comparar?a=13&b=9")
@@ -384,7 +384,7 @@ def test_12_corrigir_desfazer_e_erros(ctx):
     assert r.status_code == 404 and r.json()["detail"] == "treino de transição não encontrado"
     # desfazer o "sim" da 9 (sem rotulo gravado de regra: volta a "nao", sem origem)
     r = cli.delete(f"{base}/9/transicao")
-    assert (r.status_code, r.json()) == (200, {"valor": False, "origem": None})
+    assert (r.status_code, r.json()) == (200, {"valor": False, "origem": None, "editavel": True})
     # corpo invalido, atividade e atleta que nao existem
     assert cli.put(f"{base}/9/transicao", json={"transicao": "x"}).status_code == 422
     assert cli.put(f"{base}/9999/transicao", json={"transicao": True}).status_code == 404

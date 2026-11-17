@@ -1,17 +1,13 @@
 ---
 source_file: "docs/_templates/diario.md"
 type: "document"
-community: "Comunidade 3"
+community: "Template de diário"
 tags:
   - graphify/document
   - graphify/EXTRACTED
-  - community/Comunidade_3
+  - community/Template_de_dirio
 ---
 
 # Template: diário
 
-## Connections
-- [[Agente Nina (documentação)]] - `references` [EXTRACTED]
-- [[docsdiario (diário por data)]] - `conceptually_related_to` [EXTRACTED]
-
-#graphify/document #graphify/EXTRACTED #community/Comunidade_3
+#graphify/document #graphify/EXTRACTED #community/Template_de_dirio

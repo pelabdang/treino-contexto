@@ -28,7 +28,9 @@ from app.rotas.checkin import CheckinOut, checkin_out
 from app.rotas.evolucao import Erro
 from app.rotas.transicao import TransicaoOut, transicao_da_atividade
 from app.servicos import checkin as checkin_svc
-from app.servicos.carga_leitura import CargaLida, carga_da_atividade
+from app.metricas import carga as cg
+from app.servicos import carga_textos as ct
+from app.servicos.carga_leitura import CargaLida, carga_da_atividade, serie_do_atleta
 from app.servicos.carga_pse_leitura import CargaPseLida, carga_pse_da_atividade
 from app.servicos.clima import ClimaDaAtividade, EstadoClima, assinatura_clima, clima_da_atividade
 from app.servicos.distancia_texto import distancia_da_atividade
@@ -103,6 +105,24 @@ class CargaAtividadeOut(BaseModel):
         "sem_dados_saude", "sem_limiar_na_data", "sem_fc", "sem_pace", "cobertura_insuficiente", "modalidade_sem_carga"
     ] | None = None  # so em `sem_carga`
     versao: str | None = None  # carga@2; null em `pendente`
+    # Textos prontos para a tela (Meta 12, #464): o app nao formata nem redige.
+    valor_texto: str | None = None  # so em `calculada`: 1 casa, virgula ("87,4")
+    metodo_texto: str | None = None  # so em `calculada`: "Estimada pela FC." / "Estimada pelo pace."
+    texto: str | None = None  # em `sem_carga` (a frase do motivo) e em `pendente`; null em `calculada`
+
+
+class FormaDoDiaOut(BaseModel):
+    """CTL, ATL e TSB do fim do dia local do treino (`serie_carga@1`), calculados na leitura pela mesma `calcular_serie` do `GET /carga`.
+    Estimativa, nao medida. Em `aprendendo` (menos de 42 dias de historico) os tres numeros NAO saem. Null so em multiesporte_pai e troca."""
+
+    estado: Literal["calculada", "aprendendo", "sem_serie"]
+    data_local: str  # AAAA-MM-DD, o dia da atividade
+    ctl_texto: str | None = None  # so em `calculada`: 1 casa, virgula
+    atl_texto: str | None = None
+    tsb_texto: str | None = None  # sinal explicito: "+3,2", "-11,6" com o menos U+2212, "0,0"
+    texto_aprendendo: str | None = None  # so em `aprendendo`: "Ainda aprendendo a sua forma: faltam 23 dias de historico para estimar."
+    sem_carga_no_dia: int = 0  # treinos do dia sem carga calculada
+    texto_sem_carga: str | None = None  # null se `sem_carga_no_dia` e 0
 
 
 class DivergenciaOut(BaseModel):
@@ -190,6 +210,7 @@ class AtividadeOut(BaseModel):
     esforcos: EsforcosOut | None = None  # so corrida e ciclismo (ADR 0008); null nas outras modalidades
     transicao: TransicaoOut = Field(default_factory=lambda: TransicaoOut(valor=False))  # ADR 0009; sem linha = false/null
     carga: CargaAtividadeOut | None = None  # null so em multiesporte_pai e troca; elegivel nao calculada vem `pendente`
+    forma_do_dia: FormaDoDiaOut | None = None  # Meta 12 (#464); null so em multiesporte_pai e troca
     tipo_treino: Literal["leve", "moderado", "longo", "intervalado", "fartlek"] | None = None  # ADR 0011 (#266)
     tipo_origem: Literal["sugestao", "professor", "trainingpeaks", "semana_padrao"] | None = None
     tipo_confirmado: bool = False
@@ -308,8 +329,17 @@ def _feedback_out(f: FeedbackLido | None) -> FeedbackOut | None:
 
 
 def _carga_out(c: CargaLida) -> CargaAtividadeOut:
+    texto = ct.MOTIVO_TEXTO[c.motivo] if c.estado == "sem_carga" else (ct.PENDENTE_TEXTO if c.estado == "pendente" else None)
     return CargaAtividadeOut(estado=c.estado, carga=c.carga, metodo=c.metodo, cobertura_pct=c.cobertura_pct,
-                             motivo=c.motivo, versao=c.versao)
+                             motivo=c.motivo, versao=c.versao,
+                             valor_texto=None if c.carga is None else ct.numero_texto(c.carga),
+                             metodo_texto=ct.METODO_TEXTO.get(c.metodo) if c.metodo else None, texto=texto)
+
+
+def _forma_out(session: Session, a: Atividade, dia: date) -> FormaDoDiaOut | None:
+    if cg.ignorada(a.subtipo):
+        return None
+    return FormaDoDiaOut(**asdict(ct.forma_do_dia(serie_do_atleta(session, a.atleta_id).serie, dia)))
 
 
 def get_fit_dir() -> Path | None:
@@ -403,8 +433,9 @@ def buscar_atividade(
         fc_media=a.fc_media,
         clima=None if clima is None else _clima_out(clima),
         esforcos=_esforcos_out(session, a),
-        transicao=transicao_da_atividade(session, a.id),
+        transicao=transicao_da_atividade(session, a),
         carga=None if carga is None else _carga_out(carga),
+        forma_do_dia=_forma_out(session, a, local.date()),
         tipo_treino=a.tipo_treino,
         tipo_origem=a.tipo_origem,
         tipo_confirmado=bool(a.tipo_confirmado),
