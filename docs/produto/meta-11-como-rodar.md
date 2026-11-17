@@ -153,7 +153,14 @@ with SessionLocal() as s:
     Isso apaga o volume `<projeto>_pgdata` (aqui `treino-meta11_pgdata`); nada do banco do dia a dia é tocado.
 
 ## Limitações da conferência local (#431)
-*(Espaço reservado: as limitações genéricas entram aqui depois das respostas do Angelo, sem data, nome, número nem tipo de atividade de nenhum aluno.)*
+A conferência local da caixa do dia (#431) foi feita só na máquina do Angelo, com nada no repositório. Limitações, em texto genérico (sem data, nome, número nem tipo de atividade de nenhum aluno):
+1. **`fora_do_normal` depende da `linha_base@2`.** Com poucas amostras do tipo, ou com dispersão muito pequena, o `z` pode sair grande, e o limite de 2,5 não mede relevância esportiva. Investigação na #455.
+2. **`checkin_vencendo` hoje inclui a modalidade "outra".** Ela vai sair do motivo (#454).
+3. **Quem faz poucos check-ins gera um aviso por treino.** Isso vai virar uma linha por aluno (#454).
+4. **A regra só enxerga o que foi ingerido.** Sem treinos novos, a lista fica parada.
+5. **`dor` e `divergencia` só têm teste sintético.** A conferência local não os exercitou.
+6. **A regra de divergência fica como está até 4 semanas de uso.**
+Mesma lista, junto da regra, em [[metricas/atencao]].
 
 ## Achados do guia
 - **O `carregar_professor` só grava identidade.** Não existe comando que carregue os treinos de `tests/fixtures/meta11/treinos.json`: aquele arquivo é a

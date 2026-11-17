@@ -45,4 +45,13 @@ Regra própria do projeto, sem artigo: janela de 7 dias, aviso a partir de 5, ja
 normal" não é novo: é o da `linha_base@2` ([[decisoes/0011-linha-de-base-e-semana-padrao]]; mediana e MAD de Leys et al., 2013, citação ainda a conferir). Não é limiar clínico.
 O motivo 4 some no oitavo dia (prazo vencido). Mudar qualquer coisa acima exige subir `VERSAO` (`atencao@1`).
 
+## Limitações da conferência local (#431)
+A conferência com a conta real foi feita só no computador do Angelo, e as regras da `atencao@1` ficaram como estão. Em texto genérico:
+1. **`fora_do_normal` depende da `linha_base@2`.** Com poucas amostras do tipo, ou com dispersão muito pequena, o `z` pode sair grande, e o limite de 2,5 não mede relevância esportiva. Investigação na #455.
+2. **`checkin_vencendo` hoje inclui a modalidade "outra".** Ela vai sair do motivo (#454).
+3. **Quem faz poucos check-ins gera um aviso por treino.** Isso vai virar uma linha por aluno (#454).
+4. **A regra só enxerga o que foi ingerido.** Sem treinos novos, a lista fica parada.
+5. **`dor` e `divergencia` só têm teste sintético.** A conferência local não os exercitou.
+6. **A regra de divergência fica como está até 4 semanas de uso.**
+
 Testes: `uv run pytest services/api/tests/metricas/test_atencao.py`.
