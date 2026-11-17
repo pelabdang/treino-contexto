@@ -239,5 +239,18 @@ Cada item tem a **recomendação** (o padrão que vale se o Angelo responder "ok
 ## Revisão da Duda (incorporada em 16/11)
 Comentário no PR #435. Bloqueantes resolvidos: `PROFESSOR_ID` vazio (comentado no `.env.example` e validador `""` para `None`) e ordem `404` antes de `422`. Sem índice novo em `vinculo_professor_atleta` (a consulta parte do prefixo da chave). Os demais pontos estão nos itens 1, 2, 3, 5 e 6 e em "Limitações".
 
+## Adendo 1 (17/11): `atencao@2`, aviso de check-in numa linha por aluno e sem `outra` (#454)
+Origem: conferência local da #431, decisões do Angelo de 16/11 ("ok para as seis", itens 1 e 2). Só dado sintético aqui.
+- **Uma linha por aluno.** O motivo `checkin_vencendo` deixa de ser um por treino. A regra junta os treinos sem check-in de 5 a 7 dias e escreve **uma** linha, presa ao treino
+  **mais antigo** (o de prazo mais curto; empate de dia: o menor `id`). Um treino: "Treino de sexta sem check-in; o prazo termina em 2 dias." (o texto de antes). Dois ou mais:
+  "3 treinos sem check-in; o prazo do mais antigo termina hoje." Os outros treinos pendentes só entram na contagem. A ordem dos motivos e a prioridade entre alunos não mudam.
+- **Modalidade `outra` fora do aviso.** `outra` não gera `checkin_vencendo` nem entra na contagem.
+- **Escolha: só o aviso, não o check-in do atleta.** `carga_pse.elegivel` (que decide quem pede check-in e tem carga pela PSE, ADR 0012, item 4) **não muda**: um treino `outra`
+  (musculação, por exemplo) continua podendo receber check-in e carga pela PSE, e o atleta pode fazê-lo. O professor é que deixa de ser avisado de um check-in que não é esperado.
+  Alternativa descartada: tirar `outra` também do check-in (perderia a carga pela PSE desses treinos e mexeria no app do atleta e no contrato da atividade).
+- **Contrato do `GET`:** a forma não muda (`treinos[].motivos[]` com `{codigo, texto}`); muda só o `texto` do motivo e `versao` passa a `atencao@2`. A tela mostra o `texto` como veio.
+  Os treinos pendentes que só tinham esse motivo somem da lista do aluno (o aluno fica com uma linha); os de outros motivos continuam.
+- Oráculo da #421 atualizado (Carla: `car-1` e `car-5` viram uma linha; `car-6`, `outra`, fica fora). Nota [[metricas/atencao]].
+
 ## Data e quem decidiu
 2026-11-16. Proposta do Caio (ciência), com revisão da Duda (banco e API) pedida no PR. Decisões do Angelo de 16/11 ("ok para as 10") no Contexto. Issue #419. **Modelo de dados: aprovado pelo Theo em 2026-11-16** (comentário no PR #435), com a revisão da Duda incorporada no mesmo dia. O Angelo respondeu **"ok para as 7"** (16/11) aos itens 1, 2, 5, 6, 7, 8 e 10, com as recomendações. **Aceita em 2026-11-16.**

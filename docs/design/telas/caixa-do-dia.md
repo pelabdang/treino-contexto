@@ -57,7 +57,7 @@ quando precisar são formatados no app, como nas outras telas.
 **Resposta do `GET`:**
 | campo | valores | na tela |
 |---|---|---|
-| `versao` | `atencao@1` | não aparece (só em teste e em log sem dado de saúde) |
+| `versao` | `atencao@2` | não aparece (só em teste e em log sem dado de saúde) |
 | `hoje` | data local (`America/Sao_Paulo`) | "Quinta, 13/11/25" no cabeçalho; mesma data que a API usou para as janelas |
 | `janela_atencao_dias`, `janela_novos_dias` | 7 e 14 | frases de apoio das seções ("últimos 7 dias", "últimos 14 dias"): o app **não** escreve o número no código |
 | `alunos[]` | ordenados pela API (item 4 da ADR); **o app não reordena** | seção "Para olhar hoje" |
