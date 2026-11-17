@@ -1,6 +1,6 @@
 {
  "hoje": "2026-11-18",
- "versao": "atencao@1",
+ "versao": "atencao@2",
  "lista": [
   {
    "atleta": "Atleta Fixture Ana",
@@ -66,20 +66,11 @@
    "atleta": "Atleta Fixture Carla",
    "treinos": [
     {
-     "id": "car-1",
-     "motivos": [
-      {
-       "codigo": "checkin_vencendo",
-       "texto": "Treino de sexta sem check-in; o prazo termina em 2 dias."
-      }
-     ]
-    },
-    {
      "id": "car-5",
      "motivos": [
       {
        "codigo": "checkin_vencendo",
-       "texto": "Treino de quarta sem check-in; o prazo termina hoje."
+       "texto": "2 treinos sem check-in; o prazo do mais antigo termina hoje."
       }
      ]
     }
@@ -99,9 +90,11 @@
  "sem_motivo_e_por_que": {
   "ana-2": "dentro do normal, check-in sem dor",
   "bru-2": "divergência existe na coluna, mas o tipo está confirmado",
+  "car-1": "sem check-in, 5 dias, mas o aviso é uma linha por aluno e vai no treino mais antigo (car-5); entra na contagem",
   "car-2": "sem check-in, mas o treino é de ontem (1 dia; o aviso começa com 5)",
   "car-3": "8 dias: fora da janela e prazo vencido",
   "car-4": "multiesporte_pai não é elegível a check-in",
+  "car-6": "modalidade outra não gera o aviso de check-in (6 dias, sem check-in) e não entra na contagem",
   "dav-0": "dor marcada, mas fora da janela de 7 dias (16 dias)",
   "dav-1": "dentro do normal, check-in sem dor"
  },
@@ -122,6 +115,7 @@
   "car-5": "sem tipo",
   "dav-0": "fora da janela de 14 dias",
   "eva-1": "sem consentimento",
-  "fab-1": "outro professor"
+  "fab-1": "outro professor",
+  "car-6": "sem tipo (modalidade outra)"
  }
 }

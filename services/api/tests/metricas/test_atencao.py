@@ -1,4 +1,4 @@
-"""`atencao@1` (issue #422, ADR 0015): os quatro motivos, contra o oráculo à mão de `tests/fixtures/meta11/` e casos de borda.
+"""`atencao@2` (issue #422, ADR 0015): os quatro motivos, contra o oráculo à mão de `tests/fixtures/meta11/` e casos de borda.
 
 Valores esperados escritos à mão em `oraculo.json` (nota `docs/metricas/atencao-oraculo.md`); aqui só se lê. Tudo sintético.
 """
@@ -46,7 +46,7 @@ def _por_atleta():
 def test_oraculo_da_lista():
     orac = _json("oraculo.json")
     r = at.atencao(_por_atleta(), HOJE)
-    assert r.versao == "atencao@1" == orac["versao"]
+    assert r.versao == "atencao@2" == orac["versao"]
     obtido = [{"atleta": a.atleta, "treinos": [{"id": t.id, "motivos": [{"codigo": m.codigo, "texto": m.texto} for m in t.motivos]}
                                                for t in a.treinos]} for a in r.com_atencao]
     assert obtido == orac["lista"]
@@ -73,13 +73,46 @@ def _t(**k):
 
 
 @pytest.mark.parametrize("dias,esperado", [(4, None), (5, "em 2 dias"), (6, "em 1 dia"), (7, "hoje"), (8, None)])
-def test_checkin_vencendo_bordas(dias, esperado):
+def test_checkin_vencendo_bordas_um_treino(dias, esperado):
     from datetime import timedelta
-    m = at.motivos_do_treino(_t(dia=HOJE - timedelta(days=dias), dor=None), HOJE)
+    r = at.checkin_vencendo_do_atleta([_t(id="a", dia=HOJE - timedelta(days=dias), dor=None)], HOJE)
     if esperado is None:
-        assert m == ()
+        assert r is None
     else:
-        assert [x.codigo for x in m] == ["checkin_vencendo"] and m[0].texto.endswith(f"termina {esperado}.")
+        nome = at.DIAS_SEMANA[(HOJE - timedelta(days=dias)).weekday()]
+        assert r == ("a", at.Motivo("checkin_vencendo", f"Treino de {nome} sem check-in; o prazo termina {esperado}."))
+
+
+def test_checkin_vencendo_varios_treinos_uma_linha_no_mais_antigo():
+    from datetime import timedelta
+    ts = [_t(id="novo", dia=HOJE - timedelta(days=5), dor=None), _t(id="velho", dia=HOJE - timedelta(days=7), dor=None),
+          _t(id="meio", dia=HOJE - timedelta(days=6), dor=None)]
+    assert at.checkin_vencendo_do_atleta(ts, HOJE) == ("velho", at.Motivo("checkin_vencendo", "3 treinos sem check-in; o prazo do mais antigo termina hoje."))
+    r = at.atencao({"a": ts}, HOJE)
+    assert [(t.id, [m.codigo for m in t.motivos]) for t in r.com_atencao[0].treinos] == [("velho", ["checkin_vencendo"])]  # uma linha só
+
+
+def test_checkin_vencendo_empate_de_dia_usa_o_menor_id():
+    from datetime import timedelta
+    ts = [_t(id=2, dia=HOJE - timedelta(days=6), dor=None), _t(id=1, dia=HOJE - timedelta(days=6), dor=None)]
+    r = at.checkin_vencendo_do_atleta(ts, HOJE)
+    assert r[0] == 1 and r[1].texto.startswith("2 treinos sem check-in")
+
+
+def test_modalidade_outra_nao_gera_nem_conta_no_aviso_de_checkin():
+    from datetime import timedelta
+    outra = _t(id="o", dia=HOJE - timedelta(days=7), dor=None, modalidade="outra")
+    assert at.checkin_vencendo_do_atleta([outra], HOJE) is None
+    corrida = _t(id="c", dia=HOJE - timedelta(days=6), dor=None)
+    nome = at.DIAS_SEMANA[corrida.dia.weekday()]
+    assert at.checkin_vencendo_do_atleta([outra, corrida], HOJE)[1].texto == f"Treino de {nome} sem check-in; o prazo termina em 1 dia."
+
+
+def test_aviso_de_checkin_soma_aos_outros_motivos_do_mesmo_treino_na_ordem_fixa():
+    from datetime import timedelta
+    t = _t(id="x", dia=HOJE - timedelta(days=5), dor=None, tipo_origem="semana_padrao", tipo_divergencia="sem_esforco", tipo_treino="longo")
+    r = at.atencao({"a": [t]}, HOJE)
+    assert [m.codigo for m in r.com_atencao[0].treinos[0].motivos] == ["divergencia", "checkin_vencendo"]
 
 
 def test_limite_de_fora_e_o_da_linha_de_base():
@@ -109,8 +142,8 @@ def test_divergencia_some_com_tipo_confirmado_e_texto_por_tipo():
 
 def test_multiesporte_nao_pede_checkin_e_treino_sem_checkin_dentro_do_prazo_curto_nao_avisa():
     from datetime import timedelta
-    assert at.motivos_do_treino(_t(dia=HOJE - timedelta(days=6), dor=None, subtipo="multiesporte_pai"), HOJE) == ()
-    assert at.motivos_do_treino(_t(dia=HOJE - timedelta(days=1), dor=None), HOJE) == ()
+    assert at.checkin_vencendo_do_atleta([_t(dia=HOJE - timedelta(days=6), dor=None, subtipo="multiesporte_pai")], HOJE) is None
+    assert at.checkin_vencendo_do_atleta([_t(dia=HOJE - timedelta(days=1), dor=None)], HOJE) is None
 
 
 def test_sem_nenhum_treino_o_atleta_fica_sem_atencao_e_a_funcao_e_idempotente():
