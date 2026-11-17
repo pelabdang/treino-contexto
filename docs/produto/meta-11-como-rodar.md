@@ -2,7 +2,7 @@
 tipo: guia
 status: em-uso
 dono: nina
-atualizado: 2026-11-16
+atualizado: 2026-11-17
 links: [[produto/meta-10-como-rodar]], [[produto/meta-8-como-rodar]], [[produto/roadmap]], [[decisoes/0015-caixa-do-dia-do-professor]], [[decisoes/0004-contrato-tela-evolucao]], [[metricas/atencao]], [[metricas/atencao-oraculo]], [[design/telas/caixa-do-dia]], [[modulos/api]], [[modulos/banco]], [[modulos/worker]], [[modulos/mobile]], [[glossario]]
 ---
 # Meta 11: como rodar a caixa do dia do professor
@@ -108,7 +108,7 @@ with SessionLocal() as s:
    (cd services/api && CORS_ORIGENS=http://localhost:8084 uv run uvicorn app.main:app --port 8061)
    curl -s -i localhost:8061/professores/1/caixa-do-dia
    ```
-   `CORS_ORIGENS` é a origem do Expo web do passo 7 (`http://localhost:8084`, a mesma porta): sem ela o navegador bloqueia o `GET` e a tela mostra "Não foi possível falar com o servidor". O `curl` não precisa dela. Esperado: `200`, `cache-control: no-store`, `versao` `atencao@1`, `hoje` com a data de hoje, `janela_atencao_dias` 7 e `janela_novos_dias` 14. Em `alunos[]`
+   `CORS_ORIGENS` é a origem do Expo web do passo 7 (`http://localhost:8084`, a mesma porta): sem ela o navegador bloqueia o `GET` e a tela mostra "Não foi possível falar com o servidor". O `curl` não precisa dela. Esperado: `200`, `cache-control: no-store`, `versao` `atencao@2`, `hoje` com a data de hoje, `janela_atencao_dias` 7 e `janela_novos_dias` 14. Em `alunos[]`
    (a ordem é a da API; o app não reordena):
    - **Ana** (id 1), com o treino 1 e o motivo `dor`: "Treino de <dia> com dor marcada no check-in.";
    - **Carla** (id 5), com o treino 3 e o motivo `checkin_vencendo`: "Treino de <dia> sem check-in; o prazo termina em 1 dia." (6 dias atrás: restam
