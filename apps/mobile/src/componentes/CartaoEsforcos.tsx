@@ -132,7 +132,7 @@ function criarEstilos({ cor }: Tema) {
     colTexto: { textAlign: "right" },
     valor: { ...fonte["corpo-forte"], fontVariant: ["tabular-nums"], color: cor.texto, textAlign: "right" },
     semDado: { ...fonte.corpo, color: cor["texto-2"], textAlign: "right" },
-    legenda: { ...fonte.legenda, color: cor["texto-2"], marginTop: -espaco[1], paddingBottom: espaco[1] },
+    legenda: { ...fonte.legenda, color: cor["texto-2"], paddingBottom: espaco[2] },
     verTodos: { flexDirection: "row", alignItems: "center", gap: espaco[1], minHeight: tamanho.botaoAltura, alignSelf: "flex-start" },
     link: { ...fonte.botao, color: cor.destaque },
     aviso: { flexDirection: "row", alignItems: "flex-start", gap: espaco[2], marginTop: espaco[2], padding: espaco[3], borderRadius: raio.medio, backgroundColor: cor["superficie-2"] },

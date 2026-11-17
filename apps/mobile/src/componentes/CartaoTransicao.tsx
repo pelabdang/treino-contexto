@@ -38,6 +38,7 @@ export function CartaoTransicao({ transicao, apiUrl, atletaId, atividadeId, fetc
   const tema = useTema();
   const styles = useMemo(() => criarEstilos(tema), [tema]);
   const [salvando, setSalvando] = useState(false);
+  const [qual, setQual] = useState<"principal" | "voltar" | null>(null);
   const [erro, setErro] = useState<string | null>(null);
   const [anuncio, setAnuncio] = useState("");
   if (!transicao || transicao.editavel === false) return null;
@@ -58,8 +59,9 @@ export function CartaoTransicao({ transicao, apiUrl, atletaId, atividadeId, fetc
     }
   };
 
-  const enviar = async (chamada: () => ReturnType<typeof corrigirTransicao>, aviso: string) => {
+  const enviar = async (qualBotao: "principal" | "voltar", chamada: () => ReturnType<typeof corrigirTransicao>, aviso: string) => {
     setSalvando(true);
+    setQual(qualBotao);
     setErro(null);
     const r = await chamada();
     if (!r.ok) {
@@ -94,13 +96,14 @@ export function CartaoTransicao({ transicao, apiUrl, atletaId, atividadeId, fetc
           disabled={salvando}
           onPress={() =>
             enviar(
+              "principal",
               () => corrigirTransicao(atletaId, atividadeId, principal.alvo, opcoes),
               principal.alvo ? "Marcado como treino de transição." : "Marcado como não sendo treino de transição.",
             )
           }
           style={[styles.botao, salvando && styles.desligado]}
         >
-          <Text style={styles.botaoTexto}>{salvando ? "Salvando..." : principal.rotulo}</Text>
+          <Text style={styles.botaoTexto}>{salvando && qual === "principal" ? "Salvando..." : principal.rotulo}</Text>
         </Pressable>
       )}
       {podeVoltar && (
@@ -109,10 +112,10 @@ export function CartaoTransicao({ transicao, apiUrl, atletaId, atividadeId, fetc
           accessibilityLabel="Voltar à sugestão do app"
           accessibilityState={{ disabled: salvando }}
           disabled={salvando}
-          onPress={() => enviar(() => desfazerCorrecaoDeTransicao(atletaId, atividadeId, opcoes), "Voltou à sugestão do app.")}
+          onPress={() => enviar("voltar", () => desfazerCorrecaoDeTransicao(atletaId, atividadeId, opcoes), "Voltou à sugestão do app.")}
           style={[styles.botaoTextoLink, salvando && styles.desligado]}
         >
-          <Text style={styles.link}>{salvando && !principal ? "Salvando..." : "Voltar à sugestão do app"}</Text>
+          <Text style={styles.link}>{salvando && qual === "voltar" ? "Salvando..." : "Voltar à sugestão do app"}</Text>
         </Pressable>
       )}
 

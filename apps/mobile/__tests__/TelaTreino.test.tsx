@@ -401,5 +401,17 @@ describe("tela de um treino", () => {
       expect(within(c).getByRole("button", { name: "Marcar este treino como não sendo de transição" }).props.accessibilityState.disabled).toBe(true);
       await solta(resposta(500, { detail: "x" }));
     });
+
+    it("com botão principal, 'Voltar à sugestão do app' também mostra 'Salvando...' e só ele", async () => {
+      let solta: (r: Response) => void = () => {};
+      const f = jest.fn(async (_u: unknown, init?: RequestInit) =>
+        init?.method === "DELETE" ? new Promise<Response>((ok) => (solta = ok)) : resposta(200, atividades.transicaoNegada),
+      ) as unknown as typeof fetch;
+      const { c } = await abrir(null, f);
+      void fireEvent.press(within(c).getByText("Voltar à sugestão do app"));
+      expect(await within(c).findByText("Salvando...")).toBeTruthy();
+      expect(within(c).getByText("Marcar como transição")).toBeTruthy();
+      await solta(resposta(500, { detail: "x" }));
+    });
   });
 });
