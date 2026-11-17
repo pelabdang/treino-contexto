@@ -264,9 +264,9 @@ falso positivo e 3 é "muito conservador"). Com 8 treinos no mínimo, um limite 
 
 **Textos prontos** (a API formata, o app mostra; ADR 0004, adendo 2). Sem juízo de valor: a linha de base compara com o histórico
 do atleta, não diz se o treino foi bom.
-- **Aprendendo:** `{n} de 8 treinos do tipo {tipo} nas últimas 8 semanas.` (desde o #487 o texto não repete "aprendendo": a palavra do estado é do app)
-- **Dentro:** `{Rótulo} dentro do seu normal para treino {tipo}: {valor}, perto da mediana de {mediana} ({n} treinos nas últimas 8 semanas).`
-- **Fora:** `{Rótulo} fora do seu normal para treino {tipo}: {valor}, {diferença} {mais rápido|mais lento|maior|menor} que a mediana de {mediana} (na FC, "{diferença} acima da mediana de {mediana}" ou "abaixo da mediana de {mediana}", desde o #487) ({n} treinos nas últimas 8 semanas). Isto compara com o seu histórico; não diz se o treino foi bom ou ruim.`
+- **Aprendendo:** `{n} de 8 treinos do tipo {tipo} nas últimas 12 semanas.` (desde o #487 o texto não repete "aprendendo": a palavra do estado é do app)
+- **Dentro:** `{Rótulo} dentro do seu normal para treino {tipo}: {valor}, perto da mediana de {mediana} ({n} treinos nas últimas 12 semanas).`
+- **Fora:** `{Rótulo} fora do seu normal para treino {tipo}: {valor}, {diferença} {mais rápido|mais lento|maior|menor} que a mediana de {mediana} (na FC, "{diferença} acima da mediana de {mediana}" ou "abaixo da mediana de {mediana}", desde o #487) ({n} treinos nas últimas 12 semanas). Isto compara com o seu histórico; não diz se o treino foi bom ou ruim.`
 - **Sem valor:** `Sem {rótulo em minúsculas} neste treino: {motivo}.`
 - **Sem linha de base** (nível da atividade): `Sem linha de base: {motivo}.`, com motivos em palavras (ex.: "o treino não tem tipo", "treino
   com formato diferente do plano", "parte de treino de transição").
@@ -425,13 +425,13 @@ com `itens: []` faz o mesmo efeito.
       "z": -2.7,
       "n": 8,
       "diferenca_texto": "24 s/km mais rápido",
-      "texto": "Pace médio fora do seu normal para treino leve: 5:06/km, 24 s/km mais rápido que a mediana de 5:30/km (8 treinos nas últimas 8 semanas). Isto compara com o seu histórico; não diz se o treino foi bom ou ruim."
+      "texto": "Pace médio fora do seu normal para treino leve: 5:06/km, 24 s/km mais rápido que a mediana de 5:30/km (8 treinos nas últimas 12 semanas). Isto compara com o seu histórico; não diz se o treino foi bom ou ruim."
     },
     {
       "chave": "fc_media", "rotulo": "FC média", "unidade": "bpm", "estado": "aprendendo",
       "valor": 148.0, "valor_texto": "148 bpm", "mediana": null, "mediana_texto": null,
       "desvio": null, "z": null, "n": 5, "diferenca_texto": null,
-      "texto": "5 de 8 treinos do tipo leve nas últimas 8 semanas."
+      "texto": "5 de 8 treinos do tipo leve nas últimas 12 semanas."
     }
   ]
 }
