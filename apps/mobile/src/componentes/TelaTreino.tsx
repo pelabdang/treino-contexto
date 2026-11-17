@@ -7,6 +7,7 @@ import { borda, espaco, fonte, larguraConteudoMax, raio, tamanho, useMargemTela,
 import { CartaoCargaForma } from "./CartaoCargaForma";
 import { CartaoEsforcos } from "./CartaoEsforcos";
 import { CartaoFeedback } from "./CartaoFeedback";
+import { CartaoNormal } from "./CartaoNormal";
 import { CartaoTransicao } from "./CartaoTransicao";
 import { CartoesCheckin } from "./CartoesCheckin";
 import { EsqueletoTreino } from "./Esqueleto";
@@ -194,6 +195,8 @@ function Treino({ atividade, styles, tema, checkin, aoAtualizarFeedback, conexao
       {checkin ? <CartoesCheckin atividade={atividade} {...checkin} entreCartoes={feedback} /> : feedback}
 
       <CartaoEsforcos esforcos={atividade.esforcos} />
+
+      <CartaoNormal linhaBase={atividade.linha_base} />
 
       <CartaoCargaForma carga={atividade.carga} forma={atividade.forma_do_dia} />
 

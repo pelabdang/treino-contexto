@@ -1,6 +1,7 @@
 import { StyleSheet } from "react-native";
 import { fireEvent, render, screen, within } from "@testing-library/react-native";
 
+import { NOTA_NORMAL } from "../src/componentes/CartaoNormal";
 import { TelaTreino } from "../src/componentes/TelaTreino";
 import { atividades } from "../__fixtures__/atividades";
 
@@ -66,9 +67,10 @@ describe("tela de um treino", () => {
     await screen.findByTestId("cartao-resumo");
     expect(screen.getByText("18/03/25 às 06:30")).toBeTruthy();
     expect(screen.getByText("0:52:05")).toBeTruthy();
-    expect(screen.getByText("5:12 min/km")).toBeTruthy();
-    expect(screen.getByText("10,00 km")).toBeTruthy();
-    expect(screen.getByText("152 bpm")).toBeTruthy();
+    const resumo = within(screen.getByTestId("cartao-resumo"));
+    expect(resumo.getByText("5:12 min/km")).toBeTruthy();
+    expect(resumo.getByText("10,00 km")).toBeTruthy();
+    expect(resumo.getByText("152 bpm")).toBeTruthy();
     for (const r of ["Distância, 10,00 km", "Pace médio, 5:12 min/km", "FC média, 152 bpm"]) {
       expect(within(screen.getByTestId("cartao-resumo")).getByLabelText(r)).toBeTruthy();
     }
@@ -412,6 +414,81 @@ describe("tela de um treino", () => {
       expect(await within(c).findByText("Salvando...")).toBeTruthy();
       expect(within(c).getByText("Marcar como transição")).toBeTruthy();
       await solta(resposta(500, { detail: "x" }));
+    });
+  });
+
+  describe("comparado com o seu normal (#465)", () => {
+    const abrir = async (a: unknown) => {
+      await render(tela(fetchCom(200, a)));
+      return screen.findByTestId("cartao-normal");
+    };
+
+    it("dentro do normal: valor, palavra com ícone, texto da API e nota fixa", async () => {
+      const c = await abrir(atividades.ok);
+      const fc = within(within(c).getByTestId("metrica-fc_media"));
+      expect(fc.getByText("152 bpm")).toBeTruthy();
+      expect(fc.getByText("Dentro do seu normal")).toBeTruthy();
+      expect(fc.getByText("adjust:16")).toBeTruthy();
+      expect(fc.getByText("Mediana de 150 bpm, em 6 treinos leves.")).toBeTruthy();
+      expect(within(c).getByText(NOTA_NORMAL)).toBeTruthy();
+    });
+
+    it("fora do normal: ícone e palavra, sem 'bom' nem 'ruim' e sem cor de erro ou alerta", async () => {
+      const c = await abrir(atividades.normalFora);
+      const carga = within(within(c).getByTestId("metrica-carga_hora"));
+      expect(carga.getByText("61,0 pontos/h")).toBeTruthy();
+      expect(carga.getByText("Fora do seu normal")).toBeTruthy();
+      expect(carga.getByText("unfold-more:16")).toBeTruthy();
+      expect(carga.getByText(/9,0 pontos\/h maior que a mediana/)).toBeTruthy();
+      expect(within(c).getAllByText("Fora do seu normal")).toHaveLength(2);
+      const cores = JSON.stringify(StyleSheet.flatten(carga.getByText("Fora do seu normal").props.style));
+      expect(cores).not.toMatch(/#b3261e|#c62828/i);
+    });
+
+    it("aprendendo e sem dado: uma linha por métrica, só estado e texto, sem valor", async () => {
+      const c = await abrir(atividades.normalAprendendo);
+      const pace = within(within(c).getByTestId("metrica-pace_medio"));
+      expect(pace.getByText("Aprendendo o seu normal")).toBeTruthy();
+      expect(pace.getByText("hourglass-empty:16")).toBeTruthy();
+      expect(pace.getByText(/3 de 8 treinos leves/)).toBeTruthy();
+      const fc = within(within(c).getByTestId("metrica-fc_media"));
+      expect(fc.getByText("Sem dado neste treino")).toBeTruthy();
+      expect(fc.getByText("info-outline:16")).toBeTruthy();
+      expect(within(c).queryByText(/bpm$/)).toBeNull();
+    });
+
+    it("sem linha de base (sem tipo): aviso neutro com o texto da API, sem métricas", async () => {
+      const c = await abrir(atividades.normalSemTipo);
+      expect(within(c).getByText("Sem linha de base: o treino não tem tipo.")).toBeTruthy();
+      expect(within(c).queryByText(NOTA_NORMAL)).toBeNull();
+    });
+
+    it("natação (modalidade sem métricas): aviso com o texto da API", async () => {
+      const c = await abrir(atividades.natacao);
+      expect(within(c).getByText("Ainda não há linha de base para natação.")).toBeTruthy();
+    });
+
+    it("multiesporte e linha_base ausente: o cartão não aparece", async () => {
+      for (const a of [atividades.normalMultiesporte, { ...atividades.ok, linha_base: null }]) {
+        const r = await render(tela(fetchCom(200, a)));
+        await screen.findByTestId("cartao-resumo");
+        expect(screen.queryByTestId("cartao-normal")).toBeNull();
+        await r.unmount();
+      }
+    });
+
+    it("cada métrica é um item só para o leitor de tela: rótulo, valor, estado e texto", async () => {
+      const c = await abrir(atividades.ok);
+      expect(within(c).getByLabelText("FC média. 152 bpm. Dentro do seu normal. Mediana de 150 bpm, em 6 treinos leves.")).toBeTruthy();
+    });
+
+    it("o cartão fica entre Esforços e Carga e forma do dia", async () => {
+      await render(tela(fetchCom(200, atividades.comEsforcos)));
+      await screen.findByTestId("cartao-normal");
+      const ids = JSON.stringify(screen.toJSON());
+      const pos = (t: string) => ids.indexOf(`"${t}"`);
+      expect(pos("cartao-esforcos")).toBeLessThan(pos("cartao-normal"));
+      expect(pos("cartao-normal")).toBeLessThan(pos("cartao-carga-forma"));
     });
   });
 });

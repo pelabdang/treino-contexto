@@ -14,6 +14,10 @@ const ROTAS = [
   { nome: "treino-carga-sem-fc", caminho: "/treino/106" }, // carga sem_carga com o motivo; forma calculada com treino sem carga no dia
   { nome: "treino-forma-aprendendo", caminho: "/treino/108" }, // carga calculada; forma aprendendo (sem CTL, ATL, TSB)
   { nome: "treino-carga-pendente", caminho: "/treino/109" },
+  { nome: "treino-normal-fora", caminho: "/treino/101" }, // linha_base@3: pace e carga por hora fora do normal, FC dentro
+  { nome: "treino-normal-aprendendo", caminho: "/treino/108" }, // uma métrica aprendendo e outra sem dado
+  { nome: "treino-normal-sem-tipo", caminho: "/treino/112" }, // aviso neutro com o texto da API
+  { nome: "treino-normal-multiesporte", caminho: "/treino/110" }, // sem o cartão
   { nome: "treino-esforcos-ciclismo", caminho: "/treino/109" }, // velocidade no lugar do pace
   { nome: "treino-esforcos-muitos", caminho: "/treino/130" }, // 12 esforços: mostra 8 e "Ver todos"
   { nome: "checkin-pergunta1", caminho: "/checkin/101" },
