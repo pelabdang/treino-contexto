@@ -873,7 +873,7 @@ Revisadas ao fim de cada meta com o que se aprendeu. Ordem tirada da "Fundação
   investigação (#455). Fuso do "hoje" corrigido (#458). `uv run pytest` no `main` em `5074d20`: 2819 verdes e 2 pulados; `npm test` com 333.
   **Não verificados:** celular de verdade (amarrado ao ensaio, decisão 10), leitor de tela real, login (o `PROFESSOR_ID` não é
   autenticação) e aluno real. Resultado completo em [[produto/metas/meta-11-caixa-do-dia]].
-- **Pendências que seguem:** #455 (quatro perguntas ao Angelo sobre a `linha_base@3`; pergunta 2 da Meta 12); #402 (paralela proposta da
+- **Pendências que seguem:** #455 (perguntas ao Angelo sobre uma `linha_base@3`; pergunta 2 da Meta 12); #402 (paralela proposta da
   Meta 12); `atencao@1` ainda em `apps/mobile/__fixtures__/caixaDoDia.ts` e `apps/mobile/scripts/api-falsa.mjs` (rafa-app; as notas foram
   corrigidas na #430); comando para carregar os treinos sintéticos da Meta 11 (candidata).
 - **Aprendido na Meta 11:** capturas por comando tiraram a conferência visual do fim da meta (a Lia revisou a tela rodando dentro da QA,
@@ -915,7 +915,7 @@ Revisadas ao fim de cada meta com o que se aprendeu. Ordem tirada da "Fundação
 
   | Proposta | Título | Dono | Depende de |
   |---|---|---|---|
-  | P1 | `linha_base@3`: piso de dispersão por métrica (proposta da #455), nota, oráculo sintético e conferência local | caio-ciencia | respostas da #455 (pergunta 2) |
+  | P1 | `linha_base@3` conforme a resposta da #455, com nota, oráculo sintético e conferência local | caio-ciencia | respostas da #455 (pergunta 2) |
   | P2 | Desenho da tela do treino com as seções normal, carga e esforços, e a mesma aparência de distância e pace (#237) | lia-design | nenhuma |
   | P3 | Contrato do `GET` da atividade para as três seções (textos prontos, estados, arredondamento da carga); adendo da ADR 0004 só se mudar | duda-dados | P2 |
   | P4 | Tela do treino: seção "comparado com o seu normal" | rafa-app (revisão da Lia) | P2, P3 (e P1, se aprovada) |
@@ -959,8 +959,8 @@ Revisadas ao fim de cada meta com o que se aprendeu. Ordem tirada da "Fundação
 - **Tela da linha de base no app** (rafa-app, com a Lia): proposta na Meta 12. A Meta 7 entregou a `linha_base` só na API; o lugar natural é a tela
   de um treino, junto do tipo e da divergência.
 - **Revisar o limite de "fora do normal" ou a métrica por tipo** (caio-ciencia): se a taxa de sessões "fora" ficar acima do
-  esperado para um limite de `|z| >= 2,5`, rever o limite, o piso ou a métrica de cada tipo (`linha_base@3`). Investigada na #455
-  (conferência local da Meta 11): proposta de piso por métrica, P1 da Meta 12 se o Angelo aprovar.
+  esperado para um limite de `|z| >= 2,5`, rever o limite, o piso ou a métrica de cada tipo (`linha_base@3`). Achado da conferência
+  local da Meta 11: com poucas amostras do tipo ou dispersão muito pequena, o `z` pode sair grande; o limite não mede relevância esportiva; investigação na #455; P1 da Meta 12 se o Angelo aprovar.
 - **Janela maior para tipo raro** (caio-ciencia): tipo feito a cada duas semanas ou menos segue em "aprendendo" com 12
   semanas e mínimo de 8; uma janela por tipo resolveria.
 - **Esforço curto no `intervalado` sem série de 1 km** (caio-ciencia): hoje o treino compara só pela FC média e pela carga por
@@ -1139,8 +1139,7 @@ stack Expo). A chave do provedor de LLM foi entregue e está no `.env` (fora do 
   Meta 12 é aberta antes do "ok". Cada pergunta traz a recomendação; "ok para todas" vale como "sim" a cada uma.
    1. **Abrir as issues e começar a Meta 12** com a lista P1 a P10 da seção "Meta 12" (paralelas: `atencao@2` no app, #402 e a comparação
       para a Meta 13). *Recomendação:* sim. Alternativas: login e deploy agora (pede as decisões da pergunta 5 antes) ou o agente do atleta.
-   2. **`linha_base@3` antes de o atleta ver o "fora do normal".** As quatro perguntas da #455 (piso de dispersão por métrica e o que fazer
-      com uma métrica de distribuição de dois picos). *Recomendação:* responder na largada; com o "sim", a P1 entra e a seção do normal usa a
+   2. **`linha_base@3` antes de o atleta ver o "fora do normal".** As perguntas da #455. *Recomendação:* responder na largada; com o "sim", a P1 entra e a seção do normal usa a
       `@3`; sem resposta, a P1 e a P4 saem da meta e o atleta não vê o "fora do normal" ainda (melhor do que mostrar uma leitura que a
       conferência local já mostrou frágil).
    3. **Carga na tela do atleta.** *Recomendação:* a carga do treino e a forma do dia (condicionamento, fadiga e forma, os nomes em
@@ -1158,7 +1157,7 @@ Pendentes com o Angelo (o time segue em volta delas):
    lista de cada meta.
 2. **Antes de gerar o feedback dos treinos reais dele:** ler os termos do provedor sobre o uso dos dados para treinar modelos (item 10
    de "A confirmar" da ADR 0013). Segue não conferido por nós.
-3. **#455:** as quatro perguntas sobre a `linha_base@3` (pergunta 2 da Meta 12).
+3. **#455:** as perguntas sobre uma `linha_base@3` (pergunta 2 da Meta 12).
 4. **Antes do primeiro aluno real:** termo de consentimento, contrato com a assessoria e consulta de LGPD (decisões 3, 4 e 7 da Meta 11);
    login e deploy (decisão 2), com conta e serviço novos (pergunta 5 da Meta 12).
 5. **Meta 12:** as seis perguntas acima.

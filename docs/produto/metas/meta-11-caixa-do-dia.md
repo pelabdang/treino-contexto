@@ -108,16 +108,16 @@ Detalhes na [[decisoes/0015-caixa-do-dia-do-professor]], em [[metricas/atencao]]
 Todos genéricos; nada do dado real.
 - **A conferência local achou ruído no aviso de check-in:** um aviso por treino e a modalidade `outra` entrando na conta. Virou a
   `atencao@2` (#454): uma linha por aluno, sem `outra`.
-- **A caixa expôs um ponto fraco de uma métrica antiga:** um treino saiu "fora do normal" com duas medidas em direções opostas e `z` muito
-  grande. A investigação (#455) aponta uma métrica com distribuição de dois picos e dispersão minúscula, e propõe uma `linha_base@3` com piso
-  por métrica; quatro perguntas ao Angelo estão pendentes.
+- **A caixa expôs um ponto fraco de uma métrica antiga:** o "fora do normal" vem da `linha_base@2`; com poucas amostras do tipo ou dispersão muito pequena, o `z` pode sair grande; o limite não mede relevância esportiva; investigação na #455 (em aberto,
+  com perguntas ao Angelo antes de qualquer versão nova).
 - **O "hoje" dependia do relógio do teste:** entre 21h e meia-noite de Brasília o dia UTC já virou; o e2e montava as datas em UTC e
   falhava nessa janela, e a frase de prazo do detalhe usava o relógio, não o "hoje" da requisição (#458). Hoje o fuso é sempre
   `America/Sao_Paulo`, com teste às 20h, 23h e 01h.
 - **O passo da tela no guia não tinha sido rodado por quem escreveu:** faltava `CORS_ORIGENS` (#449), achado pela QA.
 - **Versão nova da regra deixou a string antiga em fixtures do app:** `apps/mobile/__fixtures__/caixaDoDia.ts` e
   `apps/mobile/scripts/api-falsa.mjs` ainda dizem `atencao@1` (pendência do Rafa); as notas foram corrigidas neste PR.
-- **As capturas por comando funcionaram:** 28 capturas em cerca de 37 s, e a tela foi vista durante a meta, não no fim.
+- **As capturas por comando funcionaram:** 76 capturas no padrão (19 rotas, 2 tamanhos, 2 temas) em cerca de 80 s, e a tela foi vista
+  durante a meta, não no fim.
 
 ## O que se aprendeu
 - **Capturas por comando tiraram a conferência visual do fim da meta.** Pela primeira vez desde a Meta 8, a Lia revisou a tela rodando dentro
@@ -131,7 +131,7 @@ Todos genéricos; nada do dado real.
 - **"A confirmar" com padrões funcionou pela sexta meta seguida** ("ok para as 7" na ADR 0015).
 
 ## PRECISA DO ANGELO
-- **#455:** as quatro perguntas sobre a `linha_base@3` (piso por métrica). Até a resposta, o "fora do normal" segue na `@2`.
+- **#455:** as perguntas sobre uma `linha_base@3`. Até a resposta, o "fora do normal" segue na `@2`.
 - **Meta 12:** proposta e perguntas no [[produto/roadmap]] ("Meta 12, proposta"). Nenhuma issue da Meta 12 foi aberta.
 - **Termos do provedor sobre o uso dos dados para treinar modelos** (item 10 de "A confirmar" da ADR 0013): segue não conferido por nós.
 
