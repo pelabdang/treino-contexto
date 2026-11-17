@@ -66,9 +66,12 @@ describe("tela de um treino", () => {
     await screen.findByTestId("cartao-resumo");
     expect(screen.getByText("18/03/25 às 06:30")).toBeTruthy();
     expect(screen.getByText("0:52:05")).toBeTruthy();
-    expect(screen.getByText(/Pace médio: 5:12/)).toBeTruthy();
-    expect(screen.getByText(/Distância: 10,00/)).toBeTruthy();
-    expect(screen.getByText("FC média: 152 bpm")).toBeTruthy();
+    expect(screen.getByText("5:12 min/km")).toBeTruthy();
+    expect(screen.getByText("10,00 km")).toBeTruthy();
+    expect(screen.getByText("152 bpm")).toBeTruthy();
+    for (const r of ["Distância, 10,00 km", "Pace médio, 5:12 min/km", "FC média, 152 bpm"]) {
+      expect(within(screen.getByTestId("cartao-resumo")).getByLabelText(r)).toBeTruthy();
+    }
     expect(screen.getByText("24,3 °C")).toBeTruthy();
     expect(screen.getByText("25,1 °C")).toBeTruthy();
     expect(screen.getByText("61 %")).toBeTruthy();
@@ -82,21 +85,21 @@ describe("tela de um treino", () => {
     await screen.findByTestId("cartao-resumo");
     expect(screen.getByText("02/01/30 às 99:88")).toBeTruthy();
     expect(screen.getByText("7:77:77")).toBeTruthy();
-    expect(screen.getByText(/Pace médio: 9:99/)).toBeTruthy();
+    expect(screen.getByText("9:99 min/km")).toBeTruthy();
   });
 
   it("distância: mostra `distancia` exatamente como veio, sem converter distancia_m", async () => {
     const a = { ...atividades.ok, distancia: "ABC 7,5 xyz", distancia_m: 123456 };
     await render(tela(fetchCom(200, a)));
     await screen.findByTestId("cartao-resumo");
-    expect(screen.getByText("Distância: ABC 7,5 xyz")).toBeTruthy();
+    expect(screen.getByText("ABC 7,5 xyz")).toBeTruthy();
     expect(screen.queryByText(/123/)).toBeNull();
   });
 
   it("distância: natação em metros e sem distância não mostra a linha", async () => {
     await render(tela(fetchCom(200, atividades.natacao)));
     await screen.findByTestId("cartao-resumo");
-    expect(screen.getByText("Distância: 1.800 m")).toBeTruthy();
+    expect(screen.getByText("1.800 m")).toBeTruthy();
   });
 
   it("distância null: não mostra a linha, mesmo com distancia_m", async () => {
@@ -129,7 +132,7 @@ describe("tela de um treino", () => {
     await render(tela(fetchCom(200, atividades.natacao)));
     await screen.findByTestId("cartao-resumo");
     expect(screen.queryByText(/Pace médio/)).toBeNull();
-    expect(screen.getByText("FC média: sem FC")).toBeTruthy();
+    expect(screen.getByText("sem FC")).toBeTruthy();
     expect(screen.getByText("0:45:00")).toBeTruthy();
     expect(screen.getAllByText("Natação").length).toBeGreaterThan(0);
   });

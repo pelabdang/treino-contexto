@@ -1,20 +1,16 @@
 ---
-source_file: "docs/modulos/mobile.md"
-type: "document"
-community: "Comunidade 0"
+source_file: "docs/produto/meta-3-como-rodar.md"
+type: "concept"
+community: "Mapa, upload de FIT e ADRs"
 tags:
-  - graphify/document
+  - graphify/concept
   - graphify/EXTRACTED
-  - community/Comunidade_0
+  - community/Mapa_upload_de_FIT_e_ADRs
 ---
 
 # Botão Enviar arquivo FIT
 
 ## Connections
-- [[Guia Meta 3 como rodar o upload de FIT]] - `references` [EXTRACTED]
-- [[Módulo mobile]] - `implements` [EXTRACTED]
-- [[POST atividades fit (upload de FIT)]] - `shares_data_with` [INFERRED]
-- [[Rafa (app em React Native com Expo)]] - `references` [EXTRACTED]
-- [[Tela TelaEvolucao do app]] - `references` [EXTRACTED]
+- [[Meta 3 como rodar o upload de FIT]] - `references` [EXTRACTED]
 
-#graphify/document #graphify/EXTRACTED #community/Comunidade_0
+#graphify/concept #graphify/EXTRACTED #community/Mapa_upload_de_FIT_e_ADRs

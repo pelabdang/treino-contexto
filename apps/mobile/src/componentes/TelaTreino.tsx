@@ -176,13 +176,14 @@ function Treino({ atividade, styles, tema, checkin, aoAtualizarFeedback }: Props
       <View testID="cartao-resumo" style={styles.cartao}>
         <Text style={styles.rotulo}>Duração</Text>
         <Text style={styles.destaque}>{atividade.duracao}</Text>
-        {atividade.distancia != null && <Text style={styles.corpo}>Distância: {atividade.distancia}</Text>}
-        {atividade.pace_medio != null && (
-          <Text style={styles.corpo}>
-            Pace médio: {atividade.pace_medio} <Text style={styles.secundario}>min/km</Text>
-          </Text>
-        )}
-        <Text style={styles.secundario}>FC média: {atividade.fc_media === null ? "sem FC" : `${atividade.fc_media} bpm`}</Text>
+        {atividade.distancia != null && <Linha styles={styles} rotulo="Distância" valor={atividade.distancia} />}
+        {atividade.pace_medio != null && <Linha styles={styles} rotulo="Pace médio" valor={`${atividade.pace_medio} min/km`} />}
+        <Linha
+          styles={styles}
+          rotulo="FC média"
+          valor={atividade.fc_media === null ? "sem FC" : `${atividade.fc_media} bpm`}
+          suave={atividade.fc_media === null}
+        />
       </View>
 
       {checkin ? <CartoesCheckin atividade={atividade} {...checkin} entreCartoes={feedback} /> : feedback}
@@ -235,11 +236,11 @@ function CartaoClima({ clima, styles, tema }: { clima: ClimaAtividade; styles: E
   );
 }
 
-function Linha({ styles, rotulo, valor }: { styles: Estilos; rotulo: string; valor: string }) {
+function Linha({ styles, rotulo, valor, suave }: { styles: Estilos; rotulo: string; valor: string; suave?: boolean }) {
   return (
     <View accessible accessibilityLabel={`${rotulo}, ${valor}`} style={styles.linha}>
       <Text style={styles.rotuloLinha}>{rotulo}</Text>
-      <Text style={styles.valorLinha}>{valor}</Text>
+      <Text style={[styles.valorLinha, suave && styles.valorSuave]}>{valor}</Text>
     </View>
   );
 }
@@ -317,7 +318,6 @@ function criarEstilos({ cor }: Tema, margem: number = espaco[4]) {
     rotulo: { ...fonte.rotulo, color: cor["texto-2"] },
     destaque: { ...fonte["numero-destaque"], color: cor.texto },
     corpo: { ...fonte.corpo, color: cor.texto },
-    secundario: { ...fonte.corpo, color: cor["texto-2"] },
     linha: {
       flexDirection: "row",
       justifyContent: "space-between",
@@ -328,6 +328,7 @@ function criarEstilos({ cor }: Tema, margem: number = espaco[4]) {
     },
     rotuloLinha: { ...fonte.corpo, color: cor["texto-2"] },
     valorLinha: { ...fonte["corpo-forte"], fontVariant: ["tabular-nums"], color: cor.texto },
+    valorSuave: { color: cor["texto-2"] },
     atribuicao: { ...fonte.legenda, marginTop: espaco[3], color: cor["texto-2"] },
     aviso: {
       flexDirection: "row",

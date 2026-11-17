@@ -1,17 +1,13 @@
 ---
 source_file: "docs/_templates/meta.md"
 type: "document"
-community: "Comunidade 3"
+community: "Template de meta"
 tags:
   - graphify/document
   - graphify/EXTRACTED
-  - community/Comunidade_3
+  - community/Template_de_meta
 ---
 
 # Template: meta
 
-## Connections
-- [[Agente Nina (documentação)]] - `references` [EXTRACTED]
-- [[Roteiro de metas (docsprodutoroadmap.md)]] - `references` [EXTRACTED]
-
-#graphify/document #graphify/EXTRACTED #community/Comunidade_3
+#graphify/document #graphify/EXTRACTED #community/Template_de_meta

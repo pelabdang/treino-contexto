@@ -16,5 +16,6 @@ Uma nota por módulo em `docs/modulos/`. Mapa geral em [[00-inicio]].
 - [[modulos/clima]]: cliente Open-Meteo (clima da atividade, Meta 4), testado com resposta sintética, sem rede.
 - [[modulos/grafico-tiros]]: PNG e CSV da evolução dos tiros de 1 km.
 - [[modulos/grafico-carga]]: PNG e CSV da carga de treino (CTL, ATL, TSB e carga diária).
+- [[modulos/caixa-do-dia]]: caixa do dia do professor (Meta 11): rota, regra `atencao@2`, filtro de vínculo e consentimento e tela.
 - [[modulos/mobile]]: app React Native com Expo (iOS, Android e web).
 - [[modulos/infra]]: Docker Compose, variáveis de ambiente e CI.
