@@ -440,7 +440,8 @@ describe("tela de um treino", () => {
       expect(carga.getByText("Fora do seu normal")).toBeTruthy();
       expect(carga.getByText("unfold-more:16")).toBeTruthy();
       expect(carga.getByText(/9,0 pontos\/h maior que a mediana/)).toBeTruthy();
-      expect(within(c).getAllByText("Fora do seu normal")).toHaveLength(2);
+      expect(within(c).getAllByText("Fora do seu normal")).toHaveLength(3);
+      expect(within(within(c).getByTestId("metrica-fc_media")).getByText("11 bpm acima da mediana de 150 bpm, em 6 treinos leves.")).toBeTruthy();
       const cores = JSON.stringify(StyleSheet.flatten(carga.getByText("Fora do seu normal").props.style));
       expect(cores).not.toMatch(/#b3261e|#c62828/i);
     });
@@ -450,7 +451,7 @@ describe("tela de um treino", () => {
       const pace = within(within(c).getByTestId("metrica-pace_medio"));
       expect(pace.getByText("Aprendendo o seu normal")).toBeTruthy();
       expect(pace.getByText("hourglass-empty:16")).toBeTruthy();
-      expect(pace.getByText(/3 de 8 treinos leves/)).toBeTruthy();
+      expect(pace.getByText("3 de 8 treinos do tipo leve nas últimas 12 semanas.")).toBeTruthy();
       const fc = within(within(c).getByTestId("metrica-fc_media"));
       expect(fc.getByText("Sem dado neste treino")).toBeTruthy();
       expect(fc.getByText("info-outline:16")).toBeTruthy();
