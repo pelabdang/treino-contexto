@@ -131,8 +131,7 @@ Todos genéricos; nada do dado real.
 - **"A confirmar" com padrões funcionou pela sexta meta seguida** ("ok para as 7" na ADR 0015).
 
 ## PRECISA DO ANGELO
-- **#455:** as perguntas sobre uma `linha_base@3`. Até a resposta, o "fora do normal" segue na `@2`.
-- **Meta 12:** proposta e perguntas no [[produto/roadmap]] ("Meta 12, proposta"). Nenhuma issue da Meta 12 foi aberta.
+- **#455 e Meta 12:** respondidas pelo Angelo em 17/11 ("sim para as quatro" e "ok para as seis"). A `linha_base@3` é a #462 e a Meta 12 está em curso, com as issues #461 a #472 e #237 ([[produto/roadmap]], seção "Meta 12"). Até a `@3` entrar, o "fora do normal" segue na `@2`.
 - **Termos do provedor sobre o uso dos dados para treinar modelos** (item 10 de "A confirmar" da ADR 0013): segue não conferido por nós.
 
 ## Resultado
@@ -142,4 +141,4 @@ com o motivo em uma linha, abre o detalhe do treino (com a observação, que nun
 correção vence a sugestão e a semana-padrão e não é desfeita. A tela tem teste, capturas por comando e design-ok da Lia sobre a tela rodando.
 Versões no fechamento: `atencao@2`; migrações até 0016.
 
-Próxima: Meta 12, **proposta**, esperando o "ok" do Angelo ([[produto/roadmap]]).
+Próxima: Meta 12, **em curso** desde 17/11 ([[produto/roadmap]]).
