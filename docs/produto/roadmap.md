@@ -3,7 +3,7 @@ tipo: roteiro
 status: em-uso
 dono: paulo
 atualizado: 2026-11-17
-links: [[produto/plano-mvp-execucao]], [[produto/metas/meta-11-caixa-do-dia]], [[produto/meta-11-como-rodar]], [[decisoes/0015-caixa-do-dia-do-professor]], [[metricas/atencao]], [[design/telas/caixa-do-dia]], [[design/telas/conferencia-369]], [[produto/metas/meta-10-recuperacao]], [[produto/meta-10-como-rodar]], [[decisoes/0014-recuperacao-diaria]], [[metricas/recuperacao]], [[diario/2026-11-12]], [[diario/2026-11-13]], [[diario/2026-11-16]], [[produto/metas/meta-9-feedback-automatico]], [[produto/meta-9-como-rodar]], [[decisoes/0013-feedback-automatico]], [[diario/2026-11-11]], [[decisoes/0001-modelo-de-dados-minimo]], [[decisoes/0005-serie-de-tiros-o-que-entra]], [[produto/metas/meta-1-tiros-1km]], [[produto/metas/meta-2-evolucao-tiros-app]], [[produto/metas/meta-3-upload-fit]], [[decisoes/0004-contrato-tela-evolucao]], [[decisoes/0006-upload-de-fit]], [[decisoes/0003-fuso-da-atividade]], [[diario/2026-11-03]], [[00-inicio]], [[produto/metas/meta-4-clima-atividade]], [[decisoes/0007-clima-da-atividade]], [[produto/meta-4-como-rodar]], [[metricas/tiros-1km]], [[decisoes/0008-deteccao-de-esforcos]], [[diario/2026-11-04]], [[produto/metas/meta-5-deteccao-esforcos]], [[produto/meta-5-como-rodar]], [[decisoes/0009-treino-de-transicao]], [[metricas/esforcos]], [[metricas/transicao]], [[modulos/ingestao-garmin]], [[diario/2026-11-06]], [[produto/metas/meta-6-carga-treino]], [[produto/meta-6-como-rodar]], [[decisoes/0010-carga-de-treino]], [[metricas/carga-treino]], [[metricas/serie-carga]], [[metricas/conferencia-carga]], [[diario/2026-11-07]], [[diario/2026-11-08]], [[diario/2026-11-09]], [[produto/metas/meta-7-linha-de-base-semana-padrao]], [[produto/meta-7-como-rodar]], [[decisoes/0011-linha-de-base-e-semana-padrao]], [[metricas/linha-base]], [[metricas/tipo-treino]], [[design/tokens]], [[produto/metas/meta-8-check-in]], [[produto/meta-8-como-rodar]], [[decisoes/0012-check-in-pos-treino]], [[metricas/carga-pse]], [[design/telas/checkin]], [[diario/2026-11-10]]
+links: [[produto/plano-mvp-execucao]], [[produto/metas/meta-12-treino-inteiro]], [[produto/meta-12-como-rodar]], [[design/telas/treino]], [[produto/metas/meta-11-caixa-do-dia]], [[produto/meta-11-como-rodar]], [[decisoes/0015-caixa-do-dia-do-professor]], [[metricas/atencao]], [[design/telas/caixa-do-dia]], [[design/telas/conferencia-369]], [[produto/metas/meta-10-recuperacao]], [[produto/meta-10-como-rodar]], [[decisoes/0014-recuperacao-diaria]], [[metricas/recuperacao]], [[diario/2026-11-12]], [[diario/2026-11-13]], [[diario/2026-11-16]], [[produto/metas/meta-9-feedback-automatico]], [[produto/meta-9-como-rodar]], [[decisoes/0013-feedback-automatico]], [[diario/2026-11-11]], [[decisoes/0001-modelo-de-dados-minimo]], [[decisoes/0005-serie-de-tiros-o-que-entra]], [[produto/metas/meta-1-tiros-1km]], [[produto/metas/meta-2-evolucao-tiros-app]], [[produto/metas/meta-3-upload-fit]], [[decisoes/0004-contrato-tela-evolucao]], [[decisoes/0006-upload-de-fit]], [[decisoes/0003-fuso-da-atividade]], [[diario/2026-11-03]], [[00-inicio]], [[produto/metas/meta-4-clima-atividade]], [[decisoes/0007-clima-da-atividade]], [[produto/meta-4-como-rodar]], [[metricas/tiros-1km]], [[decisoes/0008-deteccao-de-esforcos]], [[diario/2026-11-04]], [[produto/metas/meta-5-deteccao-esforcos]], [[produto/meta-5-como-rodar]], [[decisoes/0009-treino-de-transicao]], [[metricas/esforcos]], [[metricas/transicao]], [[modulos/ingestao-garmin]], [[diario/2026-11-06]], [[produto/metas/meta-6-carga-treino]], [[produto/meta-6-como-rodar]], [[decisoes/0010-carga-de-treino]], [[metricas/carga-treino]], [[metricas/serie-carga]], [[metricas/conferencia-carga]], [[diario/2026-11-07]], [[diario/2026-11-08]], [[diario/2026-11-09]], [[produto/metas/meta-7-linha-de-base-semana-padrao]], [[produto/meta-7-como-rodar]], [[decisoes/0011-linha-de-base-e-semana-padrao]], [[metricas/linha-base]], [[metricas/tipo-treino]], [[design/tokens]], [[produto/metas/meta-8-check-in]], [[produto/meta-8-como-rodar]], [[decisoes/0012-check-in-pos-treino]], [[metricas/carga-pse]], [[design/telas/checkin]], [[diario/2026-11-10]]
 ---
 # Roteiro de metas
 
@@ -24,8 +24,8 @@ Ao fechar uma meta, o Paulo registra o resultado em `docs/produto/metas/` e revi
 | 9 | Feedback automático por treino | feita (fixtures e provedor falso; tela rodando, celular e revisão da Lia na tela não verificados; [[produto/metas/meta-9-feedback-automatico]]) |
 | 10 | Sono, VFC e FC de repouso no contexto do treino | feita (fixtures, sem rede; conferência visual no Chrome em 390 px sem bloqueantes; celular de verdade não verificado; [[produto/metas/meta-10-recuperacao]]) |
 | 11 | Caixa do dia do professor (piloto local, sem login, atletas sintéticos) | feita (fixtures, sem rede; design-ok da Lia na tela rodando; celular, leitor de tela, login e aluno real não verificados; [[produto/metas/meta-11-caixa-do-dia]]) |
-| **12** | **O treino inteiro na tela do atleta (linha de base, carga, esforços)** | **em curso** ("ok para as seis" do Angelo em 17/11; issues #461 a #472 e #237) |
-| 13 | Login e deploy do piloto | próxima (decisão 5 da Meta 12); planejada depois das decisões do Angelo sobre provedor, custo, CNPJ e LGPD |
+| 12 | O treino inteiro na tela do atleta (linha de base, carga, esforços) | feita (fixtures, sem rede; tela viva contra a API e design-ok da Lia; celular, leitor de tela, login e aluno real não verificados; [[produto/metas/meta-12-treino-inteiro]]) |
+| **13** | **Login e deploy do piloto** | **proposta**, esperando as decisões do Angelo (perguntas em "PRECISA DO ANGELO", "Meta 13") |
 | 14 | Agente do atleta (primeiras perguntas) | depois da Meta 13 (decisão 6 da Meta 12; era a Meta 12) |
 
 Numeração: em 03/11 a linha de base virou meta própria e as metas seguintes andaram um número. Em 04/11 (decisão do
@@ -882,8 +882,12 @@ Revisadas ao fim de cada meta com o que se aprendeu. Ordem tirada da "Fundação
   datas "de hoje" são do fuso do atleta e o teste fixa o relógio nas viradas (#458); versão nova de regra procura a string antiga também
   nas fixtures do app e na API falsa; quem escreve o guia roda o passo da tela (#449); "A confirmar" com padrões funcionou pela sexta meta.
 
-### Meta 12: o treino inteiro na tela do atleta (em curso)
-> **Em curso desde 17/11.** Proposta do Paulo na #430; o Angelo respondeu **"ok para as seis"** em 17/11, todas com a recomendação, e
+### Meta 12: o treino inteiro na tela do atleta (feita)
+> **Feita em 17/11, com cinco itens não verificados** (celular de verdade, leitor de tela real, login, aluno real e o feedback dos treinos
+> reais ainda não refeito com a `@3`). Resultado completo em [[produto/metas/meta-12-treino-inteiro]]. Quatro perguntas (A a D) seguem
+> "a confirmar" em "PRECISA DO ANGELO".
+>
+> Aberta em 17/11. Proposta do Paulo na #430; o Angelo respondeu **"ok para as seis"** em 17/11, todas com a recomendação, e
 > respondeu às perguntas da #455 (respostas só no relatório local em `entregas/`). Issues #462 a #472 e #237; roteiro na #461. Nada na meta
 > precisa de conta, serviço pago ou dado de outro aluno real.
 
@@ -929,16 +933,16 @@ Revisadas ao fim de cada meta com o que se aprendeu. Ordem tirada da "Fundação
 
   | Proposta | Issue | Título | Dono | Depende de | Situação |
   |---|---|---|---|---|---|
-  | P1 | #462 | `linha_base@3` com piso por métrica e mínimo de 8 amostras, nota, oráculo sintético e conferência local (o PR fecha a #455) | caio-ciencia | nenhuma (respostas da #455 dadas) | aberta |
-  | P2 | #463 | Desenho da tela do treino com as seções normal, carga e esforços, e a decisão da #237 | lia-design | nenhuma | aberta |
-  | P3 | #464 | Contrato do `GET` da atividade para as três seções (textos prontos, estados, arredondamento da carga); adendo da ADR 0004 só se mudar | duda-dados (Theo no adendo) | #463 | aberta |
-  | P4 | #465 | Tela do treino: seção "comparado com o seu normal" | rafa-app (revisão da Lia) | #462, #463, #464 | aberta |
-  | P5 | #466 | Tela do treino: carga do treino e forma do dia, como estimativa | rafa-app (revisão da Lia) | #463, #464 | aberta |
-  | P6 | #467 | Tela do treino: esforços e rótulo de transição corrigível pelo atleta | rafa-app (revisão da Lia) | #463, #464 | aberta |
-  | P7 | #237 | Mesma aparência para distância e pace na tela do treino (issue existente) | rafa-app (revisão da Lia) | #463 (e #464 se o contrato mudar) | aberta |
-  | P8 | #468 | Documentação, guia `meta-12-como-rodar` e diário (quem escreve roda o passo da tela) | nina-docs | #465, #466, #467, #237 | aberta |
-  | P9 | #469 | QA de ponta a ponta com fixtures, capturas e revisão da Lia na tela rodando | bia-qa com lia-design | #468 | aberta |
-  | P10 | #470 | Resultado da meta e roteiro | paulo-planejador | #469 | aberta |
+  | P1 | #462 | `linha_base@3` com piso por métrica e mínimo de 8 amostras, nota, oráculo sintético e conferência local (o PR fecha a #455) | caio-ciencia | nenhuma (respostas da #455 dadas) | feita (PR #479; conferência local só em `entregas/`) |
+  | P2 | #463 | Desenho da tela do treino com as seções normal, carga e esforços, e a decisão da #237 | lia-design | nenhuma | feita (PR #476) |
+  | P3 | #464 | Contrato do `GET` da atividade para as três seções (textos prontos, estados, arredondamento da carga); adendo da ADR 0004 só se mudar | duda-dados (Theo no adendo) | #463 | feita (PR #480, adendo 12) |
+  | P4 | #465 | Tela do treino: seção "comparado com o seu normal" | rafa-app (revisão da Lia) | #462, #463, #464 | feita (PR #485) |
+  | P5 | #466 | Tela do treino: carga do treino e forma do dia, como estimativa | rafa-app (revisão da Lia) | #463, #464 | feita (PR #483) |
+  | P6 | #467 | Tela do treino: esforços e rótulo de transição corrigível pelo atleta | rafa-app (revisão da Lia) | #463, #464 | feita (PR #484) |
+  | P7 | #237 | Mesma aparência para distância e pace na tela do treino (issue existente) | rafa-app (revisão da Lia) | #463 (e #464 se o contrato mudar) | feita (PR #477) |
+  | P8 | #468 | Documentação, guia `meta-12-como-rodar` e diário (quem escreve roda o passo da tela) | nina-docs | #465, #466, #467, #237 | feita (PR #486) |
+  | P9 | #469 | QA de ponta a ponta com fixtures, capturas e revisão da Lia na tela rodando | bia-qa com lia-design | #468 | feita (PR #492) |
+  | P10 | #470 | Resultado da meta e roteiro | paulo-planejador | #469 | esta |
 
   **Ordem:** na largada, em paralelo: #462 (Caio), #463 (Lia), #461 (este roteiro) e as paralelas #471 (Rafa, enquanto a spec não sai) e
   #472 (Duda, enquanto a spec não sai). #464 assim que a spec disser os campos; #237 pode adiantar com a spec. Depois o Rafa em sequência:
@@ -952,16 +956,72 @@ Revisadas ao fim de cada meta com o que se aprendeu. Ordem tirada da "Fundação
   ele quiser ver).
 - **Fora:** gráfico da série de carga (CTL, ATL e TSB ao longo do tempo); tela da evolução e #213; motivo de falta; resumos; login e deploy
   (Meta 13); agente (Meta 14); alerta de qualquer tipo; celular de verdade (amarrado ao ensaio).
+- **Entraram durante a meta, todas feitas:** #487 (textos da FC e de "aprendendo"; PRs #488, #489, #490; a #491 era duplicada); #471 e
+  #402 (paralelas; PRs #474, #475 e #482); PRs #478 e #481 (grafo, diário e nota da Meta 11). Em aberto, fora do fechamento: #472.
+- **Decisões do Theo na meta:** contrato do `GET` (PRs #476 e #480: textos prontos da carga, 1 casa com vírgula, TSB com U+2212,
+  `transicao.editavel` e `forma_do_dia`); `409` no `PUT` e no `DELETE` da transição quando o treino não tem rótulo; `feedback_prompt@9` (só os
+  números dos exemplos G02 e G04); pisos da `@3` também em `fc_melhor_tiro` e `melhor_pace`.
+- **Resultado:** feita (17/11), com cinco itens não verificados. Com fixtures sintéticas, a Bia conferiu o critério com
+  `tests/test_e2e_meta12.py` (16 testes) e seguiu o [[produto/meta-12-como-rodar]] do zero, com a **tela viva contra a API de um banco
+  limpo** (#469, PR #492); a única correção do guia foi abrir a tela por `localhost`. A Lia deu design-ok na tela rodando. **Não
+  verificados:** celular de verdade, leitor de tela real, login, aluno real e o feedback dos treinos reais refeito com a `@3`. Resultado
+  completo em [[produto/metas/meta-12-treino-inteiro]].
+- **Pendências que seguem:** #472 (comparação para a Meta 13, com o Angelo); perguntas A a D (a confirmar); sugestão da revisão de mostrar
+  o esforço de 1000 m como "1 km" em vez de "1 · 1000 m" (a Duda decide); a seção "Não rodado" do guia, que ainda cita a tela viva como
+  não rodada (a Nina acerta junto com este fechamento).
+- **Aprendido na Meta 12:** spec com a lista de campos antes do contrato evitou retrabalho; a tela viva contra a API na QA pega o que a API
+  falsa não pega (CORS, texto do backend) e fica como padrão; versão nova de métrica mexe em textos aprovados de outro módulo (exemplos do
+  feedback), então quem sobe a versão procura também ali; texto pronto da API precisa de revisão de português como a tela tem revisão
+  visual; perguntas do meio da meta seguem "a confirmar" com a recomendação valendo e não param o time.
 
-### Meta 13: login e deploy do piloto (próxima; decisão 5 do Angelo em 17/11)
-- **Objetivo:** o app no ar para o ensaio (plano, seção 9, semana 11: 1 professor e 10 atletas), com login, cada professor vendo só os
-  próprios alunos e consentimento registrado pelo próprio atleta.
-- **Antes de planejar ("PRECISA DO ANGELO"):** provedor e teto de custo mensal, CNPJ, consulta de LGPD (termo de consentimento, contrato com
-  a assessoria), limite do upload no proxy. A comparação da paralela da Meta 12 (#472) leva as opções; o Paulo transforma a recomendação
-  em perguntas na #470.
-- **Plano B, se as decisões não vierem até o fim da Meta 12:** a Meta 14 (agente) não sobe na frente, porque o ensaio precisa do app no ar;
-  o Paulo propõe uma meta curta sem conta nem gasto (por exemplo, a tela da evolução com a #213 ou a série da carga) e pergunta ao Angelo.
-- **Quem:** duda-dados, rafa-app, Theo.
+### Meta 13: login e deploy do piloto (proposta)
+> **Proposta do Paulo na #470, esperando as decisões do Angelo.** Nenhuma issue aberta. As perguntas estão em "PRECISA DO ANGELO",
+> "Meta 13", cada uma com a recomendação. Diferente das metas anteriores, esta **pede conta nova e gasto mensal**: nada é criado nem
+> contratado antes do "sim" dele. A comparação de opções (#472) é a entrada das perguntas 2 a 4; enquanto ela não sai, as recomendações
+> abaixo são as do roteiro (AGENTS.md já aponta a DigitalOcean como produção futura).
+
+- **Por que esta e não outra.** O ensaio com professor e atletas (plano, seção 9, semana 11) precisa do app no ar, com login e cada
+  professor vendo só os próprios alunos. Três perguntas abertas da Meta 12 (B, quem corrige sem login; o celular de verdade, amarrado ao
+  ensaio; o aluno real) só fecham com isso. O agente (Meta 14) vale mais com o app no ar.
+- **Objetivo:** o app no ar para o ensaio (1 professor e 10 atletas), com login de atleta e de professor, cada um vendo só o que é seu,
+  consentimento registrado pelo próprio atleta, e o Angelo usando o app no celular dele contra o servidor.
+- **Entrega visível:** endereço do piloto com HTTPS; telas de entrar e sair; o atleta registra o consentimento para um professor; o
+  professor vê só os seus alunos; o app no celular (Expo Go) apontando para o servidor; guia de implantação e de restauração do backup.
+- **Critério de pronto (proposto):**
+  - ADR 0016 aprovada pelo Theo antes de qualquer migração ou conta: identidade e sessão, papéis (atleta, professor), quem corrige o quê
+    (fecha a pergunta B), consentimento pelo atleta, o que sai do `ATLETA_ID` e do `PROFESSOR_ID`, segredos, logs, backup e exclusão;
+  - cada rota com teste de acesso: sem sessão = 401; recurso de outro atleta ou de aluno sem consentimento = 404, como na Meta 11;
+  - nenhum dado de saúde em log no servidor; segredos só no provedor, fora do git;
+  - deploy reproduzível a partir do repositório, com limite de 10 MB do upload no proxy e backup diário com uma restauração testada;
+  - só dado sintético e o do Angelo no servidor (se ele disser "sim", pergunta 7); nenhum outro aluno real antes da consulta de LGPD;
+  - QA no endereço do piloto seguindo só o guia, **com o celular de verdade** (Expo Go, dado sintético) e um leitor de tela uma vez.
+- **Issues propostas** (cada uma até 1 dia; **nenhuma aberta** até o "ok" do Angelo):
+
+  | Proposta | Título | Dono | Depende de |
+  |---|---|---|---|
+  | P1 | ADR 0016: login, papéis, consentimento pelo atleta e deploy do piloto | duda-dados com caio-ciencia (aprovação do Theo) | perguntas 2 a 6 |
+  | P2 | Desenho das telas de entrar, sair, consentimento e erro de sessão | lia-design | P1 (adianta) |
+  | P3 | Contas e sessão na API (atleta e professor), migração, no lugar do `ATLETA_ID` e do `PROFESSOR_ID` | duda-dados | P1 |
+  | P4 | Controle de acesso em todas as rotas (401 e 404), com teste de cada rota; transição só pelo atleta dono | duda-dados | P3 |
+  | P5 | Consentimento registrado pelo atleta (rota e regra; o texto do termo vem da consulta jurídica, até lá um texto provisório marcado) | duda-dados | P3 |
+  | P6 | App: telas de entrar e sair, sessão guardada, cliente regerado | rafa-app (revisão da Lia) | P2, P3 |
+  | P7 | App: tela do consentimento | rafa-app (revisão da Lia) | P2, P5 |
+  | P8 | Deploy reproduzível no provedor escolhido: imagens, banco gerenciado, HTTPS, segredos, limite de upload, logs sem dado de saúde | duda-dados com o Theo | pergunta 2 (conta criada pelo Angelo) |
+  | P9 | Backup diário e restauração testada; exclusão de conta | duda-dados | P8 |
+  | P10 | Carregar o professor e os atletas sintéticos no piloto (e o histórico do Angelo, se ele disser "sim") | duda-dados | P8, P4 |
+  | P11 | Documentação: guia de implantação, `meta-13-como-rodar`, diário | nina-docs | P6, P7, P9 |
+  | P12 | QA no endereço do piloto, com celular de verdade e leitor de tela | bia-qa com lia-design | P11, P10 |
+  | P13 | Resultado da meta e roteiro | paulo-planejador | P12 |
+
+  **Ordem (proposta):** P1 e P2 na largada; P3 a P7 rodam localmente sem conta; P8 só depois de o Angelo criar a conta e definir o teto
+  (pergunta 2). Caminho crítico: P1 → P3 → P4 → P10 → P12 → P13, com a P8 como o risco (depende de conta). Se a conta não vier, P1 a P7
+  entram mesmo assim e a meta fecha com "login local", sem o endereço.
+- **Paralelas (fora do critério):** correção da transição deixa o feedback `desatualizado`, se o Angelo disser "sim" à pergunta C da Meta 12;
+  "1 km" no rótulo do esforço de 1000 m, se a Duda decidir mudar.
+- **Quem:** duda-dados (API, deploy), rafa-app (telas), lia-design (spec), caio-ciencia (ADR), nina-docs, bia-qa, Theo (ADR, deploy,
+  segredos), Angelo (conta, custo, LGPD, celular).
+- **Fora:** aluno real além do Angelo; WhatsApp ou e-mail transacional (se o login pedir e-mail, é pergunta 3); API oficial da Garmin
+  (depende do CNPJ); domínio próprio, se ele não quiser pagar; painel da coordenação; agente (Meta 14).
 
 ### Meta 14: agente do atleta, primeiras perguntas (depois da Meta 13; decisão 6 do Angelo em 17/11; era a Meta 12)
 - **Objetivo:** atalhos para as perguntas mais comuns ("minha evolução nos tiros de 1 km"), respondidos por consultas estruturadas.
@@ -1173,14 +1233,48 @@ stack Expo). A chave do provedor de LLM foi entregue e está no `.env` (fora do 
       ficam com você: o provedor, o teto de custo mensal, o CNPJ e a consulta de LGPD (termo de consentimento e contrato com a assessoria).
    6. **Agente do atleta passa a Meta 14.** *Recomendação:* sim: o ensaio precisa do app no ar antes de o agente valer para mais alguém.
 
+- **Meta 12, quatro perguntas do meio da meta: a confirmar.** Saíram da spec (#463) e do guia; a recomendação vale até a resposta e
+  está no `main`, menos a C (não implementada). Detalhes em [[produto/metas/meta-12-treino-inteiro]].
+   - **A. Forma do dia em "aprendendo".** *Recomendação:* esconder CTL, ATL e TSB e mostrar só o aviso. Alternativa: os números com o selo
+     "ainda aprendendo".
+   - **B. Quem corrige a transição sem login.** *Recomendação:* aceitar até a Meta 13; com o login, só o atleta dono do treino corrige.
+   - **C. Feedback depois de corrigir a transição.** *Recomendação:* o feedback já gerado fica `desatualizado` e é refeito, como no
+     check-in editado. Não implementado; com o "sim", issue pequena (paralela da Meta 13).
+   - **D. Manter a `linha_base@3` ou buscar uma regra nova.** A conferência local mostrou redução pequena do "fora do normal" (números só
+     em `entregas/`). *Recomendação:* manter até haver uso real para calibrar e rever depois do ensaio. Alternativa: investigar agora.
+
+- **Meta 13 (login e deploy do piloto): proposta em 17/11 (#470), esperando resposta.** Nenhuma issue aberta antes do "ok"; nada criado
+  nem contratado. A comparação da #472 é a entrada das perguntas 2 a 4. "Ok para todas" vale como "sim" a cada uma.
+   1. **Abrir as issues e começar a Meta 13** com a lista P1 a P13 da seção "Meta 13". *Recomendação:* sim. Alternativa: uma meta curta
+      sem conta (tela da evolução com a #213, ou a série da carga) enquanto as perguntas 2 a 5 amadurecem.
+   2. **Provedor e teto de custo mensal.** Você cria a conta e cadastra o pagamento; o time nunca cria. *Recomendação:* a DigitalOcean
+      (já é a produção prevista no AGENTS.md), com região e preço confirmados pela #472, e um teto mensal que você define; acima do teto, o
+      time para e pergunta.
+   3. **Como o atleta e o professor entram.** *Recomendação:* e-mail e senha na própria API (senha com hash, sem serviço novo). Link mágico
+      ou login social pedem serviço de e-mail ou conta de terceiro, e voltam para você.
+   4. **Domínio e e-mail.** *Recomendação:* sem domínio próprio no piloto (o endereço do provedor basta) e sem e-mail transacional; se
+      quiser domínio, é custo anual seu.
+   5. **CNPJ e LGPD antes do ar.** *Recomendação:* pôr no ar só com dado sintético e o seu; a consulta de LGPD (termo de consentimento,
+      contrato com a assessoria, onde ficam os dados) e o CNPJ ficam como condição para o **primeiro aluno real**, não para o deploy. O
+      texto do termo no app fica provisório e marcado até a consulta.
+   6. **Conta no nome de quem.** A conta do provedor na pessoa física ou no CNPJ, quando houver. *Recomendação:* decisão sua; o código não
+      muda.
+   7. **O seu histórico real no servidor.** *Recomendação:* sim, só depois do backup testado (P9), na região escolhida, com nada no
+      repositório; se "não", o servidor tem só dado sintético e você usa o celular com eles.
+   8. **Celular de verdade na QA da Meta 13.** *Recomendação:* sim: 15 minutos com o Expo Go apontando para o piloto, dado sintético
+      (fecha o item amarrado ao ensaio desde a Meta 11).
+   9. **Ensaio com professor e atletas reais.** *Recomendação:* fica fora da Meta 13; vira a meta seguinte, depois do "sim" da pergunta 5
+      (consulta de LGPD feita).
+
 Pendentes com o Angelo (o time segue em volta delas):
 1. **Celular de verdade** (Expo Go, iOS ou Android): amarrado ao ensaio com professor e atletas (decisão 10 da Meta 11, 16/11); sai da
    lista de cada meta.
 2. **Antes de gerar o feedback dos treinos reais dele:** ler os termos do provedor sobre o uso dos dados para treinar modelos (item 10
    de "A confirmar" da ADR 0013). Segue não conferido por nós.
-3. **Antes de planejar a Meta 13 (login e deploy):** provedor, teto de custo mensal, CNPJ e consulta de LGPD (termo de consentimento e
-   contrato com a assessoria). Chegam como perguntas com a comparação da #472, no fim da Meta 12 (#470).
-4. **Antes do primeiro aluno real:** termo de consentimento, contrato com a assessoria e consulta de LGPD (decisões 3, 4 e 7 da Meta 11);
+3. **Meta 13:** as nove perguntas acima (provedor, custo, login, domínio, CNPJ, LGPD, conta, histórico real, celular, ensaio).
+4. **Meta 12:** as perguntas A a D, "a confirmar".
+5. **Feedback dos treinos reais com a `linha_base@3`:** refazer localmente quando você quiser (nada no repositório).
+6. **Antes do primeiro aluno real:** termo de consentimento, contrato com a assessoria e consulta de LGPD (decisões 3, 4 e 7 da Meta 11);
    login e deploy (decisão 2 da Meta 11; Meta 13).
 
 Em aberto:
