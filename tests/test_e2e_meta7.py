@@ -431,7 +431,7 @@ def test_16_textos_do_guia_passo_7(ctx):
         "Pace médio dentro do seu normal para treino leve: 5:06/km, perto da mediana de 5:30/km "
         "(11 treinos nas últimas 12 semanas).")  # @3: piso de 3% do pace (z = -2,42)
     assert m68["fc_media"]["texto"] == (
-        "FC média fora do seu normal para treino leve: 160 bpm, 11 bpm acima que a mediana de 149 bpm "
+        "FC média fora do seu normal para treino leve: 160 bpm, 11 bpm acima da mediana de 149 bpm "
         "(8 treinos nas últimas 12 semanas). Isto compara com o seu histórico; não diz se o treino foi bom ou ruim.")
     assert (m68["fc_media"]["estado"], m68["fc_media"]["n"], m68["fc_media"]["valor_texto"]) == ("fora", 8, "160 bpm")
     assert (m68["carga_hora"]["estado"], m68["carga_hora"]["motivo"]) == ("sem_valor", "carga_pendente")
