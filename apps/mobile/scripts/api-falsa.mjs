@@ -270,14 +270,14 @@ const linhaBaseDe = (id) => {
   if (id === 112) return semLB("corrida", "sem_tipo", "Sem linha de base: o treino não tem tipo.");
   if (id === 108) {
     return { ...baseLB, estado: "ok", metricas: [
-      metricaBase("pace_medio", "Pace médio", "s/km", { estado: "aprendendo", n: 3, texto: "Ainda aprendendo o seu normal: 3 de 8 treinos leves nas últimas 12 semanas." }),
+      metricaBase("pace_medio", "Pace médio", "s/km", { estado: "aprendendo", n: 3, texto: "3 de 8 treinos do tipo leve nas últimas 12 semanas." }),
       metricaBase("fc_media", "FC média", "bpm", { estado: "sem_valor", n: 0, motivo: "sem_valor", texto: "Este treino não tem frequência cardíaca." }),
     ] };
   }
   if (id === 101) {
     return { ...baseLB, estado: "ok", metricas: [
       { ...PACE_DENTRO, estado: "fora", desvio: -25, diferenca_texto: "25 s/km mais rápido", texto: "25 s/km mais rápido que a mediana de 5:15 min/km, em 6 treinos leves." },
-      FC_DENTRO,
+      { ...FC_DENTRO, estado: "fora", valor: 161, valor_texto: "161 bpm", desvio: 11, diferenca_texto: "11 bpm acima", texto: "11 bpm acima da mediana de 150 bpm, em 6 treinos leves." },
       metricaBase("carga_hora", "Carga por hora", "pontos/h", { estado: "fora", valor: 61, valor_texto: "61,0 pontos/h", mediana: 52, mediana_texto: "52,0 pontos/h", desvio: 9, diferenca_texto: "9,0 pontos/h maior", texto: "9,0 pontos/h maior que a mediana de 52,0 pontos/h, em 6 treinos leves." }),
     ] };
   }

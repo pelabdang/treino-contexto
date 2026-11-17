@@ -170,7 +170,7 @@ export const atividades = {
       ...linhaBaseCorrida,
       metricas: [
         { ...linhaBaseCorrida.metricas[0], estado: "fora", desvio: -25, diferenca_texto: "25 s/km mais rápido", texto: "25 s/km mais rápido que a mediana de 5:15 min/km, em 6 treinos leves." },
-        linhaBaseCorrida.metricas[1],
+        { ...linhaBaseCorrida.metricas[1], estado: "fora", valor: 161, valor_texto: "161 bpm", desvio: 11, diferenca_texto: "11 bpm acima", texto: "11 bpm acima da mediana de 150 bpm, em 6 treinos leves." },
         {
           chave: "carga_hora",
           rotulo: "Carga por hora",
@@ -194,7 +194,7 @@ export const atividades = {
     linha_base: {
       ...linhaBaseCorrida,
       metricas: [
-        { chave: "pace_medio", rotulo: "Pace médio", unidade: "s/km", estado: "aprendendo", n: 3, texto: "Ainda aprendendo o seu normal: 3 de 8 treinos leves nas últimas 12 semanas." },
+        { chave: "pace_medio", rotulo: "Pace médio", unidade: "s/km", estado: "aprendendo", n: 3, texto: "3 de 8 treinos do tipo leve nas últimas 12 semanas." },
         { chave: "fc_media", rotulo: "FC média", unidade: "bpm", estado: "sem_valor", n: 0, motivo: "sem_valor", texto: "Este treino não tem frequência cardíaca." },
       ],
     },

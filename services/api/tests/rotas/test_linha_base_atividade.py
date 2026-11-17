@@ -136,7 +136,7 @@ def test_texto_de_fora_e_o_da_adr(client, banco):
     m = ms["fc_media"]
     assert (m["estado"], m["valor_texto"], m["mediana_texto"], m["diferenca_texto"]) == ("fora", "160 bpm", "149 bpm", "11 bpm acima")
     assert m["texto"] == (
-        "FC média fora do seu normal para treino leve: 160 bpm, 11 bpm acima que a mediana de 149 bpm "
+        "FC média fora do seu normal para treino leve: 160 bpm, 11 bpm acima da mediana de 149 bpm "
         "(8 treinos nas últimas 12 semanas). Isto compara com o seu histórico; não diz se o treino foi bom ou ruim.")
 
 
@@ -148,7 +148,7 @@ def test_texto_de_dentro_e_de_aprendendo(client, banco):
     # aprendendo: a natação leve de 16/03 tem só 2 treinos do tipo na janela
     nat = _get(client, banco, "2026-03-16/nat1")["linha_base"]["metricas"][0]
     assert nat["estado"] == "aprendendo" and nat["mediana"] is None and nat["z"] is None and nat["mediana_texto"] is None
-    assert nat["texto"] == "Ainda aprendendo o seu normal em treino leve: 2 de 8 treinos nas últimas 12 semanas."
+    assert nat["texto"] == "2 de 8 treinos do tipo leve nas últimas 12 semanas."
     assert nat["valor_texto"].endswith(" bpm")
 
 
@@ -171,7 +171,7 @@ def test_carga_por_hora_divide_pela_duracao(client, banco):
     assert j["linha_base"]["estado"] == "ok"
     m = {m["chave"]: m for m in j["linha_base"]["metricas"]}["carga_hora"]
     assert (m["estado"], m["valor"], m["valor_texto"], m["n"]) == ("aprendendo", 40.0, "40,0 pontos/h", 0)
-    assert m["texto"] == "Ainda aprendendo o seu normal em treino moderado (parte de transição): 0 de 8 treinos nas últimas 12 semanas."
+    assert m["texto"] == "0 de 8 treinos do tipo moderado (parte de transição) nas últimas 12 semanas."
 
 
 def test_esteira_nao_entra_no_pace_mas_a_fc_segue(client, banco):

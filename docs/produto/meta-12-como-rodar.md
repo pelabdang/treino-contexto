@@ -61,7 +61,7 @@ com o banco `treino-meta12` (Postgres na 5471, API na 8071). Os números abaixo 
    janela. Esperado em `linha_base`: `estado` `ok`, `versao` `linha_base@3` e quatro métricas, cada uma com `valor_texto` e o `texto` pronto (o app não monta frase):
    - `melhor_pace` **fora** ("5:00/km, 39 s/km mais lento que a mediana de 4:21/km (11 treinos nas últimas 12 semanas)");
    - `fc_melhor_tiro` **dentro** ("170 bpm, perto da mediana de 172 bpm");
-   - `fc_media` **fora** ("150 bpm, 10 bpm abaixo que a mediana de 160 bpm (12 treinos)");
+   - `fc_media` **fora** ("150 bpm, 10 bpm abaixo da mediana de 160 bpm (12 treinos nas últimas 12 semanas)");
    - `carga_hora` **sem_valor** ("Sem carga por hora neste treino: a carga ainda não foi calculada.").
 
    Os textos "fora" terminam com "Isto compara com o seu histórico; não diz se o treino foi bom ou ruim." Na mesma resposta: `carga.estado` `pendente` com `texto` "A carga deste treino ainda não foi calculada.",
@@ -120,6 +120,6 @@ Nada aqui é decidido; a spec adotou a recomendação da Lia e o Paulo leva ao A
 - **D. Manter a `linha_base@3` ou buscar uma taxa menor de "fora do normal".** Só genérico: a `@3` reduz o "fora" por dispersão pequena; um piso maior ou um limite maior cortaria mais, ao custo de esconder desvios reais. Ela vale como está até haver uso real para calibrar (conferência local na máquina do Angelo, #462).
 
 ## Achados do guia
-- **O texto de FC "abaixo que a mediana" tem concordância torta.** A frase da `fc_media` sai "10 bpm abaixo que a mediana de 160 bpm". Pequeno, do texto pronto da API; vira issue da Duda ou da Lia.
+- **Resolvido (#487):** a frase da FC dizia "abaixo que a mediana"; agora diz "abaixo da mediana" e o texto de `aprendendo` começa pela contagem ("5 de 8 treinos do tipo leve nas últimas 12 semanas."), porque a palavra do estado é do app. A janela de 12 semanas (84 dias) agora aparece nos textos.
 - **As fixtures da Meta 7 só têm carga em 13 das 81 atividades.** Por isso o `forma_do_dia` do passo 5 é `sem_serie` e o do passo 6 é `calculada`; o `sem_carga` com motivo só aparece nos testes e nas capturas.
 - **As capturas e o app vivo usam a API falsa ou o banco**, não os dois ao mesmo tempo. A comparação entre as duas é da QA (#469).

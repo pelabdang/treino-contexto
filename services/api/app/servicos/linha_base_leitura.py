@@ -205,13 +205,13 @@ def _metrica_texto(m: lb.MetricaBase, tipo_treino: str, motivos: dict[str, str])
         por_que = MOTIVO_SEM_VALOR.get(motivo or "", "sem o dado neste treino")
         texto = f"Sem {_minusculo(rotulo)} neste treino: {por_que}."
     elif m.estado == "aprendendo":
-        texto = f"Ainda aprendendo o seu normal em treino {tipo_treino}: {m.n} de {MINIMO_TREINOS} treinos {janela}."
+        texto = f"{m.n} de {MINIMO_TREINOS} treinos do tipo {tipo_treino} {janela}."  # sem "aprendendo": o app ja diz o estado (#487)
     elif m.estado == "dentro":
         texto = (f"{rotulo} dentro do seu normal para treino {tipo_treino}: {valor_t}, perto da mediana de {mediana_t} "
                  f"({_treinos(m.n)} {janela}).")
     else:
         dif = _diferenca(tipo, m.valor, m.mediana)
-        texto = (f"{rotulo} fora do seu normal para treino {tipo_treino}: {valor_t}, {dif} que a mediana de {mediana_t} "
+        texto = (f"{rotulo} fora do seu normal para treino {tipo_treino}: {valor_t}, {dif} {'da' if tipo == 'fc' else 'que a'} mediana de {mediana_t} "
                  f"({_treinos(m.n)} {janela}). Isto compara com o seu histórico; não diz se o treino foi bom ou ruim.")
     return MetricaTexto(m.chave, rotulo, unidade, m.estado, motivo, m.valor, valor_t, m.mediana, mediana_t, m.desvio, m.z,
                         m.n, dif, texto)
