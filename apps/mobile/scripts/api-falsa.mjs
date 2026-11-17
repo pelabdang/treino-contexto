@@ -279,7 +279,7 @@ const detalheSemCheckin = {
   feedback: { estado: "sem_checkin", mensagem: "O prazo do check-in deste treino acabou, então ele fica sem feedback.", checkin_aberto: false },
 };
 const caixaComConteudo = {
-  versao: "atencao@1",
+  versao: "atencao@2",
   hoje: "2025-11-13",
   janela_atencao_dias: 7,
   janela_novos_dias: 14,
