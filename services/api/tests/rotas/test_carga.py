@@ -120,7 +120,7 @@ def test_atividade_traz_a_carga_do_oraculo(session, client):
     for fonte, e in ESPERADO.items():
         j = client.get(f"/atletas/{atleta_id}/atividades/{por_fonte[fonte]}").json()["carga"]
         assert j["estado"] == e.estado and j["versao"] == "carga@2"
-        assert set(j) == {"estado", "carga", "metodo", "cobertura_pct", "motivo", "versao"}  # nada de limiar
+        assert set(j) == {"estado", "carga", "metodo", "cobertura_pct", "motivo", "versao", "valor_texto", "metodo_texto", "texto"}  # nada de limiar
         assert j["motivo"] == e.motivo and j["metodo"] == e.metodo
         if e.estado == "calculada":
             assert j["carga"] == pytest.approx(e.carga, abs=1e-5)
@@ -143,7 +143,8 @@ def test_atividade_elegivel_sem_linha_e_pendente(session, client):
     session.add(at)
     session.commit()
     assert client.get(f"/atletas/{a.id}/atividades/{at.id}").json()["carga"] == {
-        "estado": "pendente", "carga": None, "metodo": None, "cobertura_pct": None, "motivo": None, "versao": None}
+        "estado": "pendente", "carga": None, "metodo": None, "cobertura_pct": None, "motivo": None, "versao": None,
+        "valor_texto": None, "metodo_texto": None, "texto": "A carga deste treino ainda não foi calculada."}
 
 
 def test_versao_antiga_e_pendente_na_atividade_e_na_serie(session, client):

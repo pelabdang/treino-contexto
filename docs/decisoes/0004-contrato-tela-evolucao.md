@@ -2,7 +2,7 @@
 tipo: decisao
 status: em-uso
 dono: theo
-atualizado: 2026-11-16
+atualizado: 2026-11-17
 links: [[decisoes/0013-feedback-automatico]], [[modulos/api]], [[modulos/grafico-tiros]], [[modulos/mobile]], [[modulos/worker]], [[metricas/tiros-1km]], [[decisoes/0002-segmento-intensidade-e-versao]], [[decisoes/0003-fuso-da-atividade]], [[decisoes/0005-serie-de-tiros-o-que-entra]], [[decisoes/0006-upload-de-fit]], [[decisoes/0007-clima-da-atividade]], [[produto/roadmap]], [[design/telas/treino]], [[decisoes/0009-treino-de-transicao]]
 ---
 # ADR: 0004 Contrato da tela de evolução dos tiros (Meta 2)
@@ -258,3 +258,14 @@ check-in. Tipos no cliente: `FeedbackTreino` e `EstadoFeedback`. Detalhes em [[m
 - **`GET /professores/{professor_id}/caixa-do-dia`** (`buscarCaixaDoDia`, `Cache-Control: no-store`): `versao` (`atencao@2`; o formato não muda, só o texto do motivo `checkin_vencendo`: uma linha por aluno, no treino mais antigo; adendo 1 da ADR 0015), `hoje` (`AAAA-MM-DD`, `America/Sao_Paulo`), `janela_atencao_dias` (7), `janela_novos_dias` (14), `alunos[]` (ordem da API: `atleta_id`, `nome`, `sem_motivo`, `texto_sem_motivo`, `treinos[]` só com motivo, do mais recente ao mais antigo, cada um com `atividade_id`, `modalidade`, `data_local`, `hora_local`, `duracao_texto`, `motivos[]` `{codigo, texto}` e `detalhe`) e `novos[]` (mais recente primeiro: os mesmos campos do treino mais `atleta_id`, `atleta_nome`, `tipo_sugerido`, `tipo_sugerido_texto`, `origem_texto`). `detalhe`: `tipo_texto` e `tipo_origem_texto` (nulos sem tipo), `tipo_confirmado`, `checkin` (`null` sem check-in; `pse_texto`, `sensacao`, `sensacao_texto`, `atalhos[]`, `nada_a_relatar`, `observacao`) e `feedback` (os estados do adendo 10). A `observacao` só existe em `detalhe.checkin.observacao`.
 - **`PUT /professores/{professor_id}/tipos-de-treino`**: corpo lista de `{atividade_id, tipo_treino?}` (1 a 200); resposta `{confirmados, corrigidos}`; erros `404 atividade_nao_encontrada`, `422 atividade_sem_tipo` e `422` de validação.
 Dado de saúde: nada em log, nada de modelo de linguagem, só o professor com vínculo e consentimento. Tipos no cliente: `CaixaDoDiaOut`, `TiposConfirmadosOut`. Detalhes em [[modulos/api]].
+
+## Adendo 12 (2026-11-17): textos da carga, `forma_do_dia` e `transicao.editavel` no `GET` da atividade (#464)
+**Status: proposto (Theo decidiu os itens 1, 2, 3, 5 e 8 no PR #476; aprovação final neste PR).** Só campos novos e opcionais no `GET /atletas/{id}/atividades/{id}`; nenhum campo sai nem muda de tipo (a API formata, o app mostra; adendo 2). Base: a spec [[design/telas/treino]], seção "Meta 12".
+- **`linha_base.metricas[].valor_texto`** já saía no `MetricaBaseOut` desde a `linha_base@2` (adendo 7); a spec pedia por engano. Nada muda.
+- **`carga`** ganha `valor_texto` (1 casa, vírgula: "87,4"; só em `calculada`), `metodo_texto` ("Estimada pelo pace." para `rtss`, "Estimada pela FC." para `hrtss`) e `texto` (a frase do motivo em `sem_carga`, as seis da spec; "A carga deste treino ainda não foi calculada." em `pendente`; `null` em `calculada`). O número `carga` continua sem arredondar.
+- **`forma_do_dia`** (novo, `null` só em `multiesporte_pai` e `troca`, como `carga`): CTL, ATL e TSB do **fim do dia local do treino**, pela mesma `calcular_serie` (`serie_carga@1`) do `GET /carga`, calculada na leitura (sem série inteira). Campos: `estado` (`calculada`, `aprendendo`, `sem_serie`), `data_local`, `ctl_texto`, `atl_texto`, `tsb_texto` (1 casa e vírgula; o TSB com sinal explícito, menos U+2212, "+3,2", "0,0"), `texto_aprendendo`, `sem_carga_no_dia` (inteiro) e `texto_sem_carga` (`null` se 0).
+  - `aprendendo` (menos de 42 dias desde o primeiro dia da série): **os três textos não saem**; vem `texto_aprendendo` com os dias que faltam. Isto segue a recomendação da Lia e depende da pergunta 4 com o Angelo; se ele quiser mostrar, os textos passam a sair junto do `estado`.
+  - `sem_serie`: o dia não está na série (nenhuma carga calculada até ali, ou a atividade do dia ainda está `pendente`).
+  - `sem_carga_no_dia` e `texto_sem_carga` saem em `calculada` e em `aprendendo`.
+- **`transicao.editavel`** (`true` para corrida, natação e ciclismo; `false` para `outra`, `multiesporte_pai` e `troca`): também na resposta do `PUT` e do `DELETE` da transição. As rotas **continuam aceitando** a correção nesses casos; o campo diz só se a tela mostra o cartão.
+Tipos no cliente: `FormaDoDiaOut`, `CargaAtividadeOut` e `TransicaoOut` com os campos novos.

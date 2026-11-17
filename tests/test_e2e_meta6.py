@@ -317,7 +317,7 @@ def test_8_carga_de_cada_atividade_bate_com_o_oraculo_carga_2(ctx, orc):
             assert c["carga"] is None  # nunca carga inventada
             if e.motivo == "cobertura_insuficiente":
                 assert _perto(c["cobertura_pct"], e.cobertura_pct)
-        assert set(c) == {"estado", "carga", "metodo", "cobertura_pct", "motivo", "versao"}
+        assert set(c) == {"estado", "carga", "metodo", "cobertura_pct", "motivo", "versao", "valor_texto", "metodo_texto", "texto"}
 
 
 def test_9_multiesporte_pai_e_troca_ficam_fora(ctx, orc):

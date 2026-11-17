@@ -186,6 +186,16 @@
               }
             ]
           },
+          "forma_do_dia": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/FormaDoDiaOut"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
           "hora_local": {
             "title": "Hora Local",
             "type": "string"
@@ -593,6 +603,17 @@
             ],
             "title": "Metodo"
           },
+          "metodo_texto": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Metodo Texto"
+          },
           "motivo": {
             "anyOf": [
               {
@@ -611,6 +632,28 @@
               }
             ],
             "title": "Motivo"
+          },
+          "texto": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Texto"
+          },
+          "valor_texto": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Valor Texto"
           },
           "versao": {
             "anyOf": [
@@ -1610,6 +1653,90 @@
           "estado"
         ],
         "title": "FeedbackOut",
+        "type": "object"
+      },
+      "FormaDoDiaOut": {
+        "description": "CTL, ATL e TSB do fim do dia local do treino (`serie_carga@1`), calculados na leitura pela mesma `calcular_serie` do `GET /carga`.\nEstimativa, nao medida. Em `aprendendo` (menos de 42 dias de historico) os tres numeros NAO saem. Null so em multiesporte_pai e troca.",
+        "properties": {
+          "atl_texto": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Atl Texto"
+          },
+          "ctl_texto": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Ctl Texto"
+          },
+          "data_local": {
+            "title": "Data Local",
+            "type": "string"
+          },
+          "estado": {
+            "enum": [
+              "calculada",
+              "aprendendo",
+              "sem_serie"
+            ],
+            "title": "Estado",
+            "type": "string"
+          },
+          "sem_carga_no_dia": {
+            "default": 0,
+            "title": "Sem Carga No Dia",
+            "type": "integer"
+          },
+          "texto_aprendendo": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Texto Aprendendo"
+          },
+          "texto_sem_carga": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Texto Sem Carga"
+          },
+          "tsb_texto": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Tsb Texto"
+          }
+        },
+        "required": [
+          "estado",
+          "data_local"
+        ],
+        "title": "FormaDoDiaOut",
         "type": "object"
       },
       "GrupoOut": {
@@ -2799,6 +2926,11 @@
       "TransicaoOut": {
         "description": "Rotulo \"treino de transicao\" da atividade. Sem linha no banco e `valor = false`, `origem = null`.",
         "properties": {
+          "editavel": {
+            "default": true,
+            "title": "Editavel",
+            "type": "boolean"
+          },
           "origem": {
             "anyOf": [
               {
