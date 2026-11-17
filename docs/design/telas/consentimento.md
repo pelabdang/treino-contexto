@@ -127,7 +127,7 @@ Tocar em "Retirar consentimento" abre um diálogo:
 ```
 - Depois de retirar, o vínculo **continua** (a linha não se apaga, ADR 0015) e o cartão
   volta a "Aguardando você", com o botão "Ler e dar consentimento" (dar de novo é um caminho curto). Para tirar o vínculo de vez, quem
-  opera o piloto remove (ver pergunta 3).
+  opera o piloto remove (decisão 3 abaixo).
 - "Retirar" é um passo só, sem pedir senha (é uma proteção do atleta, tem de ser fácil).
 - Erro de rede: "Não foi possível retirar. Tente de novo." e o estado fica como estava. Anúncio ao concluir: "Consentimento retirado."
 
@@ -171,15 +171,11 @@ Regras que a tela **espera** da API (o app não decide nada disto):
 - o log do servidor **não grava** nome, `termo_versao` nem o fato de ter consentido junto do atleta (dado de saúde);
 - consentir e retirar são idempotentes (tocar duas vezes não dá erro).
 
-## Perguntas abertas (para o Theo e a Duda, na ADR 0016)
-Cada uma com a recomendação da Lia.
-1. **Quem cria o vínculo e como o atleta fica sabendo.** Recomendo que **quem opera o piloto** crie o vínculo professor-atleta (comando)
-   e o atleta veja o pedido na lista e no aviso da evolução. Sem convite por e-mail (decisão 4 da Meta 13). Se o professor puder
-   "pedir" pelo app, é rota e tela nova do lado dele.
-2. **Versão do termo registrada.** Recomendo gravar `termo_versao` junto do `consentimento_em` (é a prova de qual texto o atleta leu).
-   Isso é coluna nova: precisa do adendo da ADR 0001 ou da própria 0016.
-3. **Retirar apaga o vínculo ou só o consentimento?** Recomendo **só o consentimento** (como a ADR 0015, `consentimento_em` volta a
-   nulo e a linha fica); o cartão volta a "Aguardando você". Remover o vínculo é por quem opera.
-4. **Avisar o professor quando o atleta retira.** Recomendo **não** no piloto (sem notificação); decisão da ADR.
-5. **Texto provisório.** A redação da tela do termo é proposta da Lia, em palavras simples. Recomendo o **Angelo** ler e ajustar antes do
-   primeiro aluno real, e a consulta de LGPD substituir tudo. Até lá, a faixa "texto provisório" fica sempre visível.
+## Decisões de contrato (Theo, 17/11)
+Comentário do Theo no PR #512; entram na ADR 0016 (#497). Todas como a Lia recomendou.
+1. **Vínculo:** criado por **quem opera o piloto**, sem convite por e-mail; o atleta vê o pedido na lista e no aviso da evolução.
+2. **Versão do termo:** `termo_versao` é gravada junto de `consentimento_em` (registrado na ADR 0016).
+3. **Retirar:** só o consentimento; o **vínculo fica** e o cartão volta a "Aguardando você". Tirar o vínculo é por quem opera.
+4. **Aviso ao professor ao retirar:** **não** no piloto.
+5. **Texto do termo:** segue **provisório e marcado**; o texto definitivo vem antes do primeiro aluno real (decisão do Angelo). A redação
+   desta tela é proposta da Lia, em palavras simples, para o Angelo ler e ajustar.

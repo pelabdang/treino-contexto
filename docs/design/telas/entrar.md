@@ -87,7 +87,7 @@ meio vertical: com o teclado e a janela baixa o botão precisa ficar à vista), 
 | saiu de propósito | nada: a tela abre limpa | |
 
 **Regra de segurança no texto:** a faixa de `401` é **a mesma** para e-mail que não existe e para senha errada. Nunca "esse e-mail
-não está cadastrado" nem "senha errada". Também a mesma para uma conta desativada (ver pergunta 3).
+não está cadastrado" nem "senha errada". Também a mesma para uma conta desativada (decisão 3 abaixo).
 
 ## Sair
 Onde fica: no cabeçalho das telas principais (evolução dos tiros e caixa do dia), um **botão de texto "Sair"** com o ícone
@@ -163,7 +163,7 @@ Duas ocasiões: **primeiro acesso** (a senha foi criada por quem opera, então a
 | sem rede | "Não foi possível salvar. Tente de novo." |
 - `autoComplete="new-password"` nos dois campos novos (o aparelho oferece gerar uma senha).
 - Troca é **da pessoa que está dentro**. A recuperação de senha esquecida **não passa por esta tela**: é um comando de quem opera.
-- O mínimo de **10 caracteres** é a recomendação da Lia (ver pergunta 4); a regra final é da ADR 0016. Sem exigir símbolo nem
+- O mínimo de **10 caracteres** foi aceito pelo Theo (decisão 4 abaixo); a regra final fica na ADR 0016. Sem exigir símbolo nem
   maiúscula (regra que cansa e não protege mais que o tamanho).
 
 ## Papéis e destino depois de entrar
@@ -199,18 +199,13 @@ campo vazio e de "as duas senhas novas iguais".
 
 Nada disso é dado de saúde, mas **o log do servidor não grava e-mail, senha nem acesso** (ADR 0016).
 
-## Perguntas abertas (para o Theo e a Duda, na ADR 0016)
-Cada uma com a recomendação da Lia.
-1. **Onde o app guarda o acesso.** No celular (Expo), o cofre do aparelho (`expo-secure-store`); na web, recomendo guardar na sessão
-   do navegador (`sessionStorage`, some ao fechar a aba) e mandar no cabeçalho, em vez de cookie, para não abrir o assunto de CSRF. Para o
-   piloto com dado sintético e do Angelo, aceitável; o risco (script injetado lê o armazenamento) fica na ADR.
-2. **Uma conta tem um papel ou dois?** Recomendo **um papel por conta** no piloto (um professor que também treina usa duas contas).
-   Se a ADR aceitar dois, a tela de entrar ganha uma escolha "Entrar como atleta ou como professor", e eu desenho.
-3. **Conta desativada ou apagada.** Recomendo que a entrada responda o **mesmo** `401` (sem dizer que a conta existe) e que quem
-   opera avise por fora. Se a ADR quiser uma frase própria, só depois de a senha estar certa.
-4. **Regra da senha.** Recomendo 10 caracteres no mínimo, sem outras regras, e a senha provisória do operador **obriga a troca** no
-   primeiro acesso (`troca_de_senha_obrigatoria`). Se a ADR não quiser a tela de troca no piloto, a de entrar não muda e esta seção sai.
-5. **Prazo do acesso.** Recomendo um prazo que não obrigue o atleta a entrar toda semana (ele treina e abre o app depois do treino);
-   por exemplo 30 dias. Se o prazo for curto, "Acesso expirou" vira rotina e o texto precisa mudar. Decisão de segurança, fica com o Theo.
-6. **Limite de tentativas (`429`).** Recomendo a API mandar `espere_s` para o texto dizer o tempo certo. Sem o campo, a frase fica sem
-   número ("Espere um pouco e tente de novo").
+## Decisões de contrato (Theo, 17/11)
+Comentário do Theo no PR #512; entram na ADR 0016 (#497). Todas como a Lia recomendou.
+1. **Onde guardar o acesso:** no cofre do aparelho (Expo) e em `sessionStorage` na web, enviado em cabeçalho, sem cookie.
+2. **Papéis:** um papel por conta no piloto (quem é professor e atleta usa duas contas).
+3. **Conta desativada:** responde o **mesmo** `401` do e-mail inexistente e da senha errada.
+4. **Senha:** mínimo de 10 caracteres, sem outras regras. A senha provisória do operador **obriga a troca** no primeiro acesso
+   (`troca_de_senha_obrigatoria`); a tela "Trocar a senha" **fica no piloto**.
+5. **Prazo do acesso:** **30 dias**; **sair e trocar a senha invalidam o acesso no servidor** (o acesso guardado em outro aparelho
+   também deixa de valer, e esse aparelho vê "Seu acesso expirou. Entre de novo.").
+6. **Limite de tentativas:** `429` com `espere_s`; o texto diz o tempo.
