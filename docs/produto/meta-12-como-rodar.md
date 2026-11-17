@@ -15,9 +15,9 @@ Garmin e nunca o banco real.** A spec está em [[design/telas/treino]] (seção 
 
 **Situação da verificação (#468, Nina, 17/11):** os passos 1 a 7 foram rodados de verdade num clone de trabalho do `main` (`e776191`, com as #479 a #485),
 com o banco `treino-meta12` (Postgres na 5471, API na 8071). Os números abaixo são os que saíram. O banco e a API foram derrubados no fim e nada usou a rede.
-**Não rodado aqui:**
+**Não rodado por mim:**
 - a **tela contra a API de verdade** (Expo web apontando para o banco do passo 1): o passo 8 usa as capturas por comando, que rodam sobre a **API falsa** do app
-  (12 capturas rodadas, de 3 telas, em claro e escuro, 390 e 1280); a Bia roda a tela viva na QA (#469);
+  (12 capturas rodadas, de 3 telas, em claro e escuro, 390 e 1280). **A Bia rodou a tela viva na QA (#469, PR #492)**, contra a API de um banco limpo, seguindo este guia do zero; as capturas estão em `docs/design/telas/treino/qa-viva/` e a Lia deu design-ok sobre a tela rodando;
 - o **`sem_carga` com motivo** e a carga `pendente` com a série cheia pelo banco: as fixtures da Meta 7 só gravam carga em 13 atividades; todos os estados estão
   nos testes (passo 9);
 - **celular de verdade, leitor de tela real e login**: amarrados ao ensaio (Meta 13);
@@ -122,4 +122,4 @@ Nada aqui é decidido; a spec adotou a recomendação da Lia e o Paulo leva ao A
 ## Achados do guia
 - **Resolvido (#487):** a frase da FC dizia "abaixo que a mediana"; agora diz "abaixo da mediana" e o texto de `aprendendo` começa pela contagem ("5 de 8 treinos do tipo leve nas últimas 12 semanas."), porque a palavra do estado é do app. A janela de 12 semanas (84 dias) agora aparece nos textos.
 - **As fixtures da Meta 7 só têm carga em 13 das 81 atividades.** Por isso o `forma_do_dia` do passo 5 é `sem_serie` e o do passo 6 é `calculada`; o `sem_carga` com motivo só aparece nos testes e nas capturas.
-- **As capturas e o app vivo usam a API falsa ou o banco**, não os dois ao mesmo tempo. A comparação entre as duas é da QA (#469).
+- **As capturas e o app vivo usam a API falsa ou o banco**, não os dois ao mesmo tempo. A comparação entre as duas foi feita na QA (#469): mesmos cartões, textos e estados.
