@@ -1,19 +1,20 @@
 ---
-source_file: "docs/00-inicio.md"
+source_file: "docs/produto/metas/meta-2-evolucao-tiros-app.md"
 type: "document"
-community: "Comunidade 3"
+community: "Mapa, upload de FIT e ADRs"
 tags:
   - graphify/document
   - graphify/EXTRACTED
-  - community/Comunidade_3
+  - community/Mapa_upload_de_FIT_e_ADRs
 ---
 
 # Meta 2: evolução dos tiros no app
 
 ## Connections
-- [[00-inicio (mapa do projeto)]] - `references` [EXTRACTED]
-- [[ADR 0004 contrato da tela de evolução]] - `references` [EXTRACTED]
-- [[Meta 1 tiros de 1 km]] - `conceptually_related_to` [EXTRACTED]
-- [[Módulo gráfico de tiros]] - `conceptually_related_to` [INFERRED]
+- [[ADR 0004 Contrato da tela de evolução dos tiros (Meta 2)]] - `references` [EXTRACTED]
+- [[Meta 1 tiros de 1 km]] - `references` [EXTRACTED]
+- [[Meta 3 upload de arquivo FIT]] - `references` [EXTRACTED]
+- [[Roadmap]] - `references` [EXTRACTED]
+- [[Treino Contexto mapa do projeto]] - `references` [EXTRACTED]
 
-#graphify/document #graphify/EXTRACTED #community/Comunidade_3
+#graphify/document #graphify/EXTRACTED #community/Mapa_upload_de_FIT_e_ADRs

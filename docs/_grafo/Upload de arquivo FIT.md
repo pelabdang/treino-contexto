@@ -1,20 +1,16 @@
 ---
 source_file: "docs/decisoes/0006-upload-de-fit.md"
-type: "document"
-community: "Comunidade 4"
+type: "concept"
+community: "Mapa, upload de FIT e ADRs"
 tags:
-  - graphify/document
+  - graphify/concept
   - graphify/EXTRACTED
-  - community/Comunidade_4
+  - community/Mapa_upload_de_FIT_e_ADRs
 ---
 
-# Upload de arquivo FIT
+# upload de arquivo FIT
 
 ## Connections
-- [[ADR 0006 Upload de arquivo FIT (Meta 3)]] - `implements` [EXTRACTED]
-- [[Comando worker.apagar_fit]] - `references` [EXTRACTED]
-- [[Guarda do FIT (FIT_DIR)]] - `references` [EXTRACTED]
-- [[Módulo ingestão Garmin_1]] - `references` [INFERRED]
-- [[Regra de identidade dos 60 s]] - `references` [EXTRACTED]
+- [[ADR 0006 Upload de arquivo FIT (Meta 3)]] - `references` [EXTRACTED]
 
-#graphify/document #graphify/EXTRACTED #community/Comunidade_4
+#graphify/concept #graphify/EXTRACTED #community/Mapa_upload_de_FIT_e_ADRs

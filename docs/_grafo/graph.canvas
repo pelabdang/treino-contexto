@@ -3,27 +3,1975 @@
     {
       "id": "g0",
       "type": "group",
-      "label": "Arquitetura e Camadas do Produto",
+      "label": "Contrato da tela e m\u00e9tricas",
       "x": 0,
       "y": 0,
-      "width": 1540,
-      "height": 820,
+      "width": 1980,
+      "height": 920,
       "color": "1"
     },
     {
-      "id": "n_docs_produto_plano_mvp_execucao_claude_api",
+      "id": "n_docs_decisoes_0004_contrato_tela_evolucao",
       "type": "file",
-      "file": "API do Claude.md",
+      "file": "ADR 0004 Contrato da tela de evolu\u00e7\u00e3o dos tiros (Meta 2).md",
       "x": 20,
       "y": 80,
       "width": 180,
       "height": 60
     },
     {
-      "id": "n_docs_produto_plano_mvp_execucao_altimetria",
+      "id": "n_docs_decisoes_0012_check_in_pos_treino",
       "type": "file",
-      "file": "Altimetria.md",
+      "file": "ADR 0012 Check-in p\u00f3s-treino (PSE, sensa\u00e7\u00e3o, observa\u00e7\u00e3o) e `carga_pse@1`.md",
       "x": 220,
+      "y": 80,
+      "width": 180,
+      "height": 60
+    },
+    {
+      "id": "n_docs_decisoes_0015_caixa_do_dia_do_professor",
+      "type": "file",
+      "file": "ADR 0015 Caixa do dia do professor no piloto local (identidade, v\u00ednculo, `atencao@1` e co.md",
+      "x": 420,
+      "y": 80,
+      "width": 180,
+      "height": 60
+    },
+    {
+      "id": "n_docs_metricas_atencao",
+      "type": "file",
+      "file": "Aten\u00e7\u00e3o da caixa do dia (`atencao@2`).md",
+      "x": 620,
+      "y": 80,
+      "width": 180,
+      "height": 60
+    },
+    {
+      "id": "n_docs_design_telas_evolucao_tiros_botao_enviar_fit",
+      "type": "file",
+      "file": "BotaoEnviarFit.md",
+      "x": 820,
+      "y": 80,
+      "width": 180,
+      "height": 60
+    },
+    {
+      "id": "n_docs_modulos_mobile_botao_enviar_fit",
+      "type": "file",
+      "file": "BotaoEnviarFit_1.md",
+      "x": 1020,
+      "y": 80,
+      "width": 180,
+      "height": 60
+    },
+    {
+      "id": "n_docs_metricas_atencao_oraculo",
+      "type": "file",
+      "file": "Caixa do dia fixtures e or\u00e1culo \u00e0 m\u00e3o (`atencao@2`).md",
+      "x": 1220,
+      "y": 80,
+      "width": 180,
+      "height": 60
+    },
+    {
+      "id": "n_docs_design_telas_feedback_capturas_sinteticas",
+      "type": "file",
+      "file": "Capturas sint\u00e9ticas.md",
+      "x": 1420,
+      "y": 80,
+      "width": 180,
+      "height": 60
+    },
+    {
+      "id": "n_docs_modulos_mobile_componente_grafico_tiros",
+      "type": "file",
+      "file": "Componente GraficoTiros.md",
+      "x": 1620,
+      "y": 80,
+      "width": 180,
+      "height": 60
+    },
+    {
+      "id": "n_docs_design_telas_conferencia_369",
+      "type": "file",
+      "file": "Confer\u00eancia visual do check-in e do cart\u00e3o Feedback (369).md",
+      "x": 20,
+      "y": 160,
+      "width": 180,
+      "height": 60
+    },
+    {
+      "id": "n_docs_design_guia_visual",
+      "type": "file",
+      "file": "Design guia visual do app.md",
+      "x": 220,
+      "y": 160,
+      "width": 180,
+      "height": 60
+    },
+    {
+      "id": "n_docs_design_telas_treino_distancia",
+      "type": "file",
+      "file": "Dist\u00e2ncia.md",
+      "x": 420,
+      "y": 160,
+      "width": 180,
+      "height": 60
+    },
+    {
+      "id": "n_docs_diario_2026_11_09",
+      "type": "file",
+      "file": "Di\u00e1rio 2026-11-09 Metas 7 e 8 linha de base e check-in.md",
+      "x": 620,
+      "y": 160,
+      "width": 180,
+      "height": 60
+    },
+    {
+      "id": "n_docs_diario_2026_11_10",
+      "type": "file",
+      "file": "Di\u00e1rio 2026-11-10 Fechamento da Meta 8.md",
+      "x": 820,
+      "y": 160,
+      "width": 180,
+      "height": 60
+    },
+    {
+      "id": "n_docs_design_telas_semana_padrao_duvidas",
+      "type": "file",
+      "file": "D\u00favidas de produto.md",
+      "x": 1020,
+      "y": 160,
+      "width": 180,
+      "height": 60
+    },
+    {
+      "id": "n_docs_modulos_api_caixa_do_dia",
+      "type": "file",
+      "file": "Endpoint caixa do dia do professor.md",
+      "x": 1220,
+      "y": 160,
+      "width": 180,
+      "height": 60
+    },
+    {
+      "id": "n_docs_modulos_api_checkin",
+      "type": "file",
+      "file": "Endpoint check-in p\u00f3s-treino.md",
+      "x": 1420,
+      "y": 160,
+      "width": 180,
+      "height": 60
+    },
+    {
+      "id": "n_docs_modulos_api_semana_padrao",
+      "type": "file",
+      "file": "Endpoint semana-padr\u00e3o.md",
+      "x": 1620,
+      "y": 160,
+      "width": 180,
+      "height": 60
+    },
+    {
+      "id": "n_docs_design_telas_checkin_pse",
+      "type": "file",
+      "file": "Escala PSE (CR-10).md",
+      "x": 20,
+      "y": 240,
+      "width": 180,
+      "height": 60
+    },
+    {
+      "id": "n_docs_design_telas_evolucao_tiros_grafico_tiros",
+      "type": "file",
+      "file": "GraficoTiros.md",
+      "x": 220,
+      "y": 240,
+      "width": 180,
+      "height": 60
+    },
+    {
+      "id": "n_docs_design_telas_checkin_pendentes",
+      "type": "file",
+      "file": "Lista de pendentes.md",
+      "x": 420,
+      "y": 240,
+      "width": 180,
+      "height": 60
+    },
+    {
+      "id": "n_docs_diario_2026_11_09_meta7",
+      "type": "file",
+      "file": "Meta 7 (linha de base e semana-padr\u00e3o).md",
+      "x": 620,
+      "y": 240,
+      "width": 180,
+      "height": 60
+    },
+    {
+      "id": "n_docs_diario_2026_11_09_meta8",
+      "type": "file",
+      "file": "Meta 8 (check-in p\u00f3s-treino).md",
+      "x": 820,
+      "y": 240,
+      "width": 180,
+      "height": 60
+    },
+    {
+      "id": "n_docs_diario_2026_11_10_meta8_fechada",
+      "type": "file",
+      "file": "Meta 8 fechada.md",
+      "x": 1020,
+      "y": 240,
+      "width": 180,
+      "height": 60
+    },
+    {
+      "id": "n_docs_produto_metas_meta_8_check_in",
+      "type": "file",
+      "file": "Meta 8 check-in.md",
+      "x": 1220,
+      "y": 240,
+      "width": 180,
+      "height": 60
+    },
+    {
+      "id": "n_docs_produto_meta_8_como_rodar",
+      "type": "file",
+      "file": "Meta 8 como rodar o check-in e a carga pela PSE.md",
+      "x": 1420,
+      "y": 240,
+      "width": 180,
+      "height": 60
+    },
+    {
+      "id": "n_docs_diario_2026_11_11_meta9",
+      "type": "file",
+      "file": "Meta 9 (feedback autom\u00e1tico).md",
+      "x": 1620,
+      "y": 240,
+      "width": 180,
+      "height": 60
+    },
+    {
+      "id": "n_docs_modulos_mobile",
+      "type": "file",
+      "file": "M\u00f3dulo mobile.md",
+      "x": 20,
+      "y": 320,
+      "width": 180,
+      "height": 60
+    },
+    {
+      "id": "n_docs_design_telas_checkin_obs",
+      "type": "file",
+      "file": "Observa\u00e7\u00e3o livre.md",
+      "x": 220,
+      "y": 320,
+      "width": 180,
+      "height": 60
+    },
+    {
+      "id": "n_docs_decisoes_0012_check_in_pos_treino_pse",
+      "type": "file",
+      "file": "PSE.md",
+      "x": 420,
+      "y": 320,
+      "width": 180,
+      "height": 60
+    },
+    {
+      "id": "n_docs_produto_plano_mvp_execucao",
+      "type": "file",
+      "file": "Plano de execu\u00e7\u00e3o do MVP.md",
+      "x": 620,
+      "y": 320,
+      "width": 180,
+      "height": 60
+    },
+    {
+      "id": "n_docs_design_telas_feedback_privacidade",
+      "type": "file",
+      "file": "Privacidade no desenho.md",
+      "x": 820,
+      "y": 320,
+      "width": 180,
+      "height": 60
+    },
+    {
+      "id": "n_docs_design_telas_checkin_tres_toques",
+      "type": "file",
+      "file": "Regra dos 3 toques.md",
+      "x": 1020,
+      "y": 320,
+      "width": 180,
+      "height": 60
+    },
+    {
+      "id": "n_docs_design_telas_feedback_sem_juizo",
+      "type": "file",
+      "file": "Sem ju\u00edzo de valor visual.md",
+      "x": 1220,
+      "y": 320,
+      "width": 180,
+      "height": 60
+    },
+    {
+      "id": "n_docs_design_telas_semana_padrao_semana_padrao",
+      "type": "file",
+      "file": "Semana-padr\u00e3o_2.md",
+      "x": 1420,
+      "y": 320,
+      "width": 180,
+      "height": 60
+    },
+    {
+      "id": "n_docs_design_telas_checkin_sensacao",
+      "type": "file",
+      "file": "Sensa\u00e7\u00e3o p\u00f3s-treino.md",
+      "x": 1620,
+      "y": 320,
+      "width": 180,
+      "height": 60
+    },
+    {
+      "id": "n_docs_design_telas_checkin_sugestao_pse",
+      "type": "file",
+      "file": "Sugest\u00e3o da PSE da parte anterior (multiesporte).md",
+      "x": 20,
+      "y": 400,
+      "width": 180,
+      "height": 60
+    },
+    {
+      "id": "n_docs_design_telas_caixa_do_dia",
+      "type": "file",
+      "file": "Tela caixa do dia do professor.md",
+      "x": 220,
+      "y": 400,
+      "width": 180,
+      "height": 60
+    },
+    {
+      "id": "n_docs_design_telas_feedback",
+      "type": "file",
+      "file": "Tela cart\u00e3o Feedback na tela de um treino.md",
+      "x": 420,
+      "y": 400,
+      "width": 180,
+      "height": 60
+    },
+    {
+      "id": "n_docs_design_telas_checkin",
+      "type": "file",
+      "file": "Tela check-in p\u00f3s-treino e lista de pendentes.md",
+      "x": 620,
+      "y": 400,
+      "width": 180,
+      "height": 60
+    },
+    {
+      "id": "n_docs_design_telas_evolucao_tiros",
+      "type": "file",
+      "file": "Tela evolu\u00e7\u00e3o dos tiros de 1 km.md",
+      "x": 820,
+      "y": 400,
+      "width": 180,
+      "height": 60
+    },
+    {
+      "id": "n_docs_design_telas_semana_padrao",
+      "type": "file",
+      "file": "Tela semana-padr\u00e3o.md",
+      "x": 1020,
+      "y": 400,
+      "width": 180,
+      "height": 60
+    },
+    {
+      "id": "n_docs_design_telas_treino",
+      "type": "file",
+      "file": "Tela um treino, com o clima.md",
+      "x": 1220,
+      "y": 400,
+      "width": 180,
+      "height": 60
+    },
+    {
+      "id": "n_docs_templates_tela",
+      "type": "file",
+      "file": "Tela {{title}}.md",
+      "x": 1420,
+      "y": 400,
+      "width": 180,
+      "height": 60
+    },
+    {
+      "id": "n_docs_modulos_mobile_tela_caixa_do_dia",
+      "type": "file",
+      "file": "TelaCaixaDoDia.md",
+      "x": 1620,
+      "y": 400,
+      "width": 180,
+      "height": 60
+    },
+    {
+      "id": "n_docs_design_telas_evolucao_tiros_tela_evolucao",
+      "type": "file",
+      "file": "TelaEvolucao.md",
+      "x": 20,
+      "y": 480,
+      "width": 180,
+      "height": 60
+    },
+    {
+      "id": "n_docs_modulos_mobile_tela_evolucao",
+      "type": "file",
+      "file": "TelaEvolucao_1.md",
+      "x": 220,
+      "y": 480,
+      "width": 180,
+      "height": 60
+    },
+    {
+      "id": "n_docs_modulos_mobile_tela_semana_padrao",
+      "type": "file",
+      "file": "TelaSemanaPadrao.md",
+      "x": 420,
+      "y": 480,
+      "width": 180,
+      "height": 60
+    },
+    {
+      "id": "n_docs_design_telas_treino_tela_treino",
+      "type": "file",
+      "file": "TelaTreino.md",
+      "x": 620,
+      "y": 480,
+      "width": 180,
+      "height": 60
+    },
+    {
+      "id": "n_docs_modulos_mobile_tela_treino",
+      "type": "file",
+      "file": "TelaTreino_1.md",
+      "x": 820,
+      "y": 480,
+      "width": 180,
+      "height": 60
+    },
+    {
+      "id": "n_docs_design_telas_semana_padrao_salvar",
+      "type": "file",
+      "file": "Textos de salvar.md",
+      "x": 1020,
+      "y": 480,
+      "width": 180,
+      "height": 60
+    },
+    {
+      "id": "n_docs_design_tokens",
+      "type": "file",
+      "file": "Tokens de design_1.md",
+      "x": 1220,
+      "y": 480,
+      "width": 180,
+      "height": 60
+    },
+    {
+      "id": "n_docs_decisoes_0004_contrato_tela_evolucao_a_api_formata_o_app_mostra",
+      "type": "file",
+      "file": "a API formata, o app mostra.md",
+      "x": 1420,
+      "y": 480,
+      "width": 180,
+      "height": 60
+    },
+    {
+      "id": "n_docs_decisoes_0015_caixa_do_dia_do_professor_atencao_1",
+      "type": "file",
+      "file": "atencao@1.md",
+      "x": 1620,
+      "y": 480,
+      "width": 180,
+      "height": 60
+    },
+    {
+      "id": "n_docs_decisoes_0015_caixa_do_dia_do_professor_caixa_do_dia_do_professor",
+      "type": "file",
+      "file": "caixa do dia do professor.md",
+      "x": 20,
+      "y": 560,
+      "width": 180,
+      "height": 60
+    },
+    {
+      "id": "n_docs_decisoes_0010_carga_de_treino_carga_de_treino_rtss_hrtss",
+      "type": "file",
+      "file": "carga de treino (rTSS, hrTSS).md",
+      "x": 220,
+      "y": 560,
+      "width": 180,
+      "height": 60
+    },
+    {
+      "id": "n_docs_decisoes_0012_check_in_pos_treino_carga_pse_1",
+      "type": "file",
+      "file": "carga_pse@1.md",
+      "x": 420,
+      "y": 560,
+      "width": 180,
+      "height": 60
+    },
+    {
+      "id": "n_docs_decisoes_0015_caixa_do_dia_do_professor_confirmacao_em_lote",
+      "type": "file",
+      "file": "confirma\u00e7\u00e3o em lote.md",
+      "x": 620,
+      "y": 560,
+      "width": 180,
+      "height": 60
+    },
+    {
+      "id": "n_docs_decisoes_0004_contrato_tela_evolucao_contrato_da_tela_de_evolucao",
+      "type": "file",
+      "file": "contrato da tela de evolu\u00e7\u00e3o.md",
+      "x": 820,
+      "y": 560,
+      "width": 180,
+      "height": 60
+    },
+    {
+      "id": "n_docs_design_telas_caixa_do_dia_detalhe_do_treino",
+      "type": "file",
+      "file": "detalhe do treino.md",
+      "x": 1020,
+      "y": 560,
+      "width": 180,
+      "height": 60
+    },
+    {
+      "id": "n_docs_decisoes_0011_linha_de_base_e_semana_padrao_linha_de_base_pessoal",
+      "type": "file",
+      "file": "linha de base pessoal.md",
+      "x": 1220,
+      "y": 560,
+      "width": 180,
+      "height": 60
+    },
+    {
+      "id": "n_docs_decisoes_0004_contrato_tela_evolucao_melhor_tiro_como_valor_principal",
+      "type": "file",
+      "file": "melhor tiro como valor principal.md",
+      "x": 1420,
+      "y": 560,
+      "width": 180,
+      "height": 60
+    },
+    {
+      "id": "n_docs_produto_meta_11_como_rodar",
+      "type": "file",
+      "file": "meta 11 como rodar.md",
+      "x": 1620,
+      "y": 560,
+      "width": 180,
+      "height": 60
+    },
+    {
+      "id": "n_docs_templates_tela_modelo_de_spec_de_tela",
+      "type": "file",
+      "file": "modelo de spec de tela.md",
+      "x": 20,
+      "y": 640,
+      "width": 180,
+      "height": 60
+    },
+    {
+      "id": "n_docs_design_telas_caixa_do_dia_motivos_e_icones",
+      "type": "file",
+      "file": "motivos e \u00edcones.md",
+      "x": 220,
+      "y": 640,
+      "width": 180,
+      "height": 60
+    },
+    {
+      "id": "n_docs_design_guia_visual_paleta_petroleo",
+      "type": "file",
+      "file": "paleta petr\u00f3leo.md",
+      "x": 420,
+      "y": 640,
+      "width": 180,
+      "height": 60
+    },
+    {
+      "id": "n_docs_design_guia_visual_prancheta_do_treinador",
+      "type": "file",
+      "file": "prancheta do treinador.md",
+      "x": 620,
+      "y": 640,
+      "width": 180,
+      "height": 60
+    },
+    {
+      "id": "n_docs_design_telas_caixa_do_dia_tela_caixa_do_dia",
+      "type": "file",
+      "file": "tela caixa do dia.md",
+      "x": 820,
+      "y": 640,
+      "width": 180,
+      "height": 60
+    },
+    {
+      "id": "n_docs_design_guia_visual_tokens_de_design",
+      "type": "file",
+      "file": "tokens de design.md",
+      "x": 1020,
+      "y": 640,
+      "width": 180,
+      "height": 60
+    },
+    {
+      "id": "n_docs_decisoes_0015_caixa_do_dia_do_professor_vinculo_e_consentimento",
+      "type": "file",
+      "file": "v\u00ednculo e consentimento.md",
+      "x": 1220,
+      "y": 640,
+      "width": 180,
+      "height": 60
+    },
+    {
+      "id": "g1",
+      "type": "group",
+      "label": "Modelo de dados e ADRs iniciais",
+      "x": 2060,
+      "y": 0,
+      "width": 1760,
+      "height": 920,
+      "color": "2"
+    },
+    {
+      "id": "n_docs_decisoes_0001_modelo_de_dados_minimo",
+      "type": "file",
+      "file": "ADR 0001 Modelo de dados m\u00ednimo e estrutura do monorepo.md",
+      "x": 2080,
+      "y": 80,
+      "width": 180,
+      "height": 60
+    },
+    {
+      "id": "n_docs_decisoes_0002_segmento_intensidade_e_versao",
+      "type": "file",
+      "file": "ADR 0002 Segmento com intensidade da volta e vers\u00e3o da detec\u00e7\u00e3o.md",
+      "x": 2280,
+      "y": 80,
+      "width": 180,
+      "height": 60
+    },
+    {
+      "id": "n_docs_decisoes_0003_fuso_da_atividade",
+      "type": "file",
+      "file": "ADR 0003 Fuso da atividade e data local da sess\u00e3o.md",
+      "x": 2480,
+      "y": 80,
+      "width": 180,
+      "height": 60
+    },
+    {
+      "id": "n_docs_decisoes_0005_serie_de_tiros_o_que_entra",
+      "type": "file",
+      "file": "ADR 0005 S\u00e9rie de tiros o que entra e como a regra muda.md",
+      "x": 2680,
+      "y": 80,
+      "width": 180,
+      "height": 60
+    },
+    {
+      "id": "n_docs_decisoes_0008_deteccao_de_esforcos",
+      "type": "file",
+      "file": "ADR 0008 Detec\u00e7\u00e3o de esfor\u00e7os (corrida por dist\u00e2ncia, ciclismo por dura\u00e7\u00e3o).md",
+      "x": 2880,
+      "y": 80,
+      "width": 180,
+      "height": 60
+    },
+    {
+      "id": "n_docs_decisoes_0009_treino_de_transicao",
+      "type": "file",
+      "file": "ADR 0009 Treino de transi\u00e7\u00e3o (r\u00f3tulo sugerido e corrig\u00edvel).md",
+      "x": 3080,
+      "y": 80,
+      "width": 180,
+      "height": 60
+    },
+    {
+      "id": "n_docs_decisoes_0010_carga_de_treino",
+      "type": "file",
+      "file": "ADR 0010 Carga de treino (rTSS, hrTSS, CTL, ATL e TSB).md",
+      "x": 3280,
+      "y": 80,
+      "width": 180,
+      "height": 60
+    },
+    {
+      "id": "n_docs_decisoes_0011_linha_de_base_e_semana_padrao",
+      "type": "file",
+      "file": "ADR 0011 Linha de base pessoal, semana-padr\u00e3o e tipo de treino.md",
+      "x": 3480,
+      "y": 80,
+      "width": 180,
+      "height": 60
+    },
+    {
+      "id": "n_docs_metricas_tiros_1km_agregacao_sessao",
+      "type": "file",
+      "file": "Agrega\u00e7\u00e3o por sess\u00e3o.md",
+      "x": 2080,
+      "y": 160,
+      "width": 180,
+      "height": 60
+    },
+    {
+      "id": "n_docs_decisoes_0010_carga_de_treino_ctl_atl_e_tsb",
+      "type": "file",
+      "file": "CTL, ATL e TSB.md",
+      "x": 2280,
+      "y": 160,
+      "width": 180,
+      "height": 60
+    },
+    {
+      "id": "n_docs_metricas_carga_treino",
+      "type": "file",
+      "file": "Carga de treino.md",
+      "x": 2480,
+      "y": 160,
+      "width": 180,
+      "height": 60
+    },
+    {
+      "id": "n_docs_metricas_carga_oraculo",
+      "type": "file",
+      "file": "Carga de treino fixtures de algumas semanas e or\u00e1culo.md",
+      "x": 2680,
+      "y": 160,
+      "width": 180,
+      "height": 60
+    },
+    {
+      "id": "n_docs_metricas_conferencia_carga",
+      "type": "file",
+      "file": "Confer\u00eancia da nossa carga com a carga do Garmin (`conferencia_carga@1`).md",
+      "x": 2880,
+      "y": 160,
+      "width": 180,
+      "height": 60
+    },
+    {
+      "id": "n_docs_modulos_ingestao_garmin_saude",
+      "type": "file",
+      "file": "Dados de sa\u00fade da exporta\u00e7\u00e3o (limiar, zonas, recordes).md",
+      "x": 3080,
+      "y": 160,
+      "width": 180,
+      "height": 60
+    },
+    {
+      "id": "n_docs_diario_2026_11_04_decisoes_angelo",
+      "type": "file",
+      "file": "Decis\u00f5es do Angelo (0411).md",
+      "x": 3280,
+      "y": 160,
+      "width": 180,
+      "height": 60
+    },
+    {
+      "id": "n_docs_metricas_esforcos_oraculo",
+      "type": "file",
+      "file": "Detec\u00e7\u00e3o de esfor\u00e7os fixtures e or\u00e1culo.md",
+      "x": 3480,
+      "y": 160,
+      "width": 180,
+      "height": 60
+    },
+    {
+      "id": "n_docs_metricas_tipo_treino_divergencia",
+      "type": "file",
+      "file": "Diverg\u00eancia do plano.md",
+      "x": 2080,
+      "y": 240,
+      "width": 180,
+      "height": 60
+    },
+    {
+      "id": "n_docs_diario_2026_11_04",
+      "type": "file",
+      "file": "Di\u00e1rio 2026-11-04 Decis\u00f5es do Angelo e detec\u00e7\u00e3o de esfor\u00e7os.md",
+      "x": 2280,
+      "y": 240,
+      "width": 180,
+      "height": 60
+    },
+    {
+      "id": "n_docs_diario_2026_11_06",
+      "type": "file",
+      "file": "Di\u00e1rio 2026-11-06 Meta 5 esfor\u00e7os e treino de transi\u00e7\u00e3o.md",
+      "x": 2480,
+      "y": 240,
+      "width": 180,
+      "height": 60
+    },
+    {
+      "id": "n_docs_diario_2026_11_07",
+      "type": "file",
+      "file": "Di\u00e1rio 2026-11-07 Meta 6 carga de treino.md",
+      "x": 2680,
+      "y": 240,
+      "width": 180,
+      "height": 60
+    },
+    {
+      "id": "n_docs_diario_2026_11_08",
+      "type": "file",
+      "file": "Di\u00e1rio 2026-11-08 Fechamento da Meta 6.md",
+      "x": 2880,
+      "y": 240,
+      "width": 180,
+      "height": 60
+    },
+    {
+      "id": "n_docs_metricas_tipo_treino_semana_padrao",
+      "type": "file",
+      "file": "Encaixe na semana-padr\u00e3o.md",
+      "x": 3080,
+      "y": 240,
+      "width": 180,
+      "height": 60
+    },
+    {
+      "id": "n_docs_modulos_api_carga",
+      "type": "file",
+      "file": "Endpoint de carga.md",
+      "x": 3280,
+      "y": 240,
+      "width": 180,
+      "height": 60
+    },
+    {
+      "id": "n_docs_metricas_esforcos",
+      "type": "file",
+      "file": "Esfor\u00e7os.md",
+      "x": 3480,
+      "y": 240,
+      "width": 180,
+      "height": 60
+    },
+    {
+      "id": "n_docs_glossario",
+      "type": "file",
+      "file": "Gloss\u00e1rio.md",
+      "x": 2080,
+      "y": 320,
+      "width": 180,
+      "height": 60
+    },
+    {
+      "id": "n_docs_diario_2026_11_08_grafico_carga",
+      "type": "file",
+      "file": "Gr\u00e1fico de carga.md",
+      "x": 2280,
+      "y": 320,
+      "width": 180,
+      "height": 60
+    },
+    {
+      "id": "n_docs_modulos_ingestao_garmin",
+      "type": "file",
+      "file": "Ingest\u00e3o Garmin.md",
+      "x": 2480,
+      "y": 320,
+      "width": 180,
+      "height": 60
+    },
+    {
+      "id": "n_docs_diario_2026_11_06_meta5",
+      "type": "file",
+      "file": "Meta 5 (esfor\u00e7os e transi\u00e7\u00e3o).md",
+      "x": 2680,
+      "y": 320,
+      "width": 180,
+      "height": 60
+    },
+    {
+      "id": "n_docs_produto_meta_5_como_rodar",
+      "type": "file",
+      "file": "Meta 5 como rodar a detec\u00e7\u00e3o de esfor\u00e7os.md",
+      "x": 2880,
+      "y": 320,
+      "width": 180,
+      "height": 60
+    },
+    {
+      "id": "n_docs_diario_2026_11_07_meta6",
+      "type": "file",
+      "file": "Meta 6 (carga de treino).md",
+      "x": 3080,
+      "y": 320,
+      "width": 180,
+      "height": 60
+    },
+    {
+      "id": "n_docs_metricas_tiros_1km",
+      "type": "file",
+      "file": "M\u00e9trica tiros de 1 km.md",
+      "x": 3280,
+      "y": 320,
+      "width": 180,
+      "height": 60
+    },
+    {
+      "id": "n_docs_modulos_banco",
+      "type": "file",
+      "file": "M\u00f3dulo banco.md",
+      "x": 3480,
+      "y": 320,
+      "width": 180,
+      "height": 60
+    },
+    {
+      "id": "n_docs_modulos_worker",
+      "type": "file",
+      "file": "M\u00f3dulo worker.md",
+      "x": 2080,
+      "y": 400,
+      "width": 180,
+      "height": 60
+    },
+    {
+      "id": "n_docs_modulos_ingestao_garmin_parser_fit",
+      "type": "file",
+      "file": "Parser de FIT (fitdecode).md",
+      "x": 2280,
+      "y": 400,
+      "width": 180,
+      "height": 60
+    },
+    {
+      "id": "n_docs_metricas_tiros_1km_ritmo_habitual",
+      "type": "file",
+      "file": "Ritmo habitual do atleta.md",
+      "x": 2480,
+      "y": 400,
+      "width": 180,
+      "height": 60
+    },
+    {
+      "id": "n_docs_metricas_serie_carga",
+      "type": "file",
+      "file": "S\u00e9rie de carga.md",
+      "x": 2680,
+      "y": 400,
+      "width": 180,
+      "height": 60
+    },
+    {
+      "id": "n_docs_metricas_tipo_treino",
+      "type": "file",
+      "file": "Tipo de treino.md",
+      "x": 2880,
+      "y": 400,
+      "width": 180,
+      "height": 60
+    },
+    {
+      "id": "n_docs_metricas_tipo_linha_base_oraculo",
+      "type": "file",
+      "file": "Tipo de treino e linha de base fixtures de 12 semanas e or\u00e1culo.md",
+      "x": 3080,
+      "y": 400,
+      "width": 180,
+      "height": 60
+    },
+    {
+      "id": "n_docs_modulos_ingestao_garmin_multiesporte",
+      "type": "file",
+      "file": "Treino multiesporte atividade-pai e troca.md",
+      "x": 3280,
+      "y": 400,
+      "width": 180,
+      "height": 60
+    },
+    {
+      "id": "n_docs_decisoes_0008_deteccao_de_esforcos_calibracao_pelos_recordes_pessoais",
+      "type": "file",
+      "file": "calibra\u00e7\u00e3o pelos recordes pessoais.md",
+      "x": 3480,
+      "y": 400,
+      "width": 180,
+      "height": 60
+    },
+    {
+      "id": "n_docs_decisoes_0010_carga_de_treino_carga_1",
+      "type": "file",
+      "file": "carga@1.md",
+      "x": 2080,
+      "y": 480,
+      "width": 180,
+      "height": 60
+    },
+    {
+      "id": "n_docs_decisoes_0003_fuso_da_atividade_data_local_da_sessao",
+      "type": "file",
+      "file": "data local da sess\u00e3o.md",
+      "x": 2280,
+      "y": 480,
+      "width": 180,
+      "height": 60
+    },
+    {
+      "id": "n_docs_decisoes_0008_deteccao_de_esforcos_deteccao_de_esforcos",
+      "type": "file",
+      "file": "detec\u00e7\u00e3o de esfor\u00e7os.md",
+      "x": 2480,
+      "y": 480,
+      "width": 180,
+      "height": 60
+    },
+    {
+      "id": "n_docs_decisoes_0001_modelo_de_dados_minimo_estrutura_do_monorepo",
+      "type": "file",
+      "file": "estrutura do monorepo.md",
+      "x": 2680,
+      "y": 480,
+      "width": 180,
+      "height": 60
+    },
+    {
+      "id": "n_docs_decisoes_0003_fuso_da_atividade_fuso_da_atividade",
+      "type": "file",
+      "file": "fuso da atividade.md",
+      "x": 2880,
+      "y": 480,
+      "width": 180,
+      "height": 60
+    },
+    {
+      "id": "n_docs_modulos_grafico_carga",
+      "type": "file",
+      "file": "grafico carga.md",
+      "x": 3080,
+      "y": 480,
+      "width": 180,
+      "height": 60
+    },
+    {
+      "id": "n_docs_decisoes_0002_segmento_intensidade_e_versao_intensidade_da_volta",
+      "type": "file",
+      "file": "intensidade da volta.md",
+      "x": 3280,
+      "y": 480,
+      "width": 180,
+      "height": 60
+    },
+    {
+      "id": "n_docs_decisoes_0010_carga_de_treino_limiar_do_atleta",
+      "type": "file",
+      "file": "limiar do atleta.md",
+      "x": 3480,
+      "y": 480,
+      "width": 180,
+      "height": 60
+    },
+    {
+      "id": "n_docs_decisoes_0001_modelo_de_dados_minimo_modelo_de_dados_minimo",
+      "type": "file",
+      "file": "modelo de dados m\u00ednimo.md",
+      "x": 2080,
+      "y": 560,
+      "width": 180,
+      "height": 60
+    },
+    {
+      "id": "n_docs_decisoes_0008_deteccao_de_esforcos_recuperacao_pelo_tempo_de_pausa",
+      "type": "file",
+      "file": "recupera\u00e7\u00e3o pelo tempo de pausa.md",
+      "x": 2280,
+      "y": 560,
+      "width": 180,
+      "height": 60
+    },
+    {
+      "id": "n_docs_decisoes_0009_treino_de_transicao_regra_transicao_1",
+      "type": "file",
+      "file": "regra transicao@1.md",
+      "x": 2480,
+      "y": 560,
+      "width": 180,
+      "height": 60
+    },
+    {
+      "id": "n_docs_decisoes_0009_treino_de_transicao_rotulo_corrigivel_pelo_atleta",
+      "type": "file",
+      "file": "r\u00f3tulo corrig\u00edvel pelo atleta.md",
+      "x": 2680,
+      "y": 560,
+      "width": 180,
+      "height": 60
+    },
+    {
+      "id": "n_docs_decisoes_0011_linha_de_base_e_semana_padrao_semana_padrao",
+      "type": "file",
+      "file": "semana-padr\u00e3o_1.md",
+      "x": 2880,
+      "y": 560,
+      "width": 180,
+      "height": 60
+    },
+    {
+      "id": "n_docs_decisoes_0005_serie_de_tiros_o_que_entra_serie_de_tiros",
+      "type": "file",
+      "file": "s\u00e9rie de tiros.md",
+      "x": 3080,
+      "y": 560,
+      "width": 180,
+      "height": 60
+    },
+    {
+      "id": "n_docs_decisoes_0011_linha_de_base_e_semana_padrao_tipo_de_treino_tipo_treino_1",
+      "type": "file",
+      "file": "tipo de treino (tipo_treino@1).md",
+      "x": 3280,
+      "y": 560,
+      "width": 180,
+      "height": 60
+    },
+    {
+      "id": "n_docs_metricas_transicao",
+      "type": "file",
+      "file": "transicao.md",
+      "x": 3480,
+      "y": 560,
+      "width": 180,
+      "height": 60
+    },
+    {
+      "id": "n_docs_decisoes_0009_treino_de_transicao_treino_de_transicao",
+      "type": "file",
+      "file": "treino de transi\u00e7\u00e3o.md",
+      "x": 2080,
+      "y": 640,
+      "width": 180,
+      "height": 60
+    },
+    {
+      "id": "n_docs_decisoes_0002_segmento_intensidade_e_versao_versao_da_deteccao",
+      "type": "file",
+      "file": "vers\u00e3o da detec\u00e7\u00e3o.md",
+      "x": 2280,
+      "y": 640,
+      "width": 180,
+      "height": 60
+    },
+    {
+      "id": "n_docs_produto_meta_5_como_rodar_detectar_esforcos",
+      "type": "file",
+      "file": "worker.detectar_esforcos.md",
+      "x": 2480,
+      "y": 640,
+      "width": 180,
+      "height": 60
+    },
+    {
+      "id": "g2",
+      "type": "group",
+      "label": "Mapa, upload de FIT e ADRs",
+      "x": 3900,
+      "y": 0,
+      "width": 1540,
+      "height": 720,
+      "color": "3"
+    },
+    {
+      "id": "n_docs_decisoes_0006_upload_de_fit",
+      "type": "file",
+      "file": "ADR 0006 Upload de arquivo FIT (Meta 3).md",
+      "x": 3920,
+      "y": 80,
+      "width": 180,
+      "height": 60
+    },
+    {
+      "id": "n_docs_decisoes_0007_clima_da_atividade",
+      "type": "file",
+      "file": "ADR 0007 Clima da atividade (Meta 4).md",
+      "x": 4120,
+      "y": 80,
+      "width": 180,
+      "height": 60
+    },
+    {
+      "id": "n_docs_produto_meta_3_como_rodar_botao_enviar_fit",
+      "type": "file",
+      "file": "Bot\u00e3o Enviar arquivo FIT.md",
+      "x": 4320,
+      "y": 80,
+      "width": 180,
+      "height": 60
+    },
+    {
+      "id": "n_docs_metricas_clima_oraculo",
+      "type": "file",
+      "file": "Clima da atividade fixtures e or\u00e1culo.md",
+      "x": 4520,
+      "y": 80,
+      "width": 180,
+      "height": 60
+    },
+    {
+      "id": "n_docs_design_telas_treino_clima",
+      "type": "file",
+      "file": "Clima do treino.md",
+      "x": 4720,
+      "y": 80,
+      "width": 180,
+      "height": 60
+    },
+    {
+      "id": "n_docs_diario_2026_10_31",
+      "type": "file",
+      "file": "Di\u00e1rio 2026-10-31 Ciclo da Meta 1 tiros de 1 km.md",
+      "x": 4920,
+      "y": 80,
+      "width": 180,
+      "height": 60
+    },
+    {
+      "id": "n_docs_diario_2026_11_01",
+      "type": "file",
+      "file": "Di\u00e1rio 2026-11-01 Meta 1 fechada e confer\u00eancia privada.md",
+      "x": 5120,
+      "y": 80,
+      "width": 180,
+      "height": 60
+    },
+    {
+      "id": "n_docs_diario_2026_11_03",
+      "type": "file",
+      "file": "Di\u00e1rio 2026-11-03 Ciclos das Metas 2, 3 e 4.md",
+      "x": 3920,
+      "y": 160,
+      "width": 180,
+      "height": 60
+    },
+    {
+      "id": "n_docs_modulos_api_upload_fit",
+      "type": "file",
+      "file": "Endpoint upload de FIT.md",
+      "x": 4120,
+      "y": 160,
+      "width": 180,
+      "height": 60
+    },
+    {
+      "id": "n_docs_produto_metas_meta_4_clima_atividade_estados_clima",
+      "type": "file",
+      "file": "Estados do clima (ok, indoor, sem_posicao, pendente, falha).md",
+      "x": 4320,
+      "y": 160,
+      "width": 180,
+      "height": 60
+    },
+    {
+      "id": "n_docs_produto_meta_3_como_rodar_fit_dir",
+      "type": "file",
+      "file": "FIT_DIR (pasta de guarda dos FIT).md",
+      "x": 4520,
+      "y": 160,
+      "width": 180,
+      "height": 60
+    },
+    {
+      "id": "n_docs_diario_2026_10_31_meta1",
+      "type": "file",
+      "file": "Meta 1 (tiros de 1 km).md",
+      "x": 4720,
+      "y": 160,
+      "width": 180,
+      "height": 60
+    },
+    {
+      "id": "n_docs_produto_meta_1_como_reproduzir",
+      "type": "file",
+      "file": "Meta 1 como reproduzir.md",
+      "x": 4920,
+      "y": 160,
+      "width": 180,
+      "height": 60
+    },
+    {
+      "id": "n_docs_produto_metas_meta_1_tiros_1km",
+      "type": "file",
+      "file": "Meta 1 tiros de 1 km.md",
+      "x": 5120,
+      "y": 160,
+      "width": 180,
+      "height": 60
+    },
+    {
+      "id": "n_docs_diario_2026_11_03_meta2",
+      "type": "file",
+      "file": "Meta 2 (evolu\u00e7\u00e3o no app).md",
+      "x": 3920,
+      "y": 240,
+      "width": 180,
+      "height": 60
+    },
+    {
+      "id": "n_docs_produto_meta_2_como_rodar",
+      "type": "file",
+      "file": "Meta 2 como rodar a API e o app.md",
+      "x": 4120,
+      "y": 240,
+      "width": 180,
+      "height": 60
+    },
+    {
+      "id": "n_docs_produto_metas_meta_2_evolucao_tiros_app",
+      "type": "file",
+      "file": "Meta 2 evolu\u00e7\u00e3o dos tiros no app.md",
+      "x": 4320,
+      "y": 240,
+      "width": 180,
+      "height": 60
+    },
+    {
+      "id": "n_docs_diario_2026_11_03_meta3",
+      "type": "file",
+      "file": "Meta 3 (upload de FIT).md",
+      "x": 4520,
+      "y": 240,
+      "width": 180,
+      "height": 60
+    },
+    {
+      "id": "n_docs_produto_meta_3_como_rodar",
+      "type": "file",
+      "file": "Meta 3 como rodar o upload de FIT.md",
+      "x": 4720,
+      "y": 240,
+      "width": 180,
+      "height": 60
+    },
+    {
+      "id": "n_docs_produto_metas_meta_3_upload_fit",
+      "type": "file",
+      "file": "Meta 3 upload de arquivo FIT.md",
+      "x": 4920,
+      "y": 240,
+      "width": 180,
+      "height": 60
+    },
+    {
+      "id": "n_docs_diario_2026_11_03_meta4",
+      "type": "file",
+      "file": "Meta 4 (clima completo).md",
+      "x": 5120,
+      "y": 240,
+      "width": 180,
+      "height": 60
+    },
+    {
+      "id": "n_docs_produto_metas_meta_4_clima_atividade",
+      "type": "file",
+      "file": "Meta 4 clima da atividade.md",
+      "x": 3920,
+      "y": 320,
+      "width": 180,
+      "height": 60
+    },
+    {
+      "id": "n_docs_produto_metas_meta_5_deteccao_esforcos",
+      "type": "file",
+      "file": "Meta 5 detec\u00e7\u00e3o de esfor\u00e7os.md",
+      "x": 4120,
+      "y": 320,
+      "width": 180,
+      "height": 60
+    },
+    {
+      "id": "n_docs_modulos_api",
+      "type": "file",
+      "file": "M\u00f3dulo API.md",
+      "x": 4320,
+      "y": 320,
+      "width": 180,
+      "height": 60
+    },
+    {
+      "id": "n_docs_modulos_api_client",
+      "type": "file",
+      "file": "M\u00f3dulo api-client.md",
+      "x": 4520,
+      "y": 320,
+      "width": 180,
+      "height": 60
+    },
+    {
+      "id": "n_docs_modulos_grafico_tiros",
+      "type": "file",
+      "file": "M\u00f3dulo gr\u00e1fico dos tiros de 1 km.md",
+      "x": 4720,
+      "y": 320,
+      "width": 180,
+      "height": 60
+    },
+    {
+      "id": "n_docs_modulos_infra",
+      "type": "file",
+      "file": "M\u00f3dulo infra.md",
+      "x": 4920,
+      "y": 320,
+      "width": 180,
+      "height": 60
+    },
+    {
+      "id": "n_docs_decisoes_0007_clima_da_atividade_open_meteo",
+      "type": "file",
+      "file": "Open-Meteo.md",
+      "x": 5120,
+      "y": 320,
+      "width": 180,
+      "height": 60
+    },
+    {
+      "id": "n_docs_produto_metas_meta_1_tiros_1km_tiros_1km_regra",
+      "type": "file",
+      "file": "Regra tiros_1km (vers\u00f5es @1 a @4).md",
+      "x": 3920,
+      "y": 400,
+      "width": 180,
+      "height": 60
+    },
+    {
+      "id": "n_docs_diario_2026_11_01_repo_publico",
+      "type": "file",
+      "file": "Reposit\u00f3rio p\u00fablico sem dado real.md",
+      "x": 4120,
+      "y": 400,
+      "width": 180,
+      "height": 60
+    },
+    {
+      "id": "n_docs_00_inicio",
+      "type": "file",
+      "file": "Treino Contexto mapa do projeto.md",
+      "x": 4320,
+      "y": 400,
+      "width": 180,
+      "height": 60
+    },
+    {
+      "id": "n_docs_produto_metas_meta_5_deteccao_esforcos_treino_chave",
+      "type": "file",
+      "file": "Treino-chave cont\u00ednuo.md",
+      "x": 4520,
+      "y": 400,
+      "width": 180,
+      "height": 60
+    },
+    {
+      "id": "n_docs_modulos_clima",
+      "type": "file",
+      "file": "clima.md",
+      "x": 4720,
+      "y": 400,
+      "width": 180,
+      "height": 60
+    },
+    {
+      "id": "n_docs_decisoes_0007_clima_da_atividade_clima_da_atividade",
+      "type": "file",
+      "file": "clima da atividade.md",
+      "x": 4920,
+      "y": 400,
+      "width": 180,
+      "height": 60
+    },
+    {
+      "id": "n_docs_00_inicio_mapa_do_projeto",
+      "type": "file",
+      "file": "mapa do projeto.md",
+      "x": 5120,
+      "y": 400,
+      "width": 180,
+      "height": 60
+    },
+    {
+      "id": "n_docs_produto_meta_4_como_rodar",
+      "type": "file",
+      "file": "meta 4 como rodar.md",
+      "x": 3920,
+      "y": 480,
+      "width": 180,
+      "height": 60
+    },
+    {
+      "id": "n_docs_decisoes_0006_upload_de_fit_regra_dos_60_s_de_identidade_da_atividade",
+      "type": "file",
+      "file": "regra dos 60 s de identidade da atividade.md",
+      "x": 4120,
+      "y": 480,
+      "width": 180,
+      "height": 60
+    },
+    {
+      "id": "n_docs_decisoes_0007_clima_da_atividade_tabela_clima_atividade",
+      "type": "file",
+      "file": "tabela clima_atividade.md",
+      "x": 4320,
+      "y": 480,
+      "width": 180,
+      "height": 60
+    },
+    {
+      "id": "n_docs_00_inicio_termos",
+      "type": "file",
+      "file": "termos.md",
+      "x": 4520,
+      "y": 480,
+      "width": 180,
+      "height": 60
+    },
+    {
+      "id": "n_docs_decisoes_0006_upload_de_fit_upload_de_arquivo_fit",
+      "type": "file",
+      "file": "upload de arquivo FIT.md",
+      "x": 4720,
+      "y": 480,
+      "width": 180,
+      "height": 60
+    },
+    {
+      "id": "n_docs_produto_meta_4_como_rodar_preencher_clima",
+      "type": "file",
+      "file": "worker.preencher_clima.md",
+      "x": 4920,
+      "y": 480,
+      "width": 180,
+      "height": 60
+    },
+    {
+      "id": "n_docs_modulos",
+      "type": "file",
+      "file": "\u00cdndice de m\u00f3dulos.md",
+      "x": 5120,
+      "y": 480,
+      "width": 180,
+      "height": 60
+    },
+    {
+      "id": "g3",
+      "type": "group",
+      "label": "Check-in e feedback autom\u00e1tico",
+      "x": 5520,
+      "y": 0,
+      "width": 1540,
+      "height": 720,
+      "color": "4"
+    },
+    {
+      "id": "n_docs_decisoes_0013_feedback_automatico",
+      "type": "file",
+      "file": "ADR 0013 Feedback autom\u00e1tico por treino (pacote de fatos, guarda, camada de LLM, checagen.md",
+      "x": 5540,
+      "y": 80,
+      "width": 180,
+      "height": 60
+    },
+    {
+      "id": "n_docs_decisoes_0014_recuperacao_diaria",
+      "type": "file",
+      "file": "ADR 0014 Recupera\u00e7\u00e3o di\u00e1ria (sono, VFC e FC de repouso) no contexto do treino.md",
+      "x": 5740,
+      "y": 80,
+      "width": 180,
+      "height": 60
+    },
+    {
+      "id": "n_docs_modulos_camada_llm",
+      "type": "file",
+      "file": "Camada LLM.md",
+      "x": 5940,
+      "y": 80,
+      "width": 180,
+      "height": 60
+    },
+    {
+      "id": "n_docs_metricas_carga_pse",
+      "type": "file",
+      "file": "Carga por PSE.md",
+      "x": 6140,
+      "y": 80,
+      "width": 180,
+      "height": 60
+    },
+    {
+      "id": "n_docs_produto_metas_meta_9_feedback_automatico_checagens_texto",
+      "type": "file",
+      "file": "Checagens autom\u00e1ticas do texto do feedback.md",
+      "x": 6340,
+      "y": 80,
+      "width": 180,
+      "height": 60
+    },
+    {
+      "id": "n_docs_metricas_checagens_feedback",
+      "type": "file",
+      "file": "Checagens do feedback_1.md",
+      "x": 6540,
+      "y": 80,
+      "width": 180,
+      "height": 60
+    },
+    {
+      "id": "n_docs_metricas_carga_pse_oraculo",
+      "type": "file",
+      "file": "Check-in e carga pela PSE fixtures e or\u00e1culo.md",
+      "x": 6740,
+      "y": 80,
+      "width": 180,
+      "height": 60
+    },
+    {
+      "id": "n_docs_diario_2026_11_11",
+      "type": "file",
+      "file": "Di\u00e1rio 2026-11-11 Meta 9 feedback por treino.md",
+      "x": 5540,
+      "y": 160,
+      "width": 180,
+      "height": 60
+    },
+    {
+      "id": "n_docs_diario_2026_11_12",
+      "type": "file",
+      "file": "Di\u00e1rio 2026-11-12 Meta 9 e recupera\u00e7\u00e3o di\u00e1ria.md",
+      "x": 5740,
+      "y": 160,
+      "width": 180,
+      "height": 60
+    },
+    {
+      "id": "n_docs_diario_2026_11_13",
+      "type": "file",
+      "file": "Di\u00e1rio 2026-11-13 Meta 10 e rodada com o provedor LLM.md",
+      "x": 5940,
+      "y": 160,
+      "width": 180,
+      "height": 60
+    },
+    {
+      "id": "n_docs_diario_2026_11_16",
+      "type": "file",
+      "file": "Di\u00e1rio 2026-11-16 Fim da Meta 10 e revis\u00e3o de docs.md",
+      "x": 6140,
+      "y": 160,
+      "width": 180,
+      "height": 60
+    },
+    {
+      "id": "n_docs_metricas_fatos_treino",
+      "type": "file",
+      "file": "Fatos do treino.md",
+      "x": 6340,
+      "y": 160,
+      "width": 180,
+      "height": 60
+    },
+    {
+      "id": "n_docs_metricas_linha_base",
+      "type": "file",
+      "file": "Linha de base.md",
+      "x": 6540,
+      "y": 160,
+      "width": 180,
+      "height": 60
+    },
+    {
+      "id": "n_docs_diario_2026_11_13_meta10",
+      "type": "file",
+      "file": "Meta 10 (recupera\u00e7\u00e3o).md",
+      "x": 6740,
+      "y": 160,
+      "width": 180,
+      "height": 60
+    },
+    {
+      "id": "n_docs_produto_meta_10_como_rodar",
+      "type": "file",
+      "file": "Meta 10 como rodar.md",
+      "x": 5540,
+      "y": 240,
+      "width": 180,
+      "height": 60
+    },
+    {
+      "id": "n_docs_produto_metas_meta_10_recuperacao",
+      "type": "file",
+      "file": "Meta 10 sono, VFC e FC de repouso no contexto do treino.md",
+      "x": 5740,
+      "y": 240,
+      "width": 180,
+      "height": 60
+    },
+    {
+      "id": "n_docs_produto_roadmap_meta_12_proposta",
+      "type": "file",
+      "file": "Meta 12 o treino inteiro na tela do atleta (proposta).md",
+      "x": 5940,
+      "y": 240,
+      "width": 180,
+      "height": 60
+    },
+    {
+      "id": "n_docs_produto_roadmap_meta_13_login_deploy",
+      "type": "file",
+      "file": "Meta 13 login e deploy do piloto (esbo\u00e7o).md",
+      "x": 6140,
+      "y": 240,
+      "width": 180,
+      "height": 60
+    },
+    {
+      "id": "n_docs_produto_roadmap_meta_14_agente_atleta",
+      "type": "file",
+      "file": "Meta 14 agente do atleta (esbo\u00e7o).md",
+      "x": 6340,
+      "y": 240,
+      "width": 180,
+      "height": 60
+    },
+    {
+      "id": "n_docs_produto_meta_9_como_rodar",
+      "type": "file",
+      "file": "Meta 9 como rodar.md",
+      "x": 6540,
+      "y": 240,
+      "width": 180,
+      "height": 60
+    },
+    {
+      "id": "n_docs_produto_metas_meta_9_feedback_automatico",
+      "type": "file",
+      "file": "Meta 9 feedback autom\u00e1tico.md",
+      "x": 6740,
+      "y": 240,
+      "width": 180,
+      "height": 60
+    },
+    {
+      "id": "n_docs_metricas_recuperacao",
+      "type": "file",
+      "file": "M\u00e9trica recupera\u00e7\u00e3o.md",
+      "x": 5540,
+      "y": 320,
+      "width": 180,
+      "height": 60
+    },
+    {
+      "id": "n_docs_metricas_recuperacao_oraculo",
+      "type": "file",
+      "file": "Or\u00e1culo da recupera\u00e7\u00e3o.md",
+      "x": 5740,
+      "y": 320,
+      "width": 180,
+      "height": 60
+    },
+    {
+      "id": "n_docs_metricas_fatos_treino_oraculo",
+      "type": "file",
+      "file": "Or\u00e1culo dos fatos do treino.md",
+      "x": 5940,
+      "y": 320,
+      "width": 180,
+      "height": 60
+    },
+    {
+      "id": "n_docs_produto_metas_meta_9_feedback_automatico_codigo_calcula_ia_redige",
+      "type": "file",
+      "file": "Princ\u00edpio o c\u00f3digo calcula, a IA s\u00f3 redige.md",
+      "x": 6140,
+      "y": 320,
+      "width": 180,
+      "height": 60
+    },
+    {
+      "id": "n_docs_modulos_camada_llm_feedback_prompt",
+      "type": "file",
+      "file": "Prompt feedback_prompt.md",
+      "x": 6340,
+      "y": 320,
+      "width": 180,
+      "height": 60
+    },
+    {
+      "id": "n_docs_produto_metas_meta_10_recuperacao_recuperacao_dia",
+      "type": "file",
+      "file": "Recupera\u00e7\u00e3o da noite anterior (sono, VFC, FC de repouso).md",
+      "x": 6540,
+      "y": 320,
+      "width": 180,
+      "height": 60
+    },
+    {
+      "id": "n_docs_diario_2026_11_12_recuperacao",
+      "type": "file",
+      "file": "Recupera\u00e7\u00e3o di\u00e1ria (sono, VFC, FC de repouso)_1.md",
+      "x": 6740,
+      "y": 320,
+      "width": 180,
+      "height": 60
+    },
+    {
+      "id": "n_docs_produto_roadmap_renumeracao_metas",
+      "type": "file",
+      "file": "Renumera\u00e7\u00e3o das metas (decis\u00f5es do Angelo).md",
+      "x": 5540,
+      "y": 400,
+      "width": 180,
+      "height": 60
+    },
+    {
+      "id": "n_docs_diario_2026_11_16_revisao_docs",
+      "type": "file",
+      "file": "Revis\u00e3o de docs.md",
+      "x": 5740,
+      "y": 400,
+      "width": 180,
+      "height": 60
+    },
+    {
+      "id": "n_docs_produto_roadmap",
+      "type": "file",
+      "file": "Roadmap.md",
+      "x": 5940,
+      "y": 400,
+      "width": 180,
+      "height": 60
+    },
+    {
+      "id": "n_docs_diario_2026_11_13_rodada_provedor",
+      "type": "file",
+      "file": "Rodada com o provedor de verdade (376).md",
+      "x": 6140,
+      "y": 400,
+      "width": 180,
+      "height": 60
+    },
+    {
+      "id": "n_docs_modulos_ingestao_garmin_sono_vfc",
+      "type": "file",
+      "file": "Sono, VFC e FC de repouso.md",
+      "x": 6340,
+      "y": 400,
+      "width": 180,
+      "height": 60
+    },
+    {
+      "id": "n_docs_decisoes_0013_feedback_automatico_camada_de_llm",
+      "type": "file",
+      "file": "camada de LLM.md",
+      "x": 6540,
+      "y": 400,
+      "width": 180,
+      "height": 60
+    },
+    {
+      "id": "n_docs_decisoes_0013_feedback_automatico_checagens_do_feedback",
+      "type": "file",
+      "file": "checagens do feedback.md",
+      "x": 6740,
+      "y": 400,
+      "width": 180,
+      "height": 60
+    },
+    {
+      "id": "n_docs_decisoes_0012_check_in_pos_treino_check_in_pos_treino",
+      "type": "file",
+      "file": "check-in p\u00f3s-treino.md",
+      "x": 5540,
+      "y": 480,
+      "width": 180,
+      "height": 60
+    },
+    {
+      "id": "n_docs_decisoes_0014_recuperacao_diaria_fatos_treino_2",
+      "type": "file",
+      "file": "fatos_treino@2.md",
+      "x": 5740,
+      "y": 480,
+      "width": 180,
+      "height": 60
+    },
+    {
+      "id": "n_docs_decisoes_0013_feedback_automatico_feedback_automatico_por_treino",
+      "type": "file",
+      "file": "feedback autom\u00e1tico por treino.md",
+      "x": 5940,
+      "y": 480,
+      "width": 180,
+      "height": 60
+    },
+    {
+      "id": "n_docs_decisoes_0013_feedback_automatico_pacote_de_fatos_fatos_treino_1",
+      "type": "file",
+      "file": "pacote de fatos fatos_treino@1.md",
+      "x": 6140,
+      "y": 480,
+      "width": 180,
+      "height": 60
+    },
+    {
+      "id": "n_docs_decisoes_0014_recuperacao_diaria_recuperacao_1",
+      "type": "file",
+      "file": "recuperacao@1.md",
+      "x": 6340,
+      "y": 480,
+      "width": 180,
+      "height": 60
+    },
+    {
+      "id": "n_docs_decisoes_0014_recuperacao_diaria_recuperacao_diaria_sono_vfc_fc_de_repouso",
+      "type": "file",
+      "file": "recupera\u00e7\u00e3o di\u00e1ria (sono, VFC, FC de repouso).md",
+      "x": 6540,
+      "y": 480,
+      "width": 180,
+      "height": 60
+    },
+    {
+      "id": "n_docs_produto_meta_9_como_rodar_gerar_feedback",
+      "type": "file",
+      "file": "worker.gerar_feedback.md",
+      "x": 6740,
+      "y": 480,
+      "width": 180,
+      "height": 60
+    },
+    {
+      "id": "g4",
+      "type": "group",
+      "label": "Arquitetura e plano do MVP",
+      "x": 7140,
+      "y": 0,
+      "width": 1100,
+      "height": 520,
+      "color": "5"
+    },
+    {
+      "id": "n_docs_produto_plano_mvp_execucao_claude_api",
+      "type": "file",
+      "file": "API do Claude.md",
+      "x": 7160,
       "y": 80,
       "width": 180,
       "height": 60
@@ -32,43 +1980,7 @@
       "id": "n_docs_produto_plano_mvp_execucao_arquitetura",
       "type": "file",
       "file": "Arquitetura (ingest\u00e3o, fila, workers, web).md",
-      "x": 420,
-      "y": 80,
-      "width": 180,
-      "height": 60
-    },
-    {
-      "id": "n_docs_produto_plano_mvp_execucao_outros_relogios",
-      "type": "file",
-      "file": "COROS, Polar, Suunto, Wahoo.md",
-      "x": 620,
-      "y": 80,
-      "width": 180,
-      "height": 60
-    },
-    {
-      "id": "n_docs_produto_plano_mvp_execucao_caixa_do_dia",
-      "type": "file",
-      "file": "Caixa do dia (quem precisa de aten\u00e7\u00e3o).md",
-      "x": 820,
-      "y": 80,
-      "width": 180,
-      "height": 60
-    },
-    {
-      "id": "n_docs_produto_plano_mvp_execucao_camada1_metricas",
-      "type": "file",
-      "file": "Camada 1 m\u00e9tricas determin\u00edsticas.md",
-      "x": 1020,
-      "y": 80,
-      "width": 180,
-      "height": 60
-    },
-    {
-      "id": "n_docs_produto_plano_mvp_execucao_camada2_linha_base",
-      "type": "file",
-      "file": "Camada 2 linha de base pessoal.md",
-      "x": 1220,
+      "x": 7360,
       "y": 80,
       "width": 180,
       "height": 60
@@ -77,17 +1989,8 @@
       "id": "n_docs_produto_plano_mvp_execucao_camada3_motor_explicacao",
       "type": "file",
       "file": "Camada 3 motor de explica\u00e7\u00e3o.md",
-      "x": 20,
-      "y": 160,
-      "width": 180,
-      "height": 60
-    },
-    {
-      "id": "n_docs_produto_plano_mvp_execucao_carga_tss",
-      "type": "file",
-      "file": "Carga (TSS, rTSS, hrTSS, CTLATLTSB).md",
-      "x": 220,
-      "y": 160,
+      "x": 7560,
+      "y": 80,
       "width": 180,
       "height": 60
     },
@@ -95,8 +1998,8 @@
       "id": "n_docs_produto_plano_mvp_execucao_checkin",
       "type": "file",
       "file": "Check-in p\u00f3s-treino (3 toques).md",
-      "x": 420,
-      "y": 160,
+      "x": 7760,
+      "y": 80,
       "width": 180,
       "height": 60
     },
@@ -104,17 +2007,8 @@
       "id": "n_docs_produto_plano_mvp_execucao_checkin_semanal",
       "type": "file",
       "file": "Check-in semanal (3 perguntas).md",
-      "x": 620,
-      "y": 160,
-      "width": 180,
-      "height": 60
-    },
-    {
-      "id": "n_docs_produto_plano_mvp_execucao_classificacao_tipo_treino",
-      "type": "file",
-      "file": "Classifica\u00e7\u00e3o do tipo de treino pelo professor.md",
-      "x": 820,
-      "y": 160,
+      "x": 7960,
+      "y": 80,
       "width": 180,
       "height": 60
     },
@@ -122,16 +2016,7 @@
       "id": "n_docs_produto_plano_mvp_execucao_open_meteo",
       "type": "file",
       "file": "Clima (Open-Meteo).md",
-      "x": 1020,
-      "y": 160,
-      "width": 180,
-      "height": 60
-    },
-    {
-      "id": "n_docs_produto_plano_mvp_execucao_consulta_estruturada",
-      "type": "file",
-      "file": "Consulta estruturada do agente.md",
-      "x": 1220,
+      "x": 7160,
       "y": 160,
       "width": 180,
       "height": 60
@@ -140,35 +2025,17 @@
       "id": "n_docs_produto_plano_mvp_execucao_custo_piloto",
       "type": "file",
       "file": "Custo estimado do piloto.md",
-      "x": 20,
-      "y": 240,
+      "x": 7360,
+      "y": 160,
       "width": 180,
       "height": 60
     },
     {
-      "id": "n_docs_produto_plano_mvp_execucao_eficiencia",
+      "id": "n_docs_produto_plano_mvp_execucao_fase_inteligencia_fluxo",
       "type": "file",
-      "file": "Efici\u00eancia (EF) e desacoplamento PaHR.md",
-      "x": 220,
-      "y": 240,
-      "width": 180,
-      "height": 60
-    },
-    {
-      "id": "n_docs_produto_plano_mvp_execucao_fase_fundacao_dados",
-      "type": "file",
-      "file": "Fase Funda\u00e7\u00e3o de dados (sem. 3-6).md",
-      "x": 420,
-      "y": 240,
-      "width": 180,
-      "height": 60
-    },
-    {
-      "id": "n_docs_produto_plano_mvp_execucao_ficha_aluno",
-      "type": "file",
-      "file": "Ficha do aluno.md",
-      "x": 620,
-      "y": 240,
+      "file": "Fase Intelig\u00eancia e fluxo (sem. 7-10).md",
+      "x": 7560,
+      "y": 160,
       "width": 180,
       "height": 60
     },
@@ -176,53 +2043,8 @@
       "id": "n_docs_produto_plano_mvp_execucao_fila_workers",
       "type": "file",
       "file": "Fila e workers Python.md",
-      "x": 820,
-      "y": 240,
-      "width": 180,
-      "height": 60
-    },
-    {
-      "id": "n_docs_produto_plano_mvp_execucao_garmin",
-      "type": "file",
-      "file": "Garmin Connect Developer Program.md",
-      "x": 1020,
-      "y": 240,
-      "width": 180,
-      "height": 60
-    },
-    {
-      "id": "n_docs_produto_plano_mvp_execucao_inicio_frio",
-      "type": "file",
-      "file": "In\u00edcio frio (valor populacional ponderado).md",
-      "x": 1220,
-      "y": 240,
-      "width": 180,
-      "height": 60
-    },
-    {
-      "id": "n_docs_produto_plano_mvp_execucao_lgpd",
-      "type": "file",
-      "file": "LGPD (dados de sa\u00fade sens\u00edveis).md",
-      "x": 20,
-      "y": 320,
-      "width": 180,
-      "height": 60
-    },
-    {
-      "id": "n_docs_produto_plano_mvp_execucao_modelo_dados",
-      "type": "file",
-      "file": "Modelo de dados (n\u00facleo).md",
-      "x": 220,
-      "y": 320,
-      "width": 180,
-      "height": 60
-    },
-    {
-      "id": "n_docs_produto_plano_mvp_execucao_metricas_engajamento",
-      "type": "file",
-      "file": "M\u00e9tricas de engajamento.md",
-      "x": 420,
-      "y": 320,
+      "x": 7760,
+      "y": 160,
       "width": 180,
       "height": 60
     },
@@ -230,8 +2052,8 @@
       "id": "n_docs_produto_plano_mvp_execucao_nextjs_pwa",
       "type": "file",
       "file": "Next.js PWA (frontend).md",
-      "x": 620,
-      "y": 320,
+      "x": 7960,
+      "y": 160,
       "width": 180,
       "height": 60
     },
@@ -239,17 +2061,8 @@
       "id": "n_docs_produto_plano_mvp_execucao_qualidade_dados",
       "type": "file",
       "file": "Nota de qualidade de dados.md",
-      "x": 820,
-      "y": 320,
-      "width": 180,
-      "height": 60
-    },
-    {
-      "id": "n_docs_produto_plano_mvp_execucao_pace_ajustado",
-      "type": "file",
-      "file": "Pace ajustado (GAP, calor, vento).md",
-      "x": 1020,
-      "y": 320,
+      "x": 7160,
+      "y": 240,
       "width": 180,
       "height": 60
     },
@@ -257,26 +2070,8 @@
       "id": "n_docs_produto_plano_mvp_execucao_postgres_supabase",
       "type": "file",
       "file": "PostgreSQL  Supabase.md",
-      "x": 1220,
-      "y": 320,
-      "width": 180,
-      "height": 60
-    },
-    {
-      "id": "n_docs_produto_plano_mvp_execucao_riscos",
-      "type": "file",
-      "file": "Principais riscos e mitiga\u00e7\u00e3o.md",
-      "x": 20,
-      "y": 400,
-      "width": 180,
-      "height": 60
-    },
-    {
-      "id": "n_docs_produto_plano_mvp_execucao_principio_dado_bruto",
-      "type": "file",
-      "file": "Princ\u00edpio guardar dado bruto e versionar m\u00e9tricas.md",
-      "x": 220,
-      "y": 400,
+      "x": 7360,
+      "y": 240,
       "width": 180,
       "height": 60
     },
@@ -284,8 +2079,8 @@
       "id": "n_docs_produto_plano_mvp_execucao_principios_experiencia",
       "type": "file",
       "file": "Princ\u00edpios de experi\u00eancia (o check-in \u00e9 o produto).md",
-      "x": 420,
-      "y": 400,
+      "x": 7560,
+      "y": 240,
       "width": 180,
       "height": 60
     },
@@ -293,17 +2088,8 @@
       "id": "n_docs_produto_plano_mvp_execucao_fastapi",
       "type": "file",
       "file": "Python FastAPI (backend).md",
-      "x": 620,
-      "y": 400,
-      "width": 180,
-      "height": 60
-    },
-    {
-      "id": "n_docs_produto_plano_mvp_execucao_segmento",
-      "type": "file",
-      "file": "Segmento (zona e equipamento).md",
-      "x": 820,
-      "y": 400,
+      "x": 7760,
+      "y": 240,
       "width": 180,
       "height": 60
     },
@@ -311,8 +2097,126 @@
       "id": "n_docs_produto_plano_mvp_execucao_seguranca",
       "type": "file",
       "file": "Seguran\u00e7a e controle de acesso por linha.md",
-      "x": 1020,
-      "y": 400,
+      "x": 7960,
+      "y": 240,
+      "width": 180,
+      "height": 60
+    },
+    {
+      "id": "n_docs_produto_plano_mvp_execucao_strava",
+      "type": "file",
+      "file": "Strava (n\u00e3o usar).md",
+      "x": 7160,
+      "y": 320,
+      "width": 180,
+      "height": 60
+    },
+    {
+      "id": "n_docs_produto_plano_mvp_execucao_whatsapp",
+      "type": "file",
+      "file": "WhatsApp (lembretes e link).md",
+      "x": 7360,
+      "y": 320,
+      "width": 180,
+      "height": 60
+    },
+    {
+      "id": "g5",
+      "type": "group",
+      "label": "Caixa do dia e produto",
+      "x": 0,
+      "y": 1000,
+      "width": 880,
+      "height": 520,
+      "color": "6"
+    },
+    {
+      "id": "n_docs_produto_plano_mvp_execucao_caixa_do_dia",
+      "type": "file",
+      "file": "Caixa do dia (quem precisa de aten\u00e7\u00e3o).md",
+      "x": 20,
+      "y": 1080,
+      "width": 180,
+      "height": 60
+    },
+    {
+      "id": "n_docs_produto_plano_mvp_execucao_cancelamento",
+      "type": "file",
+      "file": "Cancelamento  desconex\u00e3o do aluno.md",
+      "x": 220,
+      "y": 1080,
+      "width": 180,
+      "height": 60
+    },
+    {
+      "id": "n_docs_produto_plano_mvp_execucao_checagem_numeros",
+      "type": "file",
+      "file": "Checagem autom\u00e1tica de n\u00fameros.md",
+      "x": 420,
+      "y": 1080,
+      "width": 180,
+      "height": 60
+    },
+    {
+      "id": "n_docs_produto_plano_mvp_execucao_classificacao_tipo_treino",
+      "type": "file",
+      "file": "Classifica\u00e7\u00e3o do tipo de treino pelo professor.md",
+      "x": 620,
+      "y": 1080,
+      "width": 180,
+      "height": 60
+    },
+    {
+      "id": "n_docs_produto_plano_mvp_execucao_consulta_estruturada",
+      "type": "file",
+      "file": "Consulta estruturada do agente.md",
+      "x": 20,
+      "y": 1160,
+      "width": 180,
+      "height": 60
+    },
+    {
+      "id": "n_docs_produto_plano_mvp_execucao_hipotese",
+      "type": "file",
+      "file": "Hip\u00f3tese do MVP (contexto pronto reduz cancelamento).md",
+      "x": 220,
+      "y": 1160,
+      "width": 180,
+      "height": 60
+    },
+    {
+      "id": "n_docs_produto_plano_mvp_execucao_qualidade_inteligencia",
+      "type": "file",
+      "file": "Medi\u00e7\u00e3o da intelig\u00eancia (precis\u00e3o, utilidade, alertas).md",
+      "x": 420,
+      "y": 1160,
+      "width": 180,
+      "height": 60
+    },
+    {
+      "id": "n_docs_produto_plano_mvp_execucao_modelo_dados",
+      "type": "file",
+      "file": "Modelo de dados (n\u00facleo).md",
+      "x": 620,
+      "y": 1160,
+      "width": 180,
+      "height": 60
+    },
+    {
+      "id": "n_docs_produto_plano_mvp_execucao_principio_dado_bruto",
+      "type": "file",
+      "file": "Princ\u00edpio guardar dado bruto e versionar m\u00e9tricas.md",
+      "x": 20,
+      "y": 1240,
+      "width": 180,
+      "height": 60
+    },
+    {
+      "id": "n_docs_produto_plano_mvp_execucao_segmento",
+      "type": "file",
+      "file": "Segmento (zona e equipamento).md",
+      "x": 220,
+      "y": 1240,
       "width": 180,
       "height": 60
     },
@@ -320,8 +2224,17 @@
       "id": "n_docs_produto_plano_mvp_execucao_semana_padrao",
       "type": "file",
       "file": "Semana-padr\u00e3o.md",
-      "x": 1220,
-      "y": 400,
+      "x": 420,
+      "y": 1240,
+      "width": 180,
+      "height": 60
+    },
+    {
+      "id": "n_docs_produto_plano_mvp_execucao_sinal_alerta",
+      "type": "file",
+      "file": "Sinal  alerta de aten\u00e7\u00e3o.md",
+      "x": 620,
+      "y": 1240,
       "width": 180,
       "height": 60
     },
@@ -330,52 +2243,7 @@
       "type": "file",
       "file": "Storage de objetos (S3, Parquet).md",
       "x": 20,
-      "y": 480,
-      "width": 180,
-      "height": 60
-    },
-    {
-      "id": "n_docs_produto_plano_mvp_execucao_strava",
-      "type": "file",
-      "file": "Strava (n\u00e3o usar).md",
-      "x": 220,
-      "y": 480,
-      "width": 180,
-      "height": 60
-    },
-    {
-      "id": "n_docs_produto_plano_mvp_execucao_upload_fit",
-      "type": "file",
-      "file": "Upload de arquivo FITGPXTCX.md",
-      "x": 420,
-      "y": 480,
-      "width": 180,
-      "height": 60
-    },
-    {
-      "id": "n_docs_produto_plano_mvp_execucao_whoop_oura",
-      "type": "file",
-      "file": "WHOOP, Oura.md",
-      "x": 620,
-      "y": 480,
-      "width": 180,
-      "height": 60
-    },
-    {
-      "id": "n_docs_produto_plano_mvp_execucao_whatsapp",
-      "type": "file",
-      "file": "WhatsApp (lembretes e link).md",
-      "x": 820,
-      "y": 480,
-      "width": 180,
-      "height": 60
-    },
-    {
-      "id": "n_docs_produto_plano_mvp_execucao_bem_estar_diario",
-      "type": "file",
-      "file": "bem_estar_diario (sono, HRV, FC repouso).md",
-      "x": 1020,
-      "y": 480,
+      "y": 1320,
       "width": 180,
       "height": 60
     },
@@ -383,8 +2251,8 @@
       "id": "n_docs_produto_plano_mvp_execucao_metrica_derivada",
       "type": "file",
       "file": "metrica_derivada (versionada).md",
-      "x": 1220,
-      "y": 480,
+      "x": 220,
+      "y": 1320,
       "width": 180,
       "height": 60
     },
@@ -392,1158 +2260,154 @@
       "id": "n_docs_produto_plano_mvp_execucao_serie_atividade",
       "type": "file",
       "file": "serie_atividade (s\u00e9ries por segundo).md",
-      "x": 20,
-      "y": 560,
-      "width": 180,
-      "height": 60
-    },
-    {
-      "id": "g1",
-      "type": "group",
-      "label": "M\u00e9tricas de Carga e Ci\u00eancia",
-      "x": 1620,
-      "y": 0,
-      "width": 1100,
-      "height": 620,
-      "color": "2"
-    },
-    {
-      "id": "n_docs_glossario_zonas_a1_a3",
-      "type": "file",
-      "file": "A1, A2, A3 (zonas aer\u00f3bias nata\u00e7\u00e3o).md",
-      "x": 1640,
-      "y": 80,
-      "width": 180,
-      "height": 60
-    },
-    {
-      "id": "n_docs_glossario_atl",
-      "type": "file",
-      "file": "ATL (carga aguda).md",
-      "x": 1840,
-      "y": 80,
-      "width": 180,
-      "height": 60
-    },
-    {
-      "id": "n_docs_glossario_ctl",
-      "type": "file",
-      "file": "CTL (carga cr\u00f4nica).md",
-      "x": 2040,
-      "y": 80,
-      "width": 180,
-      "height": 60
-    },
-    {
-      "id": "n_claude_agents_caio_ciencia_agente",
-      "type": "file",
-      "file": "Caio (cientista de dados do esporte).md",
-      "x": 2240,
-      "y": 80,
-      "width": 180,
-      "height": 60
-    },
-    {
-      "id": "n_claude_agents_duda_dados_open_meteo",
-      "type": "file",
-      "file": "Clima via Open-Meteo.md",
-      "x": 2440,
-      "y": 80,
-      "width": 180,
-      "height": 60
-    },
-    {
-      "id": "n_claude_agents_caio_ciencia_ctl_atl",
-      "type": "file",
-      "file": "C\u00e1lculo CTLATL.md",
-      "x": 1640,
-      "y": 160,
-      "width": 180,
-      "height": 60
-    },
-    {
-      "id": "n_claude_agents_caio_ciencia_tss_rtss_hrtss",
-      "type": "file",
-      "file": "C\u00e1lculo TSSrTSShrTSS.md",
-      "x": 1840,
-      "y": 160,
-      "width": 180,
-      "height": 60
-    },
-    {
-      "id": "n_docs_glossario_desacoplamento",
-      "type": "file",
-      "file": "Desacoplamento (PaHR).md",
-      "x": 2040,
-      "y": 160,
-      "width": 180,
-      "height": 60
-    },
-    {
-      "id": "n_claude_agents_caio_ciencia_deteccao_tiros_series",
-      "type": "file",
-      "file": "Detec\u00e7\u00e3o de tiros e s\u00e9ries de nata\u00e7\u00e3o.md",
-      "x": 2240,
-      "y": 160,
-      "width": 180,
-      "height": 60
-    },
-    {
-      "id": "n_claude_agents_caio_ciencia_desacoplamento",
-      "type": "file",
-      "file": "Efici\u00eancia e desacoplamento.md",
-      "x": 2440,
-      "y": 160,
-      "width": 180,
-      "height": 60
-    },
-    {
-      "id": "n_docs_glossario_ftp",
-      "type": "file",
-      "file": "FTP.md",
-      "x": 1640,
-      "y": 240,
-      "width": 180,
-      "height": 60
-    },
-    {
-      "id": "n_docs_glossario_gap",
-      "type": "file",
-      "file": "GAP (pace ajustado \u00e0 inclina\u00e7\u00e3o).md",
-      "x": 1840,
-      "y": 240,
-      "width": 180,
-      "height": 60
-    },
-    {
-      "id": "n_docs_glossario_documento",
-      "type": "file",
-      "file": "Gloss\u00e1rio.md",
-      "x": 2040,
-      "y": 240,
-      "width": 180,
-      "height": 60
-    },
-    {
-      "id": "n_docs_glossario_hrv",
-      "type": "file",
-      "file": "HRV.md",
-      "x": 2240,
-      "y": 240,
-      "width": 180,
-      "height": 60
-    },
-    {
-      "id": "n_docs_glossario_linha_de_base",
-      "type": "file",
-      "file": "Linha de base.md",
-      "x": 2440,
-      "y": 240,
-      "width": 180,
-      "height": 60
-    },
-    {
-      "id": "n_claude_agents_caio_ciencia_linha_de_base",
-      "type": "file",
-      "file": "Linha de base por tipo de treino.md",
-      "x": 1640,
-      "y": 320,
-      "width": 180,
-      "height": 60
-    },
-    {
-      "id": "n_claude_agents_caio_ciencia_motor_explicacao",
-      "type": "file",
-      "file": "Motor de explica\u00e7\u00e3o (appexplicacao).md",
-      "x": 1840,
-      "y": 320,
-      "width": 180,
-      "height": 60
-    },
-    {
-      "id": "n_docs_glossario_np",
-      "type": "file",
-      "file": "NP (pot\u00eancia normalizada).md",
-      "x": 2040,
-      "y": 320,
-      "width": 180,
-      "height": 60
-    },
-    {
-      "id": "n_docs_glossario_pse",
-      "type": "file",
-      "file": "PSE (percep\u00e7\u00e3o subjetiva de esfor\u00e7o).md",
-      "x": 2240,
-      "y": 320,
-      "width": 180,
-      "height": 60
-    },
-    {
-      "id": "n_claude_agents_caio_ciencia_pace_ajustado",
-      "type": "file",
-      "file": "Pace ajustado (subida e calor).md",
-      "x": 2440,
-      "y": 320,
-      "width": 180,
-      "height": 60
-    },
-    {
-      "id": "n_docs_glossario_swolf",
-      "type": "file",
-      "file": "SWOLF.md",
-      "x": 1640,
-      "y": 400,
-      "width": 180,
-      "height": 60
-    },
-    {
-      "id": "n_docs_glossario_tsb",
-      "type": "file",
-      "file": "TSB (forma).md",
-      "x": 1840,
-      "y": 400,
-      "width": 180,
-      "height": 60
-    },
-    {
-      "id": "n_docs_glossario_tss",
-      "type": "file",
-      "file": "TSS  rTSS  hrTSS.md",
-      "x": 2040,
-      "y": 400,
-      "width": 180,
-      "height": 60
-    },
-    {
-      "id": "n_docs_glossario_tipo_de_treino",
-      "type": "file",
-      "file": "Tipo de treino.md",
-      "x": 2240,
-      "y": 400,
-      "width": 180,
-      "height": 60
-    },
-    {
-      "id": "n_claude_agents_caio_ciencia_modulo_metricas",
-      "type": "file",
-      "file": "servicesapiappmetricas.md",
-      "x": 2440,
-      "y": 400,
-      "width": 180,
-      "height": 60
-    },
-    {
-      "id": "g2",
-      "type": "group",
-      "label": "Governan\u00e7a e Fluxo de Metas",
-      "x": 2800,
-      "y": 0,
-      "width": 1100,
-      "height": 620,
-      "color": "3"
-    },
-    {
-      "id": "n_agents_precisa_do_angelo",
-      "type": "file",
-      "file": "PRECISA DO ANGELO.md",
-      "x": 2820,
-      "y": 80,
-      "width": 180,
-      "height": 60
-    },
-    {
-      "id": "n_leia_me_settings",
-      "type": "file",
-      "file": ".claudesettings.json (times, permiss\u00f5es, hook).md",
-      "x": 3020,
-      "y": 80,
-      "width": 180,
-      "height": 60
-    },
-    {
-      "id": "n_agents_angelo",
-      "type": "file",
-      "file": "Angelo (dono do produto).md",
-      "x": 3220,
-      "y": 80,
-      "width": 180,
-      "height": 60
-    },
-    {
-      "id": "n_claude_agents_bia_qa_agente",
-      "type": "file",
-      "file": "Bia (QA).md",
-      "x": 3420,
-      "y": 80,
-      "width": 180,
-      "height": 60
-    },
-    {
-      "id": "n_claude_instrucao_ler_agents",
-      "type": "file",
-      "file": "CLAUDE.md ler e seguir AGENTS.md",
-      "x": 3620,
-      "y": 80,
-      "width": 180,
-      "height": 60
-    },
-    {
-      "id": "n_agents_camada_llm",
-      "type": "file",
-      "file": "Camada de IA troc\u00e1vel (LiteLLM, padr\u00e3o Groq).md",
-      "x": 2820,
-      "y": 160,
-      "width": 180,
-      "height": 60
-    },
-    {
-      "id": "n_agents_criterio_de_pronto",
-      "type": "file",
-      "file": "Crit\u00e9rio de pronto.md",
-      "x": 3020,
-      "y": 160,
-      "width": 180,
-      "height": 60
-    },
-    {
-      "id": "n_github_workflows_testes_gatilhos",
-      "type": "file",
-      "file": "Gatilhos pull_request e push em main.md",
-      "x": 3220,
-      "y": 160,
-      "width": 180,
-      "height": 60
-    },
-    {
-      "id": "n_leia_me_hook_testes",
-      "type": "file",
-      "file": "Hook testes.sh (bloqueia tarefa com teste quebrado).md",
-      "x": 3420,
-      "y": 160,
-      "width": 180,
-      "height": 60
-    },
-    {
-      "id": "n_claude_agents_paulo_planejador_issues_github",
-      "type": "file",
-      "file": "Issues da meta no GitHub.md",
-      "x": 3620,
-      "y": 160,
-      "width": 180,
-      "height": 60
-    },
-    {
-      "id": "n_leia_me_kit_inicial",
-      "type": "file",
-      "file": "Kit inicial do reposit\u00f3rio.md",
-      "x": 2820,
-      "y": 240,
-      "width": 180,
-      "height": 60
-    },
-    {
-      "id": "n_agents_regra_testes",
-      "type": "file",
-      "file": "Nenhum c\u00f3digo sem teste.md",
-      "x": 3020,
-      "y": 240,
-      "width": 180,
-      "height": 60
-    },
-    {
-      "id": "n_github_workflows_testes_pytest_step",
-      "type": "file",
-      "file": "Passo pytest -q (tolera sem testes).md",
-      "x": 3220,
-      "y": 240,
-      "width": 180,
-      "height": 60
-    },
-    {
-      "id": "n_claude_agents_paulo_planejador_agente",
-      "type": "file",
-      "file": "Paulo (planejador).md",
-      "x": 3420,
-      "y": 240,
-      "width": 180,
-      "height": 60
-    },
-    {
-      "id": "n_docs_produto_plano_mvp_execucao_documento",
-      "type": "file",
-      "file": "Plano de MVP e execu\u00e7\u00e3o.md",
-      "x": 3620,
-      "y": 240,
-      "width": 180,
-      "height": 60
-    },
-    {
-      "id": "n_agents_regras_do_time",
-      "type": "file",
-      "file": "Regras do time (AGENTS.md).md",
-      "x": 2820,
-      "y": 320,
-      "width": 180,
-      "height": 60
-    },
-    {
-      "id": "n_docs_produto_plano_mvp_execucao_frentes",
-      "type": "file",
-      "file": "Seis frentes de execu\u00e7\u00e3o.md",
-      "x": 3020,
-      "y": 320,
-      "width": 180,
-      "height": 60
-    },
-    {
-      "id": "n_github_workflows_testes_setup_python",
-      "type": "file",
-      "file": "Setup Python 3.12 + requirements.md",
-      "x": 3220,
-      "y": 320,
-      "width": 180,
-      "height": 60
-    },
-    {
-      "id": "n_agents_meta_atual",
-      "type": "file",
-      "file": "S\u00f3 issues da meta atual.md",
-      "x": 3420,
-      "y": 320,
-      "width": 180,
-      "height": 60
-    },
-    {
-      "id": "n_docs_templates_meta_template",
-      "type": "file",
-      "file": "Template meta.md",
-      "x": 3620,
-      "y": 320,
-      "width": 180,
-      "height": 60
-    },
-    {
-      "id": "n_github_workflows_testes_workflow",
-      "type": "file",
-      "file": "Workflow CI testes.md",
-      "x": 2820,
-      "y": 400,
-      "width": 180,
-      "height": 60
-    },
-    {
-      "id": "n_claude_agents_paulo_planejador_registro_metas",
-      "type": "file",
-      "file": "docsprodutometas (resultado das metas).md",
-      "x": 3020,
-      "y": 400,
-      "width": 180,
-      "height": 60
-    },
-    {
-      "id": "n_claude_agents_paulo_planejador_roadmap",
-      "type": "file",
-      "file": "docsprodutoroadmap.md (roteiro de metas).md",
-      "x": 3220,
-      "y": 400,
-      "width": 180,
-      "height": 60
-    },
-    {
-      "id": "n_claude_agents_bia_qa_testes_e2e",
-      "type": "file",
-      "file": "testse2e (testes ponta a ponta).md",
-      "x": 3420,
-      "y": 400,
-      "width": 180,
-      "height": 60
-    },
-    {
-      "id": "g3",
-      "type": "group",
-      "label": "Documenta\u00e7\u00e3o e Revis\u00e3o",
-      "x": 0,
-      "y": 900,
-      "width": 1100,
-      "height": 620,
-      "color": "4"
-    },
-    {
-      "id": "n_agents_adr",
-      "type": "file",
-      "file": "ADR em docsdecisoes.md",
-      "x": 20,
-      "y": 980,
-      "width": 180,
-      "height": 60
-    },
-    {
-      "id": "n_agents_produto",
-      "type": "file",
-      "file": "App de an\u00e1lise de treinos com contexto.md",
-      "x": 220,
-      "y": 980,
-      "width": 180,
-      "height": 60
-    },
-    {
-      "id": "n_claude_agents_nina_docs_ciclo_diario_graphify",
-      "type": "file",
-      "file": "Fim de ciclo di\u00e1rio + graphify --obsidian.md",
       "x": 420,
-      "y": 980,
-      "width": 180,
-      "height": 60
-    },
-    {
-      "id": "n_inicio_mapa_projeto",
-      "type": "file",
-      "file": "Mapa do projeto (00-inicio).md",
-      "x": 620,
-      "y": 980,
-      "width": 180,
-      "height": 60
-    },
-    {
-      "id": "n_agents_mudanca_modelo_dados",
-      "type": "file",
-      "file": "Mudan\u00e7a no modelo de dados exige aprova\u00e7\u00e3o do Theo.md",
-      "x": 820,
-      "y": 980,
-      "width": 180,
-      "height": 60
-    },
-    {
-      "id": "n_claude_agents_nina_docs_agente",
-      "type": "file",
-      "file": "Nina (documentadora).md",
-      "x": 20,
-      "y": 1060,
-      "width": 180,
-      "height": 60
-    },
-    {
-      "id": "n_claude_agents_nina_docs_padrao_nota",
-      "type": "file",
-      "file": "Padr\u00e3o de nota (cabe\u00e7alho, links, portugu\u00eas).md",
-      "x": 220,
-      "y": 1060,
-      "width": 180,
-      "height": 60
-    },
-    {
-      "id": "n_agents_regra_documentacao",
-      "type": "file",
-      "file": "Regras de documenta\u00e7\u00e3o (Obsidian + Graphify).md",
-      "x": 420,
-      "y": 1060,
-      "width": 180,
-      "height": 60
-    },
-    {
-      "id": "n_claude_agents_nina_docs_revisao_pr_docs_ok",
-      "type": "file",
-      "file": "Revis\u00e3o de docs por PR (docs ok).md",
-      "x": 620,
-      "y": 1060,
-      "width": 180,
-      "height": 60
-    },
-    {
-      "id": "n_agents_merge_so_theo",
-      "type": "file",
-      "file": "S\u00f3 o Theo faz merge com check verde.md",
-      "x": 820,
-      "y": 1060,
-      "width": 180,
-      "height": 60
-    },
-    {
-      "id": "n_docs_templates_artigo_template",
-      "type": "file",
-      "file": "Template artigo.md",
-      "x": 20,
-      "y": 1140,
-      "width": 180,
-      "height": 60
-    },
-    {
-      "id": "n_docs_templates_decisao_template",
-      "type": "file",
-      "file": "Template decis\u00e3o (ADR).md",
-      "x": 220,
-      "y": 1140,
-      "width": 180,
-      "height": 60
-    },
-    {
-      "id": "n_docs_templates_diario_template",
-      "type": "file",
-      "file": "Template di\u00e1rio.md",
-      "x": 420,
-      "y": 1140,
-      "width": 180,
-      "height": 60
-    },
-    {
-      "id": "n_docs_templates_entrevista_template",
-      "type": "file",
-      "file": "Template entrevista.md",
-      "x": 620,
-      "y": 1140,
-      "width": 180,
-      "height": 60
-    },
-    {
-      "id": "n_docs_templates_metrica_template",
-      "type": "file",
-      "file": "Template m\u00e9trica.md",
-      "x": 820,
-      "y": 1140,
-      "width": 180,
-      "height": 60
-    },
-    {
-      "id": "n_docs_templates_modulo_template",
-      "type": "file",
-      "file": "Template m\u00f3dulo.md",
-      "x": 20,
-      "y": 1220,
-      "width": 180,
-      "height": 60
-    },
-    {
-      "id": "n_docs_templates_regra_template",
-      "type": "file",
-      "file": "Template regra.md",
-      "x": 220,
-      "y": 1220,
-      "width": 180,
-      "height": 60
-    },
-    {
-      "id": "n_claude_agents_caio_ciencia_regra_valor_esperado_manual",
-      "type": "file",
-      "file": "Teste com valor calculado \u00e0 m\u00e3o e fonte citada.md",
-      "x": 420,
-      "y": 1220,
-      "width": 180,
-      "height": 60
-    },
-    {
-      "id": "n_agents_theo_tech_lead",
-      "type": "file",
-      "file": "Theo (tech lead).md",
-      "x": 620,
-      "y": 1220,
-      "width": 180,
-      "height": 60
-    },
-    {
-      "id": "n_inicio_grafo_automatico",
-      "type": "file",
-      "file": "docs_grafo (mapa autom\u00e1tico, gerado).md",
-      "x": 820,
-      "y": 1220,
-      "width": 180,
-      "height": 60
-    },
-    {
-      "id": "n_agents_graphify_report",
-      "type": "file",
-      "file": "graphify-outGRAPH_REPORT.md",
-      "x": 20,
-      "y": 1300,
-      "width": 180,
-      "height": 60
-    },
-    {
-      "id": "n_readme_treino_contexto",
-      "type": "file",
-      "file": "treino-contexto (README).md",
-      "x": 220,
-      "y": 1300,
-      "width": 180,
-      "height": 60
-    },
-    {
-      "id": "g4",
-      "type": "group",
-      "label": "Agente do Atleta e Feedback",
-      "x": 1620,
-      "y": 900,
-      "width": 1100,
-      "height": 520,
-      "color": "5"
-    },
-    {
-      "id": "n_docs_produto_plano_mvp_execucao_agente_atleta",
-      "type": "file",
-      "file": "Agente do atleta.md",
-      "x": 1640,
-      "y": 980,
-      "width": 180,
-      "height": 60
-    },
-    {
-      "id": "n_docs_produto_plano_mvp_execucao_aprendizado_continuo",
-      "type": "file",
-      "file": "Aprendizado cont\u00ednuo com edi\u00e7\u00f5es do professor.md",
-      "x": 1840,
-      "y": 980,
-      "width": 180,
-      "height": 60
-    },
-    {
-      "id": "n_docs_produto_plano_mvp_execucao_atleta",
-      "type": "file",
-      "file": "Atleta.md",
-      "x": 2040,
-      "y": 980,
-      "width": 180,
-      "height": 60
-    },
-    {
-      "id": "n_docs_produto_plano_mvp_execucao_base_conhecimento",
-      "type": "file",
-      "file": "Base de conhecimento (regras com fonte).md",
-      "x": 2240,
-      "y": 980,
-      "width": 180,
-      "height": 60
-    },
-    {
-      "id": "n_docs_produto_plano_mvp_execucao_cadencia_feedback",
-      "type": "file",
-      "file": "Cad\u00eancia do feedback (treino, semanal, quinzenal, mensal).md",
-      "x": 2440,
-      "y": 980,
-      "width": 180,
-      "height": 60
-    },
-    {
-      "id": "n_docs_produto_plano_mvp_execucao_camada4_redacao_ia",
-      "type": "file",
-      "file": "Camada 4 reda\u00e7\u00e3o com IA.md",
-      "x": 1640,
-      "y": 1060,
-      "width": 180,
-      "height": 60
-    },
-    {
-      "id": "n_docs_produto_plano_mvp_execucao_consultor_ciencia",
-      "type": "file",
-      "file": "Consultor de ci\u00eancia do esporte.md",
-      "x": 1840,
-      "y": 1060,
-      "width": 180,
-      "height": 60
-    },
-    {
-      "id": "n_docs_produto_plano_mvp_execucao_devolutiva_professor",
-      "type": "file",
-      "file": "Devolutiva do professor.md",
-      "x": 2040,
-      "y": 1060,
-      "width": 180,
-      "height": 60
-    },
-    {
-      "id": "n_docs_produto_plano_mvp_execucao_ely_2007",
-      "type": "file",
-      "file": "Ely 2007 (calor e desempenho na corrida).md",
-      "x": 2240,
-      "y": 1060,
-      "width": 180,
-      "height": 60
-    },
-    {
-      "id": "n_docs_produto_plano_mvp_execucao_fase_agente",
-      "type": "file",
-      "file": "Fase Agente do atleta (sem. 9-11).md",
-      "x": 2440,
-      "y": 1060,
-      "width": 180,
-      "height": 60
-    },
-    {
-      "id": "n_docs_produto_plano_mvp_execucao_feedback_automatico",
-      "type": "file",
-      "file": "Feedback autom\u00e1tico.md",
-      "x": 1640,
-      "y": 1140,
-      "width": 180,
-      "height": 60
-    },
-    {
-      "id": "n_docs_produto_plano_mvp_execucao_escopo_agente",
-      "type": "file",
-      "file": "Limites de escopo do agente (n\u00e3o prescreve).md",
-      "x": 1840,
-      "y": 1140,
-      "width": 180,
-      "height": 60
-    },
-    {
-      "id": "n_docs_produto_plano_mvp_execucao_linguagem_proibida",
-      "type": "file",
-      "file": "Linguagem proibida.md",
-      "x": 2040,
-      "y": 1140,
-      "width": 180,
-      "height": 60
-    },
-    {
-      "id": "n_docs_produto_plano_mvp_execucao_pacote_fatos",
-      "type": "file",
-      "file": "Pacote de fatos estruturado.md",
-      "x": 2240,
-      "y": 1140,
-      "width": 180,
-      "height": 60
-    },
-    {
-      "id": "n_docs_produto_plano_mvp_execucao_professor",
-      "type": "file",
-      "file": "Professor.md",
-      "x": 2440,
-      "y": 1140,
-      "width": 180,
-      "height": 60
-    },
-    {
-      "id": "n_docs_produto_plano_mvp_execucao_propriedade_intelectual",
-      "type": "file",
-      "file": "Propriedade intelectual (regras e textos).md",
-      "x": 1640,
-      "y": 1220,
-      "width": 180,
-      "height": 60
-    },
-    {
-      "id": "n_docs_produto_plano_mvp_execucao_regras_envio",
-      "type": "file",
-      "file": "Regras de envio por canal (aprova\u00e7\u00e3o do professor).md",
-      "x": 1840,
-      "y": 1220,
-      "width": 180,
-      "height": 60
-    },
-    {
-      "id": "g5",
-      "type": "group",
-      "label": "Piloto e Avalia\u00e7\u00e3o do MVP",
-      "x": 2800,
-      "y": 900,
-      "width": 1100,
-      "height": 520,
-      "color": "6"
-    },
-    {
-      "id": "n_docs_produto_plano_mvp_execucao_cancelamento",
-      "type": "file",
-      "file": "Cancelamento  desconex\u00e3o do aluno.md",
-      "x": 2820,
-      "y": 980,
-      "width": 180,
-      "height": 60
-    },
-    {
-      "id": "n_docs_produto_plano_mvp_execucao_checagem_numeros",
-      "type": "file",
-      "file": "Checagem autom\u00e1tica de n\u00fameros.md",
-      "x": 3020,
-      "y": 980,
-      "width": 180,
-      "height": 60
-    },
-    {
-      "id": "n_docs_produto_plano_mvp_execucao_coordenacao",
-      "type": "file",
-      "file": "Coordena\u00e7\u00e3o.md",
-      "x": 3220,
-      "y": 980,
-      "width": 180,
-      "height": 60
-    },
-    {
-      "id": "n_docs_produto_plano_mvp_execucao_criterio_decisao",
-      "type": "file",
-      "file": "Crit\u00e9rio de decis\u00e3o (seguir, ajustar, repensar).md",
-      "x": 3420,
-      "y": 980,
-      "width": 180,
-      "height": 60
-    },
-    {
-      "id": "n_docs_produto_plano_mvp_execucao_cronograma",
-      "type": "file",
-      "file": "Cronograma (~16 semanas).md",
-      "x": 3620,
-      "y": 980,
-      "width": 180,
-      "height": 60
-    },
-    {
-      "id": "n_docs_produto_plano_mvp_execucao_fase_avaliacao",
-      "type": "file",
-      "file": "Fase Avalia\u00e7\u00e3o (sem. 16).md",
-      "x": 2820,
-      "y": 1060,
-      "width": 180,
-      "height": 60
-    },
-    {
-      "id": "n_docs_produto_plano_mvp_execucao_fase_ensaio",
-      "type": "file",
-      "file": "Fase Ensaio (sem. 11).md",
-      "x": 3020,
-      "y": 1060,
-      "width": 180,
-      "height": 60
-    },
-    {
-      "id": "n_docs_produto_plano_mvp_execucao_fase_inteligencia_fluxo",
-      "type": "file",
-      "file": "Fase Intelig\u00eancia e fluxo (sem. 7-10).md",
-      "x": 3220,
-      "y": 1060,
-      "width": 180,
-      "height": 60
-    },
-    {
-      "id": "n_docs_produto_plano_mvp_execucao_grupo_comparacao",
-      "type": "file",
-      "file": "Grupo de compara\u00e7\u00e3o.md",
-      "x": 3420,
-      "y": 1060,
-      "width": 180,
-      "height": 60
-    },
-    {
-      "id": "n_docs_produto_plano_mvp_execucao_hipotese",
-      "type": "file",
-      "file": "Hip\u00f3tese do MVP (contexto pronto reduz cancelamento).md",
-      "x": 3620,
-      "y": 1060,
-      "width": 180,
-      "height": 60
-    },
-    {
-      "id": "n_docs_produto_plano_mvp_execucao_manual_assessoria",
-      "type": "file",
-      "file": "Manual da assessoria.md",
-      "x": 2820,
-      "y": 1140,
-      "width": 180,
-      "height": 60
-    },
-    {
-      "id": "n_docs_produto_plano_mvp_execucao_qualidade_inteligencia",
-      "type": "file",
-      "file": "Medi\u00e7\u00e3o da intelig\u00eancia (precis\u00e3o, utilidade, alertas).md",
-      "x": 3020,
-      "y": 1140,
-      "width": 180,
-      "height": 60
-    },
-    {
-      "id": "n_docs_produto_plano_mvp_execucao_metricas_sucesso",
-      "type": "file",
-      "file": "M\u00e9tricas de sucesso do piloto.md",
-      "x": 3220,
-      "y": 1140,
-      "width": 180,
-      "height": 60
-    },
-    {
-      "id": "n_docs_produto_plano_mvp_execucao_painel_coordenacao",
-      "type": "file",
-      "file": "Painel da coordena\u00e7\u00e3o.md",
-      "x": 3420,
-      "y": 1140,
-      "width": 180,
-      "height": 60
-    },
-    {
-      "id": "n_docs_produto_plano_mvp_execucao_piloto",
-      "type": "file",
-      "file": "Piloto (30 dias, 2-3 professores, 40-60 atletas).md",
-      "x": 3620,
-      "y": 1140,
-      "width": 180,
-      "height": 60
-    },
-    {
-      "id": "n_docs_produto_plano_mvp_execucao_retencao_90d",
-      "type": "file",
-      "file": "Reten\u00e7\u00e3o aos 90 dias.md",
-      "x": 2820,
-      "y": 1220,
-      "width": 180,
-      "height": 60
-    },
-    {
-      "id": "n_docs_produto_plano_mvp_execucao_sinal_alerta",
-      "type": "file",
-      "file": "Sinal  alerta de aten\u00e7\u00e3o.md",
-      "x": 3020,
-      "y": 1220,
+      "y": 1320,
       "width": 180,
       "height": 60
     },
     {
       "id": "g6",
       "type": "group",
-      "label": "Stack e Ingest\u00e3o de Dados",
-      "x": 0,
-      "y": 1600,
+      "label": "Guias das metas e caixa do dia",
+      "x": 2060,
+      "y": 1000,
       "width": 880,
       "height": 520,
       "color": "1"
     },
     {
-      "id": "n_claude_agents_duda_dados_api_fastapi",
+      "id": "n_docs_produto_metas_meta_6_carga_treino_ctl_atl_tsb",
       "type": "file",
-      "file": "API FastAPI (servicesapi).md",
-      "x": 20,
-      "y": 1680,
+      "file": "CTL, ATL e TSB (condicionamento, fadiga, forma).md",
+      "x": 2080,
+      "y": 1080,
       "width": 180,
       "height": 60
     },
     {
-      "id": "n_agents_contrato_openapi",
+      "id": "n_docs_produto_metas_meta_8_check_in_carga_pse",
       "type": "file",
-      "file": "Contrato OpenAPI gera cliente TypeScript.md",
-      "x": 220,
-      "y": 1680,
+      "file": "Carga pela PSE (carga_pse@1).md",
+      "x": 2280,
+      "y": 1080,
       "width": 180,
       "height": 60
     },
     {
-      "id": "n_claude_agents_duda_dados_agente",
+      "id": "n_docs_produto_metas_meta_7_linha_de_base_semana_padrao_linha_de_base",
       "type": "file",
-      "file": "Duda (dados e backend).md",
-      "x": 420,
-      "y": 1680,
+      "file": "Linha de base pessoal (mediana e desvio).md",
+      "x": 2480,
+      "y": 1080,
       "width": 180,
       "height": 60
     },
     {
-      "id": "n_claude_agents_duda_dados_ingestao_garmin_fit",
+      "id": "n_docs_produto_metas_meta_11_caixa_do_dia",
       "type": "file",
-      "file": "Ingest\u00e3o GarminFITGPXTCX (fitdecode).md",
-      "x": 620,
-      "y": 1680,
+      "file": "Meta 11 caixa do dia do professor.md",
+      "x": 2680,
+      "y": 1080,
       "width": 180,
       "height": 60
     },
     {
-      "id": "n_agents_regra_dados_pessoais",
+      "id": "n_docs_produto_metas_meta_6_carga_treino",
       "type": "file",
-      "file": "Nunca commitar dados pessoais.md",
-      "x": 20,
-      "y": 1760,
+      "file": "Meta 6 carga de treino.md",
+      "x": 2080,
+      "y": 1160,
       "width": 180,
       "height": 60
     },
     {
-      "id": "n_claude_agents_rafa_app_agente",
+      "id": "n_docs_produto_meta_6_como_rodar",
       "type": "file",
-      "file": "Rafa (app React NativeExpo).md",
-      "x": 220,
-      "y": 1760,
+      "file": "Meta 6 como rodar a carga de treino.md",
+      "x": 2280,
+      "y": 1160,
       "width": 180,
       "height": 60
     },
     {
-      "id": "n_agents_stack",
+      "id": "n_docs_produto_meta_7_como_rodar",
       "type": "file",
-      "file": "Stack (Expo, FastAPI, PostgreSQL, Alembic).md",
-      "x": 420,
-      "y": 1760,
+      "file": "Meta 7 como rodar semana-padr\u00e3o, tipo de treino e linha de base.md",
+      "x": 2480,
+      "y": 1160,
       "width": 180,
       "height": 60
     },
     {
-      "id": "n_claude_agents_rafa_app_jest",
+      "id": "n_docs_produto_metas_meta_7_linha_de_base_semana_padrao",
       "type": "file",
-      "file": "Testes Jest + Testing Library (npm test).md",
-      "x": 620,
-      "y": 1760,
+      "file": "Meta 7 linha de base e semana-padr\u00e3o.md",
+      "x": 2680,
+      "y": 1160,
       "width": 180,
       "height": 60
     },
     {
-      "id": "n_agents_issue_branch_pr",
+      "id": "n_docs_produto_metas_meta_11_caixa_do_dia_regra_atencao",
       "type": "file",
-      "file": "Uma issue = uma branch = um PR.md",
-      "x": 20,
-      "y": 1840,
+      "file": "Regra de aten\u00e7\u00e3o (atencao@2).md",
+      "x": 2080,
+      "y": 1240,
       "width": 180,
       "height": 60
     },
     {
-      "id": "n_claude_agents_rafa_app_mobile",
+      "id": "n_docs_produto_metas_meta_7_linha_de_base_semana_padrao_semana_padrao",
       "type": "file",
-      "file": "appsmobile (telas atleta, professor, coordena\u00e7\u00e3o).md",
-      "x": 220,
-      "y": 1840,
+      "file": "Semana-padr\u00e3o_3.md",
+      "x": 2280,
+      "y": 1240,
       "width": 180,
       "height": 60
     },
     {
-      "id": "n_claude_agents_duda_dados_dados_teste",
+      "id": "n_docs_produto_metas_meta_11_caixa_do_dia_vinculo_consentimento",
       "type": "file",
-      "file": "dados-teste (dados reais fora do git).md",
-      "x": 420,
-      "y": 1840,
+      "file": "V\u00ednculo e consentimento do atleta com o professor.md",
+      "x": 2480,
+      "y": 1240,
       "width": 180,
       "height": 60
     },
     {
-      "id": "n_claude_agents_rafa_app_api_client",
+      "id": "n_docs_produto_metas_meta_6_carga_treino_rtss_hrtss",
       "type": "file",
-      "file": "packagesapi-client (cliente gerado).md",
-      "x": 620,
-      "y": 1840,
+      "file": "rTSS e hrTSS.md",
+      "x": 2680,
+      "y": 1240,
       "width": 180,
       "height": 60
     },
     {
-      "id": "n_claude_agents_duda_dados_worker",
+      "id": "n_docs_produto_meta_6_como_rodar_calcular_carga",
       "type": "file",
-      "file": "servicesworker.md",
-      "x": 20,
-      "y": 1920,
-      "width": 180,
-      "height": 60
-    },
-    {
-      "id": "n_claude_agents_duda_dados_fixtures",
-      "type": "file",
-      "file": "testsfixtures (amostras anonimizadas).md",
-      "x": 220,
-      "y": 1920,
+      "file": "worker.calcular_carga.md",
+      "x": 2080,
+      "y": 1320,
       "width": 180,
       "height": 60
     },
     {
       "id": "g7",
       "type": "group",
-      "label": "Neg\u00f3cio e Descoberta",
-      "x": 1620,
-      "y": 1600,
+      "label": "Pessoas, parceiros e decis\u00f5es",
+      "x": 3900,
+      "y": 1000,
       "width": 880,
-      "height": 420,
+      "height": 520,
       "color": "2"
     },
     {
       "id": "n_docs_produto_plano_mvp_execucao_angelo",
       "type": "file",
       "file": "Angelo (produto e rela\u00e7\u00e3o com a assessoria).md",
-      "x": 1640,
-      "y": 1680,
+      "x": 3920,
+      "y": 1080,
       "width": 180,
       "height": 60
     },
@@ -1551,8 +2415,8 @@
       "id": "n_docs_produto_plano_mvp_execucao_apple_health",
       "type": "file",
       "file": "Apple Health  Health Connect.md",
-      "x": 1840,
-      "y": 1680,
+      "x": 4120,
+      "y": 1080,
       "width": 180,
       "height": 60
     },
@@ -1560,8 +2424,8 @@
       "id": "n_docs_produto_plano_mvp_execucao_assessoria",
       "type": "file",
       "file": "Assessoria (cliente B2B).md",
-      "x": 2040,
-      "y": 1680,
+      "x": 4320,
+      "y": 1080,
       "width": 180,
       "height": 60
     },
@@ -1569,8 +2433,8 @@
       "id": "n_docs_produto_plano_mvp_execucao_cnpj",
       "type": "file",
       "file": "CNPJ.md",
-      "x": 2240,
-      "y": 1680,
+      "x": 4520,
+      "y": 1080,
       "width": 180,
       "height": 60
     },
@@ -1578,8 +2442,8 @@
       "id": "n_docs_produto_plano_mvp_execucao_claude_code",
       "type": "file",
       "file": "Claude Code (agentes do projeto).md",
-      "x": 1640,
-      "y": 1760,
+      "x": 3920,
+      "y": 1160,
       "width": 180,
       "height": 60
     },
@@ -1587,7 +2451,643 @@
       "id": "n_docs_produto_plano_mvp_execucao_decisoes_pendentes",
       "type": "file",
       "file": "Decis\u00f5es que precisam de voc\u00ea.md",
-      "x": 1840,
+      "x": 4120,
+      "y": 1160,
+      "width": 180,
+      "height": 60
+    },
+    {
+      "id": "n_docs_produto_plano_mvp_execucao_fora_do_mvp",
+      "type": "file",
+      "file": "Fora do MVP (prescri\u00e7\u00e3o, app nativo, venda direta).md",
+      "x": 4320,
+      "y": 1160,
+      "width": 180,
+      "height": 60
+    },
+    {
+      "id": "n_docs_produto_plano_mvp_execucao_lgpd",
+      "type": "file",
+      "file": "LGPD (dados de sa\u00fade sens\u00edveis).md",
+      "x": 4520,
+      "y": 1160,
+      "width": 180,
+      "height": 60
+    },
+    {
+      "id": "n_docs_produto_plano_mvp_execucao_documento",
+      "type": "file",
+      "file": "Plano de MVP e execu\u00e7\u00e3o.md",
+      "x": 3920,
+      "y": 1240,
+      "width": 180,
+      "height": 60
+    },
+    {
+      "id": "n_docs_produto_plano_mvp_execucao_preco",
+      "type": "file",
+      "file": "Pre\u00e7o por atleta ativo (R$ 5 a 15).md",
+      "x": 4120,
+      "y": 1240,
+      "width": 180,
+      "height": 60
+    },
+    {
+      "id": "n_docs_produto_plano_mvp_execucao_riscos",
+      "type": "file",
+      "file": "Principais riscos e mitiga\u00e7\u00e3o.md",
+      "x": 4320,
+      "y": 1240,
+      "width": 180,
+      "height": 60
+    },
+    {
+      "id": "n_docs_produto_plano_mvp_execucao_frentes",
+      "type": "file",
+      "file": "Seis frentes de execu\u00e7\u00e3o.md",
+      "x": 4520,
+      "y": 1240,
+      "width": 180,
+      "height": 60
+    },
+    {
+      "id": "n_docs_produto_plano_mvp_execucao_trainingpeaks",
+      "type": "file",
+      "file": "TrainingPeaks.md",
+      "x": 3920,
+      "y": 1320,
+      "width": 180,
+      "height": 60
+    },
+    {
+      "id": "g8",
+      "type": "group",
+      "label": "Agente do atleta",
+      "x": 5520,
+      "y": 1000,
+      "width": 880,
+      "height": 420,
+      "color": "3"
+    },
+    {
+      "id": "n_docs_produto_plano_mvp_execucao_agente_atleta",
+      "type": "file",
+      "file": "Agente do atleta.md",
+      "x": 5540,
+      "y": 1080,
+      "width": 180,
+      "height": 60
+    },
+    {
+      "id": "n_docs_produto_plano_mvp_execucao_atleta",
+      "type": "file",
+      "file": "Atleta.md",
+      "x": 5740,
+      "y": 1080,
+      "width": 180,
+      "height": 60
+    },
+    {
+      "id": "n_docs_produto_plano_mvp_execucao_cadencia_feedback",
+      "type": "file",
+      "file": "Cad\u00eancia do feedback (treino, semanal, quinzenal, mensal).md",
+      "x": 5940,
+      "y": 1080,
+      "width": 180,
+      "height": 60
+    },
+    {
+      "id": "n_docs_produto_plano_mvp_execucao_camada4_redacao_ia",
+      "type": "file",
+      "file": "Camada 4 reda\u00e7\u00e3o com IA.md",
+      "x": 6140,
+      "y": 1080,
+      "width": 180,
+      "height": 60
+    },
+    {
+      "id": "n_docs_produto_plano_mvp_execucao_devolutiva_professor",
+      "type": "file",
+      "file": "Devolutiva do professor.md",
+      "x": 5540,
+      "y": 1160,
+      "width": 180,
+      "height": 60
+    },
+    {
+      "id": "n_docs_produto_plano_mvp_execucao_fase_agente",
+      "type": "file",
+      "file": "Fase Agente do atleta (sem. 9-11).md",
+      "x": 5740,
+      "y": 1160,
+      "width": 180,
+      "height": 60
+    },
+    {
+      "id": "n_docs_produto_plano_mvp_execucao_feedback_automatico",
+      "type": "file",
+      "file": "Feedback autom\u00e1tico.md",
+      "x": 5940,
+      "y": 1160,
+      "width": 180,
+      "height": 60
+    },
+    {
+      "id": "n_docs_produto_plano_mvp_execucao_escopo_agente",
+      "type": "file",
+      "file": "Limites de escopo do agente (n\u00e3o prescreve).md",
+      "x": 6140,
+      "y": 1160,
+      "width": 180,
+      "height": 60
+    },
+    {
+      "id": "n_docs_produto_plano_mvp_execucao_linguagem_proibida",
+      "type": "file",
+      "file": "Linguagem proibida.md",
+      "x": 5540,
+      "y": 1240,
+      "width": 180,
+      "height": 60
+    },
+    {
+      "id": "n_docs_produto_plano_mvp_execucao_pacote_fatos",
+      "type": "file",
+      "file": "Pacote de fatos estruturado.md",
+      "x": 5740,
+      "y": 1240,
+      "width": 180,
+      "height": 60
+    },
+    {
+      "id": "n_docs_produto_plano_mvp_execucao_professor",
+      "type": "file",
+      "file": "Professor.md",
+      "x": 5940,
+      "y": 1240,
+      "width": 180,
+      "height": 60
+    },
+    {
+      "id": "n_docs_produto_plano_mvp_execucao_regras_envio",
+      "type": "file",
+      "file": "Regras de envio por canal (aprova\u00e7\u00e3o do professor).md",
+      "x": 6140,
+      "y": 1240,
+      "width": 180,
+      "height": 60
+    },
+    {
+      "id": "g9",
+      "type": "group",
+      "label": "Cronograma e valida\u00e7\u00e3o",
+      "x": 7140,
+      "y": 1000,
+      "width": 880,
+      "height": 420,
+      "color": "4"
+    },
+    {
+      "id": "n_docs_produto_plano_mvp_execucao_coordenacao",
+      "type": "file",
+      "file": "Coordena\u00e7\u00e3o.md",
+      "x": 7160,
+      "y": 1080,
+      "width": 180,
+      "height": 60
+    },
+    {
+      "id": "n_docs_produto_plano_mvp_execucao_criterio_decisao",
+      "type": "file",
+      "file": "Crit\u00e9rio de decis\u00e3o (seguir, ajustar, repensar).md",
+      "x": 7360,
+      "y": 1080,
+      "width": 180,
+      "height": 60
+    },
+    {
+      "id": "n_docs_produto_plano_mvp_execucao_cronograma",
+      "type": "file",
+      "file": "Cronograma (~16 semanas).md",
+      "x": 7560,
+      "y": 1080,
+      "width": 180,
+      "height": 60
+    },
+    {
+      "id": "n_docs_produto_plano_mvp_execucao_fase_avaliacao",
+      "type": "file",
+      "file": "Fase Avalia\u00e7\u00e3o (sem. 16).md",
+      "x": 7760,
+      "y": 1080,
+      "width": 180,
+      "height": 60
+    },
+    {
+      "id": "n_docs_produto_plano_mvp_execucao_fase_ensaio",
+      "type": "file",
+      "file": "Fase Ensaio (sem. 11).md",
+      "x": 7160,
+      "y": 1160,
+      "width": 180,
+      "height": 60
+    },
+    {
+      "id": "n_docs_produto_plano_mvp_execucao_grupo_comparacao",
+      "type": "file",
+      "file": "Grupo de compara\u00e7\u00e3o.md",
+      "x": 7360,
+      "y": 1160,
+      "width": 180,
+      "height": 60
+    },
+    {
+      "id": "n_docs_produto_plano_mvp_execucao_manual_assessoria",
+      "type": "file",
+      "file": "Manual da assessoria.md",
+      "x": 7560,
+      "y": 1160,
+      "width": 180,
+      "height": 60
+    },
+    {
+      "id": "n_docs_produto_plano_mvp_execucao_metricas_sucesso",
+      "type": "file",
+      "file": "M\u00e9tricas de sucesso do piloto.md",
+      "x": 7760,
+      "y": 1160,
+      "width": 180,
+      "height": 60
+    },
+    {
+      "id": "n_docs_produto_plano_mvp_execucao_painel_coordenacao",
+      "type": "file",
+      "file": "Painel da coordena\u00e7\u00e3o.md",
+      "x": 7160,
+      "y": 1240,
+      "width": 180,
+      "height": 60
+    },
+    {
+      "id": "n_docs_produto_plano_mvp_execucao_piloto",
+      "type": "file",
+      "file": "Piloto (30 dias, 2-3 professores, 40-60 atletas).md",
+      "x": 7360,
+      "y": 1240,
+      "width": 180,
+      "height": 60
+    },
+    {
+      "id": "n_docs_produto_plano_mvp_execucao_retencao_90d",
+      "type": "file",
+      "file": "Reten\u00e7\u00e3o aos 90 dias.md",
+      "x": 7560,
+      "y": 1240,
+      "width": 180,
+      "height": 60
+    },
+    {
+      "id": "g10",
+      "type": "group",
+      "label": "Time e pap\u00e9is",
+      "x": 0,
+      "y": 1600,
+      "width": 880,
+      "height": 420,
+      "color": "5"
+    },
+    {
+      "id": "n_docs_time_angelo",
+      "type": "file",
+      "file": "Angelo (dono do produto).md",
+      "x": 20,
+      "y": 1680,
+      "width": 180,
+      "height": 60
+    },
+    {
+      "id": "n_docs_time_bia",
+      "type": "file",
+      "file": "Bia (QA).md",
+      "x": 220,
+      "y": 1680,
+      "width": 180,
+      "height": 60
+    },
+    {
+      "id": "n_docs_time_caio",
+      "type": "file",
+      "file": "Caio (ci\u00eancia do esporte).md",
+      "x": 420,
+      "y": 1680,
+      "width": 180,
+      "height": 60
+    },
+    {
+      "id": "n_docs_time_duda",
+      "type": "file",
+      "file": "Duda (dados e backend).md",
+      "x": 620,
+      "y": 1680,
+      "width": 180,
+      "height": 60
+    },
+    {
+      "id": "n_docs_time_lia",
+      "type": "file",
+      "file": "Lia (design e UX).md",
+      "x": 20,
+      "y": 1760,
+      "width": 180,
+      "height": 60
+    },
+    {
+      "id": "n_docs_time_nina",
+      "type": "file",
+      "file": "Nina (documenta\u00e7\u00e3o).md",
+      "x": 220,
+      "y": 1760,
+      "width": 180,
+      "height": 60
+    },
+    {
+      "id": "n_docs_time_paulo",
+      "type": "file",
+      "file": "Paulo (planejador).md",
+      "x": 420,
+      "y": 1760,
+      "width": 180,
+      "height": 60
+    },
+    {
+      "id": "n_docs_time_rafa",
+      "type": "file",
+      "file": "Rafa (app React Native).md",
+      "x": 620,
+      "y": 1760,
+      "width": 180,
+      "height": 60
+    },
+    {
+      "id": "n_docs_time_regras_merge_docs_ok",
+      "type": "file",
+      "file": "Regras do time merge s\u00f3 do Theo, docs-ok da Nina, design-ok da Lia.md",
+      "x": 20,
+      "y": 1840,
+      "width": 180,
+      "height": 60
+    },
+    {
+      "id": "n_docs_time_theo",
+      "type": "file",
+      "file": "Theo (tech lead).md",
+      "x": 220,
+      "y": 1840,
+      "width": 180,
+      "height": 60
+    },
+    {
+      "id": "n_docs_time",
+      "type": "file",
+      "file": "Time e pap\u00e9is.md",
+      "x": 420,
+      "y": 1840,
+      "width": 180,
+      "height": 60
+    },
+    {
+      "id": "g11",
+      "type": "group",
+      "label": "Script de contraste",
+      "x": 2060,
+      "y": 1600,
+      "width": 880,
+      "height": 420,
+      "color": "6"
+    },
+    {
+      "id": "n_users_angelopelisson_documents_projects_treino_contexto_docs_design_contraste_rationale_1",
+      "type": "file",
+      "file": "Contraste WCAG 2.x dos pares de cor do guia visual (issue 192).  L\u00ea as cores da.md",
+      "x": 2080,
+      "y": 1680,
+      "width": 180,
+      "height": 60
+    },
+    {
+      "id": "n_users_angelopelisson_documents_projects_treino_contexto_docs_design_contraste_rationale_82",
+      "type": "file",
+      "file": "Lumin\u00e2ncia relativa sRGB (WCAG 2.2)..md",
+      "x": 2280,
+      "y": 1680,
+      "width": 180,
+      "height": 60
+    },
+    {
+      "id": "n_users_angelopelisson_documents_projects_treino_contexto_docs_design_contraste_calcular",
+      "type": "file",
+      "file": "calcular().md",
+      "x": 2480,
+      "y": 1680,
+      "width": 180,
+      "height": 60
+    },
+    {
+      "id": "n_users_angelopelisson_documents_projects_treino_contexto_docs_design_contraste_py",
+      "type": "file",
+      "file": "contraste.py.md",
+      "x": 2680,
+      "y": 1680,
+      "width": 180,
+      "height": 60
+    },
+    {
+      "id": "n_users_angelopelisson_documents_projects_treino_contexto_docs_design_contraste_documento_atualizado",
+      "type": "file",
+      "file": "documento_atualizado().md",
+      "x": 2080,
+      "y": 1760,
+      "width": 180,
+      "height": 60
+    },
+    {
+      "id": "n_users_angelopelisson_documents_projects_treino_contexto_docs_design_contraste_ler_cores",
+      "type": "file",
+      "file": "ler_cores().md",
+      "x": 2280,
+      "y": 1760,
+      "width": 180,
+      "height": 60
+    },
+    {
+      "id": "n_users_angelopelisson_documents_projects_treino_contexto_docs_design_contraste_luminancia",
+      "type": "file",
+      "file": "luminancia().md",
+      "x": 2480,
+      "y": 1760,
+      "width": 180,
+      "height": 60
+    },
+    {
+      "id": "n_users_angelopelisson_documents_projects_treino_contexto_docs_design_contraste_main",
+      "type": "file",
+      "file": "main().md",
+      "x": 2680,
+      "y": 1760,
+      "width": 180,
+      "height": 60
+    },
+    {
+      "id": "n_users_angelopelisson_documents_projects_treino_contexto_docs_design_contraste_num",
+      "type": "file",
+      "file": "num().md",
+      "x": 2080,
+      "y": 1840,
+      "width": 180,
+      "height": 60
+    },
+    {
+      "id": "n_users_angelopelisson_documents_projects_treino_contexto_docs_design_contraste_razao",
+      "type": "file",
+      "file": "razao().md",
+      "x": 2280,
+      "y": 1840,
+      "width": 180,
+      "height": 60
+    },
+    {
+      "id": "n_users_angelopelisson_documents_projects_treino_contexto_docs_design_contraste_tabela",
+      "type": "file",
+      "file": "tabela().md",
+      "x": 2480,
+      "y": 1840,
+      "width": 180,
+      "height": 60
+    },
+    {
+      "id": "g12",
+      "type": "group",
+      "label": "Camadas de m\u00e9tricas",
+      "x": 3900,
+      "y": 1600,
+      "width": 660,
+      "height": 420,
+      "color": "1"
+    },
+    {
+      "id": "n_docs_produto_plano_mvp_execucao_altimetria",
+      "type": "file",
+      "file": "Altimetria.md",
+      "x": 3920,
+      "y": 1680,
+      "width": 180,
+      "height": 60
+    },
+    {
+      "id": "n_docs_produto_plano_mvp_execucao_camada1_metricas",
+      "type": "file",
+      "file": "Camada 1 m\u00e9tricas determin\u00edsticas.md",
+      "x": 4120,
+      "y": 1680,
+      "width": 180,
+      "height": 60
+    },
+    {
+      "id": "n_docs_produto_plano_mvp_execucao_camada2_linha_base",
+      "type": "file",
+      "file": "Camada 2 linha de base pessoal.md",
+      "x": 4320,
+      "y": 1680,
+      "width": 180,
+      "height": 60
+    },
+    {
+      "id": "n_docs_produto_plano_mvp_execucao_carga_tss",
+      "type": "file",
+      "file": "Carga (TSS, rTSS, hrTSS, CTLATLTSB).md",
+      "x": 3920,
+      "y": 1760,
+      "width": 180,
+      "height": 60
+    },
+    {
+      "id": "n_docs_produto_plano_mvp_execucao_eficiencia",
+      "type": "file",
+      "file": "Efici\u00eancia (EF) e desacoplamento PaHR.md",
+      "x": 4120,
+      "y": 1760,
+      "width": 180,
+      "height": 60
+    },
+    {
+      "id": "n_docs_produto_plano_mvp_execucao_inicio_frio",
+      "type": "file",
+      "file": "In\u00edcio frio (valor populacional ponderado).md",
+      "x": 4320,
+      "y": 1760,
+      "width": 180,
+      "height": 60
+    },
+    {
+      "id": "n_docs_produto_plano_mvp_execucao_metricas_engajamento",
+      "type": "file",
+      "file": "M\u00e9tricas de engajamento.md",
+      "x": 3920,
+      "y": 1840,
+      "width": 180,
+      "height": 60
+    },
+    {
+      "id": "n_docs_produto_plano_mvp_execucao_pace_ajustado",
+      "type": "file",
+      "file": "Pace ajustado (GAP, calor, vento).md",
+      "x": 4120,
+      "y": 1840,
+      "width": 180,
+      "height": 60
+    },
+    {
+      "id": "g13",
+      "type": "group",
+      "label": "Descoberta e conhecimento",
+      "x": 5520,
+      "y": 1600,
+      "width": 660,
+      "height": 420,
+      "color": "2"
+    },
+    {
+      "id": "n_docs_produto_plano_mvp_execucao_aprendizado_continuo",
+      "type": "file",
+      "file": "Aprendizado cont\u00ednuo com edi\u00e7\u00f5es do professor.md",
+      "x": 5540,
+      "y": 1680,
+      "width": 180,
+      "height": 60
+    },
+    {
+      "id": "n_docs_produto_plano_mvp_execucao_base_conhecimento",
+      "type": "file",
+      "file": "Base de conhecimento (regras com fonte).md",
+      "x": 5740,
+      "y": 1680,
+      "width": 180,
+      "height": 60
+    },
+    {
+      "id": "n_docs_produto_plano_mvp_execucao_consultor_ciencia",
+      "type": "file",
+      "file": "Consultor de ci\u00eancia do esporte.md",
+      "x": 5940,
+      "y": 1680,
+      "width": 180,
+      "height": 60
+    },
+    {
+      "id": "n_docs_produto_plano_mvp_execucao_ely_2007",
+      "type": "file",
+      "file": "Ely 2007 (calor e desempenho na corrida).md",
+      "x": 5540,
       "y": 1760,
       "width": 180,
       "height": 60
@@ -1596,7 +3096,7 @@
       "id": "n_docs_produto_plano_mvp_execucao_entrevistas_treinadores",
       "type": "file",
       "file": "Entrevistas com 8 a 12 treinadores.md",
-      "x": 2040,
+      "x": 5740,
       "y": 1760,
       "width": 180,
       "height": 60
@@ -1605,56 +3105,233 @@
       "id": "n_docs_produto_plano_mvp_execucao_fase_descoberta",
       "type": "file",
       "file": "Fase Descoberta (sem. 1-2).md",
-      "x": 2240,
+      "x": 5940,
       "y": 1760,
       "width": 180,
       "height": 60
     },
     {
-      "id": "n_docs_produto_plano_mvp_execucao_fora_do_mvp",
+      "id": "n_docs_produto_plano_mvp_execucao_propriedade_intelectual",
       "type": "file",
-      "file": "Fora do MVP (prescri\u00e7\u00e3o, app nativo, venda direta).md",
-      "x": 1640,
+      "file": "Propriedade intelectual (regras e textos).md",
+      "x": 5540,
       "y": 1840,
       "width": 180,
       "height": 60
     },
     {
-      "id": "n_docs_produto_plano_mvp_execucao_preco",
+      "id": "g14",
+      "type": "group",
+      "label": "Funda\u00e7\u00e3o de dados e fontes",
+      "x": 7140,
+      "y": 1600,
+      "width": 660,
+      "height": 420,
+      "color": "3"
+    },
+    {
+      "id": "n_docs_produto_plano_mvp_execucao_outros_relogios",
       "type": "file",
-      "file": "Pre\u00e7o por atleta ativo (R$ 5 a 15).md",
-      "x": 1840,
+      "file": "COROS, Polar, Suunto, Wahoo.md",
+      "x": 7160,
+      "y": 1680,
+      "width": 180,
+      "height": 60
+    },
+    {
+      "id": "n_docs_produto_plano_mvp_execucao_fase_fundacao_dados",
+      "type": "file",
+      "file": "Fase Funda\u00e7\u00e3o de dados (sem. 3-6).md",
+      "x": 7360,
+      "y": 1680,
+      "width": 180,
+      "height": 60
+    },
+    {
+      "id": "n_docs_produto_plano_mvp_execucao_ficha_aluno",
+      "type": "file",
+      "file": "Ficha do aluno.md",
+      "x": 7560,
+      "y": 1680,
+      "width": 180,
+      "height": 60
+    },
+    {
+      "id": "n_docs_produto_plano_mvp_execucao_garmin",
+      "type": "file",
+      "file": "Garmin Connect Developer Program.md",
+      "x": 7160,
+      "y": 1760,
+      "width": 180,
+      "height": 60
+    },
+    {
+      "id": "n_docs_produto_plano_mvp_execucao_upload_fit",
+      "type": "file",
+      "file": "Upload de arquivo FITGPXTCX.md",
+      "x": 7360,
+      "y": 1760,
+      "width": 180,
+      "height": 60
+    },
+    {
+      "id": "n_docs_produto_plano_mvp_execucao_whoop_oura",
+      "type": "file",
+      "file": "WHOOP, Oura.md",
+      "x": 7560,
+      "y": 1760,
+      "width": 180,
+      "height": 60
+    },
+    {
+      "id": "n_docs_produto_plano_mvp_execucao_bem_estar_diario",
+      "type": "file",
+      "file": "bem_estar_diario (sono, HRV, FC repouso).md",
+      "x": 7160,
       "y": 1840,
       "width": 180,
       "height": 60
     },
     {
-      "id": "n_docs_produto_plano_mvp_execucao_trainingpeaks",
+      "id": "g15",
+      "type": "group",
+      "label": "Templates de regra e texto",
+      "x": 0,
+      "y": 2100,
+      "width": 600,
+      "height": 400,
+      "color": "4"
+    },
+    {
+      "id": "n_docs_templates_artigo_template",
       "type": "file",
-      "file": "TrainingPeaks.md",
-      "x": 2040,
-      "y": 1840,
+      "file": "Template artigo.md",
+      "x": 20,
+      "y": 2180,
+      "width": 180,
+      "height": 60
+    },
+    {
+      "id": "n_docs_templates_entrevista_template",
+      "type": "file",
+      "file": "Template entrevista.md",
+      "x": 220,
+      "y": 2180,
+      "width": 180,
+      "height": 60
+    },
+    {
+      "id": "n_docs_templates_metrica_template",
+      "type": "file",
+      "file": "Template m\u00e9trica.md",
+      "x": 20,
+      "y": 2260,
+      "width": 180,
+      "height": 60
+    },
+    {
+      "id": "n_docs_templates_regra_template",
+      "type": "file",
+      "file": "Template regra.md",
+      "x": 220,
+      "y": 2260,
+      "width": 180,
+      "height": 60
+    },
+    {
+      "id": "g16",
+      "type": "group",
+      "label": "Template de decis\u00e3o",
+      "x": 2060,
+      "y": 2100,
+      "width": 600,
+      "height": 400,
+      "color": "5"
+    },
+    {
+      "id": "n_docs_templates_decisao_template",
+      "type": "file",
+      "file": "Template decis\u00e3o (ADR).md",
+      "x": 2080,
+      "y": 2180,
+      "width": 180,
+      "height": 60
+    },
+    {
+      "id": "g17",
+      "type": "group",
+      "label": "Template de di\u00e1rio",
+      "x": 3900,
+      "y": 2100,
+      "width": 600,
+      "height": 400,
+      "color": "6"
+    },
+    {
+      "id": "n_docs_templates_diario_template",
+      "type": "file",
+      "file": "Template di\u00e1rio.md",
+      "x": 3920,
+      "y": 2180,
+      "width": 180,
+      "height": 60
+    },
+    {
+      "id": "g18",
+      "type": "group",
+      "label": "Template de meta",
+      "x": 5520,
+      "y": 2100,
+      "width": 600,
+      "height": 400,
+      "color": "1"
+    },
+    {
+      "id": "n_docs_templates_meta_template",
+      "type": "file",
+      "file": "Template meta.md",
+      "x": 5540,
+      "y": 2180,
+      "width": 180,
+      "height": 60
+    },
+    {
+      "id": "g19",
+      "type": "group",
+      "label": "Template de m\u00f3dulo",
+      "x": 7140,
+      "y": 2100,
+      "width": 600,
+      "height": 400,
+      "color": "2"
+    },
+    {
+      "id": "n_docs_templates_modulo_template",
+      "type": "file",
+      "file": "Template m\u00f3dulo.md",
+      "x": 7160,
+      "y": 2180,
       "width": 180,
       "height": 60
     }
   ],
   "edges": [
     {
-      "id": "e_docs_produto_plano_mvp_execucao_documento_agents_regras_do_time",
-      "fromNode": "n_docs_produto_plano_mvp_execucao_documento",
-      "toNode": "n_agents_regras_do_time",
+      "id": "e_docs_templates_artigo_template_docs_templates_metrica_template",
+      "fromNode": "n_docs_templates_artigo_template",
+      "toNode": "n_docs_templates_metrica_template",
       "label": "references [EXTRACTED]"
     },
     {
-      "id": "e_docs_produto_plano_mvp_execucao_documento_claude_agents_paulo_planejador_agente",
-      "fromNode": "n_docs_produto_plano_mvp_execucao_documento",
-      "toNode": "n_claude_agents_paulo_planejador_agente",
-      "label": "references [EXTRACTED]"
+      "id": "e_docs_templates_artigo_template_docs_templates_regra_template",
+      "fromNode": "n_docs_templates_artigo_template",
+      "toNode": "n_docs_templates_regra_template",
+      "label": "references [INFERRED]"
     },
     {
-      "id": "e_docs_produto_plano_mvp_execucao_documento_claude_agents_paulo_planejador_roadmap",
-      "fromNode": "n_docs_produto_plano_mvp_execucao_documento",
-      "toNode": "n_claude_agents_paulo_planejador_roadmap",
+      "id": "e_docs_templates_entrevista_template_docs_templates_regra_template",
+      "fromNode": "n_docs_templates_entrevista_template",
+      "toNode": "n_docs_templates_regra_template",
       "label": "references [EXTRACTED]"
     },
     {
@@ -1691,18 +3368,6 @@
       "id": "e_docs_produto_plano_mvp_execucao_documento_docs_produto_plano_mvp_execucao_riscos",
       "fromNode": "n_docs_produto_plano_mvp_execucao_documento",
       "toNode": "n_docs_produto_plano_mvp_execucao_riscos",
-      "label": "references [EXTRACTED]"
-    },
-    {
-      "id": "e_docs_produto_plano_mvp_execucao_documento_inicio_mapa_projeto",
-      "fromNode": "n_docs_produto_plano_mvp_execucao_documento",
-      "toNode": "n_inicio_mapa_projeto",
-      "label": "references [EXTRACTED]"
-    },
-    {
-      "id": "e_docs_produto_plano_mvp_execucao_documento_leia_me_kit_inicial",
-      "fromNode": "n_docs_produto_plano_mvp_execucao_documento",
-      "toNode": "n_leia_me_kit_inicial",
       "label": "references [EXTRACTED]"
     },
     {
@@ -2420,424 +4085,436 @@
       "label": "references [EXTRACTED]"
     },
     {
-      "id": "e_claude_agents_bia_qa_agente_agents_criterio_de_pronto",
-      "fromNode": "n_claude_agents_bia_qa_agente",
-      "toNode": "n_agents_criterio_de_pronto",
+      "id": "e_docs_00_inicio_docs_00_inicio_mapa_do_projeto",
+      "fromNode": "n_docs_00_inicio",
+      "toNode": "n_docs_00_inicio_mapa_do_projeto",
       "label": "references [EXTRACTED]"
     },
     {
-      "id": "e_claude_agents_bia_qa_agente_claude_agents_bia_qa_testes_e2e",
-      "fromNode": "n_claude_agents_bia_qa_agente",
-      "toNode": "n_claude_agents_bia_qa_testes_e2e",
-      "label": "implements [EXTRACTED]"
-    },
-    {
-      "id": "e_claude_agents_bia_qa_agente_claude_agents_duda_dados_dados_teste",
-      "fromNode": "n_claude_agents_bia_qa_agente",
-      "toNode": "n_claude_agents_duda_dados_dados_teste",
+      "id": "e_docs_00_inicio_docs_00_inicio_termos",
+      "fromNode": "n_docs_00_inicio",
+      "toNode": "n_docs_00_inicio_termos",
       "label": "references [EXTRACTED]"
     },
     {
-      "id": "e_claude_agents_bia_qa_agente_claude_agents_paulo_planejador_registro_metas",
-      "fromNode": "n_claude_agents_bia_qa_agente",
-      "toNode": "n_claude_agents_paulo_planejador_registro_metas",
+      "id": "e_docs_00_inicio_docs_decisoes_0001_modelo_de_dados_minimo",
+      "fromNode": "n_docs_00_inicio",
+      "toNode": "n_docs_decisoes_0001_modelo_de_dados_minimo",
       "label": "references [EXTRACTED]"
     },
     {
-      "id": "e_claude_agents_bia_qa_testes_e2e_leia_me_hook_testes",
-      "fromNode": "n_claude_agents_bia_qa_testes_e2e",
-      "toNode": "n_leia_me_hook_testes",
-      "label": "semantically_similar_to [INFERRED]"
-    },
-    {
-      "id": "e_claude_agents_caio_ciencia_agente_agents_theo_tech_lead",
-      "fromNode": "n_claude_agents_caio_ciencia_agente",
-      "toNode": "n_agents_theo_tech_lead",
+      "id": "e_docs_00_inicio_docs_decisoes_0002_segmento_intensidade_e_versao",
+      "fromNode": "n_docs_00_inicio",
+      "toNode": "n_docs_decisoes_0002_segmento_intensidade_e_versao",
       "label": "references [EXTRACTED]"
     },
     {
-      "id": "e_claude_agents_caio_ciencia_agente_claude_agents_caio_ciencia_ctl_atl",
-      "fromNode": "n_claude_agents_caio_ciencia_agente",
-      "toNode": "n_claude_agents_caio_ciencia_ctl_atl",
-      "label": "implements [EXTRACTED]"
-    },
-    {
-      "id": "e_claude_agents_caio_ciencia_agente_claude_agents_caio_ciencia_desacoplamento",
-      "fromNode": "n_claude_agents_caio_ciencia_agente",
-      "toNode": "n_claude_agents_caio_ciencia_desacoplamento",
-      "label": "implements [EXTRACTED]"
-    },
-    {
-      "id": "e_claude_agents_caio_ciencia_agente_claude_agents_caio_ciencia_deteccao_tiros_series",
-      "fromNode": "n_claude_agents_caio_ciencia_agente",
-      "toNode": "n_claude_agents_caio_ciencia_deteccao_tiros_series",
-      "label": "implements [EXTRACTED]"
-    },
-    {
-      "id": "e_claude_agents_caio_ciencia_agente_claude_agents_caio_ciencia_linha_de_base",
-      "fromNode": "n_claude_agents_caio_ciencia_agente",
-      "toNode": "n_claude_agents_caio_ciencia_linha_de_base",
-      "label": "implements [EXTRACTED]"
-    },
-    {
-      "id": "e_claude_agents_caio_ciencia_agente_claude_agents_caio_ciencia_modulo_metricas",
-      "fromNode": "n_claude_agents_caio_ciencia_agente",
-      "toNode": "n_claude_agents_caio_ciencia_modulo_metricas",
-      "label": "implements [EXTRACTED]"
-    },
-    {
-      "id": "e_claude_agents_caio_ciencia_agente_claude_agents_caio_ciencia_motor_explicacao",
-      "fromNode": "n_claude_agents_caio_ciencia_agente",
-      "toNode": "n_claude_agents_caio_ciencia_motor_explicacao",
-      "label": "implements [EXTRACTED]"
-    },
-    {
-      "id": "e_claude_agents_caio_ciencia_agente_claude_agents_caio_ciencia_pace_ajustado",
-      "fromNode": "n_claude_agents_caio_ciencia_agente",
-      "toNode": "n_claude_agents_caio_ciencia_pace_ajustado",
-      "label": "implements [EXTRACTED]"
-    },
-    {
-      "id": "e_claude_agents_caio_ciencia_agente_claude_agents_caio_ciencia_regra_valor_esperado_manual",
-      "fromNode": "n_claude_agents_caio_ciencia_agente",
-      "toNode": "n_claude_agents_caio_ciencia_regra_valor_esperado_manual",
-      "label": "implements [EXTRACTED]"
-    },
-    {
-      "id": "e_claude_agents_caio_ciencia_agente_claude_agents_caio_ciencia_tss_rtss_hrtss",
-      "fromNode": "n_claude_agents_caio_ciencia_agente",
-      "toNode": "n_claude_agents_caio_ciencia_tss_rtss_hrtss",
-      "label": "implements [EXTRACTED]"
-    },
-    {
-      "id": "e_claude_agents_caio_ciencia_modulo_metricas_claude_agents_caio_ciencia_ctl_atl",
-      "fromNode": "n_claude_agents_caio_ciencia_modulo_metricas",
-      "toNode": "n_claude_agents_caio_ciencia_ctl_atl",
-      "label": "conceptually_related_to [INFERRED]"
-    },
-    {
-      "id": "e_claude_agents_caio_ciencia_modulo_metricas_claude_agents_caio_ciencia_desacoplamento",
-      "fromNode": "n_claude_agents_caio_ciencia_modulo_metricas",
-      "toNode": "n_claude_agents_caio_ciencia_desacoplamento",
-      "label": "conceptually_related_to [INFERRED]"
-    },
-    {
-      "id": "e_claude_agents_caio_ciencia_modulo_metricas_claude_agents_caio_ciencia_deteccao_tiros_series",
-      "fromNode": "n_claude_agents_caio_ciencia_modulo_metricas",
-      "toNode": "n_claude_agents_caio_ciencia_deteccao_tiros_series",
-      "label": "conceptually_related_to [INFERRED]"
-    },
-    {
-      "id": "e_claude_agents_caio_ciencia_modulo_metricas_claude_agents_caio_ciencia_linha_de_base",
-      "fromNode": "n_claude_agents_caio_ciencia_modulo_metricas",
-      "toNode": "n_claude_agents_caio_ciencia_linha_de_base",
-      "label": "conceptually_related_to [INFERRED]"
-    },
-    {
-      "id": "e_claude_agents_caio_ciencia_modulo_metricas_claude_agents_caio_ciencia_motor_explicacao",
-      "fromNode": "n_claude_agents_caio_ciencia_modulo_metricas",
-      "toNode": "n_claude_agents_caio_ciencia_motor_explicacao",
-      "label": "shares_data_with [INFERRED]"
-    },
-    {
-      "id": "e_claude_agents_caio_ciencia_modulo_metricas_claude_agents_caio_ciencia_pace_ajustado",
-      "fromNode": "n_claude_agents_caio_ciencia_modulo_metricas",
-      "toNode": "n_claude_agents_caio_ciencia_pace_ajustado",
-      "label": "conceptually_related_to [INFERRED]"
-    },
-    {
-      "id": "e_claude_agents_caio_ciencia_modulo_metricas_claude_agents_caio_ciencia_tss_rtss_hrtss",
-      "fromNode": "n_claude_agents_caio_ciencia_modulo_metricas",
-      "toNode": "n_claude_agents_caio_ciencia_tss_rtss_hrtss",
-      "label": "conceptually_related_to [INFERRED]"
-    },
-    {
-      "id": "e_claude_agents_caio_ciencia_modulo_metricas_claude_agents_duda_dados_ingestao_garmin_fit",
-      "fromNode": "n_claude_agents_caio_ciencia_modulo_metricas",
-      "toNode": "n_claude_agents_duda_dados_ingestao_garmin_fit",
-      "label": "shares_data_with [INFERRED]"
-    },
-    {
-      "id": "e_claude_agents_caio_ciencia_modulo_metricas_docs_templates_metrica_template",
-      "fromNode": "n_claude_agents_caio_ciencia_modulo_metricas",
-      "toNode": "n_docs_templates_metrica_template",
+      "id": "e_docs_00_inicio_docs_decisoes_0003_fuso_da_atividade",
+      "fromNode": "n_docs_00_inicio",
+      "toNode": "n_docs_decisoes_0003_fuso_da_atividade",
       "label": "references [EXTRACTED]"
     },
     {
-      "id": "e_claude_agents_caio_ciencia_motor_explicacao_agents_camada_llm",
-      "fromNode": "n_claude_agents_caio_ciencia_motor_explicacao",
-      "toNode": "n_agents_camada_llm",
-      "label": "conceptually_related_to [AMBIGUOUS]"
-    },
-    {
-      "id": "e_claude_agents_caio_ciencia_motor_explicacao_docs_templates_regra_template",
-      "fromNode": "n_claude_agents_caio_ciencia_motor_explicacao",
-      "toNode": "n_docs_templates_regra_template",
-      "label": "shares_data_with [INFERRED]"
-    },
-    {
-      "id": "e_claude_agents_caio_ciencia_tss_rtss_hrtss_docs_glossario_tss",
-      "fromNode": "n_claude_agents_caio_ciencia_tss_rtss_hrtss",
-      "toNode": "n_docs_glossario_tss",
-      "label": "references [INFERRED]"
-    },
-    {
-      "id": "e_claude_agents_caio_ciencia_ctl_atl_docs_glossario_atl",
-      "fromNode": "n_claude_agents_caio_ciencia_ctl_atl",
-      "toNode": "n_docs_glossario_atl",
-      "label": "references [INFERRED]"
-    },
-    {
-      "id": "e_claude_agents_caio_ciencia_ctl_atl_docs_glossario_ctl",
-      "fromNode": "n_claude_agents_caio_ciencia_ctl_atl",
-      "toNode": "n_docs_glossario_ctl",
-      "label": "references [INFERRED]"
-    },
-    {
-      "id": "e_claude_agents_caio_ciencia_desacoplamento_docs_glossario_desacoplamento",
-      "fromNode": "n_claude_agents_caio_ciencia_desacoplamento",
-      "toNode": "n_docs_glossario_desacoplamento",
-      "label": "references [INFERRED]"
-    },
-    {
-      "id": "e_claude_agents_caio_ciencia_pace_ajustado_docs_glossario_gap",
-      "fromNode": "n_claude_agents_caio_ciencia_pace_ajustado",
-      "toNode": "n_docs_glossario_gap",
-      "label": "references [INFERRED]"
-    },
-    {
-      "id": "e_claude_agents_caio_ciencia_pace_ajustado_claude_agents_duda_dados_open_meteo",
-      "fromNode": "n_claude_agents_caio_ciencia_pace_ajustado",
-      "toNode": "n_claude_agents_duda_dados_open_meteo",
-      "label": "shares_data_with [INFERRED]"
-    },
-    {
-      "id": "e_claude_agents_caio_ciencia_deteccao_tiros_series_docs_glossario_swolf",
-      "fromNode": "n_claude_agents_caio_ciencia_deteccao_tiros_series",
-      "toNode": "n_docs_glossario_swolf",
-      "label": "conceptually_related_to [INFERRED]"
-    },
-    {
-      "id": "e_claude_agents_caio_ciencia_linha_de_base_docs_glossario_linha_de_base",
-      "fromNode": "n_claude_agents_caio_ciencia_linha_de_base",
-      "toNode": "n_docs_glossario_linha_de_base",
-      "label": "references [INFERRED]"
-    },
-    {
-      "id": "e_claude_agents_caio_ciencia_linha_de_base_docs_glossario_tipo_de_treino",
-      "fromNode": "n_claude_agents_caio_ciencia_linha_de_base",
-      "toNode": "n_docs_glossario_tipo_de_treino",
-      "label": "references [INFERRED]"
-    },
-    {
-      "id": "e_claude_agents_caio_ciencia_regra_valor_esperado_manual_agents_regra_testes",
-      "fromNode": "n_claude_agents_caio_ciencia_regra_valor_esperado_manual",
-      "toNode": "n_agents_regra_testes",
-      "label": "conceptually_related_to [INFERRED]"
-    },
-    {
-      "id": "e_claude_agents_caio_ciencia_regra_valor_esperado_manual_docs_templates_artigo_template",
-      "fromNode": "n_claude_agents_caio_ciencia_regra_valor_esperado_manual",
-      "toNode": "n_docs_templates_artigo_template",
-      "label": "semantically_similar_to [INFERRED]"
-    },
-    {
-      "id": "e_claude_agents_caio_ciencia_regra_valor_esperado_manual_docs_templates_metrica_template",
-      "fromNode": "n_claude_agents_caio_ciencia_regra_valor_esperado_manual",
-      "toNode": "n_docs_templates_metrica_template",
-      "label": "implements [INFERRED]"
-    },
-    {
-      "id": "e_claude_agents_duda_dados_agente_agents_issue_branch_pr",
-      "fromNode": "n_claude_agents_duda_dados_agente",
-      "toNode": "n_agents_issue_branch_pr",
-      "label": "implements [EXTRACTED]"
-    },
-    {
-      "id": "e_claude_agents_duda_dados_agente_agents_theo_tech_lead",
-      "fromNode": "n_claude_agents_duda_dados_agente",
-      "toNode": "n_agents_theo_tech_lead",
+      "id": "e_docs_00_inicio_docs_decisoes_0004_contrato_tela_evolucao",
+      "fromNode": "n_docs_00_inicio",
+      "toNode": "n_docs_decisoes_0004_contrato_tela_evolucao",
       "label": "references [EXTRACTED]"
     },
     {
-      "id": "e_claude_agents_duda_dados_agente_claude_agents_duda_dados_api_fastapi",
-      "fromNode": "n_claude_agents_duda_dados_agente",
-      "toNode": "n_claude_agents_duda_dados_api_fastapi",
-      "label": "implements [EXTRACTED]"
-    },
-    {
-      "id": "e_claude_agents_duda_dados_agente_claude_agents_duda_dados_dados_teste",
-      "fromNode": "n_claude_agents_duda_dados_agente",
-      "toNode": "n_claude_agents_duda_dados_dados_teste",
+      "id": "e_docs_00_inicio_docs_decisoes_0005_serie_de_tiros_o_que_entra",
+      "fromNode": "n_docs_00_inicio",
+      "toNode": "n_docs_decisoes_0005_serie_de_tiros_o_que_entra",
       "label": "references [EXTRACTED]"
     },
     {
-      "id": "e_claude_agents_duda_dados_agente_claude_agents_duda_dados_fixtures",
-      "fromNode": "n_claude_agents_duda_dados_agente",
-      "toNode": "n_claude_agents_duda_dados_fixtures",
-      "label": "implements [EXTRACTED]"
-    },
-    {
-      "id": "e_claude_agents_duda_dados_agente_claude_agents_duda_dados_ingestao_garmin_fit",
-      "fromNode": "n_claude_agents_duda_dados_agente",
-      "toNode": "n_claude_agents_duda_dados_ingestao_garmin_fit",
-      "label": "implements [EXTRACTED]"
-    },
-    {
-      "id": "e_claude_agents_duda_dados_agente_claude_agents_duda_dados_open_meteo",
-      "fromNode": "n_claude_agents_duda_dados_agente",
-      "toNode": "n_claude_agents_duda_dados_open_meteo",
-      "label": "implements [EXTRACTED]"
-    },
-    {
-      "id": "e_claude_agents_duda_dados_agente_claude_agents_duda_dados_worker",
-      "fromNode": "n_claude_agents_duda_dados_agente",
-      "toNode": "n_claude_agents_duda_dados_worker",
-      "label": "implements [EXTRACTED]"
-    },
-    {
-      "id": "e_claude_agents_duda_dados_ingestao_garmin_fit_docs_templates_metrica_template",
-      "fromNode": "n_claude_agents_duda_dados_ingestao_garmin_fit",
-      "toNode": "n_docs_templates_metrica_template",
-      "label": "references [INFERRED]"
-    },
-    {
-      "id": "e_claude_agents_duda_dados_api_fastapi_agents_contrato_openapi",
-      "fromNode": "n_claude_agents_duda_dados_api_fastapi",
-      "toNode": "n_agents_contrato_openapi",
-      "label": "references [INFERRED]"
-    },
-    {
-      "id": "e_claude_agents_duda_dados_api_fastapi_agents_stack",
-      "fromNode": "n_claude_agents_duda_dados_api_fastapi",
-      "toNode": "n_agents_stack",
+      "id": "e_docs_00_inicio_docs_decisoes_0006_upload_de_fit",
+      "fromNode": "n_docs_00_inicio",
+      "toNode": "n_docs_decisoes_0006_upload_de_fit",
       "label": "references [EXTRACTED]"
     },
     {
-      "id": "e_claude_agents_duda_dados_api_fastapi_claude_agents_rafa_app_api_client",
-      "fromNode": "n_claude_agents_duda_dados_api_fastapi",
-      "toNode": "n_claude_agents_rafa_app_api_client",
-      "label": "calls [INFERRED]"
-    },
-    {
-      "id": "e_claude_agents_duda_dados_worker_agents_stack",
-      "fromNode": "n_claude_agents_duda_dados_worker",
-      "toNode": "n_agents_stack",
+      "id": "e_docs_00_inicio_docs_decisoes_0007_clima_da_atividade",
+      "fromNode": "n_docs_00_inicio",
+      "toNode": "n_docs_decisoes_0007_clima_da_atividade",
       "label": "references [EXTRACTED]"
     },
     {
-      "id": "e_claude_agents_duda_dados_dados_teste_agents_regra_dados_pessoais",
-      "fromNode": "n_claude_agents_duda_dados_dados_teste",
-      "toNode": "n_agents_regra_dados_pessoais",
-      "label": "implements [EXTRACTED]"
-    },
-    {
-      "id": "e_claude_agents_duda_dados_dados_teste_claude_agents_duda_dados_fixtures",
-      "fromNode": "n_claude_agents_duda_dados_dados_teste",
-      "toNode": "n_claude_agents_duda_dados_fixtures",
-      "label": "conceptually_related_to [EXTRACTED]"
-    },
-    {
-      "id": "e_claude_agents_nina_docs_agente_agents_regras_do_time",
-      "fromNode": "n_claude_agents_nina_docs_agente",
-      "toNode": "n_agents_regras_do_time",
+      "id": "e_docs_00_inicio_docs_decisoes_0008_deteccao_de_esforcos",
+      "fromNode": "n_docs_00_inicio",
+      "toNode": "n_docs_decisoes_0008_deteccao_de_esforcos",
       "label": "references [EXTRACTED]"
     },
     {
-      "id": "e_claude_agents_nina_docs_agente_claude_agents_nina_docs_ciclo_diario_graphify",
-      "fromNode": "n_claude_agents_nina_docs_agente",
-      "toNode": "n_claude_agents_nina_docs_ciclo_diario_graphify",
-      "label": "implements [EXTRACTED]"
-    },
-    {
-      "id": "e_claude_agents_nina_docs_agente_claude_agents_nina_docs_padrao_nota",
-      "fromNode": "n_claude_agents_nina_docs_agente",
-      "toNode": "n_claude_agents_nina_docs_padrao_nota",
-      "label": "implements [EXTRACTED]"
-    },
-    {
-      "id": "e_claude_agents_nina_docs_agente_claude_agents_nina_docs_revisao_pr_docs_ok",
-      "fromNode": "n_claude_agents_nina_docs_agente",
-      "toNode": "n_claude_agents_nina_docs_revisao_pr_docs_ok",
-      "label": "implements [EXTRACTED]"
-    },
-    {
-      "id": "e_claude_agents_nina_docs_agente_docs_glossario_documento",
-      "fromNode": "n_claude_agents_nina_docs_agente",
-      "toNode": "n_docs_glossario_documento",
-      "label": "implements [EXTRACTED]"
-    },
-    {
-      "id": "e_claude_agents_nina_docs_agente_docs_templates_artigo_template",
-      "fromNode": "n_claude_agents_nina_docs_agente",
-      "toNode": "n_docs_templates_artigo_template",
-      "label": "implements [EXTRACTED]"
-    },
-    {
-      "id": "e_claude_agents_nina_docs_agente_docs_templates_decisao_template",
-      "fromNode": "n_claude_agents_nina_docs_agente",
-      "toNode": "n_docs_templates_decisao_template",
-      "label": "implements [EXTRACTED]"
-    },
-    {
-      "id": "e_claude_agents_nina_docs_agente_docs_templates_diario_template",
-      "fromNode": "n_claude_agents_nina_docs_agente",
-      "toNode": "n_docs_templates_diario_template",
-      "label": "implements [EXTRACTED]"
-    },
-    {
-      "id": "e_claude_agents_nina_docs_agente_docs_templates_entrevista_template",
-      "fromNode": "n_claude_agents_nina_docs_agente",
-      "toNode": "n_docs_templates_entrevista_template",
-      "label": "implements [EXTRACTED]"
-    },
-    {
-      "id": "e_claude_agents_nina_docs_agente_docs_templates_meta_template",
-      "fromNode": "n_claude_agents_nina_docs_agente",
-      "toNode": "n_docs_templates_meta_template",
-      "label": "implements [EXTRACTED]"
-    },
-    {
-      "id": "e_claude_agents_nina_docs_agente_docs_templates_metrica_template",
-      "fromNode": "n_claude_agents_nina_docs_agente",
-      "toNode": "n_docs_templates_metrica_template",
-      "label": "implements [EXTRACTED]"
-    },
-    {
-      "id": "e_claude_agents_nina_docs_agente_docs_templates_modulo_template",
-      "fromNode": "n_claude_agents_nina_docs_agente",
-      "toNode": "n_docs_templates_modulo_template",
-      "label": "implements [EXTRACTED]"
-    },
-    {
-      "id": "e_claude_agents_nina_docs_agente_docs_templates_regra_template",
-      "fromNode": "n_claude_agents_nina_docs_agente",
-      "toNode": "n_docs_templates_regra_template",
-      "label": "implements [INFERRED]"
-    },
-    {
-      "id": "e_claude_agents_nina_docs_agente_inicio_mapa_projeto",
-      "fromNode": "n_claude_agents_nina_docs_agente",
-      "toNode": "n_inicio_mapa_projeto",
-      "label": "implements [EXTRACTED]"
-    },
-    {
-      "id": "e_claude_agents_nina_docs_revisao_pr_docs_ok_agents_regra_documentacao",
-      "fromNode": "n_claude_agents_nina_docs_revisao_pr_docs_ok",
-      "toNode": "n_agents_regra_documentacao",
+      "id": "e_docs_00_inicio_docs_decisoes_0009_treino_de_transicao",
+      "fromNode": "n_docs_00_inicio",
+      "toNode": "n_docs_decisoes_0009_treino_de_transicao",
       "label": "references [EXTRACTED]"
     },
     {
-      "id": "e_claude_agents_nina_docs_revisao_pr_docs_ok_agents_merge_so_theo",
-      "fromNode": "n_claude_agents_nina_docs_revisao_pr_docs_ok",
-      "toNode": "n_agents_merge_so_theo",
-      "label": "conceptually_related_to [EXTRACTED]"
+      "id": "e_docs_00_inicio_docs_decisoes_0010_carga_de_treino",
+      "fromNode": "n_docs_00_inicio",
+      "toNode": "n_docs_decisoes_0010_carga_de_treino",
+      "label": "references [EXTRACTED]"
     },
     {
-      "id": "e_claude_agents_nina_docs_ciclo_diario_graphify_agents_graphify_report",
-      "fromNode": "n_claude_agents_nina_docs_ciclo_diario_graphify",
-      "toNode": "n_agents_graphify_report",
-      "label": "references [INFERRED]"
+      "id": "e_docs_00_inicio_docs_decisoes_0011_linha_de_base_e_semana_padrao",
+      "fromNode": "n_docs_00_inicio",
+      "toNode": "n_docs_decisoes_0011_linha_de_base_e_semana_padrao",
+      "label": "references [EXTRACTED]"
+    },
+    {
+      "id": "e_docs_00_inicio_docs_decisoes_0012_check_in_pos_treino",
+      "fromNode": "n_docs_00_inicio",
+      "toNode": "n_docs_decisoes_0012_check_in_pos_treino",
+      "label": "references [EXTRACTED]"
+    },
+    {
+      "id": "e_docs_00_inicio_docs_decisoes_0013_feedback_automatico",
+      "fromNode": "n_docs_00_inicio",
+      "toNode": "n_docs_decisoes_0013_feedback_automatico",
+      "label": "references [EXTRACTED]"
+    },
+    {
+      "id": "e_docs_00_inicio_docs_decisoes_0014_recuperacao_diaria",
+      "fromNode": "n_docs_00_inicio",
+      "toNode": "n_docs_decisoes_0014_recuperacao_diaria",
+      "label": "references [EXTRACTED]"
+    },
+    {
+      "id": "e_docs_00_inicio_docs_decisoes_0015_caixa_do_dia_do_professor",
+      "fromNode": "n_docs_00_inicio",
+      "toNode": "n_docs_decisoes_0015_caixa_do_dia_do_professor",
+      "label": "references [EXTRACTED]"
+    },
+    {
+      "id": "e_docs_00_inicio_docs_design_guia_visual",
+      "fromNode": "n_docs_00_inicio",
+      "toNode": "n_docs_design_guia_visual",
+      "label": "references [EXTRACTED]"
+    },
+    {
+      "id": "e_docs_00_inicio_docs_design_telas_caixa_do_dia",
+      "fromNode": "n_docs_00_inicio",
+      "toNode": "n_docs_design_telas_caixa_do_dia",
+      "label": "references [EXTRACTED]"
+    },
+    {
+      "id": "e_docs_00_inicio_docs_design_telas_checkin",
+      "fromNode": "n_docs_00_inicio",
+      "toNode": "n_docs_design_telas_checkin",
+      "label": "references [EXTRACTED]"
+    },
+    {
+      "id": "e_docs_00_inicio_docs_design_telas_evolucao_tiros",
+      "fromNode": "n_docs_00_inicio",
+      "toNode": "n_docs_design_telas_evolucao_tiros",
+      "label": "references [EXTRACTED]"
+    },
+    {
+      "id": "e_docs_00_inicio_docs_design_telas_feedback",
+      "fromNode": "n_docs_00_inicio",
+      "toNode": "n_docs_design_telas_feedback",
+      "label": "references [EXTRACTED]"
+    },
+    {
+      "id": "e_docs_00_inicio_docs_design_telas_semana_padrao",
+      "fromNode": "n_docs_00_inicio",
+      "toNode": "n_docs_design_telas_semana_padrao",
+      "label": "references [EXTRACTED]"
+    },
+    {
+      "id": "e_docs_00_inicio_docs_design_telas_treino",
+      "fromNode": "n_docs_00_inicio",
+      "toNode": "n_docs_design_telas_treino",
+      "label": "references [EXTRACTED]"
+    },
+    {
+      "id": "e_docs_00_inicio_docs_design_tokens",
+      "fromNode": "n_docs_00_inicio",
+      "toNode": "n_docs_design_tokens",
+      "label": "references [EXTRACTED]"
+    },
+    {
+      "id": "e_docs_00_inicio_docs_diario_2026_11_12",
+      "fromNode": "n_docs_00_inicio",
+      "toNode": "n_docs_diario_2026_11_12",
+      "label": "references [EXTRACTED]"
+    },
+    {
+      "id": "e_docs_00_inicio_docs_diario_2026_11_13",
+      "fromNode": "n_docs_00_inicio",
+      "toNode": "n_docs_diario_2026_11_13",
+      "label": "references [EXTRACTED]"
+    },
+    {
+      "id": "e_docs_00_inicio_docs_diario_2026_11_16",
+      "fromNode": "n_docs_00_inicio",
+      "toNode": "n_docs_diario_2026_11_16",
+      "label": "references [EXTRACTED]"
+    },
+    {
+      "id": "e_docs_00_inicio_docs_glossario",
+      "fromNode": "n_docs_00_inicio",
+      "toNode": "n_docs_glossario",
+      "label": "references [EXTRACTED]"
+    },
+    {
+      "id": "e_docs_00_inicio_docs_metricas_atencao",
+      "fromNode": "n_docs_00_inicio",
+      "toNode": "n_docs_metricas_atencao",
+      "label": "references [EXTRACTED]"
+    },
+    {
+      "id": "e_docs_00_inicio_docs_metricas_atencao_oraculo",
+      "fromNode": "n_docs_00_inicio",
+      "toNode": "n_docs_metricas_atencao_oraculo",
+      "label": "references [EXTRACTED]"
+    },
+    {
+      "id": "e_docs_00_inicio_docs_metricas_carga_oraculo",
+      "fromNode": "n_docs_00_inicio",
+      "toNode": "n_docs_metricas_carga_oraculo",
+      "label": "references [EXTRACTED]"
+    },
+    {
+      "id": "e_docs_00_inicio_docs_metricas_carga_pse",
+      "fromNode": "n_docs_00_inicio",
+      "toNode": "n_docs_metricas_carga_pse",
+      "label": "references [EXTRACTED]"
+    },
+    {
+      "id": "e_docs_00_inicio_docs_metricas_carga_pse_oraculo",
+      "fromNode": "n_docs_00_inicio",
+      "toNode": "n_docs_metricas_carga_pse_oraculo",
+      "label": "references [EXTRACTED]"
+    },
+    {
+      "id": "e_docs_00_inicio_docs_metricas_carga_treino",
+      "fromNode": "n_docs_00_inicio",
+      "toNode": "n_docs_metricas_carga_treino",
+      "label": "references [EXTRACTED]"
+    },
+    {
+      "id": "e_docs_00_inicio_docs_metricas_checagens_feedback",
+      "fromNode": "n_docs_00_inicio",
+      "toNode": "n_docs_metricas_checagens_feedback",
+      "label": "references [EXTRACTED]"
+    },
+    {
+      "id": "e_docs_00_inicio_docs_metricas_clima_oraculo",
+      "fromNode": "n_docs_00_inicio",
+      "toNode": "n_docs_metricas_clima_oraculo",
+      "label": "references [EXTRACTED]"
+    },
+    {
+      "id": "e_docs_00_inicio_docs_metricas_conferencia_carga",
+      "fromNode": "n_docs_00_inicio",
+      "toNode": "n_docs_metricas_conferencia_carga",
+      "label": "references [EXTRACTED]"
+    },
+    {
+      "id": "e_docs_00_inicio_docs_metricas_esforcos",
+      "fromNode": "n_docs_00_inicio",
+      "toNode": "n_docs_metricas_esforcos",
+      "label": "references [EXTRACTED]"
+    },
+    {
+      "id": "e_docs_00_inicio_docs_metricas_esforcos_oraculo",
+      "fromNode": "n_docs_00_inicio",
+      "toNode": "n_docs_metricas_esforcos_oraculo",
+      "label": "references [EXTRACTED]"
+    },
+    {
+      "id": "e_docs_00_inicio_docs_metricas_fatos_treino",
+      "fromNode": "n_docs_00_inicio",
+      "toNode": "n_docs_metricas_fatos_treino",
+      "label": "references [EXTRACTED]"
+    },
+    {
+      "id": "e_docs_00_inicio_docs_metricas_fatos_treino_oraculo",
+      "fromNode": "n_docs_00_inicio",
+      "toNode": "n_docs_metricas_fatos_treino_oraculo",
+      "label": "references [EXTRACTED]"
+    },
+    {
+      "id": "e_docs_00_inicio_docs_metricas_linha_base",
+      "fromNode": "n_docs_00_inicio",
+      "toNode": "n_docs_metricas_linha_base",
+      "label": "references [EXTRACTED]"
+    },
+    {
+      "id": "e_docs_00_inicio_docs_metricas_recuperacao",
+      "fromNode": "n_docs_00_inicio",
+      "toNode": "n_docs_metricas_recuperacao",
+      "label": "references [EXTRACTED]"
+    },
+    {
+      "id": "e_docs_00_inicio_docs_metricas_recuperacao_oraculo",
+      "fromNode": "n_docs_00_inicio",
+      "toNode": "n_docs_metricas_recuperacao_oraculo",
+      "label": "references [EXTRACTED]"
+    },
+    {
+      "id": "e_docs_00_inicio_docs_metricas_serie_carga",
+      "fromNode": "n_docs_00_inicio",
+      "toNode": "n_docs_metricas_serie_carga",
+      "label": "references [EXTRACTED]"
+    },
+    {
+      "id": "e_docs_00_inicio_docs_metricas_tipo_linha_base_oraculo",
+      "fromNode": "n_docs_00_inicio",
+      "toNode": "n_docs_metricas_tipo_linha_base_oraculo",
+      "label": "references [EXTRACTED]"
+    },
+    {
+      "id": "e_docs_00_inicio_docs_metricas_tipo_treino",
+      "fromNode": "n_docs_00_inicio",
+      "toNode": "n_docs_metricas_tipo_treino",
+      "label": "references [EXTRACTED]"
+    },
+    {
+      "id": "e_docs_00_inicio_docs_metricas_tiros_1km",
+      "fromNode": "n_docs_00_inicio",
+      "toNode": "n_docs_metricas_tiros_1km",
+      "label": "references [EXTRACTED]"
+    },
+    {
+      "id": "e_docs_00_inicio_docs_metricas_transicao",
+      "fromNode": "n_docs_00_inicio",
+      "toNode": "n_docs_metricas_transicao",
+      "label": "references [EXTRACTED]"
+    },
+    {
+      "id": "e_docs_00_inicio_docs_modulos",
+      "fromNode": "n_docs_00_inicio",
+      "toNode": "n_docs_modulos",
+      "label": "references [EXTRACTED]"
+    },
+    {
+      "id": "e_docs_00_inicio_docs_modulos_api",
+      "fromNode": "n_docs_00_inicio",
+      "toNode": "n_docs_modulos_api",
+      "label": "references [EXTRACTED]"
+    },
+    {
+      "id": "e_docs_00_inicio_docs_modulos_api_client",
+      "fromNode": "n_docs_00_inicio",
+      "toNode": "n_docs_modulos_api_client",
+      "label": "references [EXTRACTED]"
+    },
+    {
+      "id": "e_docs_00_inicio_docs_modulos_banco",
+      "fromNode": "n_docs_00_inicio",
+      "toNode": "n_docs_modulos_banco",
+      "label": "references [EXTRACTED]"
+    },
+    {
+      "id": "e_docs_00_inicio_docs_modulos_camada_llm",
+      "fromNode": "n_docs_00_inicio",
+      "toNode": "n_docs_modulos_camada_llm",
+      "label": "references [EXTRACTED]"
+    },
+    {
+      "id": "e_docs_00_inicio_docs_modulos_clima",
+      "fromNode": "n_docs_00_inicio",
+      "toNode": "n_docs_modulos_clima",
+      "label": "references [EXTRACTED]"
+    },
+    {
+      "id": "e_docs_00_inicio_docs_modulos_grafico_carga",
+      "fromNode": "n_docs_00_inicio",
+      "toNode": "n_docs_modulos_grafico_carga",
+      "label": "references [EXTRACTED]"
+    },
+    {
+      "id": "e_docs_00_inicio_docs_modulos_grafico_tiros",
+      "fromNode": "n_docs_00_inicio",
+      "toNode": "n_docs_modulos_grafico_tiros",
+      "label": "references [EXTRACTED]"
+    },
+    {
+      "id": "e_docs_00_inicio_docs_modulos_infra",
+      "fromNode": "n_docs_00_inicio",
+      "toNode": "n_docs_modulos_infra",
+      "label": "references [EXTRACTED]"
+    },
+    {
+      "id": "e_docs_00_inicio_docs_modulos_ingestao_garmin",
+      "fromNode": "n_docs_00_inicio",
+      "toNode": "n_docs_modulos_ingestao_garmin",
+      "label": "references [EXTRACTED]"
+    },
+    {
+      "id": "e_docs_00_inicio_docs_modulos_mobile",
+      "fromNode": "n_docs_00_inicio",
+      "toNode": "n_docs_modulos_mobile",
+      "label": "references [EXTRACTED]"
+    },
+    {
+      "id": "e_docs_00_inicio_docs_modulos_worker",
+      "fromNode": "n_docs_00_inicio",
+      "toNode": "n_docs_modulos_worker",
+      "label": "references [EXTRACTED]"
+    },
+    {
+      "id": "e_docs_00_inicio_docs_produto_meta_10_como_rodar",
+      "fromNode": "n_docs_00_inicio",
+      "toNode": "n_docs_produto_meta_10_como_rodar",
+      "label": "references [EXTRACTED]"
+    },
+    {
+      "id": "e_docs_00_inicio_docs_produto_meta_11_como_rodar",
+      "fromNode": "n_docs_00_inicio",
+      "toNode": "n_docs_produto_meta_11_como_rodar",
+      "label": "references [EXTRACTED]"
+    },
+    {
+      "id": "e_docs_00_inicio_docs_produto_meta_1_como_reproduzir",
+      "fromNode": "n_docs_00_inicio",
+      "toNode": "n_docs_produto_meta_1_como_reproduzir",
+      "label": "references [EXTRACTED]"
+    },
+    {
+      "id": "e_docs_00_inicio_docs_produto_meta_2_como_rodar",
+      "fromNode": "n_docs_00_inicio",
+      "toNode": "n_docs_produto_meta_2_como_rodar",
+      "label": "references [EXTRACTED]"
+    },
+    {
+      "id": "e_docs_00_inicio_docs_produto_meta_3_como_rodar",
+      "fromNode": "n_docs_00_inicio",
+      "toNode": "n_docs_produto_meta_3_como_rodar",
+      "label": "references [EXTRACTED]"
+    },
+    {
+      "id": "e_docs_00_inicio_docs_produto_meta_4_como_rodar",
+      "fromNode": "n_docs_00_inicio",
+      "toNode": "n_docs_produto_meta_4_como_rodar",
+      "label": "references [EXTRACTED]"
+    },
+    {
+      "id": "e_docs_00_inicio_docs_produto_meta_5_como_rodar",
+      "fromNode": "n_docs_00_inicio",
+      "toNode": "n_docs_produto_meta_5_como_rodar",
+      "label": "references [EXTRACTED]"
+    },
+    {
+      "id": "e_docs_00_inicio_docs_produto_meta_6_como_rodar",
+      "fromNode": "n_docs_00_inicio",
+      "toNode": "n_docs_produto_meta_6_como_rodar",
+      "label": "references [EXTRACTED]"
+    },
+    {
+      "id": "e_docs_00_inicio_docs_produto_meta_7_como_rodar",
+      "fromNode": "n_docs_00_inicio",
+      "toNode": "n_docs_produto_meta_7_como_rodar",
+      "label": "references [EXTRACTED]"
+    },
+    {
+      "id": "e_docs_00_inicio_docs_produto_meta_8_como_rodar",
+      "fromNode": "n_docs_00_inicio",
+      "toNode": "n_docs_produto_meta_8_como_rodar",
+      "label": "references [EXTRACTED]"
     }
   ]
 }
