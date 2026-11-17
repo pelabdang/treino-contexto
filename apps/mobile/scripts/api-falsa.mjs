@@ -217,6 +217,23 @@ const infoTreino = (id) => {
   const a = id === 106 ? natacao(id) : corrida(id);
   return { modalidade: id === 109 ? "ciclismo" : a.modalidade, data_local: a.data_local, hora_local: a.hora_local, duracao: a.duracao, duracao_s: a.duracao_s };
 };
+// Carga e forma do dia sintéticas (#466, ADR 0004 adendo 12): 106 sem FC (sem_carga), 108 aprendendo, 109 pendente e sem série, 110 sem os dois.
+const cargaForma = (a) => {
+  const id = a.atividade_id;
+  if (id === 110) return { carga: null, forma_do_dia: null };
+  const dia = a.data_local;
+  const forma = { estado: "calculada", data_local: dia, ctl_texto: "41,2", atl_texto: "52,8", tsb_texto: "\u221211,6", sem_carga_no_dia: 0, texto_sem_carga: null };
+  if (id === 106) {
+    return { carga: { versao: "carga@2", estado: "sem_carga", motivo: "sem_fc", texto: "Este treino não tem frequência cardíaca, então não dá para estimar a carga pela FC." }, forma_do_dia: { ...forma, sem_carga_no_dia: 1, texto_sem_carga: "Há 1 treino deste dia sem carga calculada; a forma pode estar subestimada." } };
+  }
+  if (id === 108) {
+    return { carga: { versao: "carga@2", estado: "calculada", carga: 87.43, valor_texto: "87,4", metodo: "hrtss", metodo_texto: "Estimada pela FC.", cobertura_pct: 98, texto: null }, forma_do_dia: { estado: "aprendendo", data_local: dia, sem_carga_no_dia: 0, texto_aprendendo: "Ainda aprendendo a sua forma: faltam 23 dias de histórico para estimar." } };
+  }
+  if (id === 109) {
+    return { carga: { versao: "carga@2", estado: "pendente", texto: "A carga deste treino ainda não foi calculada." }, forma_do_dia: { estado: "sem_serie", data_local: dia, sem_carga_no_dia: 0 } };
+  }
+  return { carga: { versao: "carga@2", estado: "calculada", carga: 87.43, valor_texto: "87,4", metodo: "hrtss", metodo_texto: "Estimada pela FC.", cobertura_pct: 98, texto: null }, forma_do_dia: forma };
+};
 const comCheckin = (a, atleta) => {
   const id = a.atividade_id;
   const e = checkins.get(chaveCheckin(atleta, id)) ?? null;
@@ -235,6 +252,7 @@ const comCheckin = (a, atleta) => {
     checkin_aberto: e ? true : !naoPedeCheckin(id) && !prazoVencido(id),
     feedback: feedbackDe(id, !!e, !naoPedeCheckin(id) && !prazoVencido(id)),
     pse_sugerida: id === 109 && !e ? 5 : null,
+    ...cargaForma(a),
   };
 };
 const pendentesDe = (atleta) => {

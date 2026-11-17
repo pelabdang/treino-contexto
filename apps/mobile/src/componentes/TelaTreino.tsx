@@ -4,6 +4,7 @@ import { useCallback, useEffect, useMemo, useState, type ReactNode } from "react
 import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 
 import { borda, espaco, fonte, larguraConteudoMax, raio, tamanho, useMargemTela, useTema, type Tema } from "../tema";
+import { CartaoCargaForma } from "./CartaoCargaForma";
 import { CartaoFeedback } from "./CartaoFeedback";
 import { CartoesCheckin } from "./CartoesCheckin";
 import { EsqueletoTreino } from "./Esqueleto";
@@ -187,6 +188,8 @@ function Treino({ atividade, styles, tema, checkin, aoAtualizarFeedback }: Props
       </View>
 
       {checkin ? <CartoesCheckin atividade={atividade} {...checkin} entreCartoes={feedback} /> : feedback}
+
+      <CartaoCargaForma carga={atividade.carga} forma={atividade.forma_do_dia} />
 
       {atividade.clima && <CartaoClima clima={atividade.clima} styles={styles} tema={tema} />}
     </View>
