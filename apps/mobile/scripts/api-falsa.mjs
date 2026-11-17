@@ -256,6 +256,33 @@ const esforcosDe = (id) => {
   if (id === 130) return wrap(Array.from({ length: 12 }, (_, i) => esforco(i + 1)));
   return null;
 };
+// Linha de base sintética `linha_base@3` (#465): 107 dentro do normal (padrão), 101 fora, 108 aprendendo e sem dado, 112 sem tipo,
+// 106 natação sem métricas, 110 multiesporte (sem cartão), 109 ciclismo sem métricas.
+const metricaBase = (chave, rotulo, unidade, extra) => ({ chave, rotulo, unidade, estado: "dentro", n: 6, ...extra });
+const PACE_DENTRO = metricaBase("pace_medio", "Pace médio", "s/km", { valor: 312, valor_texto: "5:12 min/km", mediana: 315, mediana_texto: "5:15 min/km", desvio: -3, diferenca_texto: "3 s/km mais rápido", texto: "Mediana de 5:15 min/km, em 6 treinos leves." });
+const FC_DENTRO = metricaBase("fc_media", "FC média", "bpm", { valor: 152, valor_texto: "152 bpm", mediana: 150, mediana_texto: "150 bpm", desvio: 2, diferenca_texto: "2 bpm acima", texto: "Mediana de 150 bpm, em 6 treinos leves." });
+const baseLB = { versao: "linha_base@3", modalidade: "corrida", tipo_treino: "leve", janela_semanas: 12, minimo_treinos: 8 };
+const semLB = (modalidade, motivo, texto) => ({ ...baseLB, modalidade, tipo_treino: null, estado: "sem_linha_base", metricas: [], motivo, texto });
+const linhaBaseDe = (id) => {
+  if (id === 110) return semLB("corrida", "multiesporte", "Treino de vários esportes: sem linha de base.");
+  if (id === 106) return semLB("natacao", "modalidade_sem_metricas", "Ainda não há linha de base para natação.");
+  if (id === 109) return semLB("ciclismo", "modalidade_sem_metricas", "Ainda não há linha de base para ciclismo.");
+  if (id === 112) return semLB("corrida", "sem_tipo", "Sem linha de base: o treino não tem tipo.");
+  if (id === 108) {
+    return { ...baseLB, estado: "ok", metricas: [
+      metricaBase("pace_medio", "Pace médio", "s/km", { estado: "aprendendo", n: 3, texto: "Ainda aprendendo o seu normal: 3 de 8 treinos leves nas últimas 12 semanas." }),
+      metricaBase("fc_media", "FC média", "bpm", { estado: "sem_valor", n: 0, motivo: "sem_valor", texto: "Este treino não tem frequência cardíaca." }),
+    ] };
+  }
+  if (id === 101) {
+    return { ...baseLB, estado: "ok", metricas: [
+      { ...PACE_DENTRO, estado: "fora", desvio: -25, diferenca_texto: "25 s/km mais rápido", texto: "25 s/km mais rápido que a mediana de 5:15 min/km, em 6 treinos leves." },
+      FC_DENTRO,
+      metricaBase("carga_hora", "Carga por hora", "pontos/h", { estado: "fora", valor: 61, valor_texto: "61,0 pontos/h", mediana: 52, mediana_texto: "52,0 pontos/h", desvio: 9, diferenca_texto: "9,0 pontos/h maior", texto: "9,0 pontos/h maior que a mediana de 52,0 pontos/h, em 6 treinos leves." }),
+    ] };
+  }
+  return { ...baseLB, estado: "ok", metricas: [PACE_DENTRO, FC_DENTRO] };
+};
 const comCheckin = (a, atleta) => {
   const id = a.atividade_id;
   const e = checkins.get(chaveCheckin(atleta, id)) ?? null;
@@ -275,6 +302,7 @@ const comCheckin = (a, atleta) => {
     feedback: feedbackDe(id, !!e, !naoPedeCheckin(id) && !prazoVencido(id)),
     pse_sugerida: id === 109 && !e ? 5 : null,
     ...cargaForma(a),
+    linha_base: linhaBaseDe(id),
     esforcos: esforcosDe(id),
     transicao: transicaoDe(atleta, id),
   };
