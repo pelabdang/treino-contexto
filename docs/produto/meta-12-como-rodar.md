@@ -95,7 +95,7 @@ com o banco `treino-meta12` (Postgres na 5471, API na 8071). Os números abaixo 
 
    Todas as outras (`treino-pronto`, `treino-carga-sem-fc`, `treino-carga-pendente`, `treino-normal-*`, `treino-esforcos-ciclismo`) saem com `npm run capturas` sem `--so`.
    Para ver a tela viva e o cartão de transição, `CI=1 EXPO_PUBLIC_API_URL=http://localhost:8071 npx expo start --web --port 8084` (com a API do passo 4 subida com
-   `CORS_ORIGENS=http://localhost:8084`) e abrir `http://localhost:8084/treino/81`; a Bia confere isso na QA (#469).
+   `CORS_ORIGENS=http://localhost:8084`) e abrir `http://localhost:8084/treino/81`. Abra com `localhost`, não com `127.0.0.1`: o CORS da API só libera a origem escrita em `CORS_ORIGENS` e, de outra origem, a tela mostra "Não foi possível falar com o servidor". A Bia conferiu a tela viva na QA (#469): capturas em `docs/design/telas/treino/qa-viva/`.
 9. **Os testes que não precisam de nada disso:** `uv run pytest services/api/tests/metricas/test_linha_base.py services/api/tests/rotas/test_atividade_carga_forma.py
    services/api/tests/rotas/test_treinos_de_transicao.py tests/test_e2e_meta7.py` (92 passaram: piso de cada métrica, 7 amostras `aprendendo`, estados da carga e da forma,
    o `409`) e, em `apps/mobile`, `npx jest __tests__/TelaTreino.test.tsx` (54 testes: um por estado de cada cartão, a correção com `PUT`, `DELETE`, releitura, erro e "Salvando...").
