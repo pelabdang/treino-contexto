@@ -405,8 +405,8 @@ Para a #464. Todas como a Lia recomendou.
 
 ### Perguntas ao Angelo (decididas em 17/11)
 O Angelo respondeu **"ok para as quatro"** (A a D da Meta 12) em 17/11, todas com a recomendação. Cada cartão abaixo vale como está.
-- **A. Forma do dia em "aprendendo" (decidido, Angelo 17/11).** **Esconder** CTL, ATL e TSB e mostrar só o aviso. Se ele preferir mostrar, entra o
-  selo "ainda aprendendo" junto dos números.
+- **A. Forma do dia em "aprendendo" (decidido, Angelo 17/11).** **Esconder** CTL, ATL e TSB e mostrar só o aviso. Alternativa descartada: mostrar os números com o
+  selo "ainda aprendendo".
 - **B. Quem corrige a transição sem login (decidido, Angelo 17/11).** Sem login, professor e atleta veem a mesma tela. **Aceito na Meta 12**; fecha
   na Meta 13, com o login; o rótulo é reversível (DELETE).
 - **C. Efeito da correção no feedback (decidido, Angelo 17/11; ainda não implementado).** Corrigir a transição muda a linha de base, que entra no pacote de fatos do feedback.
