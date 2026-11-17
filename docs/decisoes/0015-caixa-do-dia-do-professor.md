@@ -257,3 +257,6 @@ Origem: conferência local da #431, decisões do Angelo de 16/11 ("ok para as se
 
 ## Adendo (2026-11-17): a caixa lê a `linha_base@3`
 Desde 17/11 o "fora do normal" vem da `linha_base@3` (piso de dispersão por métrica, adendo 3 da [[decisoes/0011-linha-de-base-e-semana-padrao]]). As regras, o limite de 2,5 e as constantes desta decisão não mudam; onde o texto acima diz `linha_base@2`, leia-se a versão vigente.
+
+## Adendo 3 (2026-11-17): com o login, a identidade do professor vem da sessão ([[decisoes/0016-login-e-deploy-do-piloto]])
+O item 2 (`PROFESSOR_ID` no ambiente) vale **só até a #500**. Com o login, o professor é o da **sessão**, a variável some, a rota continua `/professores/{professor_id}/...` e qualquer id diferente do da sessão devolve a mesma `professor_inexistente`. O filtro do item 3 ganha `consentimento_revogado_em IS NULL` e `termo_versao` igual à versão vigente do termo, na mesma função `atletas_do_professor`, a única que decide quem o professor vê.
