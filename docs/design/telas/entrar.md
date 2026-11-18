@@ -2,7 +2,7 @@
 tipo: design
 status: rascunho
 dono: lia
-atualizado: 2026-11-17
+atualizado: 2026-11-18
 links: [[design/guia-visual]], [[design/tokens]], [[design/telas/consentimento]], [[design/telas/caixa-do-dia]], [[design/telas/treino]], [[produto/roadmap]], [[modulos/mobile]]
 ---
 # Telas: entrar, sair, acesso expirado e trocar a senha
@@ -11,7 +11,7 @@ Spec da issue #498 (Meta 13), antes das telas (P6 da Meta 13, do Rafa) e junto d
 aceita: a lista de campos no fim ajusta ao texto final da ADR. Decisões do Angelo de 17/11 ([[produto/roadmap]], "Meta 13"):
 **e-mail e senha na própria API**, **sem e-mail transacional** (a senha esquecida é refeita por quem opera o piloto) e **sem login a
 tela do atleta e a caixa do professor não abrem**. Todos os nomes, e-mails e textos abaixo são **sintéticos**. Nada em
-`apps/mobile/` muda nesta nota.
+`apps/mobile/` muda nesta nota. Os nomes de rota são os da ADR 0016 (`/sessao`, `/conta/senha`), por decisão do Theo de 18/11.
 
 ## Objetivo
 Quem abre o app diz quem é, com e-mail e senha, e cai na tela certa: o **atleta** na evolução dos tiros e o **professor** na caixa
@@ -26,7 +26,7 @@ O tom é calmo e direto. **Palavras simples, sem jargão de segurança**: "entra
 |---|---|---|---|
 | `/entrar` | Entrar | qualquer pessoa sem acesso ativo | abrir o app ou qualquer endereço sem acesso; "Sair" |
 | `/trocar-senha` | Trocar a senha | quem já entrou | primeiro acesso (senha provisória) ou "Trocar senha" no menu |
-| (diálogo) | Sair | quem já entrou | "Sair" no cabeçalho |
+| (diálogo) | Sair | quem já entrou | "Sair" no menu "Conta" do cabeçalho |
 | (faixa e redirecionamento) | Acesso expirado | quem já entrou | qualquer chamada à API que volta `401` |
 
 Regra geral de rotas: **só `/entrar` abre sem acesso.** Qualquer outro endereço (`/`, `/treino/<id>`, `/caixa-do-dia`,
@@ -80,18 +80,19 @@ meio vertical: com o teclado e a janela baixa o botão precisa ficar à vista), 
 | pronto | "Entrar" ligado | |
 | entrando | botão desligado com o texto "Entrando...", campos desligados; o texto fica, para leitor de tela | "Entrando..." |
 | e-mail ou senha errados (`401`) | faixa de erro acima do botão, `error-outline`, `cor.erro` sobre `cor.erro-suave`; **a senha é apagada, o e-mail fica**; o foco vai para a senha | "E-mail ou senha incorretos. Confira e tente de novo." |
-| muitas tentativas (`429`) | faixa neutra `info-outline` e o botão desligado pelo tempo que a API mandar; depois volta | "Muitas tentativas. Espere 5 minutos e tente de novo." (o número vem da API) |
-| sem rede | faixa de erro e o botão "Tentar de novo" volta a ser "Entrar" | "Não foi possível falar com o servidor. Confira a conexão e tente de novo." |
-| erro do servidor (`5xx`) | faixa de erro | "Algo deu errado do nosso lado. Tente de novo mais tarde." |
-| acesso expirado (veio de outra tela) | faixa neutra no alto, `info-outline` | "Seu acesso expirou. Entre de novo." |
+| muitas tentativas (`429`) | faixa neutra `info-outline` e o botão desligado pelo tempo que a API mandar; depois volta | "Muitas tentativas. Espere 5 minutos e tente de novo." (o número vem da API; sem `espere_s` na resposta, o app assume 60 s) |
+| sem rede | faixa de erro; o botão continua "Entrar" (sem texto próprio de "Tentar de novo"); **o que a pessoa digitou fica, inclusive a senha** | "Não foi possível falar com o servidor. Confira a conexão e tente de novo." |
+| erro do servidor (`5xx`) | faixa de erro; o que a pessoa digitou fica, inclusive a senha | "Algo deu errado do nosso lado. Tente de novo mais tarde." |
+| acesso expirado (veio de outra tela) | faixa neutra no alto, `info-outline`; **some quando aparece outro aviso** (um aviso por vez) | "Seu acesso expirou. Entre de novo." |
 | saiu de propósito | nada: a tela abre limpa | |
 
 **Regra de segurança no texto:** a faixa de `401` é **a mesma** para e-mail que não existe e para senha errada. Nunca "esse e-mail
 não está cadastrado" nem "senha errada". Também a mesma para uma conta desativada (decisão 3 abaixo).
 
 ## Sair
-Onde fica: no cabeçalho das telas principais (evolução dos tiros e caixa do dia), um **botão de texto "Sair"** com o ícone
-`logout`, alvo 48, no canto oposto ao "Voltar". Nas telas internas (treino, check-in) não aparece: "Voltar" basta.
+Onde fica: **só dentro do menu "Conta"** do cabeçalho das telas principais (evolução dos tiros e caixa do dia), item com o ícone
+`logout` e o texto "Sair", alvo 48. **Não há botão "Sair" solto no cabeçalho** (menos risco de sair por engano; o diálogo ainda
+confirma). Nas telas internas (treino, check-in) não aparece: "Voltar" basta.
 
 ```
 ┌ Sair do app? ────────────────────┐   diálogo, fonte.titulo-secao
@@ -103,10 +104,11 @@ Onde fica: no cabeçalho das telas principais (evolução dos tiros e caixa do d
 - **"Cancelar" é o botão principal** (a saída por engano custa digitar a senha de novo; o contrário é raro).
 - Ao confirmar: o app **apaga o que guardou no aparelho** (o acesso e o endereço lembrado), avisa a API (para o acesso deixar de
   valer) e vai a `/entrar` com a tela limpa. O aviso à API é feito sem esperar: **se a rede falhar, a pessoa sai mesmo assim** no
-  aparelho (o acesso apagado lá já impede o uso). Anúncio para leitor de tela: "Você saiu."
+  aparelho (o acesso apagado lá já impede o uso). Anúncio para leitor de tela ao abrir `/entrar`: "Você saiu." (`announceForAccessibility`)
 - Quem está no meio de um check-in com texto digitado: o texto não é guardado (regra do [[design/telas/checkin]]), então o
   diálogo diz a verdade e **não** avisa de rascunho.
-- Quem quiser trocar a senha acha "Trocar senha" na mesma área do cabeçalho (menu "Conta", com "Trocar senha" e "Sair").
+- Quem quiser trocar a senha acha "Trocar senha" no mesmo menu "Conta" ("Trocar senha" e "Sair"). O menu fecha ao tocar fora, ao
+  apertar Esc (web) e ao escolher um item.
 
 ## Acesso expirado
 O acesso tem prazo (a API decide qual). Quando qualquer chamada volta `401` com a pessoa usando o app:
@@ -128,7 +130,7 @@ check-in não enviada) **se perde**, porque o app não guarda rascunho. O texto 
 | rede ou `5xx` | os estados de erro que cada tela já tem |
 
 ## Abrir o app (carregando o acesso)
-Ao abrir, antes de mostrar qualquer tela, o app olha se há um acesso guardado e pergunta à API quem é a pessoa (`GET /eu`).
+Ao abrir, antes de mostrar qualquer tela, o app olha se há um acesso guardado e pergunta à API quem é a pessoa (`GET /sessao`).
 Durante isso: tela cheia no fundo `cor.fundo` com o texto "Verificando o seu acesso..." (esqueleto não, é um instante). Resultados:
 - **Há acesso e a API confirma:** abre a tela do papel (ou o endereço pedido).
 - **Há acesso e a API diz `401`:** "Seu acesso expirou" na entrada.
@@ -159,8 +161,9 @@ Duas ocasiões: **primeiro acesso** (a senha foi criada por quem opera, então a
 | senha de agora errada (`401` ou `422`) | "A senha de agora não confere." (aqui não há o que esconder: a pessoa já entrou) |
 | nova muito curta ou igual à de agora (`422`) | "A senha nova precisa de pelo menos 10 caracteres e ser diferente da de agora." |
 | as duas novas diferentes (checado no app, antes de enviar) | "As duas senhas novas não são iguais." |
-| salvo | "Senha trocada." e segue para o início do papel (primeiro acesso) ou volta (voluntária) |
-| sem rede | "Não foi possível salvar. Tente de novo." |
+| salvo | **tela de confirmação**: título "Trocar a senha", faixa de sucesso (`check-circle-outline`) com "Senha trocada." e o botão primário "Continuar"; o foco vai para a faixa. "Continuar" segue para o início do papel (primeiro acesso) ou volta (voluntária). Não é mensagem que some: quem usa leitor de tela ou lê devagar não perde o aviso |
+| rede ou `5xx` | "Não foi possível salvar. Tente de novo." (as três senhas digitadas ficam) |
+- **Texto do primeiro acesso:** "Sua senha foi criada para o primeiro acesso. Escolha uma senha só sua." (na troca voluntária, só "Escolha uma senha só sua.").
 - `autoComplete="new-password"` nos dois campos novos (o aparelho oferece gerar uma senha).
 - Troca é **da pessoa que está dentro**. A recuperação de senha esquecida **não passa por esta tela**: é um comando de quem opera.
 - O mínimo de **10 caracteres** foi aceito pelo Theo (decisão 4 abaixo); a regra final fica na ADR 0016. Sem exigir símbolo nem
@@ -174,27 +177,32 @@ Duas ocasiões: **primeiro acesso** (a senha foi criada por quem opera, então a
 O app **não escolhe o atleta nem o professor por configuração**: o `EXPO_PUBLIC_ATLETA_ID` e o `EXPO_PUBLIC_PROFESSOR_ID` saem e
 o identificador vem da resposta de entrar. O professor **não** vê "Consentimento" (quem consente é o atleta).
 
+## Margem de área segura (celular com entalhe)
+Entrar e trocar a senha precisam de margem no topo igual à área segura do aparelho (`useSafeAreaInsets`): sem ela, o título fica sob
+a hora e o entalhe do iPhone. O mesmo vale para as outras telas; é um ajuste geral, que não bloqueia o PR #518.
+
 ## Acessibilidade
 - Ordem de leitura: título, instrução, e-mail, senha, "Ver", "Entrar", ajuda para senha esquecida.
 - A faixa de erro tem `accessibilityRole="alert"` e a mensagem é lida quando aparece; o foco vai para o primeiro campo com problema
   (a senha, no `401`). Erro nunca depende só da cor: tem ícone e frase.
-- "Ver" é um botão com rótulo "Mostrar a senha" ou "Esconder a senha" e estado.
+- "Ver" é um botão com rótulo **"Ver a senha"** ou "Esconder a senha" e estado. O rótulo acessível contém o texto visível (WCAG 2.5.3): quem comanda o aparelho por voz diz "toque em Ver".
 - Alvos de 48 nos campos e botões; contraste conforme [[design/tokens]]; `cor.erro` sobre `cor.erro-suave` já está na tabela (5,46 claro,
   6,67 escuro).
 - Fonte do sistema grande (até 1,5): os campos não cortam; o botão fica dentro da rolagem, com o teclado aberto o formulário sobe.
 - Foco por teclado na web: ordem natural; anel de foco `cor.foco`; Enter envia.
 - Nenhum texto de erro revela se o e-mail existe.
 
-## Lista de campos que a tela precisa da API (entrada da ADR 0016, #497, e das issues da API)
-"Pedido" é o que a tela precisa; os nomes são proposta, a ADR 0016 decide. O app **não valida regra de senha nem de e-mail** além de
+## Lista de campos que a tela precisa da API (ADR 0016)
+"Pedido" é o que a tela precisa; os nomes são os da ADR 0016. Com a troca de senha obrigatória ligada, as demais rotas respondem `403`
+`troca_de_senha_obrigatoria` e o app abre `/trocar-senha`. O app **não valida regra de senha nem de e-mail** além de
 campo vazio e de "as duas senhas novas iguais".
 
 | tela | quem chama | pede | recebe | observação |
 |---|---|---|---|---|
-| Entrar | `POST /sessao` (nome a decidir) | `email`, `senha` | `acesso` (o que o app guarda), `expira_em` (instante), `papel` (`atleta` ou `professor`), `atleta_id` ou `professor_id`, `nome` (para saudar), `troca_de_senha_obrigatoria` (booleano) | `401` com o **mesmo corpo** para e-mail inexistente, senha errada e conta desativada; `429` com `espere_s` (segundos) |
-| Abrir o app | `GET /eu` | acesso | `papel`, `atleta_id` ou `professor_id`, `nome`, `expira_em`, `troca_de_senha_obrigatoria` | `401` se expirou ou foi revogado |
+| Entrar | `POST /sessao` | `email`, `senha` | `token` (o que o app guarda), `expira_em` (instante), `papel` (`atleta` ou `professor`), `atleta_id` ou `professor_id`, `nome` (para saudar), `troca_de_senha_obrigatoria` (booleano) | `401` com o **mesmo corpo** para e-mail inexistente, senha errada e conta desativada; `429` com `espere_s` (segundos) |
+| Abrir o app | `GET /sessao` | acesso | `papel`, `atleta_id` ou `professor_id`, `nome`, `expira_em`, `troca_de_senha_obrigatoria` | `401` se expirou ou foi revogado |
 | Sair | `DELETE /sessao` | acesso | `204` | falha de rede não impede a saída no aparelho |
-| Trocar a senha | `PUT /eu/senha` | `senha_atual`, `senha_nova` | `204` | `422` com tipo (`senha_atual_incorreta`, `senha_nova_invalida`) para o app escolher o texto; **sem** devolver a senha nem repetir o enviado |
+| Trocar a senha | `PUT /conta/senha` | `senha_atual`, `senha_nova` | `{token, expira_em}` novo (a API revoga todos os acessos; o app troca o guardado) | `422` com tipo (`senha_atual_incorreta`, `senha_nova_invalida`) para o app escolher o texto; **sem** devolver a senha nem repetir o enviado |
 | todas as rotas | cabeçalho de acesso | | | `401` quando expirou; `404` uniforme para dado de outro atleta ou aluno sem consentimento; nunca `403` com diferença visível |
 
 Nada disso é dado de saúde, mas **o log do servidor não grava e-mail, senha nem acesso** (ADR 0016).
