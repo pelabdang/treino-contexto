@@ -13,9 +13,18 @@ describe("menu Conta e diálogo de sair", () => {
     expect(screen.getByTestId("abrir-conta").props.accessibilityState.expanded).toBe(true);
     expect(screen.getByText("Trocar senha")).toBeTruthy();
     expect(screen.getByText("Sair")).toBeTruthy();
-    expect(screen.queryByText("Consentimento")).toBeNull(); // entra com a #503
+    expect(screen.queryByText("Consentimento")).toBeNull(); // só o atleta tem o item
     await fireEvent.press(screen.getByTestId("trocar-senha"));
     expect(aoTrocarSenha).toHaveBeenCalled();
+    expect(screen.queryByTestId("menu-conta")).toBeNull();
+  });
+
+  it("o atleta tem 'Consentimento' no menu; sem a função (professor) o item não existe", async () => {
+    const aoConsentimento = jest.fn();
+    await render(<BarraConta aoTrocarSenha={jest.fn()} aoConsentimento={aoConsentimento} aoSair={jest.fn()} />);
+    await fireEvent.press(screen.getByTestId("abrir-conta"));
+    await fireEvent.press(screen.getByTestId("consentimento"));
+    expect(aoConsentimento).toHaveBeenCalled();
     expect(screen.queryByTestId("menu-conta")).toBeNull();
   });
 

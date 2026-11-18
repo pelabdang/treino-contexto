@@ -123,8 +123,7 @@ function CartaoProfessor({ v, aoDar, aoRetirar, styles, tema }: { v: Vinculo; ao
         <MaterialIcons name={consentido ? "check-circle-outline" : "hourglass-empty"} size={tamanho.iconeMedio} color={tema.cor["texto-2"]} accessible={false} />
         <Text style={styles.estadoTexto}>{estadoTexto}</Text>
       </View>
-      {!consentido && v.termo_desatualizado && <Text style={styles.legenda}>O termo mudou desde o seu último consentimento. Leia de novo para continuar.</Text>}
-      <Text style={styles.legenda}>Termo provisório</Text>
+      {!consentido && v.termo_desatualizado && <Text style={styles.legenda}>O termo mudou. Leia e dê o consentimento de novo.</Text>}
       {consentido ? (
         <Pressable testID={`retirar-${v.professor_id}`} accessibilityRole="button" accessibilityLabel={`Retirar consentimento de ${v.nome}`} onPress={aoRetirar} style={comFoco([styles.botao, styles.secundario], styles.foco)}>
           <Text style={styles.secundarioTexto}>Retirar consentimento</Text>

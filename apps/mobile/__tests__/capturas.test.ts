@@ -113,6 +113,21 @@ describe("rotas de entrar, sair e trocar a senha (#502)", () => {
   });
 });
 
+describe("rotas do consentimento (#503)", () => {
+  const cons = ROTAS.filter((r: any) => r.nome.startsWith("consentimento"));
+  it("cobre lista, estados de erro, retirar, termo e o aviso da evolução", () => {
+    const nomes = cons.map((r: any) => r.nome);
+    for (const n of ["consentimento", "consentimento-vazio", "consentimento-retirar", "consentimento-termo", "consentimento-termo-marcado", "consentimento-termo-mudou", "consentimento-aviso-evolucao"]) expect(nomes).toContain(n);
+  });
+  it("todo acesso e toda simulação pedidos existem", () => {
+    for (const r of cons) {
+      expect(acessoDaRota(r)).toMatch(/^token-sintetico-/);
+      if (r.simular) expect(SIMULACOES[r.simular]).toBeDefined();
+    }
+    expect(SIMULACOES["termo-definitivo"].termo.alterar({ provisorio: true, texto: "x" })).toEqual({ provisorio: false, texto: "x" });
+  });
+});
+
 describe("validarApiUrl", () => {
   it("aceita API local em outra porta", () => {
     expect(validarApiUrl("http://127.0.0.1:8791")).toBe("http://127.0.0.1:8791");

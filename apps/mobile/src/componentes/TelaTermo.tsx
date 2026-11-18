@@ -123,14 +123,20 @@ export function TelaTermo({ apiUrl, atletaId, professorId, aoVoltar, aoConcluir,
                 </View>
               </View>
             )}
-            <Text style={styles.texto}>Você está dando permissão a:</Text>
-            <Text style={styles.nome}>{estado.nome}</Text>
-            <Text testID="texto-termo" style={styles.corpo}>
-              {estado.termo.texto}
-            </Text>
             <Text style={styles.texto}>
-              Você pode retirar quando quiser. O professor deixa de ver seus treinos na hora. O que ele já gravou, como o tipo corrigido de um treino, fica.
+              Você está dando permissão a: <Text style={styles.nome}>{estado.nome}</Text>.
             </Text>
+            {/* O texto vem inteiro da API, sem cortar nem recolher; cada quebra de linha vira um parágrafo. */}
+            <View testID="texto-termo" style={{ gap: espaco[3] }}>
+              {estado.termo.texto
+                .split(/\r?\n+/)
+                .filter((p) => p.trim())
+                .map((p, i) => (
+                  <Text key={i} style={styles.corpo}>
+                    {p}
+                  </Text>
+                ))}
+            </View>
             <Pressable
               testID="li-e-concordo"
               accessibilityRole="checkbox"
