@@ -39,6 +39,15 @@ describe("tela de trocar a senha", () => {
     expect(screen.getByTestId("voltar")).toBeTruthy();
   });
 
+  it("primeiro acesso tem 'Sair' (a pessoa não fica presa); a troca voluntária não", async () => {
+    const aoSair = jest.fn();
+    await render(<TelaTrocarSenha primeiroAcesso aoTrocar={jest.fn()} aoConcluir={jest.fn()} aoSair={aoSair} />);
+    await fireEvent.press(screen.getByTestId("sair"));
+    expect(aoSair).toHaveBeenCalledTimes(1);
+    await render(<TelaTrocarSenha aoTrocar={jest.fn()} aoConcluir={jest.fn()} aoVoltar={jest.fn()} aoSair={aoSair} />);
+    expect(screen.queryByTestId("sair")).toBeNull();
+  });
+
   it("as duas senhas novas diferentes são barradas no app, sem chamar a API", async () => {
     const aoTrocar = jest.fn();
     await render(<TelaTrocarSenha aoTrocar={aoTrocar} aoConcluir={jest.fn()} />);

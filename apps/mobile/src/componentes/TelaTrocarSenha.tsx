@@ -17,6 +17,8 @@ type Props = {
   /** Depois de "Continuar" (início do papel no primeiro acesso, ou volta). */
   aoConcluir: () => void;
   aoVoltar?: () => void;
+  /** Primeiro acesso: quem recebeu a senha provisória e desiste não fica preso; sai do app. */
+  aoSair?: () => void;
 };
 
 export const TEXTO_ATUAL_ERRADA = "A senha de agora não confere.";
@@ -32,7 +34,7 @@ function erroDe(f: Falha): Erro {
   return "servidor";
 }
 
-export function TelaTrocarSenha({ primeiroAcesso = false, aoTrocar, aoConcluir, aoVoltar }: Props) {
+export function TelaTrocarSenha({ primeiroAcesso = false, aoTrocar, aoConcluir, aoVoltar, aoSair }: Props) {
   const tema = useTema();
   const margem = useMargemTela();
   const larga = useWindowDimensions().width >= larguraMargemGrande;
@@ -127,6 +129,11 @@ export function TelaTrocarSenha({ primeiroAcesso = false, aoTrocar, aoConcluir, 
             >
               <Text style={[styles.botaoTexto, !podeSalvar && styles.botaoTextoDesligado]}>{salvando ? "Salvando..." : "Salvar a senha nova"}</Text>
             </Pressable>
+            {primeiroAcesso && aoSair && (
+              <Pressable testID="sair" accessibilityRole="button" onPress={aoSair} style={comFoco([styles.botao, styles.secundario], styles.foco)}>
+                <Text style={styles.secundarioTexto}>Sair</Text>
+              </Pressable>
+            )}
           </>
         )}
       </View>
@@ -151,6 +158,8 @@ function criarEstilos({ cor }: Tema, margem: number, larga: boolean) {
     sucesso: { flexDirection: "row", alignItems: "center", gap: espaco[2], padding: espaco[3], borderRadius: raio.medio, backgroundColor: cor["sucesso-suave"], borderWidth: borda.fina, borderColor: cor.sucesso },
     sucessoTexto: { ...fonte["corpo-forte"], color: cor.sucesso },
     botao: { minHeight: tamanho.botaoAltura, alignItems: "center", justifyContent: "center", borderRadius: raio.medio, backgroundColor: cor.destaque, paddingHorizontal: espaco[4] },
+    secundario: { backgroundColor: cor.superficie, borderWidth: borda.fina, borderColor: cor["borda-forte"] },
+    secundarioTexto: { ...fonte.botao, color: cor.texto },
     botaoDesligado: { backgroundColor: cor["superficie-2"] },
     botaoTexto: { ...fonte.botao, color: cor["sobre-destaque"] },
     botaoTextoDesligado: { color: cor["texto-desligado"] },

@@ -1,7 +1,7 @@
 // Tela "Entrar" (#502, spec docs/design/telas/entrar.md). E-mail e senha; sem cadastro, sem "lembrar de mim". Palavras simples:
 // nada de "autenticação", "sessão" ou "token". A faixa de 401 é a mesma para e-mail que não existe, senha errada e conta desativada.
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { Pressable, ScrollView, StyleSheet, Text, useWindowDimensions, View } from "react-native";
+import { AccessibilityInfo, Pressable, ScrollView, StyleSheet, Text, useWindowDimensions, View } from "react-native";
 
 import type { Entrou, Falha, ResultadoSessao } from "../sessao/api";
 import { comFoco } from "../tema/foco";
@@ -12,6 +12,8 @@ import { borda, espaco, fonte, larguraMargemGrande, raio, tamanho, useMargemTela
 type Props = {
   /** Veio de outra tela porque o acesso deixou de valer: faixa neutra no alto. */
   expirou?: boolean;
+  /** Saiu de propósito: a tela abre limpa e anuncia "Você saiu." (leitor de tela). */
+  saiu?: boolean;
   aoEntrar: (email: string, senha: string) => Promise<ResultadoSessao<Entrou>>;
   /** Chamada depois de entrar com sucesso. A rota decide para onde ir: quando a sessão muda, a própria rota segue. */
   aoConcluir?: (entrou: Entrou) => void;
@@ -35,7 +37,7 @@ type Aviso = { tipo: "credenciais" } | { tipo: "rede" } | { tipo: "servidor" } |
 
 const ESPERA_PADRAO_S = 60;
 
-export function TelaEntrar({ expirou = false, aoEntrar, aoConcluir, agora = Date.now }: Props) {
+export function TelaEntrar({ expirou = false, saiu = false, aoEntrar, aoConcluir, agora = Date.now }: Props) {
   const tema = useTema();
   const margem = useMargemTela();
   const larga = useWindowDimensions().width >= larguraMargemGrande;
@@ -54,6 +56,10 @@ export function TelaEntrar({ expirou = false, aoEntrar, aoConcluir, agora = Date
       montada.current = false;
     };
   }, []);
+
+  useEffect(() => {
+    if (saiu) AccessibilityInfo.announceForAccessibility?.("Você saiu.");
+  }, [saiu]);
 
   // Contagem da espera do 429: o botão volta quando o tempo que a API mandou passa.
   const espera = aviso?.tipo === "espere" ? aviso : null;

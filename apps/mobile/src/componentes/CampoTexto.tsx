@@ -54,7 +54,7 @@ export function CampoTexto({ rotulo, valor, aoMudar, secreto = false, desligado 
           <Pressable
             testID={`${testID}-ver`}
             accessibilityRole="button"
-            accessibilityLabel={visivel ? "Esconder a senha" : "Mostrar a senha"}
+            accessibilityLabel={visivel ? "Esconder a senha" : "Ver a senha"}
             accessibilityState={{ selected: visivel, disabled: desligado }}
             disabled={desligado}
             onPress={() => setVisivel((v) => !v)}
