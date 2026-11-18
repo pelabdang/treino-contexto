@@ -151,11 +151,11 @@ Sem painel e sem rota de administração. Quem cuida do piloto (o Angelo e o tim
 5. **5 falhas em 15 minutos para o `429`.** Padrão nosso, sem fonte além das recomendações do NIST e do OWASP (a senha de 10 caracteres já está decidida).
 6. ~~Token da web~~ **Decidido: `sessionStorage` na web, cofre no celular, cabeçalho, sem cookie.** Cookie `HttpOnly` fica para depois, se o piloto crescer.
 7. **Limite de tentativas por e-mail, sem IP.** **Sim.** Alternativa: por IP, que exige confiar no cabeçalho do proxy.
-8. **`pg_dump` cifrado além do backup do provedor.** **Decidir na #505**, porque destruir o cluster destrói os backups gerenciados e o piloto tem pouco dado; o custo é guardar o dump em outro lugar sob o mesmo cuidado.
+8. **`pg_dump` cifrado além do backup do provedor.** **Decidido (Theo, 18/11): sim, cifrado com `age`**; no servidor fica só a **chave pública**, e a **chave privada fica com o Angelo**, fora do repositório e fora do servidor (sem ela não há restauração: guardar com cuidado). Scripts em `infra/backup/` (#505); onde o job roda e onde moram os backups fica para a #504. Guia: [[produto/meta-13-backup-e-restauracao]].
 9. **Professor lê o treino do aluno só pela caixa.** **Sim**, no piloto. A tela de treino do aluno para o professor vira outra meta, com a spec da Lia.
 10. **Semana-padrão: só o atleta dono grava** nesta meta. Hoje o `definido_por` admite o professor; passar isso para uma rota `/professores/{id}/...` fica para quando houver a tela.
 11. **Titular da conta do provedor** (decisão 6 do Angelo, em aberto): o código e esta ADR não dependem da resposta.
-12. **Trilha de consentimento na exclusão** (revisão do Caio, T7). **Apagar junto** com o resto, mais simples. Alternativa: manter um evento anonimizado (sem `atleta_id`) como prova de que houve consentimento. Perguntar na consulta de LGPD.
+12. **Trilha de consentimento na exclusão** (revisão do Caio, T7). **Apagar junto** com o resto, mais simples. Alternativa: manter um evento anonimizado (sem `atleta_id`) como prova de que houve consentimento. Perguntar na consulta de LGPD. **Decisão do Theo (18/11): o padrão (apagar a trilha junto) fica até a consulta de LGPD**; é o que o `excluir-conta` faz hoje.
 13. **Feedback no servidor.** **Desligado** até um "sim" explícito do Angelo (item 9). Pergunta ao Angelo: ligar o `gerar_feedback` no servidor, com o texto real no banco do servidor e o pacote saindo para o provedor de LLM?
 14. **Termo definitivo.** A revisão jurídica cobre o envio ao provedor de IA, o reaceite com histórico todo e o que o professor mantém depois da revogação.
 
