@@ -7,6 +7,8 @@ links: [[design/guia-visual]], [[design/tokens]], [[design/telas/consentimento]]
 ---
 # Telas: entrar, sair, acesso expirado e trocar a senha
 
+> **Desde a #532 (abas do app):** o menu "Conta" do cabeçalho, citado abaixo, virou a **aba "Conta"** ("Trocar senha" e "Sair" estão nela; "Sair" continua pedindo confirmação). O resto da spec vale. Ver [[modulos/mobile]].
+
 Spec da issue #498 (Meta 13), antes das telas (P6 da Meta 13, do Rafa) e junto da ADR 0016 (#497, da Duda), que ainda não foi
 aceita: a lista de campos no fim ajusta ao texto final da ADR. Decisões do Angelo de 17/11 ([[produto/roadmap]], "Meta 13"):
 **e-mail e senha na própria API**, **sem e-mail transacional** (a senha esquecida é refeita por quem opera o piloto) e **sem login a
