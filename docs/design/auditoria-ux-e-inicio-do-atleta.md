@@ -22,8 +22,8 @@ O app foi construído **por métrica** (uma tela para cada cálculo que a ciênc
 hierarquia entre as telas nem uma identidade.
 
 ### Achados que valem para o app todo
-1. **A entrada é uma métrica de uma modalidade.** A tela inicial é "Evolução dos tiros de 1 km". O Angelo é multiesporte (corrida,
-   natação, ciclismo): quem treinou natação ontem abre o app e vê tiros de corrida. A entrada deveria ser "meu último treino",
+1. **A entrada é uma métrica de uma modalidade.** A tela inicial é "Evolução dos tiros de 1 km". O app atende atleta multiesporte
+   (corrida, natação, ciclismo): quem treinou natação ontem abre o app e vê tiros de corrida. A entrada deveria ser "meu último treino",
    qualquer que seja.
 2. **Navegação é uma pilha de links de texto.** "Semana-padrão", "Check-ins pendentes", "Enviar arquivo FIT" e o menu "Conta" têm o mesmo
    peso visual, em lista, no alto de uma tela de gráfico. Não há barra de navegação nem lugar fixo para nada. O atleta não sabe o que
