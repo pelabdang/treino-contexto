@@ -2,7 +2,7 @@
 tipo: design
 status: rascunho
 dono: lia
-atualizado: 2026-11-17
+atualizado: 2026-11-18
 links: [[design/guia-visual]], [[design/tokens]], [[design/telas/entrar]], [[design/telas/caixa-do-dia]], [[design/telas/checkin]], [[decisoes/0015-caixa-do-dia-do-professor]], [[decisoes/0012-check-in-pos-treino]], [[produto/roadmap]], [[modulos/mobile]]
 ---
 # Tela: consentimento do atleta para o professor
@@ -27,7 +27,8 @@ Se houver **pedido aguardando resposta**, a evolução mostra uma linha de aviso
 
 ## O que a tela mostra
 Uma lista de **professores com vínculo** com o atleta (o vínculo é criado por quem opera o piloto; a tela não cria vínculo). Cada
-professor está em um de dois estados: **aguardando** o consentimento ou **consentido**.
+professor está em um de dois estados: **aguardando** o consentimento ou **consentido**. A tela **não mostra o nome da assessoria**:
+a API não manda esse campo e o nome do professor basta para o atleta reconhecer quem pede.
 
 ```
 ┌──────────────────────────────────┐
@@ -36,19 +37,20 @@ professor está em um de dois estados: **aguardando** o consentimento ou **conse
 │ Quem pode ver os seus treinos.   │  fonte.corpo, cor.texto-2
 │ ┌──────────────────────────────┐ │  cartão por professor
 │ │ Carlos Exemplo               │ │  fonte.titulo-secao
-│ │ Assessoria Modelo            │ │  fonte.corpo, cor.texto-2
 │ │ (hourglass) Aguardando você  │ │  estado: ícone + palavra
 │ │ [  Ler e dar consentimento ] │ │  primário, 48
 │ └──────────────────────────────┘ │
 │ ┌──────────────────────────────┐ │
 │ │ Marina Exemplo               │ │
-│ │ Assessoria Modelo            │ │
 │ │ (check) Consentido em        │ │
 │ │ 10/11/26                     │ │
 │ │ [  Retirar consentimento  ]  │ │  secundário, 48, texto cor.texto
 │ └──────────────────────────────┘ │
 └──────────────────────────────────┘
 ```
+- **"Aguardando você" cobre três casos**, todos sem o professor ver nada: nunca consentiu, **retirou** (`consentimento_revogado_em`) ou
+  **aceitou um termo antigo** (`termo_desatualizado`). No terceiro, a linha de apoio diz "O termo mudou. Leia e dê o consentimento de
+  novo." (`info-outline`), porque o professor deixou de ver até o novo aceite. Os dois botões são os mesmos.
 - **Estado em palavra e ícone**, nunca só cor: "Aguardando você" (`hourglass-empty`) e "Consentido em dd/mm/aa"
   (`check-circle-outline`). "Consentido" não é verde de sucesso: `cor.texto-2` com o ícone, para não parecer pressão a aceitar.
 - Ordem: **aguardando primeiro**, depois consentidos, cada grupo por nome.
@@ -66,36 +68,26 @@ Tocar em "Ler e dar consentimento" abre a tela do termo (uma tela, não um diál
 │ │ só para o piloto.                ││
 │ └──────────────────────────────────┘│
 │ Você está dando permissão a:     │  fonte.corpo
-│ Carlos Exemplo, da Assessoria    │  fonte.corpo-forte
-│ Modelo.                          │
-│ O professor vai ver:             │  fonte.titulo-secao
-│  - os seus treinos e a análise   │
-│  - o que você responde no        │
-│    check-in: esforço, sensação,  │
-│    dor e a observação que você   │
-│    escrever                      │
-│  - o feedback de cada treino     │
-│ O professor não vê:              │
-│  - a sua senha                   │
-│  - treinos de outros atletas     │
-│ Você pode retirar quando quiser. │
-│ O professor deixa de ver seus    │
-│ treinos na hora. O que ele já    │
-│ gravou, como o tipo corrigido de │
-│ um treino, fica.                 │
+│ Carlos Exemplo.                  │  fonte.corpo-forte
+│                                  │
+│ (o texto do termo, como a API    │  fonte.corpo, parágrafos como vêm
+│  entrega, sem cortar nem         │
+│  resumir)                        │
 │ [ ] Li e concordo                │  caixa de seleção, alvo 48, rótulo clicável
 │ [   Dar consentimento   ]        │  primário, 48, desligado até marcar
 └──────────────────────────────────┘
 ```
 - **Faixa "Texto provisório"** acima de tudo, `warning-amber` e a palavra "provisório", fixa no texto do termo (e repetida numa linha
-  curta no cartão da lista, "Termo provisório"). Redação: "Este texto é provisório. Ainda não foi revisto por quem entende de lei e
+  curta no cartão da lista, "Termo provisório"). Redação da faixa (fica **no app**, não vem da API): "Este texto é provisório. Ainda não foi revisto por quem entende de lei e
   vale só para o piloto." O texto real do termo **substitui** o provisório quando vier da consulta de LGPD; a faixa **some sozinha**
   quando a API disser que o termo não é mais provisório (campo `provisorio`).
 - **O texto do termo vem da API** (versão e texto), não fica fixo no app: trocar o termo não exige novo aplicativo, e o app **registra
   qual versão** o atleta leu ([[decisoes/0015-caixa-do-dia-do-professor]]: "o texto do termo fica para a consulta jurídica").
-- O corpo do termo acima é a **proposta de redação da Lia** para o texto provisório, em palavras simples, para a Duda e o Angelo
-  ajustarem. A lista "o professor vai ver" **tem de bater com o que a API entrega ao professor** (ADR 0015, item 7: tipo, PSE, sensação,
-  atalhos, feedback e **observação livre**). Se a API mudar o que o professor vê, o termo muda junto.
+- **O texto do termo é o da API, uma string única**, mostrada inteira em `fonte.corpo`; a tela **não** monta listas nem blocos, e **não
+  reescreve nem resume**. Quebras de linha na string (`\n`) viram parágrafos. O texto da API já diz o que o professor vê e não vê e
+  cita o envio de um resumo do treino a um serviço de inteligência artificial de terceiros fora do Brasil: **é parte do que o
+  atleta precisa ler antes de aceitar**, então fica sempre visível (sem recolher). A proposta de redação anterior da Lia sai desta nota.
+- Antes do termo o app só acrescenta a linha "Você está dando permissão a: <nome>." (o nome vem da lista).
 - **"Li e concordo"** liga o botão. Não vem marcado. O botão diz "Dar consentimento" (a ação), não "Aceitar".
 - Sem "aceitar tudo", sem nada pré-marcado, sem botão de cor chamativa: a decisão é do atleta.
 - "Voltar" sem consentir não muda nada e **não** pergunta nada.
@@ -156,15 +148,17 @@ avisar ou não.
 - Texto do termo em `fonte.corpo` (16), nunca abaixo de 14; rolagem simples, sem expandir/recolher.
 
 ## Lista de campos que a tela precisa da API (entrada da ADR 0016, #497, e da issue do consentimento, P5)
-Nomes são proposta; a ADR 0016 decide.
+Os nomes são os da API já no main (#516) e da ADR 0016.
 
 | tela | rota | pede | recebe |
 |---|---|---|---|
-| Lista | `GET /eu/professores` | acesso (papel atleta) | `professores[]`: `professor_id`, `nome`, `assessoria_nome`, `estado` (`aguardando` ou `consentido`), `consentimento_em` (data, só se consentido), `termo_versao` (a versão que o atleta aceitou, só se consentido) |
-| Aviso na evolução | a mesma rota | | `total_aguardando` (inteiro) para a linha de aviso, ou o app conta `estado = aguardando` na lista |
-| Termo | `GET /termo` | acesso | `versao`, `texto` (blocos de texto pronto, em português), `provisorio` (booleano), `aviso_provisorio` (a frase da faixa, para ficar na mão de quem muda o termo) |
-| Dar consentimento | `PUT /eu/professores/{professor_id}/consentimento` | `termo_versao` | `200` com o item da lista; `409` `termo_mudou` se a versão enviada não é a atual; `404` se o vínculo não existe; `401` |
-| Retirar | `DELETE /eu/professores/{professor_id}/consentimento` | | `200` com o item da lista (volta a `aguardando`) ou `204`; `404` |
+| Lista | `GET /atletas/{atleta_id}/professores` | acesso (papel atleta); `atleta_id` vem da sessão | `atleta_id`, `termo_vigente`, `professores[]`: `professor_id`, `nome`, `consentimento` (booleano: vale agora), `termo_versao`, `consentimento_em`, `consentimento_revogado_em`, `termo_desatualizado` |
+| Aviso na evolução | a mesma rota | | o app conta os itens com `consentimento = false` |
+| Termo | `GET /termo-de-consentimento` | acesso | `versao`, `provisorio` (booleano), `texto` (string única) |
+| Dar consentimento | `PUT /atletas/{atleta_id}/professores/{professor_id}/consentimento` | `termo_versao` | `200` com o item da lista; `409` se a versão não é a vigente; `404` se não há vínculo |
+| Retirar | `DELETE /atletas/{atleta_id}/professores/{professor_id}/consentimento` | | `204` sem corpo (o app atualiza o cartão para "Aguardando você" e relê a lista); `404` |
+Estado do cartão: `consentimento = true` é "Consentido em" `consentimento_em`; `false` é "Aguardando você" (com a linha extra se
+`termo_desatualizado`). O estado **vem da API**: o app não compara datas nem versões.
 Regras que a tela **espera** da API (o app não decide nada disto):
 - o atleta só consente **para ele mesmo**: `atleta_id` vem do acesso, nunca do corpo;
 - o `consentimento_em` é gravado pela API com a hora dela, não pelo app;
