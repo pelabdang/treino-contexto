@@ -13,7 +13,7 @@ def criar_app(cors_origens: str | None = None) -> FastAPI:
         CORSMiddleware,
         allow_origins=lista_origens(settings.cors_origens if cors_origens is None else cors_origens),
         allow_methods=["GET", "POST", "PUT", "DELETE"],
-        allow_headers=[],
+        allow_headers=["Authorization", "Content-Type"],  # o Bearer e o JSON; nada mais (#527). Sem credentials e sem "*"
         allow_credentials=False,
     )
     app.include_router(evolucao.router, dependencies=[Depends(atleta_da_sessao)])
