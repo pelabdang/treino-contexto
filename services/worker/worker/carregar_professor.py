@@ -21,6 +21,7 @@ from datetime import datetime
 from pathlib import Path
 
 from app.db.models import Assessoria, Atleta, Professor, VinculoProfessorAtleta
+from app.servicos.consentimento import TERMO_VIGENTE
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
@@ -83,9 +84,11 @@ def carregar(session: Session, dados: dict) -> tuple[int, int, int, int]:
             vinculo = session.get(VinculoProfessorAtleta, (professores[v["professor"]].id, atleta.id))
             if vinculo is None:
                 session.add(VinculoProfessorAtleta(professor_id=professores[v["professor"]].id, atleta_id=atleta.id,
-                                                   consentimento_em=quando))
+                                                   consentimento_em=quando, termo_versao=TERMO_VIGENTE if quando else None))
             else:
                 vinculo.consentimento_em = quando
+                vinculo.termo_versao = TERMO_VIGENTE if quando else None
+                vinculo.consentimento_revogado_em = None
             n_vinculos += 1
     session.flush()
     return professores[dados["professor_do_piloto"]].id, len(professores), n_atletas, n_vinculos

@@ -1,6 +1,21 @@
 {
   "components": {
     "schemas": {
+      "AceiteIn": {
+        "properties": {
+          "termo_versao": {
+            "maxLength": 40,
+            "minLength": 1,
+            "title": "Termo Versao",
+            "type": "string"
+          }
+        },
+        "required": [
+          "termo_versao"
+        ],
+        "title": "AceiteIn",
+        "type": "object"
+      },
       "AcessoOut": {
         "properties": {
           "expira_em": {
@@ -2673,6 +2688,32 @@
         "title": "Periodo",
         "type": "object"
       },
+      "ProfessoresOut": {
+        "properties": {
+          "atleta_id": {
+            "title": "Atleta Id",
+            "type": "integer"
+          },
+          "professores": {
+            "items": {
+              "$ref": "#/components/schemas/VinculoOut"
+            },
+            "title": "Professores",
+            "type": "array"
+          },
+          "termo_vigente": {
+            "title": "Termo Vigente",
+            "type": "string"
+          }
+        },
+        "required": [
+          "atleta_id",
+          "termo_vigente",
+          "professores"
+        ],
+        "title": "ProfessoresOut",
+        "type": "object"
+      },
       "QuemSouOut": {
         "description": "Quem esta logado. Um dos dois ids e `null` (um papel por conta).",
         "properties": {
@@ -2921,6 +2962,29 @@
           "tiros"
         ],
         "title": "SessaoOut",
+        "type": "object"
+      },
+      "TermoOut": {
+        "properties": {
+          "provisorio": {
+            "title": "Provisorio",
+            "type": "boolean"
+          },
+          "texto": {
+            "title": "Texto",
+            "type": "string"
+          },
+          "versao": {
+            "title": "Versao",
+            "type": "string"
+          }
+        },
+        "required": [
+          "versao",
+          "provisorio",
+          "texto"
+        ],
+        "title": "TermoOut",
         "type": "object"
       },
       "TipoItemIn": {
@@ -3384,6 +3448,72 @@
           "itens"
         ],
         "title": "VigenteOut",
+        "type": "object"
+      },
+      "VinculoOut": {
+        "properties": {
+          "consentimento": {
+            "title": "Consentimento",
+            "type": "boolean"
+          },
+          "consentimento_em": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Consentimento Em"
+          },
+          "consentimento_revogado_em": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Consentimento Revogado Em"
+          },
+          "nome": {
+            "title": "Nome",
+            "type": "string"
+          },
+          "professor_id": {
+            "title": "Professor Id",
+            "type": "integer"
+          },
+          "termo_desatualizado": {
+            "title": "Termo Desatualizado",
+            "type": "boolean"
+          },
+          "termo_versao": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Termo Versao"
+          }
+        },
+        "required": [
+          "professor_id",
+          "nome",
+          "consentimento",
+          "termo_versao",
+          "consentimento_em",
+          "consentimento_revogado_em",
+          "termo_desatualizado"
+        ],
+        "title": "VinculoOut",
         "type": "object"
       }
     },
@@ -4251,6 +4381,216 @@
         ]
       }
     },
+    "/atletas/{atleta_id}/professores": {
+      "get": {
+        "operationId": "professoresDoAtleta",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "atleta_id",
+            "required": true,
+            "schema": {
+              "title": "Atleta Id",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProfessoresOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Erro"
+                }
+              }
+            },
+            "description": "não autenticado"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Erro"
+                }
+              }
+            },
+            "description": "Sem acesso ou sem vínculo com esse professor (o mesmo 404 de atleta inexistente)"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Professores Do Atleta",
+        "tags": [
+          "consentimento"
+        ]
+      }
+    },
+    "/atletas/{atleta_id}/professores/{professor_id}/consentimento": {
+      "delete": {
+        "operationId": "retirarConsentimento",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "atleta_id",
+            "required": true,
+            "schema": {
+              "title": "Atleta Id",
+              "type": "integer"
+            }
+          },
+          {
+            "in": "path",
+            "name": "professor_id",
+            "required": true,
+            "schema": {
+              "title": "Professor Id",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Erro"
+                }
+              }
+            },
+            "description": "Sem acesso ou sem vínculo com esse professor (o mesmo 404 de atleta inexistente)"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Retirar",
+        "tags": [
+          "consentimento"
+        ]
+      },
+      "put": {
+        "operationId": "aceitarConsentimento",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "atleta_id",
+            "required": true,
+            "schema": {
+              "title": "Atleta Id",
+              "type": "integer"
+            }
+          },
+          {
+            "in": "path",
+            "name": "professor_id",
+            "required": true,
+            "schema": {
+              "title": "Professor Id",
+              "type": "integer"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AceiteIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/VinculoOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Erro"
+                }
+              }
+            },
+            "description": "Sem acesso ou sem vínculo com esse professor (o mesmo 404 de atleta inexistente)"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Erro"
+                }
+              }
+            },
+            "description": "`termo_versao` diferente da vigente: leia o termo de novo"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Aceitar",
+        "tags": [
+          "consentimento"
+        ]
+      }
+    },
     "/atletas/{atleta_id}/semana-padrao": {
       "get": {
         "description": "A semana vigente em `em` (AAAA-MM-DD; padrão: hoje em America/Sao_Paulo) e o histórico de vigências.",
@@ -4878,6 +5218,42 @@
         "summary": "Entrar",
         "tags": [
           "sessão"
+        ]
+      }
+    },
+    "/termo-de-consentimento": {
+      "get": {
+        "operationId": "termoDeConsentimento",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TermoOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Erro"
+                }
+              }
+            },
+            "description": "não autenticado"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Termo",
+        "tags": [
+          "consentimento"
         ]
       }
     }
