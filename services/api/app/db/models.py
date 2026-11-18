@@ -307,7 +307,7 @@ class ClimaAtividade(Base):
     vento_kmh: Mapped[float | None] = mapped_column(Float)
     fonte: Mapped[str | None] = mapped_column(String(40))
     entrada: Mapped[str] = mapped_column(String(64))  # SHA-256 de inicio, duracao_s e posicao
-    tentativas: Mapped[int] = mapped_column(Integer, default=0, server_default=false())
+    tentativas: Mapped[int] = mapped_column(Integer, default=0, server_default="0")
     erro: Mapped[str | None] = mapped_column(String(200))
     consultado_em: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
 
@@ -615,7 +615,7 @@ class FeedbackTreino(Base):
     versao_checagens: Mapped[str] = mapped_column(String(40))
     provedor: Mapped[str | None] = mapped_column(String(40))
     modelo: Mapped[str | None] = mapped_column(String(80))
-    tentativas: Mapped[int] = mapped_column(Integer, default=1, server_default=true())
+    tentativas: Mapped[int] = mapped_column(Integer, default=1, server_default="1")
     checkin_atualizado_em: Mapped[datetime] = mapped_column(DateTime(timezone=True))
     # ADR 0014, item 1: copia do `importado_em` da noite usada no pacote; NULL = o pacote saiu sem noite
     recuperacao_importada_em: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
