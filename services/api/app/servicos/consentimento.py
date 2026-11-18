@@ -6,7 +6,7 @@
 - Aceitar grava `consentimento_em` e `termo_versao` JUNTOS, limpa `consentimento_revogado_em` e acrescenta um `consentimento_evento`.
   Revogar grava `consentimento_revogado_em` e acrescenta o evento; o vinculo e os dados do atleta ficam. Repetir o mesmo pedido nao
   grava nada de novo (nem evento).
-- O termo e PROVISORIO e marcado (decisao 5 do Angelo): o texto definitivo vem da consulta de LGPD, antes do primeiro aluno real.
+- O termo e PROVISORIO e marcado (decisao 4 do Angelo, ADR 0016): o texto definitivo vem da consulta de LGPD, antes do primeiro aluno real.
 Nada aqui escreve nome, treino ou texto de atleta em log.
 """
 
