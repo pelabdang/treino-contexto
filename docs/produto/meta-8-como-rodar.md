@@ -7,6 +7,9 @@ links: [[produto/meta-7-como-rodar]], [[produto/meta-6-como-rodar]], [[produto/r
 ---
 # Meta 8: como rodar o check-in pós-treino e a carga pela PSE
 
+> **Desde a #502 (Meta 13):** o app não lê mais `EXPO_PUBLIC_ATLETA_ID` nem `EXPO_PUBLIC_PROFESSOR_ID`; o atleta ou o professor é o da conta que entrou em `/entrar`. Para forçar um estado, entre com `atleta<N>@exemplo.com` ou `professor<N>@exemplo.com` (senha sintética, ver `apps/mobile/scripts/api-falsa.mjs`), onde `<N>` faz o papel do antigo id. Onde o texto abaixo manda pôr a variável, leia "entre com a conta de mesmo número". Detalhes em [[modulos/mobile]].
+
+
 Passo a passo da Meta 8 com as fixtures: Postgres próprio, migrações até a 0012, 18 atividades sintéticas, o check-in (`PUT`, `GET`,
 `DELETE`) pela API, a carga pela PSE (`carga_pse@1`), a lista de pendentes, o `GET` da atividade com `checkin`, `checkin_aberto` e
 `pse_sugerida`, a tela no app web e o `worker.apagar_checkin`. **Só dado sintético, sem rede.** As regras estão na

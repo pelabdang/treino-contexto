@@ -7,6 +7,9 @@ links: [[produto/meta-8-como-rodar]], [[produto/roadmap]], [[decisoes/0013-feedb
 ---
 # Meta 9: como rodar o feedback automático por treino
 
+> **Desde a #502 (Meta 13):** o app não lê mais `EXPO_PUBLIC_ATLETA_ID` nem `EXPO_PUBLIC_PROFESSOR_ID`; o atleta ou o professor é o da conta que entrou em `/entrar`. Para forçar um estado, entre com `atleta<N>@exemplo.com` ou `professor<N>@exemplo.com` (senha sintética, ver `apps/mobile/scripts/api-falsa.mjs`), onde `<N>` faz o papel do antigo id. Onde o texto abaixo manda pôr a variável, leia "entre com a conta de mesmo número". Detalhes em [[modulos/mobile]].
+
+
 Passo a passo da Meta 9 com as fixtures: Postgres próprio, migrações até a 0013, as 18 atividades sintéticas da Meta 8 com
 check-in, o `worker.gerar_feedback` com o **provedor falso**, o campo `feedback` no `GET` da atividade em cada estado e o cartão
 "Feedback" no app. **Só dado sintético, sem rede e sem provedor de verdade.** As regras estão na

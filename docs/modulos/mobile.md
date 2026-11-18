@@ -8,13 +8,13 @@ links: [[design/telas/feedback]], [[decisoes/0013-feedback-automatico]], [[modul
 # Módulo: mobile
 
 ## Para que serve
-App em React Native com Expo (TypeScript, Expo Router) para iOS, Android e web. Hoje tem a tela "Evolução dos tiros de 1 km" ligada à API (botão "Enviar arquivo FIT", gráfico de dois painéis, lista das sessões e rodapé) e a leitura da configuração. Sem login e sem deploy: roda local, na web e no Expo Go.
+App em React Native com Expo (TypeScript, Expo Router) para iOS, Android e web. Hoje tem a tela "Evolução dos tiros de 1 km" ligada à API (botão "Enviar arquivo FIT", gráfico de dois painéis, lista das sessões e rodapé) e a leitura da configuração. Com login por e-mail e senha desde a #502 (ADR 0016) e sem deploy: roda local, na web e no Expo Go.
 
 O app não calcula pace: todo `m:ss` virá da [[modulos/api]].
 
 ## Entradas e saídas
-- **Até a #502 o app ainda não manda sessão** (cabeçalho `Authorization`): contra a API real, as rotas respondem `401` desde a #500; o app só funciona contra a API falsa. As variáveis de id abaixo somem do app real quando entrar o login (ADR 0016, item 8).
-- Entrada: variáveis `EXPO_PUBLIC_API_URL` (padrão `http://localhost:8000`) e `EXPO_PUBLIC_ATLETA_ID` (padrão `1`, o atleta das fixtures) e `EXPO_PUBLIC_PROFESSOR_ID` (professor da caixa do dia, #426; **sem padrão**: vazio ou inválido vira `null` e a tela mostra "Caixa do dia não encontrada" sem chamar a API), lidas só em `src/config.ts`. Modelo em `apps/mobile/.env.example`; copie para `.env.local` (ignorado pelo git).
+- **Sessão (#502, [[decisoes/0016-login-e-deploy-do-piloto]], spec [[design/telas/entrar]]):** o app pergunta quem é a pessoa (`GET /sessao`), guarda o token no cofre do aparelho (`expo-secure-store`) ou em `sessionStorage` na web, e manda `Authorization: Bearer` em toda chamada pelo `fetch` do `SessaoProvider` (`src/sessao/`). Um `401` limpa o acesso e leva a "Seu acesso expirou"; `403 troca_de_senha_obrigatoria` leva a `/trocar-senha`.
+- Entrada: só a variável `EXPO_PUBLIC_API_URL` (padrão `http://localhost:8000`), lida em `src/config.ts`. **`EXPO_PUBLIC_ATLETA_ID` e `EXPO_PUBLIC_PROFESSOR_ID` foram removidos na #502**: o atleta e o professor vêm da conta que entrou. Modelo em `apps/mobile/.env.example`; copie para `.env.local` (ignorado pelo git).
 - Consome a [[modulos/api]] pelo pacote `@treino/api-client` (`packages/api-client/`, tipos gerados do OpenAPI; ver [[modulos/api-client]]), dependência local `"@treino/api-client": "file:../../packages/api-client"`. Uso: `buscarEvolucaoTiros1km(config.atletaId, {inicio, fim}, {baseUrl: config.apiUrl})`. A tela inicial chama pelo componente `TelaEvolucao`.
 - Jest: `package.json` tem `moduleDirectories` com `<rootDir>/node_modules`, para o pacote (fora de `apps/mobile`) achar os helpers do Babel.
 
