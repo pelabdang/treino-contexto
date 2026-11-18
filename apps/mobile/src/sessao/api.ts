@@ -46,7 +46,12 @@ async function chamar<T>(metodo: string, caminho: string, corpo: unknown, opcoes
       const n = Number(((await r.json()) as { espere_s?: unknown }).espere_s);
       if (Number.isFinite(n) && n > 0) espereS = Math.ceil(n);
     } catch {
-      // sem corpo: o texto cai no "tente de novo mais tarde"
+      // sem corpo: tenta o cabeçalho
+    }
+    if (espereS === 0) {
+      // `Retry-After` repete o valor (ADR 0016): lido antes de a tela assumir um tempo próprio.
+      const n = Number(r.headers?.get?.("retry-after"));
+      if (Number.isFinite(n) && n > 0) espereS = Math.ceil(n);
     }
     return { ok: false, falha: { motivo: "espere", espereS } };
   }

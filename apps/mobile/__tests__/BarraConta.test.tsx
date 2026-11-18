@@ -19,6 +19,18 @@ describe("menu Conta e diálogo de sair", () => {
     expect(screen.queryByTestId("menu-conta")).toBeNull();
   });
 
+  it("o menu fecha ao tocar fora e com Esc", async () => {
+    await render(<BarraConta aoTrocarSenha={jest.fn()} aoSair={jest.fn()} />);
+    await fireEvent.press(screen.getByTestId("abrir-conta"));
+    await fireEvent.press(screen.getByTestId("fundo-menu-conta", { includeHiddenElements: true }));
+    expect(screen.queryByTestId("menu-conta")).toBeNull();
+    await fireEvent.press(screen.getByTestId("abrir-conta"));
+    expect(screen.getByTestId("menu-conta")).toBeTruthy();
+    // Esc na web e o botão voltar no Android chamam `onRequestClose` do Modal.
+    await fireEvent(screen.getByTestId("menu-conta"), "requestClose");
+    expect(screen.queryByTestId("menu-conta")).toBeNull();
+  });
+
   it("Sair pergunta antes; 'Cancelar' não sai", async () => {
     const aoSair = jest.fn();
     await render(<BarraConta aoTrocarSenha={jest.fn()} aoSair={aoSair} />);

@@ -43,6 +43,9 @@ describe("tela de trocar a senha", () => {
     const aoSair = jest.fn();
     await render(<TelaTrocarSenha primeiroAcesso aoTrocar={jest.fn()} aoConcluir={jest.fn()} aoSair={aoSair} />);
     await fireEvent.press(screen.getByTestId("sair"));
+    expect(aoSair).not.toHaveBeenCalled(); // o mesmo diálogo do menu Conta: pergunta antes
+    expect(screen.getByText("Sair do app?")).toBeTruthy();
+    await fireEvent.press(screen.getByTestId("confirmar-sair"));
     expect(aoSair).toHaveBeenCalledTimes(1);
     await render(<TelaTrocarSenha aoTrocar={jest.fn()} aoConcluir={jest.fn()} aoVoltar={jest.fn()} aoSair={aoSair} />);
     expect(screen.queryByTestId("sair")).toBeNull();
@@ -98,6 +101,8 @@ describe("tela de trocar a senha", () => {
     await salvar();
     expect(aoTrocar).toHaveBeenCalledWith("atual-sintetica", "senha-nova-longa");
     expect(screen.getByText("Senha trocada.")).toBeTruthy();
+    expect(screen.getByText("[check-circle-outline]", { includeHiddenElements: true })).toBeTruthy(); // ícone do guia
+    expect(screen.getByTestId("senha-trocada").props.accessibilityLiveRegion).toBe("polite");
     expect(screen.queryByTestId("campo-senha-nova")).toBeNull();
     await fireEvent.press(screen.getByTestId("continuar"));
     expect(aoConcluir).toHaveBeenCalled();
