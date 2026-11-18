@@ -9,7 +9,7 @@ recriada e nao ganha senha nova (para isso, `worker.conta redefinir-senha`). `--
 deixa todos os vinculos "aguardando o atleta" (o consentimento e ato do atleta, ADR 0016, item 7).
 
 O que este comando NAO faz: carregar historico real. O historico do Angelo so entra no servidor depois da restauracao testada (#505), e
-e carregado por ele ou pelo Theo com os importadores de sempre, com nada no repositorio, em issue, PR ou log (decisao 7). Por seguranca,
+e carregado por ele ou pelo Theo com os importadores de sempre, com nada no repositorio, em issue, PR ou log (decisao 5 do Angelo, ADR 0016). Por seguranca,
 a carga recusa um atleta que ja exista com o nome de um da fixture mas nao tenha vindo desta carga.
 
 Codigos de saida: 0 ok; 1 argumento, fixture invalida ou atleta que nao e da fixture.
