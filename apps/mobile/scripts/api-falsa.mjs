@@ -451,6 +451,34 @@ const lerJson = (req) =>
 const emailDaConta = (c) => `${c.papel}${c.id}@exemplo.com`;
 const NAO_AUTENTICADO = { detail: "não autenticado" };
 
+// Consentimento do atleta e termo sintéticos (#503, ADR 0016 item 7): `GET /termo-de-consentimento` e, por atleta, em memória,
+// `GET /atletas/{id}/professores`, `PUT` e `DELETE .../professores/{pid}/consentimento`. Professores fictícios "Exemplo": 11 e 13 aguardando
+// (o 13 aceitou um termo antigo), 12 consentido. Atleta de teste (entre com atleta<id>@exemplo.com): 2 = sem vínculos; 23 = GET derruba a
+// conexão; 24 = PUT responde 409 (termo mudou); 25 = PUT derruba a conexão; 26 = DELETE derruba a conexão; 27 = GET responde 500.
+const TERMO_VERSAO = "termo@0-provisorio";
+const TERMO = {
+  versao: TERMO_VERSAO,
+  provisorio: true,
+  texto:
+    "Termo de consentimento (provisório). Ao aceitar, você autoriza o professor indicado a ver, no aplicativo, os seus treinos, o seu check-in (esforço percebido, sensação, atalhos e a observação que você escrever) e o feedback do treino.\nO professor não vê a sua carga de treino em números, a recuperação, o clima nem a sua semana-padrão, e não vê os dados de outros atletas. Você pode revogar quando quiser: a partir daí o professor deixa de ver os seus dados, mas o que ele já confirmou no seu treino (como o tipo) continua.\nEstes são dados pessoais de saúde. Texto sintético de exemplo.",
+};
+const vinculosPorAtleta = new Map();
+const vinculosDe = (atleta) => {
+  if (!vinculosPorAtleta.has(atleta)) {
+    vinculosPorAtleta.set(
+      atleta,
+      atleta === 2
+        ? []
+        : [
+            { professor_id: 11, nome: "Carlos Exemplo", consentimento: false, termo_versao: null, consentimento_em: null, consentimento_revogado_em: null, termo_desatualizado: false },
+            { professor_id: 12, nome: "Marina Exemplo", consentimento: true, termo_versao: TERMO_VERSAO, consentimento_em: "2026-11-10T12:00:00Z", consentimento_revogado_em: null, termo_desatualizado: false },
+            { professor_id: 13, nome: "Paulo Exemplo", consentimento: false, termo_versao: "termo@antigo", consentimento_em: "2026-10-01T12:00:00Z", consentimento_revogado_em: null, termo_desatualizado: true },
+          ],
+    );
+  }
+  return vinculosPorAtleta.get(atleta);
+};
+
 createServer((req, res) => {
   const cabecalhos = {
     "content-type": "application/json",
@@ -509,6 +537,34 @@ createServer((req, res) => {
   const dono = pathname.match(/^\/(atletas|professores)\/(\d+)(?:\/|$)/);
   if (dono && ((dono[1] === "atletas") !== (sessaoDe.papel === "atleta") || Number(dono[2]) !== sessaoDe.id)) {
     return falar(404, dono[1] === "professores" ? professorInexistente : { detail: "não encontrado" });
+  }
+  if (pathname === "/termo-de-consentimento" && req.method === "GET") return falar(200, TERMO);
+  const co = pathname.match(/^\/atletas\/(\d+)\/professores(?:\/(\d+)\/consentimento)?$/);
+  if (co) {
+    const atleta = Number(co[1]);
+    const lista = vinculosDe(atleta);
+    if (!co[2] && req.method === "GET") {
+      if (atleta === 23) return req.destroy();
+      if (atleta === 27) return falar(500, { detail: "erro sintético" });
+      return falar(200, { atleta_id: atleta, termo_vigente: TERMO_VERSAO, professores: lista });
+    }
+    const v = lista.find((x) => x.professor_id === Number(co[2]));
+    if (co[2] && req.method === "PUT") {
+      if (atleta === 25) return req.destroy();
+      lerJson(req).then((c) => {
+        if (!v) return falar(404, { detail: "vínculo não encontrado" });
+        if (atleta === 24 || c?.termo_versao !== TERMO_VERSAO) return falar(409, { detail: "o termo mudou: leia a versão atual" });
+        Object.assign(v, { consentimento: true, termo_versao: TERMO_VERSAO, consentimento_em: new Date().toISOString(), consentimento_revogado_em: null, termo_desatualizado: false });
+        falar(200, v);
+      });
+      return;
+    }
+    if (co[2] && req.method === "DELETE") {
+      if (atleta === 26) return req.destroy();
+      if (!v) return falar(404, { detail: "vínculo não encontrado" });
+      Object.assign(v, { consentimento: false, consentimento_revogado_em: new Date().toISOString() });
+      return falar(204);
+    }
   }
   let corpo = null;
   const tp = pathname.match(/^\/professores\/(\d+)\/tipos-de-treino$/);

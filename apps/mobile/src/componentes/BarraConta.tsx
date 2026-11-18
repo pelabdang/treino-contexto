@@ -1,5 +1,5 @@
-// Menu "Conta" do cabeçalho das telas principais (#502, spec docs/design/telas/entrar.md): "Trocar senha" e "Sair". Sair abre um diálogo
-// em que "Cancelar" é o botão principal (sair por engano custa digitar a senha de novo). "Consentimento" (atleta) entra com a #503.
+// Menu "Conta" do cabeçalho das telas principais (#502, spec docs/design/telas/entrar.md): "Trocar senha", "Consentimento" (só o atleta) e "Sair". Sair abre um diálogo
+// em que "Cancelar" é o botão principal (sair por engano custa digitar a senha de novo).
 import { MaterialIcons } from "@expo/vector-icons";
 import { useMemo, useState } from "react";
 import { Modal, Pressable, StyleSheet, Text, View } from "react-native";
@@ -11,11 +11,13 @@ import { borda, espaco, fonte, larguraConteudoMax, raio, tamanho, useMargemTela,
 
 type Props = {
   aoTrocarSenha: () => void;
+  /** Só o atleta tem "Consentimento" (quem consente é ele, #503). Sem a função, o item não aparece. */
+  aoConsentimento?: () => void;
   /** Depois de confirmar o diálogo. */
   aoSair: () => void;
 };
 
-export function BarraConta({ aoTrocarSenha, aoSair }: Props) {
+export function BarraConta({ aoTrocarSenha, aoConsentimento, aoSair }: Props) {
   const tema = useTema();
   const margem = useMargemTela();
   const styles = useMemo(() => criarEstilos(tema, margem), [tema, margem]);
@@ -56,6 +58,20 @@ export function BarraConta({ aoTrocarSenha, aoSair }: Props) {
               <MaterialIcons name="lock-outline" size={tamanho.iconeMedio} color={tema.cor["texto-2"]} accessible={false} />
               <Text style={styles.itemTexto}>Trocar senha</Text>
             </Pressable>
+            {aoConsentimento && (
+              <Pressable
+                testID="consentimento"
+                accessibilityRole="button"
+                onPress={() => {
+                  setAberto(false);
+                  aoConsentimento();
+                }}
+                style={comFoco(styles.item, styles.foco)}
+              >
+                <MaterialIcons name="verified-user" size={tamanho.iconeMedio} color={tema.cor["texto-2"]} accessible={false} />
+                <Text style={styles.itemTexto}>Consentimento</Text>
+              </Pressable>
+            )}
             <Pressable
               testID="sair"
               accessibilityRole="button"

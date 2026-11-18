@@ -155,6 +155,15 @@ async function principal() {
         return r.abort("connectionrefused");
       });
     }
+    if (sim?.termo) {
+      await pagina.route("**/termo-de-consentimento", async (r) => {
+        if (sim.termo.alterar) {
+          const original = await r.fetch();
+          return r.fulfill({ response: original, json: sim.termo.alterar(await original.json()) });
+        }
+        return r.fulfill({ status: sim.termo.status, json: sim.termo.corpo, headers: { "access-control-allow-origin": "*" } });
+      });
+    }
     if (sim?.senha) {
       await pagina.route("**/conta/senha", (r) => r.fulfill({ status: 200, json: sim.senha, headers: { "access-control-allow-origin": "*" } }));
     }
