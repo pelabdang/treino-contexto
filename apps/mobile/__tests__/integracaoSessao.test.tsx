@@ -24,8 +24,8 @@ jest.mock("../src/sessao/armazenamento", () => ({
   },
 }));
 
-import CaixaDoDia from "../src/app/(app)/caixa-do-dia";
-import Inicio from "../src/app/(app)/index";
+import CaixaDoDia from "../src/app/(app)/(abas)/caixa-do-dia";
+import Inicio from "../src/app/(app)/(abas)/index";
 import { SessaoProvider, useSessao } from "../src/sessao/SessaoProvider";
 
 const API = "http://api.teste";
@@ -58,7 +58,7 @@ describe("rotas com sessão", () => {
     await waitFor(() => expect(f.mock.calls.some((c) => String(c[0]) === `${API}/atletas/3/evolucao/tiros-1km`)).toBe(true));
     const chamada = f.mock.calls.find((c) => String(c[0]) === `${API}/atletas/3/evolucao/tiros-1km`);
     expect(new Headers(chamada?.[1]?.headers).get("authorization")).toBe("Bearer token-sintetico-3");
-    expect(screen.getByTestId("abrir-conta")).toBeTruthy();
+    expect(screen.queryByTestId("abrir-conta")).toBeNull(); // o menu Conta do topo saiu: a Conta é uma aba
   });
 
   it("o professor da sessão (9) abre a caixa dele", async () => {

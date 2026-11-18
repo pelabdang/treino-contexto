@@ -73,9 +73,15 @@ const ROTAS = [
   { nome: "trocar-senha-atual-errada", caminho: "/trocar-senha", preencher: [["campo-senha-atual", "senha-errada-sintetica"], ["campo-senha-nova", "outra-senha-sintetica"], ["campo-senha-repetida", "outra-senha-sintetica"]], clicar: ["botao-salvar"] },
   { nome: "trocar-senha-nova-invalida", caminho: "/trocar-senha", preencher: [["campo-senha-atual", SENHA_SINTETICA], ["campo-senha-nova", "curta"], ["campo-senha-repetida", "curta"]], clicar: ["botao-salvar"] },
   { nome: "trocar-senha-salva", caminho: "/trocar-senha", simular: "troca-ok", preencher: TROCAR_OK, clicar: ["botao-salvar"] },
-  { nome: "conta-menu", caminho: "/", clicar: ["abrir-conta"] },
-  { nome: "conta-menu-professor", caminho: "/caixa-do-dia", clicar: ["abrir-conta"] },
-  { nome: "sair-dialogo", caminho: "/", clicar: ["abrir-conta", "sair"] },
+  // Navegação por abas (UX, auditoria da Lia): barra na base (390) e menu lateral (1280). Início e Evolução mostram os tiros de 1 km.
+  { nome: "aba-inicio", caminho: "/" },
+  { nome: "aba-treinos", caminho: "/treinos" },
+  { nome: "aba-evolucao", caminho: "/evolucao" },
+  { nome: "aba-conta", caminho: "/conta" }, // atleta 1 tem pedido de consentimento: selo na aba e no item
+  { nome: "aba-conta-sem-pedido", caminho: "/conta", acesso: "atleta2" },
+  { nome: "aba-conta-professor", caminho: "/conta", acesso: "professor" },
+  { nome: "aba-caixa-do-dia", caminho: "/caixa-do-dia" },
+  { nome: "sair-dialogo", caminho: "/conta", clicar: ["conta-sair"] },
   // Consentimento do atleta (#503, spec docs/design/telas/consentimento.md).
   { nome: "consentimento", caminho: "/consentimento" },
   { nome: "consentimento-registrado", caminho: "/consentimento?aviso=registrado" },
@@ -89,7 +95,6 @@ const ROTAS = [
   { nome: "consentimento-termo-erro-salvar", caminho: "/consentimento/11", acesso: "atleta25", clicar: ["li-e-concordo", "dar-consentimento"] },
   { nome: "consentimento-termo-mudou", caminho: "/consentimento/11", acesso: "atleta24", clicar: ["li-e-concordo", "dar-consentimento"] },
   { nome: "consentimento-termo-erro", caminho: "/consentimento/11", simular: "termo-erro" },
-  { nome: "consentimento-aviso-evolucao", caminho: "/" },
 ];
 
 // Acesso sintético que a captura guarda no navegador antes de abrir a rota (`null`: sem acesso).

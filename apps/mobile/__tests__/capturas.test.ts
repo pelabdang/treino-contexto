@@ -85,10 +85,10 @@ describe("rotas da caixa do dia (#426)", () => {
 });
 
 describe("rotas de entrar, sair e trocar a senha (#502)", () => {
-  const conta = ROTAS.filter((r: any) => /^(entrar|acesso|trocar-senha|conta-menu|sair)/.test(r.nome));
+  const conta = ROTAS.filter((r: any) => /^(entrar|acesso|trocar-senha|aba-|sair)/.test(r.nome));
   it("cobre os estados da spec da Lia", () => {
     const nomes = conta.map((r: any) => r.nome);
-    for (const n of ["entrar", "entrar-erro-401", "entrar-muitas-tentativas", "entrar-sem-rede", "entrar-expirou", "trocar-senha-primeiro-acesso", "trocar-senha-diferentes", "conta-menu", "conta-menu-professor", "sair-dialogo"]) {
+    for (const n of ["entrar", "entrar-erro-401", "entrar-muitas-tentativas", "entrar-sem-rede", "entrar-expirou", "trocar-senha-primeiro-acesso", "trocar-senha-diferentes", "aba-conta", "aba-conta-professor", "sair-dialogo"]) {
       expect(nomes).toContain(n);
     }
   });
@@ -117,7 +117,7 @@ describe("rotas do consentimento (#503)", () => {
   const cons = ROTAS.filter((r: any) => r.nome.startsWith("consentimento"));
   it("cobre lista, estados de erro, retirar, termo e o aviso da evolução", () => {
     const nomes = cons.map((r: any) => r.nome);
-    for (const n of ["consentimento", "consentimento-vazio", "consentimento-retirar", "consentimento-termo", "consentimento-termo-marcado", "consentimento-termo-mudou", "consentimento-aviso-evolucao"]) expect(nomes).toContain(n);
+    for (const n of ["consentimento", "consentimento-vazio", "consentimento-retirar", "consentimento-termo", "consentimento-termo-marcado", "consentimento-termo-mudou"]) expect(nomes).toContain(n);
   });
   it("todo acesso e toda simulação pedidos existem", () => {
     for (const r of cons) {

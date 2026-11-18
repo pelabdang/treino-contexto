@@ -11,7 +11,7 @@ jest.mock("expo-router", () => ({
 }));
 import { router as mockRouter } from "expo-router";
 
-import Inicio from "../src/app/(app)/index";
+import Inicio from "../src/app/(app)/(abas)/index";
 import SemanaPadrao from "../src/app/(app)/semana-padrao";
 
 const resposta = (corpo: unknown) => ({ ok: true, status: 200, json: async () => corpo }) as Response;
@@ -39,10 +39,9 @@ describe("rota /semana-padrao e a entrada pela evolução", () => {
     expect(mockRouter.replace).toHaveBeenCalledWith("/");
   });
 
-  it("a evolução tem o botão 'Semana-padrão', que abre /semana-padrao", async () => {
+  it("a semana-padrão agora abre pela aba Conta (o Início não tem mais o botão)", async () => {
     globalThis.fetch = jest.fn(() => new Promise<Response>(() => {})) as unknown as typeof fetch;
     await render(<ComSessao><Inicio /></ComSessao>);
-    await fireEvent.press(screen.getByTestId("abrir-semana-padrao"));
-    expect(mockRouter.push).toHaveBeenCalledWith("/semana-padrao");
+    expect(screen.queryByTestId("abrir-semana-padrao")).toBeNull();
   });
 });
