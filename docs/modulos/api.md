@@ -43,7 +43,7 @@ Futuramente recebe a importação Garmin e serve métricas ao [[modulos/mobile]]
 ## CORS
 O app web roda em outra porta (`http://localhost:8081`), então a API libera as origens de `CORS_ORIGENS` (lista
 separada por vírgula, lida em `app/config.py`; middleware em `criar_app` de `app/main.py`).
-- Padrão local: `http://localhost:8081`. `GET`, `POST` (upload de FIT, #95), `PUT` e `DELETE` (correção da transição, #170; ampliam o item 7 da [[decisoes/0004-contrato-tela-evolucao]]) e o preflight deles; sem cookies nem cabeçalhos extras.
+- Padrão local: `http://localhost:8081`. `GET`, `POST` (upload de FIT, #95), `PUT` e `DELETE` (correção da transição, #170; ampliam o item 7 da [[decisoes/0004-contrato-tela-evolucao]]) e o preflight deles; sem cookies (`allow_credentials=False`). **Cabeçalhos liberados: `Authorization` (o Bearer do login, ADR 0016) e `Content-Type` (o JSON)**, e só esses; o Starlette soma sozinho `Accept`, `Accept-Language` e `Content-Language`. Sem eles o navegador bloqueia o preflight e o login na web não funciona (#527). Nunca `*` nos cabeçalhos.
 - Nunca `*`: com `*` na lista a API não sobe (`ValueError`). Variável vazia não libera nenhuma origem.
 - Origem fora da lista recebe a resposta normal, sem `Access-Control-Allow-Origin` (o navegador bloqueia).
 - Exemplo para mais de uma origem: `CORS_ORIGENS=http://localhost:8081,https://app.exemplo.com`.

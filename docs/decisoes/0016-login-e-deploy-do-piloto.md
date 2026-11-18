@@ -55,7 +55,7 @@ Uma migração `0017`, **só aditiva** (tabelas novas e duas colunas anuláveis;
 - **Validade: 30 dias** desde o login, fixos (sem renovar a cada uso; nenhuma escrita por requisição). Depois, entrar de novo.
 - **Revogação:** `DELETE /sessao` revoga a sessão atual; trocar a senha revoga **todas** as sessões da conta, a atual inclusive (a resposta traz um token novo); desativar a conta revoga todas.
 - **Força bruta:** depois de **5 falhas em 15 minutos** para o mesmo e-mail, o `POST /sessao` responde `429` com `espere_s` (segundos até poder tentar; o cabeçalho `Retry-After` repete) até a janela passar, **mesmo com a senha certa**. É por e-mail porque não confiamos num IP que o proxy repassa. Custo conhecido: quem sabe o e-mail de outro pode travar a conta dele por 15 minutos; no piloto (10 contas, sem cadastro aberto) é aceitável.
-- **Onde o app guarda o token** (decisão 1 do Theo): no celular, o cofre do aparelho (`expo-secure-store`); na web, `sessionStorage` (morre ao fechar a aba). Sempre em cabeçalho, nunca em cookie. Risco conhecido: um XSS na web leria o token. Mitigação: CORS só com a origem do app, sem HTML de terceiros, CSP no proxy da web (#504).
+- **Onde o app guarda o token** (decisão 1 do Theo): no celular, o cofre do aparelho (`expo-secure-store`); na web, `sessionStorage` (morre ao fechar a aba). Sempre em cabeçalho, nunca em cookie. Risco conhecido: um XSS na web leria o token. Mitigação: CORS só com a origem do app (cabeçalhos liberados: `Authorization` e `Content-Type`; o Starlette soma sozinho `Accept`, `Accept-Language` e `Content-Language`; sem credentials e sem `*`; sem eles o login na web falha no preflight, #527), sem HTML de terceiros, CSP no proxy da web (#504).
 
 ### 4. Rotas de identidade
 | Rota | Quem | O que faz |
