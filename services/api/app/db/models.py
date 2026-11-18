@@ -17,7 +17,9 @@ from sqlalchemy import (
     Integer,
     String,
     UniqueConstraint,
+    false,
     func,
+    true,
 )
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
@@ -103,6 +105,64 @@ class VinculoProfessorAtleta(Base):
     professor_id: Mapped[int] = mapped_column(ForeignKey("professor.id"), primary_key=True)
     atleta_id: Mapped[int] = mapped_column(ForeignKey("atleta.id"), primary_key=True)
     consentimento_em: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    # ADR 0016, item 1: a versao do termo aceita (gravada junto de `consentimento_em`) e quando o atleta retirou o consentimento.
+    termo_versao: Mapped[str | None] = mapped_column(String(40))
+    consentimento_revogado_em: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+
+
+class Conta(Base):
+    """Conta de login (ADR 0016, item 1): um papel por conta, atleta OU professor. Sem nome, telefone nem documento."""
+
+    __tablename__ = "conta"
+    __table_args__ = (CheckConstraint("(atleta_id IS NULL) <> (professor_id IS NULL)", name="um_papel"),)
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    email: Mapped[str] = mapped_column(String(254), unique=True)  # sempre em minusculas
+    senha_hash: Mapped[str] = mapped_column(String(255))
+    atleta_id: Mapped[int | None] = mapped_column(ForeignKey("atleta.id"), unique=True)
+    professor_id: Mapped[int | None] = mapped_column(ForeignKey("professor.id"), unique=True)
+    ativa: Mapped[bool] = mapped_column(Boolean, default=True, server_default=true())
+    deve_trocar_senha: Mapped[bool] = mapped_column(Boolean, default=False, server_default=false())
+    criada_em: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+    senha_trocada_em: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+
+
+class Sessao(Base):
+    """Acesso de uma conta (ADR 0016, item 3): so o hash SHA-256 do token e guardado; vale 30 dias fixos."""
+
+    __tablename__ = "sessao"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    conta_id: Mapped[int] = mapped_column(ForeignKey("conta.id", ondelete="CASCADE"))
+    token_hash: Mapped[str] = mapped_column(String(64), unique=True)
+    criada_em: Mapped[datetime] = mapped_column(DateTime(timezone=True))
+    expira_em: Mapped[datetime] = mapped_column(DateTime(timezone=True))
+    revogada_em: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+
+
+class TentativaLogin(Base):
+    """So para limitar forca bruta (ADR 0016, item 3): hash do e-mail, quando e se deu certo. Sem IP."""
+
+    __tablename__ = "tentativa_login"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    email_hash: Mapped[str] = mapped_column(String(64), index=True)
+    ocorrida_em: Mapped[datetime] = mapped_column(DateTime(timezone=True))
+    ok: Mapped[bool] = mapped_column(Boolean)
+
+
+class ConsentimentoEvento(Base):
+    """Trilha so de acrescimo do consentimento (ADR 0016, item 1): o estado atual esta no vinculo."""
+
+    __tablename__ = "consentimento_evento"
+    __table_args__ = (CheckConstraint("acao IN ('aceito', 'revogado')", name="acao"),)
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    atleta_id: Mapped[int] = mapped_column(ForeignKey("atleta.id"))
+    professor_id: Mapped[int] = mapped_column(ForeignKey("professor.id"))
+    acao: Mapped[str] = mapped_column(String(10))
+    termo_versao: Mapped[str] = mapped_column(String(40))
+    ocorrida_em: Mapped[datetime] = mapped_column(DateTime(timezone=True))
 
 
 class Atividade(Base):

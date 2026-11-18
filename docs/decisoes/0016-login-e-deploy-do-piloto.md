@@ -60,10 +60,12 @@ Uma migração `0017`, **só aditiva** (tabelas novas e duas colunas anuláveis;
 ### 4. Rotas de identidade
 | Rota | Quem | O que faz |
 |---|---|---|
-| `POST /sessao` | pública | corpo `{email, senha}`; `200` com `{token, expira_em, atleta_id, professor_id, deve_trocar_senha}` (um dos dois ids é `null`); credencial errada, e-mail inexistente e conta inativa dão a **mesma** `401`; `429` na força bruta |
-| `GET /sessao` | sessão | quem sou: `atleta_id`, `professor_id`, `nome`, `deve_trocar_senha`. É daqui que o app sabe o id; **somem** `EXPO_PUBLIC_ATLETA_ID` e `EXPO_PUBLIC_PROFESSOR_ID` (ficam só no modo de captura da API falsa) |
+| `POST /sessao` | pública | corpo `{email, senha}`; `200` com `{token, expira_em, papel, atleta_id, professor_id, nome, troca_de_senha_obrigatoria}` (um dos dois ids é `null`); credencial errada, e-mail inexistente e conta inativa dão a **mesma** `401`; `429` na força bruta |
+| `GET /sessao` | sessão | quem sou: `papel`, `atleta_id`, `professor_id`, `nome`, `expira_em`, `troca_de_senha_obrigatoria`. É daqui que o app sabe o id; **somem** `EXPO_PUBLIC_ATLETA_ID` e `EXPO_PUBLIC_PROFESSOR_ID` (ficam só no modo de captura da API falsa) |
 | `DELETE /sessao` | sessão | revoga a atual; `204` |
 | `PUT /conta/senha` | sessão | `{senha_atual, senha_nova}`; revoga todas as sessões, devolve `{token, expira_em}` novo e zera `deve_trocar_senha` |
+
+**Nome do campo (decisão do Theo):** nas respostas de `POST /sessao` e `GET /sessao` o campo é `troca_de_senha_obrigatoria`; `deve_trocar_senha` é só o nome da **coluna** em `conta`. **Erros de `PUT /conta/senha`:** `422` no formato do pydantic, com `type` `senha_atual_incorreta` (loc `senha_atual`) ou `senha_nova_invalida` (loc `senha_nova`) e o motivo em `msg`; a senha nunca é repetida.
 
 `/health` e `POST /sessao` são as **únicas** rotas sem sessão. Em produção, `/docs` e `/openapi.json` ficam desligados (o `openapi.json` versionado em `packages/api-client/` continua sendo gerado por script).
 
@@ -87,8 +89,8 @@ A forma das rotas **não muda**: `/atletas/{atleta_id}/...` e `/professores/{pro
 
 ### 6. Operador, não administrador
 Sem painel e sem rota de administração. Quem cuida do piloto (o Angelo e o time, com acesso ao servidor) usa **comandos** do pacote da API, o mesmo caminho dos workers:
-`criar-conta` (e-mail, atleta e/ou professor; pede a senha **sem eco**, nunca como argumento de linha de comando, para não cair no histórico do shell), `vincular` (professor e atleta, **sem** consentimento), `redefinir-senha`, `desativar-conta`, `excluir-conta` e `limpar-sessoes-expiradas`.
-- **Redefinição de senha sem e-mail (decisão 3 do Angelo):** o atleta pede ao operador (fora do app); `redefinir-senha` gera uma senha temporária aleatória, **mostra uma vez no terminal**, marca `deve_trocar_senha` e revoga todas as sessões. O app força a tela de troca antes de qualquer outra rota (as rotas, fora `PUT /conta/senha`, `GET /sessao` e `DELETE /sessao`, respondem `403` com `type` `troca_de_senha_obrigatoria` enquanto a marca estiver ligada). O operador passa a senha temporária por um canal que o atleta confia; ela vale só até a troca.
+`criar-conta` (no código, `python -m worker.conta criar`; os demais seguem o mesmo padrão: `vincular`, `redefinir-senha`, `desativar`, `limpar`; e-mail, atleta e/ou professor; pede a senha **sem eco**, nunca como argumento de linha de comando, para não cair no histórico do shell), `vincular` (professor e atleta, **sem** consentimento), `redefinir-senha`, `desativar-conta`, `excluir-conta` e `limpar-sessoes-expiradas`.
+- **Redefinição de senha sem e-mail (decisão 3 do Angelo):** o atleta pede ao operador (fora do app); `redefinir-senha` gera uma senha temporária aleatória, **mostra uma vez no terminal**, marca `deve_trocar_senha` e revoga todas as sessões. O app força a tela de troca antes de qualquer outra rota (as rotas, fora `PUT /conta/senha`, `GET /sessao` e `DELETE /sessao`, respondem `403` com `type` `troca_de_senha_obrigatoria` enquanto a marca estiver ligada; isso **não contradiz** o `404` para recurso de outra pessoa: o `403` vale para a própria conta, antes de qualquer checagem de recurso, e não revela nada de ninguém). O operador passa a senha temporária por um canal que o atleta confia; ela vale só até a troca.
 - Cada comando grava uma linha de log **sem e-mail, sem senha e sem dado de saúde**: só a ação, o `conta_id` e a hora.
 
 ### 7. Consentimento registrado pelo atleta

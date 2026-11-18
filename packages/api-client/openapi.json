@@ -1,6 +1,25 @@
 {
   "components": {
     "schemas": {
+      "AcessoOut": {
+        "properties": {
+          "expira_em": {
+            "format": "date-time",
+            "title": "Expira Em",
+            "type": "string"
+          },
+          "token": {
+            "title": "Token",
+            "type": "string"
+          }
+        },
+        "required": [
+          "token",
+          "expira_em"
+        ],
+        "title": "AcessoOut",
+        "type": "object"
+      },
       "AlunoOut": {
         "properties": {
           "atleta_id": {
@@ -1460,6 +1479,84 @@
         "title": "Eixos",
         "type": "object"
       },
+      "EntrarIn": {
+        "properties": {
+          "email": {
+            "maxLength": 254,
+            "minLength": 1,
+            "title": "Email",
+            "type": "string"
+          },
+          "senha": {
+            "maxLength": 1000,
+            "minLength": 1,
+            "title": "Senha",
+            "type": "string"
+          }
+        },
+        "required": [
+          "email",
+          "senha"
+        ],
+        "title": "EntrarIn",
+        "type": "object"
+      },
+      "EntrarOut": {
+        "properties": {
+          "atleta_id": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Atleta Id"
+          },
+          "expira_em": {
+            "format": "date-time",
+            "title": "Expira Em",
+            "type": "string"
+          },
+          "nome": {
+            "title": "Nome",
+            "type": "string"
+          },
+          "papel": {
+            "title": "Papel",
+            "type": "string"
+          },
+          "professor_id": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Professor Id"
+          },
+          "token": {
+            "title": "Token",
+            "type": "string"
+          },
+          "troca_de_senha_obrigatoria": {
+            "title": "Troca De Senha Obrigatoria",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "papel",
+          "nome",
+          "expira_em",
+          "troca_de_senha_obrigatoria",
+          "token"
+        ],
+        "title": "EntrarOut",
+        "type": "object"
+      },
       "Erro": {
         "properties": {
           "detail": {
@@ -2264,6 +2361,24 @@
         "title": "MotivoOut",
         "type": "object"
       },
+      "Muitas": {
+        "properties": {
+          "detail": {
+            "title": "Detail",
+            "type": "string"
+          },
+          "espere_s": {
+            "title": "Espere S",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "detail",
+          "espere_s"
+        ],
+        "title": "Muitas",
+        "type": "object"
+      },
       "NovoOut": {
         "properties": {
           "atividade_id": {
@@ -2556,6 +2671,58 @@
           "fim"
         ],
         "title": "Periodo",
+        "type": "object"
+      },
+      "QuemSouOut": {
+        "description": "Quem esta logado. Um dos dois ids e `null` (um papel por conta).",
+        "properties": {
+          "atleta_id": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Atleta Id"
+          },
+          "expira_em": {
+            "format": "date-time",
+            "title": "Expira Em",
+            "type": "string"
+          },
+          "nome": {
+            "title": "Nome",
+            "type": "string"
+          },
+          "papel": {
+            "title": "Papel",
+            "type": "string"
+          },
+          "professor_id": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Professor Id"
+          },
+          "troca_de_senha_obrigatoria": {
+            "title": "Troca De Senha Obrigatoria",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "papel",
+          "nome",
+          "expira_em",
+          "troca_de_senha_obrigatoria"
+        ],
+        "title": "QuemSouOut",
         "type": "object"
       },
       "SemanaPadraoGravadaOut": {
@@ -3033,6 +3200,28 @@
         "title": "TreinosDeTransicaoOut",
         "type": "object"
       },
+      "TrocarSenhaIn": {
+        "properties": {
+          "senha_atual": {
+            "maxLength": 1000,
+            "minLength": 1,
+            "title": "Senha Atual",
+            "type": "string"
+          },
+          "senha_nova": {
+            "maxLength": 1000,
+            "minLength": 1,
+            "title": "Senha Nova",
+            "type": "string"
+          }
+        },
+        "required": [
+          "senha_atual",
+          "senha_nova"
+        ],
+        "title": "TrocarSenhaIn",
+        "type": "object"
+      },
       "Unidades": {
         "properties": {
           "distancia": {
@@ -3196,6 +3385,13 @@
         ],
         "title": "VigenteOut",
         "type": "object"
+      }
+    },
+    "securitySchemes": {
+      "HTTPBearer": {
+        "description": "Acesso devolvido por `POST /sessao`",
+        "scheme": "bearer",
+        "type": "http"
       }
     }
   },
@@ -4292,6 +4488,55 @@
         ]
       }
     },
+    "/conta/senha": {
+      "put": {
+        "operationId": "trocarSenha",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/TrocarSenhaIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AcessoOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Erro"
+                }
+              }
+            },
+            "description": "não autenticado"
+          },
+          "422": {
+            "description": "`senha_atual_incorreta` ou `senha_nova_invalida` (com o motivo em `msg`); nunca repete a senha"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Trocar Senha",
+        "tags": [
+          "sessão"
+        ]
+      }
+    },
     "/health": {
       "get": {
         "operationId": "health_health_get",
@@ -4426,6 +4671,128 @@
         "summary": "Confirmar Tipos",
         "tags": [
           "professor"
+        ]
+      }
+    },
+    "/sessao": {
+      "delete": {
+        "operationId": "sair",
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Erro"
+                }
+              }
+            },
+            "description": "não autenticado"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Sair",
+        "tags": [
+          "sessão"
+        ]
+      },
+      "get": {
+        "operationId": "quemSou",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/QuemSouOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Erro"
+                }
+              }
+            },
+            "description": "não autenticado"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Quem Sou",
+        "tags": [
+          "sessão"
+        ]
+      },
+      "post": {
+        "operationId": "entrar",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/EntrarIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EntrarOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Erro"
+                }
+              }
+            },
+            "description": "E-mail ou senha incorretos (o mesmo corpo para e-mail inexistente, senha errada e conta desativada)"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Muitas"
+                }
+              }
+            },
+            "description": "5 falhas em 15 minutos para o e-mail; `espere_s` segundos e `Retry-After`"
+          }
+        },
+        "summary": "Entrar",
+        "tags": [
+          "sessão"
         ]
       }
     }
