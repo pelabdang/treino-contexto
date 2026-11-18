@@ -78,6 +78,7 @@ const ROTAS = [
   { nome: "sair-dialogo", caminho: "/", clicar: ["abrir-conta", "sair"] },
   // Consentimento do atleta (#503, spec docs/design/telas/consentimento.md).
   { nome: "consentimento", caminho: "/consentimento" },
+  { nome: "consentimento-registrado", caminho: "/consentimento?aviso=registrado" },
   { nome: "consentimento-vazio", caminho: "/consentimento", acesso: "atleta2" },
   { nome: "consentimento-erro-rede", caminho: "/consentimento", acesso: "atleta23" },
   { nome: "consentimento-erro", caminho: "/consentimento", acesso: "atleta27" },

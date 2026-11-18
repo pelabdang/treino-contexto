@@ -2,7 +2,7 @@
 // a versão que o atleta leu. "Li e concordo" não vem marcado e liga o botão "Dar consentimento". Sem "aceitar tudo".
 import { MaterialIcons } from "@expo/vector-icons";
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { AccessibilityInfo, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
+import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 
 import { buscarProfessores, buscarTermo, darConsentimento, type Termo } from "../consentimento/api";
 import { comFoco } from "../tema/foco";
@@ -66,7 +66,6 @@ export function TelaTermo({ apiUrl, atletaId, professorId, aoVoltar, aoConcluir,
     const r = await darConsentimento(atletaId, professorId, estado.termo.versao, opcoes);
     setSalvando(false);
     if (r.ok) {
-      AccessibilityInfo.announceForAccessibility?.("Consentimento registrado.");
       aoConcluir();
     } else if (r.erro.tipo === "nao_encontrado") {
       aoInexistente();
@@ -92,6 +91,8 @@ export function TelaTermo({ apiUrl, atletaId, professorId, aoVoltar, aoConcluir,
         <Text accessibilityRole="header" style={styles.titulo}>
           Termo de consentimento
         </Text>
+
+        {aviso === "mudou" && <Faixa tipo="info" testID="faixa-mudou" texto="O texto do termo mudou. Leia de novo antes de dar o consentimento." />}
 
         {estado.tipo === "carregando" && (
           <View>
@@ -150,7 +151,6 @@ export function TelaTermo({ apiUrl, atletaId, professorId, aoVoltar, aoConcluir,
             </Pressable>
             {aviso === "rede" && <Faixa tipo="erro" testID="faixa-erro" texto="Não foi possível salvar. Tente de novo." />}
             {aviso === "servidor" && <Faixa tipo="erro" testID="faixa-erro" texto="Algo deu errado do nosso lado. Tente de novo mais tarde." />}
-            {aviso === "mudou" && <Faixa tipo="info" testID="faixa-mudou" texto="O texto do termo mudou. Leia de novo antes de dar o consentimento." />}
             <Pressable
               testID="dar-consentimento"
               accessibilityRole="button"
@@ -163,7 +163,6 @@ export function TelaTermo({ apiUrl, atletaId, professorId, aoVoltar, aoConcluir,
             </Pressable>
           </>
         )}
-        {estado.tipo === "carregando" && aviso === "mudou" && <Faixa tipo="info" testID="faixa-mudou" texto="O texto do termo mudou. Leia de novo antes de dar o consentimento." />}
       </View>
     </ScrollView>
   );

@@ -3,7 +3,7 @@
 // Estado em ícone e palavra, nunca só cor. Nada do que vem da API (nome, versão do termo) vai para log.
 import { MaterialIcons } from "@expo/vector-icons";
 import { type ComponentRef, useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { AccessibilityInfo, Modal, Pressable, ScrollView, StyleSheet, Text, useWindowDimensions, View } from "react-native";
+import { Modal, Pressable, ScrollView, StyleSheet, Text, useWindowDimensions, View } from "react-native";
 
 import { buscarProfessores, dataCurta, ordenar, retirarConsentimento, type Vinculo } from "../consentimento/api";
 import { FOCAVEL, focar } from "../navegacao/foco";
@@ -19,8 +19,8 @@ type Props = {
   aoAbrirTermo: (professorId: number) => void;
   /** Muda quando a tela volta ao foco: busca a lista de novo (depois de dar o consentimento). */
   atualizar?: number;
-  /** Veio da tela do termo porque o vínculo não existe mais. */
-  avisoInexistente?: boolean;
+  /** Faixa neutra no alto, vinda da tela do termo: consentimento registrado, ou o vínculo não existe mais. */
+  aviso?: "registrado" | "inexistente" | null;
   fetchFn?: typeof fetch;
 };
 
@@ -28,12 +28,15 @@ type Estado = { tipo: "carregando" } | { tipo: "ok"; lista: Vinculo[] } | { tipo
 
 export const TEXTO_VAZIO = "Nenhum professor pediu para ver os seus treinos. Quando pedir, o pedido aparece aqui.";
 
-export function TelaConsentimento({ apiUrl, atletaId, aoVoltar, aoAbrirTermo, atualizar = 0, avisoInexistente = false, fetchFn }: Props) {
+export function TelaConsentimento({ apiUrl, atletaId, aoVoltar, aoAbrirTermo, atualizar = 0, aviso: avisoInicial = null, fetchFn }: Props) {
   const tema = useTema();
   const margem = useMargemTela();
   const styles = useMemo(() => criarEstilos(tema, margem), [tema, margem]);
   const [estado, setEstado] = useState<Estado>({ tipo: "carregando" });
   const [tentativa, setTentativa] = useState(0);
+  // A faixa fica até a pessoa sair da tela (não some sozinha); retirar troca a faixa por "Consentimento retirado.".
+  const [local, setLocal] = useState<{ de: typeof avisoInicial; valor: "retirado" } | null>(null);
+  const aviso: "registrado" | "retirado" | "inexistente" | null = local && local.de === avisoInicial ? local.valor : avisoInicial;
   const [retirando, setRetirando] = useState<Vinculo | null>(null);
   const [erroRetirar, setErroRetirar] = useState(false);
   const opcoes = useMemo(() => ({ baseUrl: apiUrl, fetch: fetchFn }), [apiUrl, fetchFn]);
@@ -62,14 +65,14 @@ export function TelaConsentimento({ apiUrl, atletaId, aoVoltar, aoAbrirTermo, at
     const r = await retirarConsentimento(atletaId, alvo.professor_id, opcoes);
     if (r.ok) {
       setErroRetirar(false);
-      AccessibilityInfo.announceForAccessibility?.("Consentimento retirado.");
+      setLocal({ de: avisoInicial, valor: "retirado" });
       setTentativa((n) => n + 1);
     } else if (r.erro.tipo === "nao_encontrado") {
       setTentativa((n) => n + 1); // sumiu: a lista recarrega sem ele
     } else {
       setErroRetirar(true);
     }
-  }, [retirando, atletaId, opcoes]);
+  }, [retirando, atletaId, opcoes, avisoInicial]);
 
   return (
     <ScrollView testID="tela-consentimento" contentContainerStyle={styles.container}>
@@ -84,7 +87,9 @@ export function TelaConsentimento({ apiUrl, atletaId, aoVoltar, aoAbrirTermo, at
           Consentimento
         </Text>
         <Text style={styles.texto}>Quem pode ver os seus treinos.</Text>
-        {avisoInexistente && <Faixa tipo="info" testID="faixa-inexistente" texto="Este pedido não existe mais." />}
+        {aviso === "inexistente" && <Faixa tipo="info" testID="faixa-inexistente" texto="Este pedido não existe mais." />}
+        {aviso === "registrado" && <Faixa tipo="info" testID="faixa-registrado" texto="Consentimento registrado." />}
+        {aviso === "retirado" && <Faixa tipo="info" testID="faixa-retirado" texto="Consentimento retirado." />}
         {erroRetirar && <Faixa tipo="erro" testID="faixa-erro-retirar" texto="Não foi possível retirar. Tente de novo." />}
 
         {estado.tipo === "carregando" && (
@@ -171,8 +176,7 @@ function DialogoRetirar({ vinculo, aoCancelar, aoConfirmar }: { vinculo: Vinculo
             Retirar o consentimento?
           </Text>
           <Text style={styles.texto}>
-            {vinculo?.nome} deixa de ver os seus treinos a partir de agora. O que ele já gravou, como o tipo corrigido de um treino, fica. Você pode dar o
-            consentimento de novo depois.
+            {vinculo?.nome} deixa de ver os seus treinos a partir de agora. O que ele já gravou, como o tipo corrigido de um treino, fica. Se você der o consentimento de novo, ele volta a ver todo o seu histórico.
           </Text>
           <View style={styles.botoes}>
             <Pressable testID="cancelar-retirar" accessibilityRole="button" onPress={aoCancelar} style={comFoco([styles.botao, styles.primario], styles.foco)}>
