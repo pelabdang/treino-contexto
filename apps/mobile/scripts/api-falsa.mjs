@@ -1,6 +1,6 @@
 // API falsa com dados 100% sintéticos, só para abrir o app na web e tirar capturas
 // sem backend e sem trocar config (#218). Uso: node scripts/api-falsa.mjs [porta]
-// Depois: EXPO_PUBLIC_API_URL=http://localhost:8000 npx expo start --web
+// Depois: EXPO_PUBLIC_API_URL=http://localhost:8000 npx expo start --web  (entre com atleta1@exemplo.com ou professor1@exemplo.com, senha senha-sintetica-123)
 import { createServer } from "node:http";
 
 const porta = Number(process.argv[2] ?? process.env.PORT ?? 8000);
@@ -124,7 +124,7 @@ const planoPadrao = () => [
     ]),
   },
 ];
-// Atleta de teste para forçar estados da tela da semana-padrão (EXPO_PUBLIC_ATLETA_ID=<id>); os demais ids usam o plano do atleta 1:
+// Atleta de teste para forçar estados da tela da semana-padrão (entre com atleta<id>@exemplo.com); os demais ids usam o plano do atleta 1:
 //   2 = sem plano (estado vazio)            3 = GET derruba a conexão (erro de rede ao carregar)
 //   4 = PUT responde 422                    5 = GET responde 404 (atleta não encontrado)
 //   6 = PUT derruba a conexão (erro de rede ao salvar)
@@ -158,7 +158,7 @@ const gravarSemana = (id, corpo) => {
 // Check-in pós-treino sintético (#299, ADR 0012): PUT/GET/DELETE em memória, por atleta, e a lista de pendentes. Nenhum dado real.
 // Atividades: 101 corrida e 106 natação sem check-in (prazo aberto); 107 corrida com check-in; 108 corrida com o prazo vencido;
 // 109 parte de multiesporte com `pse_sugerida` 5; 110 treino inteiro de multiesporte (não pede check-in). Outros ids: corrida sem check-in.
-// Atleta de teste para forçar estados do check-in (EXPO_PUBLIC_ATLETA_ID=<id>); os demais usam os dados acima:
+// Atleta de teste para forçar estados do check-in (entre com atleta<id>@exemplo.com); os demais usam os dados acima:
 //   7 = sem pendentes (lista vazia)          8 = GET dos pendentes derruba a conexão   9 = GET da atividade derruba a conexão
 //  10 = PUT responde 422 genérico           11 = PUT responde 422 fora_do_prazo       12 = PUT responde 422 atividade_sem_checkin
 //  13 = PUT derruba a conexão               14 = PUT responde 404                     15 = DELETE derruba a conexão
@@ -325,7 +325,7 @@ iniciarCheckins();
 const atividade = (id, atleta = 1) => comCheckin(id === 106 ? natacao(id) : corrida(id), atleta);
 
 // Caixa do dia sintética (#426, ADR 0015): `GET /professores/{id}/caixa-do-dia`. Alunos fictícios "Atleta Fixture ...", texto marcador na observação.
-// Professor de teste (EXPO_PUBLIC_PROFESSOR_ID=<id>): 1 = com conteúdo; 2 = sem alunos; 3 = ninguém com motivo e sem novos;
+// Professor de teste (entre com professor<id>@exemplo.com): 1 = com conteúdo; 2 = sem alunos; 3 = ninguém com motivo e sem novos;
 // 4 = derruba a conexão; 5 = 404 uniforme `professor_inexistente`; 6 = 500. Outros ids: 404 uniforme (o servidor de verdade não diz a causa).
 const detalheCheckin = {
   tipo_confirmado: false,
@@ -407,15 +407,109 @@ const caixaDe = (id) => {
   return caixaComConteudo;
 };
 
+// Entrar, sair e trocar a senha sintéticos (#502, ADR 0016). Contas fictícias @exemplo.com, todas com a senha SENHA_SINTETICA:
+//   atleta<N>@exemplo.com e professor<N>@exemplo.com (N = 1 a 30): entram como o atleta ou o professor N, e os ids de teste de cada
+//   tela (ver os comentários acima: atleta 7, 8, 9... e professor 2, 3...) continuam valendo, agora pela conta e não por variável de ambiente.
+//   primeiro-acesso@exemplo.com = atleta 1 com a senha provisória (a troca é obrigatória)
+//   muitas@exemplo.com = sempre 429 com espere_s 300      servidor@exemplo.com = sempre 500       desativada@exemplo.com = 401 (o mesmo)
+// O acesso é "token-sintetico-<papel>-<N>" (qualquer N de 1 a 30 vale, sem relógio): "token-sintetico-expirado" dá sempre 401 e
+// "token-sintetico-trocar" é o atleta 1 com a troca obrigatória. As capturas (scripts/capturas.mjs) usam esses acessos sem passar pela tela.
+// Sair revoga o acesso; trocar a senha revoga e devolve outro. Todas as rotas de dado pedem o Bearer (401) e o id do caminho tem de ser o da conta (404).
+const SENHA_SINTETICA = "senha-sintetica-123";
+const senhasTrocadas = new Map();
+const revogados = new Set();
+const trocaPendente = new Set(["token-sintetico-trocar"]);
+const geracao = new Map();
+const RE_TOKEN = /^token-sintetico-(atleta|professor)-(\d+)(?:-(?:g\d+|trocar))?$/;
+const contaDoToken = (t) => {
+  if (!t || revogados.has(t)) return null;
+  if (t === "token-sintetico-trocar") return { papel: "atleta", id: 1 };
+  const m = t.match(RE_TOKEN);
+  const id = m ? Number(m[2]) : 0;
+  return m && id >= 1 && id <= 30 ? { papel: m[1], id } : null;
+};
+const quemSou = (conta, token) => ({
+  papel: conta.papel,
+  atleta_id: conta.papel === "atleta" ? conta.id : null,
+  professor_id: conta.papel === "professor" ? conta.id : null,
+  nome: conta.papel === "atleta" ? `Atleta Fixture ${conta.id}` : `Professor Fixture ${conta.id}`,
+  expira_em: "2099-12-31T23:59:59Z",
+  troca_de_senha_obrigatoria: trocaPendente.has(token),
+});
+const lerJson = (req) =>
+  new Promise((ok) => {
+    let texto = "";
+    req.on("data", (c) => (texto += c));
+    req.on("end", () => {
+      try {
+        ok(JSON.parse(texto));
+      } catch {
+        ok(null);
+      }
+    });
+  });
+const emailDaConta = (c) => `${c.papel}${c.id}@exemplo.com`;
+const NAO_AUTENTICADO = { detail: "não autenticado" };
+
 createServer((req, res) => {
   const cabecalhos = {
     "content-type": "application/json",
     "access-control-allow-origin": "*",
-    "access-control-allow-headers": "*",
+    "access-control-allow-headers": "authorization, content-type, accept",
     "access-control-allow-methods": "*",
   };
   if (req.method === "OPTIONS") return res.writeHead(204, cabecalhos).end();
   const { pathname, searchParams } = new URL(req.url, "http://x");
+  const acesso = (req.headers.authorization ?? "").replace(/^Bearer /, "");
+  const falar = (status, obj) => res.writeHead(status, cabecalhos).end(obj === undefined ? undefined : JSON.stringify(obj));
+  if (pathname === "/sessao" && req.method === "POST") {
+    lerJson(req).then((c) => {
+      const email = String(c?.email ?? "").trim().toLowerCase();
+      const senha = String(c?.senha ?? "");
+      if (email === "muitas@exemplo.com") return res.writeHead(429, { ...cabecalhos, "retry-after": "300" }).end(JSON.stringify({ detail: "muitas tentativas", espere_s: 300 }));
+      if (email === "servidor@exemplo.com") return falar(500, { detail: "erro sintético" });
+      const m = email === "primeiro-acesso@exemplo.com" ? ["", "atleta", "1"] : email.match(/^(atleta|professor)(\d+)@exemplo\.com$/) && ["", ...email.match(/^(atleta|professor)(\d+)@/).slice(1)];
+      const conta = m && Number(m[2]) >= 1 && Number(m[2]) <= 30 ? { papel: m[1], id: Number(m[2]) } : null;
+      const esperada = conta ? (senhasTrocadas.get(email) ?? SENHA_SINTETICA) : null;
+      if (!conta || senha !== esperada) return falar(401, { detail: "e-mail ou senha incorretos" });
+      const token = email === "primeiro-acesso@exemplo.com" ? "token-sintetico-trocar" : `token-sintetico-${conta.papel}-${conta.id}`;
+      revogados.delete(token);
+      return falar(200, { token, ...quemSou(conta, token) });
+    });
+    return;
+  }
+  if (pathname === "/health") return falar(200, { status: "ok" });
+  const sessaoDe = contaDoToken(acesso);
+  if (!sessaoDe) return falar(401, NAO_AUTENTICADO);
+  if (pathname === "/sessao" && req.method === "GET") return falar(200, quemSou(sessaoDe, acesso));
+  if (pathname === "/sessao" && req.method === "DELETE") {
+    revogados.add(acesso);
+    return falar(204);
+  }
+  if (pathname === "/conta/senha" && req.method === "PUT") {
+    lerJson(req).then((c) => {
+      const email = acesso === "token-sintetico-trocar" ? "primeiro-acesso@exemplo.com" : emailDaConta(sessaoDe);
+      const atual = senhasTrocadas.get(email) ?? SENHA_SINTETICA;
+      const invalido = (loc, type, msg) => falar(422, { detail: [{ loc: ["body", loc], msg, type }] });
+      if (c?.senha_atual !== atual) return invalido("senha_atual", "senha_atual_incorreta", "senha atual incorreta");
+      if (typeof c?.senha_nova !== "string" || c.senha_nova.length < 10 || c.senha_nova === c.senha_atual) {
+        return invalido("senha_nova", "senha_nova_invalida", "a senha nova precisa de pelo menos 10 caracteres e ser diferente da atual");
+      }
+      senhasTrocadas.set(email, c.senha_nova);
+      revogados.add(acesso);
+      trocaPendente.delete(acesso);
+      const g = (geracao.get(email) ?? 0) + 1;
+      geracao.set(email, g);
+      return falar(200, { token: `token-sintetico-${sessaoDe.papel}-${sessaoDe.id}-g${g}`, expira_em: "2099-12-31T23:59:59Z" });
+    });
+    return;
+  }
+  if (trocaPendente.has(acesso)) return falar(403, { detail: [{ loc: [], msg: "troque a senha provisória", type: "troca_de_senha_obrigatoria" }] });
+  // O id do caminho tem de ser o da conta; senão, o mesmo 404 de "não existe".
+  const dono = pathname.match(/^\/(atletas|professores)\/(\d+)(?:\/|$)/);
+  if (dono && ((dono[1] === "atletas") !== (sessaoDe.papel === "atleta") || Number(dono[2]) !== sessaoDe.id)) {
+    return falar(404, dono[1] === "professores" ? professorInexistente : { detail: "não encontrado" });
+  }
   let corpo = null;
   const tp = pathname.match(/^\/professores\/(\d+)\/tipos-de-treino$/);
   if (tp && req.method === "PUT") {

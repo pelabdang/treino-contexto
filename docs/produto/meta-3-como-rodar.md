@@ -7,6 +7,9 @@ links: [[produto/meta-2-como-rodar]], [[produto/meta-1-como-reproduzir]], [[deci
 ---
 # Meta 3: como rodar o upload de FIT
 
+> **Desde a #502 (Meta 13):** o app não lê mais `EXPO_PUBLIC_ATLETA_ID` nem `EXPO_PUBLIC_PROFESSOR_ID`; o atleta ou o professor é o da conta que entrou em `/entrar`. Para forçar um estado, entre com `atleta<N>@exemplo.com` ou `professor<N>@exemplo.com` (senha sintética, ver `apps/mobile/scripts/api-falsa.mjs`), onde `<N>` faz o papel do antigo id. Onde o texto abaixo manda pôr a variável, leia "entre com a conta de mesmo número". Detalhes em [[modulos/mobile]].
+
+
 Passo a passo do upload de um `.fit` com os FIT sintéticos de `tests/fixtures/garmin/fit/`: Postgres, migrações,
 fixtures, API com `FIT_DIR` temporária, app na web e envio pelo botão. Só dado sintético. A base é a mesma do
 [[produto/meta-2-como-rodar]]; as regras do upload estão na [[decisoes/0006-upload-de-fit]].
