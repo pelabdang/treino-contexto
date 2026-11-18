@@ -10,6 +10,7 @@ import pytest
 from fastapi.testclient import TestClient
 
 from app.config import settings
+from app.servicos.consentimento import TERMO_VIGENTE
 from app.db.models import Assessoria, Atividade, Atleta, CheckinTreino, Professor, VinculoProfessorAtleta
 from app.db.session import get_session
 from app.main import criar_app
@@ -54,8 +55,8 @@ def mundo(session):
     session.flush()
     ok = AGORA - timedelta(days=30)
     for i, cons in {1: ok, 2: ok, 3: ok, 4: ok, 5: None, 8: AGORA + timedelta(days=1)}.items():
-        session.add(VinculoProfessorAtleta(professor_id=PROF, atleta_id=i, consentimento_em=cons))
-    session.add(VinculoProfessorAtleta(professor_id=OUTRO, atleta_id=6, consentimento_em=ok))
+        session.add(VinculoProfessorAtleta(professor_id=PROF, atleta_id=i, consentimento_em=cons, termo_versao=TERMO_VIGENTE))
+    session.add(VinculoProfessorAtleta(professor_id=OUTRO, atleta_id=6, consentimento_em=ok, termo_versao=TERMO_VIGENTE))
     # Ana: dor (ha 2 dias), com observacao; confirmada (nao e novo)
     _ativ(session, 10, 1, 2)
     _checkin(session, 10, dor=True, texto=OBS)
