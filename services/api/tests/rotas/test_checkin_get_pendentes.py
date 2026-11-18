@@ -16,6 +16,7 @@ import pytest
 from app.db.models import Atividade, Atleta, CheckinTreino
 from app.db.session import get_session
 from app.main import criar_app
+from tests.acesso_de_teste import sem_login
 from app.servicos import checkin as svc
 from app.servicos.fuso import FUSO_PADRAO
 from fastapi.testclient import TestClient
@@ -48,7 +49,7 @@ def relogio(monkeypatch):
 
 @pytest.fixture
 def client(session):
-    app = criar_app("http://localhost:8081")
+    app = sem_login(criar_app("http://localhost:8081"))
     app.dependency_overrides[get_session] = lambda: session
     return TestClient(app, raise_server_exceptions=False)
 

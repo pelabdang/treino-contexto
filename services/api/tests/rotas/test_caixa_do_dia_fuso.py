@@ -11,6 +11,7 @@ from app.config import settings
 from app.db.models import Assessoria, Atividade, Atleta, Professor, VinculoProfessorAtleta
 from app.db.session import get_session
 from app.main import criar_app
+from tests.acesso_de_teste import sem_login
 from app.servicos import professor as svc_prof
 from app.servicos.feedback_leitura import MSG_PRAZO_VENCIDO, MSG_SEM_CHECKIN
 
@@ -36,7 +37,7 @@ def app(session, monkeypatch):
     session.add(Atividade(id=2, atleta_id=1, fonte="t", fonte_id="2", modalidade="corrida", inicio=_utc(11, 13), fuso_min=-180, duracao_s=2700,
                           tipo_treino="leve", tipo_origem="sugestao", tipo_versao="tipo_treino@1"))
     session.commit()
-    a = criar_app("http://localhost:8081")
+    a = sem_login(criar_app("http://localhost:8081"))
     a.dependency_overrides[get_session] = lambda: session
     return a
 

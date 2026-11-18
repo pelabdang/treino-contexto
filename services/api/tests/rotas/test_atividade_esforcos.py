@@ -11,6 +11,7 @@ from app.db.session import get_session
 from app.ingestao.garmin import ler_atividade_fit
 from app.ingestao.importacao import duracao_da, gravar_atividade
 from app.main import criar_app
+from tests.acesso_de_teste import sem_login
 from app.metricas import esforcos as ef
 from app.metricas.tiros_1km import formatar_pace
 from app.servicos.esforcos import detectar_esforcos
@@ -33,7 +34,7 @@ def oraculo():
 
 @pytest.fixture
 def client(session):
-    app = criar_app("http://localhost:8081")
+    app = sem_login(criar_app("http://localhost:8081"))
     app.dependency_overrides[get_session] = lambda: session
     return TestClient(app)
 

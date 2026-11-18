@@ -14,6 +14,7 @@ from app.db.session import get_session
 from app.ingestao.importacao import importar
 from app.ingestao.saude import importar_saude
 from app.main import criar_app
+from tests.acesso_de_teste import sem_login
 from app.servicos.carga import calcular_carga_do_atleta
 from fastapi.testclient import TestClient
 from sqlalchemy import select
@@ -31,7 +32,7 @@ MOTIVOS = {"sem_dados_saude", "sem_limiar_na_data", "sem_fc", "sem_pace", "cober
 
 @pytest.fixture
 def client(session):
-    app = criar_app("http://localhost:8081")
+    app = sem_login(criar_app("http://localhost:8081"))
     app.dependency_overrides[get_session] = lambda: session
     return TestClient(app)
 

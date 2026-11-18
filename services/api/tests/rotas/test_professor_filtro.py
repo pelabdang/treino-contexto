@@ -6,11 +6,12 @@ import logging
 from datetime import datetime, timedelta, timezone
 
 import pytest
-from fastapi import Depends, FastAPI
+from fastapi import Depends, FastAPI, HTTPException
 from fastapi.testclient import TestClient
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
+from app.autenticacao import professor_da_sessao
 from app.config import Settings, settings
 from app.db.models import (
     Assessoria, Atividade, Atleta, CheckinTreino, Professor, VinculoProfessorAtleta,
@@ -151,8 +152,12 @@ def test_so_atletas_visiveis_vale_para_atividade_e_checkin(session, mundo):
 
 @pytest.fixture
 def cliente(session, mundo, monkeypatch):
-    monkeypatch.setattr(settings, "professor_id", PROF)
     app = FastAPI()
+
+    def _professor_da_sessao(professor_id: int) -> int:  # a "sessao" deste teste e o professor PROF
+        if professor_id != PROF:
+            raise HTTPException(status_code=404, detail=svc.PROFESSOR_INEXISTENTE["detail"])
+        return PROF
 
     def _sessao():
         yield session
@@ -168,6 +173,7 @@ def cliente(session, mundo, monkeypatch):
         return {"atletas": sorted(s.scalars(q))}
 
     app.dependency_overrides[get_session] = _sessao
+    app.dependency_overrides[professor_da_sessao] = _professor_da_sessao
     app.dependency_overrides[svc.agora_utc] = lambda: AGORA
     return TestClient(app)
 
@@ -189,32 +195,8 @@ def test_atleta_inexistente_tem_o_mesmo_404_de_atleta_fora_do_filtro(cliente, mu
     assert fora.content == nao_existe.content
 
 
-def test_404_do_professor_e_o_mesmo_byte_a_byte_nos_tres_casos(cliente, session, monkeypatch, caplog):
-    caplog.set_level(logging.DEBUG)
-    # 1. id diferente do configurado (e que existe na tabela)
-    diferente = cliente.get(f"/professores/{OUTRO}/treinos")
-    # 2. id igual ao configurado, mas sem linha em `professor`
-    monkeypatch.setattr(settings, "professor_id", 99)
-    sem_linha = cliente.get("/professores/99/treinos")
-    # 3. sem configuracao
-    monkeypatch.setattr(settings, "professor_id", None)
-    sem_config = cliente.get(f"/professores/{PROF}/treinos")
-    for r in (diferente, sem_linha, sem_config):
-        assert r.status_code == 404
-    assert diferente.content == sem_linha.content == sem_config.content
-    assert diferente.json() == svc.PROFESSOR_INEXISTENTE
-    # o log nao diz qual dos tres foi (nem leva nome de atleta)
-    texto = " ".join(r.getMessage().lower() for r in caplog.records if r.name.startswith("app"))
-    assert "configur" not in texto and "atleta" not in texto
-
-
-def test_o_filtro_usa_o_id_da_configuracao_nao_o_do_caminho(cliente, monkeypatch):
+def test_o_filtro_usa_o_id_da_sessao_nao_o_do_caminho(cliente, monkeypatch):
     ok = cliente.get(f"/professores/{PROF}/treinos")
     assert ok.status_code == 200 and ok.json()["atletas"] == [1]
     # o id do outro professor no caminho nunca troca a identidade: 404, nao a lista do outro
     assert cliente.get(f"/professores/{OUTRO}/treinos").status_code == 404
-
-
-def test_professor_da_rota_devolve_o_id_da_configuracao(session, mundo, monkeypatch):
-    monkeypatch.setattr(settings, "professor_id", PROF)
-    assert svc.professor_da_rota(PROF, session) == PROF

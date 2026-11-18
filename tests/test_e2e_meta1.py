@@ -116,7 +116,7 @@ def test_fluxo_completo(ambiente):
         assert rp.status_code == 200 and rp.headers["content-type"] == "image/png"
         assert rp.content == png_cli  # API e comando usam o mesmo render_png
     finally:
-        app.dependency_overrides.clear()
+        app.dependency_overrides.pop(get_session, None)  # nao `clear()`: o conftest deixa a sobrescrita de acesso ate o fim do teste
 
     # fora da série: rodagem com auto-lap, natação e esteira sem FIT
     from app.db.models import Atividade

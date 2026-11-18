@@ -12,6 +12,7 @@ import pytest
 from app.db.models import Atividade, Atleta
 from app.db.session import get_session
 from app.main import criar_app
+from tests.acesso_de_teste import sem_login
 from app.metricas.serie_carga import MOTIVOS
 from app.servicos import carga_textos as ct
 from fastapi.testclient import TestClient
@@ -28,7 +29,7 @@ M = "−"
 
 @pytest.fixture
 def client(session):
-    app = criar_app("http://localhost:8081")
+    app = sem_login(criar_app("http://localhost:8081"))
     app.dependency_overrides[get_session] = lambda: session
     return TestClient(app)
 

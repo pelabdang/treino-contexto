@@ -19,14 +19,11 @@ from fastapi import Depends, HTTPException
 from sqlalchemy import Select, select
 from sqlalchemy.orm import Session
 
-from app.config import settings
+from app.autenticacao import PROFESSOR_INEXISTENTE, professor_da_sessao
 from app.db.models import Atleta, Professor, VinculoProfessorAtleta
 from app.db.session import get_session
 
-# Corpo unico do 404 do professor: a mesma forma e os mesmos bytes nos tres casos (ADR 0015, item 2).
-PROFESSOR_INEXISTENTE = {
-    "detail": [{"loc": ["path", "professor_id"], "msg": "professor inexistente", "type": "professor_inexistente"}]
-}
+# Corpo unico do 404 do professor: a mesma forma e os mesmos bytes para qualquer id que nao seja o da sessao (ADR 0015, item 2).
 ATLETA_NAO_ENCONTRADO = {
     "detail": [{"loc": ["path", "atleta_id"], "msg": "atleta não encontrado", "type": "atleta_nao_encontrado"}]
 }
@@ -55,20 +52,10 @@ def atletas_do_professor(professor_id: int, agora: datetime):
     )
 
 
-def professor_configurado(session: Session, professor_id_do_caminho: int) -> int | None:
-    """O id da configuracao se o do caminho for o mesmo e houver linha em `professor`; senao `None` (sem dizer por que)."""
-    configurado = settings.professor_id
-    if configurado is None or professor_id_do_caminho != configurado:
-        return None
-    return configurado if session.get(Professor, configurado) is not None else None
-
-
-def professor_da_rota(professor_id: int, session: Session = Depends(get_session)) -> int:
-    """Dependencia das rotas `/professores/{professor_id}/...`: devolve o id da CONFIGURACAO ou levanta o 404 uniforme."""
-    valido = professor_configurado(session, professor_id)
-    if valido is None:
-        raise HTTPException(status_code=404, detail=PROFESSOR_INEXISTENTE["detail"])
-    return valido
+def professor_da_rota(professor_id: int = Depends(professor_da_sessao)) -> int:
+    """Dependencia das rotas `/professores/{professor_id}/...`: o professor da SESSAO (ADR 0016, item 5; ADR 0015, adendo 3).
+    O 404 uniforme vem de `professor_da_sessao`."""
+    return professor_id
 
 
 def atleta_visivel(session: Session, professor_id: int, atleta_id: int, agora: datetime) -> Atleta:
