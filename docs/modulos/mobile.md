@@ -40,7 +40,7 @@ O app não calcula pace: todo `m:ss` virá da [[modulos/api]].
 
 ## Abas do atleta e do professor (#532)
 - Estrutura `src/app/(app)/(abas)/` dentro do grupo `(app)` (a guarda de sessão continua no `(app)/_layout.tsx`). **As URLs não mudam**: as telas de detalhe (treino, check-in, semana-padrão, consentimento, trocar senha) abrem por cima das abas, no `Stack` do `(app)`, sem a barra. Código: `src/componentes/BarraDeAbas.tsx` (`abasDoPapel`), `TelaConta.tsx`, `TelaEmBreve.tsx`; `src/sessao/destino.ts` deixa `/conta` aberta aos dois papéis e `/caixa-do-dia` só ao professor.
-- **A `BarraConta` e o menu \"Conta\" do topo foram removidos**; \"Enviar arquivo FIT\" saiu da evolução e foi para a aba Conta (`ocultarEnviarFit`). O selo de pedidos (consentimento aguardando) aparece na aba Conta e no item Consentimento, atualizado a cada troca de tela (`src/consentimento/usePedidos.ts`).
+- **A `BarraConta` e o menu "Conta" do topo foram removidos**; "Enviar arquivo FIT" saiu da evolução e foi para a aba Conta (`ocultarEnviarFit`). O selo de pedidos (consentimento aguardando) aparece na aba Conta e no item Consentimento, atualizado a cada troca de tela (`src/consentimento/usePedidos.ts`).
 - Testes: `__tests__/abas.test.tsx` (e os de rota e de sessão ajustados). Capturas (sintéticas, claro e escuro, 390 e 1280) em `docs/design/telas/navegacao/`: uma por aba (início, treinos, evolução, conta com e sem pedido, conta do professor, caixa do dia) e o diálogo de sair.
 - Fonte da proposta: [[design/auditoria-ux-e-inicio-do-atleta]] (arquitetura de informação). Pendente: a lista de treinos (API) e a tela inicial nova.
 
