@@ -8,6 +8,7 @@ from fastapi.testclient import TestClient
 from app.db.models import Atividade, Atleta
 from app.db.session import get_session
 from app.main import app
+from tests.acesso_de_teste import sem_login
 from app.metricas.tiros_1km import VERSAO
 
 ZIP = Path(__file__).parents[4] / "tests" / "fixtures" / "garmin" / "exportacao_minima.zip"
@@ -23,6 +24,7 @@ def importar_fixtures(session):
 @pytest.fixture
 def client(session):
     app.dependency_overrides[get_session] = lambda: session
+    sem_login(app)
     yield TestClient(app)
     app.dependency_overrides.clear()
 

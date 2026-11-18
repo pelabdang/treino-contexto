@@ -36,6 +36,14 @@ def _json(obj, ordenar: bool = False) -> str:
     return json.dumps(obj, ensure_ascii=False, indent=2, sort_keys=ordenar) + "\n"
 
 
+def _liberar(app, get_session, session) -> None:
+    """So para gerar os exemplos: o atleta do caminho vale como o da sessao (como o helper dos testes; o servidor nao tem esse atalho)."""
+    from app.autenticacao import atleta_da_sessao
+
+    app.dependency_overrides[get_session] = lambda: session
+    app.dependency_overrides[atleta_da_sessao] = lambda atleta_id: atleta_id
+
+
 def texto_openapi() -> str:
     from app.main import app
 
@@ -60,11 +68,11 @@ def texto_exemplo() -> str:
     with Session(engine) as session:
         importar(session, ZIP_FIXTURES, "Atleta Ficticio")
         atleta = session.query(Atleta).one()
-        app.dependency_overrides[get_session] = lambda: session
+        _liberar(app, get_session, session)
         try:
             r = TestClient(app).get(f"/atletas/{atleta.id}/evolucao/tiros-1km")
         finally:
-            app.dependency_overrides.pop(get_session, None)
+            app.dependency_overrides.clear()
     r.raise_for_status()
     return _json(r.json())
 
@@ -101,11 +109,11 @@ def texto_exemplo_esforcos() -> str:
         _, ativ, _ = gravar_atividade(session, atleta.id, a, duracao_da(a), [])
         session.commit()
         detectar_esforcos(session, atleta.id)
-        app.dependency_overrides[get_session] = lambda: session
+        _liberar(app, get_session, session)
         try:
             r = TestClient(app).get(f"/atletas/{atleta.id}/atividades/{ativ.id}")
         finally:
-            app.dependency_overrides.pop(get_session, None)
+            app.dependency_overrides.clear()
     r.raise_for_status()
     return _json(r.json())
 
@@ -142,11 +150,11 @@ def texto_exemplo_transicao() -> str:
             ))
         session.commit()
         aplicar_sugestao(session, atleta.id, agora=datetime(2025, 3, 7, tzinfo=timezone.utc))
-        app.dependency_overrides[get_session] = lambda: session
+        _liberar(app, get_session, session)
         try:
             r = TestClient(app).get(f"/atletas/{atleta.id}/treinos-de-transicao")
         finally:
-            app.dependency_overrides.pop(get_session, None)
+            app.dependency_overrides.clear()
     r.raise_for_status()
     return _json(r.json())
 
@@ -173,11 +181,11 @@ def texto_exemplo_carga() -> str:
         importar_saude(session, str(ZIP_CARGA), "Atleta Ficticio")
         atleta = session.query(Atleta).one()
         calcular_carga_do_atleta(session, atleta.id)
-        app.dependency_overrides[get_session] = lambda: session
+        _liberar(app, get_session, session)
         try:
             r = TestClient(app).get(f"/atletas/{atleta.id}/carga")
         finally:
-            app.dependency_overrides.pop(get_session, None)
+            app.dependency_overrides.clear()
     r.raise_for_status()
     return _json(r.json())
 

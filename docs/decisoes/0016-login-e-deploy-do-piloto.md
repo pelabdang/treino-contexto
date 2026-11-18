@@ -85,7 +85,7 @@ A forma das rotas **não muda**: `/atletas/{atleta_id}/...` e `/professores/{pro
 | Registrar e revogar o **consentimento** | só o **atleta** | professor |
 | Criar conta, vínculo, redefinir senha, desativar, excluir | só o **operador**, por comando (item 6) | ninguém por rota |
 
-**A ordem das respostas é `401` (sem sessão), depois `404` (de outro ou inexistente), depois `409` (`editavel = false`)**, com um teste para a ordem. Isto cumpre a pergunta B da Meta 12 (só o atleta dono corrige a transição). O `409` por `transicao.editavel = false` (ADR 0004, adendo 12) continua valendo, depois da checagem de dono.
+**A ordem das respostas é `401` (sem sessão), depois `403` (`troca_de_senha_obrigatoria`, item 6), depois `404` (de outro ou inexistente, com o mesmo corpo), depois `422` (corpo ou parâmetro inválido) e `409` (`editavel = false`)**, com um teste para a ordem (`test_acesso.py`, #500). O `404` de atleta alheio tem os mesmos bytes do de atleta inexistente, e o de professor alheio os do `professor_inexistente`. Isto cumpre a pergunta B da Meta 12 (só o atleta dono corrige a transição). O `409` por `transicao.editavel = false` (ADR 0004, adendo 12) continua valendo, depois da checagem de dono.
 
 ### 6. Operador, não administrador
 Sem painel e sem rota de administração. Quem cuida do piloto (o Angelo e o time, com acesso ao servidor) usa **comandos** do pacote da API, o mesmo caminho dos workers:

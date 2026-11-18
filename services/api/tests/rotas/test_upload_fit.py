@@ -6,6 +6,7 @@ import pytest
 from app.db.models import Atividade, Atleta
 from app.db.session import get_session
 from app.main import criar_app
+from tests.acesso_de_teste import sem_login
 from app.rotas.atividades import get_fit_dir
 from app.ingestao.importacao import TAMANHO_MAX_FIT
 from fastapi.testclient import TestClient
@@ -31,7 +32,7 @@ def atleta(session):
 
 @pytest.fixture
 def client(session, pasta):
-    app = criar_app("http://localhost:8081")
+    app = sem_login(criar_app("http://localhost:8081"))
     app.dependency_overrides[get_session] = lambda: session
     app.dependency_overrides[get_fit_dir] = lambda: pasta
     return TestClient(app)

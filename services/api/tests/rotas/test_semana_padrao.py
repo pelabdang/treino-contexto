@@ -6,6 +6,7 @@ import pytest
 from app.db.models import Atividade, Atleta, SemanaPadrao, SemanaPadraoItem
 from app.db.session import get_session
 from app.main import criar_app
+from tests.acesso_de_teste import sem_login
 from app.servicos import semana_padrao as sp
 from fastapi.testclient import TestClient
 from sqlalchemy import func, select
@@ -13,7 +14,7 @@ from sqlalchemy import func, select
 
 @pytest.fixture
 def client(session):
-    app = criar_app("http://localhost:8081")
+    app = sem_login(criar_app("http://localhost:8081"))
     app.dependency_overrides[get_session] = lambda: session
     return TestClient(app)
 

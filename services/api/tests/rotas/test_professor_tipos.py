@@ -13,6 +13,7 @@ from app.config import settings
 from app.db.models import Assessoria, Atividade, Atleta, CheckinTreino, FeedbackTreino, Professor, VinculoProfessorAtleta
 from app.db.session import get_session
 from app.main import criar_app
+from tests.acesso_de_teste import sem_login
 from app.servicos import professor as svc_prof
 from app.servicos.feedback import desatualizado, motivos_desatualizado, tipo_atual
 from app.servicos.feedback_leitura import MSG_DESATUALIZADO_TIPO, feedback_da_atividade
@@ -56,7 +57,7 @@ def mundo(session):
 @pytest.fixture
 def client(session, mundo, monkeypatch):
     monkeypatch.setattr(settings, "professor_id", PROF)
-    app = criar_app("http://localhost:8081")
+    app = sem_login(criar_app("http://localhost:8081"))
     app.dependency_overrides[get_session] = lambda: session
     app.dependency_overrides[svc_prof.agora_utc] = lambda: AGORA
     return TestClient(app, raise_server_exceptions=False)
@@ -99,18 +100,6 @@ def test_atividade_inexistente_e_fora_do_filtro_tem_o_mesmo_404_byte_a_byte(clie
     assert fora.status_code == nao_existe.status_code == 404
     assert fora.content == nao_existe.content
     assert b"9999" not in nao_existe.content and str(mundo["consentimento_nulo"]).encode() not in fora.content.replace(b"404", b"")
-
-
-def test_404_do_professor_igual_nos_tres_casos_e_vem_antes_do_422(client, monkeypatch, mundo):
-    invalido = [{"atividade_id": 1, "tipo_treino": "nao_existe"}]  # 422 se a ordem fosse outra
-    diferente = client.put(f"/professores/{OUTRO}/tipos-de-treino", json=invalido)
-    monkeypatch.setattr(settings, "professor_id", 99)
-    sem_linha = client.put("/professores/99/tipos-de-treino", json=invalido)
-    monkeypatch.setattr(settings, "professor_id", None)
-    sem_config = client.put(URL, json=invalido)
-    assert diferente.status_code == sem_linha.status_code == sem_config.status_code == 404
-    assert diferente.content == sem_linha.content == sem_config.content
-    assert diferente.json() == svc_prof.PROFESSOR_INEXISTENTE
 
 
 def test_404_da_atividade_vem_antes_do_422_atividade_sem_tipo(client, session, mundo):

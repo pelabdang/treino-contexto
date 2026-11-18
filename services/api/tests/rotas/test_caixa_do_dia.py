@@ -13,6 +13,7 @@ from app.config import settings
 from app.db.models import Assessoria, Atividade, Atleta, CheckinTreino, Professor, VinculoProfessorAtleta
 from app.db.session import get_session
 from app.main import criar_app
+from tests.acesso_de_teste import sem_login
 from app.servicos import professor as svc_prof
 
 HOJE = date(2026, 11, 18)  # quarta-feira
@@ -77,7 +78,7 @@ def mundo(session):
 @pytest.fixture
 def client(session, mundo, monkeypatch):
     monkeypatch.setattr(settings, "professor_id", PROF)
-    app = criar_app("http://localhost:8081")
+    app = sem_login(criar_app("http://localhost:8081"))
     app.dependency_overrides[get_session] = lambda: session
     app.dependency_overrides[svc_prof.agora_utc] = lambda: AGORA
     return TestClient(app, raise_server_exceptions=False)
@@ -182,17 +183,6 @@ def test_consentimento_no_futuro_entra_quando_chega_a_hora(client, session):
     session.get(VinculoProfessorAtleta, (PROF, 8)).consentimento_em = AGORA
     session.commit()
     assert "Hugo Consentimento Futuro" in [a["nome"] for a in _caixa(client)["alunos"]]
-
-
-def test_404_do_professor_igual_nos_tres_casos(client, monkeypatch):
-    diferente = client.get(f"/professores/{OUTRO}/caixa-do-dia")
-    monkeypatch.setattr(settings, "professor_id", 99)
-    sem_linha = client.get("/professores/99/caixa-do-dia")
-    monkeypatch.setattr(settings, "professor_id", None)
-    sem_config = client.get(URL)
-    assert diferente.status_code == sem_linha.status_code == sem_config.status_code == 404
-    assert diferente.content == sem_linha.content == sem_config.content
-    assert diferente.json() == svc_prof.PROFESSOR_INEXISTENTE
 
 
 def test_multiesporte_nao_gera_motivo_nem_novo(client, session):

@@ -20,6 +20,7 @@ from app.db.models import (
 )
 from app.db.session import get_session
 from app.main import criar_app
+from tests.acesso_de_teste import sem_login
 from app.metricas import carga as cg
 from app.metricas import esforcos as ef
 from fastapi.testclient import TestClient
@@ -59,7 +60,7 @@ def _blocos(a, estrutura, tiros):
 
 @pytest.fixture
 def client(session):
-    app = criar_app("http://localhost:8081")
+    app = sem_login(criar_app("http://localhost:8081"))
     app.dependency_overrides[get_session] = lambda: session
     return TestClient(app)
 

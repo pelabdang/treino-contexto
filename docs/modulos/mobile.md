@@ -13,6 +13,7 @@ App em React Native com Expo (TypeScript, Expo Router) para iOS, Android e web. 
 O app não calcula pace: todo `m:ss` virá da [[modulos/api]].
 
 ## Entradas e saídas
+- **Até a #502 o app ainda não manda sessão** (cabeçalho `Authorization`): contra a API real, as rotas respondem `401` desde a #500; o app só funciona contra a API falsa. As variáveis de id abaixo somem do app real quando entrar o login (ADR 0016, item 8).
 - Entrada: variáveis `EXPO_PUBLIC_API_URL` (padrão `http://localhost:8000`) e `EXPO_PUBLIC_ATLETA_ID` (padrão `1`, o atleta das fixtures) e `EXPO_PUBLIC_PROFESSOR_ID` (professor da caixa do dia, #426; **sem padrão**: vazio ou inválido vira `null` e a tela mostra "Caixa do dia não encontrada" sem chamar a API), lidas só em `src/config.ts`. Modelo em `apps/mobile/.env.example`; copie para `.env.local` (ignorado pelo git).
 - Consome a [[modulos/api]] pelo pacote `@treino/api-client` (`packages/api-client/`, tipos gerados do OpenAPI; ver [[modulos/api-client]]), dependência local `"@treino/api-client": "file:../../packages/api-client"`. Uso: `buscarEvolucaoTiros1km(config.atletaId, {inicio, fim}, {baseUrl: config.apiUrl})`. A tela inicial chama pelo componente `TelaEvolucao`.
 - Jest: `package.json` tem `moduleDirectories` com `<rootDir>/node_modules`, para o pacote (fora de `apps/mobile`) achar os helpers do Babel.

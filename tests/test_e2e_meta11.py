@@ -380,42 +380,31 @@ class Api:
             return e.code, e.read(), dict(e.headers)
 
 
-def test_04_professor_id_ausente_ou_vazio_a_api_sobe_e_o_404_e_uniforme_byte_a_byte(base, tmp_path):
-    """Item: ADR 0015, item 2: a API sobe sem `PROFESSOR_ID` (ausente ou `PROFESSOR_ID=`), as rotas do professor dao o MESMO 404."""
+def test_04_a_api_de_verdade_sem_sessao_da_401_uniforme_com_ou_sem_professor_id(base, tmp_path):
+    """Item: ADR 0016 (Meta 13) no lugar do `PROFESSOR_ID` da ADR 0015, item 2: a identidade do professor vem da SESSAO. A API sobe com a
+    variavel ausente, vazia ou preenchida (ela nao decide mais nada) e a rota do professor, sem sessao, da o MESMO 401 nos tres casos."""
     corpos = {}
-    for rotulo, extra in (("ausente", {}), ("vazio", {"PROFESSOR_ID": ""})):
+    for rotulo, extra in (("ausente", {}), ("vazio", {"PROFESSOR_ID": ""}), ("configurado", {"PROFESSOR_ID": "1"})):
         pasta = tmp_path / rotulo
         pasta.mkdir()
         with Api(base, pasta, **extra) as api:
             assert api.get("/health")[0] == 200  # o resto do app nao depende do professor
             status, corpo, _ = api.get(CAIXA)
-            assert status == 404, rotulo
+            assert status == 401, rotulo
             corpos[rotulo] = corpo
-    pasta = tmp_path / "configurado"
-    pasta.mkdir()
-    with Api(base, pasta, PROFESSOR_ID="1") as api:
-        status, corpo, cab = api.get(CAIXA)
-        assert status == 200 and cab.get("Cache-Control", cab.get("cache-control")) == "no-store"
-        corpos["outro_id"] = api.get("/professores/2/caixa-do-dia")[1]  # existe no banco, mas nao e o configurado
-        corpos["sem_linha"] = api.get("/professores/999/caixa-do-dia")[1]
-        assert api.get("/professores/1/qualquer-coisa")[0] == 404
+            assert api.get("/professores/2/caixa-do-dia")[0] == 401
     assert len(set(corpos.values())) == 1, corpos
-    assert json.loads(corpos["ausente"]) == {
-        "detail": [{"loc": ["path", "professor_id"], "msg": "professor inexistente", "type": "professor_inexistente"}]}
 
 
-def test_05_404_do_professor_vem_antes_do_422_do_corpo_e_nao_grava(mundo, monkeypatch):
-    """Item: ADR 0015, item 2 e Duda: professor inexistente e 404 antes de qualquer validacao do corpo do PUT."""
+def test_05_404_do_professor_vem_antes_do_422_do_corpo_e_nao_grava(mundo):
+    """Item: ADR 0015, item 2 e Duda: professor inexistente e 404 antes de qualquer validacao do corpo do PUT. (O professor de OUTRA conta
+    tem o mesmo 404 por sessao de verdade em `services/api/tests/rotas/test_acesso.py`.)"""
     antes = _estado(mundo)
     ruim = [{"atividade_id": 1, "tipo_treino": "inventado"}]
-    r_outro = mundo.client.put("/professores/2/tipos-de-treino", json=ruim)
     r_sem_linha = mundo.client.put("/professores/999/tipos-de-treino", json=[])
-    from app.config import settings
-
-    monkeypatch.setattr(settings, "professor_id", None)
-    r_sem_config = mundo.client.put(LOTE, json=ruim)
-    assert (r_outro.status_code, r_sem_linha.status_code, r_sem_config.status_code) == (404, 404, 404)
-    assert r_outro.content == r_sem_linha.content == r_sem_config.content
+    r_sem_linha_ruim = mundo.client.put("/professores/999/tipos-de-treino", json=ruim)
+    assert (r_sem_linha.status_code, r_sem_linha_ruim.status_code) == (404, 404)
+    assert r_sem_linha.content == r_sem_linha_ruim.content
     assert _estado(mundo) == antes
 
 

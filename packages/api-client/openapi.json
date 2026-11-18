@@ -3488,6 +3488,11 @@
             "description": "Validation Error"
           }
         },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
         "summary": "Enviar Atividade Fit",
         "tags": [
           "atividades"
@@ -3550,6 +3555,11 @@
             "description": "Validation Error"
           }
         },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
         "summary": "Buscar Atividade",
         "tags": [
           "atividades"
@@ -3605,6 +3615,11 @@
             "description": "Validation Error"
           }
         },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
         "summary": "Apagar Checkin",
         "tags": [
           "check-in"
@@ -3658,6 +3673,11 @@
             "description": "Entrada inválida, atividade que não pede check-in ou fora do prazo. Nunca repete o que foi enviado: só `loc`, `msg` e `type`"
           }
         },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
         "summary": "Checkin Da Atividade",
         "tags": [
           "check-in"
@@ -3721,6 +3741,11 @@
             "description": "Entrada inválida, atividade que não pede check-in ou fora do prazo. Nunca repete o que foi enviado: só `loc`, `msg` e `type`"
           }
         },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
         "summary": "Registrar Checkin",
         "tags": [
           "check-in"
@@ -3793,6 +3818,11 @@
             "description": "Validation Error"
           }
         },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
         "summary": "Desfazer Correcao De Transicao",
         "tags": [
           "treino de transição"
@@ -3873,6 +3903,11 @@
             "description": "Validation Error"
           }
         },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
         "summary": "Corrigir Transicao",
         "tags": [
           "treino de transição"
@@ -3960,6 +3995,11 @@
             "description": "Validation Error"
           }
         },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
         "summary": "Carga Do Atleta",
         "tags": [
           "carga"
@@ -4020,6 +4060,11 @@
             "description": "Entrada inválida, atividade que não pede check-in ou fora do prazo. Nunca repete o que foi enviado: só `loc`, `msg` e `type`"
           }
         },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
         "summary": "Listar Checkins Pendentes",
         "tags": [
           "check-in"
@@ -4107,6 +4152,11 @@
             "description": "Validation Error"
           }
         },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
         "summary": "Evolucao Tiros 1Km",
         "tags": [
           "evolução"
@@ -4190,6 +4240,11 @@
             "description": "Validation Error"
           }
         },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
         "summary": "Evolucao Tiros 1Km Png",
         "tags": [
           "evolução"
@@ -4260,6 +4315,11 @@
             "description": "Validation Error"
           }
         },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
         "summary": "Semana Padrao Do Atleta",
         "tags": [
           "semana-padrão"
@@ -4321,6 +4381,11 @@
             "description": "Validation Error"
           }
         },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
         "summary": "Gravar Semana Padrao",
         "tags": [
           "semana-padrão"
@@ -4401,6 +4466,11 @@
             "description": "Período inválido (`inicio` depois de `fim`)"
           }
         },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
         "summary": "Listar Treinos De Transicao",
         "tags": [
           "treino de transição"
@@ -4482,6 +4552,11 @@
             "description": "Validation Error"
           }
         },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
         "summary": "Comparar Treinos De Transicao",
         "tags": [
           "treino de transição"
@@ -4606,6 +4681,11 @@
             "description": "Validation Error"
           }
         },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
         "summary": "Buscar Caixa Do Dia",
         "tags": [
           "professor"
@@ -4668,6 +4748,11 @@
             "description": "Lote vazio, com mais de 200 itens, com `atividade_id` repetido ou tipo fora dos cinco (validacao); ou `atividade_sem_tipo` (multiesporte ou sem tipo para confirmar). Lote nao salvo. Nunca repete o enviado"
           }
         },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
         "summary": "Confirmar Tipos",
         "tags": [
           "professor"

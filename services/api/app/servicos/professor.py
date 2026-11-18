@@ -2,9 +2,9 @@
 
 Duas pecas, usadas por TODA rota do professor (a Meta 11 nao tem rota de professor que leia atleta fora daqui):
 
-- `professor_da_rota`: dependencia que confere o `professor_id` do caminho contra o `PROFESSOR_ID` configurado e contra a
-  tabela `professor`. Os tres jeitos de falhar (sem configuracao, id diferente, sem linha) dao o MESMO `404`, byte a byte, e
-  o log nao diz qual deles foi: a resposta nao confirma que um id existe. Devolve o id da CONFIGURACAO, nunca o do caminho.
+- `professor_da_rota`: dependencia que devolve o professor da SESSAO (`professor_da_sessao`, ADR 0016, item 5; desde a #500 nao ha
+  mais `PROFESSOR_ID`). Qualquer id do caminho que nao seja o da sessao da o MESMO `404`, byte a byte, e o log nao diz o motivo:
+  a resposta nao confirma que um id existe. Devolve o id da SESSAO, nunca o do caminho.
 - `atletas_do_professor(professor_id, agora)`: expressao SQL (subconsulta de `atleta_id`) com o vinculo E o consentimento
   (`consentimento_em` nao nulo e `<= agora`). Entra como condicao da consulta, nunca como filtro depois de ler.
 
@@ -19,14 +19,11 @@ from fastapi import Depends, HTTPException
 from sqlalchemy import Select, select
 from sqlalchemy.orm import Session
 
-from app.config import settings
+from app.autenticacao import PROFESSOR_INEXISTENTE, professor_da_sessao
 from app.db.models import Atleta, Professor, VinculoProfessorAtleta
 from app.db.session import get_session
 
-# Corpo unico do 404 do professor: a mesma forma e os mesmos bytes nos tres casos (ADR 0015, item 2).
-PROFESSOR_INEXISTENTE = {
-    "detail": [{"loc": ["path", "professor_id"], "msg": "professor inexistente", "type": "professor_inexistente"}]
-}
+# Corpo unico do 404 do professor: a mesma forma e os mesmos bytes para qualquer id que nao seja o da sessao (ADR 0015, item 2).
 ATLETA_NAO_ENCONTRADO = {
     "detail": [{"loc": ["path", "atleta_id"], "msg": "atleta não encontrado", "type": "atleta_nao_encontrado"}]
 }
@@ -55,20 +52,10 @@ def atletas_do_professor(professor_id: int, agora: datetime):
     )
 
 
-def professor_configurado(session: Session, professor_id_do_caminho: int) -> int | None:
-    """O id da configuracao se o do caminho for o mesmo e houver linha em `professor`; senao `None` (sem dizer por que)."""
-    configurado = settings.professor_id
-    if configurado is None or professor_id_do_caminho != configurado:
-        return None
-    return configurado if session.get(Professor, configurado) is not None else None
-
-
-def professor_da_rota(professor_id: int, session: Session = Depends(get_session)) -> int:
-    """Dependencia das rotas `/professores/{professor_id}/...`: devolve o id da CONFIGURACAO ou levanta o 404 uniforme."""
-    valido = professor_configurado(session, professor_id)
-    if valido is None:
-        raise HTTPException(status_code=404, detail=PROFESSOR_INEXISTENTE["detail"])
-    return valido
+def professor_da_rota(professor_id: int = Depends(professor_da_sessao)) -> int:
+    """Dependencia das rotas `/professores/{professor_id}/...`: o professor da SESSAO (ADR 0016, item 5; ADR 0015, adendo 3).
+    O 404 uniforme vem de `professor_da_sessao`."""
+    return professor_id
 
 
 def atleta_visivel(session: Session, professor_id: int, atleta_id: int, agora: datetime) -> Atleta:

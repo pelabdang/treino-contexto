@@ -7,6 +7,7 @@ import pytest
 from app.db.models import Atividade, Atleta, ClimaAtividade
 from app.db.session import get_session
 from app.main import criar_app
+from tests.acesso_de_teste import sem_login
 from app.servicos.clima import FONTE_CLIMA, entrada_de
 from fastapi.testclient import TestClient
 
@@ -17,7 +18,7 @@ VALORES = {"temperatura_c", "sensacao_c", "umidade_pct", "vento_kmh"}
 
 @pytest.fixture
 def client(session):
-    app = criar_app("http://localhost:8081")
+    app = sem_login(criar_app("http://localhost:8081"))
     app.dependency_overrides[get_session] = lambda: session
     return TestClient(app)
 
