@@ -623,6 +623,8 @@ class FeedbackTreino(Base):
     clima_visto: Mapped[str | None] = mapped_column(String(64))
     # ADR 0015, item 1: o tipo que o pacote viu na geracao (`sem_tipo` sem tipo); NULL = linha anterior a migracao 0016 (nao compara)
     tipo_visto: Mapped[str | None] = mapped_column(String(20))
+    # #510 (pergunta C da Meta 12): se o pacote viu o treino como parte de uma transicao; NULL = linha anterior a migracao 0018 (nao compara)
+    transicao_visto: Mapped[bool | None] = mapped_column(Boolean)
     tentado_em: Mapped[datetime] = mapped_column(DateTime(timezone=True))
 
     checkin: Mapped[CheckinTreino] = relationship(back_populates="feedback")

@@ -2,7 +2,7 @@
 tipo: decisao
 status: aceita
 dono: caio
-atualizado: 2026-11-16
+atualizado: 2026-11-18
 links: [[decisoes/0004-contrato-tela-evolucao]], [[decisoes/0007-clima-da-atividade]], [[decisoes/0008-deteccao-de-esforcos]], [[decisoes/0010-carga-de-treino]], [[decisoes/0011-linha-de-base-e-semana-padrao]], [[decisoes/0012-check-in-pos-treino]], [[metricas/linha-base]], [[metricas/carga-treino]], [[metricas/carga-pse]], [[metricas/esforcos]], [[modulos/banco]], [[modulos/api]], [[modulos/worker]], [[produto/roadmap]], [[produto/plano-mvp-execucao]], [[glossario]]
 ---
 # ADR: 0013 Feedback automático por treino (pacote de fatos, guarda, camada de LLM, checagens)
@@ -286,7 +286,7 @@ O campo vem **só** no `GET` da atividade do próprio atleta, como o check-in (n
 | `pronto` | linha `pronto` e não desatualizada | `texto` (3 a 5 linhas), `origem` |
 | `sem_checkin` | a atividade não tem check-in | `mensagem` ("Faça o check-in para ver o feedback."), `checkin_aberto` (a janela de 7 dias da ADR 0012; falso = prazo vencido, sem botão) |
 | `pendente` | tem check-in e ainda não há tentativa (o worker não rodou) | `mensagem` |
-| `desatualizado` | o check-in foi editado ou `versao_fatos` mudou | `mensagem`; **a API não devolve o texto antigo** |
+| `desatualizado` | qualquer motivo de `motivos_desatualizado()`: `checkin` (editado), `versao` (`versao_fatos` mudou), `noite` (recuperação importada depois, adendo 1), `clima` (adendo 4), `tipo` (o professor confirmou ou corrigiu o tipo, #425) e `transicao` (o atleta corrigiu ou desfez o rótulo de transição, adendo 5) | `mensagem` (varia pelo motivo); **a API não devolve o texto antigo** |
 | `indisponivel` | linha `sem_feedback`, por qualquer motivo | `mensagem` e `motivo` (código fechado, só para quem cuida do app) |
 
 - **`mensagem`**: a **frase pronta em português, escrita pela API** (como `carga_pse.texto`); o app a mostra como veio, e as frases da spec do cartão ficam só como reserva. A API pode variar a frase por `motivo`
@@ -459,3 +459,12 @@ Revê a decisão 6 só no clima: o feedback gerado com o clima `pendente` dizia 
 3. **Linhas antigas.** As linhas de antes da `0015` ficam com `clima_visto` **nulo**, que **não compara**: nenhuma entra na fila de uma vez (não se sabe o que o pacote viu, e refazer todas gastaria chamadas do provedor). Preço: um feedback antigo gerado com o clima pendente continua com o texto antigo até o próximo `--refazer`; a impressão passa a ser gravada em toda geração nova. Alternativa descartada: preencher a coluna na migração com a impressão de hoje (esconderia justamente os casos que a issue quer pegar).
 4. **Mensagem do `GET`** (só a `mensagem`, sem estado novo): só o clima mudou, "Os dados do clima foram atualizados. O feedback será refeito."; clima e noite juntos, "Os dados da noite anterior e do clima foram atualizados. O feedback será refeito."; check-in editado (ou versão do pacote) continua com a frase do check-in, sozinho ou junto. A frase só da versão do pacote (#402) **não** foi mudada aqui.
 5. **`downgrade`** remove a coluna.
+
+## Adendo 5 (2026-11-18): a marcação de transição que muda desatualiza o feedback (#510)
+Pergunta C da Meta 12 ([[decisoes/0004-contrato-tela-evolucao]], adendo 12, e [[decisoes/0009-treino-de-transicao]]). Aprovado pelo Caio sem mudança (18/11).
+1. **Motivo novo `transicao`.** O `fatos_treino@2` leva `parte_de_transicao` da própria atividade. Quando o atleta corrige ou desfaz o rótulo de transição, o valor de hoje deixa de bater com o que o pacote viu, e o feedback fica `desatualizado`; o worker o refaz como nos outros motivos. A lista completa dos motivos passa a ser: `checkin`, `versao`, `noite`, `clima`, `tipo`, `transicao`.
+2. **Coluna `feedback_treino.transicao_visto`** (migração **`0018`**, booleano, **anulável**, aditiva): se o pacote viu a atividade como parte de um treino de transição. **`NULL` (linhas anteriores) não compara**, como `clima_visto` e `tipo_visto`: nenhuma linha antiga entra na fila de uma vez. É gravada em toda geração nova e na linha mantida pelo `--refazer`.
+3. **Comparação no `GET`** (e no worker): `transicao_visto` contra a situação de hoje (`transicao_atual`: a atividade tem rótulo de transição ativo), sem coluna nem trabalho novo na leitura.
+4. **Mensagem do `GET`:** só a transição, "A marcação de treino de transição mudou depois deste feedback. O feedback será refeito."; tipo e transição juntos, "O tipo e a marcação de transição do treino mudaram depois deste feedback. O feedback será refeito."; com noite ou clima na mesma hora vale a frase deles.
+5. **A outra parte do brick não refaz.** Corrigir a transição de uma atividade não desatualiza o feedback da outra parte: o `fatos_treino@2` só leva `parte_de_transicao` da **própria** atividade, e o prompt e as checagens não citam transição. O efeito do rótulo de outra atividade sobre a linha de base é o mesmo caso de "entrou treino novo", que esta ADR (item 2) já decidiu **não** desatualizar. Por isso `fatos_treino@2` e `checagens_feedback@1` **não mudam**.
+6. **`downgrade`** remove a coluna.
