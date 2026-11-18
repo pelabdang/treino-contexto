@@ -203,7 +203,7 @@ campo vazio e de "as duas senhas novas iguais".
 | Abrir o app | `GET /sessao` | acesso | `papel`, `atleta_id` ou `professor_id`, `nome`, `expira_em`, `troca_de_senha_obrigatoria` | `401` se expirou ou foi revogado |
 | Sair | `DELETE /sessao` | acesso | `204` | falha de rede não impede a saída no aparelho |
 | Trocar a senha | `PUT /conta/senha` | `senha_atual`, `senha_nova` | `{token, expira_em}` novo (a API revoga todos os acessos; o app troca o guardado) | `422` com tipo (`senha_atual_incorreta`, `senha_nova_invalida`) para o app escolher o texto; **sem** devolver a senha nem repetir o enviado |
-| todas as rotas | cabeçalho de acesso | | | `401` quando expirou; `404` uniforme para dado de outro atleta ou aluno sem consentimento; nunca `403` com diferença visível |
+| todas as rotas | cabeçalho de acesso | | | `401` quando expirou; `404` uniforme para dado de outro atleta ou aluno sem consentimento (nunca `403` para isso); o único `403` é `troca_de_senha_obrigatoria`, da própria conta (ADR 0016, item 6) |
 
 Nada disso é dado de saúde, mas **o log do servidor não grava e-mail, senha nem acesso** (ADR 0016).
 
