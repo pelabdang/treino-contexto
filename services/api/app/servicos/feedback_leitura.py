@@ -22,6 +22,8 @@ MSG_DESATUALIZADO_VERSAO = "O feedback será refeito."  # #402: so a versao do p
 MSG_DESATUALIZADO_NOITE = "Os dados da noite anterior foram atualizados. O feedback será refeito."  # #396: so a noite mudou
 MSG_DESATUALIZADO_CLIMA = "Os dados do clima foram atualizados. O feedback será refeito."  # #409: so o clima mudou
 MSG_DESATUALIZADO_TIPO = "O tipo do treino mudou depois deste feedback. O feedback será refeito."  # #425: o professor corrigiu o tipo
+MSG_DESATUALIZADO_TRANSICAO = "A marcação de treino de transição mudou depois deste feedback. O feedback será refeito."  # #510: o atleta corrigiu ou desfez o rótulo
+MSG_DESATUALIZADO_TREINO = "O tipo e a marcação de transição do treino mudaram depois deste feedback. O feedback será refeito."
 MSG_DESATUALIZADO_NOITE_CLIMA = "Os dados da noite anterior e do clima foram atualizados. O feedback será refeito."
 MSG_INDISPONIVEL = "Ainda não foi possível gerar o feedback deste treino. Uma nova tentativa será feita mais tarde."
 MSG_SEM_PROVEDOR = "O feedback automático não está ligado neste app."
@@ -38,11 +40,13 @@ class FeedbackLido:
 
 
 def feedback_da_atividade(a: Atividade, checkin: CheckinTreino | None, checkin_aberto: bool,
-                          versao_fatos: str = VERSAO_FATOS, recuperacao_hoje=_NAO_SEI, clima_hoje=_NAO_SEI, tipo_hoje=_NAO_SEI) -> FeedbackLido | None:
+                          versao_fatos: str = VERSAO_FATOS, recuperacao_hoje=_NAO_SEI, clima_hoje=_NAO_SEI, tipo_hoje=_NAO_SEI,
+                          transicao_hoje=_NAO_SEI) -> FeedbackLido | None:
     """`None` para atividade que nao pede check-in (`multiesporte_pai` e `troca`): o cartao nao aparece.
     `recuperacao_hoje`: o `importado_em` da noite do treino hoje (ADR 0014, item 4b); omitido, a noite nao entra na conta.
     `clima_hoje`: a assinatura do clima hoje (#409); omitido, o clima nao entra na conta.
-    `tipo_hoje`: o tipo da atividade hoje (#425); omitido, o tipo nao entra na conta."""
+    `tipo_hoje`: o tipo da atividade hoje (#425); omitido, o tipo nao entra na conta.
+    `transicao_hoje`: se a atividade e parte de uma transicao hoje (#510); omitido, nao entra na conta."""
     if not elegivel(a):
         return None
     if checkin is None:
@@ -54,7 +58,7 @@ def feedback_da_atividade(a: Atividade, checkin: CheckinTreino | None, checkin_a
     if fb.estado == "sem_feedback":
         sem_provedor = fb.motivo == "provedor_nao_configurado"
         return FeedbackLido("indisponivel", mensagem=MSG_SEM_PROVEDOR if sem_provedor else MSG_INDISPONIVEL, motivo=fb.motivo)
-    motivos = motivos_desatualizado(fb, checkin, versao_fatos, recuperacao_hoje, clima_hoje, tipo_hoje)
+    motivos = motivos_desatualizado(fb, checkin, versao_fatos, recuperacao_hoje, clima_hoje, tipo_hoje, transicao_hoje)
     if motivos:
         return FeedbackLido("desatualizado", mensagem=_mensagem_desatualizado(motivos))
     return FeedbackLido("pronto", texto=fb.texto, origem="teste" if fb.provedor == "falso" else "automatico")
@@ -68,6 +72,8 @@ def _mensagem_desatualizado(motivos: frozenset[str]) -> str:
     motivos = motivos - {"versao"}
     if not motivos:
         return MSG_DESATUALIZADO_VERSAO
+    if "transicao" in motivos and not ({"noite", "clima"} & motivos):
+        return MSG_DESATUALIZADO_TREINO if "tipo" in motivos else MSG_DESATUALIZADO_TRANSICAO
     if "tipo" in motivos and not ({"noite", "clima"} & motivos):
         return MSG_DESATUALIZADO_TIPO
     if {"noite", "clima"} <= motivos:

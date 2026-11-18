@@ -70,8 +70,13 @@ def tipo_atual(a: Atividade) -> str:
     return a.tipo_treino or SEM_TIPO
 
 
+def transicao_atual(a: Atividade) -> bool:
+    """O que o pacote de fatos ve hoje: a atividade e parte de um treino de transicao (`parte_de_transicao`), o que `transicao_visto` guarda."""
+    return bool(a.rotulo_transicao and a.rotulo_transicao.transicao)
+
+
 def motivos_desatualizado(fb: FeedbackTreino, checkin: CheckinTreino, versao_fatos: str, recuperacao_hoje: Any = _NAO_SEI,
-                          clima_hoje: Any = _NAO_SEI, tipo_hoje: Any = _NAO_SEI) -> frozenset[str]:
+                          clima_hoje: Any = _NAO_SEI, tipo_hoje: Any = _NAO_SEI, transicao_hoje: Any = _NAO_SEI) -> frozenset[str]:
     """Por que o feedback nao vale mais, entre `checkin`, `versao`, `noite` e `clima` (vazio = em dia).
 
     - `checkin`: o check-in foi editado (inclusive um `PUT` identico); `versao`: a `versao_fatos` mudou;
@@ -80,8 +85,10 @@ def motivos_desatualizado(fb: FeedbackTreino, checkin: CheckinTreino, versao_fat
       a migracao `0015`, de que o pacote viu: nao se compara (nao entra na fila de uma vez; `--refazer` resolve).
     - `tipo`: `fb.tipo_visto` difere do tipo da atividade hoje (`tipo_atual`; correcao do professor, ADR 0015, item 5). `tipo_visto`
       nulo = linha anterior a migracao `0016`: nao se compara.
+    - `transicao`: `fb.transicao_visto` difere de `transicao_atual` (o atleta corrigiu ou desfez o rotulo de transicao, #510). `transicao_visto`
+      nulo = linha anterior a migracao `0018`: nao se compara.
     Todos os `datetime` sao normalizados para UTC (o SQLite devolve sem fuso). Noite e clima so entram na conta quando quem chama
-    passa `recuperacao_hoje` / `clima_hoje` / `tipo_hoje`."""
+    passa `recuperacao_hoje` / `clima_hoje` / `tipo_hoje` / `transicao_hoje`."""
     motivos = set()
     if para_utc(fb.checkin_atualizado_em) != para_utc(checkin.atualizado_em):
         motivos.add("checkin")
@@ -93,13 +100,15 @@ def motivos_desatualizado(fb: FeedbackTreino, checkin: CheckinTreino, versao_fat
         motivos.add("clima")
     if tipo_hoje is not _NAO_SEI and fb.tipo_visto is not None and fb.tipo_visto != tipo_hoje:
         motivos.add("tipo")
+    if transicao_hoje is not _NAO_SEI and fb.transicao_visto is not None and fb.transicao_visto != transicao_hoje:
+        motivos.add("transicao")
     return frozenset(motivos)
 
 
 def desatualizado(fb: FeedbackTreino, checkin: CheckinTreino, versao_fatos: str, recuperacao_hoje: Any = _NAO_SEI,
-                  clima_hoje: Any = _NAO_SEI, tipo_hoje: Any = _NAO_SEI) -> bool:
+                  clima_hoje: Any = _NAO_SEI, tipo_hoje: Any = _NAO_SEI, transicao_hoje: Any = _NAO_SEI) -> bool:
     """O feedback nao vale mais por qualquer um dos motivos de `motivos_desatualizado`."""
-    return bool(motivos_desatualizado(fb, checkin, versao_fatos, recuperacao_hoje, clima_hoje, tipo_hoje))
+    return bool(motivos_desatualizado(fb, checkin, versao_fatos, recuperacao_hoje, clima_hoje, tipo_hoje, transicao_hoje))
 
 
 def so_a_noite_mudou(fb: FeedbackTreino, checkin: CheckinTreino, versao_fatos: str, recuperacao_hoje: Any = _NAO_SEI) -> bool:
@@ -135,7 +144,7 @@ def fila(session: Session, atleta_id: int, versoes: Versoes, refazer: bool = Fal
         fb = checkin.feedback
         if not elegivel(ativ):
             fora += 1
-        elif fb is None or refazer or fb.estado == "sem_feedback" or desatualizado(fb, checkin, versoes.fatos, _hoje(recuperacao_hoje, ativ), assinatura_clima(ativ, climas.get(ativ.id)), tipo_atual(ativ)):
+        elif fb is None or refazer or fb.estado == "sem_feedback" or desatualizado(fb, checkin, versoes.fatos, _hoje(recuperacao_hoje, ativ), assinatura_clima(ativ, climas.get(ativ.id)), tipo_atual(ativ), transicao_atual(ativ)):
             nunca = 0 if fb is None else 1
             tent = 0 if fb is None else fb.tentativas
             entram.append(((nunca, tent, -para_utc(ativ.inicio).timestamp()), checkin))
@@ -147,7 +156,8 @@ def fila(session: Session, atleta_id: int, versoes: Versoes, refazer: bool = Fal
 
 def _gravar(session: Session, checkin: CheckinTreino, atualizado_em: datetime, *, estado: str, motivo: str | None,
             texto: str | None, provedor: str | None, modelo: str | None, versoes: Versoes, agora: datetime,
-            recuperacao_em: datetime | None = None, clima_visto: str | None = None, tipo_visto: str | None = None) -> None:
+            recuperacao_em: datetime | None = None, clima_visto: str | None = None, tipo_visto: str | None = None,
+            transicao_visto: bool | None = None) -> None:
     """Upsert por `checkin_id` (`INSERT ... ON CONFLICT DO NOTHING` por dialeto, sem savepoint, como o check-in) e commit."""
     fb = session.scalars(select(FeedbackTreino).where(FeedbackTreino.checkin_id == checkin.id)).first()
     if fb is None:
@@ -158,7 +168,7 @@ def _gravar(session: Session, checkin: CheckinTreino, atualizado_em: datetime, *
             _INSERT[dialeto](FeedbackTreino).values(
                 checkin_id=checkin.id, estado=estado, motivo=motivo, texto=texto, versao_fatos=versoes.fatos,
                 versao_prompt=versoes.prompt, versao_checagens=versoes.checagens, provedor=provedor, modelo=modelo,
-                tentativas=1, checkin_atualizado_em=atualizado_em, recuperacao_importada_em=recuperacao_em, clima_visto=clima_visto, tipo_visto=tipo_visto, tentado_em=agora,
+                tentativas=1, checkin_atualizado_em=atualizado_em, recuperacao_importada_em=recuperacao_em, clima_visto=clima_visto, tipo_visto=tipo_visto, transicao_visto=transicao_visto, tentado_em=agora,
             ).on_conflict_do_nothing(index_elements=["checkin_id"])
         )
         fb = session.scalars(select(FeedbackTreino).where(FeedbackTreino.checkin_id == checkin.id)).one()
@@ -172,6 +182,7 @@ def _gravar(session: Session, checkin: CheckinTreino, atualizado_em: datetime, *
     fb.recuperacao_importada_em = recuperacao_em
     fb.clima_visto = clima_visto
     fb.tipo_visto = tipo_visto
+    fb.transicao_visto = transicao_visto
     session.commit()
 
 
@@ -191,6 +202,7 @@ def gerar(session: Session, atleta_id: int, redator: Redator, montar_pacote: Mon
         recuperacao_em = None if recuperacao_hoje is None else recuperacao_hoje(checkin.atividade)  # a noite que o pacote usa
         clima_visto = assinatura_clima(checkin.atividade, climas.get(checkin.atividade.id))  # o clima que o pacote vai usar
         tipo_visto = tipo_atual(checkin.atividade)  # o tipo que o pacote vai usar
+        transicao_visto = transicao_atual(checkin.atividade)  # a transicao que o pacote vai usar
         try:
             pacote = montar_pacote(session, checkin.atividade, checkin)
         except Exception:  # noqa: BLE001  (a mensagem pode ter dado de saude: so a contagem)
@@ -201,7 +213,7 @@ def gerar(session: Session, atleta_id: int, redator: Redator, montar_pacote: Mon
             rel.ignorados += 1
             continue
         fb_antes = checkin.feedback  # com `refazer`: texto pronto e em dia nao se perde se a nova tentativa falhar
-        manter = fb_antes is not None and fb_antes.estado == "pronto" and not desatualizado(fb_antes, checkin, versoes.fatos, _hoje(recuperacao_hoje, checkin.atividade), clima_visto, tipo_visto)
+        manter = fb_antes is not None and fb_antes.estado == "pronto" and not desatualizado(fb_antes, checkin, versoes.fatos, _hoje(recuperacao_hoje, checkin.atividade), clima_visto, tipo_visto, transicao_visto)
         res = redator.redigir(prompt, pacote)
         if res.texto is None and getattr(redator, "limite_do_provedor", False):  # limite do provedor: nada gravado, o resto fica para depois
             rel.adiados = len(checkins) - n
@@ -211,7 +223,7 @@ def gerar(session: Session, atleta_id: int, redator: Redator, montar_pacote: Mon
 
         def grava(estado: str, motivo: str | None, texto: str | None) -> None:
             _gravar(session, checkin, atualizado_em, estado=estado, motivo=motivo, texto=texto, provedor=res.provedor,
-                    modelo=res.modelo, versoes=versoes, agora=momento, recuperacao_em=recuperacao_em, clima_visto=clima_visto, tipo_visto=tipo_visto)
+                    modelo=res.modelo, versoes=versoes, agora=momento, recuperacao_em=recuperacao_em, clima_visto=clima_visto, tipo_visto=tipo_visto, transicao_visto=transicao_visto)
 
         def mantem_ou_cai() -> bool | None:
             """A nova tentativa falhou: o texto pronto antigo so fica se passar nas checagens ATUAIS com o pacote desta
@@ -226,6 +238,7 @@ def gerar(session: Session, atleta_id: int, redator: Redator, montar_pacote: Mon
             if antigo is None:
                 fb_antes.versao_checagens = versoes.checagens  # o texto foi conferido por ela; nao conta tentativa
                 fb_antes.tipo_visto = tipo_visto  # idem para a linha anterior a 0016
+                fb_antes.transicao_visto = transicao_visto  # idem para a linha anterior a 0018
                 fb_antes.clima_visto = clima_visto  # linha anterior a 0015 (nulo) passa a comparar o clima daqui em diante
                 session.commit()
                 rel.mantidos += 1
