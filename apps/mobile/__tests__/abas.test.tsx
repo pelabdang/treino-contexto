@@ -4,7 +4,6 @@ import { fireEvent, render, screen } from "@testing-library/react-native";
 import { ComSessao, criarSessaoFalsa, dentroAtleta, dentroProfessor } from "../__fixtures__/sessaoFalsa";
 import { ABAS_ATLETA, ABAS_PROFESSOR, abasDoPapel, BarraDeAbas } from "../src/componentes/BarraDeAbas";
 import { TelaConta } from "../src/componentes/TelaConta";
-import { TelaEmBreve, TEXTO_EM_BREVE } from "../src/componentes/TelaEmBreve";
 import { caminhoDoPapel } from "../src/sessao/destino";
 
 jest.mock("@expo/vector-icons", () => require("../__fixtures__/iconesFalsos"));
@@ -112,27 +111,15 @@ describe("aba Conta", () => {
   });
 });
 
-describe("aba Treinos (provisória)", () => {
-  it("mostra o estado vazio provisório", async () => {
-    await render(<TelaEmBreve titulo="Treinos" />);
-    expect(screen.getByText("Treinos")).toBeTruthy();
-    expect(screen.getByText(TEXTO_EM_BREVE)).toBeTruthy();
-    expect(TEXTO_EM_BREVE).toBe("Em breve, todos os seus treinos aqui");
-  });
-});
-
 describe("rotas das abas", () => {
   jest.mock("expo-router", () => ({
     useFocusEffect: (cb: () => void) => require("react").useEffect(cb, [cb]),
     router: { push: jest.fn(), navigate: jest.fn(), replace: jest.fn() },
   }));
 
-  it("Treinos, Evolução e Conta renderizam com a sessão do papel", async () => {
-    const Treinos = require("../src/app/(app)/(abas)/treinos").default;
+  it("Conta renderiza com a sessão do papel", async () => {
     const Conta = require("../src/app/(app)/(abas)/conta").default;
     globalThis.fetch = jest.fn(async () => ({ ok: true, status: 200, json: async () => ({ professores: [] }) }) as Response) as unknown as typeof fetch;
-    await render(<ComSessao><Treinos /></ComSessao>);
-    expect(screen.getByText(TEXTO_EM_BREVE)).toBeTruthy();
     await render(<ComSessao sessao={criarSessaoFalsa(dentroAtleta())}><Conta /></ComSessao>);
     expect(screen.getByText("Semana-padrão")).toBeTruthy();
     await render(<ComSessao sessao={criarSessaoFalsa(dentroProfessor())}><Conta /></ComSessao>);
