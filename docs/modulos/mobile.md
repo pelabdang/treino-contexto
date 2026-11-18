@@ -24,6 +24,8 @@ O app não calcula pace: todo `m:ss` virá da [[modulos/api]].
 | `src/app/_layout.tsx` | (raiz) | `SessaoProvider` e `Stack` sem cabeçalho |
 | `src/app/entrar.tsx` | `/entrar` | `TelaEntrar` (#502): e-mail e senha; faixas de `401`, `429`, sem rede, `5xx` e "Seu acesso expirou". Única rota que abre sem acesso |
 | `src/app/(app)/_layout.tsx` | (grupo `(app)`) | **guarda de sessão**: verificando, sem rede, sem acesso (vai a `/entrar` e lembra o endereço), troca de senha pendente (vai a `/trocar-senha`) e papel errado (vai ao início do próprio papel) |
+| `src/app/(app)/consentimento/index.tsx` | `/consentimento` | `TelaConsentimento` (#503): professores com vínculo, "Aguardando você" ou "Consentido em", e o diálogo de retirar; só o atleta (o professor volta ao próprio início) |
+| `src/app/(app)/consentimento/[professorId].tsx` | `/consentimento/<professor_id>` | `TelaTermo`: o termo como a API entrega (string única, faixa "Texto provisório" no app), "Li e concordo" e "Dar consentimento" |
 | `src/app/(app)/trocar-senha.tsx` | `/trocar-senha` | `TelaTrocarSenha`: primeiro acesso ou troca voluntária; confirmação com "Continuar" |
 | `src/app/(app)/index.tsx` | `/` | `TelaEvolucao` com o atleta da sessão (o professor cai em `/caixa-do-dia`); menu "Conta" com "Trocar senha" e "Sair" (`BarraConta`) |
 | `src/app/(app)/semana-padrao.tsx` | `/semana-padrao` | `TelaSemanaPadrao` (#268); aberta pelo botão "Semana-padrão" da evolução |
@@ -31,6 +33,12 @@ O app não calcula pace: todo `m:ss` virá da [[modulos/api]].
 | `src/app/(app)/checkin/[id].tsx` | `/checkin/<atividade_id>` | `TelaCheckin` (#299): criar (3 perguntas) ou editar (tela única); `?origem=pendentes` só troca o texto do botão de "Salvo" |
 | `src/app/(app)/checkins-pendentes.tsx` | `/checkins-pendentes` | `TelaCheckinsPendentes` (#299); aberta pela linha "Check-ins pendentes" da evolução |
 | `src/app/(app)/caixa-do-dia.tsx` | `/caixa-do-dia` | `TelaCaixaDoDia` (#426), com o professor da sessão; é o início do papel professor |
+
+## Consentimento do atleta (#503)
+- Spec [[design/telas/consentimento]], API do #516 ([[modulos/api]], [[decisoes/0016-login-e-deploy-do-piloto]], item 7). Código: `src/consentimento/api.ts` (`buscarProfessores`, termo, aceitar, retirar; nunca lançam, sem nome de professor nem versão em log), `src/componentes/TelaConsentimento.tsx` e `TelaTermo.tsx`.
+- Entrada: item "Consentimento" no menu "Conta" (`BarraConta`, só para o atleta) e a linha de aviso "Há um professor pedindo para ver seus treinos." na evolução (`TelaEvolucao`), que faz uma chamada a mais e some se ela falhar. O estado de cada cartão **vem da API** (`consentimento`, `termo_desatualizado`); o app não compara datas nem versões.
+- API falsa (`npm run api-falsa`, sintética): professores "Exemplo" 11 e 13 aguardando (o 13 aceitou um termo antigo) e 12 consentido; contas de teste `atleta<id>@exemplo.com`: `2` sem vínculos, `23` o `GET` derruba a conexão, `24` o `PUT` dá `409` (termo mudou), `25` o `PUT` derruba a conexão, `26` o `DELETE` derruba a conexão, `27` o `GET` dá `500`.
+- Capturas (sintéticas, claro e escuro, 390 e 1280) em `docs/design/telas/consentimento/`: lista, vazio, aviso na evolução, termo (marcado, erro, erro ao salvar, mudou, definitivo), registrado e retirar.
 
 ## Entrar, sair e trocar a senha (#502)
 - Código: `src/sessao/` (`SessaoProvider`, `api`, `armazenamento`, `destino`) e `src/componentes/` (`TelaEntrar`, `TelaTrocarSenha`, `TelaAcesso`, `BarraConta`, `CampoTexto`, `Faixa`). Testes em `__tests__/` (`TelaEntrar`, `TelaTrocarSenha`, `SessaoProvider`, `BarraConta`, `rotasDeAcesso`, `integracaoSessao`, `sessaoApi`, `sessaoArmazenamento`, `sessaoDestino`).

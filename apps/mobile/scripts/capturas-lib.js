@@ -13,6 +13,12 @@ const ACESSOS = {
   professor: "token-sintetico-professor-1",
   expirado: "token-sintetico-expirado", // a API falsa responde sempre 401
   trocar: "token-sintetico-trocar", // atleta 1 com a troca de senha obrigatória
+  // Atletas de teste do consentimento (ver api-falsa.mjs): 2 sem vínculos, 23 GET derruba, 24 PUT dá 409, 25 PUT derruba, 27 GET dá 500.
+  atleta2: "token-sintetico-atleta-2",
+  atleta23: "token-sintetico-atleta-23",
+  atleta24: "token-sintetico-atleta-24",
+  atleta25: "token-sintetico-atleta-25",
+  atleta27: "token-sintetico-atleta-27",
 };
 const ENTRAR_ANA = [["campo-email", "atleta1@exemplo.com"], ["campo-senha", SENHA_SINTETICA]];
 const TROCAR_OK = [["campo-senha-atual", SENHA_SINTETICA], ["campo-senha-nova", "outra-senha-sintetica"], ["campo-senha-repetida", "outra-senha-sintetica"]];
@@ -70,6 +76,20 @@ const ROTAS = [
   { nome: "conta-menu", caminho: "/", clicar: ["abrir-conta"] },
   { nome: "conta-menu-professor", caminho: "/caixa-do-dia", clicar: ["abrir-conta"] },
   { nome: "sair-dialogo", caminho: "/", clicar: ["abrir-conta", "sair"] },
+  // Consentimento do atleta (#503, spec docs/design/telas/consentimento.md).
+  { nome: "consentimento", caminho: "/consentimento" },
+  { nome: "consentimento-registrado", caminho: "/consentimento?aviso=registrado" },
+  { nome: "consentimento-vazio", caminho: "/consentimento", acesso: "atleta2" },
+  { nome: "consentimento-erro-rede", caminho: "/consentimento", acesso: "atleta23" },
+  { nome: "consentimento-erro", caminho: "/consentimento", acesso: "atleta27" },
+  { nome: "consentimento-retirar", caminho: "/consentimento", clicar: ["retirar-12"] },
+  { nome: "consentimento-termo", caminho: "/consentimento/11" },
+  { nome: "consentimento-termo-marcado", caminho: "/consentimento/11", clicar: ["li-e-concordo"] },
+  { nome: "consentimento-termo-definitivo", caminho: "/consentimento/11", simular: "termo-definitivo" },
+  { nome: "consentimento-termo-erro-salvar", caminho: "/consentimento/11", acesso: "atleta25", clicar: ["li-e-concordo", "dar-consentimento"] },
+  { nome: "consentimento-termo-mudou", caminho: "/consentimento/11", acesso: "atleta24", clicar: ["li-e-concordo", "dar-consentimento"] },
+  { nome: "consentimento-termo-erro", caminho: "/consentimento/11", simular: "termo-erro" },
+  { nome: "consentimento-aviso-evolucao", caminho: "/" },
 ];
 
 // Acesso sintético que a captura guarda no navegador antes de abrir a rota (`null`: sem acesso).
@@ -94,6 +114,9 @@ const SIMULACOES = {
   "verificar-rede": { sessao: { metodo: "GET", abortar: true } },
   "verificar-pendurado": { sessao: { metodo: "GET", pendurar: true } },
   "troca-ok": { senha: { token: "token-sintetico-atleta-1", expira_em: "2099-12-31T23:59:59Z" } },
+  // Termo (#503): `termo` altera ou derruba a resposta de `GET /termo-de-consentimento` no navegador.
+  "termo-definitivo": { termo: { alterar: (t) => ({ ...t, provisorio: false }) } },
+  "termo-erro": { termo: { status: 500, corpo: { detail: "erro sintético" } } },
   "404": { status: 404, corpo: { detail: [{ loc: ["path", "professor_id"], msg: "professor inexistente", type: "professor_inexistente" }] } },
 };
 const TAMANHOS = [
