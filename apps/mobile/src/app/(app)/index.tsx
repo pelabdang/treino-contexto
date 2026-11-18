@@ -12,7 +12,7 @@ export default function Inicio() {
   const { sair } = useSessao();
   return (
     <View style={{ flex: 1 }}>
-      <BarraConta aoTrocarSenha={() => router.push("/trocar-senha")} aoSair={sair} />
+      <BarraConta aoTrocarSenha={() => router.push("/trocar-senha")} aoConsentimento={() => router.push("/consentimento")} aoSair={sair} />
       <TelaEvolucao
         apiUrl={apiUrl}
         atletaId={atletaId}
@@ -21,6 +21,7 @@ export default function Inicio() {
         aoAbrirTreino={(id) => router.push(`/treino/${id}`)}
         aoAbrirSemanaPadrao={() => router.push("/semana-padrao")}
         aoAbrirCheckinsPendentes={() => router.push("/checkins-pendentes")}
+        aoAbrirConsentimento={() => router.push("/consentimento")}
       />
     </View>
   );
