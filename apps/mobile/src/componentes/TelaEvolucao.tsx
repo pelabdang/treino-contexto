@@ -32,6 +32,8 @@ type Props = {
   aoAbrirCheckinsPendentes?: () => void;
   /** Abre a lista de consentimentos (#503). Sem ele, não busca nem mostra o aviso de pedido de professor. */
   aoAbrirConsentimento?: () => void;
+  /** Esconde "Enviar arquivo FIT" (agora na aba Conta). No estado vazio o botão volta, porque o texto o cita. */
+  ocultarEnviarFit?: boolean;
   /** Muda quando a tela volta ao foco: busca o total de pendentes de novo. */
   atualizar?: number;
   /** Troque nos testes. Padrão: o fetch global. */
@@ -61,6 +63,7 @@ export function TelaEvolucao({
   aoAbrirSemanaPadrao,
   aoAbrirCheckinsPendentes,
   aoAbrirConsentimento,
+  ocultarEnviarFit = false,
   atualizar = 0,
   fetchFn,
 }: Props) {
@@ -158,13 +161,15 @@ export function TelaEvolucao({
           <MaterialIcons name="chevron-right" size={tamanho.iconeMedio} color={tema.cor.destaque} accessible={false} />
         </Pressable>
       )}
-      <BotaoEnviarFit
-        apiUrl={apiUrl}
-        atletaId={atletaId}
-        fetchFn={fetchFn}
-        aoEnviar={recarregar}
-        variante={vazio ? "primario" : "secundario"}
-      />
+      {(!ocultarEnviarFit || vazio) && (
+        <BotaoEnviarFit
+          apiUrl={apiUrl}
+          atletaId={atletaId}
+          fetchFn={fetchFn}
+          aoEnviar={recarregar}
+          variante={vazio ? "primario" : "secundario"}
+        />
+      )}
       {estado.tipo === "carregando" && (
         <View>
           <Text accessibilityLiveRegion="polite" style={styles.texto}>
