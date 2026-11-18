@@ -1,4 +1,4 @@
-import { fireEvent, render, screen, waitFor } from "@testing-library/react-native";
+import { act, fireEvent, render, screen, waitFor } from "@testing-library/react-native";
 
 import { TEXTO_VAZIO, TelaConsentimento } from "../src/componentes/TelaConsentimento";
 import { TelaTermo } from "../src/componentes/TelaTermo";
@@ -88,6 +88,7 @@ describe("lista de consentimentos", () => {
     await fireEvent.press(screen.getByTestId("retirar-12"));
     await fireEvent.press(screen.getByTestId("confirmar-retirar"));
     await waitFor(() => expect(screen.getAllByText("Aguardando você")).toHaveLength(2));
+    expect(screen.getByText("Consentimento retirado.")).toBeTruthy();
     expect(screen.queryByTestId("retirar-12")).toBeNull();
   });
 
@@ -105,8 +106,19 @@ describe("lista de consentimentos", () => {
     expect(screen.getByTestId("retirar-12")).toBeTruthy();
   });
 
+  it("veio do termo com o consentimento registrado: faixa neutra visível que não some sozinha", async () => {
+    jest.useFakeTimers();
+    await render(lista(servidor({ "GET /atletas/1/professores": () => resposta(200, LISTA) }), { aviso: "registrado" }));
+    expect(await screen.findByText("Consentimento registrado.")).toBeTruthy();
+    await act(async () => {
+      jest.advanceTimersByTime(60_000);
+    });
+    expect(screen.getByText("Consentimento registrado.")).toBeTruthy();
+    jest.useRealTimers();
+  });
+
   it("veio do termo porque o pedido não existe mais: faixa com a frase", async () => {
-    await render(lista(servidor({ "GET /atletas/1/professores": () => resposta(200, LISTA) }), { avisoInexistente: true }));
+    await render(lista(servidor({ "GET /atletas/1/professores": () => resposta(200, LISTA) }), { aviso: "inexistente" }));
     expect(await screen.findByText("Este pedido não existe mais.")).toBeTruthy();
   });
 });
@@ -163,6 +175,18 @@ describe("tela do termo", () => {
     await fireEvent.press(screen.getByTestId("dar-consentimento"));
     expect(await screen.findByText("Não foi possível salvar. Tente de novo.")).toBeTruthy();
     expect(screen.getByTestId("li-e-concordo").props.accessibilityState.checked).toBe(true);
+  });
+
+  it("409: a faixa fica no topo do termo, logo abaixo do título, e é anunciada", async () => {
+    const f = servidor({
+      ...rotasBase,
+      "PUT /atletas/1/professores/11/consentimento": () => resposta(409, { detail: "o termo mudou" }),
+    });
+    await render(termo(f));
+    await fireEvent.press(await screen.findByTestId("li-e-concordo"));
+    await fireEvent.press(screen.getByTestId("dar-consentimento"));
+    const faixa = await screen.findByTestId("faixa-mudou");
+    expect(faixa.props.accessibilityLiveRegion).toBe("polite");
   });
 
   it("409: o termo mudou, recarrega e desmarca a caixa", async () => {

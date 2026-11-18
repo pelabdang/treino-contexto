@@ -14,7 +14,7 @@ export default function Termo() {
       fetchFn={fetchFn}
       professorId={Number(Array.isArray(professorId) ? professorId[0] : professorId)}
       aoVoltar={voltar}
-      aoConcluir={voltar}
+      aoConcluir={() => (router.canGoBack() ? router.dismissTo("/consentimento?aviso=registrado") : router.replace("/consentimento?aviso=registrado"))}
       aoInexistente={() => router.replace("/consentimento?aviso=inexistente")}
     />
   );

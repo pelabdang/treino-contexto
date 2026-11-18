@@ -124,7 +124,7 @@ export function TelaEvolucao({
         Evolução dos tiros de 1 km
       </Text>
       {aoAbrirConsentimento && pedidos > 0 && (
-        <View testID="aviso-consentimento" accessibilityRole="alert" style={styles.avisoPedido}>
+        <View testID="aviso-consentimento" accessibilityLiveRegion="polite" style={styles.avisoPedido}>
           <MaterialIcons name="info-outline" size={tamanho.iconeGrande} color={tema.cor["texto-2"]} accessible={false} />
           <Text style={styles.avisoPedidoTexto}>Há um professor pedindo para ver seus treinos.</Text>
           <Pressable testID="ver-pedido" accessibilityRole="button" accessibilityLabel="Ver o pedido do professor" onPress={aoAbrirConsentimento} style={styles.avisoPedidoBotao}>

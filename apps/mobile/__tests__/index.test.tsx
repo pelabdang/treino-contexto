@@ -314,6 +314,9 @@ describe("tela de evolução", () => {
       expect(await screen.findByText("Há um professor pedindo para ver seus treinos.")).toBeTruthy();
       await fireEvent.press(screen.getByTestId("ver-pedido"));
       expect(abrir).toHaveBeenCalled();
+      // Não é erro: região viva educada, nunca "alert" (seria lido toda vez que a tela abre).
+      expect(screen.getByTestId("aviso-consentimento").props.accessibilityRole).toBeUndefined();
+      expect(screen.getByTestId("aviso-consentimento").props.accessibilityLiveRegion).toBe("polite");
     });
 
     it("sem pedido, ou se a busca falhar, não há aviso", async () => {
