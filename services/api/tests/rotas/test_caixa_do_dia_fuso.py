@@ -26,7 +26,6 @@ def _utc(dia, hora, minuto=0):
 
 @pytest.fixture
 def app(session, monkeypatch):
-    monkeypatch.setattr(settings, "professor_id", 1)
     session.add(Assessoria(id=1, nome="Assessoria Teste"))
     session.add(Professor(id=1, assessoria_id=1, nome="Professor Um"))
     session.add(Atleta(id=1, assessoria_id=1, nome="Ana Teste"))

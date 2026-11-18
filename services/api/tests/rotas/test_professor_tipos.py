@@ -57,7 +57,6 @@ def mundo(session):
 
 @pytest.fixture
 def client(session, mundo, monkeypatch):
-    monkeypatch.setattr(settings, "professor_id", PROF)
     app = sem_login(criar_app("http://localhost:8081"))
     app.dependency_overrides[get_session] = lambda: session
     app.dependency_overrides[svc_prof.agora_utc] = lambda: AGORA

@@ -12,7 +12,6 @@ from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from app.autenticacao import professor_da_sessao
-from app.config import Settings, settings
 from app.servicos.consentimento import TERMO_VIGENTE
 from app.db.models import (
     Assessoria, Atividade, Atleta, CheckinTreino, Professor, VinculoProfessorAtleta,
@@ -59,47 +58,6 @@ def mundo(session: Session):
 
 def _visiveis(session, professor_id=PROF, agora=AGORA):
     return set(session.scalars(select(Atleta.id).where(Atleta.id.in_(svc.atletas_do_professor(professor_id, agora)))))
-
-
-# ---------- configuracao ----------
-
-@pytest.fixture
-def sem_ambiente(monkeypatch, tmp_path):
-    monkeypatch.delenv("PROFESSOR_ID", raising=False)
-
-    class S(Settings):
-        model_config = {**Settings.model_config, "env_file": tmp_path / ".env"}
-
-    return S, tmp_path / ".env"
-
-
-def test_configuracao_sobe_com_a_variavel_ausente(sem_ambiente):
-    S, _ = sem_ambiente
-    assert S().professor_id is None
-
-
-@pytest.mark.parametrize("valor", ["", "   "])
-def test_configuracao_sobe_com_a_variavel_vazia_no_ambiente_e_no_arquivo(sem_ambiente, monkeypatch, valor):
-    S, env = sem_ambiente
-    monkeypatch.setenv("PROFESSOR_ID", valor)
-    assert S().professor_id is None
-    monkeypatch.delenv("PROFESSOR_ID")
-    env.write_text(f"PROFESSOR_ID={valor}\n", encoding="utf-8")
-    assert S().professor_id is None
-
-
-def test_configuracao_le_o_inteiro(sem_ambiente, monkeypatch):
-    S, _ = sem_ambiente
-    monkeypatch.setenv("PROFESSOR_ID", "3")
-    assert S().professor_id == 3
-
-
-def test_env_example_traz_a_variavel_comentada():
-    from app.config import RAIZ_REPOSITORIO
-
-    linhas = (RAIZ_REPOSITORIO / ".env.example").read_text(encoding="utf-8").splitlines()
-    assert "# PROFESSOR_ID=1" in linhas
-    assert not any(l.startswith("PROFESSOR_ID") for l in linhas)
 
 
 # ---------- o filtro ----------

@@ -1,0 +1,53 @@
+# Ensaio LOCAL do deploy do piloto (issue #504, ADR 0016, item 10): a mesma imagem do servidor, com um Postgres descartavel.
+# Nada de provedor, de rede externa nem de dado real. Senhas abaixo sao de ensaio e so valem dentro deste compose.
+#
+#   docker compose -f infra/docker-compose.ensaio-deploy.yml up -d --build      # sobe Postgres, migra e sobe a API em http://localhost:8090
+#   docker compose -f infra/docker-compose.ensaio-deploy.yml run --rm migrar ... # (a migracao ja roda sozinha antes da API)
+#   docker compose -f infra/docker-compose.ensaio-deploy.yml down -v            # apaga tudo
+#
+# Comandos do worker na mesma imagem, por exemplo a carga sintetica (precisa da fixture dentro da imagem: use `-v`):
+#   docker compose -f infra/docker-compose.ensaio-deploy.yml run --rm -v "$PWD/tests/fixtures:/fixtures:ro" worker \
+#       python -m worker.carregar_piloto --fixtures /fixtures/professor_piloto
+name: treino-ensaio-deploy
+
+x-ambiente: &ambiente
+  DATABASE_URL: postgresql+psycopg://treino:ensaio-local@postgres:5432/treino
+  AMBIENTE: producao
+  CORS_ORIGENS: http://localhost:8091
+  # sem LLM_MODEL nem chave: o feedback automatico fica desligado no servidor (ADR 0016, item 13)
+
+services:
+  postgres:
+    image: postgres:16
+    environment:
+      POSTGRES_USER: treino
+      POSTGRES_PASSWORD: ensaio-local
+      POSTGRES_DB: treino
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U treino -d treino"]
+      interval: 3s
+      timeout: 3s
+      retries: 20
+
+  migrar:
+    build: {context: .., dockerfile: services/api/Dockerfile}
+    image: treino-api:ensaio
+    working_dir: /app/services/api
+    command: ["alembic", "upgrade", "head"]
+    environment: *ambiente
+    depends_on:
+      postgres: {condition: service_healthy}
+
+  api:
+    image: treino-api:ensaio
+    environment: *ambiente
+    ports: ["8090:8080"]
+    depends_on:
+      migrar: {condition: service_completed_successfully}
+
+  worker:
+    image: treino-api:ensaio
+    profiles: ["worker"]
+    environment: *ambiente
+    depends_on:
+      migrar: {condition: service_completed_successfully}

@@ -30,15 +30,18 @@ class Settings(BaseSettings):
     groq_api_key: SecretStr | None = None
     openai_api_key: SecretStr | None = None
     anthropic_api_key: SecretStr | None = None
-    # Professor do piloto local (ADR 0015, item 2): sem valor padrao. Ausente ou vazio = `None` (a API sobe; as rotas do
-    # professor respondem 404 uniforme). Nao e segredo e tambem nao e autenticacao.
-    professor_id: int | None = None
 
-    @field_validator("professor_id", mode="before")
+    @field_validator("database_url")
     @classmethod
-    def _professor_id_vazio_e_none(cls, v):
-        # `PROFESSOR_ID=` vazio no .env faria o pydantic-settings falhar ao importar o modulo
-        return None if isinstance(v, str) and not v.strip() else v
+    def _url_do_provedor(cls, v: str) -> str:
+        """O banco gerenciado entrega `postgresql://...` (ou `postgres://`); o SQLAlchemy daqui usa o driver psycopg 3."""
+        for velho in ("postgresql://", "postgres://"):
+            if v.startswith(velho):
+                return "postgresql+psycopg://" + v[len(velho):]
+        return v
+
+    # Ambiente (ADR 0016, item 10): `producao` desliga `/docs`, `/openapi.json` e `/redoc`. Qualquer outro valor (padrao `local`) mantem tudo ligado.
+    ambiente: str = "local"
 
 
 def lista_origens(texto: str) -> list[str]:

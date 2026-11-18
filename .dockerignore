@@ -1,0 +1,21 @@
+# Fora da imagem: git, dependencias locais, dado, testes, docs e o app mobile (a web estatica tem build proprio).
+.git
+.claude
+.venv
+**/__pycache__
+**/*.pyc
+.pytest_cache
+node_modules
+.env
+.env.*
+dados-teste
+dados-upload
+dados-garmin
+entregas
+graphify-out
+tests
+**/tests
+docs
+apps
+packages
+infra

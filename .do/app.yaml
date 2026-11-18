@@ -1,0 +1,67 @@
+# App Platform da DigitalOcean para o piloto (issue #504, ADR 0016, item 10; custo e opcoes em docs/produto/meta-13-opcoes-deploy.md).
+# SEM SEGREDO neste arquivo: o unico valor sensivel (URL do banco) vem do binding `${banco.DATABASE_URL}`, resolvido pelo provedor.
+# Nada daqui foi aplicado: a conta e do Angelo e o primeiro deploy e feito por ele ou pelo Theo (`doctl apps create --spec .do/app.yaml`).
+# Um teste (services/api/tests/test_deploy_spec.py) barra segredo, chave de LLM e variavel fora da lista.
+#
+# PRECISA DO ANGELO antes do deploy:
+#   - regiao (abaixo, `nyc` = Nova York; a recomendada `nyc3` e o banco), teto de custo (US$ 40/mes) e titular da conta;
+#   - criar a conta, o cluster PostgreSQL gerenciado (nome abaixo em `cluster_name`) e autorizar o GitHub no App Platform;
+#   - guardar a chave PRIVADA do age (backup cifrado, #505). Ela nunca entra no servidor nem no repositorio.
+name: treino-contexto
+region: nyc
+
+databases:
+  - name: banco
+    engine: PG
+    version: "16"
+    production: true
+    cluster_name: treino-pg   # cluster criado pelo Angelo no painel; troque pelo nome real
+    db_name: treino
+    db_user: treino
+
+services:
+  - name: api
+    github: &fonte
+      repo: pelabdang/treino-contexto
+      branch: main
+      deploy_on_push: false      # deploy manual: nada vai ao ar sem alguem mandar
+    dockerfile_path: services/api/Dockerfile
+    source_dir: /
+    http_port: 8080
+    instance_count: 1
+    instance_size_slug: apps-s-1vcpu-1gb
+    health_check:
+      http_path: /health
+    # Mesma origem do app web: a API fica em /api (o prefixo e removido antes de chegar na API) e o site em /.
+    routes:
+      - path: /api
+    envs:
+      - {key: DATABASE_URL, scope: RUN_TIME, type: SECRET, value: "${banco.DATABASE_URL}"}
+      - {key: AMBIENTE, scope: RUN_TIME, value: producao}          # desliga /docs, /redoc e /openapi.json
+      - {key: CORS_ORIGENS, scope: RUN_TIME, value: "${APP_URL}"}
+      - {key: FIT_DIR, scope: RUN_TIME, value: /app/dados-upload/fit}   # disco efemero: ver infra/LEIA-ME.md
+    # Sem LLM_MODEL, LLM_PROVIDER nem chave de LLM: o `gerar_feedback` fica DESLIGADO no servidor (ADR 0016, itens 9 e 13).
+
+jobs:
+  - name: migrar
+    kind: PRE_DEPLOY                 # roda antes de cada deploy; falhou, o deploy nao segue
+    github: *fonte
+    dockerfile_path: services/api/Dockerfile
+    source_dir: /
+    instance_size_slug: apps-s-1vcpu-0.5gb
+    run_command: sh -c "cd /app/services/api && alembic upgrade head"
+    envs:
+      - {key: DATABASE_URL, scope: RUN_TIME, type: SECRET, value: "${banco.DATABASE_URL}"}
+
+static_sites:
+  - name: web
+    github: *fonte
+    source_dir: apps/mobile
+    build_command: npm ci && npx expo export --platform web --output-dir dist
+    output_dir: dist
+    catchall_document: index.html
+    routes:
+      - path: /
+    envs:
+      # A URL da API entra no bundle na hora do build (variavel EXPO_PUBLIC_*): mesma origem + /api.
+      - {key: EXPO_PUBLIC_API_URL, scope: BUILD_TIME, value: "${APP_URL}/api"}
