@@ -2,7 +2,7 @@
 tipo: decisao
 status: em-uso
 dono: theo
-atualizado: 2026-11-17
+atualizado: 2026-11-18
 links: [[decisoes/0013-feedback-automatico]], [[modulos/api]], [[modulos/grafico-tiros]], [[modulos/mobile]], [[modulos/worker]], [[metricas/tiros-1km]], [[decisoes/0002-segmento-intensidade-e-versao]], [[decisoes/0003-fuso-da-atividade]], [[decisoes/0005-serie-de-tiros-o-que-entra]], [[decisoes/0006-upload-de-fit]], [[decisoes/0007-clima-da-atividade]], [[produto/roadmap]], [[design/telas/treino]], [[decisoes/0009-treino-de-transicao]]
 ---
 # ADR: 0004 Contrato da tela de evolução dos tiros (Meta 2)
@@ -269,3 +269,13 @@ Dado de saúde: nada em log, nada de modelo de linguagem, só o professor com v�
   - `sem_carga_no_dia` e `texto_sem_carga` saem em `calculada` e em `aprendendo`.
 - **`transicao.editavel`** (`true` para corrida, natação e ciclismo; `false` para `outra`, `multiesporte_pai` e `troca`): também na resposta do `PUT` e do `DELETE` da transição. Com `editavel = false`, o `PUT` e o `DELETE` da transição respondem **`409`** (`detail`: "Este treino não tem rótulo de transição.") e não gravam nada (decisão do Theo em 17/11).
 Tipos no cliente: `FormaDoDiaOut`, `CargaAtividadeOut` e `TransicaoOut` com os campos novos.
+
+## Adendo 13 (2026-11-18): lista de treinos do atleta, `GET /atletas/{atleta_id}/atividades` (#537)
+Base da aba "Treinos" e da tela inicial nova ([[design/auditoria-ux-e-inicio-do-atleta]], "O que falta na API"). Só o atleta dono (`atleta_da_sessao`, [[decisoes/0016-login-e-deploy-do-piloto]], item 5): sem sessão `401`, atleta de outro o mesmo `404` de inexistente.
+1. **Rota e ordem.** `GET /atletas/{atleta_id}/atividades`, do mais recente para o mais antigo, por `(inicio, id)` decrescente. Parâmetros: `limite` (1 a 100, padrão 20), `antes_de` (cursor), `modalidade` (uma das conhecidas) e `checkin_pendente` (booleano). Valor inválido é `422`.
+2. **Cursor.** A resposta traz `proximo`; passe-o em `antes_de` para a página seguinte. `null` quer dizer que acabou. O cursor é `"<início UTC ISO>~<id>"` e traz só o que vem **depois** dele na ordem, sem pular nem repetir treino mesmo que entre uma atividade nova no topo. Cursor mal formado dá `422` com `type` `cursor_invalido`.
+3. **Item enxuto.** `atividade_id`, `inicio` (UTC), `data_local` e `hora_local` (pelo fuso da atividade), `modalidade`, `subtipo`, `tipo_treino`, `duracao_s` e `duracao` (`h:mm:ss`), `distancia_m` e `distancia` (texto pronto), `destaque` (frase pronta: "Pace médio m:ss /km" na corrida, "Velocidade média x,x km/h" no ciclismo; `null` nas demais), `checkin_estado` e `feedback_estado`. **Nada de texto de check-in nem de feedback, clima, esforços, carga ou linha de base** (dado de saúde fica no `GET` da atividade).
+4. **`checkin_estado`:** `feito`, `pendente` (sem check-in e dentro do prazo da ADR 0012), `vencido` (sem check-in e fora do prazo) e `nao_se_aplica` (`multiesporte_pai` e `troca`). `checkin_pendente=true` filtra os `pendente`.
+5. **`feedback_estado`:** o estado do cartão da ADR 0013 sem o texto: `pronto`, `sem_checkin`, `pendente`, `desatualizado`, `indisponivel`; `null` em `multiesporte_pai` e `troca`.
+6. **Ressalva: a noite e o clima ficam fora do `feedback_estado` da lista.** A lista compara só o que a página já tem (check-in, versão, tipo e transição, motivos da ADR 0013). A recuperação da noite e o clima pedem outras consultas e não entram, para a lista continuar numa consulta só. Por isso um treino pode aparecer `pronto` na lista e `desatualizado` no detalhe. O detalhe (`GET` da atividade) é a fonte completa.
+7. **Custo.** Uma consulta por página (`LIMIT + 1`, para saber se há mais) com check-in, feedback e rótulo de transição por junção: sem N+1.
