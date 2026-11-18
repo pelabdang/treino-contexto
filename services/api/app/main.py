@@ -3,7 +3,7 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from app.autenticacao import atleta_da_sessao
 from app.config import lista_origens, settings
-from app.rotas import atividades, caixa_do_dia, carga, checkin, evolucao, professor, semana_padrao, sessao, transicao
+from app.rotas import atividades, caixa_do_dia, carga, checkin, consentimento, evolucao, professor, semana_padrao, sessao, transicao
 
 
 def criar_app(cors_origens: str | None = None) -> FastAPI:
@@ -23,6 +23,8 @@ def criar_app(cors_origens: str | None = None) -> FastAPI:
     app.include_router(checkin.router, dependencies=[Depends(atleta_da_sessao)])
     app.include_router(checkin.router_pendentes, dependencies=[Depends(atleta_da_sessao)])
     app.include_router(semana_padrao.router, dependencies=[Depends(atleta_da_sessao)])
+    app.include_router(consentimento.router, dependencies=[Depends(atleta_da_sessao)])
+    app.include_router(consentimento.router_termo)
     app.include_router(professor.router)
     app.include_router(caixa_do_dia.router)
     app.include_router(sessao.router)

@@ -10,6 +10,7 @@ from fastapi.testclient import TestClient
 from sqlalchemy import select
 
 from app.config import settings
+from app.servicos.consentimento import TERMO_VIGENTE
 from app.db.models import Assessoria, Atividade, Atleta, CheckinTreino, FeedbackTreino, Professor, VinculoProfessorAtleta
 from app.db.session import get_session
 from app.main import criar_app
@@ -46,9 +47,9 @@ def mundo(session):
                               duracao_s=1800, tipo_treino="leve", tipo_origem="semana_padrao", tipo_versao="tipo_treino@1",
                               tipo_divergencia="sem_esforco"))
         if vinc:
-            session.add(VinculoProfessorAtleta(professor_id=PROF, atleta_id=i, consentimento_em=cons))
+            session.add(VinculoProfessorAtleta(professor_id=PROF, atleta_id=i, consentimento_em=cons, termo_versao=TERMO_VIGENTE))
         if outro:
-            session.add(VinculoProfessorAtleta(professor_id=OUTRO, atleta_id=i, consentimento_em=AGORA - timedelta(days=9)))
+            session.add(VinculoProfessorAtleta(professor_id=OUTRO, atleta_id=i, consentimento_em=AGORA - timedelta(days=9), termo_versao=TERMO_VIGENTE))
         ids[nome] = i
     session.commit()
     return ids

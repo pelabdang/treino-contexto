@@ -13,6 +13,7 @@ from sqlalchemy.orm import Session
 
 from app.autenticacao import professor_da_sessao
 from app.config import Settings, settings
+from app.servicos.consentimento import TERMO_VIGENTE
 from app.db.models import (
     Assessoria, Atividade, Atleta, CheckinTreino, Professor, VinculoProfessorAtleta,
 )
@@ -48,9 +49,9 @@ def mundo(session: Session):
             atividade_id=i, pse=5, sensacao=3, nada_a_relatar=True, dor=False, cansaco=False, sono_ruim=False, calor=False,
             trabalho_estresse=False, versao="checkin@1", registrado_em=AGORA, atualizado_em=AGORA))
         if s["vinculo"]:
-            session.add(VinculoProfessorAtleta(professor_id=PROF, atleta_id=i, consentimento_em=s["consentimento"]))
+            session.add(VinculoProfessorAtleta(professor_id=PROF, atleta_id=i, consentimento_em=s["consentimento"], termo_versao=TERMO_VIGENTE))
         if s.get("outro"):
-            session.add(VinculoProfessorAtleta(professor_id=OUTRO, atleta_id=i, consentimento_em=AGORA - timedelta(days=9)))
+            session.add(VinculoProfessorAtleta(professor_id=OUTRO, atleta_id=i, consentimento_em=AGORA - timedelta(days=9), termo_versao=TERMO_VIGENTE))
         ids[nome] = i
     session.flush()  # sem commit: a conexao fica com a sessao e a thread do TestClient ve o mesmo SQLite em memoria
     return ids

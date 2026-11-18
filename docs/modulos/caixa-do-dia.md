@@ -17,7 +17,7 @@ Mostra ao professor, numa tela só, quais alunos pedem atenção hoje e quais tr
 - Quem formata é a API; o app só mostra ([[decisoes/0004-contrato-tela-evolucao]], adendos 2 e 11).
 
 ## Regra de privacidade
-Um filtro só, `atletas_do_professor`: vínculo com consentimento já dado. Toda rota de professor passa por ele. Sem vínculo, sem consentimento ou com consentimento no futuro, o aluno some e a API responde `404`. Ver "Vínculo e consentimento" no [[glossario]].
+Um filtro só, `atletas_do_professor`: vínculo com consentimento já dado, **não revogado** e **na versão vigente do termo** (#501). Toda rota de professor passa por ele. Sem vínculo, sem consentimento, com consentimento no futuro, revogado ou com termo desatualizado, o aluno some e a API responde `404`. Ver "Vínculo e consentimento" no [[glossario]].
 
 ## Arquivos principais
 - `services/api/app/rotas/caixa_do_dia.py`: a rota e a montagem da caixa.

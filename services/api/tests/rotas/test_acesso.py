@@ -7,6 +7,7 @@ from datetime import datetime, timedelta, timezone
 
 import pytest
 from app.autenticacao import atleta_da_sessao, professor_da_sessao
+from app.servicos.consentimento import TERMO_VIGENTE
 from app.db.models import Assessoria, Atividade, Atleta, Professor, VinculoProfessorAtleta
 from app.db.session import get_session
 from app.main import criar_app
@@ -44,8 +45,8 @@ def mundo(session):
     ativ = Atividade(atleta_id=ana.id, fonte="t", fonte_id="1", modalidade="corrida", inicio=AGORA - timedelta(days=1), duracao_s=1800,
                      tipo_treino="leve", tipo_origem="semana_padrao", tipo_versao="tipo_treino@1", tipo_divergencia="sem_esforco")
     session.add(ativ)
-    session.add(VinculoProfessorAtleta(professor_id=paulo.id, atleta_id=ana.id, consentimento_em=AGORA - timedelta(days=5)))
-    session.add(VinculoProfessorAtleta(professor_id=lia.id, atleta_id=ana.id, consentimento_em=None))  # vinculo sem consentimento
+    session.add(VinculoProfessorAtleta(professor_id=paulo.id, atleta_id=ana.id, consentimento_em=AGORA - timedelta(days=5), termo_versao=TERMO_VIGENTE))
+    session.add(VinculoProfessorAtleta(professor_id=lia.id, atleta_id=ana.id, consentimento_em=None, termo_versao=TERMO_VIGENTE))  # vinculo sem consentimento
     for email, kw in (("ana@exemplo.com", dict(atleta_id=ana.id)), ("bia@exemplo.com", dict(atleta_id=bia.id)),
                       ("paulo@exemplo.com", dict(professor_id=paulo.id)), ("lia@exemplo.com", dict(professor_id=lia.id))):
         svc.criar_conta(session, email, SENHA, **kw)
@@ -91,7 +92,7 @@ def test_toda_rota_de_atleta_ou_de_professor_confere_o_id_com_a_sessao(app):
         elif r.path.startswith("/professores/"):
             assert professor_da_sessao in chamadas or any(c.__name__ == "professor_da_rota" for c in chamadas), r.path
         else:
-            assert r.path in {"/sessao", "/conta/senha"}, f"rota fora do mapa de acesso: {r.path}"
+            assert r.path in {"/sessao", "/conta/senha", "/termo-de-consentimento"}, f"rota fora do mapa de acesso: {r.path}"
 
 
 def test_a_lista_de_rotas_publicas_e_so_a_do_adr(app):
