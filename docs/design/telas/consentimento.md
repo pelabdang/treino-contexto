@@ -77,8 +77,7 @@ Tocar em "Ler e dar consentimento" abre a tela do termo (uma tela, não um diál
 │ [   Dar consentimento   ]        │  primário, 48, desligado até marcar
 └──────────────────────────────────┘
 ```
-- **Faixa "Texto provisório"** acima de tudo, `warning-amber` e a palavra "provisório", fixa no texto do termo (e repetida numa linha
-  curta no cartão da lista, "Termo provisório"). Redação da faixa (fica **no app**, não vem da API): "Este texto é provisório. Ainda não foi revisto por quem entende de lei e
+- **Faixa "Texto provisório"** acima de tudo, `warning-amber` e a palavra "provisório", fixa no texto do termo. **Não se repete no cartão da lista**: a faixa aparece onde a pessoa decide, antes de aceitar. Redação da faixa (fica **no app**, não vem da API): "Este texto é provisório. Ainda não foi revisto por quem entende de lei e
   vale só para o piloto." O texto real do termo **substitui** o provisório quando vier da consulta de LGPD; a faixa **some sozinha**
   quando a API disser que o termo não é mais provisório (campo `provisorio`).
 - **O texto do termo vem da API** (versão e texto), não fica fixo no app: trocar o termo não exige novo aplicativo, e o app **registra
@@ -98,7 +97,7 @@ Tocar em "Ler e dar consentimento" abre a tela do termo (uma tela, não um diál
 | carregando o termo | esqueleto de quatro linhas e o texto | "Carregando o termo..." |
 | pronto | o termo, a faixa provisória, a caixa e o botão | |
 | salvando | botão desligado, "Salvando..." | "Salvando..." |
-| salvo | volta à lista, com o cartão do professor já em "Consentido em dd/mm/aa" e o anúncio "Consentimento registrado." | |
+| salvo | volta à lista, com o cartão em "Consentido em dd/mm/aa", **uma faixa neutra visível no alto da lista** ("Consentimento registrado.", fica até a pessoa sair da tela) e o mesmo anúncio para leitor de tela | "Consentimento registrado." |
 | erro de rede ao salvar | faixa de erro acima do botão; a caixa continua marcada | "Não foi possível salvar. Tente de novo." |
 | termo mudou enquanto lia (`409`) | faixa neutra e o termo recarregado, caixa desmarcada | "O texto do termo mudou. Leia de novo antes de dar o consentimento." |
 | professor não está mais na lista (`404`) | volta à lista com a frase | "Este pedido não existe mais." |
@@ -112,8 +111,9 @@ Tocar em "Retirar consentimento" abre um diálogo:
 │ seus treinos a partir de agora.  │
 │ O que ele já gravou, como o tipo │
 │ corrigido de um treino, fica.    │
-│ Você pode dar o consentimento de │
-│ novo depois.                     │
+│ Se você der o consentimento de   │
+│ novo, ele volta a ver todo o seu │
+│ histórico.                       │
 │ [   Cancelar   ] [  Retirar  ]   │  "Cancelar" primário; "Retirar" secundário
 └──────────────────────────────────┘
 ```
