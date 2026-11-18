@@ -1,3 +1,4 @@
+import { AccessibilityInfo } from "react-native";
 import { act, fireEvent, render, screen } from "@testing-library/react-native";
 
 import { TelaEntrar, tempoEmPalavras } from "../src/componentes/TelaEntrar";
@@ -41,7 +42,7 @@ describe("tela de entrar", () => {
   it("Ver mostra a senha e Esconder volta a esconder", async () => {
     await render(<TelaEntrar aoEntrar={jest.fn()} />);
     const ver = screen.getByTestId("campo-senha-ver");
-    expect(ver.props.accessibilityLabel).toBe("Mostrar a senha");
+    expect(ver.props.accessibilityLabel).toBe("Ver a senha");
     await fireEvent.press(ver);
     expect(screen.getByTestId("campo-senha").props.secureTextEntry).toBe(false);
     expect(screen.getByTestId("campo-senha-ver").props.accessibilityLabel).toBe("Esconder a senha");
@@ -119,6 +120,25 @@ describe("tela de entrar", () => {
   it("veio de acesso expirado: faixa neutra no alto", async () => {
     await render(<TelaEntrar expirou aoEntrar={jest.fn()} />);
     expect(screen.getByText("Seu acesso expirou. Entre de novo.")).toBeTruthy();
+  });
+
+  it("o nome do botão da senha contém o texto visível (WCAG 2.5.3)", async () => {
+    await render(<TelaEntrar aoEntrar={jest.fn()} />);
+    expect(screen.getByText("Ver")).toBeTruthy();
+    expect(screen.getByTestId("campo-senha-ver").props.accessibilityLabel).toContain("Ver");
+    await fireEvent.press(screen.getByTestId("campo-senha-ver"));
+    expect(screen.getByText("Esconder")).toBeTruthy();
+    expect(screen.getByTestId("campo-senha-ver").props.accessibilityLabel).toContain("Esconder");
+  });
+
+  it("saiu de propósito: anuncia 'Você saiu.' uma vez; abertura normal não anuncia", async () => {
+    const anunciar = jest.spyOn(AccessibilityInfo, "announceForAccessibility").mockImplementation(() => undefined);
+    await render(<TelaEntrar aoEntrar={jest.fn()} />);
+    expect(anunciar).not.toHaveBeenCalled();
+    await render(<TelaEntrar saiu aoEntrar={jest.fn()} />);
+    expect(anunciar).toHaveBeenCalledTimes(1);
+    expect(anunciar).toHaveBeenCalledWith("Você saiu.");
+    anunciar.mockRestore();
   });
 
   it("saiu de propósito: a tela abre limpa, sem faixa", async () => {

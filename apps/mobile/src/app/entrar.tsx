@@ -13,7 +13,7 @@ export default function Entrar() {
   if (estado.tipo === "verificando") return <TelaVerificando />;
   if (estado.tipo === "sem_rede") return <TelaSemRede aoTentar={verificarDeNovo} />;
   if (estado.tipo === "dentro") return <Seguir papel={estado.papel} trocaObrigatoria={estado.trocaObrigatoria} />;
-  return <TelaEntrar expirou={estado.expirou} aoEntrar={entrar} />;
+  return <TelaEntrar expirou={estado.expirou} saiu={!estado.expirou && !estado.lembrar} aoEntrar={entrar} />;
 }
 
 function Seguir({ papel, trocaObrigatoria }: { papel: Papel; trocaObrigatoria: boolean }) {
