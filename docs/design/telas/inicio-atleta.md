@@ -10,7 +10,7 @@ links: [[design/identidade-visual-v2]], [[design/auditoria-ux-e-inicio-do-atleta
 Resposta do Angelo à [[design/auditoria-ux-e-inicio-do-atleta]]: a tela inicial é "uma mistura das direções", o gráfico de carga e
 forma é **quinzenal com uma frase de análise**, e a ordem do primeiro olhar depois do treino é "proponha". Aqui estão a **tela
 inicial v2** e a **tela do treino** redesenhadas, já na identidade de [[design/identidade-visual-v2]]. Rascunho para ele reagir: nenhuma
-linha do app muda. Atleta (Ana), treinos e números **sintéticos**; linha do tempo: hoje é **sexta, 21/03/25**.
+linha do app muda. O nome "Pulso" que aparece nos esboços é **provisório** (os nomes Pulso, Cadência e Contexto são propostas, sem decisão do Angelo; ver [[design/identidade-visual-v2]]). Atleta (Ana), treinos e números **sintéticos**; linha do tempo: hoje é **sexta, 21/03/25**.
 
 ## Tela inicial v2
 Celular claro e escuro, e computador:

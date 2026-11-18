@@ -13,7 +13,7 @@ referências Strava e Garmin "mas pode propor coisas". Isto é **proposta para e
 
 Quadro de estilo (claro e escuro lado a lado, com os três logotipos): ![[design/telas/inicio-atleta/quadro-de-estilo.svg]]
 
-Os esboços usam o nome provisório **Pulso** e atletas e números **sintéticos**. A fonte nos SVGs aparece com uma reserva (a
+**Nenhum nome, logotipo, cor ou fonte está decidido**: Pulso, Cadência e Contexto são **propostas** que o Angelo ainda não escolheu. Os esboços usam o nome provisório **Pulso** só para ter algo na tela, com atletas e números **sintéticos**. A fonte nos SVGs aparece com uma reserva (a
 condensada pesada real é a Barlow Condensed; o SVG a usa se ela estiver instalada).
 
 ## Ideia em uma frase
