@@ -1,14 +1,13 @@
 ---
 tipo: guia
-status: rascunho
+status: em-uso
 dono: nina
 atualizado: 2026-11-18
-links: [[decisoes/0016-login-e-deploy-do-piloto]], [[produto/meta-13-opcoes-deploy]], [[produto/roadmap]]
+links: [[decisoes/0016-login-e-deploy-do-piloto]], [[produto/meta-13-opcoes-deploy]], [[produto/roadmap]], [[modulos/worker]], [[modulos/banco]], [[glossario]]
 ---
 # Meta 13: backup, restauração e exclusão de conta
 
-> **Rascunho da Duda (issue #505) para a Nina revisar e fechar.** A parte local (scripts, comando, testes e o ensaio no Docker) está pronta; o que depende da conta na
-> DigitalOcean (#504) e de decisões do Angelo está na seção "O que espera".
+> Parte local da #505 (scripts, comando, testes e o ensaio no Docker), pronta e revisada. A **#505 segue aberta** até a restauração no provedor ser feita e registrada; o que depende da conta na DigitalOcean (#504) e do Angelo está em "O que espera".
 > Só dado **sintético** aqui. O histórico real do Angelo só entra no servidor **depois** de uma restauração feita e conferida (decisão 5 do Angelo, ADR 0016, item 9).
 
 ## Backup diário
@@ -49,6 +48,6 @@ um banco novo, reaplicação da exclusão e login de uma conta.
 
 ## O que espera (não é da Duda)
 1. **Conta e banco na DigitalOcean (Angelo, #504):** onde roda o job diário, onde ficam os backups (mesma região do banco) e o backup gerenciado. A restauração **no provedor** (para um novo cluster) só se ensaia com a conta; a local já está provada.
-2. **Cifra do `pg_dump` (ADR 0016, "A confirmar", 8):** o rascunho usa `age`. Confirmar com o Theo; o Angelo guarda a chave privada.
+2. **Chave privada do `age` (Angelo):** decidido pelo Theo (ADR 0016, "A confirmar", 8): `age`, só a chave pública no servidor. O Angelo gera o par, guarda a privada **fora do repositório e do servidor** e passa só a pública (`age1...`). Sem a privada, nenhum backup abre. Instalar o `age` onde o script rodar.
 3. **Onde mora o registro de exclusões** em produção (fora do banco que se restaura; só ids e datas). Decidir na #504.
-4. **Trilha de consentimento na exclusão (ADR 0016, "A confirmar", 12):** o padrão implementado **apaga** a trilha junto. Se a consulta de LGPD pedir prova anonimizada, muda.
+4. **Trilha de consentimento na exclusão (ADR 0016, "A confirmar", 12):** o padrão implementado **apaga** a trilha junto, e fica assim **até a consulta de LGPD** (decisão do Theo). Se ela pedir prova anonimizada, muda.

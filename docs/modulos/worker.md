@@ -116,5 +116,7 @@ da importação e do cálculo de métricas, fora da [[modulos/api]].
 ## Como testar
 `uv run pytest -q` na raiz.
 
+- Contas e exclusão (Meta 13): `python -m worker.conta` (#499, criar, vincular, redefinir senha, desativar, limpar) e, na #505, `python -m worker.excluir_conta` (`excluir`, `reaplicar`) e `worker.conferir_restauracao` (contagem por tabela, sem valores). Backup e restauração em `infra/backup/`; guia em [[produto/meta-13-backup-e-restauracao]].
+
 ## Pendências
 - Definir fila e tarefas na Meta 1. Quando definir, abrir ADR em [[decisoes/]].
