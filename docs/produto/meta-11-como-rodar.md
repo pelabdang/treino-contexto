@@ -26,8 +26,7 @@ banco `treino-meta11` (Postgres na 5461, API na 8061). Os números abaixo são o
 - As mesmas ferramentas e cuidados do [[produto/meta-8-como-rodar]] e do [[produto/meta-10-como-rodar]]: comandos na **raiz** do repositório,
   pasta de trabalho fora do git (abaixo, `/caminho/saida`), portas livres, `uv`, Docker, `curl`, `python3` e, para a tela, `node` com `npm`.
 - **Não use o banco do seu dia a dia** (porta 5433) nem as portas 8000 e 8081. Rode sempre com `-p treino-meta11`. Abaixo: 5461 (Postgres) e 8061 (API).
-- **Sem login.** O professor do piloto é o `PROFESSOR_ID` do ambiente; a rota leva o mesmo número (`/professores/{id}/...`). Qualquer outro número
-  devolve o mesmo `404` (`professor_inexistente`): não é autenticação, só serve à máquina local.
+- **Atenção, defasado desde a #500:** este guia foi escrito para a Meta 11, **sem login**. Hoje toda rota de dado exige sessão (`401` sem ela) e o professor é o da sessão, não o `PROFESSOR_ID`. Para repetir os passos, crie uma conta do professor e entre (comandos em `python -m worker.conta`, [[decisoes/0016-login-e-deploy-do-piloto]], item 6; o guia novo vem na #507) e mande `Authorization: Bearer <token>` nas chamadas. Qualquer outro número em `/professores/{id}/...` devolve o mesmo `404` (`professor_inexistente`). O texto abaixo mantém a forma antiga e o `export PROFESSOR_ID` já não tem efeito na API.
 - **O relógio importa.** A caixa olha os últimos 7 dias (atenção) e 14 dias (treinos novos) a partir de "hoje" em `America/Sao_Paulo`. O
   `carregar_treinos.py` do passo 4 escreve as datas **relativas a hoje**, então os números não dependem do dia; só os nomes dos dias ("sábado") mudam.
 - **Qual `.env` vale:** só o da raiz do repositório; numa worktree ele não existe. Este guia põe `DATABASE_URL` e `PROFESSOR_ID` no ambiente.

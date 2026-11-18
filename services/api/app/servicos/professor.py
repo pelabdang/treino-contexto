@@ -2,9 +2,9 @@
 
 Duas pecas, usadas por TODA rota do professor (a Meta 11 nao tem rota de professor que leia atleta fora daqui):
 
-- `professor_da_rota`: dependencia que confere o `professor_id` do caminho contra o `PROFESSOR_ID` configurado e contra a
-  tabela `professor`. Os tres jeitos de falhar (sem configuracao, id diferente, sem linha) dao o MESMO `404`, byte a byte, e
-  o log nao diz qual deles foi: a resposta nao confirma que um id existe. Devolve o id da CONFIGURACAO, nunca o do caminho.
+- `professor_da_rota`: dependencia que devolve o professor da SESSAO (`professor_da_sessao`, ADR 0016, item 5; desde a #500 nao ha
+  mais `PROFESSOR_ID`). Qualquer id do caminho que nao seja o da sessao da o MESMO `404`, byte a byte, e o log nao diz o motivo:
+  a resposta nao confirma que um id existe. Devolve o id da SESSAO, nunca o do caminho.
 - `atletas_do_professor(professor_id, agora)`: expressao SQL (subconsulta de `atleta_id`) com o vinculo E o consentimento
   (`consentimento_em` nao nulo e `<= agora`). Entra como condicao da consulta, nunca como filtro depois de ler.
 

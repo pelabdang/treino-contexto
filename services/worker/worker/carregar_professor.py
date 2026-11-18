@@ -7,7 +7,7 @@ Le `<pasta>/identidade.json`: `assessoria`, `professores` (lista de `{nome}`), `
 Grava so a identidade e os vinculos (as atividades, check-ins e noites sinteticos entram pelos outros comandos). Idempotente:
 acha assessoria, professor e atleta pelo nome e atualiza o consentimento. Recusa (codigo 1, mensagem fixa) um atleta que ja
 existe com o mesmo nome mas nao veio desta carga (nao esta na assessoria da fixture), para nunca misturar dado
-sintetico com dado real. A saida tem so contagens e a linha `PROFESSOR_ID=<id>` para colar no `.env` local.
+sintetico com dado real. A saida tem so contagens e a linha `PROFESSOR_ID=<id>` (so informativa: a API ignora essa variavel desde a #500; o professor vem da sessao).
 
 Codigos de saida: 0 ok; 1 argumento, fixture invalida ou atleta que nao e da fixture.
 """
