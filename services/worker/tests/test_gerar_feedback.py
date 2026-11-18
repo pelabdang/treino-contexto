@@ -793,3 +793,42 @@ def test_clima_visto_e_so_uma_impressao_sem_valor_de_clima(fabrica):
     _rodar(fabrica)
     visto = _linhas(fabrica)[0].clima_visto
     assert len(visto) == 64 and "21" not in visto and "ok" not in visto
+
+
+# ---------- #510: corrigir o rotulo de transicao deixa o feedback desatualizado e o worker refaz ----------
+
+def _rotulo(fabrica, transicao):
+    """Como o `PUT /atletas/{id}/atividades/{id}/transicao`: grava (ou troca) a correcao do atleta na unica atividade."""
+    from app.db.models import RotuloTransicao
+
+    with fabrica() as s:
+        a = s.scalars(select(Atividade)).first()
+        linha = s.scalars(select(RotuloTransicao)).first() or RotuloTransicao(atividade_id=a.id)
+        linha.transicao, linha.origem, linha.versao_regra, linha.definido_em = transicao, "atleta", None, AGORA
+        s.add(linha)
+        s.commit()
+
+
+def test_corrigir_a_transicao_refaz_o_feedback_e_gravar_o_mesmo_valor_nao(fabrica):
+    _atleta(fabrica, 1)
+    assert _rodar(fabrica)[1].chamadas == 1
+    assert _linhas(fabrica)[0].transicao_visto is False  # sem rotulo: o pacote viu "nao"
+    assert _rodar(fabrica)[1].chamadas == 0
+    _rotulo(fabrica, False)  # o atleta confirma "nao": nada muda para o pacote
+    assert _rodar(fabrica)[1].chamadas == 0
+    _rotulo(fabrica, True)  # o atleta marca "sim": o pacote muda
+    codigo, falso = _rodar(fabrica)
+    assert codigo == 0 and falso.chamadas == 1
+    assert _linhas(fabrica)[0].transicao_visto is True and _linhas(fabrica)[0].tentativas == 2
+    assert _rodar(fabrica)[1].chamadas == 0  # em dia de novo
+
+
+def test_linha_anterior_a_0018_nao_entra_na_fila_so_por_ter_transicao_visto_nulo(fabrica):
+    _atleta(fabrica, 1)
+    _rodar(fabrica)
+    with fabrica() as s:
+        fb = s.scalars(select(FeedbackTreino)).one()
+        fb.transicao_visto = None  # como uma linha gravada antes da migracao
+        s.commit()
+    _rotulo(fabrica, True)
+    assert _rodar(fabrica)[1].chamadas == 0  # nulo nao compara (como clima_visto e tipo_visto); `--refazer` resolve

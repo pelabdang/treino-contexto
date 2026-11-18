@@ -1,3 +1,4 @@
+import { ComSessao } from "../__fixtures__/sessaoFalsa";
 import { fireEvent, render, screen } from "@testing-library/react-native";
 
 import { semanaVazia } from "../__fixtures__/semanaPadrao";
@@ -10,8 +11,8 @@ jest.mock("expo-router", () => ({
 }));
 import { router as mockRouter } from "expo-router";
 
-import Inicio from "../src/app/index";
-import SemanaPadrao from "../src/app/semana-padrao";
+import Inicio from "../src/app/(app)/index";
+import SemanaPadrao from "../src/app/(app)/semana-padrao";
 
 const resposta = (corpo: unknown) => ({ ok: true, status: 200, json: async () => corpo }) as Response;
 
@@ -25,14 +26,14 @@ describe("rota /semana-padrao e a entrada pela evolução", () => {
   it("a rota busca a semana-padrão do atleta configurado", async () => {
     const f = jest.fn(async (..._args: unknown[]) => resposta(semanaVazia));
     globalThis.fetch = f as unknown as typeof fetch;
-    await render(<SemanaPadrao />);
+    await render(<ComSessao><SemanaPadrao /></ComSessao>);
     await screen.findByTestId("estado-vazio");
     expect(String(f.mock.calls[0][0])).toMatch(/\/atletas\/1\/semana-padrao$/);
   });
 
   it("'Voltar' sem histórico leva à evolução", async () => {
     globalThis.fetch = jest.fn(async () => resposta(semanaVazia)) as unknown as typeof fetch;
-    await render(<SemanaPadrao />);
+    await render(<ComSessao><SemanaPadrao /></ComSessao>);
     await screen.findByTestId("estado-vazio");
     await fireEvent.press(screen.getByLabelText("Voltar"));
     expect(mockRouter.replace).toHaveBeenCalledWith("/");
@@ -40,7 +41,7 @@ describe("rota /semana-padrao e a entrada pela evolução", () => {
 
   it("a evolução tem o botão 'Semana-padrão', que abre /semana-padrao", async () => {
     globalThis.fetch = jest.fn(() => new Promise<Response>(() => {})) as unknown as typeof fetch;
-    await render(<Inicio />);
+    await render(<ComSessao><Inicio /></ComSessao>);
     await fireEvent.press(screen.getByTestId("abrir-semana-padrao"));
     expect(mockRouter.push).toHaveBeenCalledWith("/semana-padrao");
   });

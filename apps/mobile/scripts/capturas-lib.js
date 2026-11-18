@@ -4,6 +4,18 @@ const { existsSync, statSync } = require("node:fs");
 const { join, normalize, sep } = require("node:path");
 
 // Só dado sintético da API falsa (scripts/api-falsa.mjs). Os ids vêm do cabeçalho daquele arquivo.
+// Acesso (#502): o app só abre com sessão. Cada captura começa com um acesso sintético já guardado em sessionStorage (ver ACESSOS), sem passar
+// pela tela de entrar: `acesso: null` abre sem acesso; sem o campo, a caixa do dia usa o professor 1 e as demais telas o atleta 1.
+// `preencher` digita nos campos (testID, texto) antes dos `clicar`.
+const SENHA_SINTETICA = "senha-sintetica-123";
+const ACESSOS = {
+  atleta: "token-sintetico-atleta-1",
+  professor: "token-sintetico-professor-1",
+  expirado: "token-sintetico-expirado", // a API falsa responde sempre 401
+  trocar: "token-sintetico-trocar", // atleta 1 com a troca de senha obrigatória
+};
+const ENTRAR_ANA = [["campo-email", "atleta1@exemplo.com"], ["campo-senha", SENHA_SINTETICA]];
+const TROCAR_OK = [["campo-senha-atual", SENHA_SINTETICA], ["campo-senha-nova", "outra-senha-sintetica"], ["campo-senha-repetida", "outra-senha-sintetica"]];
 const ROTAS = [
   { nome: "treino-pronto", caminho: "/treino/107" }, // check-in feito, feedback pronto, carga pela PSE
   { nome: "treino-feedback-pendente", caminho: "/treino/112" },
@@ -21,7 +33,7 @@ const ROTAS = [
   { nome: "treino-esforcos-ciclismo", caminho: "/treino/109" }, // velocidade no lugar do pace
   { nome: "treino-esforcos-muitos", caminho: "/treino/130" }, // 12 esforços: mostra 8 e "Ver todos"
   { nome: "checkin-pergunta1", caminho: "/checkin/101" },
-  // Caixa do dia do professor (#426). O professor vem de EXPO_PUBLIC_PROFESSOR_ID (1 no export das capturas). `clicar` abre linhas
+  // Caixa do dia do professor (#426). O professor vem do acesso sintético da captura (professor 1, ver ACESSOS). `clicar` abre linhas
   // do acordeão (testID) antes da captura; `simular` troca a resposta da caixa no navegador (ver SIMULACOES), sem outro export.
   { nome: "caixa-do-dia", caminho: "/caixa-do-dia" },
   { nome: "caixa-do-dia-detalhe", caminho: "/caixa-do-dia", clicar: ["treino-501", "treino-novo-512"] }, // observação só com o texto marcador
@@ -36,7 +48,35 @@ const ROTAS = [
   { nome: "caixa-do-dia-salvando", caminho: "/caixa-do-dia", simular: "salvando", clicar: ["selecionar-511", "selecionar-512", "salvar-lote"] },
   { nome: "caixa-do-dia-lote-erro", caminho: "/caixa-do-dia", simular: "lote-erro", clicar: ["selecionar-511", "selecionar-512", "salvar-lote"] },
   { nome: "caixa-do-dia-lote-salvo", caminho: "/caixa-do-dia", simular: "lote-salvo", clicar: ["selecionar-511", "mudar-tipo-512", "tipo-longo", "salvar-lote"] },
+  // Entrar, sair, trocar a senha e acesso expirado (#502, spec docs/design/telas/entrar.md).
+  { nome: "entrar", caminho: "/entrar", acesso: null },
+  { nome: "entrar-preenchido", caminho: "/entrar", acesso: null, preencher: ENTRAR_ANA },
+  { nome: "entrar-senha-visivel", caminho: "/entrar", acesso: null, preencher: ENTRAR_ANA, clicar: ["campo-senha-ver"] },
+  { nome: "entrar-entrando", caminho: "/entrar", acesso: null, simular: "entrando", preencher: ENTRAR_ANA, clicar: ["botao-entrar"] },
+  { nome: "entrar-erro-401", caminho: "/entrar", acesso: null, preencher: [["campo-email", "atleta1@exemplo.com"], ["campo-senha", "senha-errada-sintetica"]], clicar: ["botao-entrar"] },
+  { nome: "entrar-muitas-tentativas", caminho: "/entrar", acesso: null, preencher: [["campo-email", "muitas@exemplo.com"], ["campo-senha", "qualquer-sintetica"]], clicar: ["botao-entrar"] },
+  { nome: "entrar-sem-rede", caminho: "/entrar", acesso: null, simular: "entrar-rede", preencher: ENTRAR_ANA, clicar: ["botao-entrar"] },
+  { nome: "entrar-erro-servidor", caminho: "/entrar", acesso: null, preencher: [["campo-email", "servidor@exemplo.com"], ["campo-senha", "qualquer-sintetica"]], clicar: ["botao-entrar"] },
+  { nome: "entrar-expirou", caminho: "/treino/101", acesso: "expirado" },
+  { nome: "acesso-verificando", caminho: "/", simular: "verificar-pendurado" },
+  { nome: "acesso-sem-rede", caminho: "/", simular: "verificar-rede" },
+  { nome: "trocar-senha-primeiro-acesso", caminho: "/", acesso: "trocar" },
+  { nome: "trocar-senha", caminho: "/trocar-senha" },
+  { nome: "trocar-senha-preenchida", caminho: "/trocar-senha", preencher: TROCAR_OK },
+  { nome: "trocar-senha-diferentes", caminho: "/trocar-senha", preencher: [["campo-senha-atual", SENHA_SINTETICA], ["campo-senha-nova", "outra-senha-sintetica"], ["campo-senha-repetida", "outra-senha-diferente"]], clicar: ["botao-salvar"] },
+  { nome: "trocar-senha-atual-errada", caminho: "/trocar-senha", preencher: [["campo-senha-atual", "senha-errada-sintetica"], ["campo-senha-nova", "outra-senha-sintetica"], ["campo-senha-repetida", "outra-senha-sintetica"]], clicar: ["botao-salvar"] },
+  { nome: "trocar-senha-nova-invalida", caminho: "/trocar-senha", preencher: [["campo-senha-atual", SENHA_SINTETICA], ["campo-senha-nova", "curta"], ["campo-senha-repetida", "curta"]], clicar: ["botao-salvar"] },
+  { nome: "trocar-senha-salva", caminho: "/trocar-senha", simular: "troca-ok", preencher: TROCAR_OK, clicar: ["botao-salvar"] },
+  { nome: "conta-menu", caminho: "/", clicar: ["abrir-conta"] },
+  { nome: "conta-menu-professor", caminho: "/caixa-do-dia", clicar: ["abrir-conta"] },
+  { nome: "sair-dialogo", caminho: "/", clicar: ["abrir-conta", "sair"] },
 ];
+
+// Acesso sintético que a captura guarda no navegador antes de abrir a rota (`null`: sem acesso).
+function acessoDaRota(rota) {
+  if ("acesso" in rota) return rota.acesso ? ACESSOS[rota.acesso] : null;
+  return rota.caminho.startsWith("/caixa-do-dia") ? ACESSOS.professor : ACESSOS.atleta;
+}
 
 // Respostas simuladas da caixa do dia (só dado sintético). `alterar` recebe o JSON da API falsa; `abortar` derruba a conexão.
 const SIMULACOES = {
@@ -47,6 +87,13 @@ const SIMULACOES = {
   salvando: { put: { pendurar: true } },
   "lote-erro": { put: { status: 404, corpo: { detail: [{ loc: ["body"], msg: "atividade não encontrada", type: "atividade_nao_encontrada" }] } } },
   "lote-salvo": { depois: (c) => ({ ...c, novos: [] }) },
+  // Entrar (#502): `sessao` troca a resposta de `/sessao` no método dado (`abortar` derruba a conexão, `pendurar` nunca responde);
+  // `senha` responde o `PUT /conta/senha` sem tocar na API falsa (que revogaria o acesso das outras capturas).
+  "entrar-rede": { sessao: { metodo: "POST", abortar: true } },
+  entrando: { sessao: { metodo: "POST", pendurar: true } },
+  "verificar-rede": { sessao: { metodo: "GET", abortar: true } },
+  "verificar-pendurado": { sessao: { metodo: "GET", pendurar: true } },
+  "troca-ok": { senha: { token: "token-sintetico-atleta-1", expira_em: "2099-12-31T23:59:59Z" } },
   "404": { status: 404, corpo: { detail: [{ loc: ["path", "professor_id"], msg: "professor inexistente", type: "professor_inexistente" }] } },
 };
 const TAMANHOS = [
@@ -125,4 +172,4 @@ function criarEncerramento(limpezas) {
   };
 }
 
-module.exports = { SIMULACOES, TAMANHO_ALTO, ALTURA_MAXIMA, alturaAlta, criarEncerramento, ROTAS, TAMANHOS, TEMAS, PORTAS_PROIBIDAS, nomeArquivo, planoDeCapturas, validarApiUrl, arquivoDaRota };
+module.exports = { ACESSOS, SENHA_SINTETICA, acessoDaRota, SIMULACOES, TAMANHO_ALTO, ALTURA_MAXIMA, alturaAlta, criarEncerramento, ROTAS, TAMANHOS, TEMAS, PORTAS_PROIBIDAS, nomeArquivo, planoDeCapturas, validarApiUrl, arquivoDaRota };
