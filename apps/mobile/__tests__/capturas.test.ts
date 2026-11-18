@@ -4,7 +4,7 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 
 // eslint-disable-next-line @typescript-eslint/no-require-imports
-const { SIMULACOES, ALTURA_MAXIMA, alturaAlta, criarEncerramento, ROTAS, TAMANHOS, TEMAS, arquivoDaRota, nomeArquivo, planoDeCapturas, validarApiUrl } = require("../scripts/capturas-lib.js");
+const { ACESSOS, SENHA_SINTETICA, acessoDaRota, SIMULACOES, ALTURA_MAXIMA, alturaAlta, criarEncerramento, ROTAS, TAMANHOS, TEMAS, arquivoDaRota, nomeArquivo, planoDeCapturas, validarApiUrl } = require("../scripts/capturas-lib.js");
 
 describe("plano de capturas", () => {
   it("combina cada rota com os dois temas e os dois tamanhos (390 x 844 e 1280)", () => {
@@ -81,6 +81,35 @@ describe("rotas da caixa do dia (#426)", () => {
       for (const id of r.clicar ?? []) expect(id).toMatch(/^[a-z0-9-]+$/);
       for (const t of r.teclar ?? []) expect(["Tab", "Enter", "Escape"]).toContain(t);
     }
+  });
+});
+
+describe("rotas de entrar, sair e trocar a senha (#502)", () => {
+  const conta = ROTAS.filter((r: any) => /^(entrar|acesso|trocar-senha|conta-menu|sair)/.test(r.nome));
+  it("cobre os estados da spec da Lia", () => {
+    const nomes = conta.map((r: any) => r.nome);
+    for (const n of ["entrar", "entrar-erro-401", "entrar-muitas-tentativas", "entrar-sem-rede", "entrar-expirou", "trocar-senha-primeiro-acesso", "trocar-senha-diferentes", "conta-menu", "conta-menu-professor", "sair-dialogo"]) {
+      expect(nomes).toContain(n);
+    }
+  });
+  it("sem o campo `acesso`: a caixa do dia abre como professor e as demais telas como atleta; `acesso: null` abre sem acesso", () => {
+    expect(acessoDaRota({ nome: "x", caminho: "/caixa-do-dia" })).toBe(ACESSOS.professor);
+    expect(acessoDaRota({ nome: "x", caminho: "/treino/1" })).toBe(ACESSOS.atleta);
+    expect(acessoDaRota({ nome: "x", caminho: "/entrar", acesso: null })).toBeNull();
+    expect(acessoDaRota({ nome: "x", caminho: "/", acesso: "trocar" })).toBe("token-sintetico-trocar");
+  });
+  it("toda simulação pedida existe e só dado sintético vai nos campos", () => {
+    for (const r of conta) {
+      if (r.simular) expect(SIMULACOES[r.simular]).toBeDefined();
+      for (const [id, texto] of r.preencher ?? []) {
+        expect(id).toMatch(/^campo-[a-z-]+$/);
+        if (id === "campo-email") expect(texto).toMatch(/@exemplo\.com$/);
+      }
+    }
+    expect(SENHA_SINTETICA).toMatch(/sintetica/);
+  });
+  it("a troca de senha capturada não passa pela API falsa (não revoga o acesso das outras capturas)", () => {
+    expect(SIMULACOES["troca-ok"].senha.token).toBe(ACESSOS.atleta);
   });
 });
 

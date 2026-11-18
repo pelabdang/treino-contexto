@@ -1,9 +1,10 @@
+import { ComSessao } from "../__fixtures__/sessaoFalsa";
 import type { EvolucaoTiros1km } from "@treino/api-client";
 import { StyleSheet } from "react-native";
 import { fireEvent, render, screen, waitFor, within } from "@testing-library/react-native";
 
 import exemplo from "../../../packages/api-client/exemplos/evolucao-tiros-1km.json";
-import Inicio from "../src/app/index";
+import Inicio from "../src/app/(app)/index";
 import { TelaEvolucao } from "../src/componentes/TelaEvolucao";
 
 // Os ícones carregam a fonte de forma assíncrona (não existe no Jest): vira um texto com o nome e o tamanho.
@@ -44,7 +45,7 @@ describe("tela de evolução", () => {
   it("mostra o título (rota inicial)", async () => {
     const original = globalThis.fetch;
     globalThis.fetch = fetchCom(200, base);
-    await render(<Inicio />);
+    await render(<ComSessao><Inicio /></ComSessao>);
     expect(screen.getByText("Evolução dos tiros de 1 km")).toBeTruthy();
     await screen.findByTestId("lista-sessoes");
     globalThis.fetch = original;
@@ -148,7 +149,7 @@ describe("tela de evolução", () => {
   it("na rota inicial, 'Ver treino' navega para /treino/<id>", async () => {
     const original = globalThis.fetch;
     globalThis.fetch = fetchCom(200, base);
-    await render(<Inicio />);
+    await render(<ComSessao><Inicio /></ComSessao>);
     await screen.findByTestId("lista-sessoes");
     const id = base.sessoes[0].atividade_id;
     await fireEvent.press(screen.getByTestId(`linha-sessao-${id}`));
