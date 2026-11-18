@@ -51,6 +51,9 @@
   "private": true,
   "jest": {
     "preset": "jest-expo",
+    "setupFiles": [
+      "<rootDir>/jest.setup.js"
+    ],
     "moduleDirectories": [
       "node_modules",
       "<rootDir>/node_modules"

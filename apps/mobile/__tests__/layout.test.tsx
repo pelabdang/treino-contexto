@@ -19,5 +19,6 @@ describe("_layout", () => {
     (fontes.useFontesInter as jest.Mock).mockReturnValue(true);
     await render(<RootLayout />);
     expect(screen.queryByTestId("carregando-fonte")).toBeNull();
+    expect(screen.getByTestId("area-segura").props.style).toMatchObject({ flex: 1, paddingTop: 0, paddingBottom: 0 });
   });
 });

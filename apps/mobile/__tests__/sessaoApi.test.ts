@@ -31,6 +31,12 @@ describe("api de sessão", () => {
     expect(await entrar("a@exemplo.com", "x", { ...base, fetch: fetchCom(429, {}) })).toEqual({ ok: false, falha: { motivo: "espere", espereS: 0 } });
   });
 
+  it("429 sem `espere_s` no corpo lê o cabeçalho Retry-After", async () => {
+    const r = { ok: false, status: 429, json: async () => ({}), headers: new Headers({ "Retry-After": "120" }) } as Response;
+    const f = jest.fn(async () => r) as unknown as typeof fetch;
+    expect(await entrar("a@exemplo.com", "x", { ...base, fetch: f })).toEqual({ ok: false, falha: { motivo: "espere", espereS: 120 } });
+  });
+
   it("rede e erro do servidor", async () => {
     const quebrado = jest.fn(async () => {
       throw new Error("MARCADOR-REDE");

@@ -1,11 +1,13 @@
 // Tela "Trocar a senha" (#502, spec docs/design/telas/entrar.md). Duas ocasiões: primeiro acesso (senha provisória do operador: não dá para
 // pular, sem "Voltar") e voluntária. O app só confere campo vazio e "as duas senhas novas iguais"; a regra da senha é da API (422).
 import { MaterialIcons } from "@expo/vector-icons";
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { AccessibilityInfo, Pressable, ScrollView, StyleSheet, Text, useWindowDimensions, View } from "react-native";
+import { type ComponentRef, useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { Pressable, ScrollView, StyleSheet, Text, useWindowDimensions, View } from "react-native";
 
 import type { Falha, NovoAcesso, ResultadoSessao } from "../sessao/api";
+import { FOCAVEL, focar } from "../navegacao/foco";
 import { comFoco } from "../tema/foco";
+import { DialogoSair } from "./DialogoSair";
 import { CampoTexto, type RefCampo } from "./CampoTexto";
 import { Faixa } from "./Faixa";
 import { borda, espaco, fonte, larguraMargemGrande, raio, tamanho, useMargemTela, useTema, type Tema } from "../tema";
@@ -45,6 +47,8 @@ export function TelaTrocarSenha({ primeiroAcesso = false, aoTrocar, aoConcluir, 
   const [salvando, setSalvando] = useState(false);
   const [salvo, setSalvo] = useState(false);
   const [erro, setErro] = useState<Erro>(null);
+  const faixaSalvo = useRef<ComponentRef<typeof View>>(null);
+  const [saindo, setSaindo] = useState(false);
   const campoAtual = useRef<RefCampo>(null);
   const campoNova = useRef<RefCampo>(null);
   const campoRepetida = useRef<RefCampo>(null);
@@ -76,7 +80,8 @@ export function TelaTrocarSenha({ primeiroAcesso = false, aoTrocar, aoConcluir, 
       setNova("");
       setRepetida("");
       setSalvo(true);
-      AccessibilityInfo.announceForAccessibility?.("Senha trocada.");
+      // O foco vai para a faixa (o campo que o tinha sumiu); a região viva da faixa anuncia, sem `announceForAccessibility`.
+      setTimeout(() => focar(faixaSalvo.current), 0);
       return;
     }
     const e = erroDe(r.falha);
@@ -102,8 +107,8 @@ export function TelaTrocarSenha({ primeiroAcesso = false, aoTrocar, aoConcluir, 
         </Text>
         {salvo ? (
           <>
-            <View testID="senha-trocada" accessibilityLiveRegion="polite" style={styles.sucesso}>
-              <MaterialIcons name="check-circle" size={tamanho.iconeGrande} color={tema.cor.sucesso} accessible={false} />
+            <View ref={faixaSalvo} {...FOCAVEL} testID="senha-trocada" accessible accessibilityLiveRegion="polite" style={styles.sucesso}>
+              <MaterialIcons name="check-circle-outline" size={tamanho.iconeGrande} color={tema.cor.sucesso} accessible={false} />
               <Text style={styles.sucessoTexto}>Senha trocada.</Text>
             </View>
             <Pressable testID="continuar" accessibilityRole="button" onPress={aoConcluir} style={comFoco(styles.botao, styles.foco)}>
@@ -125,18 +130,19 @@ export function TelaTrocarSenha({ primeiroAcesso = false, aoTrocar, aoConcluir, 
               accessibilityState={{ disabled: !podeSalvar, busy: salvando }}
               disabled={!podeSalvar}
               onPress={salvar}
-              style={comFoco([styles.botao, !podeSalvar && styles.botaoDesligado], styles.foco)}
+              style={podeSalvar ? comFoco(styles.botao, styles.foco) : [styles.botao, styles.botaoDesligado]}
             >
               <Text style={[styles.botaoTexto, !podeSalvar && styles.botaoTextoDesligado]}>{salvando ? "Salvando..." : "Salvar a senha nova"}</Text>
             </Pressable>
             {primeiroAcesso && aoSair && (
-              <Pressable testID="sair" accessibilityRole="button" onPress={aoSair} style={comFoco([styles.botao, styles.secundario], styles.foco)}>
+              <Pressable testID="sair" accessibilityRole="button" onPress={() => setSaindo(true)} style={comFoco([styles.botao, styles.secundario], styles.foco)}>
                 <Text style={styles.secundarioTexto}>Sair</Text>
               </Pressable>
             )}
           </>
         )}
       </View>
+      <DialogoSair visivel={saindo} aoCancelar={() => setSaindo(false)} aoConfirmar={() => { setSaindo(false); aoSair?.(); }} />
     </ScrollView>
   );
 }

@@ -151,7 +151,7 @@ export function TelaEntrar({ expirou = false, saiu = false, aoEntrar, aoConcluir
           accessibilityState={{ disabled: !podeEnviar, busy: entrando }}
           disabled={!podeEnviar}
           onPress={enviar}
-          style={comFoco([styles.botao, !podeEnviar && styles.botaoDesligado], styles.foco)}
+          style={podeEnviar ? comFoco(styles.botao, styles.foco) : [styles.botao, styles.botaoDesligado]}
         >
           <Text style={[styles.botaoTexto, !podeEnviar && styles.botaoTextoDesligado]}>{entrando ? "Entrando..." : "Entrar"}</Text>
         </Pressable>
