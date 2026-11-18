@@ -297,4 +297,31 @@ describe("tela de evolução", () => {
     await waitFor(() => expect(screen.getByTestId("lista-sessoes")).toBeTruthy());
     expect(screen.queryByText("cálculo em atualização")).toBeNull();
   });
+
+  describe("aviso de pedido de professor (#503)", () => {
+    const comPedidos = (professores: unknown[]) =>
+      jest.fn(async (input: RequestInfo | URL) =>
+        String(input).endsWith("/professores") ? resposta(200, { atleta_id: 1, termo_vigente: "t", professores }) : resposta(200, base),
+      ) as unknown as typeof fetch & jest.Mock;
+    const telaComAviso = (f: typeof fetch, aoAbrirConsentimento = jest.fn()) => (
+      <TelaEvolucao apiUrl="http://api.teste" atletaId={1} fetchFn={f} aoAbrirConsentimento={aoAbrirConsentimento} />
+    );
+    const v = (consentimento: boolean) => ({ professor_id: 1, nome: "Carlos Exemplo", consentimento });
+
+    it("com pedido aguardando mostra a linha e 'Ver' abre o consentimento", async () => {
+      const abrir = jest.fn();
+      await render(telaComAviso(comPedidos([v(false)]), abrir));
+      expect(await screen.findByText("Há um professor pedindo para ver seus treinos.")).toBeTruthy();
+      await fireEvent.press(screen.getByTestId("ver-pedido"));
+      expect(abrir).toHaveBeenCalled();
+    });
+
+    it("sem pedido, ou se a busca falhar, não há aviso", async () => {
+      await render(telaComAviso(comPedidos([v(true)])));
+      await screen.findByTestId("lista-sessoes");
+      expect(screen.queryByTestId("aviso-consentimento")).toBeNull();
+      await render(telaComAviso(fetchCom(500, {})));
+      expect(screen.queryByTestId("aviso-consentimento")).toBeNull();
+    });
+  });
 });
