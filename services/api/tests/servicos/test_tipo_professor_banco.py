@@ -4,6 +4,7 @@ semana-padrao editada e reaplicacao. Atletas FICTICIOS."""
 from datetime import date, datetime, timezone
 from pathlib import Path
 
+from app.servicos.consentimento import TERMO_VIGENTE
 from app.db.models import Atividade, Atleta, Professor, Assessoria, SemanaPadrao, VinculoProfessorAtleta, SemanaPadraoItem
 from app.ingestao.importacao import importar_fit
 from app.metricas import tipo_treino as tt
@@ -39,7 +40,7 @@ def test_dia_com_duas_atividades_corrigir_a_dona_nao_libera_o_item_para_a_irma(s
     atleta = Atleta(nome="Ficticio")
     session.add(atleta)
     session.flush()
-    session.add(VinculoProfessorAtleta(professor_id=1, atleta_id=atleta.id, consentimento_em=datetime(2026, 11, 1, tzinfo=timezone.utc)))
+    session.add(VinculoProfessorAtleta(professor_id=1, atleta_id=atleta.id, consentimento_em=datetime(2026, 11, 1, tzinfo=timezone.utc), termo_versao=TERMO_VIGENTE))
     manha = Atividade(atleta_id=atleta.id, fonte="t", fonte_id="1", modalidade="corrida", inicio=datetime(*QUARTA, 9, tzinfo=timezone.utc),
                       duracao_s=3600, fuso_min=0)
     tarde = Atividade(atleta_id=atleta.id, fonte="t", fonte_id="2", modalidade="corrida", inicio=datetime(*QUARTA, 18, tzinfo=timezone.utc),
@@ -78,7 +79,7 @@ def test_reimportar_o_mesmo_fit_nao_desfaz_a_correcao(session, tmp_path):
     atleta = Atleta(nome="Ficticio")
     session.add(atleta)
     session.flush()
-    session.add(VinculoProfessorAtleta(professor_id=1, atleta_id=atleta.id, consentimento_em=datetime(2026, 11, 1, tzinfo=timezone.utc)))
+    session.add(VinculoProfessorAtleta(professor_id=1, atleta_id=atleta.id, consentimento_em=datetime(2026, 11, 1, tzinfo=timezone.utc), termo_versao=TERMO_VIGENTE))
     session.commit()
     dados = (FITS / "upload_rodagem_6km.fit").read_bytes()
     pasta = tmp_path / "fit"

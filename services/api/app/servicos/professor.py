@@ -22,6 +22,7 @@ from sqlalchemy.orm import Session
 from app.autenticacao import PROFESSOR_INEXISTENTE, professor_da_sessao
 from app.db.models import Atleta, Professor, VinculoProfessorAtleta
 from app.db.session import get_session
+from app.servicos.consentimento import TERMO_VIGENTE
 
 # Corpo unico do 404 do professor: a mesma forma e os mesmos bytes para qualquer id que nao seja o da sessao (ADR 0015, item 2).
 ATLETA_NAO_ENCONTRADO = {
@@ -35,7 +36,7 @@ def agora_utc() -> datetime:
 
 
 def atletas_do_professor(professor_id: int, agora: datetime):
-    """Subconsulta com os `atleta_id` visiveis ao professor: vinculo com consentimento dado ate `agora`.
+    """Subconsulta com os `atleta_id` visiveis ao professor: vinculo com consentimento dado ate `agora`, nao retirado e na versao vigente do termo.
 
     `agora` precisa ter fuso (nunca `now()` no SQL). Sem atalho por `assessoria_id`.
     """
@@ -47,6 +48,8 @@ def atletas_do_professor(professor_id: int, agora: datetime):
             VinculoProfessorAtleta.professor_id == professor_id,
             VinculoProfessorAtleta.consentimento_em.is_not(None),
             VinculoProfessorAtleta.consentimento_em <= agora,
+            VinculoProfessorAtleta.consentimento_revogado_em.is_(None),  # ADR 0016, item 7: retirar tira o aluno na hora
+            VinculoProfessorAtleta.termo_versao == TERMO_VIGENTE,  # versao diferente da vigente vale como sem consentimento
         )
         .scalar_subquery()
     )

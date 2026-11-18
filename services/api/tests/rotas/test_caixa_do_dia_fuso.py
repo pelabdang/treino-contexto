@@ -8,6 +8,7 @@ import pytest
 from fastapi.testclient import TestClient
 
 from app.config import settings
+from app.servicos.consentimento import TERMO_VIGENTE
 from app.db.models import Assessoria, Atividade, Atleta, Professor, VinculoProfessorAtleta
 from app.db.session import get_session
 from app.main import criar_app
@@ -30,7 +31,7 @@ def app(session, monkeypatch):
     session.add(Professor(id=1, assessoria_id=1, nome="Professor Um"))
     session.add(Atleta(id=1, assessoria_id=1, nome="Ana Teste"))
     session.flush()
-    session.add(VinculoProfessorAtleta(professor_id=1, atleta_id=1, consentimento_em=_utc(1, 12)))
+    session.add(VinculoProfessorAtleta(professor_id=1, atleta_id=1, consentimento_em=_utc(1, 12), termo_versao=TERMO_VIGENTE))
     # sexta 13/11 (10h locais), sem check-in e sem tipo: no dia 18 faltam 2 dias para o fim do prazo
     session.add(Atividade(id=1, atleta_id=1, fonte="t", fonte_id="1", modalidade="corrida", inicio=_utc(13, 13), fuso_min=-180, duracao_s=2700))
     # quarta 11/11, sem check-in, com tipo sugerido (entra em "novos"): no dia 18 o prazo termina hoje; no dia 19 venceu

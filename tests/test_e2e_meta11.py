@@ -255,6 +255,7 @@ def _estado(m):
 def _novo_atleta(m, nome, *, treino_dias=1, vinculo="valido"):
     """Um atleta sintetico com um treino com dor e tipo sugerido (nunca pode vazar para quem nao tem vinculo com consentimento)."""
     from app.db.models import Atividade, Atleta, CheckinTreino, VinculoProfessorAtleta
+    from app.servicos.consentimento import TERMO_VIGENTE
 
     agora = datetime.now(UTC)
     with Session(m.eng) as s:
@@ -263,9 +264,9 @@ def _novo_atleta(m, nome, *, treino_dias=1, vinculo="valido"):
         s.flush()
         cons = {"valido": agora - timedelta(days=30), "nulo": None, "futuro": agora + timedelta(days=2)}
         if vinculo in cons:
-            s.add(VinculoProfessorAtleta(professor_id=1, atleta_id=a.id, consentimento_em=cons[vinculo]))
+            s.add(VinculoProfessorAtleta(professor_id=1, atleta_id=a.id, consentimento_em=cons[vinculo], termo_versao=TERMO_VIGENTE))
         elif vinculo == "outro_professor":
-            s.add(VinculoProfessorAtleta(professor_id=2, atleta_id=a.id, consentimento_em=agora - timedelta(days=30)))
+            s.add(VinculoProfessorAtleta(professor_id=2, atleta_id=a.id, consentimento_em=agora - timedelta(days=30), termo_versao=TERMO_VIGENTE))
         ativ = Atividade(atleta_id=a.id, fonte="fixture", fonte_id=f"m11-{a.id}", modalidade="corrida",
                          inicio=_inicio(treino_dias, 10),
                          fuso_min=-180, duracao_s=2700.0, tipo_treino="intervalado", tipo_origem="sugestao")
