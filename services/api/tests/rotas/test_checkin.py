@@ -160,10 +160,10 @@ def test_marcador_nao_vai_para_o_log_no_put_feliz_nem_no_500(client, ids, caplog
     assert MARCADOR not in caplog.text
 
 
-def test_outras_rotas_da_api_continuam_com_o_422_padrao(client, ids):
+def test_outras_rotas_da_api_tambem_dao_422_sem_eco_do_que_foi_enviado(client, ids):
     ana, _, a = ids
-    r = client.get("/atletas/abc/atividades/1")
-    assert r.status_code == 422 and "input" in r.text  # o handler novo e so do check-in
+    r = client.get("/atletas/abc/atividades/1")  # #504: o handler global tira `input` e `ctx` de todo 422 (ADR 0016, item 9)
+    assert r.status_code == 422 and "input" not in r.text and "abc" not in r.text
 
 
 def test_404_atleta_ou_atividade_de_outro_atleta_nas_tres_rotas(client, ids, session):

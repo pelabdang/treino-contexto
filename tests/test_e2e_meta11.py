@@ -213,7 +213,6 @@ def _sql(eng, comando, **p):
 @pytest.fixture
 def mundo(base, tmp_path, monkeypatch):
     """Uma copia do banco da base + a API em processo (TestClient) como o professor 1. Um teste nao suja o outro."""
-    from app.config import settings
     from app.db.session import get_session
     from app.main import app
     from app.rotas.atividades import get_fit_dir
@@ -226,7 +225,6 @@ def mundo(base, tmp_path, monkeypatch):
         with Session(eng) as s:
             yield s
 
-    monkeypatch.setattr(settings, "professor_id", 1)
     app.dependency_overrides[get_session] = sessao
     app.dependency_overrides[get_fit_dir] = lambda: tmp_path / "fit"
     try:

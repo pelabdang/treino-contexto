@@ -39,7 +39,7 @@ Sem componente contínuo (economiza US$ 5/mês e não há processo a manter): os
 ## O que o App Platform não tem (decisões para o Theo)
 1. **Disco persistente:** os FIT enviados (`FIT_DIR`) somem a cada deploy. O que se perde é o arquivo bruto guardado; as atividades já importadas ficam no banco. Opções: aceitar no piloto; ou mover para armazenamento de objetos (Spaces, custo e código novos).
 2. **Limite de 10 MB no proxy:** o provedor não documenta limite de corpo configurável. A API já recusa acima de 10 MB (413, testado no ensaio); o corpo grande ainda chega até ela.
-3. **CORS e `Authorization`:** `allow_headers=[]` em `app/main.py` não libera `Authorization` nem `Content-Type: application/json` para outra origem. Em produção (mesma origem) não importa; para o web em desenvolvimento (`localhost:8081` chamando a API) a #502 vai precisar liberar esses dois cabeçalhos.
+3. **CORS e `Authorization`:** corrigido no #528 (`allow_headers` libera `Authorization` e `Content-Type`). Em produção a origem é a mesma e o CORS nem entra em jogo.
 4. **Rotas do app ainda usam `EXPO_PUBLIC_ATLETA_ID`:** até a #502 (telas de entrar) o app não consegue entrar; a API responde 401.
 
 ## PRECISA DO ANGELO
