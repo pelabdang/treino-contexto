@@ -7,6 +7,9 @@ links: [[produto/metas/meta-2-evolucao-tiros-app]], [[produto/meta-1-como-reprod
 ---
 # Meta 2: como rodar a API e o app
 
+> **Desde a #502 (Meta 13):** o app não lê mais `EXPO_PUBLIC_ATLETA_ID` nem `EXPO_PUBLIC_PROFESSOR_ID`; o atleta ou o professor é o da conta que entrou em `/entrar`. Para forçar um estado, entre com `atleta<N>@exemplo.com` ou `professor<N>@exemplo.com` (senha sintética, ver `apps/mobile/scripts/api-falsa.mjs`), onde `<N>` faz o papel do antigo id. Onde o texto abaixo manda pôr a variável, leia "entre com a conta de mesmo número". Detalhes em [[modulos/mobile]].
+
+
 Passo a passo de ponta a ponta, num clone limpo: Postgres, migrações, fixtures sintéticas, API com CORS e app na web.
 Só dado sintético. Nada de dado real. Parte da base está em [[produto/meta-1-como-reproduzir]].
 

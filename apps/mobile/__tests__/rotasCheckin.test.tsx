@@ -1,3 +1,4 @@
+import { ComSessao } from "../__fixtures__/sessaoFalsa";
 import { fireEvent, render, screen } from "@testing-library/react-native";
 
 import { atividadesCheckin, pendentes } from "../__fixtures__/checkin";
@@ -14,9 +15,9 @@ jest.mock("expo-router", () => ({
   },
 }));
 
-import Checkin from "../src/app/checkin/[id]";
-import Pendentes from "../src/app/checkins-pendentes";
-import Treino from "../src/app/treino/[id]";
+import Checkin from "../src/app/(app)/checkin/[id]";
+import Pendentes from "../src/app/(app)/checkins-pendentes";
+import Treino from "../src/app/(app)/treino/[id]";
 
 jest.setTimeout(20000);
 
@@ -36,14 +37,14 @@ describe("rotas do check-in", () => {
   it("/checkin/[id] busca a atividade do parâmetro e a rota leva só o id", async () => {
     const f = jest.fn(async (..._a: unknown[]) => resposta(atividadesCheckin.semCheckin));
     globalThis.fetch = f as unknown as typeof fetch;
-    await render(<Checkin />);
+    await render(<ComSessao><Checkin /></ComSessao>);
     await screen.findByText("Qual foi o esforço do treino?");
     expect(String(f.mock.calls[0][0])).toMatch(/\/atletas\/1\/atividades\/101$/);
   });
 
   it("/checkin/[id]: Voltar usa router.back; sem histórico, vai para o treino", async () => {
     globalThis.fetch = jest.fn(async () => resposta(atividadesCheckin.semCheckin)) as unknown as typeof fetch;
-    await render(<Checkin />);
+    await render(<ComSessao><Checkin /></ComSessao>);
     await fireEvent.press(await screen.findByLabelText("Voltar"));
     expect(mockRouter.back).toHaveBeenCalled();
     mockRouter.canGoBack.mockReturnValue(false);
@@ -56,7 +57,7 @@ describe("rotas do check-in", () => {
     globalThis.fetch = jest.fn(async (_u: unknown, init?: RequestInit) =>
       resposta(init?.method === "PUT" ? { ...atividadesCheckin.comCheckin.checkin } : atividadesCheckin.semCheckin),
     ) as unknown as typeof fetch;
-    await render(<Checkin />);
+    await render(<ComSessao><Checkin /></ComSessao>);
     await fireEvent.press(await screen.findByTestId("pse-5"));
     await fireEvent.press(await screen.findByTestId("sensacao-4"));
     await fireEvent.press(await screen.findByTestId("nada-a-relatar"));
@@ -65,21 +66,21 @@ describe("rotas do check-in", () => {
 
   it("/checkins-pendentes: abre /checkin/<id>?origem=pendentes", async () => {
     globalThis.fetch = jest.fn(async () => resposta(pendentes)) as unknown as typeof fetch;
-    await render(<Pendentes />);
+    await render(<ComSessao><Pendentes /></ComSessao>);
     await fireEvent.press(await screen.findByTestId("pendente-106"));
     expect(mockRouter.push).toHaveBeenCalledWith("/checkin/106?origem=pendentes");
   });
 
   it("/treino/[id]: 'Fazer check-in' abre /checkin/<id>", async () => {
     globalThis.fetch = jest.fn(async () => resposta(atividadesCheckin.semCheckin)) as unknown as typeof fetch;
-    await render(<Treino />);
+    await render(<ComSessao><Treino /></ComSessao>);
     await fireEvent.press(await screen.findByText("Fazer check-in"));
     expect(mockRouter.push).toHaveBeenCalledWith("/checkin/101");
   });
 
   it("/treino/[id]: 'Editar' abre /checkin/<id>", async () => {
     globalThis.fetch = jest.fn(async () => resposta(atividadesCheckin.comCheckin)) as unknown as typeof fetch;
-    await render(<Treino />);
+    await render(<ComSessao><Treino /></ComSessao>);
     await fireEvent.press(await screen.findByText("Editar"));
     expect(mockRouter.push).toHaveBeenCalledWith("/checkin/101");
   });

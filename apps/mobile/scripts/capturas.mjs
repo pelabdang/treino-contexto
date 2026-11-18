@@ -14,7 +14,7 @@ import { dirname, extname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import lib from "./capturas-lib.js";
 
-const { SIMULACOES, arquivoDaRota, nomeArquivo, planoDeCapturas, validarApiUrl, alturaAlta, criarEncerramento } = lib;
+const { SIMULACOES, acessoDaRota, arquivoDaRota, nomeArquivo, planoDeCapturas, validarApiUrl, alturaAlta, criarEncerramento } = lib;
 
 const app = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 const pasta = resolve(process.env.CAPTURAS_PASTA ?? join(app, "capturas"));
@@ -93,7 +93,7 @@ async function principal() {
   await executar("npx", ["expo", "export", "--platform", "web", "--output-dir", saida], {
     cwd: app,
     stdio: "inherit",
-    env: { ...process.env, CI: "1", EXPO_PUBLIC_API_URL: apiUrl, EXPO_PUBLIC_ATLETA_ID: "1", EXPO_PUBLIC_PROFESSOR_ID: "1" },
+    env: { ...process.env, CI: "1", EXPO_PUBLIC_API_URL: apiUrl },
   });
 
   const web = createServer((req, res) => {
@@ -126,6 +126,9 @@ async function principal() {
       locale: "pt-BR",
       deviceScaleFactor: 1,
     });
+    // Acesso sintético já guardado, como se a pessoa tivesse entrado (ver ACESSOS em capturas-lib.js).
+    const acesso = acessoDaRota(rota);
+    if (acesso) await ctx.addInitScript((t) => sessionStorage.setItem("treino.acesso", t), acesso);
     const pagina = await ctx.newPage();
     const sim = rota.simular ? SIMULACOES[rota.simular] : null;
     if (sim?.abortar || sim?.alterar || sim?.status) {
@@ -145,14 +148,26 @@ async function principal() {
         return r.fulfill({ response: original, json: leituras++ === 0 ? await original.json() : sim.depois(await original.json()) });
       });
     }
+    if (sim?.sessao) {
+      await pagina.route("**/sessao", async (r) => {
+        if (r.request().method() !== sim.sessao.metodo) return r.fallback();
+        if (sim.sessao.pendurar) return; // nunca responde
+        return r.abort("connectionrefused");
+      });
+    }
+    if (sim?.senha) {
+      await pagina.route("**/conta/senha", (r) => r.fulfill({ status: 200, json: sim.senha, headers: { "access-control-allow-origin": "*" } }));
+    }
     if (sim?.put) {
       await pagina.route("**/professores/*/tipos-de-treino", async (r) => {
         if (sim.put.pendurar) return; // nunca responde
         return r.fulfill({ status: sim.put.status, json: sim.put.corpo, headers: { "access-control-allow-origin": "*" } });
       });
     }
-    await pagina.goto(base + rota.caminho, { waitUntil: "networkidle" });
+    // Uma chamada pendurada de propósito na abertura (acesso-verificando) nunca deixa a rede ociosa: espera só o carregamento.
+    await pagina.goto(base + rota.caminho, { waitUntil: sim?.sessao?.pendurar && sim.sessao.metodo === "GET" ? "load" : "networkidle" });
     await pagina.evaluate(() => document.fonts.ready);
+    for (const [id, texto] of rota.preencher ?? []) await pagina.getByTestId(id).fill(texto);
     for (const id of rota.clicar ?? []) await pagina.getByTestId(id).click();
     if (rota.rolarAoFim) {
       // A rolagem é de um elemento da tela, não da página: leva o que mais rola até o fim.
