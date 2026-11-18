@@ -4,6 +4,7 @@ import { MaterialIcons } from "@expo/vector-icons";
 import { Pressable, ScrollView, StyleSheet, Text, useWindowDimensions, View } from "react-native";
 
 import { buscarCheckinsPendentes } from "../checkin/api";
+import { buscarProfessores, totalAguardando } from "../consentimento/api";
 import { BotaoEnviarFit } from "./BotaoEnviarFit";
 import { EsqueletoEvolucao } from "./Esqueleto";
 import {
@@ -29,6 +30,8 @@ type Props = {
   aoAbrirSemanaPadrao?: () => void;
   /** Abre a lista de check-ins pendentes (#299). Sem ele, a linha "Check-ins pendentes" não aparece nem busca o total. */
   aoAbrirCheckinsPendentes?: () => void;
+  /** Abre a lista de consentimentos (#503). Sem ele, não busca nem mostra o aviso de pedido de professor. */
+  aoAbrirConsentimento?: () => void;
   /** Muda quando a tela volta ao foco: busca o total de pendentes de novo. */
   atualizar?: number;
   /** Troque nos testes. Padrão: o fetch global. */
@@ -57,6 +60,7 @@ export function TelaEvolucao({
   aoAbrirTreino,
   aoAbrirSemanaPadrao,
   aoAbrirCheckinsPendentes,
+  aoAbrirConsentimento,
   atualizar = 0,
   fetchFn,
 }: Props) {
@@ -90,6 +94,20 @@ export function TelaEvolucao({
     };
   }, [querPendentes, apiUrl, atletaId, fetchFn, atualizar]);
 
+  // Pedido de professor aguardando resposta (#503): uma chamada a mais; se falhar ou não vier lista, o aviso não aparece.
+  const [pedidos, setPedidos] = useState(0);
+  const querPedidos = !!aoAbrirConsentimento;
+  useEffect(() => {
+    if (!querPedidos) return;
+    let ativo = true;
+    buscarProfessores(atletaId, { baseUrl: apiUrl, fetch: fetchFn }).then((r) => {
+      if (ativo) setPedidos(r.ok && Array.isArray(r.dados.professores) ? totalAguardando(r.dados.professores) : 0);
+    });
+    return () => {
+      ativo = false;
+    };
+  }, [querPedidos, apiUrl, atletaId, fetchFn, atualizar]);
+
   const tentarDeNovo = useCallback(() => {
     setEstado({ tipo: "carregando" });
     setTentativa((n) => n + 1);
@@ -105,6 +123,15 @@ export function TelaEvolucao({
       <Text accessibilityRole="header" style={styles.titulo}>
         Evolução dos tiros de 1 km
       </Text>
+      {aoAbrirConsentimento && pedidos > 0 && (
+        <View testID="aviso-consentimento" accessibilityRole="alert" style={styles.avisoPedido}>
+          <MaterialIcons name="info-outline" size={tamanho.iconeGrande} color={tema.cor["texto-2"]} accessible={false} />
+          <Text style={styles.avisoPedidoTexto}>Há um professor pedindo para ver seus treinos.</Text>
+          <Pressable testID="ver-pedido" accessibilityRole="button" accessibilityLabel="Ver o pedido do professor" onPress={aoAbrirConsentimento} style={styles.avisoPedidoBotao}>
+            <Text style={styles.verTreinoTexto}>Ver</Text>
+          </Pressable>
+        </View>
+      )}
       {aoAbrirSemanaPadrao && (
         <Pressable
           testID="abrir-semana-padrao"
@@ -321,6 +348,9 @@ function criarEstilos({ cor }: Tema, margem: number = espaco[4]) {
     },
     verTreinoTexto: { ...fonte.botao, color: cor.destaque },
     semanaPadrao: { gap: espaco[2], marginBottom: espaco[2] },
+    avisoPedido: { flexDirection: "row", alignItems: "center", gap: espaco[2], marginBottom: espaco[2], paddingLeft: espaco[3], borderRadius: raio.medio, borderWidth: borda.fina, borderColor: cor.borda, backgroundColor: cor["superficie-2"] },
+    avisoPedidoTexto: { ...fonte.corpo, flex: 1, color: cor.texto, paddingVertical: espaco[2] },
+    avisoPedidoBotao: { minHeight: tamanho.botaoAltura, minWidth: tamanho.botaoAltura, alignItems: "center", justifyContent: "center", paddingHorizontal: espaco[3] },
     cartao: {
       marginTop: espaco[4],
       padding: espaco[4],
