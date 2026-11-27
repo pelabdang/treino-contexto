@@ -24,6 +24,7 @@ const item = (id: number, extra: Partial<ItemTreino> = {}): ItemTreino => ({
   destaque: null,
   checkin_estado: "feito",
   feedback_estado: "pronto",
+  normal_estado: null,
   ...extra,
 });
 const lista = (itens: ItemTreino[]) => ({ atleta_id: 1, limite: 5, itens, proximo: null });
