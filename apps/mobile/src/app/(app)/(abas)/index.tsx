@@ -16,7 +16,7 @@ export default function Inicio() {
       atualizar={atualizar}
       ocultarEnviarFit
       aoAbrirTreino={(id) => router.push(`/treino/${id}`)}
-      aoAbrirCheckinsPendentes={() => router.push("/checkins-pendentes")}
+      aoAbrirCheckinsPendentes={() => router.navigate("/treinos?filtro=sem-checkin")}
     />
   );
 }

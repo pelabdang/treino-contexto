@@ -479,6 +479,48 @@ const vinculosDe = (atleta) => {
   return vinculosPorAtleta.get(atleta);
 };
 
+// Lista de treinos sintética (#adendo 13 da ADR 0004): `GET /atletas/{id}/atividades`, mais recente primeiro, 47 treinos paginados por cursor
+// (`antes_de` = o `proximo` anterior; aqui o cursor é a posição). Filtros `modalidade` e `checkin_pendente`. Atleta de teste (entre com
+// atleta<id>@exemplo.com): 2 = lista vazia; 28 = responde 500; 29 = derruba a conexão; 30 = a segunda página responde 500 (erro ao carregar mais).
+const TIPOS_LISTA = ["leve", "moderado", "longo", "intervalado", "fartlek", null];
+const treinosSinteticos = Array.from({ length: 47 }, (_, i) => {
+  const d = new Date(Date.UTC(2025, 2, 20) - i * 86400000);
+  const data = d.toISOString().slice(0, 10);
+  const modalidade = i % 5 === 2 ? "ciclismo" : i % 4 === 1 ? "natacao" : "corrida";
+  const tipo = modalidade === "natacao" ? null : TIPOS_LISTA[i % 6];
+  const minutos = 35 + ((i * 7) % 50);
+  const metros = modalidade === "natacao" ? 1200 + (i % 4) * 300 : 6000 + (i % 7) * 1500;
+  const nao = i % 11 === 10;
+  const checkin = nao ? "nao_se_aplica" : i < 3 ? "pendente" : i === 3 ? "vencido" : "feito";
+  const feedback = nao ? null : checkin === "feito" ? (i === 5 ? "desatualizado" : "pronto") : "sem_checkin";
+  return {
+    atividade_id: 300 + i,
+    inicio: `${data}T09:30:00Z`,
+    data_local: data,
+    hora_local: i % 3 === 0 ? "06:30" : "18:15",
+    modalidade,
+    subtipo: modalidade === "natacao" ? "piscina" : "rua",
+    tipo_treino: tipo,
+    duracao_s: minutos * 60,
+    duracao: `${Math.floor(minutos / 60)}:${String(minutos % 60).padStart(2, "0")}:00`,
+    distancia_m: metros,
+    distancia: modalidade === "natacao" ? `${metros.toLocaleString("pt-BR")} m` : `${(metros / 1000).toFixed(2).replace(".", ",")} km`,
+    destaque: tipo === "intervalado" ? "5 x 1 km a 4:11 min/km" : null,
+    checkin_estado: checkin,
+    feedback_estado: feedback,
+  };
+});
+const listaTreinos = (atleta, q) => {
+  let itens = atleta === 2 ? [] : treinosSinteticos;
+  const mod = q.get("modalidade");
+  if (mod) itens = itens.filter((t) => t.modalidade === mod);
+  if (q.get("checkin_pendente") === "true") itens = itens.filter((t) => t.checkin_estado === "pendente");
+  const limite = Math.min(Number(q.get("limite") ?? 20) || 20, 100);
+  const inicio = Number(q.get("antes_de") ?? 0) || 0;
+  const pagina = itens.slice(inicio, inicio + limite);
+  return { atleta_id: atleta, limite, itens: pagina, proximo: inicio + limite < itens.length ? String(inicio + limite) : null };
+};
+
 createServer((req, res) => {
   const cabecalhos = {
     "content-type": "application/json",
@@ -565,6 +607,13 @@ createServer((req, res) => {
       Object.assign(v, { consentimento: false, consentimento_revogado_em: new Date().toISOString() });
       return falar(204);
     }
+  }
+  const lt = pathname.match(/^\/atletas\/(\d+)\/atividades$/);
+  if (lt && req.method === "GET") {
+    const atleta = Number(lt[1]);
+    if (atleta === 29) return req.destroy();
+    if (atleta === 28 || (atleta === 30 && searchParams.get("antes_de"))) return falar(500, { detail: "erro sintético" });
+    return falar(200, listaTreinos(atleta, searchParams));
   }
   let corpo = null;
   const tp = pathname.match(/^\/professores\/(\d+)\/tipos-de-treino$/);
