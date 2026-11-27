@@ -11,6 +11,8 @@ Identidade, regras de uso e componentes base do app (iOS, Android e web). Propos
 anterior (decisão do Angelo, 04/11; issue #192). Os valores estão em [[design/tokens]]; o exemplo aplicado está em
 [[design/telas/evolucao-tiros]]. O tema no código é do Rafa, em outra issue ([[modulos/mobile]]).
 
+> **Atualização (27/11, #547):** a cor de destaque (petróleo, `cor.destaque`) e seus pares foram trocados pela marca volt da [[design/identidade-visual-v3]]. Onde este guia fala em `cor.destaque`, `cor.sobre-destaque` ou `cor.destaque-suave`, leia `cor.link`/`cor.botao`, `cor.sobre-botao` e `cor.marca-suave`. A tabela vigente é [[design/tokens]]; as regras de uso abaixo continuam valendo.
+
 ## Ideia: a prancheta do treinador
 O treinador anota o treino numa prancheta: papel claro, tinta escura, uma caneta de cor para marcar o que importa.
 O app faz o mesmo. Fundo de papel, números em tinta, uma cor de destaque só para a ação e a seleção, e cor de dado
