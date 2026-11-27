@@ -10,7 +10,7 @@ import { borda, espaco, fonte, raio, tamanho, useTema, type Tema } from "../tema
 
 export const TIPOS: Record<string, string> = { leve: "Leve", moderado: "Moderado", longo: "Longo", intervalado: "Intervalado", fartlek: "Fartlek" };
 
-type Selo = { chave: string; icone: React.ComponentProps<typeof MaterialIcons>["name"]; texto: string; atencao: boolean };
+type Selo = { chave: string; icone: React.ComponentProps<typeof MaterialIcons>["name"]; texto: string; tom: "alerta" | "normal" | "neutro" };
 
 /** Cartão de treino da lista e do início (spec v3, seção 3): valor principal e um selo só. */
 export function CartaoTreino({ item, aoAbrir }: { item: ItemTreino; aoAbrir: () => void }) {
@@ -20,14 +20,19 @@ export function CartaoTreino({ item, aoAbrir }: { item: ItemTreino; aoAbrir: () 
   const nome = mod?.nome ?? "Treino";
   const quando = `${dataCurta(item.data_local)} às ${item.hora_local}`;
   const tipo = item.tipo_treino ? TIPOS[item.tipo_treino] : null;
-  // Um selo só, o primeiro que valer (spec v3): sem check-in, check-in vencido. Os selos de "normal" dependem de campo
-  // que a lista ainda não traz (linha de base); entram quando a API mandar.
+  // Um selo só, o primeiro que valer (spec v3): sem check-in, check-in vencido, fora do normal, no normal, aprendendo.
   const selo: Selo | null =
     item.checkin_estado === "pendente"
-      ? { chave: "pendente", icone: "schedule", texto: "Sem check-in", atencao: true }
+      ? { chave: "pendente", icone: "schedule", texto: "Sem check-in", tom: "alerta" }
       : item.checkin_estado === "vencido"
-        ? { chave: "vencido", icone: "event-busy", texto: "Check-in vencido", atencao: false }
-        : null;
+        ? { chave: "vencido", icone: "event-busy", texto: "Check-in vencido", tom: "neutro" }
+        : item.normal_estado === "fora"
+          ? { chave: "fora", icone: "warning-amber", texto: "Fora do normal", tom: "alerta" }
+          : item.normal_estado === "dentro"
+            ? { chave: "dentro", icone: "check-circle-outline", texto: "No normal", tom: "normal" }
+            : item.normal_estado === "aprendendo"
+              ? { chave: "aprendendo", icone: "hourglass-empty", texto: "Aprendendo", tom: "neutro" }
+              : null;
   const principal = item.destaque ?? item.duracao;
   const resumo = [nome, quando, tipo, item.duracao, item.distancia, selo?.texto].filter(Boolean).join(", ");
   return (
@@ -54,14 +59,18 @@ export function CartaoTreino({ item, aoAbrir }: { item: ItemTreino; aoAbrir: () 
       <Text style={styles.meta}>{[item.destaque ? item.duracao : null, item.distancia].filter(Boolean).join(" · ")}</Text>
       {selo && (
         <View style={styles.selos}>
-          <View testID={`selo-${selo.chave}-${item.atividade_id}`} style={[styles.selo, selo.atencao && styles.seloAtencao]}>
-            <MaterialIcons name={selo.icone} size={tamanho.iconePequeno} color={selo.atencao ? tema.cor.alerta : tema.cor["texto-2"]} accessible={false} />
-            <Text style={[styles.seloTexto, selo.atencao && { color: tema.cor.alerta }]}>{selo.texto}</Text>
+          <View testID={`selo-${selo.chave}-${item.atividade_id}`} style={[styles.selo, selo.tom === "alerta" && styles.seloAtencao, selo.tom === "normal" && styles.seloNormal]}>
+            <MaterialIcons name={selo.icone} size={tamanho.iconePequeno} color={corDoSelo(selo.tom, tema)} accessible={false} />
+            <Text style={[styles.seloTexto, { color: corDoSelo(selo.tom, tema) }]}>{selo.texto}</Text>
           </View>
         </View>
       )}
     </Pressable>
   );
+}
+
+function corDoSelo(tom: Selo["tom"], tema: Tema): string {
+  return tom === "alerta" ? tema.cor.alerta : tom === "normal" ? tema.cor.link : tema.cor["texto-2"];
 }
 
 function criarEstilos({ cor }: Tema) {
@@ -77,6 +86,7 @@ function criarEstilos({ cor }: Tema) {
     meta: { ...fonte.rotulo, color: cor["texto-2"] },
     selos: { flexDirection: "row", flexWrap: "wrap", gap: espaco[2], marginTop: espaco[1] },
     selo: { flexDirection: "row", alignItems: "center", gap: espaco[1], paddingHorizontal: espaco[2], paddingVertical: 4, borderRadius: raio.pilula, backgroundColor: cor["superficie-2"] },
+    seloNormal: { backgroundColor: cor["marca-suave"] },
     seloAtencao: { backgroundColor: cor["alerta-suave"] },
     seloTexto: { ...fonte.legenda, color: cor["texto-2"] },
     foco: { outlineWidth: borda.foco, outlineStyle: "solid", outlineColor: cor.foco, outlineOffset: 2 },

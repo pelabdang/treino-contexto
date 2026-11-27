@@ -508,7 +508,7 @@ const treinosSinteticos = Array.from({ length: 47 }, (_, i) => {
     destaque: tipo === "intervalado" ? "5 x 1 km a 4:11 min/km" : null,
     checkin_estado: checkin,
     feedback_estado: feedback,
-    normal_estado: null,
+    normal_estado: [null, "dentro", "fora", "aprendendo"][i % 4],
   };
 });
 const listaTreinos = (atleta, q) => {

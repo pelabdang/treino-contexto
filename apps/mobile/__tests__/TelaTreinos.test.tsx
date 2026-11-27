@@ -195,3 +195,37 @@ describe("aba Treinos: ajustes do #545", () => {
     expect(screen.queryByTestId("carregando-mais")).toBeNull();
   });
 });
+
+describe("aba Treinos: selo do normal (#553)", () => {
+  const selos = async (itens: ItemTreino[]) => {
+    await render(tela(servidor(() => resposta(200, lista(itens)))));
+    await screen.findByTestId(`treino-${itens[0].atividade_id}`);
+  };
+
+  it("fora do normal, no normal e aprendendo, com ícone e palavra", async () => {
+    await selos([item(1, { normal_estado: "fora" }), item(2, { normal_estado: "dentro" }), item(3, { normal_estado: "aprendendo" })]);
+    expect(within(screen.getByTestId("selo-fora-1")).getByText("Fora do normal")).toBeTruthy();
+    expect(within(screen.getByTestId("selo-dentro-2")).getByText("No normal")).toBeTruthy();
+    expect(within(screen.getByTestId("selo-aprendendo-3")).getByText("Aprendendo")).toBeTruthy();
+    expect(screen.getByTestId("treino-1").props.accessibilityLabel).toContain("Fora do normal");
+  });
+
+  it("sem normal_estado, sem selo", async () => {
+    await selos([item(1, { normal_estado: null })]);
+    expect(screen.queryAllByTestId(/^selo-/)).toHaveLength(0);
+  });
+
+  it("um selo só, na prioridade: sem check-in > vencido > fora > no normal > aprendendo", async () => {
+    await selos([
+      item(1, { checkin_estado: "pendente", normal_estado: "fora" }),
+      item(2, { checkin_estado: "vencido", normal_estado: "fora" }),
+      item(3, { normal_estado: "fora" }),
+      item(4, { normal_estado: "dentro" }),
+    ]);
+    expect(screen.getByTestId("selo-pendente-1")).toBeTruthy();
+    expect(screen.getByTestId("selo-vencido-2")).toBeTruthy();
+    expect(screen.getByTestId("selo-fora-3")).toBeTruthy();
+    expect(screen.getByTestId("selo-dentro-4")).toBeTruthy();
+    expect(screen.getAllByTestId(/^selo-/)).toHaveLength(4);
+  });
+});
