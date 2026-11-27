@@ -1581,6 +1581,37 @@
         "title": "EixoPace",
         "type": "object"
       },
+      "EixoSerieOut": {
+        "properties": {
+          "invertido": {
+            "title": "Invertido",
+            "type": "boolean"
+          },
+          "marcas": {
+            "items": {
+              "$ref": "#/components/schemas/MarcaEixoOut"
+            },
+            "title": "Marcas",
+            "type": "array"
+          },
+          "maximo": {
+            "title": "Maximo",
+            "type": "number"
+          },
+          "minimo": {
+            "title": "Minimo",
+            "type": "number"
+          }
+        },
+        "required": [
+          "minimo",
+          "maximo",
+          "invertido",
+          "marcas"
+        ],
+        "title": "EixoSerieOut",
+        "type": "object"
+      },
       "Eixos": {
         "properties": {
           "fc": {
@@ -1966,6 +1997,100 @@
           "data_local"
         ],
         "title": "FormaDoDiaOut",
+        "type": "object"
+      },
+      "FraseEvolucaoOut": {
+        "description": "`frase_evolucao@1`: as 4 semanas até ontem contra as 4 anteriores, qualquer que seja o período. Descreve, não aconselha.",
+        "properties": {
+          "a_favor": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "A Favor"
+          },
+          "mudanca": {
+            "anyOf": [
+              {
+                "enum": [
+                  "maior",
+                  "menor",
+                  "parecido"
+                ],
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Mudanca"
+          },
+          "n_anterior": {
+            "title": "N Anterior",
+            "type": "integer"
+          },
+          "n_atual": {
+            "title": "N Atual",
+            "type": "integer"
+          },
+          "texto": {
+            "title": "Texto",
+            "type": "string"
+          },
+          "tipo": {
+            "enum": [
+              "comparada",
+              "poucos",
+              "sem_treino",
+              "so_valor",
+              "sem_dado"
+            ],
+            "title": "Tipo",
+            "type": "string"
+          },
+          "valor_anterior": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Valor Anterior"
+          },
+          "valor_atual": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Valor Atual"
+          },
+          "versao": {
+            "title": "Versao",
+            "type": "string"
+          }
+        },
+        "required": [
+          "versao",
+          "tipo",
+          "mudanca",
+          "a_favor",
+          "texto",
+          "valor_atual",
+          "valor_anterior",
+          "n_atual",
+          "n_anterior"
+        ],
+        "title": "FraseEvolucaoOut",
         "type": "object"
       },
       "FraseFormaOut": {
@@ -2534,6 +2659,24 @@
         "title": "ListaOut",
         "type": "object"
       },
+      "MarcaEixoOut": {
+        "properties": {
+          "rotulo": {
+            "title": "Rotulo",
+            "type": "string"
+          },
+          "valor": {
+            "title": "Valor",
+            "type": "number"
+          }
+        },
+        "required": [
+          "valor",
+          "rotulo"
+        ],
+        "title": "MarcaEixoOut",
+        "type": "object"
+      },
       "MarcaFc": {
         "properties": {
           "rotulo": {
@@ -3051,6 +3194,110 @@
         "title": "Periodo",
         "type": "object"
       },
+      "PontoSerieOut": {
+        "properties": {
+          "aprendendo": {
+            "title": "Aprendendo",
+            "type": "boolean"
+          },
+          "atividade_id": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Atividade Id"
+          },
+          "data": {
+            "format": "date",
+            "title": "Data",
+            "type": "string"
+          },
+          "data_texto": {
+            "title": "Data Texto",
+            "type": "string"
+          },
+          "fora_do_normal": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Fora Do Normal"
+          },
+          "melhor": {
+            "title": "Melhor",
+            "type": "boolean"
+          },
+          "normal_estado": {
+            "anyOf": [
+              {
+                "enum": [
+                  "fora",
+                  "dentro",
+                  "aprendendo"
+                ],
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Normal Estado"
+          },
+          "parcial": {
+            "title": "Parcial",
+            "type": "boolean"
+          },
+          "rotulo": {
+            "title": "Rotulo",
+            "type": "string"
+          },
+          "valor": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Valor"
+          },
+          "valor_texto": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Valor Texto"
+          }
+        },
+        "required": [
+          "atividade_id",
+          "data",
+          "data_texto",
+          "valor",
+          "valor_texto",
+          "melhor",
+          "fora_do_normal",
+          "normal_estado",
+          "aprendendo",
+          "parcial",
+          "rotulo"
+        ],
+        "title": "PontoSerieOut",
+        "type": "object"
+      },
       "ProfessoresOut": {
         "properties": {
           "atleta_id": {
@@ -3127,6 +3374,39 @@
           "troca_de_senha_obrigatoria"
         ],
         "title": "QuemSouOut",
+        "type": "object"
+      },
+      "ReferenciaOut": {
+        "properties": {
+          "maximo": {
+            "title": "Maximo",
+            "type": "number"
+          },
+          "mediana": {
+            "title": "Mediana",
+            "type": "number"
+          },
+          "minimo": {
+            "title": "Minimo",
+            "type": "number"
+          },
+          "n": {
+            "title": "N",
+            "type": "integer"
+          },
+          "texto": {
+            "title": "Texto",
+            "type": "string"
+          }
+        },
+        "required": [
+          "minimo",
+          "maximo",
+          "mediana",
+          "n",
+          "texto"
+        ],
+        "title": "ReferenciaOut",
         "type": "object"
       },
       "SemanaPadraoGravadaOut": {
@@ -3305,6 +3585,158 @@
           "motivo"
         ],
         "title": "SerieCatalogoOut",
+        "type": "object"
+      },
+      "SerieEvolucaoOut": {
+        "properties": {
+          "aprendendo_texto": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Aprendendo Texto"
+          },
+          "atleta_id": {
+            "title": "Atleta Id",
+            "type": "integer"
+          },
+          "descricao": {
+            "title": "Descricao",
+            "type": "string"
+          },
+          "eixo": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/EixoSerieOut"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "fim": {
+            "format": "date",
+            "title": "Fim",
+            "type": "string"
+          },
+          "frase": {
+            "$ref": "#/components/schemas/FraseEvolucaoOut"
+          },
+          "grupo": {
+            "enum": [
+              "Ritmo",
+              "Coração",
+              "Esforço e volume",
+              "Marcas"
+            ],
+            "title": "Grupo",
+            "type": "string"
+          },
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "inicio": {
+            "format": "date",
+            "title": "Inicio",
+            "type": "string"
+          },
+          "modalidade": {
+            "enum": [
+              "corrida",
+              "natacao",
+              "ciclismo",
+              "geral"
+            ],
+            "title": "Modalidade",
+            "type": "string"
+          },
+          "periodo": {
+            "enum": [
+              "12s",
+              "6m",
+              "1a"
+            ],
+            "title": "Periodo",
+            "type": "string"
+          },
+          "pontos": {
+            "items": {
+              "$ref": "#/components/schemas/PontoSerieOut"
+            },
+            "title": "Pontos",
+            "type": "array"
+          },
+          "referencia": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ReferenciaOut"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "titulo": {
+            "title": "Titulo",
+            "type": "string"
+          },
+          "ultimo_rotulo": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Ultimo Rotulo"
+          },
+          "ultimo_valor_texto": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Ultimo Valor Texto"
+          },
+          "unidade": {
+            "title": "Unidade",
+            "type": "string"
+          },
+          "versao_calculo": {
+            "title": "Versao Calculo",
+            "type": "string"
+          }
+        },
+        "required": [
+          "atleta_id",
+          "id",
+          "titulo",
+          "descricao",
+          "modalidade",
+          "grupo",
+          "periodo",
+          "inicio",
+          "fim",
+          "unidade",
+          "versao_calculo",
+          "pontos",
+          "ultimo_valor_texto",
+          "ultimo_rotulo",
+          "referencia",
+          "aprendendo_texto",
+          "eixo",
+          "frase"
+        ],
+        "title": "SerieEvolucaoOut",
         "type": "object"
       },
       "SessaoOut": {
@@ -4819,6 +5251,88 @@
           }
         ],
         "summary": "Catalogo Series",
+        "tags": [
+          "evolução"
+        ]
+      }
+    },
+    "/atletas/{atleta_id}/evolucao/series/{serie_id}": {
+      "get": {
+        "description": "Uma série da Evolução (#574): pontos com texto pronto e `atividade_id`, eixo, faixa do normal, destaques e a frase. `periodo`: 12 semanas\n(padrão), 6 meses ou 1 ano; a frase não muda com ele. Série do catálogo sem treino do atleta devolve pontos vazios e a frase \"sem treino\".",
+        "operationId": "serieEvolucao",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "atleta_id",
+            "required": true,
+            "schema": {
+              "title": "Atleta Id",
+              "type": "integer"
+            }
+          },
+          {
+            "in": "path",
+            "name": "serie_id",
+            "required": true,
+            "schema": {
+              "title": "Serie Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "periodo",
+            "required": false,
+            "schema": {
+              "default": "12s",
+              "enum": [
+                "12s",
+                "6m",
+                "1a"
+              ],
+              "title": "Periodo",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SerieEvolucaoOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Erro"
+                }
+              }
+            },
+            "description": "Atleta ou série não encontrados"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Serie Evolucao",
         "tags": [
           "evolução"
         ]

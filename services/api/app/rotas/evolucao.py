@@ -16,6 +16,7 @@ from app.graficos.escala import Escala, escala_fc, escala_pace
 from app.graficos.tiros_1km import render_png
 from app.db.session import get_session
 from app.metricas.tiros_1km import VERSAO, formatar_pace
+from app.servicos import evolucao_serie as ev
 from app.servicos import evolucao_series as es
 from app.servicos.evolucao_tiros import SessaoSerie, reclassificacao_pendente, sessoes_tiros_1km
 
@@ -243,4 +244,97 @@ def catalogo_series(atleta_id: int, session: Session = Depends(get_session)) -> 
         series=[SerieCatalogoOut(id=i.serie.id, titulo=i.serie.titulo, descricao=i.serie.descricao, modalidade=i.serie.modalidade,
                                  grupo=i.serie.grupo, n_pontos=i.n_pontos, disponivel=i.disponivel, motivo=i.motivo) for i in c.itens],
         serie_padrao=c.serie_padrao,
+    )
+
+
+class PontoSerieOut(BaseModel):
+    atividade_id: int | None  # null onde o ponto não é um treino (volume por semana, condicionamento): sem "Abrir treino"
+    data: date  # data local do treino; segunda-feira da semana no volume
+    data_texto: str  # "ter 18/03"; "semana de 10/03" no volume
+    valor: float | None  # 1 casa; só para desenhar. Pace e ritmo em s/km e s/100 m
+    valor_texto: str | None  # pronto: "5:42", "150", "25,3"; a unidade vem em `unidade`. null sem valor e no condicionamento que ainda aprende
+    melhor: bool  # losango: o melhor do período (só em pace, ritmo e velocidade)
+    fora_do_normal: bool | None  # triângulo: o selo do PRÓPRIO treino (linha_base@3 dele, 84 dias antes); null sem selo ou aprendendo
+    normal_estado: Literal["fora", "dentro", "aprendendo"] | None  # o mesmo selo da lista e da tela do treino
+    aprendendo: bool  # condicionamento: o dia ainda aprende (linha pontilhada)
+    parcial: bool  # volume: a semana em curso
+    rotulo: str  # o que o leitor de tela lê no ponto
+
+
+class ReferenciaOut(BaseModel):
+    minimo: float
+    maximo: float
+    mediana: float
+    n: int  # pontos que a calcularam
+    texto: str  # "Seu normal 5:16 a 6:08"
+
+
+class MarcaEixoOut(BaseModel):
+    valor: float
+    rotulo: str
+
+
+class EixoSerieOut(BaseModel):
+    minimo: float
+    maximo: float
+    invertido: bool  # menor no alto (pace e ritmo: "mais rápido ↑")
+    marcas: list[MarcaEixoOut]
+
+
+class FraseEvolucaoOut(BaseModel):
+    """`frase_evolucao@1`: as 4 semanas até ontem contra as 4 anteriores, qualquer que seja o período. Descreve, não aconselha."""
+
+    versao: str
+    tipo: Literal["comparada", "poucos", "sem_treino", "so_valor", "sem_dado"]
+    mudanca: Literal["maior", "menor", "parecido"] | None
+    a_favor: bool | None  # só para ícone; nunca entra no texto
+    texto: str
+    valor_atual: float | None
+    valor_anterior: float | None
+    n_atual: int
+    n_anterior: int
+
+
+class SerieEvolucaoOut(BaseModel):
+    atleta_id: int
+    id: str
+    titulo: str
+    descricao: str
+    modalidade: Literal["corrida", "natacao", "ciclismo", "geral"]
+    grupo: Literal["Ritmo", "Coração", "Esforço e volume", "Marcas"]
+    periodo: Literal["12s", "6m", "1a"]
+    inicio: date  # primeiro dia do período (data local)
+    fim: date  # hoje do atleta
+    unidade: str  # "/km", "bpm", "km/h", "km", "h", "m", "/100 m"; vazio no condicionamento
+    versao_calculo: str
+    pontos: list[PontoSerieOut]  # do mais antigo ao mais recente
+    ultimo_valor_texto: str | None  # o número grande
+    ultimo_rotulo: str | None  # "último treino, ter 18/03"
+    referencia: ReferenciaOut | None  # a faixa do normal; null sem 8 treinos (ver `aprendendo_texto`) e nas séries sem faixa
+    aprendendo_texto: str | None
+    eixo: EixoSerieOut | None  # null sem pontos
+    frase: FraseEvolucaoOut
+
+
+@router.get("/series/{serie_id}", response_model=SerieEvolucaoOut, operation_id="serieEvolucao",
+            responses={404: {"model": Erro, "description": "Atleta ou série não encontrados"}})
+def serie_evolucao(atleta_id: int, serie_id: str, periodo: Literal["12s", "6m", "1a"] = "12s",
+                   session: Session = Depends(get_session)) -> SerieEvolucaoOut:
+    """Uma série da Evolução (#574): pontos com texto pronto e `atividade_id`, eixo, faixa do normal, destaques e a frase. `periodo`: 12 semanas
+    (padrão), 6 meses ou 1 ano; a frase não muda com ele. Série do catálogo sem treino do atleta devolve pontos vazios e a frase "sem treino"."""
+    _atleta_ou_404(session, atleta_id)
+    if serie_id not in es.POR_ID:
+        raise HTTPException(status_code=404, detail="série não encontrada")
+    r = ev.serie(session, atleta_id, serie_id, periodo)
+    s = r.serie
+    return SerieEvolucaoOut(
+        atleta_id=atleta_id, id=s.id, titulo=s.titulo, descricao=s.descricao, modalidade=s.modalidade, grupo=s.grupo, periodo=r.periodo,
+        inicio=r.inicio, fim=r.fim, unidade=r.unidade, versao_calculo=r.versao_calculo,
+        pontos=[PontoSerieOut(**vars(p)) for p in r.pontos],
+        ultimo_valor_texto=r.ultimo_valor_texto, ultimo_rotulo=r.ultimo_rotulo,
+        referencia=None if r.referencia is None else ReferenciaOut(**vars(r.referencia)),
+        aprendendo_texto=r.aprendendo_texto,
+        eixo=None if r.eixo is None else EixoSerieOut(minimo=r.eixo.minimo, maximo=r.eixo.maximo, invertido=r.eixo.invertido,
+                                                       marcas=[MarcaEixoOut(valor=m.valor, rotulo=m.rotulo) for m in r.eixo.marcas]),
+        frase=FraseEvolucaoOut(**vars(r.frase)),
     )

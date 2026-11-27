@@ -212,15 +212,17 @@ class Material:
     pontos_por_serie: dict[str, list[PontoSerie]]
 
 
-def carregar(session: Session, atleta_id: int, agora: datetime | None = None) -> Material:
+def carregar(session: Session, atleta_id: int, agora: datetime | None = None, series: tuple[SerieDef, ...] = DEFINICOES) -> Material:
+    """Lê só o que as `series` pedidas precisam: as sessões de tiros e a carga só se alguma delas for de tiros ou de condicionamento."""
     linhas = ler_linhas(session, atleta_id)
     mais_recente = max(linhas, key=lambda l: l.inicio, default=None)
     hoje = hoje_do_atleta(None if mais_recente is None else mais_recente.fuso_min, agora)
-    tiros = [PontoSerie(s.ponto.data, s.ponto.melhor_pace_s_km, s.ponto.atividade_id) for s in sessoes_tiros_1km(session, atleta_id)]
-    lida = serie_do_atleta(session, atleta_id, agora)
-    ctl = [PontoSerie(d.dia, d.ctl, None, d.aprendendo) for d in lida.serie.dias]
+    tiros = ([PontoSerie(x.ponto.data, x.ponto.melhor_pace_s_km, x.ponto.atividade_id) for x in sessoes_tiros_1km(session, atleta_id)]
+             if any(s.tipo == "tiros" for s in series) else [])
+    ctl = ([PontoSerie(d.dia, d.ctl, None, d.aprendendo) for d in serie_do_atleta(session, atleta_id, agora).serie.dias]
+           if any(s.tipo == "ctl" for s in series) else [])
     por: dict[str, list[PontoSerie]] = {}
-    for s in DEFINICOES:
+    for s in series:
         por[s.id] = tiros if s.tipo == "tiros" else ctl if s.tipo == "ctl" else pontos_por_treino(s, linhas)
     return Material(hoje, linhas, tiros, ctl, por)
 
@@ -248,7 +250,7 @@ def avaliar(s: SerieDef, pontos: list[PontoSerie], hoje: date) -> ItemCatalogo |
     ini12 = hoje - timedelta(days=JANELA_GRAFICO_DIAS - 1)
     if s.tipo == "volume":
         semanas = somar_por_semana(pontos)
-        n = sum(1 for sem, v in semanas.items() if v > 0 and segunda(ini12) <= sem <= segunda(hoje))
+        n = sum(1 for sem, v in semanas.items() if v > 0 and segunda(hoje) - timedelta(days=77) <= sem <= segunda(hoje))
         ok = n >= MINIMO_SEMANAS_VOLUME
     elif s.tipo == "ctl":
         n = _conta(pontos, ini12, hoje)
