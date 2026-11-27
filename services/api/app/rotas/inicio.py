@@ -19,6 +19,7 @@ class BarraOut(BaseModel):
     data_texto: str  # a segunda-feira da semana: "03/02"
     valor_texto: str  # "10"; a unidade vai no `apoio` do cartão
     destaque: bool  # a semana mais recente
+    altura_pct: int  # 0 a 100: a altura da barra relativa à maior das 4 (meio para cima); o app só desenha
 
 
 class DestinoOut(BaseModel):

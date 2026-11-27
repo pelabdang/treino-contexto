@@ -13,6 +13,7 @@ arredonda. Calculado por dia (hoje do atleta), então "Em movimento" só muda qu
 
 from __future__ import annotations
 
+import math
 import re
 from dataclasses import dataclass
 from datetime import date, datetime, timedelta
@@ -43,6 +44,7 @@ class Barra:
     data_texto: str  # a segunda-feira da semana: "03/02"
     valor_texto: str  # "10"; a unidade está no `apoio` e no `rotulo`
     destaque: bool  # a semana mais recente
+    altura_pct: int  # 0 a 100, relativo à maior das 4 barras (meio para cima); 0 em todas se não há volume: o app não calcula
 
 
 @dataclass(frozen=True)
@@ -116,6 +118,11 @@ def _modalidade_principal(m: es.Material) -> str | None:
 
 
 # ---------- 3. volume das 4 semanas ----------
+def altura_pct(valor: float, maior: float) -> int:
+    """Altura da barra, 0 a 100, relativa à maior das barras; meio para cima; 0 quando não há volume."""
+    return math.floor(100 * valor / maior + 0.5) if maior > 0 else 0
+
+
 def _volume(m: es.Material, serie: es.SerieDef) -> Cartao | None:
     brutos = m.pontos_por_serie[serie.id]
     f = ev.frase_da_serie(serie, brutos, m.hoje)
@@ -128,7 +135,9 @@ def _volume(m: es.Material, serie: es.SerieDef) -> Cartao | None:
     if sum(1 for v in valores if v > 0) < SEMANAS_COM_VOLUME:
         return None
     unidade = ev._EIXO[serie.frase][3]
-    barras = [Barra(f"{d:%d/%m}", ev.valor_texto(serie.frase, v), i == 3) for i, (d, v) in enumerate(zip(datas, valores))]
+    maior = max(valores)
+    barras = [Barra(f"{d:%d/%m}", ev.valor_texto(serie.frase, v), i == 3, altura_pct(v, maior))
+              for i, (d, v) in enumerate(zip(datas, valores))]
     atual, anterior = ev.valor_texto(serie.frase, f.valor_atual), ev.valor_texto(serie.frase, f.valor_anterior)
     if f.mudanca == "parecido":
         apoio = f"parecido com as 4 anteriores ({anterior} {unidade})"
