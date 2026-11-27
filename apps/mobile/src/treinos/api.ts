@@ -5,7 +5,7 @@ import type { components, OpcoesCliente, Resultado } from "@treino/api-client";
 import { chamar } from "../checkin/api";
 
 export type ListaTreinos = components["schemas"]["ListaOut"];
-export type ItemTreino = components["schemas"]["app__rotas__lista_atividades__ItemOut"];
+export type ItemTreino = components["schemas"]["ListaAtividadesItemOut"];
 export type ModalidadeFiltro = "corrida" | "natacao" | "ciclismo";
 
 export type FiltroTreinos = {

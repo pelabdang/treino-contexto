@@ -340,7 +340,7 @@ def _carga_out(c: CargaLida) -> CargaAtividadeOut:
 def _forma_out(session: Session, a: Atividade, dia: date) -> FormaDoDiaOut | None:
     if cg.ignorada(a.subtipo):
         return None
-    return FormaDoDiaOut(**asdict(ct.forma_do_dia(serie_do_atleta(session, a.atleta_id).serie, dia)))
+    return FormaDoDiaOut(**asdict(ct.forma_do_dia(serie_do_atleta(session, a.atleta_id, estender=False).serie, dia)))
 
 
 def get_fit_dir() -> Path | None:

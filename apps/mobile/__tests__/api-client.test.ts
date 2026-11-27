@@ -144,7 +144,7 @@ describe("buscarCarga", () => {
     expect(falso.mock.calls[0][0]).toBe("http://api.local:8000/atletas/1/carga?inicio=2025-03-01&fim=2025-03-31");
     expect(r.ok).toBe(true);
     if (r.ok) {
-      expect(r.dados.versao).toBe("serie_carga@1");
+      expect(r.dados.versao).toBe("serie_carga@2");
       expect(r.dados.dias.length).toBeGreaterThan(0);
       expect(Object.keys(r.dados.totais.por_motivo)).toHaveLength(6);
     }
