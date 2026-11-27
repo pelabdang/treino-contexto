@@ -4,6 +4,7 @@ import { useCallback, useEffect, useMemo, useState, type ReactNode } from "react
 import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 
 import { borda, espaco, fonte, larguraConteudoMax, raio, tamanho, useMargemTela, useTema, type Tema } from "../tema";
+import { CartaoComoFoi, FaixaCheckin } from "./CartaoComoFoi";
 import { CartaoCargaForma } from "./CartaoCargaForma";
 import { CartaoEsforcos } from "./CartaoEsforcos";
 import { CartaoFeedback } from "./CartaoFeedback";
@@ -157,10 +158,10 @@ type PropsTreino = {
 };
 
 function Treino({ atividade, styles, tema, checkin, aoAtualizarFeedback, conexao }: PropsTreino) {
-  // Ordem da spec: dados > Check-in > Feedback > Carga pela PSE > Clima. Sem as rotas do check-in, o feedback vem logo depois dos dados.
-  const feedback = (
-    <CartaoFeedback feedback={atividade.feedback} aoFazerCheckin={checkin?.aoFazerCheckin} aoAtualizar={aoAtualizarFeedback} />
-  );
+  // Ordem do treino v3 (spec inicio-atleta-v3, seção 2): 1 Como foi, 2 Comparado ao seu normal, 3 O que você respondeu, 4 Os tiros,
+  // 5 Contexto. Cada bloco é um título para navegar por títulos.
+  const fb = atividade.feedback ?? null;
+  const convite = !!checkin && fb?.estado === "sem_checkin" && fb.checkin_aberto === true;
   const mod = MODALIDADES[atividade.modalidade];
   return (
     <View>
@@ -179,9 +180,36 @@ function Treino({ atividade, styles, tema, checkin, aoAtualizarFeedback, conexao
         </Text>
       </View>
 
+      <Bloco styles={styles} n={1} titulo="Como foi" />
+      <CartaoComoFoi atividade={atividade} />
+      {convite ? (
+        <View style={styles.espaco}>
+          <FaixaCheckin aoResponder={checkin!.aoFazerCheckin} />
+        </View>
+      ) : (
+        <CartaoFeedback feedback={atividade.feedback} aoFazerCheckin={checkin?.aoFazerCheckin} aoAtualizar={aoAtualizarFeedback} />
+      )}
+
+      <Bloco styles={styles} n={2} titulo="Comparado ao seu normal" />
+      <CartaoNormal linhaBase={atividade.linha_base} />
+
+      {checkin && (
+        <>
+          <Bloco styles={styles} n={3} titulo="O que você respondeu" />
+          <CartoesCheckin atividade={atividade} {...checkin} />
+        </>
+      )}
+
+      {(atividade.esforcos?.blocos?.length ?? 0) > 0 && (
+        <>
+          <Bloco styles={styles} n={4} titulo="Os tiros" />
+          <CartaoEsforcos esforcos={atividade.esforcos} />
+        </>
+      )}
+
+      <Bloco styles={styles} n={5} titulo="Contexto" />
       <View testID="cartao-resumo" style={styles.cartao}>
-        <Text style={styles.rotulo}>Duração</Text>
-        <Text style={styles.destaque}>{atividade.duracao}</Text>
+        <Linha styles={styles} rotulo="Duração" valor={atividade.duracao} />
         {atividade.distancia != null && <Linha styles={styles} rotulo="Distância" valor={atividade.distancia} />}
         {atividade.pace_medio != null && <Linha styles={styles} rotulo="Pace médio" valor={`${atividade.pace_medio} min/km`} />}
         <Linha
@@ -191,12 +219,6 @@ function Treino({ atividade, styles, tema, checkin, aoAtualizarFeedback, conexao
           suave={atividade.fc_media === null}
         />
       </View>
-
-      {checkin ? <CartoesCheckin atividade={atividade} {...checkin} entreCartoes={feedback} /> : feedback}
-
-      <CartaoEsforcos esforcos={atividade.esforcos} />
-
-      <CartaoNormal linhaBase={atividade.linha_base} />
 
       <CartaoCargaForma carga={atividade.carga} forma={atividade.forma_do_dia} />
 
@@ -211,6 +233,14 @@ function Treino({ atividade, styles, tema, checkin, aoAtualizarFeedback, conexao
 
       {atividade.clima && <CartaoClima clima={atividade.clima} styles={styles} tema={tema} />}
     </View>
+  );
+}
+
+function Bloco({ styles, n, titulo }: { styles: Estilos; n: number; titulo: string }) {
+  return (
+    <Text accessibilityRole="header" style={styles.bloco}>
+      {n} {titulo}
+    </Text>
   );
 }
 
@@ -335,6 +365,8 @@ function criarEstilos({ cor }: Tema, margem: number = espaco[4]) {
       borderColor: cor.borda,
       backgroundColor: cor.superficie,
     },
+    bloco: { ...fonte["titulo-secao"], color: cor.texto, marginTop: espaco[5], marginBottom: espaco[2] },
+    espaco: { marginTop: espaco[3] },
     cartaoTitulo: { ...fonte["titulo-secao"], color: cor.texto, marginBottom: espaco[2] },
     rotulo: { ...fonte.rotulo, color: cor["texto-2"] },
     destaque: { ...fonte["numero-destaque"], color: cor.texto },

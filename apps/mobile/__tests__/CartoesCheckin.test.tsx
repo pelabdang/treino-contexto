@@ -93,12 +93,12 @@ describe("cartão Check-in na tela do treino", () => {
     expect(within(cartao).getByText("Editar")).toBeTruthy();
   });
 
-  it("o cartão vem depois do resumo e antes do clima", async () => {
+  it("o cartão vem depois do normal e antes do contexto (resumo, carga e clima)", async () => {
     await render(tela(servidor([atividadesCheckin.comCheckin])));
     await screen.findByTestId("cartao-checkin");
-    const ordem = ["cartao-resumo", "cartao-checkin", "cartao-carga-pse", "cartao-clima"].map((id) => screen.getByTestId(id));
+    const ordem = ["cartao-checkin", "cartao-carga-pse", "cartao-resumo", "cartao-clima"].map((id) => screen.getByTestId(id));
     const arvore = JSON.stringify(screen.toJSON());
-    const posicoes = ["cartao-resumo", "cartao-checkin", "cartao-carga-pse", "cartao-clima"].map((id) => arvore.indexOf(`"${id}"`));
+    const posicoes = ["cartao-checkin", "cartao-carga-pse", "cartao-resumo", "cartao-clima"].map((id) => arvore.indexOf(`"${id}"`));
     expect([...posicoes].sort((a, b) => a - b)).toEqual(posicoes);
     expect(ordem).toHaveLength(4);
   });
