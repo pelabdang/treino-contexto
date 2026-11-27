@@ -24,7 +24,7 @@ const item = (id: number, extra: Partial<ItemTreino> = {}): ItemTreino => ({
   destaque: null,
   checkin_estado: "feito",
   feedback_estado: "pronto",
-  normal_estado: null,
+  normal_estado: "dentro", // a lista e o detalhe do mesmo treino concordam (normal_treino@1)
   ...extra,
 });
 const lista = (itens: ItemTreino[]) => ({ atleta_id: 1, limite: 5, itens, proximo: null });
@@ -82,6 +82,17 @@ describe("início v3", () => {
     expect(screen.queryByTestId("convite-checkin")).toBeNull();
     await fireEvent.press(screen.getByTestId("ler-feedback"));
     expect(p.aoAbrirTreino).toHaveBeenCalledWith(1);
+  });
+
+  it("o selo do normal segue o normal_estado da lista: o mesmo treino não muda de selo entre as telas", async () => {
+    const base = atividades.ok.linha_base!;
+    const detalhe = comFeedback(feedbackPronto, {
+      linha_base: { ...base, metricas: [{ ...base.metricas[0], chave: "pace_medio", estado: "dentro" }, { ...base.metricas[1], chave: "fc_media", estado: "fora", diferenca_texto: "11 bpm acima" }] },
+    } as Partial<Atividade>);
+    await render(tela(servidor({ lista: lista([item(1, { normal_estado: "fora" })]), atividade: detalhe })));
+    const selo = await screen.findByTestId("selo-normal-fora");
+    expect(within(selo).getByText("Fora do seu normal: 11 bpm acima")).toBeTruthy();
+    expect(screen.queryByTestId("selo-normal-dentro")).toBeNull();
   });
 
   it("cenário 1: sem check-in, o convite fica dentro do cartão e abre o check-in; mostra '+ N treinos'", async () => {
