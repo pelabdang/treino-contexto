@@ -74,15 +74,15 @@ Sem braçadas, SWOLF ou estilo: o modelo de dados não os guarda.
 ### Ciclismo
 | id | o que o gráfico mostra | origem | precisa para existir | na API | piso |
 |---|---|---|---|---|---|
-| `ciclismo.velocidade.<tipo>` | velocidade média de cada pedal do tipo | `distancia_m / duracao_s`, separando **ar livre**, **virtual** e **rolo** (`subtipo`) | pedal com distância e duração; o `subtipo` separa ar livre, virtual e rolo | **não** (a linha de base não usa velocidade) | 3% |
-| `ciclismo.fc.<tipo>` | FC média por pedal | `atividade.fc_media` | pedal com FC média | **parcial** | 4 bpm |
+| `ciclismo.velocidade.<rua\|casa>` | velocidade média de cada pedal, em duas séries: **na rua** (ar livre) e **em casa** (virtual e rolo) | `distancia_m / duracao_s`, separando pelo `subtipo` | pedal com distância e duração; o `subtipo` separa rua (ar livre) de casa (virtual e rolo) | **não** (a linha de base não usa velocidade) | 3% |
+| `ciclismo.fc.<rua\|casa>` | FC média por pedal, na rua e em casa | `atividade.fc_media` | pedal com FC média | **parcial** | 4 bpm |
 | `ciclismo.eficiencia` | metros por batimento no ar livre | velocidade e FC médias | pedal ao ar livre com distância, duração e FC | **não** | 3% |
 | `ciclismo.esforcos` | melhor velocidade do esforço de 1 a 60 min | `bloco_atividade` (`t1` a `t60`) | pedal com esforços detectados (`esforcos@1`) | **parcial** | 3% |
 | `ciclismo.volume` | km e horas por semana | soma | qualquer pedal | **não** | 10% |
 | `ciclismo.carga` | carga por semana e CTL | `carga@2` | pedal com carga calculada | **sim**, via `/carga` | 5% |
 | `ciclismo.recordes` | melhor 40 km, maior distância, potência média de 20 min | `recorde_pessoal` | marcas pessoais do export Garmin importado | **parcial** | sem limiar |
 Limitações: **sem potência, cadência nem altimetria** no modelo de dados (só o recorde de 20 min vem do Garmin): não há potência normalizada nem
-eficiência por watt. O ar livre e o virtual têm física diferente: **séries separadas** (decisão do Angelo, 27/11).
+eficiência por watt. A rua (ar livre) e a casa (virtual e rolo) têm física diferente: **duas séries separadas** (decisão do Angelo, 27/11).
 
 ### Transversais (todas as modalidades)
 | id | o que o gráfico mostra | origem | precisa para existir | na API | limiar |
