@@ -5,6 +5,10 @@ import { TelaTermo } from "../src/componentes/TelaTermo";
 
 jest.mock("@expo/vector-icons", () => require("../__fixtures__/iconesFalsos"));
 
+// O primeiro `render` do arquivo paga a partida a frio (React Native, ícones, fonte do tema) e, com a máquina ocupada (vários
+// jest ou outros agentes em paralelo), passava dos 5 s padrão do Jest: o teste falhava por tempo, não por asserção (#558).
+jest.setTimeout(20000);
+
 const resposta = (status: number, corpo?: unknown) => ({ ok: status >= 200 && status < 300, status, json: async () => corpo }) as Response;
 const vinc = (id: number, nome: string, ativo: boolean, extra = {}) => ({
   professor_id: id,
