@@ -182,6 +182,11 @@ def texto_exemplo_carga() -> str:
         atleta = session.query(Atleta).one()
         calcular_carga_do_atleta(session, atleta.id)
         _liberar(app, get_session, session)
+        from datetime import datetime, timezone
+
+        from app.servicos.professor import agora_utc
+
+        app.dependency_overrides[agora_utc] = lambda: datetime(2025, 4, 17, 15, 0, tzinfo=timezone.utc)  # relogio fixo: o exemplo nao envelhece
         try:
             r = TestClient(app).get(f"/atletas/{atleta.id}/carga")
         finally:

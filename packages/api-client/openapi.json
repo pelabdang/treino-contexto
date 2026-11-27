@@ -799,6 +799,16 @@
             "title": "Dias",
             "type": "array"
           },
+          "frase_forma": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/FraseFormaOut"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
           "periodo": {
             "anyOf": [
               {
@@ -828,6 +838,7 @@
           "periodo",
           "aviso",
           "dias",
+          "frase_forma",
           "totais"
         ],
         "title": "CargaSerieOut",
@@ -1205,6 +1216,17 @@
             "title": "Atl",
             "type": "number"
           },
+          "atl_texto": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Atl Texto"
+          },
           "calculadas": {
             "title": "Calculadas",
             "type": "integer"
@@ -1216,6 +1238,17 @@
           "ctl": {
             "title": "Ctl",
             "type": "number"
+          },
+          "ctl_texto": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Ctl Texto"
           },
           "data": {
             "format": "date",
@@ -1238,6 +1271,8 @@
           "atl",
           "tsb",
           "aprendendo",
+          "ctl_texto",
+          "atl_texto",
           "atividades",
           "calculadas",
           "sem_carga"
@@ -1851,6 +1886,56 @@
         "title": "FormaDoDiaOut",
         "type": "object"
       },
+      "FraseFormaOut": {
+        "description": "A frase de analise da quinzena (`frase_forma@1`): texto fixo, descricao e nunca recomendacao. Ver `app/servicos/frase_forma.py`.",
+        "properties": {
+          "tendencia": {
+            "anyOf": [
+              {
+                "enum": [
+                  "subiu",
+                  "caiu",
+                  "perto"
+                ],
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Tendencia"
+          },
+          "texto": {
+            "title": "Texto",
+            "type": "string"
+          },
+          "tipo": {
+            "enum": [
+              "aprendendo",
+              "sem_treino_recente",
+              "parecidos",
+              "acima",
+              "abaixo",
+              "bem_acima",
+              "bem_abaixo"
+            ],
+            "title": "Tipo",
+            "type": "string"
+          },
+          "versao": {
+            "title": "Versao",
+            "type": "string"
+          }
+        },
+        "required": [
+          "versao",
+          "tipo",
+          "tendencia",
+          "texto"
+        ],
+        "title": "FraseFormaOut",
+        "type": "object"
+      },
       "GrupoOut": {
         "properties": {
           "data_local": {
@@ -2038,6 +2123,53 @@
         "title": "ItemIn",
         "type": "object"
       },
+      "ItemOut": {
+        "properties": {
+          "dia_semana": {
+            "title": "Dia Semana",
+            "type": "integer"
+          },
+          "dia_semana_texto": {
+            "title": "Dia Semana Texto",
+            "type": "string"
+          },
+          "modalidade": {
+            "enum": [
+              "corrida",
+              "natacao",
+              "ciclismo"
+            ],
+            "title": "Modalidade",
+            "type": "string"
+          },
+          "tipo_treino": {
+            "anyOf": [
+              {
+                "enum": [
+                  "leve",
+                  "moderado",
+                  "longo",
+                  "intervalado",
+                  "fartlek"
+                ],
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Tipo Treino"
+          }
+        },
+        "required": [
+          "dia_semana",
+          "dia_semana_texto",
+          "modalidade",
+          "tipo_treino"
+        ],
+        "title": "ItemOut",
+        "type": "object"
+      },
       "LinhaBaseOut": {
         "description": "Linha de base da atividade contra o proprio historico, so no mesmo tipo de treino (`linha_base@3`, ADR 0011).\nCalculada na leitura. Compara com o historico do atleta; nao diz se o treino foi bom ou ruim.",
         "properties": {
@@ -2124,6 +2256,147 @@
         "title": "LinhaBaseOut",
         "type": "object"
       },
+      "ListaAtividadesItemOut": {
+        "properties": {
+          "atividade_id": {
+            "title": "Atividade Id",
+            "type": "integer"
+          },
+          "checkin_estado": {
+            "enum": [
+              "feito",
+              "pendente",
+              "vencido",
+              "nao_se_aplica"
+            ],
+            "title": "Checkin Estado",
+            "type": "string"
+          },
+          "data_local": {
+            "title": "Data Local",
+            "type": "string"
+          },
+          "destaque": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Destaque"
+          },
+          "distancia": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Distancia"
+          },
+          "distancia_m": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Distancia M"
+          },
+          "duracao": {
+            "title": "Duracao",
+            "type": "string"
+          },
+          "duracao_s": {
+            "title": "Duracao S",
+            "type": "number"
+          },
+          "feedback_estado": {
+            "anyOf": [
+              {
+                "enum": [
+                  "pronto",
+                  "sem_checkin",
+                  "pendente",
+                  "desatualizado",
+                  "indisponivel"
+                ],
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Feedback Estado"
+          },
+          "hora_local": {
+            "title": "Hora Local",
+            "type": "string"
+          },
+          "inicio": {
+            "format": "date-time",
+            "title": "Inicio",
+            "type": "string"
+          },
+          "modalidade": {
+            "title": "Modalidade",
+            "type": "string"
+          },
+          "subtipo": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Subtipo"
+          },
+          "tipo_treino": {
+            "anyOf": [
+              {
+                "enum": [
+                  "leve",
+                  "moderado",
+                  "longo",
+                  "intervalado",
+                  "fartlek"
+                ],
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Tipo Treino"
+          }
+        },
+        "required": [
+          "atividade_id",
+          "inicio",
+          "data_local",
+          "hora_local",
+          "modalidade",
+          "subtipo",
+          "tipo_treino",
+          "duracao_s",
+          "duracao",
+          "distancia_m",
+          "distancia",
+          "destaque",
+          "checkin_estado",
+          "feedback_estado"
+        ],
+        "title": "ListaAtividadesItemOut",
+        "type": "object"
+      },
       "ListaOut": {
         "properties": {
           "atleta_id": {
@@ -2132,7 +2405,7 @@
           },
           "itens": {
             "items": {
-              "$ref": "#/components/schemas/app__rotas__lista_atividades__ItemOut"
+              "$ref": "#/components/schemas/ListaAtividadesItemOut"
             },
             "title": "Itens",
             "type": "array"
@@ -2778,7 +3051,7 @@
           },
           "itens": {
             "items": {
-              "$ref": "#/components/schemas/app__rotas__semana_padrao__ItemOut"
+              "$ref": "#/components/schemas/ItemOut"
             },
             "title": "Itens",
             "type": "array"
@@ -3421,7 +3694,7 @@
           },
           "itens": {
             "items": {
-              "$ref": "#/components/schemas/app__rotas__semana_padrao__ItemOut"
+              "$ref": "#/components/schemas/ItemOut"
             },
             "title": "Itens",
             "type": "array"
@@ -3505,194 +3778,6 @@
           "termo_desatualizado"
         ],
         "title": "VinculoOut",
-        "type": "object"
-      },
-      "app__rotas__lista_atividades__ItemOut": {
-        "properties": {
-          "atividade_id": {
-            "title": "Atividade Id",
-            "type": "integer"
-          },
-          "checkin_estado": {
-            "enum": [
-              "feito",
-              "pendente",
-              "vencido",
-              "nao_se_aplica"
-            ],
-            "title": "Checkin Estado",
-            "type": "string"
-          },
-          "data_local": {
-            "title": "Data Local",
-            "type": "string"
-          },
-          "destaque": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Destaque"
-          },
-          "distancia": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Distancia"
-          },
-          "distancia_m": {
-            "anyOf": [
-              {
-                "type": "number"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Distancia M"
-          },
-          "duracao": {
-            "title": "Duracao",
-            "type": "string"
-          },
-          "duracao_s": {
-            "title": "Duracao S",
-            "type": "number"
-          },
-          "feedback_estado": {
-            "anyOf": [
-              {
-                "enum": [
-                  "pronto",
-                  "sem_checkin",
-                  "pendente",
-                  "desatualizado",
-                  "indisponivel"
-                ],
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Feedback Estado"
-          },
-          "hora_local": {
-            "title": "Hora Local",
-            "type": "string"
-          },
-          "inicio": {
-            "format": "date-time",
-            "title": "Inicio",
-            "type": "string"
-          },
-          "modalidade": {
-            "title": "Modalidade",
-            "type": "string"
-          },
-          "subtipo": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Subtipo"
-          },
-          "tipo_treino": {
-            "anyOf": [
-              {
-                "enum": [
-                  "leve",
-                  "moderado",
-                  "longo",
-                  "intervalado",
-                  "fartlek"
-                ],
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Tipo Treino"
-          }
-        },
-        "required": [
-          "atividade_id",
-          "inicio",
-          "data_local",
-          "hora_local",
-          "modalidade",
-          "subtipo",
-          "tipo_treino",
-          "duracao_s",
-          "duracao",
-          "distancia_m",
-          "distancia",
-          "destaque",
-          "checkin_estado",
-          "feedback_estado"
-        ],
-        "title": "ItemOut",
-        "type": "object"
-      },
-      "app__rotas__semana_padrao__ItemOut": {
-        "properties": {
-          "dia_semana": {
-            "title": "Dia Semana",
-            "type": "integer"
-          },
-          "dia_semana_texto": {
-            "title": "Dia Semana Texto",
-            "type": "string"
-          },
-          "modalidade": {
-            "enum": [
-              "corrida",
-              "natacao",
-              "ciclismo"
-            ],
-            "title": "Modalidade",
-            "type": "string"
-          },
-          "tipo_treino": {
-            "anyOf": [
-              {
-                "enum": [
-                  "leve",
-                  "moderado",
-                  "longo",
-                  "intervalado",
-                  "fartlek"
-                ],
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Tipo Treino"
-          }
-        },
-        "required": [
-          "dia_semana",
-          "dia_semana_texto",
-          "modalidade",
-          "tipo_treino"
-        ],
-        "title": "ItemOut",
         "type": "object"
       }
     },
@@ -4340,7 +4425,7 @@
     },
     "/atletas/{atleta_id}/carga": {
       "get": {
-        "description": "Série diária do primeiro dia com carga até o dia da última atividade, calculada na leitura sobre a carga gravada\npelo comando `calcular_carga`. `inicio` e `fim` (AAAA-MM-DD, datas locais, inclusivas) só recortam `dias`.",
+        "description": "Série diária do primeiro dia com carga até `max(ONTEM, dia da última atividade)` (`serie_carga@2`; \"ontem\" no fuso da atividade mais\nrecente, porque hoje ainda não acabou), calculada na leitura sobre a carga gravada pelo comando `calcular_carga`. Nos dias sem treino a carga\né 0 e CTL e ATL decaem. `inicio` e `fim` (AAAA-MM-DD, datas locais, inclusivas) e `ultimos` só recortam `dias`.",
         "operationId": "cargaDoAtleta",
         "parameters": [
           {
@@ -4384,6 +4469,26 @@
                 }
               ],
               "title": "Fim"
+            }
+          },
+          {
+            "description": "so os N ultimos dias (depois de `inicio` e `fim`), para o app nao baixar a serie toda",
+            "in": "query",
+            "name": "ultimos",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "maximum": 3650,
+                  "minimum": 1,
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "so os N ultimos dias (depois de `inicio` e `fim`), para o app nao baixar a serie toda",
+              "title": "Ultimos"
             }
           }
         ],
