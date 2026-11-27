@@ -2,7 +2,7 @@
 tipo: mapa
 status: em-uso
 dono: nina
-atualizado: 2026-11-17
+atualizado: 2026-11-27
 ---
 # Treino Contexto: mapa do projeto
 
@@ -24,6 +24,7 @@ App de análise de treinos com contexto (corrida, natação, ciclismo) para atle
 - **Meta 12 (atual, em curso desde 17/11): o treino inteiro na tela do atleta** ([[produto/roadmap]], seção "Meta 12"). O Angelo respondeu "ok para as seis" e "sim para as quatro" (#455). Issues #461 a #472 e #237: `linha_base@3` (#462), spec da tela (#463, [[design/telas/treino]]), contrato (#464), telas do normal, da carga e dos esforços (#465 a #467), guia, QA e resultado (#468 a #470). Paralelas: `atencao@2` nas fixtures do app (#471) e comparação de hospedagem para a Meta 13 (#472). Login e deploy viraram a Meta 13 e o agente do atleta a Meta 14. **Feito no `main` (17/11):** o roteiro (#473, #461); a `linha_base@3` (#479, #462 e #455); a spec da tela ([[design/telas/treino]], #463) e a distância e o pace em linhas iguais (#237); o contrato do `GET` da atividade com os textos da carga, `forma_do_dia` e `transicao.editavel` (#480, #464, adendo 12 da [[decisoes/0004-contrato-tela-evolucao]]); a frase do feedback só pela versão (#482, #402); `atencao@2` nas fixtures do app (#471); as telas "Carga e forma do dia", "Esforços", "Treino de transição" e "Comparado com o seu normal" (#483, #484 e #485). **Falta:** a QA (#469) e o resultado (#470). O guia é o [[produto/meta-12-como-rodar]] (#468); as perguntas A a D ao Angelo estão "a confirmar" nele.
 - **Meta 13 (em curso desde 17/11): login, consentimento e piloto** ([[produto/roadmap]], seção "Meta 13"). No `main`: a [[decisoes/0016-login-e-deploy-do-piloto]] (**proposta**, espera o Angelo sobre região, teto e titular), contas e sessão, controle de acesso em todas as rotas, consentimento do atleta, backup e exclusão (parte local, [[produto/meta-13-backup-e-restauracao]]), carga sintética do piloto e as telas de entrar, sair e consentimento. **Prioridade do Angelo (18/11): UX antes do deploy; a #504 está pausada.** A auditoria e as direções da tela inicial do atleta estão em [[design/auditoria-ux-e-inicio-do-atleta]]; a navegação por abas está em revisão (#533). Feedback automático segue desligado no servidor.
 - Time e papéis: [[time]]. A Lia (design) é dona de `docs/design/`; o guia visual, o tema do app e a tela com o melhor tiro estão no main (#192, #195 e #154)
+- **UX antes do deploy (18/11):** identidade v2 decidida com o Angelo (volt, Barlow Condensed, cantos discretos; "Pulso" é nome de trabalho, sem confirmação); abas e lista de atividades no `main`; aba Treinos ligada à lista na #540. [[diario/2026-11-18]]
 - Último diário: [[diario/2026-11-18]] (anteriores: [[diario/2026-11-17]] e [[diario/2026-11-16]])
 - Grafo desta base em `docs/_grafo/` (gerado só de `docs/`, sem `entregas/` nem `dados-teste/`); relatório em `docs/_grafo/GRAPH_REPORT.md`
 
