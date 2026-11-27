@@ -71,7 +71,7 @@ atleta. A resposta **não** foi gravada como fixture.
   sensacao_c, umidade_pct, vento_kmh)`; `estado_clima(atividade, linha)` é a versão sem consulta, para listas. É o que a API
   (#114, `buscarAtividade`, [[modulos/api]]) usa. `indoor` (subtipo `esteira`, `piscina`, `virtual`) e `sem_posicao` são **calculados**, sem linha.
   Ao ar livre com posição: sem linha, ou linha de outra `entrada`, é `pendente`; senão vale o estado da linha. Valores só em `ok`.
-- - `fim_recente(atividade, agora=None)` (#569): o fim (início + duração) tem menos de 7 dias; `preencher_clima` pula por ela e a API devolve `clima.recente`. `inteiro_texto(valor, unidade)` faz os textos em inteiro da API ("24 °C"; meio para longe do zero, sem "-0"). Contrato em [[modulos/api]] e adendo 14 da [[decisoes/0004-contrato-tela-evolucao]].
+- `fim_recente(atividade, agora=None)` (#569): o fim (início + duração) tem menos de 7 dias; `preencher_clima` pula por ela e a API devolve `clima.recente`. `inteiro_texto(valor, unidade)` faz os textos em inteiro da API ("24 °C"; meio para longe do zero, sem "-0"). Contrato em [[modulos/api]] e adendo 14 da [[decisoes/0004-contrato-tela-evolucao]].
 - Posição e horário são tudo que vai ao Open-Meteo. Nenhum log ou relatório mostra coordenada.
 
 ## O comando `worker.preencher_clima`

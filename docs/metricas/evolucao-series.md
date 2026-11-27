@@ -189,4 +189,15 @@ como reserva, fora do limite de 5.
 Mediana e MAD: Leys et al. (2013), J. Exp. Soc. Psychol. 49(4):764-766 (citação ainda a conferir, ADR 0011). Fator de eficiência: Friel, TrainingPeaks. CTL: Banister et al. (1976). Pisos, janelas e mínimos: regra própria do projeto, sem artigo.
 
 ## Código e teste
-Proposta, sem código. A implementação terá `services/api/app/metricas/` e testes com valor calculado à mão (os exemplos acima são o oráculo inicial).
+- **Frase (`frase_evolucao@1`), implementada:** `services/api/app/servicos/frase_evolucao.py`, função pura (sem banco, rede ou IA), no espírito da `frase_forma`.
+  Teste: `services/api/tests/servicos/test_frase_evolucao.py` (um por ramo e os exemplos à mão desta nota).
+- **Assinatura:** `frase_evolucao(tipo, pontos, hoje, titulo=None, minimo=None) -> FraseEvolucao`. `pontos` = lista de `Ponto(dia, valor, aprendendo=False)`;
+  `hoje` = data local do atleta; `tipo` ∈ `pace_km`, `pace_100m`, `fc`, `eficiencia`, `velocidade`, `volume_km`, `volume_h`, `volume_m`, `ctl`.
+  Devolve `versao`, `tipo` (`comparada`, `poucos`, `sem_treino`, `so_valor`, `sem_dado`), `mudanca` (`maior`/`menor`/`parecido` do valor), `a_favor`
+  (a mudança foi no sentido do "melhor" da série, só para cor ou ícone neutros, nunca no texto), `texto`, `valor_atual`, `valor_anterior`, `n_atual`, `n_anterior`.
+- **Decisões de código:** as regras decidem sobre os valores **mostrados** (arredondados, meio para cima), como a `frase_forma`; o limite entra como diferença.
+  Ponto sem valor (`None` ou não finito) fica fora da conta e vira aviso a partir de 20% dos treinos de `R`. Volume soma os treinos por semana ISO e a semana
+  sem treino vale 0; no próprio domingo a semana ainda não conta. Eficiência mostra a diferença em %; o resto na unidade da série. Sentido do "melhor":
+  pace, ritmo e FC menor; eficiência, velocidade, volume e condicionamento maior (escolha nossa, só para `a_favor`).
+- **Ainda sem frase em código:** recordes e limiar, recuperação, calor e mistura de tipos (itens 6 a 9 de "Frases por série").
+- Versão e limiares: mudar um texto, piso, janela ou mínimo sobe `frase_evolucao@2`.
