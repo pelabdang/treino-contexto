@@ -43,9 +43,10 @@ function mensagemErro(erro: ErroApi): string {
   }
 }
 
-/** Número com vírgula decimal, sem arredondar (a API manda o valor pronto para exibir). */
-function numeroBr(n: number): string {
-  return String(n).replace(".", ",");
+/** Inteiro arredondado (meio para longe do zero: 23,5 → 24 e -23,5 → -24), sem "-0". */
+function inteiro(n: number): string {
+  const r = Math.sign(n) * Math.round(Math.abs(n));
+  return String(r === 0 ? 0 : r);
 }
 
 export function TelaTreino({ apiUrl, atletaId, atividadeId, aoVoltar, aoFazerCheckin, aoEditarCheckin, atualizar = 0, fetchFn }: Props) {
@@ -245,7 +246,7 @@ function Bloco({ styles, n, titulo }: { styles: Estilos; n: number; titulo: stri
 }
 
 function CartaoClima({ clima, styles, tema }: { clima: ClimaAtividade; styles: Estilos; tema: Tema }) {
-  const valor = (n: number | null | undefined, unidade: string) => (n == null ? "sem dado" : `${numeroBr(n)} ${unidade}`);
+  const valor = (n: number | null | undefined, unidade: string) => (n == null ? "sem dado" : `${inteiro(n)} ${unidade}`);
   let corpo: ReactNode;
   switch (clima.estado) {
     case "ok":
