@@ -357,6 +357,10 @@
       },
       "BarraOut": {
         "properties": {
+          "altura_pct": {
+            "title": "Altura Pct",
+            "type": "integer"
+          },
           "data_texto": {
             "title": "Data Texto",
             "type": "string"
@@ -373,7 +377,8 @@
         "required": [
           "data_texto",
           "valor_texto",
-          "destaque"
+          "destaque",
+          "altura_pct"
         ],
         "title": "BarraOut",
         "type": "object"
