@@ -7,6 +7,8 @@ links: [[design/guia-visual]], [[design/tokens]], [[design/auditoria-ux-e-inicio
 ---
 # Identidade visual v2: esportiva e amigável (proposta)
 
+> **Fechada pela v3** ([[design/identidade-visual-v3]]): volt `#C6F432`, Barlow Condensed e cantos mais discretos decididos pelo Angelo em 18/11. Esta nota fica como histórico das alternativas.
+
 Segunda rodada, depois das respostas do Angelo à [[design/auditoria-ux-e-inicio-do-atleta]]: tom **esportivo e amigável**,
 referências Strava e Garmin "mas pode propor coisas". Isto é **proposta para ele reagir**. Nada aqui muda o app nem o
 [[design/tokens]] até o Angelo aprovar; depois disso a tabela de tokens v2 vira a tabela oficial e o Rafa a transforma em tema.
