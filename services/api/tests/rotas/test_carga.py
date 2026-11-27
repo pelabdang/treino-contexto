@@ -16,6 +16,7 @@ from app.ingestao.saude import importar_saude
 from app.main import criar_app
 from tests.acesso_de_teste import sem_login
 from app.servicos.carga import calcular_carga_do_atleta
+from app.servicos.professor import agora_utc
 from fastapi.testclient import TestClient
 from sqlalchemy import select
 
@@ -27,6 +28,7 @@ _o = importlib.util.module_from_spec(_spec)
 sys.modules[_spec.name] = _o
 _spec.loader.exec_module(_o)
 ESPERADO, SERIE, TOTAIS, TOTAIS_SEM_SAUDE = _o.ESPERADO, _o.SERIE, _o.TOTAIS, _o.TOTAIS_SEM_SAUDE
+AGORA = datetime(2025, 4, 17, 15, 0, tzinfo=timezone.utc)
 MOTIVOS = {"sem_dados_saude", "sem_limiar_na_data", "sem_fc", "sem_pace", "cobertura_insuficiente", "modalidade_sem_carga"}
 
 
@@ -34,6 +36,7 @@ MOTIVOS = {"sem_dados_saude", "sem_limiar_na_data", "sem_fc", "sem_pace", "cober
 def client(session):
     app = sem_login(criar_app("http://localhost:8081"))
     app.dependency_overrides[get_session] = lambda: session
+    app.dependency_overrides[agora_utc] = lambda: AGORA  # "ontem" = 2025-04-16, o ultimo dia com atividade das fixtures
     return TestClient(app)
 
 
@@ -51,7 +54,7 @@ def test_serie_bate_com_o_oraculo(session, client):
     r = client.get(f"/atletas/{atleta_id}/carga")
     assert r.status_code == 200
     j = r.json()
-    assert j["versao"] == "serie_carga@1" and j["versao_carga"] == "carga@2"
+    assert j["versao"] == "serie_carga@2" and j["versao_carga"] == "carga@2"
     assert j["aviso"] is None and j["periodo"] is None
     assert len(j["dias"]) == 43 and j["dias"][0]["data"] == "2025-03-05" and j["dias"][-1]["data"] == "2025-04-16"
     por_dia = {d["data"]: d for d in j["dias"]}
@@ -164,7 +167,68 @@ def test_versao_antiga_e_pendente_na_atividade_e_na_serie(session, client):
 def test_resposta_nao_vaza_saude(session, client):
     atleta_id = _atleta(session)
     j = client.get(f"/atletas/{atleta_id}/carga").json()
-    assert set(j) == {"atleta_id", "versao", "versao_carga", "periodo", "aviso", "dias", "totais"}
-    assert set(j["dias"][0]) == {"data", "carga", "ctl", "atl", "tsb", "aprendendo", "atividades", "calculadas", "sem_carga"}
+    assert set(j) == {"atleta_id", "versao", "versao_carga", "periodo", "aviso", "dias", "frase_forma", "totais"}
+    assert set(j["dias"][0]) == {"data", "carga", "ctl", "atl", "tsb", "aprendendo", "ctl_texto", "atl_texto", "atividades", "calculadas", "sem_carga"}
     assert set(j["totais"]) == {"atividades_importadas", "calculadas", "sem_carga_total", "por_motivo",
                                 "ignoradas_multiesporte", "pendentes"}
+
+
+# ---------- serie_carga@2 e frase_forma@1 (a serie vai ate ONTEM) ----------
+
+def _com_relogio(client, agora):
+    client.app.dependency_overrides[agora_utc] = lambda: agora
+
+
+def test_a_serie_segue_ate_ontem_no_fuso_da_atividade_mais_recente(session, client):
+    atleta_id = _atleta(session)
+    base = client.get(f"/atletas/{atleta_id}/carga").json()
+    ultimo = base["dias"][-1]
+    assert ultimo["data"] == "2025-04-16"
+    _com_relogio(client, datetime(2025, 4, 27, 15, 0, tzinfo=timezone.utc))  # hoje = 27/04 (UTC-3): ontem = 26/04
+    j = client.get(f"/atletas/{atleta_id}/carga").json()
+    assert j["dias"][-1]["data"] == "2025-04-26" and len(j["dias"]) == len(base["dias"]) + 10
+    novos = j["dias"][len(base["dias"]):]
+    assert all(d["carga"] == 0 and d["atividades"] == 0 and d["calculadas"] == 0 for d in novos)
+    assert novos[0]["ctl"] < ultimo["ctl"] and novos[0]["atl"] < ultimo["atl"] and novos[-1]["atl"] < novos[0]["atl"]  # decaem
+    assert j["dias"][: len(base["dias"])] == base["dias"]  # o que ja existia nao muda
+
+
+def test_hoje_nao_entra_na_serie_e_a_virada_do_dia_e_no_fuso_do_atleta(session, client):
+    atleta_id = _atleta(session)
+    _com_relogio(client, datetime(2025, 4, 17, 2, 0, tzinfo=timezone.utc))  # 23:00 de 16/04 em UTC-3: hoje ainda e 16/04, ontem = 15/04
+    assert client.get(f"/atletas/{atleta_id}/carga").json()["dias"][-1]["data"] == "2025-04-16"  # max(ontem, ultimo dia com atividade)
+    _com_relogio(client, datetime(2025, 4, 18, 2, 0, tzinfo=timezone.utc))  # 23:00 de 17/04: ontem = 16/04
+    assert client.get(f"/atletas/{atleta_id}/carga").json()["dias"][-1]["data"] == "2025-04-16"
+    _com_relogio(client, datetime(2025, 4, 18, 4, 0, tzinfo=timezone.utc))  # 01:00 de 18/04: ontem = 17/04
+    assert client.get(f"/atletas/{atleta_id}/carga").json()["dias"][-1]["data"] == "2025-04-17"
+
+
+def test_ultimos_pega_so_os_n_ultimos_dias_e_a_frase_ignora_o_recorte(session, client):
+    atleta_id = _atleta(session)
+    todos = client.get(f"/atletas/{atleta_id}/carga").json()
+    j = client.get(f"/atletas/{atleta_id}/carga", params={"ultimos": 14}).json()
+    assert [d["data"] for d in j["dias"]] == [d["data"] for d in todos["dias"][-14:]]
+    assert j["frase_forma"] == todos["frase_forma"]
+    recorte = client.get(f"/atletas/{atleta_id}/carga", params={"inicio": "2025-03-08", "fim": "2025-03-09", "ultimos": 1}).json()
+    assert [d["data"] for d in recorte["dias"]] == ["2025-03-09"] and recorte["frase_forma"] == todos["frase_forma"]
+    for ruim in (0, -1, 3651, "x"):
+        assert client.get(f"/atletas/{atleta_id}/carga", params={"ultimos": ruim}).status_code == 422
+
+
+def test_frase_forma_na_resposta_e_numeros_em_texto_sem_numero_enquanto_aprende(session, client):
+    atleta_id = _atleta(session)
+    j = client.get(f"/atletas/{atleta_id}/carga").json()
+    f = j["frase_forma"]
+    assert f["versao"] == "frase_forma@1" and f["tipo"] in {"parecidos", "acima", "abaixo", "bem_acima", "bem_abaixo"} and f["texto"].startswith("Sua fadiga (")
+    por_dia = j["dias"]
+    assert por_dia[0]["aprendendo"] and por_dia[0]["ctl_texto"] is None and por_dia[0]["atl_texto"] is None  # aprendendo: sem numero
+    ultimo = por_dia[-1]
+    assert not ultimo["aprendendo"] and ultimo["ctl_texto"] == str(int(ultimo["ctl"] + 0.5)) and ultimo["atl_texto"] == str(int(ultimo["atl"] + 0.5))
+    curto = client.get(f"/atletas/{atleta_id}/carga", params={"fim": "2025-03-20"}).json()
+    assert curto["frase_forma"] == f  # a frase e sempre do fim da serie, nunca do recorte
+
+
+def test_sem_carga_calculada_nao_tem_frase(session, client):
+    atleta_id = _atleta(session, calcular=False)
+    j = client.get(f"/atletas/{atleta_id}/carga").json()
+    assert j["aviso"] == "sem_carga_calculada" and j["dias"] == [] and j["frase_forma"] is None

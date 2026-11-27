@@ -26,7 +26,7 @@ router = APIRouter(prefix="/atletas/{atleta_id}/atividades", tags=["atividades"]
 Modalidade = Literal[*MODALIDADES]
 
 
-class ItemOut(BaseModel):
+class ListaAtividadesItemOut(BaseModel):
     atividade_id: int
     inicio: datetime  # UTC
     data_local: str  # AAAA-MM-DD, pelo fuso da atividade
@@ -46,7 +46,7 @@ class ItemOut(BaseModel):
 class ListaOut(BaseModel):
     atleta_id: int
     limite: int
-    itens: list[ItemOut]
+    itens: list[ListaAtividadesItemOut]
     proximo: str | None  # passe em `antes_de` para a proxima pagina; null = acabou
 
 
@@ -59,9 +59,9 @@ def _destaque(a: Atividade) -> str | None:
     return None
 
 
-def _item(a: Atividade) -> ItemOut:
+def _item(a: Atividade) -> ListaAtividadesItemOut:
     local = inicio_local(a.inicio, a.fuso_min)
-    return ItemOut(
+    return ListaAtividadesItemOut(
         atividade_id=a.id, inicio=a.inicio, data_local=local.date().isoformat(), hora_local=local.strftime("%H:%M"),
         modalidade=a.modalidade, subtipo=a.subtipo, tipo_treino=a.tipo_treino, duracao_s=a.duracao_s, duracao=_duracao_hms(a.duracao_s),
         distancia_m=a.distancia_m, distancia=distancia_da_atividade(a.modalidade, a.distancia_m), destaque=_destaque(a),

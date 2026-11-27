@@ -8,6 +8,7 @@ Nada de saude sai daqui: limiar, zonas, recordes e carga do Garmin ficam no banc
 from __future__ import annotations
 
 from dataclasses import dataclass
+from datetime import date, datetime, timedelta, timezone
 
 from sqlalchemy import select
 from sqlalchemy.orm import Session
@@ -15,7 +16,7 @@ from sqlalchemy.orm import Session
 from app.db.models import Atividade, CargaAtividade
 from app.metricas import carga as cg
 from app.metricas import serie_carga as sc
-from app.servicos.fuso import data_local
+from app.servicos.fuso import FUSO_PADRAO, data_local
 
 
 @dataclass(frozen=True)
@@ -33,6 +34,7 @@ class SerieLida:
     serie: sc.SerieCarga
     pendentes: int  # elegiveis sem linha em carga_atividade ou com linha de versao antiga (o comando precisa rodar)
     atividades_importadas: int
+    hoje: date | None = None  # o "hoje" do atleta (fuso da atividade mais recente) usado para o fim da serie
 
 
 def carga_da_atividade(session: Session, a: Atividade) -> CargaLida | None:
@@ -46,7 +48,18 @@ def carga_da_atividade(session: Session, a: Atividade) -> CargaLida | None:
     return CargaLida(c.estado, c.carga, c.metodo, c.motivo, c.cobertura_pct, c.versao)
 
 
-def serie_do_atleta(session: Session, atleta_id: int) -> SerieLida:
+def hoje_do_atleta(fuso_min_da_mais_recente: int | None, agora: datetime | None = None) -> date:
+    """O dia de hoje no fuso do atleta: o `fuso_min` da atividade mais recente; sem ele, America/Sao_Paulo. O relogio e injetavel."""
+    agora = agora or datetime.now(timezone.utc)
+    if fuso_min_da_mais_recente is None:
+        return agora.astimezone(FUSO_PADRAO).date()
+    return (agora.astimezone(timezone.utc) + timedelta(minutes=fuso_min_da_mais_recente)).date()
+
+
+def serie_do_atleta(session: Session, atleta_id: int, agora: datetime | None = None, estender: bool = True) -> SerieLida:
+    """A serie vai do primeiro dia com carga ate `max(ONTEM, ultimo dia com atividade)` (`serie_carga@2`): hoje ainda nao acabou.
+    `estender=False` (a forma do dia de UMA atividade) mantem o fim no ultimo dia com atividade: um treino ainda `pendente` no fim nao ganha
+    numeros de dias sem a carga dele."""
     q = (
         select(Atividade.inicio, Atividade.fuso_min, Atividade.subtipo, CargaAtividade.estado, CargaAtividade.carga,
                CargaAtividade.motivo, CargaAtividade.versao)
@@ -55,8 +68,11 @@ def serie_do_atleta(session: Session, atleta_id: int) -> SerieLida:
     )
     entradas: list[sc.AtividadeCarga] = []
     ignoradas = pendentes = total = 0
+    mais_recente: tuple[datetime, int | None] | None = None
     for inicio, fuso_min, subtipo, estado, carga, motivo, versao in session.execute(q):
         total += 1
+        if mais_recente is None or inicio > mais_recente[0]:
+            mais_recente = (inicio, fuso_min)
         if cg.ignorada(subtipo):
             ignoradas += 1
         elif estado is None or versao != cg.VERSAO:
@@ -64,4 +80,5 @@ def serie_do_atleta(session: Session, atleta_id: int) -> SerieLida:
         else:
             dia = data_local(inicio, fuso_min)
             entradas.append(sc.AtividadeCarga(dia, carga) if estado == "calculada" else sc.AtividadeCarga(dia, motivo=motivo))
-    return SerieLida(sc.calcular_serie(entradas, ignoradas), pendentes, total)
+    hoje = hoje_do_atleta(None if mais_recente is None else mais_recente[1], agora)
+    return SerieLida(sc.calcular_serie(entradas, ignoradas, ate=hoje - timedelta(days=1) if estender else None), pendentes, total, hoje)
