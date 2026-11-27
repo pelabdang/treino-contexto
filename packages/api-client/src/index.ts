@@ -30,7 +30,7 @@ export type MotivoSemCarga = NonNullable<CargaAtividade["motivo"]>;
 // Semana-padrão (#264, ADR 0011): GET e PUT /atletas/{id}/semana-padrao. `atividades_reaplicadas` conta as atividades que mudaram de tipo (#265).
 export type SemanaPadrao = components["schemas"]["SemanaPadraoOut"];
 export type SemanaPadraoVigente = components["schemas"]["VigenteOut"];
-export type SemanaPadraoItem = components["schemas"]["app__rotas__semana_padrao__ItemOut"];
+export type SemanaPadraoItem = components["schemas"]["ItemOut"];
 export type SemanaPadraoVigencia = components["schemas"]["VigenciaOut"];
 export type SemanaPadraoEnvio = components["schemas"]["SemanaPadraoIn"];
 export type SemanaPadraoGravada = components["schemas"]["SemanaPadraoGravadaOut"];

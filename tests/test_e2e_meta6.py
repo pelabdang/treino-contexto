@@ -171,6 +171,11 @@ def ctx(tmp_path_factory):
 
     app.dependency_overrides[get_session] = sessao
     app.dependency_overrides[get_fit_dir] = lambda: base / "fit"
+    from app.servicos.professor import agora_utc
+
+    from datetime import datetime, timezone
+
+    app.dependency_overrides[agora_utc] = lambda: datetime(2025, 4, 17, 15, 0, tzinfo=timezone.utc)  # "ontem" = 16/04, o ultimo dia com atividade (serie_carga@2)
     try:
         yield {"client": TestClient(app), "eng": eng, "env": env, "base": base, "app": app}
     finally:
@@ -254,7 +259,7 @@ def test_3_calcular_carga_de_novo_nao_muda_nada(ctx):
 # ---------------------------------------------------------------- 2. API contra o oraculo
 def test_4_serie_do_atleta_bate_com_o_oraculo(ctx, orc):
     j = _serie(ctx)
-    assert j["atleta_id"] == 1 and j["versao"] == "serie_carga@1" and j["versao_carga"] == "carga@2"
+    assert j["atleta_id"] == 1 and j["versao"] == "serie_carga@2" and j["versao_carga"] == "carga@2"
     assert j["periodo"] is None and j["aviso"] is None
     dias = {date.fromisoformat(d["data"]): d for d in j["dias"]}
     assert len(dias) == len(j["dias"]) == 43  # 05/03 a 16/04, sem buracos
