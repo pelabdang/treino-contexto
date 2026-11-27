@@ -135,7 +135,7 @@ describe("tela de um treino", () => {
     await screen.findByTestId("cartao-resumo");
     expect(screen.queryByText(/Pace médio/)).toBeNull();
     expect(screen.getByText("sem FC")).toBeTruthy();
-    expect(screen.getByText("0:45:00")).toBeTruthy();
+    expect(screen.getByTestId("numero-treino").props.children).toBe("0:45:00"); // sem pace, o número é a duração
     expect(screen.getAllByText("Natação").length).toBeGreaterThan(0);
   });
 
@@ -483,13 +483,52 @@ describe("tela de um treino", () => {
       expect(within(c).getByLabelText("FC média. 152 bpm. Dentro do seu normal. Mediana de 150 bpm, em 6 treinos leves.")).toBeTruthy();
     });
 
-    it("o cartão fica entre Esforços e Carga e forma do dia", async () => {
+    it("o bloco 2 vem antes dos tiros e do contexto (carga e forma do dia)", async () => {
       await render(tela(fetchCom(200, atividades.comEsforcos)));
       await screen.findByTestId("cartao-normal");
       const ids = JSON.stringify(screen.toJSON());
       const pos = (t: string) => ids.indexOf(`"${t}"`);
-      expect(pos("cartao-esforcos")).toBeLessThan(pos("cartao-normal"));
-      expect(pos("cartao-normal")).toBeLessThan(pos("cartao-carga-forma"));
+      expect(pos("cartao-normal")).toBeLessThan(pos("cartao-esforcos"));
+      expect(pos("cartao-esforcos")).toBeLessThan(pos("cartao-carga-forma"));
     });
+  });
+});
+
+describe("treino v3: cinco blocos", () => {
+  const tela = (f: typeof fetch, extra = {}) => <TelaTreino apiUrl="http://api.teste" atletaId={1} atividadeId={101} fetchFn={f} aoFazerCheckin={jest.fn()} aoEditarCheckin={jest.fn()} {...extra} />;
+
+  it("os blocos são títulos numerados na ordem aprovada", async () => {
+    await render(tela(fetchCom(200, atividades.comEsforcos)));
+    await screen.findByTestId("cartao-resumo");
+    const titulos = screen.getAllByRole("header").map((h) => h.props.children).flat().join("").match(/[1-5] (Como foi|Comparado ao seu normal|O que você respondeu|Os tiros|Contexto)/g);
+    expect(titulos).toEqual(["1 Como foi", "2 Comparado ao seu normal", "3 O que você respondeu", "4 Os tiros", "5 Contexto"]);
+  });
+
+  it("o bloco 1 abre com o número do treino (pace médio da corrida) e a linha de apoio", async () => {
+    await render(tela(fetchCom(200, atividades.ok)));
+    await screen.findByTestId("cartao-como-foi");
+    expect(screen.getByTestId("numero-treino").props.children).toBe("5:12");
+    expect(screen.getByTestId("cartao-como-foi").props.accessibilityLabel).toBe("Pace médio, 5:12, 10,00 km · 0:52:05 · FC média 152 bpm");
+  });
+
+  it("corrida intervalada: o número é o melhor tiro", async () => {
+    const intervalada = { ...atividades.comEsforcos, tipo_treino: "intervalado" } as typeof atividades.comEsforcos;
+    await render(tela(fetchCom(200, intervalada)));
+    await screen.findByTestId("cartao-como-foi");
+    expect(screen.getByText("Melhor tiro")).toBeTruthy();
+  });
+
+  it("sem esforços, o bloco 4 não aparece", async () => {
+    await render(tela(fetchCom(200, atividades.ok)));
+    await screen.findByTestId("cartao-como-foi");
+    expect(screen.queryByText("4 Os tiros")).toBeNull();
+    expect(screen.getByText("5 Contexto")).toBeTruthy();
+  });
+
+  it("sem as rotas do check-in, não há o bloco 3", async () => {
+    await render(<TelaTreino apiUrl="http://api.teste" atletaId={1} atividadeId={101} fetchFn={fetchCom(200, atividades.ok)} />);
+    await screen.findByTestId("cartao-como-foi");
+    expect(screen.queryByText("3 O que você respondeu")).toBeNull();
+    expect(screen.queryByTestId("faixa-checkin")).toBeNull();
   });
 });

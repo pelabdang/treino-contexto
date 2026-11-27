@@ -198,12 +198,12 @@ describe("cartão Feedback na tela do treino", () => {
     <TelaTreino apiUrl="http://api.teste" atletaId={1} atividadeId={101} fetchFn={f} aoFazerCheckin={jest.fn()} aoEditarCheckin={jest.fn()} {...extra} />
   );
 
-  it("ordem: Check-in, Feedback, Carga pela PSE, Clima", async () => {
+  it("ordem v3: Feedback, Check-in, Carga pela PSE, resumo (contexto)", async () => {
     const f = jest.fn(async () => resposta(comFeedback(pronto)));
     await render(tela(f as unknown as typeof fetch));
     await screen.findByTestId("cartao-feedback");
     const ids = [...JSON.stringify(screen.toJSON()).matchAll(/"testID":"(cartao-[a-z-]+)"/g)].map((m) => m[1]);
-    const ordem = ["cartao-resumo", "cartao-checkin", "cartao-feedback", "cartao-carga-pse"].filter((i) => ids.includes(i));
+    const ordem = ["cartao-feedback", "cartao-checkin", "cartao-carga-pse", "cartao-resumo"].filter((i) => ids.includes(i));
     expect(ids.filter((i) => ordem.includes(i))).toEqual(ordem);
     expect(ordem).toContain("cartao-feedback");
     expect(ordem).toContain("cartao-carga-pse");
@@ -219,11 +219,12 @@ describe("cartão Feedback na tela do treino", () => {
     }
   });
 
-  it("'Fazer check-in' do feedback abre o check-in", async () => {
+  it("sem check-in com prazo aberto: a faixa volt do bloco 1 abre o check-in (no lugar do cartão Feedback)", async () => {
     const fazer = jest.fn();
     const f = jest.fn(async () => resposta({ ...atividadesCheckin.semCheckin, feedback: { estado: "sem_checkin", checkin_aberto: true } }));
     await render(tela(f as unknown as typeof fetch, { aoFazerCheckin: fazer }));
-    await fireEvent.press(await screen.findByTestId("feedback-fazer-checkin"));
+    await fireEvent.press(await screen.findByTestId("responder-checkin"));
+    expect(screen.queryByTestId("cartao-feedback")).toBeNull();
     expect(fazer).toHaveBeenCalledTimes(1);
   });
 
