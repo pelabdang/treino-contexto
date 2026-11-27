@@ -2,7 +2,7 @@ import type { Atividade } from "@treino/api-client";
 
 import { atividades } from "../__fixtures__/atividades";
 import { diaCurto, hojePorExtenso } from "../src/componentes/datasInicio";
-import { linhaDeApoio, numeroDoTreino, primeirasLinhas, seloDoNormal } from "../src/inicio/numero";
+import { estadoDoNormal, linhaDeApoio, numeroDoTreino, primeirasLinhas, seloDoNormal } from "../src/inicio/numero";
 
 describe("número do treino", () => {
   it("corrida intervalada: o melhor tiro (menor pace entre os esforços), texto da API", () => {
@@ -44,6 +44,45 @@ describe("selo do normal", () => {
     expect(seloDoNormal(atividades.ok)).toEqual({ tipo: "dentro", texto: "Dentro do seu normal" });
     expect(seloDoNormal(atividades.normalFora)).toEqual({ tipo: "fora", texto: "Fora do seu normal: 25 s/km mais rápido" });
     expect(seloDoNormal(atividades.normalAprendendo)).toEqual({ tipo: "aprendendo", texto: "3 de 8 treinos do tipo leve nas últimas 12 semanas." });
+  });
+
+  it("pace dentro e FC fora: o treino está FORA (regra normal_treino@1), com a diferença da métrica que está fora", () => {
+    const a = {
+      ...atividades.ok,
+      linha_base: {
+        ...atividades.ok.linha_base!,
+        metricas: [
+          { ...atividades.ok.linha_base!.metricas[0], chave: "pace_medio", estado: "dentro" },
+          { ...atividades.ok.linha_base!.metricas[1], chave: "fc_media", estado: "fora", diferenca_texto: "11 bpm acima" },
+        ],
+      },
+    } as Atividade;
+    expect(estadoDoNormal(a)).toBe("fora");
+    expect(seloDoNormal(a)).toEqual({ tipo: "fora", texto: "Fora do seu normal: 11 bpm acima" });
+  });
+
+  it("alguma fora vence dentro e aprendendo; dentro vence aprendendo; sem_valor é ignorada", () => {
+    const com = (estados: string[]) =>
+      ({ ...atividades.ok, linha_base: { ...atividades.ok.linha_base!, metricas: estados.map((e, i) => ({ ...atividades.ok.linha_base!.metricas[0], chave: (["melhor_pace", "pace_medio", "fc_media", "fc_melhor_tiro"] as const)[i], estado: e })) } }) as Atividade;
+    expect(estadoDoNormal(com(["aprendendo", "dentro", "fora"]))).toBe("fora");
+    expect(estadoDoNormal(com(["aprendendo", "dentro"]))).toBe("dentro");
+    expect(estadoDoNormal(com(["sem_valor", "aprendendo"]))).toBe("aprendendo");
+    expect(estadoDoNormal(com(["sem_valor"]))).toBeNull();
+  });
+
+  it("em 'fora', o texto vem da primeira métrica fora na ordem de preferência", () => {
+    const base = atividades.ok.linha_base!.metricas[0];
+    const a = { ...atividades.ok, linha_base: { ...atividades.ok.linha_base!, metricas: [
+      { ...base, chave: "fc_media", estado: "fora", diferenca_texto: "FC acima" },
+      { ...base, chave: "pace_medio", estado: "fora", diferenca_texto: "pace mais rápido" },
+    ] } } as Atividade;
+    expect(seloDoNormal(a)?.texto).toBe("Fora do seu normal: pace mais rápido");
+  });
+
+  it("o normal_estado da lista manda no tipo (mesma conta nas duas telas); null da lista = sem selo", () => {
+    expect(seloDoNormal(atividades.ok, "fora")?.tipo).toBe("fora");
+    expect(seloDoNormal(atividades.normalFora, "dentro")).toEqual({ tipo: "dentro", texto: "Dentro do seu normal" });
+    expect(seloDoNormal(atividades.ok, null)).toBeNull();
   });
 
   it("sem linha de base ou sem cálculo: sem selo", () => {

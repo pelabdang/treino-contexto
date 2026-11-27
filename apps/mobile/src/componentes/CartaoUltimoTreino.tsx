@@ -32,7 +32,7 @@ export function CartaoUltimoTreino({ item, atividade, outrosSemCheckin, aoAbrir,
   const tipo = item.tipo_treino ? TIPOS[item.tipo_treino] : null;
   const numero = atividade ? numeroDoTreino(atividade) : { valor: item.duracao, unidade: null, rotulo: "Duração" };
   const apoio = atividade ? linhaDeApoio(atividade) : [item.distancia, item.duracao].filter(Boolean).join(" · ");
-  const selo = atividade ? seloDoNormal(atividade) : null;
+  const selo = atividade ? seloDoNormal(atividade, item.normal_estado) : null;
   const fb = atividade?.feedback ?? null;
   const convite = item.checkin_estado === "pendente" && (fb?.checkin_aberto ?? true) && fb?.estado !== "pronto";
   const quando = `${diaCurto(item.data_local)} às ${item.hora_local}`;

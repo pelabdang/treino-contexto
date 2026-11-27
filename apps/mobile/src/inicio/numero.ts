@@ -32,16 +32,48 @@ export type SeloNormal = { tipo: "dentro" | "fora" | "aprendendo"; texto: string
 
 const PREFERENCIA: MetricaLinhaBase["chave"][] = ["melhor_pace", "pace_medio", "fc_media"];
 
-/** Selo da linha de base: o primeiro cálculo que a API trouxe. Sem `linha_base` (ou sem valor), sem selo. */
-export function seloDoNormal(a: Atividade): SeloNormal | null {
+type EstadoNormal = "fora" | "dentro" | "aprendendo";
+
+/** Métricas com valor, na ordem de preferência (as que a preferência não cita vêm depois, na ordem da API). */
+function metricasOrdenadas(a: Atividade): MetricaLinhaBase[] {
   const lb = a.linha_base;
-  if (!lb || lb.estado !== "ok") return null;
-  const metricas = lb.metricas.filter((m) => m.estado !== "sem_valor");
-  const m = PREFERENCIA.map((c) => metricas.find((x) => x.chave === c)).find(Boolean) ?? metricas[0];
-  if (!m) return null;
-  if (m.estado === "dentro") return { tipo: "dentro", texto: "Dentro do seu normal" };
-  if (m.estado === "fora") return { tipo: "fora", texto: `Fora do seu normal: ${m.diferenca_texto ?? m.texto}` };
-  return { tipo: "aprendendo", texto: m.texto };
+  if (!lb || lb.estado !== "ok") return [];
+  const com = lb.metricas.filter((m) => m.estado !== "sem_valor");
+  const rank = (m: MetricaLinhaBase) => {
+    const i = PREFERENCIA.indexOf(m.chave);
+    return i === -1 ? PREFERENCIA.length : i;
+  };
+  return [...com].sort((x, y) => rank(x) - rank(y));
+}
+
+/**
+ * Estado do selo pela regra `normal_treino@1` ([[metricas/normal-treino]]): alguma métrica fora, o treino está fora; senão alguma dentro,
+ * dentro; senão aprendendo; sem `linha_base` ok ou sem métrica com valor, `null`. É a mesma regra da lista (`normal_estado`).
+ */
+export function estadoDoNormal(a: Atividade): EstadoNormal | null {
+  const ms = metricasOrdenadas(a);
+  if (ms.some((m) => m.estado === "fora")) return "fora";
+  if (ms.some((m) => m.estado === "dentro")) return "dentro";
+  if (ms.some((m) => m.estado === "aprendendo")) return "aprendendo";
+  return null;
+}
+
+/**
+ * Selo da linha de base. O TIPO segue o `normal_estado` da lista quando ele vem (mesma conta do cartão da lista, para o mesmo treino
+ * nunca mudar de selo entre telas); sem ele, a regra acima. O TEXTO vem da API: em "fora", a diferença da primeira métrica fora;
+ * em "aprendendo", o texto da primeira métrica aprendendo; em "dentro", frase fixa.
+ */
+export function seloDoNormal(a: Atividade, normalEstado?: EstadoNormal | null): SeloNormal | null {
+  const tipo = normalEstado === undefined ? estadoDoNormal(a) : normalEstado;
+  if (!tipo) return null;
+  const ms = metricasOrdenadas(a);
+  if (tipo === "dentro") return { tipo, texto: "Dentro do seu normal" };
+  if (tipo === "fora") {
+    const m = ms.find((x) => x.estado === "fora");
+    return { tipo, texto: `Fora do seu normal${m ? `: ${m.diferenca_texto ?? m.texto}` : ""}` };
+  }
+  const m = ms.find((x) => x.estado === "aprendendo");
+  return { tipo, texto: m?.texto ?? "Aprendendo" };
 }
 
 /** As três primeiras linhas do texto do feedback. */
