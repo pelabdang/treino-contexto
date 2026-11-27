@@ -2,12 +2,11 @@
 // faixa de outro treino sem check-in, quinzena e treinos recentes. Cada cartão busca e falha sozinho ("Tentar de novo").
 // Só mostra texto pronto da API; nada de saúde vai para log.
 import { MaterialIcons } from "@expo/vector-icons";
-import { buscarAtividade, type Atividade, type OpcoesCliente, type Resultado, type SerieCarga } from "@treino/api-client";
+import { buscarAtividade, buscarCarga, type Atividade, type OpcoesCliente, type Resultado, type SerieCarga } from "@treino/api-client";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { Pressable, ScrollView, StyleSheet, Text, useWindowDimensions, View } from "react-native";
 
 import { buscarCheckinsPendentes } from "../checkin/api";
-import { buscarQuinzena } from "../inicio/api";
 import { comFoco } from "../tema/foco";
 import { buscarTreinos, type ItemTreino } from "../treinos/api";
 import { BotaoEnviarFit } from "./BotaoEnviarFit";
@@ -76,7 +75,7 @@ export function TelaInicio({ apiUrl, atletaId, nome, aoAbrirTreino, aoResponderC
 
   const [lista, recarregarLista] = useBusca(() => buscarTreinos(atletaId, { limite: 5 }, opcoes), `lista-${atletaId}-${opcoes.baseUrl}`, atualizar);
   const [pendentes] = useBusca(() => buscarCheckinsPendentes(atletaId, 7, opcoes), `pendentes-${atletaId}-${opcoes.baseUrl}`, atualizar);
-  const [quinzena, recarregarQuinzena] = useBusca<SerieCarga>(() => buscarQuinzena(atletaId, opcoes), `quinzena-${atletaId}-${opcoes.baseUrl}`, atualizar);
+  const [quinzena, recarregarQuinzena] = useBusca<SerieCarga>(() => buscarCarga(atletaId, { ultimos: 14 }, opcoes), `quinzena-${atletaId}-${opcoes.baseUrl}`, atualizar);
 
   const itens = lista.tipo === "ok" ? (lista.dados.itens ?? []) : [];
   const ultimo = itens[0] ?? null;
