@@ -20,7 +20,9 @@ from collections.abc import Iterable
 from dataclasses import dataclass, field
 from datetime import date, timedelta
 
-VERSAO = "serie_carga@1"
+# serie_carga@2 (#539): a serie pode seguir ate `ate` (o dia de ONTEM no fuso do atleta, passado por quem chama) mesmo sem atividade nos
+# ultimos dias: carga 0 nesses dias, CTL e ATL decaem. Sem `ate` o fim continua sendo o ultimo dia com atividade (`worker.grafico_carga`).
+VERSAO = "serie_carga@2"
 
 TAU_CTL = 42
 TAU_ATL = 7
@@ -67,6 +69,7 @@ class DiaCarga:
     atividades: int
     calculadas: int
     sem_carga: int
+    sem_carga_avisavel: int = 0  # sem_carga menos o motivo `modalidade_sem_carga` (esse nao e falta de dado: ver `frase_forma`)
 
 
 @dataclass(frozen=True)
@@ -84,8 +87,8 @@ class SerieCarga:
     totais: TotaisCarga | None = None
 
 
-def calcular_serie(atividades: Iterable[AtividadeCarga], ignoradas_multiesporte: int = 0) -> SerieCarga:
-    """Série diária do primeiro dia com carga calculada até o dia da última atividade.
+def calcular_serie(atividades: Iterable[AtividadeCarga], ignoradas_multiesporte: int = 0, ate: date | None = None) -> SerieCarga:
+    """Série diária do primeiro dia com carga calculada até o dia da última atividade, ou até `ate` se for depois dela.
 
     Sem nenhuma carga calculada, ``dias`` é vazio (não há primeiro dia) e os totais continuam.
     Os totais contam todas as atividades recebidas, inclusive as anteriores ao início da série.
@@ -106,6 +109,8 @@ def calcular_serie(atividades: Iterable[AtividadeCarga], ignoradas_multiesporte:
 
     primeiro = min(a.dia for a in calculadas)
     ultimo = max(a.dia for a in lista)
+    if ate is not None and ate > ultimo:
+        ultimo = ate  # dias sem atividade ate `ate`: carga 0, CTL e ATL decaem
     ctl = atl = 0.0  # semente: zero antes do primeiro dia com carga
     dias: list[DiaCarga] = []
     dia = primeiro
@@ -126,6 +131,7 @@ def calcular_serie(atividades: Iterable[AtividadeCarga], ignoradas_multiesporte:
                 atividades=len(do_dia),
                 calculadas=n_calc,
                 sem_carga=len(do_dia) - n_calc,
+                sem_carga_avisavel=sum(a.carga is None and a.motivo != "modalidade_sem_carga" for a in do_dia),
             )
         )
         dia += timedelta(days=1)

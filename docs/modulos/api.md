@@ -3,7 +3,7 @@ tipo: modulo
 status: em-uso
 dono: theo
 atualizado: 2026-11-17
-links: [[decisoes/0015-caixa-do-dia-do-professor]], [[decisoes/0013-feedback-automatico]], [[decisoes/0012-check-in-pos-treino]], [[decisoes/0011-linha-de-base-e-semana-padrao]], [[metricas/serie-carga]], [[decisoes/0010-carga-de-treino]], [[decisoes/0001-modelo-de-dados-minimo]], [[decisoes/0003-fuso-da-atividade]], [[decisoes/0004-contrato-tela-evolucao]], [[metricas/tiros-1km]], [[modulos/grafico-tiros]], [[modulos/banco]], [[modulos/worker]], [[modulos/infra]], [[modulos/api-client]], [[decisoes/0006-upload-de-fit]], [[produto/meta-2-como-rodar]], [[decisoes/0007-clima-da-atividade]], [[modulos/clima]], [[produto/meta-4-como-rodar]], [[decisoes/0008-deteccao-de-esforcos]], [[metricas/esforcos]], [[decisoes/0009-treino-de-transicao]]
+links: [[metricas/frase-forma]], [[decisoes/0015-caixa-do-dia-do-professor]], [[decisoes/0013-feedback-automatico]], [[decisoes/0012-check-in-pos-treino]], [[decisoes/0011-linha-de-base-e-semana-padrao]], [[metricas/serie-carga]], [[decisoes/0010-carga-de-treino]], [[decisoes/0001-modelo-de-dados-minimo]], [[decisoes/0003-fuso-da-atividade]], [[decisoes/0004-contrato-tela-evolucao]], [[metricas/tiros-1km]], [[modulos/grafico-tiros]], [[modulos/banco]], [[modulos/worker]], [[modulos/infra]], [[modulos/api-client]], [[decisoes/0006-upload-de-fit]], [[produto/meta-2-como-rodar]], [[decisoes/0007-clima-da-atividade]], [[modulos/clima]], [[produto/meta-4-como-rodar]], [[decisoes/0008-deteccao-de-esforcos]], [[metricas/esforcos]], [[decisoes/0009-treino-de-transicao]]
 ---
 # Módulo: api
 
@@ -215,11 +215,11 @@ em stderr e saída 1). É idempotente: rodar de novo dá o mesmo resultado. Depo
 ## Carga: `GET /atletas/{atleta_id}/carga` e `carga` na atividade (#142, [[decisoes/0010-carga-de-treino]] itens 5 a 7)
 `operationId`: `cargaDoAtleta`. Código: `app/rotas/carga.py` e `app/servicos/carga_leitura.py`. A API **não calcula carga por
 atividade**: lê `carga_atividade`, gravada por `worker.calcular_carga` (#141). A série ([[metricas/serie-carga]],
-`serie_carga@1`) é calculada na leitura por `calcular_serie`; o serviço faz o dia local ([[decisoes/0003-fuso-da-atividade]]) e
+`serie_carga@2`) é calculada na leitura por `calcular_serie`; o serviço faz o dia local ([[decisoes/0003-fuso-da-atividade]]) e
 passa `ignoradas_multiesporte`.
-- Resposta: `versao` (`serie_carga@1`), `versao_carga` (`carga@1`), `periodo` (o filtro pedido, ou `null`), `aviso`
+- Resposta: `versao` (`serie_carga@2`), `versao_carga` (`carga@1`), `periodo` (o filtro pedido, ou `null`), `aviso`
   (`sem_carga_calculada` quando `dias` está vazio) e `dias`: `data` (dia local), `carga`, `ctl`, `atl`, `tsb`, `aprendendo`,
-  `atividades`, `calculadas`, `sem_carga` (dia com `sem_carga > 0` não é descanso).
+  `atividades`, `calculadas`, `sem_carga` (dia com `sem_carga > 0` não é descanso), `ctl_texto` e `atl_texto` (inteiros em texto; `null` enquanto `aprendendo`). A série termina em `max(ontem, última atividade)` (#541). `?ultimos=N` recorta os N últimos dias. `frase_forma` (`{versao, tipo, tendencia, texto}`, [[metricas/frase-forma]]) vale sempre para os 14 últimos dias da série inteira (ignora `inicio`, `fim` e `ultimos`); `null` na série vazia. O schema da lista de atividades chama-se `ListaAtividadesItemOut` (o `ItemOut` é o da semana-padrão).
 - `totais` (do atleta todo, não do período): `atividades_importadas`, `calculadas`, `sem_carga_total`, `por_motivo` (os seis
   motivos, sempre todos), `ignoradas_multiesporte` e `pendentes` (elegíveis sem linha **ou com linha de `versao` diferente da `carga@` atual**: desatualizadas até o `calcular_carga` rodar; ficam fora da série, e `atividades_importadas` fecha com a soma).
 - `inicio` e `fim` (datas locais, inclusivas) só recortam `dias`; CTL e ATL partem sempre do primeiro dia com carga. `inicio` > `fim`

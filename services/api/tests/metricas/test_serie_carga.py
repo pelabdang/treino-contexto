@@ -13,7 +13,7 @@ D1 = date(2025, 1, 6)
 
 
 def test_versao():
-    assert VERSAO == "serie_carga@1"
+    assert VERSAO == "serie_carga@2"
 
 
 def test_dia_unico():

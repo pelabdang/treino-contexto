@@ -2,10 +2,10 @@
 tipo: metrica
 status: em-uso
 dono: caio
-atualizado: 2026-11-08
-links: [[decisoes/0010-carga-de-treino]], [[decisoes/0003-fuso-da-atividade]], [[metricas/carga-treino]], [[metricas/carga-oraculo]], [[metricas/conferencia-carga]], [[produto/roadmap]], [[glossario]]
+atualizado: 2026-11-27
+links: [[metricas/frase-forma]], [[decisoes/0010-carga-de-treino]], [[decisoes/0003-fuso-da-atividade]], [[metricas/carga-treino]], [[metricas/carga-oraculo]], [[metricas/conferencia-carga]], [[produto/roadmap]], [[glossario]]
 ---
-# Série de carga: CTL, ATL e TSB diários (`serie_carga@1`)
+# Série de carga: CTL, ATL e TSB diários (`serie_carga@2`)
 
 ## O que mede
 Da carga de cada dia sai o **condicionamento (CTL)**, a **fadiga (ATL)** e a **forma (TSB)** do atleta, dia a dia. A carga de cada
@@ -24,9 +24,9 @@ TSB_d = CTL_d - ATL_d                      (fim do mesmo dia)
 
 - **Semente:** `CTL = ATL = 0` antes do primeiro dia com carga calculada. A série começa nesse dia.
 - **Dia sem treino:** `L_d = 0`; a série tem todos os dias entre o primeiro e o último, e CTL e ATL decaem.
-- **Fim:** o dia da última atividade recebida (calculada ou não), sem estender até hoje.
+- **Fim (`@2`, #541):** `max(ontem, dia da última atividade recebida)`. "Ontem" é no fuso da atividade mais recente (sem ela, America/Sao_Paulo); hoje ainda não acabou, então não entra como dia sem treino. O `ate` é passado por quem chama (`calcular_serie(..., ate=)`); sem ele, o fim continua sendo o da última atividade (`worker.grafico_carga` e a forma do dia de uma atividade). Mudou de `@1` para `@2` só por isso.
 - **`aprendendo`:** verdadeiro enquanto `dia - primeiro_dia < 42` dias.
-- **Por dia:** `atividades`, `calculadas` e `sem_carga` (contam as atividades elegíveis do dia local). Um dia com `sem_carga > 0`
+- **Por dia:** `atividades`, `calculadas` e `sem_carga` (contam as atividades elegíveis do dia local) e `sem_carga_avisavel` (o `sem_carga` sem o motivo `modalidade_sem_carga`, que não é falta de dado; usado pela [[metricas/frase-forma]]). Um dia com `sem_carga > 0`
   não é dia de descanso: houve treino sem dado.
 - **Totais:** `calculadas`, `sem_carga_total`, `por_motivo` (seis motivos, sempre todos presentes) e `ignoradas_multiesporte`.
   Contam **todas** as atividades recebidas, inclusive as anteriores ao primeiro dia da série.
@@ -43,7 +43,7 @@ TSB_d = CTL_d - ATL_d                      (fim do mesmo dia)
 Dois treinos no mesmo dia (60 e 40) valem um de 100: `L_d = 100`.
 
 ## Dados de entrada
-Função pura `calcular_serie(atividades, ignoradas_multiesporte)`. Cada `AtividadeCarga` traz o **dia local já calculado**
+Função pura `calcular_serie(atividades, ignoradas_multiesporte, ate=None)`. Cada `AtividadeCarga` traz o **dia local já calculado**
 (`data_local(inicio, fuso_min)` de `app.servicos.fuso`, feito por quem chama, para a função não depender de fuso), e `carga`
 (ou `None` com um dos seis `motivo`). Atividades `multiesporte_pai` e `troca` não entram: quem chama passa só a contagem delas.
 Carga negativa, motivo inválido, ou carga junto com motivo levantam `ValueError`.
@@ -55,7 +55,7 @@ Carga negativa, motivo inválido, ou carga junto com motivo levantam `ValueError
 - Diferença conhecida: o TSB do TrainingPeaks usa CTL e ATL do dia anterior; o nosso é o do fim do mesmo dia (glossário).
 
 ## Código e teste
-- Código: `services/api/app/metricas/serie_carga.py` (`VERSAO = "serie_carga@1"`).
+- Código: `services/api/app/metricas/serie_carga.py` (`VERSAO = "serie_carga@2"`).
 - Teste: `services/api/tests/metricas/test_serie_carga.py`. Valores à mão: dia único (CTL 2,3528, ATL 13,3122), sequência 100/0/50
   com dia sem treino, dois treinos no mesmo dia, carga constante (CTL no 42o dia = c x (1 - e^-1)). Bate com `CARGA_DIA`, `SERIE`
   e `TOTAIS` do oráculo ([[metricas/carga-oraculo]]).

@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from datetime import date
+from datetime import date, datetime
 from typing import Literal
 
 from app.db.models import Atleta
@@ -10,8 +10,10 @@ from app.db.session import get_session
 from app.metricas import carga as cg
 from app.metricas.serie_carga import MOTIVOS
 from app.rotas.evolucao import Erro, Periodo, _periodo_valido
+from app.servicos import frase_forma as ff
 from app.servicos.carga_leitura import serie_do_atleta
-from fastapi import APIRouter, Depends, HTTPException
+from app.servicos.professor import agora_utc
+from fastapi import APIRouter, Depends, HTTPException, Query
 from pydantic import BaseModel
 from sqlalchemy.orm import Session
 
@@ -28,6 +30,8 @@ class DiaCargaOut(BaseModel):
     atl: float  # fadiga, fim do dia
     tsb: float  # forma = ctl - atl, do mesmo dia
     aprendendo: bool  # menos de 42 dias desde o primeiro dia da serie: a tela avisa
+    ctl_texto: str | None  # inteiro em texto ("44"); null enquanto `aprendendo` (sem numero, como em `forma_do_dia`)
+    atl_texto: str | None
     atividades: int  # elegiveis do dia
     calculadas: int
     sem_carga: int  # > 0: nao e dia de descanso, houve treino sem dado
@@ -44,13 +48,23 @@ class TotaisCargaOut(BaseModel):
     pendentes: int  # sem linha ou com linha de versao antiga: o comando `calcular_carga` precisa rodar; ficam fora da serie
 
 
+class FraseFormaOut(BaseModel):
+    """A frase de analise da quinzena (`frase_forma@1`): texto fixo, descricao e nunca recomendacao. Ver `app/servicos/frase_forma.py`."""
+
+    versao: str
+    tipo: Literal["aprendendo", "sem_treino_recente", "parecidos", "acima", "abaixo", "bem_acima", "bem_abaixo"]
+    tendencia: Literal["subiu", "caiu", "perto"] | None  # null em `aprendendo`, `sem_treino_recente` e quando o primeiro dia do grafico ainda aprendia
+    texto: str
+
+
 class CargaSerieOut(BaseModel):
     atleta_id: int
-    versao: str  # serie_carga@1
+    versao: str  # serie_carga@2
     versao_carga: str  # carga@2, a da carga por atividade
     periodo: Periodo | None  # o filtro pedido (so recorta `dias`; CTL e ATL sempre partem do primeiro dia com carga)
     aviso: Literal["sem_carga_calculada"] | None  # a serie esta vazia porque nenhuma atividade tem carga calculada
     dias: list[DiaCargaOut]
+    frase_forma: FraseFormaOut | None  # sempre sobre os 14 ultimos dias da serie (ignora `inicio`, `fim` e `ultimos`); null na serie vazia
     totais: TotaisCargaOut
 
 
@@ -64,16 +78,22 @@ def carga_do_atleta(
     atleta_id: int,
     inicio: date | None = None,
     fim: date | None = None,
+    ultimos: int | None = Query(None, ge=1, le=3650, description="so os N ultimos dias (depois de `inicio` e `fim`), para o app nao baixar a serie toda"),
     session: Session = Depends(get_session),
+    agora: datetime = Depends(agora_utc),
 ) -> CargaSerieOut:
-    """Série diária do primeiro dia com carga até o dia da última atividade, calculada na leitura sobre a carga gravada
-    pelo comando `calcular_carga`. `inicio` e `fim` (AAAA-MM-DD, datas locais, inclusivas) só recortam `dias`."""
+    """Série diária do primeiro dia com carga até `max(ONTEM, dia da última atividade)` (`serie_carga@2`; "ontem" no fuso da atividade mais
+    recente, porque hoje ainda não acabou), calculada na leitura sobre a carga gravada pelo comando `calcular_carga`. Nos dias sem treino a carga
+    é 0 e CTL e ATL decaem. `inicio` e `fim` (AAAA-MM-DD, datas locais, inclusivas) e `ultimos` só recortam `dias`."""
     _periodo_valido(inicio, fim)
     if session.get(Atleta, atleta_id) is None:
         raise HTTPException(status_code=404, detail="atleta não encontrado")
-    lida = serie_do_atleta(session, atleta_id)
+    lida = serie_do_atleta(session, atleta_id, agora)
     s, t = lida.serie, lida.serie.totais
     dias = [d for d in s.dias if (inicio is None or d.dia >= inicio) and (fim is None or d.dia <= fim)]
+    if ultimos is not None:
+        dias = dias[-ultimos:]
+    frase = ff.frase_forma(s, lida.pendentes)
     return CargaSerieOut(
         atleta_id=atleta_id,
         versao=s.versao,
@@ -81,7 +101,9 @@ def carga_do_atleta(
         periodo=Periodo(inicio=inicio, fim=fim) if (inicio or fim) else None,
         aviso="sem_carga_calculada" if not s.dias else None,
         dias=[DiaCargaOut(data=d.dia, carga=d.carga, ctl=d.ctl, atl=d.atl, tsb=d.tsb, aprendendo=d.aprendendo,
+                          ctl_texto=None if d.aprendendo else str(ff.inteiro(d.ctl)), atl_texto=None if d.aprendendo else str(ff.inteiro(d.atl)),
                           atividades=d.atividades, calculadas=d.calculadas, sem_carga=d.sem_carga) for d in dias],
+        frase_forma=None if frase is None else FraseFormaOut(versao=frase.versao, tipo=frase.tipo, tendencia=frase.tendencia, texto=frase.texto),
         totais=TotaisCargaOut(
             atividades_importadas=lida.atividades_importadas, calculadas=t.calculadas, sem_carga_total=t.sem_carga_total,
             por_motivo=t.por_motivo, ignoradas_multiesporte=t.ignoradas_multiesporte, pendentes=lida.pendentes,
