@@ -89,6 +89,11 @@ export function GraficoSerie({ serie, selecionado, aoSelecionar }: Props) {
 
   return (
     <View testID="grafico-serie">
+      {eixo?.invertido && (
+        <Text testID="mais-rapido" style={styles.dica}>
+          mais rápido ↑
+        </Text>
+      )}
       <View
         accessible
         accessibilityRole="image"
@@ -108,7 +113,7 @@ export function GraficoSerie({ serie, selecionado, aoSelecionar }: Props) {
           {ref && eixo && (
             <G testID="faixa-normal">
               <Rect x={MARGEM.esq} y={y(ref.maximo)} width={largura - MARGEM.esq - MARGEM.dir} height={Math.max(y(ref.minimo) - y(ref.maximo), 1)} fill={cor["marca-suave"]} />
-              <SvgTexto x={MARGEM.esq + 6} y={Math.max(y(ref.maximo) + 14, MARGEM.topo + 12)} fontSize={11.5} fontFamily={familia.medio} fill={cor.link}>
+              <SvgTexto x={largura - MARGEM.dir - 6} y={Math.max(y(ref.maximo) + 14, MARGEM.topo + 12)} fontSize={11.5} fontFamily={familia.medio} fill={cor.link} textAnchor="end">
                 {ref.texto}
               </SvgTexto>
             </G>
@@ -197,6 +202,7 @@ export function GraficoSerie({ serie, selecionado, aoSelecionar }: Props) {
 
 function criarEstilos({ cor }: Tema) {
   return StyleSheet.create({
+    dica: { ...fonte.eixo, color: cor["texto-2"], marginBottom: espaco[1] },
     legenda: { flexDirection: "row", flexWrap: "wrap", columnGap: espaco[3], rowGap: espaco[1], marginTop: espaco[2] },
     legendaItem: { flexDirection: "row", alignItems: "center", gap: espaco[1] },
     legendaTexto: { ...fonte.eixo, color: cor["texto-2"] },

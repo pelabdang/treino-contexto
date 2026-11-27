@@ -196,6 +196,24 @@ describe("Evolução v1: o gráfico", () => {
     for (const t of ["treino", "fora do normal", "melhor", "normal"]) expect(screen.getByText(t, { includeHiddenElements: true })).toBeTruthy();
   });
 
+  it("pace (eixo invertido) diz 'mais rápido ↑'; volume não", async () => {
+    const { unmount } = await render(tela(fetchEvolucao()));
+    expect(await screen.findByTestId("mais-rapido")).toHaveTextContent("mais rápido ↑");
+    await unmount();
+    mockMemoria.set("1", "corrida.volume_km");
+    await render(tela(fetchEvolucao()));
+    await screen.findByTestId("grafico-serie");
+    expect(screen.queryByTestId("mais-rapido")).toBeNull();
+  });
+
+  it("legenda da série de barras: só 'semana'", async () => {
+    mockMemoria.set("1", "corrida.volume_km");
+    await render(tela(fetchEvolucao()));
+    await screen.findByTestId("grafico-serie");
+    expect(screen.getByText("semana", { includeHiddenElements: true })).toBeTruthy();
+    for (const t of ["treino", "fora do normal", "melhor"]) expect(screen.queryByText(t, { includeHiddenElements: true })).toBeNull();
+  });
+
   it("os marcos do eixo são os textos da API", async () => {
     await render(tela(fetchEvolucao()));
     await screen.findByTestId("grafico-serie");
