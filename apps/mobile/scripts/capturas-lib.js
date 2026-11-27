@@ -23,6 +23,9 @@ const ACESSOS = {
   atleta28: "token-sintetico-atleta-28",
   atleta29: "token-sintetico-atleta-29",
   atleta30: "token-sintetico-atleta-30",
+  // Início v3: 21 quinzena aprendendo, 22 quinzena responde 500.
+  atleta21: "token-sintetico-atleta-21",
+  atleta22: "token-sintetico-atleta-22",
 };
 const ENTRAR_ANA = [["campo-email", "atleta1@exemplo.com"], ["campo-senha", SENHA_SINTETICA]];
 const TROCAR_OK = [["campo-senha-atual", SENHA_SINTETICA], ["campo-senha-nova", "outra-senha-sintetica"], ["campo-senha-repetida", "outra-senha-sintetica"]];
@@ -78,7 +81,10 @@ const ROTAS = [
   { nome: "trocar-senha-nova-invalida", caminho: "/trocar-senha", preencher: [["campo-senha-atual", SENHA_SINTETICA], ["campo-senha-nova", "curta"], ["campo-senha-repetida", "curta"]], clicar: ["botao-salvar"] },
   { nome: "trocar-senha-salva", caminho: "/trocar-senha", simular: "troca-ok", preencher: TROCAR_OK, clicar: ["botao-salvar"] },
   // Navegação por abas (UX, auditoria da Lia): barra na base (390) e menu lateral (1280). Início e Evolução mostram os tiros de 1 km.
-  { nome: "aba-inicio", caminho: "/" },
+  { nome: "inicio-v3", caminho: "/" },
+  { nome: "inicio-v3-aprendendo", caminho: "/", acesso: "atleta21" },
+  { nome: "inicio-v3-erro-quinzena", caminho: "/", acesso: "atleta22" },
+  { nome: "inicio-v3-vazio", caminho: "/", acesso: "atleta2" },
   { nome: "aba-treinos", caminho: "/treinos" },
   { nome: "aba-treinos-modalidade", caminho: "/treinos", clicar: ["chip-natacao"] },
   { nome: "aba-treinos-sem-checkin", caminho: "/treinos?filtro=sem-checkin" },

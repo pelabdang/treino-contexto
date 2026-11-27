@@ -741,6 +741,22 @@ createServer((req, res) => {
     if (atleta === 17) return res.writeHead(500, cabecalhos).end(JSON.stringify({ detail: "erro sintético" }));
     return res.writeHead(200, cabecalhos).end(JSON.stringify(pendentesDe(atleta)));
   }
+  // Quinzena sintética do início v3: `GET /atletas/{id}/carga?ultimos=14` (serie_carga@2 e frase_forma@1). Atleta 21: aprendendo; 22: erro 500.
+  const cg = pathname.match(/^\/atletas\/(\d+)\/carga$/);
+  if (cg) {
+    const atleta = Number(cg[1]);
+    if (atleta === 22) return res.writeHead(500, cabecalhos).end(JSON.stringify({ detail: "erro sintético" }));
+    const aprendendo = atleta === 21;
+    const dias = Array.from({ length: 14 }, (_, i) => {
+      const ctl = Math.round(38 + i * 0.45);
+      const atl = Math.round(48 + Math.sin(i / 2) * 9 + i * 0.6);
+      return { data: `2025-03-${String(7 + i).padStart(2, "0")}`, ctl, atl, tsb: ctl - atl, carga: 0, atividades: 0, calculadas: 0, sem_carga: 0, aprendendo, ctl_texto: String(ctl), atl_texto: String(atl) };
+    });
+    const frase = aprendendo
+      ? { tipo: "aprendendo", tendencia: null, texto: "Ainda estamos aprendendo o seu ritmo: faltam alguns dias de treino para comparar.", versao: "frase_forma@1" }
+      : { tipo: "acima", tendencia: "subiu", texto: "Sua fadiga está acima do seu condicionamento. É um retrato do que você treinou, não uma recomendação.", versao: "frase_forma@1" };
+    return res.writeHead(200, cabecalhos).end(JSON.stringify({ atleta_id: atleta, aviso: null, dias, frase_forma: frase, periodo: { inicio: "2025-03-07", fim: "2025-03-20" }, totais: { atividades_importadas: 5, calculadas: 5, ignoradas_multiesporte: 0, pendentes: 0, por_motivo: {}, sem_carga_total: 0 }, versao: "serie_carga@2", versao_carga: "carga@2" }));
+  }
   if (/^\/atletas\/\d+\/evolucao\/tiros-1km$/.test(pathname)) corpo = evolucao;
   const m = pathname.match(/^\/atletas\/(\d+)\/atividades\/(\d+)$/);
   if (m) {

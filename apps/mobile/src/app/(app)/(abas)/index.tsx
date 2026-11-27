@@ -1,22 +1,24 @@
 import { router } from "expo-router";
 
-import { TelaEvolucao } from "../../../componentes/TelaEvolucao";
+import { TelaInicio } from "../../../componentes/TelaInicio";
 import { useContadorDeFoco } from "../../../navegacao/useContadorDeFoco";
-import { useAtleta } from "../../../sessao/SessaoProvider";
+import { useAtleta, useSessao } from "../../../sessao/SessaoProvider";
 
-// Início: por enquanto, a tela de evolução atual. A tela inicial nova vem da proposta da Lia.
+// Início v3: último treino, quinzena e treinos recentes (spec inicio-atleta-v3).
 export default function Inicio() {
   const atualizar = useContadorDeFoco();
   const { apiUrl, atletaId, fetchFn } = useAtleta();
+  const { estado } = useSessao();
   return (
-    <TelaEvolucao
+    <TelaInicio
       apiUrl={apiUrl}
       atletaId={atletaId}
       fetchFn={fetchFn}
+      nome={estado.tipo === "dentro" ? estado.nome : undefined}
       atualizar={atualizar}
-      ocultarEnviarFit
       aoAbrirTreino={(id) => router.push(`/treino/${id}`)}
-      aoAbrirCheckinsPendentes={() => router.navigate("/treinos?filtro=sem-checkin")}
+      aoResponderCheckin={(id) => router.push(`/checkin/${id}`)}
+      aoVerTodos={() => router.navigate("/treinos")}
     />
   );
 }
