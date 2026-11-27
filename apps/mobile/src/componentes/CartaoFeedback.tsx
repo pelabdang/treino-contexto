@@ -46,8 +46,8 @@ export function CartaoFeedback({ feedback, aoFazerCheckin, aoAtualizar }: Props)
   const teste = texto !== null && feedback.origem === "teste";
   const estadoSemTexto = (feedback.estado === "pronto" ? "indisponivel" : feedback.estado) as Exclude<EstadoFeedback, "pronto">;
   const prazoVencido = feedback.estado === "sem_checkin" && feedback.checkin_aberto === false;
-  // `pendente`: o texto é do app (a frase antiga da API manda "tocar em Atualizar"); `desatualizado`: frase da API + "Volte mais tarde".
-  const base = estadoSemTexto === "pendente" ? RESERVA.pendente : feedback.mensagem || (prazoVencido ? RESERVA_PRAZO : RESERVA[estadoSemTexto]);
+  // A `mensagem` da API vence a reserva; em `desatualizado` ganha "Volte mais tarde para ler.".
+  const base = feedback.mensagem || (prazoVencido ? RESERVA_PRAZO : RESERVA[estadoSemTexto]);
   const mensagem = estadoSemTexto === "desatualizado" ? `${base} ${VOLTE_MAIS_TARDE}` : base;
   const icone = estadoSemTexto === "sem_checkin" && !prazoVencido ? "assignment" : "info-outline";
   const podeAtualizar = !texto && (estadoSemTexto === "pendente" || estadoSemTexto === "desatualizado") && !!aoAtualizar;

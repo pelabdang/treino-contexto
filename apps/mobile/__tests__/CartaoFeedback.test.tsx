@@ -84,11 +84,10 @@ describe("cartão Feedback: um teste por estado", () => {
     expect(screen.getByTestId("feedback-mensagem")).toHaveTextContent("Frase vinda da API. Volte mais tarde para ler.");
   });
 
-  it("pendente: o texto é do app, mesmo que a API ainda mande a frase antiga com 'Atualizar'", async () => {
-    const antiga = "O feedback deste treino ainda não foi gerado. Toque em Atualizar para ver se já está pronto.";
-    await render(<CartaoFeedback feedback={{ estado: "pendente", mensagem: antiga }} aoAtualizar={jest.fn()} />);
-    expect(screen.getByTestId("feedback-mensagem")).toHaveTextContent("O feedback deste treino ainda não foi gerado. Ele é preparado em lote; volte mais tarde.");
-    expect(screen.queryByText(/Toque em Atualizar/)).toBeNull();
+  it("pendente: a mensagem da API vence a reserva", async () => {
+    await render(<CartaoFeedback feedback={{ estado: "pendente", mensagem: "Frase vinda da API." }} aoAtualizar={jest.fn()} />);
+    expect(screen.getByTestId("feedback-mensagem")).toHaveTextContent("Frase vinda da API.");
+    expect(screen.queryByText(/ainda não foi gerado/)).toBeNull();
   });
 
   it("indisponível: só a mensagem, sem botão; o motivo nunca aparece nem muda o desenho", async () => {
