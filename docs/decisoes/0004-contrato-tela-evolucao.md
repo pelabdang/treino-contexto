@@ -2,8 +2,8 @@
 tipo: decisao
 status: em-uso
 dono: theo
-atualizado: 2026-11-18
-links: [[decisoes/0013-feedback-automatico]], [[modulos/api]], [[modulos/grafico-tiros]], [[modulos/mobile]], [[modulos/worker]], [[metricas/tiros-1km]], [[decisoes/0002-segmento-intensidade-e-versao]], [[decisoes/0003-fuso-da-atividade]], [[decisoes/0005-serie-de-tiros-o-que-entra]], [[decisoes/0006-upload-de-fit]], [[decisoes/0007-clima-da-atividade]], [[produto/roadmap]], [[design/telas/treino]], [[decisoes/0009-treino-de-transicao]]
+atualizado: 2026-11-27
+links: [[decisoes/0013-feedback-automatico]], [[modulos/api]], [[modulos/grafico-tiros]], [[modulos/mobile]], [[modulos/worker]], [[metricas/tiros-1km]], [[decisoes/0002-segmento-intensidade-e-versao]], [[decisoes/0003-fuso-da-atividade]], [[decisoes/0005-serie-de-tiros-o-que-entra]], [[decisoes/0006-upload-de-fit]], [[decisoes/0007-clima-da-atividade]], [[produto/roadmap]], [[design/telas/treino]], [[decisoes/0009-treino-de-transicao]], [[metricas/evolucao-series]]
 ---
 # ADR: 0004 Contrato da tela de evolução dos tiros (Meta 2)
 
@@ -280,3 +280,9 @@ Base da aba "Treinos" e da tela inicial nova ([[design/auditoria-ux-e-inicio-do-
 6. **Ressalva: a noite e o clima ficam fora do `feedback_estado` da lista.** A lista compara só o que a página já tem (check-in, versão, tipo e transição, motivos da ADR 0013). A recuperação da noite e o clima pedem outras consultas e não entram, para a lista continuar numa consulta só. Por isso um treino pode aparecer `pronto` na lista e `desatualizado` no detalhe. O detalhe (`GET` da atividade) é a fonte completa.
 7. **`normal_estado` (#551):** o selo "normal" do treino, `fora`, `dentro`, `aprendendo` ou `null`, de [[metricas/normal-treino]] (`normal_treino@1`, decisão do Caio) sobre a `linha_base@3` do mesmo treino: a mesma que o `GET` da atividade devolve por métrica. `null` em `sem_linha_base` e quando todas as métricas são `sem_valor`. É só o estado: nenhum número nem texto de linha de base sai na lista. Continua uma consulta de histórico por página (`linha_base_resultados`), sem N+1.
 7. **Custo.** Uma consulta por página (`LIMIT + 1`, para saber se há mais) com check-in, feedback e rótulo de transição por junção: sem N+1.
+
+## Adendo 15 (2026-11-27): catálogo de séries da Evolução, `GET /atletas/{atleta_id}/evolucao/series` (#573)
+1. **Rota nova**, ao lado de `/evolucao/tiros-1km` (que continua). Devolve `series[]` (`id`, `titulo`, `descricao`, `modalidade`, `grupo`, `n_pontos`, `disponivel`, `motivo`) e `serie_padrao`. Detalhes em [[modulos/api]].
+2. **Só as séries do atleta**, por modalidade, grupo e ordem do catálogo; indisponível aparece com o motivo escrito ("Poucos treinos leves de corrida nas últimas 12 semanas").
+3. **Regra de disponível** (Caio, [[metricas/evolucao-series]]): 8 pontos em 12 semanas ou 3 (2 nos tiros) em cada janela de 28 dias; volume 3 semanas; condicionamento 8 dias.
+4. **Ids estáveis**: o app guarda o último escolhido. Série nova entra sem mudar as antigas.

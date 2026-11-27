@@ -121,6 +121,13 @@ curl "http://localhost:8000/atletas/1/evolucao/tiros-1km?inicio=2025-03-01"
   ```
 - Testes: `services/api/tests/rotas/test_evolucao_tiros.py` (banco com as fixtures importadas).
 
+## Catálogo de séries da Evolução: `GET /atletas/{atleta_id}/evolucao/series` (#573, adendo 14 da [[decisoes/0004-contrato-tela-evolucao]], [[metricas/evolucao-series]])
+Só o atleta dono (sessão). `series[]`: `id` (estável: `corrida.pace.leve`, `corrida.fc.moderado`, `corrida.tiros`, `corrida.volume_km`, `natacao.ritmo`, `ciclismo.velocidade.ar_livre|virtual|rolo`, `geral.ctl`...), `titulo`, `descricao` (uma linha), `modalidade` (`corrida`, `natacao`, `ciclismo`, `geral`), `grupo` (`Ritmo`, `Coração`, `Esforço e volume`, `Marcas`), `n_pontos`, `disponivel` e `motivo` (texto pronto, só quando indisponível). `serie_padrao`: a do último treino entre as disponíveis (`null` sem nenhuma). A série só aparece se o atleta tem ao menos um treino dela; indisponível vem com o motivo, nunca some.
+- **Disponível:** 8 pontos nas últimas 12 semanas **ou** o mínimo (3; 2 nos tiros) em cada janela da frase (28 dias até ontem e os 28 anteriores). Volume: 3 semanas com volume nas últimas 12. Condicionamento: 8 dias. Escolha de engenharia do Caio, sem calibração.
+- **O que entra:** pace só de corrida do tipo, fora a esteira; ritmo da natação só na piscina ("com pausas", não é pace); ciclismo separa ar livre, virtual (`subtipo` `virtual`) e rolo (`esteira`); volume e FC contam a esteira. `multiesporte_pai` e `troca` ficam fora. Treino sem tipo só entra no volume.
+- **Custo:** uma consulta de colunas das atividades, uma das sessões de tiros e a série de carga: sem N+1, qualquer que seja o número de séries (teste conta as consultas).
+- Código: `app/servicos/evolucao_series.py` (definições e leitura), rota em `app/rotas/evolucao.py`. Testes: `tests/rotas/test_evolucao_catalogo.py`. A rota da série (pontos, janela, frase) é a #574.
+
 ## Upload de FIT: `POST /atletas/{atleta_id}/atividades/fit`
 Regras na [[decisoes/0006-upload-de-fit]] (itens 4 e 5). Multipart com um campo `arquivo`; só nome terminado em `.fit`
 (maiúsculas valem). Usa `importar_fit` e as exceções de `app/ingestao/importacao.py`; o nome enviado nunca vai para o disco.

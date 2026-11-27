@@ -16,6 +16,7 @@ from app.graficos.escala import Escala, escala_fc, escala_pace
 from app.graficos.tiros_1km import render_png
 from app.db.session import get_session
 from app.metricas.tiros_1km import VERSAO, formatar_pace
+from app.servicos import evolucao_series as es
 from app.servicos.evolucao_tiros import SessaoSerie, reclassificacao_pendente, sessoes_tiros_1km
 
 router = APIRouter(prefix="/atletas/{atleta_id}/evolucao", tags=["evolução"])
@@ -212,3 +213,34 @@ def evolucao_tiros_1km_png(
     atleta = _atleta_ou_404(session, atleta_id)
     serie = [s.ponto for s in sessoes_tiros_1km(session, atleta_id, inicio, fim)]
     return Response(content=render_png(serie, atleta.nome), media_type="image/png")
+
+
+class SerieCatalogoOut(BaseModel):
+    id: str  # ex.: corrida.pace.leve; estável, o app guarda a última escolhida
+    titulo: str
+    descricao: str  # uma linha: o que o gráfico mostra
+    modalidade: Literal["corrida", "natacao", "ciclismo", "geral"]
+    grupo: Literal["Ritmo", "Coração", "Esforço e volume", "Marcas"]
+    n_pontos: int  # pontos com valor nas últimas 12 semanas (volume: semanas com volume; condicionamento: dias)
+    disponivel: bool
+    motivo: str | None  # texto pronto quando não disponível ("Poucos treinos ... nas últimas 12 semanas"); null se disponível
+
+
+class CatalogoSeriesOut(BaseModel):
+    atleta_id: int
+    series: list[SerieCatalogoOut]  # só as séries com ao menos um treino do atleta, por modalidade, grupo e ordem do catálogo
+    serie_padrao: str | None  # a do último treino, entre as disponíveis; null sem nenhuma disponível
+
+
+@router.get("/series", response_model=CatalogoSeriesOut, operation_id="catalogoSeriesEvolucao", responses=_ERRO_404)
+def catalogo_series(atleta_id: int, session: Session = Depends(get_session)) -> CatalogoSeriesOut:
+    """O catálogo de séries da Evolução do atleta (#573). Uma série aparece se o atleta tem treino dela; `disponivel` segue a regra do Caio
+    (8 pontos nas últimas 12 semanas ou o mínimo em cada janela da frase); indisponível vem com o motivo escrito, nunca some."""
+    _atleta_ou_404(session, atleta_id)
+    c = es.catalogo(session, atleta_id)
+    return CatalogoSeriesOut(
+        atleta_id=atleta_id,
+        series=[SerieCatalogoOut(id=i.serie.id, titulo=i.serie.titulo, descricao=i.serie.descricao, modalidade=i.serie.modalidade,
+                                 grupo=i.serie.grupo, n_pontos=i.n_pontos, disponivel=i.disponivel, motivo=i.motivo) for i in c.itens],
+        serie_padrao=c.serie_padrao,
+    )
