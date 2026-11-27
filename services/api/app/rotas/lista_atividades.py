@@ -1,6 +1,6 @@
 """`GET /atletas/{atleta_id}/atividades`: a lista de treinos do atleta (aba "Treinos" e tela inicial). So o atleta dono (`atleta_da_sessao`).
 
-Item enxuto, sem dado de saude em texto (nada de check-in nem de feedback, so o ESTADO de cada um). Paginacao por cursor (`antes_de` /
+Item enxuto, sem dado de saude em texto (nada de check-in nem de feedback, so o ESTADO de cada um (e o selo `normal_estado`)). Paginacao por cursor (`antes_de` /
 `proximo`); mais recente primeiro. Ver `app/servicos/lista_atividades.py`.
 """
 
@@ -19,7 +19,9 @@ from app.rotas.atividades import _duracao_hms, _pace_medio
 from app.rotas.evolucao import Erro
 from app.servicos import lista_atividades as svc
 from app.servicos.distancia_texto import distancia_da_atividade
+from app.metricas.normal_treino import normal_treino
 from app.servicos.fuso import inicio_local
+from app.servicos.linha_base_leitura import linha_base_resultados
 
 router = APIRouter(prefix="/atletas/{atleta_id}/atividades", tags=["atividades"])
 
@@ -41,6 +43,7 @@ class ListaAtividadesItemOut(BaseModel):
     destaque: str | None  # frase curta pronta: "Pace médio 5:21 /km" (corrida) ou "Velocidade média 24,5 km/h" (ciclismo)
     checkin_estado: Literal["feito", "pendente", "vencido", "nao_se_aplica"]
     feedback_estado: Literal["pronto", "sem_checkin", "pendente", "desatualizado", "indisponivel"] | None  # null em multiesporte_pai e troca
+    normal_estado: Literal["fora", "dentro", "aprendendo"] | None  # selo "normal" do treino (`normal_treino@1`, da `linha_base@3`); null sem linha de base ou sem valor
 
 
 class ListaOut(BaseModel):
@@ -59,13 +62,13 @@ def _destaque(a: Atividade) -> str | None:
     return None
 
 
-def _item(a: Atividade) -> ListaAtividadesItemOut:
+def _item(a: Atividade, normal: str | None) -> ListaAtividadesItemOut:
     local = inicio_local(a.inicio, a.fuso_min)
     return ListaAtividadesItemOut(
         atividade_id=a.id, inicio=a.inicio, data_local=local.date().isoformat(), hora_local=local.strftime("%H:%M"),
         modalidade=a.modalidade, subtipo=a.subtipo, tipo_treino=a.tipo_treino, duracao_s=a.duracao_s, duracao=_duracao_hms(a.duracao_s),
         distancia_m=a.distancia_m, distancia=distancia_da_atividade(a.modalidade, a.distancia_m), destaque=_destaque(a),
-        checkin_estado=svc.checkin_estado(a), feedback_estado=svc.feedback_estado(a),
+        checkin_estado=svc.checkin_estado(a), feedback_estado=svc.feedback_estado(a), normal_estado=normal,
     )
 
 
@@ -92,4 +95,6 @@ def listar_atividades(
     except svc.CursorInvalido:
         raise HTTPException(status_code=422, detail=[{"loc": ["query", "antes_de"], "msg": "cursor invalido", "type": "cursor_invalido"}]) from None
     p = svc.pagina(session, atleta_id, limite, cursor, modalidade, checkin_pendente)
-    return ListaOut(atleta_id=atleta_id, limite=limite, itens=[_item(a) for a in p.atividades], proximo=None if p.proximo is None else p.proximo.texto())
+    bases = linha_base_resultados(session, p.atividades)  # 1 consulta de historico por pagina (sem N+1)
+    normais = {i: normal_treino(b.estado, [m.estado for m in b.metricas]) for i, b in bases.items()}
+    return ListaOut(atleta_id=atleta_id, limite=limite, itens=[_item(a, normais.get(a.id)) for a in p.atividades], proximo=None if p.proximo is None else p.proximo.texto())
