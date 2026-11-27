@@ -44,7 +44,7 @@ export function BarraLote({ selecionados, corrigidos, salvando, erro, aoLimpar, 
         )}
         {salvando ? (
           <View testID="salvando" style={styles.linha} accessibilityLiveRegion="polite">
-            <ActivityIndicator color={tema.cor.destaque} />
+            <ActivityIndicator color={tema.cor.link} />
             <Text style={styles.texto}>Salvando...</Text>
           </View>
         ) : (
@@ -73,14 +73,14 @@ function criarEstilos({ cor }: Tema, margem: number) {
     linha: { flexDirection: "row", flexWrap: "wrap", alignItems: "center", gap: espaco[3] },
     texto: { ...fonte["corpo-forte"], color: cor.texto, flexGrow: 1 },
     legenda: { ...fonte.legenda, color: cor["texto-2"] },
-    secundario: { minHeight: tamanho.botaoAltura, justifyContent: "center", paddingHorizontal: espaco[4], borderRadius: raio.medio, borderWidth: borda.fina, borderColor: cor["borda-forte"] },
+    secundario: { minHeight: tamanho.botaoAltura, justifyContent: "center", paddingHorizontal: espaco[4], borderRadius: raio.botao, borderWidth: borda.fina, borderColor: cor["borda-forte"] },
     secundarioTexto: { ...fonte.botao, color: cor.texto },
-    primario: { minHeight: tamanho.botaoAltura, justifyContent: "center", paddingHorizontal: espaco[4], borderRadius: raio.medio, backgroundColor: cor.destaque },
-    primarioTexto: { ...fonte.botao, color: cor["sobre-destaque"] },
-    erro: { flexDirection: "row", flexWrap: "wrap", alignItems: "center", gap: espaco[2], padding: espaco[3], borderRadius: raio.medio, backgroundColor: cor["erro-suave"] },
+    primario: { minHeight: tamanho.botaoAltura, justifyContent: "center", paddingHorizontal: espaco[4], borderRadius: raio.botao, backgroundColor: cor.botao },
+    primarioTexto: { ...fonte.botao, color: cor["sobre-botao"] },
+    erro: { flexDirection: "row", flexWrap: "wrap", alignItems: "center", gap: espaco[2], padding: espaco[3], borderRadius: raio.bloco, backgroundColor: cor["erro-suave"] },
     erroTexto: { ...fonte.corpo, color: cor.erro, flex: 1, minWidth: 200 },
     textoBotao: { minHeight: tamanho.alvoMinimo, justifyContent: "center" },
     foco: { outlineWidth: borda.foco, outlineStyle: "solid", outlineColor: cor.foco, outlineOffset: 2 },
-    link: { ...fonte.botao, color: cor.destaque },
+    link: { ...fonte.botao, color: cor.link },
   });
 }

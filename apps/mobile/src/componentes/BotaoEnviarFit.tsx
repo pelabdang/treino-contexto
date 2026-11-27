@@ -76,8 +76,8 @@ export function BotaoEnviarFit({ apiUrl, atletaId, aoEnviar, fetchFn, variante =
           variante === "secundario" && styles.botaoSecundario,
           pressed &&
             (variante === "primario"
-              ? { backgroundColor: tema.cor["destaque-pressionado"] }
-              : { backgroundColor: tema.cor["destaque-suave"] }),
+              ? { backgroundColor: tema.cor["botao-pressionado"] }
+              : { backgroundColor: tema.cor["marca-suave"] }),
           enviando && styles.desligado,
         ]}
       >
@@ -85,7 +85,7 @@ export function BotaoEnviarFit({ apiUrl, atletaId, aoEnviar, fetchFn, variante =
       </Pressable>
       {enviando && (
         <View style={styles.linha}>
-          <ActivityIndicator color={tema.cor.destaque} />
+          <ActivityIndicator color={tema.cor.link} />
           <Text style={styles.texto}>Enviando...</Text>
         </View>
       )}
@@ -103,13 +103,13 @@ function criarEstilos({ cor }: Tema) {
       minHeight: tamanho.botaoAltura,
       justifyContent: "center",
       paddingHorizontal: espaco[4],
-      borderRadius: raio.medio,
-      backgroundColor: cor.destaque,
+      borderRadius: raio.botao,
+      backgroundColor: cor.botao,
     },
     botaoSecundario: { backgroundColor: cor.superficie, borderWidth: borda.fina, borderColor: cor["borda-forte"] },
-    botaoTextoSecundario: { color: cor.destaque },
+    botaoTextoSecundario: { color: cor.link },
     desligado: { backgroundColor: cor["superficie-2"], borderWidth: 0 },
-    botaoTexto: { ...fonte.botao, color: cor["sobre-destaque"] },
+    botaoTexto: { ...fonte.botao, color: cor["sobre-botao"] },
     botaoTextoDesligado: { color: cor["texto-desligado"] },
     linha: { flexDirection: "row", alignItems: "center", gap: espaco[2] },
     texto: { ...fonte.corpo, color: cor["texto-2"] },

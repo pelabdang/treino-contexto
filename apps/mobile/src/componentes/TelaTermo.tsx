@@ -85,7 +85,7 @@ export function TelaTermo({ apiUrl, atletaId, professorId, aoVoltar, aoConcluir,
     <ScrollView testID="tela-termo" contentContainerStyle={styles.container}>
       <View style={styles.coluna}>
         <Pressable testID="voltar" accessibilityRole="button" accessibilityLabel="Voltar" onPress={aoVoltar} style={comFoco(styles.voltar, styles.foco)}>
-          <MaterialIcons name="arrow-back" size={tamanho.iconeMedio} color={tema.cor.destaque} accessible={false} />
+          <MaterialIcons name="arrow-back" size={tamanho.iconeMedio} color={tema.cor.link} accessible={false} />
           <Text style={styles.voltarTexto}>Voltar</Text>
         </Pressable>
         <Text accessibilityRole="header" style={styles.titulo}>
@@ -146,7 +146,7 @@ export function TelaTermo({ apiUrl, atletaId, professorId, aoVoltar, aoConcluir,
               onPress={() => setMarcado((m) => !m)}
               style={comFoco(styles.caixa, styles.foco)}
             >
-              <MaterialIcons name={marcado ? "check-box" : "check-box-outline-blank"} size={tamanho.iconeGrande} color={marcado ? tema.cor.destaque : tema.cor["borda-forte"]} accessible={false} />
+              <MaterialIcons name={marcado ? "check-box" : "check-box-outline-blank"} size={tamanho.iconeGrande} color={marcado ? tema.cor.link : tema.cor["borda-forte"]} accessible={false} />
               <Text style={styles.caixaTexto}>Li e concordo</Text>
             </Pressable>
             {aviso === "rede" && <Faixa tipo="erro" testID="faixa-erro" texto="Não foi possível salvar. Tente de novo." />}
@@ -173,20 +173,20 @@ function criarEstilos({ cor }: Tema, margem: number) {
     container: { padding: margem, alignItems: "center" },
     coluna: { width: "100%", maxWidth: larguraConteudoMax, gap: espaco[3] },
     voltar: { minHeight: tamanho.botaoAltura, flexDirection: "row", alignItems: "center", gap: espaco[1], alignSelf: "flex-start" },
-    voltarTexto: { ...fonte.botao, color: cor.destaque },
+    voltarTexto: { ...fonte.botao, color: cor.link },
     titulo: { ...fonte["titulo-tela"], color: cor.texto },
     texto: { ...fonte.corpo, color: cor["texto-2"] },
     corpo: { ...fonte.corpo, color: cor.texto },
     nome: { ...fonte["corpo-forte"], color: cor.texto },
     estado: { alignItems: "center", gap: espaco[3], paddingVertical: espaco[5] },
-    provisorio: { flexDirection: "row", gap: espaco[2], padding: espaco[3], borderRadius: raio.medio, borderWidth: borda.fina, borderColor: cor.alerta, backgroundColor: cor["alerta-suave"] },
+    provisorio: { flexDirection: "row", gap: espaco[2], padding: espaco[3], borderRadius: raio.bloco, borderWidth: borda.fina, borderColor: cor.alerta, backgroundColor: cor["alerta-suave"] },
     provisorioTitulo: { ...fonte["corpo-forte"], color: cor.alerta },
     provisorioTexto: { ...fonte.corpo, color: cor.alerta },
     caixa: { minHeight: tamanho.botaoAltura, flexDirection: "row", alignItems: "center", gap: espaco[2] },
     caixaTexto: { ...fonte.corpo, color: cor.texto, flex: 1 },
-    botao: { minHeight: tamanho.botaoAltura, alignItems: "center", justifyContent: "center", borderRadius: raio.medio, paddingHorizontal: espaco[4] },
-    primario: { backgroundColor: cor.destaque },
-    primarioTexto: { ...fonte.botao, color: cor["sobre-destaque"] },
+    botao: { minHeight: tamanho.botaoAltura, alignItems: "center", justifyContent: "center", borderRadius: raio.botao, paddingHorizontal: espaco[4] },
+    primario: { backgroundColor: cor.botao },
+    primarioTexto: { ...fonte.botao, color: cor["sobre-botao"] },
     desligado: { backgroundColor: cor["superficie-2"] },
     desligadoTexto: { ...fonte.botao, color: cor["texto-desligado"] },
     foco: { outlineWidth: borda.foco, outlineStyle: "solid", outlineColor: cor.foco, outlineOffset: 2 },

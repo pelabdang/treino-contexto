@@ -7,6 +7,7 @@ import type { Entrou, Falha, ResultadoSessao } from "../sessao/api";
 import { comFoco } from "../tema/foco";
 import { CampoTexto, type RefCampo } from "./CampoTexto";
 import { Faixa } from "./Faixa";
+import { LogoPulso } from "./LogoPulso";
 import { borda, espaco, fonte, larguraMargemGrande, raio, tamanho, useMargemTela, useTema, type Tema } from "../tema";
 
 type Props = {
@@ -109,6 +110,9 @@ export function TelaEntrar({ expirou = false, saiu = false, aoEntrar, aoConcluir
     <ScrollView testID="tela-entrar" keyboardShouldPersistTaps="handled" contentContainerStyle={styles.container}>
       <View style={styles.cartao}>
         {expirou && !aviso && <Faixa tipo="info" testID="faixa-expirou" texto={TEXTO_EXPIROU} />}
+        <View style={styles.logo}>
+          <LogoPulso tamanho={48} />
+        </View>
         <Text accessibilityRole="header" style={styles.titulo}>
           Entrar
         </Text>
@@ -170,13 +174,14 @@ function criarEstilos({ cor }: Tema, margem: number, larga: boolean) {
       maxWidth: 420,
       alignSelf: larga ? "center" : "stretch",
       gap: espaco[3],
-      ...(larga ? { padding: espaco[5], backgroundColor: cor.superficie, borderWidth: borda.fina, borderColor: cor.borda, borderRadius: raio.grande } : {}),
+      ...(larga ? { padding: espaco[5], backgroundColor: cor.superficie, borderWidth: borda.fina, borderColor: cor.borda, borderRadius: raio.cartao } : {}),
     },
+    logo: { alignItems: "flex-start" },
     titulo: { ...fonte["titulo-tela"], color: cor.texto },
     texto: { ...fonte.corpo, color: cor["texto-2"] },
-    botao: { minHeight: tamanho.botaoAltura, alignItems: "center", justifyContent: "center", borderRadius: raio.medio, backgroundColor: cor.destaque, paddingHorizontal: espaco[4] },
+    botao: { minHeight: tamanho.botaoAltura, alignItems: "center", justifyContent: "center", borderRadius: raio.botao, backgroundColor: cor.botao, paddingHorizontal: espaco[4] },
     botaoDesligado: { backgroundColor: cor["superficie-2"] },
-    botaoTexto: { ...fonte.botao, color: cor["sobre-destaque"] },
+    botaoTexto: { ...fonte.botao, color: cor["sobre-botao"] },
     botaoTextoDesligado: { color: cor["texto-desligado"] },
     foco: { outlineWidth: borda.foco, outlineStyle: "solid", outlineColor: cor.foco, outlineOffset: 2 },
   });

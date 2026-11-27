@@ -120,7 +120,7 @@ export function CartaoFeedback({ feedback, aoFazerCheckin, aoAtualizar }: Props)
               onPress={() => void atualizar()}
               style={styles.botaoTexto}
             >
-              <MaterialIcons name="refresh" size={tamanho.iconeMedio} color={tema.cor.destaque} accessible={false} />
+              <MaterialIcons name="refresh" size={tamanho.iconeMedio} color={tema.cor.link} accessible={false} />
               <Text style={styles.botaoTextoDestaque}>{atualizando ? "Atualizando..." : "Atualizar"}</Text>
             </Pressable>
           )}
@@ -138,14 +138,14 @@ function criarEstilos({ cor }: Tema) {
     justifyContent: "center",
     alignItems: "center",
     paddingHorizontal: espaco[4],
-    borderRadius: raio.medio,
+    borderRadius: raio.botao,
   } as const;
   return StyleSheet.create({
     cartao: {
       marginTop: espaco[4],
       padding: espaco[4],
       gap: espaco[2],
-      borderRadius: raio.grande,
+      borderRadius: raio.cartao,
       borderWidth: borda.fina,
       borderColor: cor.borda,
       backgroundColor: cor.superficie,
@@ -161,9 +161,9 @@ function criarEstilos({ cor }: Tema) {
     nota: { flexDirection: "row", alignItems: "flex-start", gap: espaco[2] },
     notaTexto: { ...fonte.corpo, color: cor.texto, flex: 1 },
     botaoSecundario: { ...botao, alignSelf: "stretch", borderWidth: borda.fina, borderColor: cor["borda-forte"], backgroundColor: cor.superficie },
-    botaoTextoSecundario: { ...fonte.botao, color: cor.destaque },
+    botaoTextoSecundario: { ...fonte.botao, color: cor.link },
     // marginLeft negativo: o texto do botão (alvo de 48) começa na borda do conteúdo do cartão.
     botaoTexto: { ...botao, alignSelf: "flex-start", paddingHorizontal: espaco[2], marginLeft: -espaco[2] },
-    botaoTextoDestaque: { ...fonte.botao, color: cor.destaque },
+    botaoTextoDestaque: { ...fonte.botao, color: cor.link },
   });
 }

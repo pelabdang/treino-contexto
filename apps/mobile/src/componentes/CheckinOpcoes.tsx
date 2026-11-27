@@ -41,7 +41,7 @@ export function GradePse({
       >
         <Text style={styles.pseNumero}>{n}</Text>
         {ancora ? <Text style={styles.pseAncora}>{ancora}</Text> : null}
-        {escolhido && <MaterialIcons name="check" size={tamanho.iconeMedio} color={tema.cor.destaque} accessible={false} />}
+        {escolhido && <MaterialIcons name="check" size={tamanho.iconeMedio} color={tema.cor.link} accessible={false} />}
       </Pressable>
     );
   };
@@ -87,7 +87,7 @@ export function ListaSensacao({
           >
             <MaterialIcons name={s.icone} size={tamanho.iconeGrande} color={tema.cor["texto-2"]} accessible={false} />
             <Text style={styles.sensacaoTexto}>{s.texto}</Text>
-            {escolhido && <MaterialIcons name="check" size={tamanho.iconeMedio} color={tema.cor.destaque} accessible={false} />}
+            {escolhido && <MaterialIcons name="check" size={tamanho.iconeMedio} color={tema.cor.link} accessible={false} />}
           </Pressable>
         );
       })}
@@ -121,7 +121,7 @@ export function ChipsAtalhos({
             onPress={() => aoAlternar(a.chave)}
             style={[styles.chipAtalho, marcado && styles.escolhido]}
           >
-            {marcado && <MaterialIcons name="check" size={tamanho.iconePequeno} color={tema.cor.destaque} accessible={false} />}
+            {marcado && <MaterialIcons name="check" size={tamanho.iconePequeno} color={tema.cor.link} accessible={false} />}
             <Text style={styles.chipAtalhoTexto}>{a.texto}</Text>
           </Pressable>
         );
@@ -217,8 +217,8 @@ function useEsc(ativo: boolean, fechar: () => void) {
 }
 
 function criarEstilos({ cor }: Tema) {
-  const escolhido = { backgroundColor: cor["destaque-suave"], borderColor: cor.destaque, borderWidth: 2 };
-  const botao = { minHeight: tamanho.botaoAltura, justifyContent: "center", alignItems: "center", borderRadius: raio.medio } as const;
+  const escolhido = { backgroundColor: cor["marca-suave"], borderColor: cor.link, borderWidth: 2 };
+  const botao = { minHeight: tamanho.botaoAltura, justifyContent: "center", alignItems: "center", borderRadius: raio.botao } as const;
   return StyleSheet.create({
     escolhido,
     duasColunas: { flexDirection: "row", gap: espaco[2], marginTop: espaco[3] },
@@ -231,7 +231,7 @@ function criarEstilos({ cor }: Tema) {
       gap: espaco[2],
       paddingHorizontal: espaco[3],
       paddingVertical: espaco[1],
-      borderRadius: raio.medio,
+      borderRadius: raio.bloco,
       borderWidth: borda.fina,
       borderColor: cor["borda-forte"],
       backgroundColor: cor.superficie,
@@ -245,7 +245,7 @@ function criarEstilos({ cor }: Tema) {
       alignItems: "center",
       gap: espaco[3],
       paddingHorizontal: espaco[3],
-      borderRadius: raio.medio,
+      borderRadius: raio.bloco,
       borderWidth: borda.fina,
       borderColor: cor["borda-forte"],
       backgroundColor: cor.superficie,
@@ -269,22 +269,22 @@ function criarEstilos({ cor }: Tema) {
       margin: espaco[4],
       padding: espaco[4],
       gap: espaco[3],
-      borderRadius: raio.grande,
+      borderRadius: raio.cartao,
       backgroundColor: cor.superficie,
     },
     dialogoTitulo: { ...fonte["titulo-secao"], color: cor.texto, flex: 1 },
     dialogoTexto: { ...fonte.corpo, color: cor.texto },
     folha: {
       padding: espaco[4],
-      borderTopLeftRadius: raio.grande,
-      borderTopRightRadius: raio.grande,
+      borderTopLeftRadius: raio.cartao,
+      borderTopRightRadius: raio.cartao,
       backgroundColor: cor.superficie,
       maxHeight: "90%",
     },
     folhaTopo: { flexDirection: "row", alignItems: "center", justifyContent: "space-between" },
     fechar: { width: tamanho.alvoMinimo, height: tamanho.alvoMinimo, alignItems: "center", justifyContent: "center" },
-    botaoPrimario: { ...botao, backgroundColor: cor.destaque },
-    botaoPrimarioTexto: { ...fonte.botao, color: cor["sobre-destaque"] },
+    botaoPrimario: { ...botao, backgroundColor: cor.botao },
+    botaoPrimarioTexto: { ...fonte.botao, color: cor["sobre-botao"] },
     botaoSecundario: { ...botao, borderWidth: borda.fina, borderColor: cor["borda-forte"], backgroundColor: cor.superficie },
     botaoSecundarioTexto: { ...fonte.botao, color: cor.texto },
   });

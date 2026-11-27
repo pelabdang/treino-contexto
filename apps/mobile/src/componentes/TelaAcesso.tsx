@@ -41,8 +41,8 @@ function criarEstilos({ cor }: Tema, margem: number) {
   return StyleSheet.create({
     tela: { flex: 1, alignItems: "center", justifyContent: "center", gap: espaco[3], padding: margem, backgroundColor: cor.fundo },
     texto: { ...fonte.corpo, color: cor.texto, textAlign: "center" },
-    botao: { minHeight: tamanho.botaoAltura, alignItems: "center", justifyContent: "center", borderRadius: raio.medio, backgroundColor: cor.destaque, paddingHorizontal: espaco[5] },
-    botaoTexto: { ...fonte.botao, color: cor["sobre-destaque"] },
+    botao: { minHeight: tamanho.botaoAltura, alignItems: "center", justifyContent: "center", borderRadius: raio.botao, backgroundColor: cor.botao, paddingHorizontal: espaco[5] },
+    botaoTexto: { ...fonte.botao, color: cor["sobre-botao"] },
     foco: { outlineWidth: borda.foco, outlineStyle: "solid", outlineColor: cor.foco, outlineOffset: 2 },
   });
 }

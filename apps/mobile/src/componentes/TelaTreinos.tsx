@@ -130,7 +130,7 @@ export function TelaTreinos({ apiUrl, atletaId, aoAbrirTreino, semCheckinInicial
               onPress={() => escolher(c.valor)}
               style={comFoco([styles.chip, marcado && styles.chipMarcado], styles.foco)}
             >
-              {marcado && <MaterialIcons name="check" size={tamanho.iconePequeno} color={tema.cor.destaque} accessible={false} />}
+              {marcado && <MaterialIcons name="check" size={tamanho.iconePequeno} color={tema.cor.link} accessible={false} />}
               <Text style={[styles.chipTexto, marcado && styles.chipTextoMarcado]}>{c.texto}</Text>
             </Pressable>
           );
@@ -142,7 +142,7 @@ export function TelaTreinos({ apiUrl, atletaId, aoAbrirTreino, semCheckinInicial
           onPress={alternarSemCheckin}
           style={comFoco([styles.chip, semCheckin && styles.chipMarcado], styles.foco)}
         >
-          <MaterialIcons name={semCheckin ? "check" : "assignment"} size={tamanho.iconePequeno} color={semCheckin ? tema.cor.destaque : tema.cor["texto-2"]} accessible={false} />
+          <MaterialIcons name={semCheckin ? "check" : "assignment"} size={tamanho.iconePequeno} color={semCheckin ? tema.cor.link : tema.cor["texto-2"]} accessible={false} />
           <Text style={[styles.chipTexto, semCheckin && styles.chipTextoMarcado]}>Sem check-in</Text>
         </Pressable>
       </View>
@@ -151,7 +151,7 @@ export function TelaTreinos({ apiUrl, atletaId, aoAbrirTreino, semCheckinInicial
 
   const rodape = (
     <View style={styles.rodape}>
-      {estado.tipo === "ok" && maisCarregando && <ActivityIndicator testID="carregando-mais" color={tema.cor.destaque} />}
+      {estado.tipo === "ok" && maisCarregando && <ActivityIndicator testID="carregando-mais" color={tema.cor.link} />}
       {estado.tipo === "ok" && maisErro && (
         <View style={styles.maisErro}>
           <Text accessibilityRole="alert" style={styles.erro}>
@@ -287,11 +287,11 @@ function criarEstilos({ cor }: Tema, margem: number) {
     texto: { ...fonte.corpo, color: cor["texto-2"] },
     chips: { flexDirection: "row", flexWrap: "wrap", gap: espaco[2] },
     chip: { minHeight: tamanho.alvoMinimo, flexDirection: "row", alignItems: "center", gap: espaco[1], paddingHorizontal: espaco[3], borderRadius: raio.pilula, borderWidth: borda.fina, borderColor: cor["borda-forte"], backgroundColor: cor.superficie },
-    chipMarcado: { backgroundColor: cor["destaque-suave"], borderColor: cor.destaque },
+    chipMarcado: { backgroundColor: cor["marca-suave"], borderColor: cor.link },
     chipTexto: { ...fonte.rotulo, color: cor.texto },
-    chipTextoMarcado: { color: cor.destaque },
+    chipTextoMarcado: { color: cor.link },
     // Cartão no formato proposto pela Lia: fileira de números; o raio é o token atual.
-    cartao: { padding: espaco[4], gap: espaco[2], marginBottom: espaco[3], borderRadius: raio.grande, borderWidth: borda.fina, borderColor: cor.borda, backgroundColor: cor.superficie },
+    cartao: { padding: espaco[4], gap: espaco[2], marginBottom: espaco[3], borderRadius: raio.cartao, borderWidth: borda.fina, borderColor: cor.borda, backgroundColor: cor.superficie },
     topo: { flexDirection: "row", alignItems: "center", gap: espaco[2] },
     nome: { ...fonte["titulo-secao"], color: cor.texto, flex: 1 },
     tipo: { paddingHorizontal: espaco[2], paddingVertical: 2, borderRadius: raio.pilula, backgroundColor: cor["superficie-2"] },
@@ -309,8 +309,8 @@ function criarEstilos({ cor }: Tema, margem: number) {
     estado: { alignItems: "center", paddingVertical: espaco[7], gap: espaco[2] },
     estadoTitulo: { ...fonte["titulo-secao"], color: cor.texto, textAlign: "center" },
     erro: { ...fonte.corpo, color: cor.erro, textAlign: "center" },
-    botao: { minHeight: tamanho.botaoAltura, justifyContent: "center", paddingHorizontal: espaco[4], borderRadius: raio.medio, backgroundColor: cor.destaque },
-    botaoTexto: { ...fonte.botao, color: cor["sobre-destaque"] },
+    botao: { minHeight: tamanho.botaoAltura, justifyContent: "center", paddingHorizontal: espaco[4], borderRadius: raio.botao, backgroundColor: cor.botao },
+    botaoTexto: { ...fonte.botao, color: cor["sobre-botao"] },
     rodape: { paddingVertical: espaco[4], alignItems: "center" },
     maisErro: { alignItems: "center", gap: espaco[2] },
     legenda: { ...fonte.legenda, color: cor["texto-2"] },

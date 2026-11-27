@@ -282,9 +282,9 @@ export function TelaCaixaDoDia({ apiUrl, professorId, fetchFn }: Props) {
             style={comHover(styles.atualizar, styles.hover, styles.foco)}
           >
             {atualizando ? (
-              <ActivityIndicator testID="atualizando" size="small" color={tema.cor.destaque} />
+              <ActivityIndicator testID="atualizando" size="small" color={tema.cor.link} />
             ) : (
-              <MaterialIcons name="refresh" size={tamanho.iconeGrande} color={podeAtualizar ? tema.cor.destaque : tema.cor["texto-desligado"]} accessible={false} />
+              <MaterialIcons name="refresh" size={tamanho.iconeGrande} color={podeAtualizar ? tema.cor.link : tema.cor["texto-desligado"]} accessible={false} />
             )}
           </Pressable>
         )}
@@ -377,7 +377,7 @@ export function TelaCaixaDoDia({ apiUrl, professorId, fetchFn }: Props) {
                 onPress={alternarTodos}
                 style={comHover(styles.selecionarTodos, styles.hover, styles.foco)}
               >
-                <MaterialIcons name={todosMarcados ? "check-box" : "check-box-outline-blank"} size={tamanho.iconeGrande} color={todosMarcados ? tema.cor.destaque : tema.cor["borda-forte"]} accessible={false} />
+                <MaterialIcons name={todosMarcados ? "check-box" : "check-box-outline-blank"} size={tamanho.iconeGrande} color={todosMarcados ? tema.cor.link : tema.cor["borda-forte"]} accessible={false} />
                 <Text style={styles.corpoForte}>{`Selecionar todos (${dados.novos.length})`}</Text>
               </Pressable>
             )}
@@ -536,7 +536,7 @@ function LinhaNovo({ novo, aberto, alternar, selecionado, corrigidoPara, desliga
         onPress={aoMarcar}
         style={comHover(styles.caixa, styles.hover, styles.foco)}
       >
-        <MaterialIcons name={selecionado ? "check-box" : "check-box-outline-blank"} size={tamanho.iconeGrande} color={selecionado ? tema.cor.destaque : tema.cor["borda-forte"]} accessible={false} />
+        <MaterialIcons name={selecionado ? "check-box" : "check-box-outline-blank"} size={tamanho.iconeGrande} color={selecionado ? tema.cor.link : tema.cor["borda-forte"]} accessible={false} />
       </Pressable>
       <View style={styles.novoCorpo}>
         <Pressable
@@ -567,7 +567,7 @@ function LinhaNovo({ novo, aberto, alternar, selecionado, corrigidoPara, desliga
         </Pressable>
         {corrigidoPara && (
           <View testID={`corrigido-${novo.atividade_id}`} style={styles.linhaModalidade}>
-            <MaterialIcons name="edit" size={tamanho.iconeMedio} color={tema.cor.destaque} accessible={false} />
+            <MaterialIcons name="edit" size={tamanho.iconeMedio} color={tema.cor.link} accessible={false} />
             <Text style={styles.corpoForte}>{`Corrigido para ${textoDoTipo(corrigidoPara)}`}</Text>
           </View>
         )}
@@ -632,7 +632,7 @@ function Detalhe({ detalhe, testID, irParaNovo, styles, tema }: { detalhe: Detal
         <Pressable testID={`ir-para-novos-${testID}`} accessibilityRole="button" onPress={irParaNovo} style={comFoco(styles.botaoLink, styles.foco)}>
           <View style={styles.linhaModalidade}>
             <Text style={styles.link}>Confirmar ou corrigir em Treinos novos</Text>
-            <MaterialIcons name="chevron-right" size={tamanho.iconeMedio} color={tema.cor.destaque} accessible={false} />
+            <MaterialIcons name="chevron-right" size={tamanho.iconeMedio} color={tema.cor.link} accessible={false} />
           </View>
         </Pressable>
       )}
@@ -654,21 +654,21 @@ function criarEstilos({ cor }: Tema, margem: number = espaco[4]) {
     foco: { outlineWidth: borda.foco, outlineStyle: "solid", outlineColor: cor.foco, outlineOffset: 2 },
     anuncio: { position: "absolute", width: 1, height: 1, overflow: "hidden", opacity: 0 },
     cartaoNovo: { flexDirection: "row", alignItems: "flex-start", gap: espaco[2], paddingLeft: espaco[1] },
-    cartaoSelecionado: { backgroundColor: cor["destaque-suave"], borderColor: cor.destaque, borderWidth: 2 },
+    cartaoSelecionado: { backgroundColor: cor["marca-suave"], borderColor: cor.link, borderWidth: 2 },
     caixa: { width: 48, minHeight: 72, alignItems: "center", paddingTop: espaco[3] },
     novoCorpo: { flex: 1, gap: espaco[2] },
     acoesLinha: { flexDirection: "row", flexWrap: "wrap", gap: espaco[3] },
-    botaoLink: { minHeight: tamanho.alvoMinimo, justifyContent: "center", paddingHorizontal: espaco[1], borderRadius: raio.medio },
-    link: { ...fonte.botao, color: cor.destaque },
+    botaoLink: { minHeight: tamanho.alvoMinimo, justifyContent: "center", paddingHorizontal: espaco[1], borderRadius: raio.bloco },
+    link: { ...fonte.botao, color: cor.link },
     textoBotao: { minHeight: tamanho.alvoMinimo, justifyContent: "center" },
-    selecionarTodos: { minHeight: tamanho.alvoMinimo, flexDirection: "row", alignItems: "center", gap: espaco[2], marginTop: espaco[2], borderRadius: raio.medio },
-    sucesso: { flexDirection: "row", alignItems: "flex-start", gap: espaco[2], backgroundColor: cor["sucesso-suave"], padding: espaco[3], borderRadius: raio.medio, marginTop: espaco[3] },
+    selecionarTodos: { minHeight: tamanho.alvoMinimo, flexDirection: "row", alignItems: "center", gap: espaco[2], marginTop: espaco[2], borderRadius: raio.bloco },
+    sucesso: { flexDirection: "row", alignItems: "flex-start", gap: espaco[2], backgroundColor: cor["sucesso-suave"], padding: espaco[3], borderRadius: raio.bloco, marginTop: espaco[3] },
     sucessoTexto: { ...fonte.corpo, color: cor.sucesso, flex: 1 },
     chipSelecionado: { backgroundColor: cor.superficie },
     cabecalho: { flexDirection: "row", alignItems: "flex-start", justifyContent: "space-between", gap: espaco[3] },
     cabecalhoTextos: { flex: 1 },
     titulo: { ...fonte["titulo-tela"], color: cor.texto },
-    atualizar: { width: tamanho.alvoMinimo, height: tamanho.alvoMinimo, alignItems: "center", justifyContent: "center", borderRadius: raio.medio },
+    atualizar: { width: tamanho.alvoMinimo, height: tamanho.alvoMinimo, alignItems: "center", justifyContent: "center", borderRadius: raio.bloco },
     hover: { backgroundColor: cor["superficie-2"] },
     rotulo: { ...fonte.rotulo, color: cor["texto-2"] },
     resumo: { ...fonte["corpo-forte"], color: cor.texto, marginTop: espaco[2] },
@@ -683,13 +683,13 @@ function criarEstilos({ cor }: Tema, margem: number = espaco[4]) {
       marginTop: espaco[3],
       padding: espaco[4],
       gap: espaco[2],
-      borderRadius: raio.grande,
+      borderRadius: raio.cartao,
       borderWidth: borda.fina,
       borderColor: cor.borda,
       backgroundColor: cor.superficie,
     },
     divisor: { borderTopWidth: borda.fina, borderTopColor: cor.borda, paddingTop: espaco[2] },
-    linhaTreino: { flexDirection: "row", alignItems: "flex-start", gap: espaco[3], borderRadius: raio.medio },
+    linhaTreino: { flexDirection: "row", alignItems: "flex-start", gap: espaco[3], borderRadius: raio.bloco },
     linhaTextos: { flex: 1, gap: espaco[1] },
     linhaModalidade: { flexDirection: "row", alignItems: "center", gap: espaco[2] },
     motivo: { flexDirection: "row", alignItems: "flex-start", gap: espaco[2] },
@@ -697,18 +697,18 @@ function criarEstilos({ cor }: Tema, margem: number = espaco[4]) {
     semMotivo: { paddingVertical: espaco[3], borderBottomWidth: borda.fina, borderBottomColor: cor.borda },
     semNovos: { flexDirection: "row", alignItems: "center", gap: espaco[2], marginTop: espaco[3] },
     tipoLinha: { flexDirection: "row", alignItems: "center", flexWrap: "wrap", gap: espaco[2] },
-    chip: { paddingHorizontal: espaco[2], paddingVertical: espaco[1], borderRadius: raio.pilula, backgroundColor: cor["destaque-suave"] },
-    chipTexto: { ...fonte.rotulo, color: cor.destaque },
-    detalhe: { marginTop: espaco[2], padding: espaco[3], gap: espaco[2], borderRadius: raio.medio, backgroundColor: cor["superficie-2"] },
+    chip: { paddingHorizontal: espaco[2], paddingVertical: espaco[1], borderRadius: raio.pilula, backgroundColor: cor["marca-suave"] },
+    chipTexto: { ...fonte.rotulo, color: cor.link },
+    detalhe: { marginTop: espaco[2], padding: espaco[3], gap: espaco[2], borderRadius: raio.bloco, backgroundColor: cor["superficie-2"] },
     detalheLinha: { flexDirection: "row", flexWrap: "wrap", gap: espaco[2] },
     detalheRotulo: { ...fonte.rotulo, color: cor["texto-2"], minWidth: 96 },
     detalheValor: { flex: 1, minWidth: 160 },
     observacao: { marginTop: espaco[1], paddingLeft: espaco[3], borderLeftWidth: 2, borderLeftColor: cor["borda-forte"] },
-    aviso: { flexDirection: "row", alignItems: "flex-start", gap: espaco[2], backgroundColor: cor["erro-suave"], padding: espaco[3], borderRadius: raio.medio, marginTop: espaco[3] },
+    aviso: { flexDirection: "row", alignItems: "flex-start", gap: espaco[2], backgroundColor: cor["erro-suave"], padding: espaco[3], borderRadius: raio.bloco, marginTop: espaco[3] },
     avisoTexto: { ...fonte.corpo, color: cor.erro, flex: 1 },
     estado: { alignItems: "center", paddingVertical: espaco[7], gap: espaco[2] },
     estadoTitulo: { ...fonte["titulo-secao"], color: cor.texto, textAlign: "center" },
-    botao: { minHeight: tamanho.botaoAltura, justifyContent: "center", paddingHorizontal: espaco[4], borderRadius: raio.medio, backgroundColor: cor.destaque, marginTop: espaco[3] },
-    botaoTexto: { ...fonte.botao, color: cor["sobre-destaque"] },
+    botao: { minHeight: tamanho.botaoAltura, justifyContent: "center", paddingHorizontal: espaco[4], borderRadius: raio.botao, backgroundColor: cor.botao, marginTop: espaco[3] },
+    botaoTexto: { ...fonte.botao, color: cor["sobre-botao"] },
   });
 }

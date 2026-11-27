@@ -269,7 +269,7 @@ export function TelaCheckin({ apiUrl, atletaId, atividadeId, aoVoltar, aoConclui
     <KeyboardAvoidingView behavior={Platform.OS === "ios" ? "padding" : undefined} style={styles.raiz}>
       <ScrollView testID="rolagem-tela" keyboardShouldPersistTaps="handled" contentContainerStyle={styles.container}>
         <Pressable accessibilityRole="button" accessibilityLabel="Voltar" onPress={voltarAtras} style={styles.voltar}>
-          <MaterialIcons name="arrow-back" size={tamanho.iconeMedio} color={tema.cor.destaque} accessible={false} />
+          <MaterialIcons name="arrow-back" size={tamanho.iconeMedio} color={tema.cor.link} accessible={false} />
           <Text style={styles.voltarTexto}>Voltar</Text>
         </Pressable>
 
@@ -489,7 +489,7 @@ function Pergunta(props: {
         <Text style={styles.rotulo}>Pergunta {passo} de 3</Text>
         <View style={styles.segmentos}>
           {[1, 2, 3].map((n) => (
-            <View key={n} style={[styles.segmento, n <= passo && { backgroundColor: tema.cor.destaque }]} />
+            <View key={n} style={[styles.segmento, n <= passo && { backgroundColor: tema.cor.botao }]} />
           ))}
         </View>
       </View>
@@ -565,7 +565,7 @@ function Pergunta(props: {
 
 /** Rótulo do botão primário. Ocupado ("Salvando...") usa `cor.texto-2` sobre `superficie-2`, pois é informação de estado; só desligado usa `cor.texto-desligado`. */
 function Rotulo({ styles, tema, ocupado, ocupadoTexto, texto, desligado = false }: { styles: Estilos; tema: Tema; ocupado: boolean; ocupadoTexto: string; texto: string; desligado?: boolean }) {
-  const cor = ocupado ? tema.cor["texto-2"] : desligado ? tema.cor["texto-desligado"] : tema.cor["sobre-destaque"];
+  const cor = ocupado ? tema.cor["texto-2"] : desligado ? tema.cor["texto-desligado"] : tema.cor["sobre-botao"];
   return ocupado ? (
     <View style={styles.linhaCentro}>
       <ActivityIndicator color={cor} />
@@ -666,7 +666,7 @@ function Edicao(props: {
       onPress={() => props.aoMudar(alvo)}
       style={styles.mudar}
     >
-      <MaterialIcons name="edit" size={tamanho.iconeMedio} color={tema.cor.destaque} accessible={false} />
+      <MaterialIcons name="edit" size={tamanho.iconeMedio} color={tema.cor.link} accessible={false} />
       <Text style={styles.botaoTextoRotulo}>Mudar</Text>
     </Pressable>
   );
@@ -706,7 +706,7 @@ function Edicao(props: {
           <MaterialIcons
             name={props.obs.nadaARelatar ? "radio-button-checked" : "radio-button-unchecked"}
             size={tamanho.iconeGrande}
-            color={props.obs.nadaARelatar ? tema.cor.destaque : tema.cor["texto-2"]}
+            color={props.obs.nadaARelatar ? tema.cor.link : tema.cor["texto-2"]}
             accessible={false}
           />
           <Text style={styles.corpo}>Nada a relatar</Text>
@@ -738,7 +738,7 @@ function Edicao(props: {
 }
 
 function criarEstilos({ cor }: Tema, margem: number = espaco[4]) {
-  const botao = { minHeight: tamanho.botaoAltura, justifyContent: "center", alignItems: "center", paddingHorizontal: espaco[4], borderRadius: raio.medio } as const;
+  const botao = { minHeight: tamanho.botaoAltura, justifyContent: "center", alignItems: "center", paddingHorizontal: espaco[4], borderRadius: raio.botao } as const;
   return StyleSheet.create({
     raiz: { flex: 1, backgroundColor: cor.fundo },
     container: {
@@ -750,7 +750,7 @@ function criarEstilos({ cor }: Tema, margem: number = espaco[4]) {
       alignSelf: "center",
     },
     voltar: { flexDirection: "row", alignItems: "center", gap: espaco[2], minHeight: tamanho.alvoMinimo, alignSelf: "flex-start" },
-    voltarTexto: { ...fonte.botao, color: cor.destaque },
+    voltarTexto: { ...fonte.botao, color: cor.link },
     titulo: { ...fonte["titulo-tela"], color: cor.texto },
     tituloSecao: { ...fonte["titulo-secao"], color: cor.texto },
     cabecalho: { flexDirection: "row", flexWrap: "wrap", alignItems: "center", columnGap: espaco[3], rowGap: espaco[2], marginTop: espaco[2] },
@@ -785,17 +785,17 @@ function criarEstilos({ cor }: Tema, margem: number = espaco[4]) {
       gap: espaco[2],
       marginTop: espaco[3],
       padding: espaco[3],
-      borderRadius: raio.medio,
+      borderRadius: raio.bloco,
       backgroundColor: cor["superficie-2"],
     },
     avisoTexto: { ...fonte.corpo, color: cor.texto, flex: 1 },
-    botaoPrimario: { ...botao, backgroundColor: cor.destaque, alignSelf: "flex-start" },
-    botaoPrimarioTexto: { ...fonte.botao, color: cor["sobre-destaque"] },
+    botaoPrimario: { ...botao, backgroundColor: cor.botao, alignSelf: "flex-start" },
+    botaoPrimarioTexto: { ...fonte.botao, color: cor["sobre-botao"] },
     botaoDesligado: { backgroundColor: cor["superficie-2"] },
     botaoSecundario: { ...botao, borderWidth: borda.fina, borderColor: cor["borda-forte"], backgroundColor: cor.superficie },
     botaoSecundarioTexto: { ...fonte.botao, color: cor.texto },
     botaoTexto: { ...botao, flexDirection: "row", gap: espaco[1], minWidth: tamanho.alvoMinimo },
-    botaoTextoRotulo: { ...fonte.botao, color: cor.destaque },
+    botaoTextoRotulo: { ...fonte.botao, color: cor.link },
     larguraTotal: { alignSelf: "stretch", marginTop: espaco[4] },
     linhaCentro: { flexDirection: "row", alignItems: "center", gap: espaco[2] },
     campo: {
@@ -804,7 +804,7 @@ function criarEstilos({ cor }: Tema, margem: number = espaco[4]) {
       padding: espaco[3],
       ...fonte.corpo,
       color: cor.texto,
-      borderRadius: raio.medio,
+      borderRadius: raio.bloco,
       borderWidth: borda.fina,
       borderColor: cor["borda-forte"],
       backgroundColor: cor.superficie,
@@ -813,7 +813,7 @@ function criarEstilos({ cor }: Tema, margem: number = espaco[4]) {
     cartao: {
       marginTop: espaco[4],
       padding: espaco[4],
-      borderRadius: raio.grande,
+      borderRadius: raio.cartao,
       borderWidth: borda.fina,
       borderColor: cor.borda,
       backgroundColor: cor.superficie,

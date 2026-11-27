@@ -304,7 +304,7 @@ export function TelaSemanaPadrao({ apiUrl, atletaId, aoVoltar, fetchFn, hojeFn }
       <ScrollView testID="rolagem-tela" contentContainerStyle={styles.container} keyboardShouldPersistTaps="handled">
         {aoVoltar && (
           <Pressable accessibilityRole="button" accessibilityLabel="Voltar" onPress={pedirVoltar} style={styles.voltar}>
-            <MaterialIcons name="arrow-back" size={tamanho.iconeMedio} color={tema.cor.destaque} />
+            <MaterialIcons name="arrow-back" size={tamanho.iconeMedio} color={tema.cor.link} />
             <Text style={styles.voltarTexto}>Voltar</Text>
           </Pressable>
         )}
@@ -455,7 +455,7 @@ export function TelaSemanaPadrao({ apiUrl, atletaId, aoVoltar, fetchFn, hojeFn }
                       <MaterialIcons
                         name={marcado ? "radio-button-checked" : "radio-button-unchecked"}
                         size={tamanho.iconeGrande}
-                        color={marcado ? tema.cor.destaque : tema.cor["texto-2"]}
+                        color={marcado ? tema.cor.link : tema.cor["texto-2"]}
                         accessible={false}
                       />
                       <Text style={styles.radioTexto}>{nome}</Text>
@@ -530,7 +530,7 @@ export function TelaSemanaPadrao({ apiUrl, atletaId, aoVoltar, fetchFn, hojeFn }
                         onPress={() => setFolha({ tipo: "modalidade", dia })}
                         style={styles.adicionar}
                       >
-                        <MaterialIcons name="add" size={tamanho.iconeMedio} color={tema.cor.destaque} accessible={false} />
+                        <MaterialIcons name="add" size={tamanho.iconeMedio} color={tema.cor.link} accessible={false} />
                         <Text style={styles.adicionarTexto}>Adicionar treino</Text>
                       </Pressable>
                     )}
@@ -557,7 +557,7 @@ export function TelaSemanaPadrao({ apiUrl, atletaId, aoVoltar, fetchFn, hojeFn }
                       }, ${quem}, ${n} ${n === 1 ? "treino" : "treinos"} por semana. Copiar para o formulário`}
                       disabled={salvando}
                       onPress={() => tocarVigencia(v.vigente_desde)}
-                      style={({ pressed }) => [styles.vigencia, pressed && { backgroundColor: tema.cor["destaque-suave"] }]}
+                      style={({ pressed }) => [styles.vigencia, pressed && { backgroundColor: tema.cor["marca-suave"] }]}
                     >
                       <View style={{ flex: 1 }}>
                         <View style={styles.vigenciaTopo}>
@@ -589,13 +589,13 @@ export function TelaSemanaPadrao({ apiUrl, atletaId, aoVoltar, fetchFn, hojeFn }
                 accessibilityLiveRegion="polite"
                 style={[
                   styles.aviso,
-                  { backgroundColor: aviso.tipo === "erro" ? tema.cor["erro-suave"] : aviso.tipo === "salvo" ? tema.cor["sucesso-suave"] : tema.cor["destaque-suave"] },
+                  { backgroundColor: aviso.tipo === "erro" ? tema.cor["erro-suave"] : aviso.tipo === "salvo" ? tema.cor["sucesso-suave"] : tema.cor["marca-suave"] },
                 ]}
               >
                 <MaterialIcons
                   name={aviso.tipo === "erro" ? "error-outline" : aviso.tipo === "salvo" ? "check-circle" : "info-outline"}
                   size={tamanho.iconeMedio}
-                  color={aviso.tipo === "erro" ? tema.cor.erro : aviso.tipo === "salvo" ? tema.cor.sucesso : tema.cor.destaque}
+                  color={aviso.tipo === "erro" ? tema.cor.erro : aviso.tipo === "salvo" ? tema.cor.sucesso : tema.cor.link}
                   accessible={false}
                 />
                 <View style={{ flex: 1 }}>
@@ -624,13 +624,13 @@ export function TelaSemanaPadrao({ apiUrl, atletaId, aoVoltar, fetchFn, hojeFn }
                 styles.salvar,
                 motivoDesligado || salvando
                   ? { backgroundColor: tema.cor["superficie-2"] }
-                  : { backgroundColor: pressed ? tema.cor["destaque-pressionado"] : tema.cor.destaque },
+                  : { backgroundColor: pressed ? tema.cor["botao-pressionado"] : tema.cor.botao },
               ]}
             >
               <Text
                 style={[
                   styles.botaoPrimarioTexto,
-                  { color: motivoDesligado || salvando ? tema.cor["texto-desligado"] : tema.cor["sobre-destaque"] },
+                  { color: motivoDesligado || salvando ? tema.cor["texto-desligado"] : tema.cor["sobre-botao"] },
                 ]}
               >
                 {salvando ? "Salvando..." : "Salvar semana"}
@@ -664,7 +664,7 @@ export function TelaSemanaPadrao({ apiUrl, atletaId, aoVoltar, fetchFn, hojeFn }
                 <MaterialIcons
                   name={marcado ? "radio-button-checked" : "radio-button-unchecked"}
                   size={tamanho.iconeGrande}
-                  color={marcado ? tema.cor.destaque : tema.cor["texto-2"]}
+                  color={marcado ? tema.cor.link : tema.cor["texto-2"]}
                   accessible={false}
                 />
                 <Text style={styles.opcaoTexto}>{t.nome}</Text>
@@ -792,7 +792,7 @@ function criarEstilos({ cor }: Tema, margem: number = espaco[4]) {
       minHeight: tamanho.alvoMinimo,
       paddingRight: espaco[2],
     },
-    voltarTexto: { ...fonte.botao, color: cor.destaque },
+    voltarTexto: { ...fonte.botao, color: cor.link },
     titulo: { ...fonte["titulo-tela"], color: cor.texto },
     subtitulo: { ...fonte.corpo, color: cor["texto-2"], marginTop: espaco[1] },
     texto: { ...fonte.corpo, color: cor["texto-2"] },
@@ -806,25 +806,25 @@ function criarEstilos({ cor }: Tema, margem: number = espaco[4]) {
       justifyContent: "center",
       alignItems: "center",
       paddingHorizontal: espaco[4],
-      borderRadius: raio.medio,
-      backgroundColor: cor.destaque,
+      borderRadius: raio.botao,
+      backgroundColor: cor.botao,
     },
-    botaoPrimarioTexto: { ...fonte.botao, color: cor["sobre-destaque"] },
+    botaoPrimarioTexto: { ...fonte.botao, color: cor["sobre-botao"] },
     botaoSecundario: {
       minHeight: tamanho.alvoMinimo,
       justifyContent: "center",
       alignItems: "center",
       paddingHorizontal: espaco[4],
-      borderRadius: raio.medio,
+      borderRadius: raio.bloco,
       borderWidth: borda.fina,
       borderColor: cor["borda-forte"],
     },
-    botaoSecundarioTexto: { ...fonte.botao, color: cor.destaque },
+    botaoSecundarioTexto: { ...fonte.botao, color: cor.link },
     cartao: {
       marginTop: espaco[4],
       padding: espaco[4],
       gap: espaco[2],
-      borderRadius: raio.grande,
+      borderRadius: raio.cartao,
       borderWidth: borda.fina,
       borderColor: cor.borda,
       backgroundColor: cor.superficie,
@@ -834,7 +834,7 @@ function criarEstilos({ cor }: Tema, margem: number = espaco[4]) {
       ...fonte.corpo,
       minHeight: tamanho.botaoAltura,
       paddingHorizontal: espaco[3],
-      borderRadius: raio.medio,
+      borderRadius: raio.botao,
       borderWidth: borda.fina,
       borderColor: cor["borda-forte"],
       color: cor.texto,
@@ -850,9 +850,9 @@ function criarEstilos({ cor }: Tema, margem: number = espaco[4]) {
       gap: espaco[2],
       minHeight: tamanho.botaoAltura,
       paddingHorizontal: espaco[3],
-      borderRadius: raio.medio,
+      borderRadius: raio.botao,
     },
-    radioMarcado: { backgroundColor: cor["destaque-suave"], borderWidth: borda.foco, borderColor: cor.destaque },
+    radioMarcado: { backgroundColor: cor["marca-suave"], borderWidth: borda.foco, borderColor: cor.link },
     radioLivre: { borderWidth: borda.fina, borderColor: cor["borda-forte"] },
     radioTexto: { ...fonte.corpo, color: cor.texto },
     dia: { paddingVertical: espaco[2], gap: espaco[2] },
@@ -878,7 +878,7 @@ function criarEstilos({ cor }: Tema, margem: number = espaco[4]) {
       justifyContent: "space-between",
       minHeight: tamanho.botaoAltura,
       paddingHorizontal: espaco[3],
-      borderRadius: raio.medio,
+      borderRadius: raio.botao,
       borderWidth: borda.fina,
       borderColor: cor["borda-forte"],
     },
@@ -897,7 +897,7 @@ function criarEstilos({ cor }: Tema, margem: number = espaco[4]) {
       minHeight: tamanho.alvoMinimo,
       paddingRight: espaco[2],
     },
-    adicionarTexto: { ...fonte.botao, color: cor.destaque },
+    adicionarTexto: { ...fonte.botao, color: cor.link },
     vigencia: {
       flexDirection: "row",
       alignItems: "center",
@@ -910,11 +910,11 @@ function criarEstilos({ cor }: Tema, margem: number = espaco[4]) {
     vigenciaData: { ...fonte["corpo-forte"], color: cor.texto },
     selo: {
       ...fonte.legenda,
-      color: cor.destaque,
+      color: cor.link,
       paddingHorizontal: espaco[2],
       borderRadius: raio.pilula,
       borderWidth: borda.fina,
-      borderColor: cor.destaque,
+      borderColor: cor.link,
     },
     // Na web larga a barra acompanha a coluna do conteúdo (720 mais as margens), centralizada.
     barra: {
@@ -930,13 +930,13 @@ function criarEstilos({ cor }: Tema, margem: number = espaco[4]) {
       padding: margem,
       gap: espaco[2],
     },
-    aviso: { flexDirection: "row", gap: espaco[2], padding: espaco[3], borderRadius: raio.medio },
+    aviso: { flexDirection: "row", gap: espaco[2], padding: espaco[3], borderRadius: raio.bloco },
     avisoTexto: { ...fonte.corpo, color: cor.texto },
     salvar: {
       minHeight: tamanho.botaoAltura,
       justifyContent: "center",
       alignItems: "center",
-      borderRadius: raio.medio,
+      borderRadius: raio.botao,
     },
     fundoModal: { flex: 1, justifyContent: "flex-end", backgroundColor: "rgba(0,0,0,0.4)" },
     folha: {
@@ -945,8 +945,8 @@ function criarEstilos({ cor }: Tema, margem: number = espaco[4]) {
       alignSelf: "center",
       padding: espaco[4],
       gap: espaco[1],
-      borderTopLeftRadius: raio.grande,
-      borderTopRightRadius: raio.grande,
+      borderTopLeftRadius: raio.cartao,
+      borderTopRightRadius: raio.cartao,
       backgroundColor: cor.superficie,
     },
     folhaTopo: { flexDirection: "row", justifyContent: "space-between", alignItems: "center" },
@@ -962,7 +962,7 @@ function criarEstilos({ cor }: Tema, margem: number = espaco[4]) {
       margin: margem,
       padding: espaco[4],
       gap: espaco[3],
-      borderRadius: raio.grande,
+      borderRadius: raio.cartao,
       backgroundColor: cor.superficie,
       alignSelf: "center",
       width: "90%",

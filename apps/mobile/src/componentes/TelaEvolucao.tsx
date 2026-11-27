@@ -141,11 +141,11 @@ export function TelaEvolucao({
           accessibilityRole="button"
           accessibilityLabel="Semana-padrão"
           onPress={aoAbrirSemanaPadrao}
-          style={({ pressed }) => [styles.verTreino, styles.semanaPadrao, pressed && { backgroundColor: tema.cor["destaque-suave"] }]}
+          style={({ pressed }) => [styles.verTreino, styles.semanaPadrao, pressed && { backgroundColor: tema.cor["marca-suave"] }]}
         >
-          <MaterialIcons name="event" size={tamanho.iconeMedio} color={tema.cor.destaque} accessible={false} />
+          <MaterialIcons name="event" size={tamanho.iconeMedio} color={tema.cor.link} accessible={false} />
           <Text style={styles.verTreinoTexto}>Semana-padrão</Text>
-          <MaterialIcons name="chevron-right" size={tamanho.iconeMedio} color={tema.cor.destaque} accessible={false} />
+          <MaterialIcons name="chevron-right" size={tamanho.iconeMedio} color={tema.cor.link} accessible={false} />
         </Pressable>
       )}
       {aoAbrirCheckinsPendentes && (
@@ -154,11 +154,11 @@ export function TelaEvolucao({
           accessibilityRole="button"
           accessibilityLabel={pendentes ? `Check-ins pendentes, ${pendentes}` : "Check-ins pendentes"}
           onPress={aoAbrirCheckinsPendentes}
-          style={({ pressed }) => [styles.verTreino, styles.semanaPadrao, pressed && { backgroundColor: tema.cor["destaque-suave"] }]}
+          style={({ pressed }) => [styles.verTreino, styles.semanaPadrao, pressed && { backgroundColor: tema.cor["marca-suave"] }]}
         >
-          <MaterialIcons name="assignment" size={tamanho.iconeMedio} color={tema.cor.destaque} accessible={false} />
+          <MaterialIcons name="assignment" size={tamanho.iconeMedio} color={tema.cor.link} accessible={false} />
           <Text style={styles.verTreinoTexto}>Check-ins pendentes{pendentes ? ` · ${pendentes}` : ""}</Text>
-          <MaterialIcons name="chevron-right" size={tamanho.iconeMedio} color={tema.cor.destaque} accessible={false} />
+          <MaterialIcons name="chevron-right" size={tamanho.iconeMedio} color={tema.cor.link} accessible={false} />
         </Pressable>
       )}
       {(!ocultarEnviarFit || vazio) && (
@@ -193,7 +193,7 @@ export function TelaEvolucao({
             <Pressable
               accessibilityRole="button"
               onPress={tentarDeNovo}
-              style={({ pressed }) => [styles.botao, pressed && { backgroundColor: tema.cor["destaque-pressionado"] }]}
+              style={({ pressed }) => [styles.botao, pressed && { backgroundColor: tema.cor["botao-pressionado"] }]}
             >
               <Text style={styles.botaoTexto}>Tentar de novo</Text>
             </Pressable>
@@ -257,10 +257,10 @@ function Sucesso({
                 accessibilityRole="button"
                 accessibilityLabel="Ver treino"
                 onPress={() => aoAbrirTreino(selecionadaId)}
-                style={({ pressed }) => [styles.verTreino, pressed && { backgroundColor: tema.cor["destaque-suave"] }]}
+                style={({ pressed }) => [styles.verTreino, pressed && { backgroundColor: tema.cor["marca-suave"] }]}
               >
                 <Text style={styles.verTreinoTexto}>Ver treino</Text>
-                <MaterialIcons name="chevron-right" size={tamanho.iconeMedio} color={tema.cor.destaque} accessible={false} />
+                <MaterialIcons name="chevron-right" size={tamanho.iconeMedio} color={tema.cor.link} accessible={false} />
               </Pressable>
             )}
           </View>
@@ -286,7 +286,7 @@ function Sucesso({
                   onPress={() => setSelecionadaId(s.atividade_id)}
                   style={({ pressed }) => [
                     styles.linha,
-                    (selecionada || pressed) && { backgroundColor: tema.cor["destaque-suave"] },
+                    (selecionada || pressed) && { backgroundColor: tema.cor["marca-suave"] },
                   ]}
                 >
                   <Text style={[styles.celula, larga && styles.colData]}>{dataCurta(s.data)}</Text>
@@ -339,27 +339,27 @@ function criarEstilos({ cor }: Tema, margem: number = espaco[4]) {
       minHeight: tamanho.botaoAltura,
       justifyContent: "center",
       paddingHorizontal: espaco[4],
-      borderRadius: raio.medio,
-      backgroundColor: cor.destaque,
+      borderRadius: raio.botao,
+      backgroundColor: cor.botao,
     },
-    botaoTexto: { ...fonte.botao, color: cor["sobre-destaque"] },
+    botaoTexto: { ...fonte.botao, color: cor["sobre-botao"] },
     verTreino: {
       flexDirection: "row",
       alignItems: "center",
       alignSelf: "flex-start",
       minHeight: tamanho.botaoAltura,
       paddingRight: espaco[2],
-      borderRadius: raio.medio,
+      borderRadius: raio.botao,
     },
-    verTreinoTexto: { ...fonte.botao, color: cor.destaque },
+    verTreinoTexto: { ...fonte.botao, color: cor.link },
     semanaPadrao: { gap: espaco[2], marginBottom: espaco[2] },
-    avisoPedido: { flexDirection: "row", alignItems: "center", gap: espaco[2], marginBottom: espaco[2], paddingLeft: espaco[3], borderRadius: raio.medio, borderWidth: borda.fina, borderColor: cor.borda, backgroundColor: cor["superficie-2"] },
+    avisoPedido: { flexDirection: "row", alignItems: "center", gap: espaco[2], marginBottom: espaco[2], paddingLeft: espaco[3], borderRadius: raio.bloco, borderWidth: borda.fina, borderColor: cor.borda, backgroundColor: cor["superficie-2"] },
     avisoPedidoTexto: { ...fonte.corpo, flex: 1, color: cor.texto, paddingVertical: espaco[2] },
     avisoPedidoBotao: { minHeight: tamanho.botaoAltura, minWidth: tamanho.botaoAltura, alignItems: "center", justifyContent: "center", paddingHorizontal: espaco[3] },
     cartao: {
       marginTop: espaco[4],
       padding: espaco[4],
-      borderRadius: raio.grande,
+      borderRadius: raio.cartao,
       borderWidth: borda.fina,
       borderColor: cor.borda,
       backgroundColor: cor.superficie,

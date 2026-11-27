@@ -99,7 +99,7 @@ describe("tela de evolução", () => {
     d.eixos = null;
     await render(tela(fetchCom(200, d)));
     await screen.findByTestId("estado-vazio");
-    expect(fundo()).toBe("#0B6A6E");
+    expect(fundo()).toBe("#12200A");
   });
 
   it("carregando: esqueleto dos cartões e o texto", async () => {
