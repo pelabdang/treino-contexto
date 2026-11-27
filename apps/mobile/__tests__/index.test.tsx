@@ -189,6 +189,7 @@ describe("Evolução v1: o gráfico", () => {
     await screen.findByTestId("grafico-serie");
     expect(screen.getByTestId("faixa-normal")).toBeTruthy();
     expect(noGrafico("Seu normal 5:35 a 5:50")).toBe(true);
+    expect(screen.getAllByTestId("borda-faixa")).toHaveLength(2); // as duas bordas da faixa, em cor.link (contraste 3:1)
     expect(screen.getByTestId("marca-melhor")).toBeTruthy();
     expect(screen.getByTestId("marca-fora")).toBeTruthy();
     expect(screen.getByTestId("linha-serie")).toBeTruthy();
