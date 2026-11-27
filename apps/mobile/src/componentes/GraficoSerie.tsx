@@ -113,7 +113,7 @@ export function GraficoSerie({ serie, selecionado, aoSelecionar }: Props) {
           {ref && eixo && (
             <G testID="faixa-normal">
               <Rect x={MARGEM.esq} y={y(ref.maximo)} width={largura - MARGEM.esq - MARGEM.dir} height={Math.max(y(ref.minimo) - y(ref.maximo), 1)} fill={cor["marca-suave"]} />
-              {[y(ref.maximo), y(ref.minimo)].map((yy, i) => (
+              {[y(ref.maximo), y(ref.minimo)].map((v) => Math.round(v) + 0.5).map((yy, i) => ( // meio pixel: a linha de 1 não borra em dois
                 <Line key={i} testID="borda-faixa" x1={MARGEM.esq} x2={largura - MARGEM.dir} y1={yy} y2={yy} stroke={cor.link} strokeWidth={1} />
               ))}
               <SvgTexto x={largura - MARGEM.dir - 6} y={Math.max(y(ref.maximo) + 14, MARGEM.topo + 12)} fontSize={11.5} fontFamily={familia.medio} fill={cor.link} textAnchor="end">
