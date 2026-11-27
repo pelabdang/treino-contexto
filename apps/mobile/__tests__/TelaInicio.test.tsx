@@ -1,4 +1,5 @@
 import type { Atividade } from "@treino/api-client";
+import { StyleSheet } from "react-native";
 import { fireEvent, render, screen, waitFor, within } from "@testing-library/react-native";
 
 import { atividades } from "../__fixtures__/atividades";
@@ -240,6 +241,14 @@ describe("início v4: Seus números", () => {
     const barras = within(await screen.findByTestId("barras-volume_4_semanas"));
     for (const t of ["40 km", "03/02", "25 km", "24/02"]) expect(barras.getByText(t)).toBeTruthy();
     expect(barras.getAllByText(/ km$/)).toHaveLength(4);
+  });
+
+  it("a altura de cada barra segue o altura_pct da API (o app só desenha)", async () => {
+    await render(comNumeros());
+    const barras = within(await screen.findByTestId("barras-volume_4_semanas"));
+    const alturas = [0, 1, 2, 3].map((i) => StyleSheet.flatten(barras.getByTestId(`barra-altura-${i}`).props.style).height);
+    expect(alturas).toEqual(["100%", "88%", "75%", "63%"]);
+    expect(new Set(alturas).size).toBe(4); // não são mais todas iguais
   });
 
   it("cada cartão é um botão com o rótulo falado da API, e o toque abre o destino dele", async () => {

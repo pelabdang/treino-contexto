@@ -84,7 +84,10 @@ function Cartao({ cartao, aoAbrir, styles, tema, sozinho }: { cartao: CartaoInic
           {cartao.barras.map((b, i) => (
             <View key={`${b.data_texto}-${i}`} style={styles.barraColuna}>
               <Text style={styles.barraValor}>{b.valor_texto}</Text>
-              <View style={[styles.barra, b.destaque ? styles.barraDestaque : styles.barraComum]} />
+              <View testID={`barra-${i}`} style={styles.barraTrilho}>
+                {/* `altura_pct` (0 a 100, relativo à maior) vem da API: o app só desenha. Mínimo de 2 px para a barra nunca sumir. */}
+                <View testID={`barra-altura-${i}`} style={[styles.barra, { height: `${b.altura_pct}%`, minHeight: 2 }, b.destaque ? styles.barraDestaque : styles.barraComum]} />
+              </View>
               <Text style={styles.barraData}>{b.data_texto}</Text>
             </View>
           ))}
@@ -118,7 +121,8 @@ function criarEstilos({ cor }: Tema) {
     barras: { flexDirection: "row", alignItems: "flex-end", gap: espaco[3], paddingTop: espaco[1] },
     barraColuna: { flex: 1, alignItems: "center", gap: 2 },
     barraValor: { ...fonte.eixo, color: cor.texto },
-    barra: { width: "100%", height: 32, borderRadius: raio.pequeno },
+    barraTrilho: { width: "100%", height: 48, justifyContent: "flex-end" },
+    barra: { width: "100%", borderRadius: raio.pequeno },
     barraDestaque: { backgroundColor: cor["grafico.pace"] },
     barraComum: { backgroundColor: cor["superficie-2"] },
     barraData: { ...fonte.eixo, color: cor["texto-2"] },
