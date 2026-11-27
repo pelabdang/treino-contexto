@@ -52,7 +52,7 @@ export function BarraDeAbas({ abas, ativa, aoEscolher, lateral, selos = {} }: Pr
             style={comFoco([styles.aba, marcada && styles.abaMarcada], styles.foco)}
           >
             <View>
-              <MaterialIcons name={a.icone} size={tamanho.iconeGrande} color={marcada ? tema.cor.destaque : tema.cor["texto-2"]} accessible={false} />
+              <MaterialIcons name={a.icone} size={tamanho.iconeGrande} color={marcada ? tema.cor.link : tema.cor["texto-2"]} accessible={false} />
               {selo > 0 && (
                 <View testID={`selo-${a.rota}`} style={styles.selo}>
                   <Text style={styles.seloTexto}>{selo}</Text>
@@ -73,13 +73,13 @@ function criarEstilos({ cor }: Tema, lateral: boolean) {
       ? { width: 200, paddingVertical: espaco[4], paddingHorizontal: espaco[3], gap: espaco[1], backgroundColor: cor.superficie, borderRightWidth: borda.fina, borderRightColor: cor.borda }
       : { flexDirection: "row", backgroundColor: cor.superficie, borderTopWidth: borda.fina, borderTopColor: cor.borda },
     aba: lateral
-      ? { flexDirection: "row", alignItems: "center", gap: espaco[3], minHeight: tamanho.botaoAltura, paddingHorizontal: espaco[3], borderRadius: raio.medio }
+      ? { flexDirection: "row", alignItems: "center", gap: espaco[3], minHeight: tamanho.botaoAltura, paddingHorizontal: espaco[3], borderRadius: raio.botao }
       : { flex: 1, minHeight: 56, alignItems: "center", justifyContent: "center", gap: 2, paddingVertical: espaco[1] },
-    abaMarcada: { backgroundColor: cor["destaque-suave"] },
+    abaMarcada: { backgroundColor: cor["marca-suave"] },
     rotulo: { ...fonte.rotulo, color: cor["texto-2"] },
-    rotuloMarcado: { color: cor.destaque, fontFamily: fonte["corpo-forte"].fontFamily },
-    selo: { position: "absolute", top: -4, right: -10, minWidth: 18, height: 18, borderRadius: 9, paddingHorizontal: 4, alignItems: "center", justifyContent: "center", backgroundColor: cor.destaque },
-    seloTexto: { ...fonte.legenda, lineHeight: 16, color: cor["sobre-destaque"], fontFamily: fonte["corpo-forte"].fontFamily },
+    rotuloMarcado: { color: cor.link, fontFamily: fonte["corpo-forte"].fontFamily },
+    selo: { position: "absolute", top: -4, right: -10, minWidth: 18, height: 18, borderRadius: 9, paddingHorizontal: 4, alignItems: "center", justifyContent: "center", backgroundColor: cor.erro },
+    seloTexto: { ...fonte.legenda, lineHeight: 16, color: cor["sobre-erro"], fontFamily: fonte["corpo-forte"].fontFamily },
     foco: { outlineWidth: borda.foco, outlineStyle: "solid", outlineColor: cor.foco, outlineOffset: -2 },
   });
 }

@@ -71,7 +71,7 @@ export function CartaoNormal({ linhaBase }: { linhaBase: Atividade["linha_base"]
 
 function criarEstilos({ cor }: Tema) {
   return StyleSheet.create({
-    cartao: { marginTop: espaco[4], padding: espaco[4], borderRadius: raio.grande, borderWidth: borda.fina, borderColor: cor.borda, backgroundColor: cor.superficie },
+    cartao: { marginTop: espaco[4], padding: espaco[4], borderRadius: raio.cartao, borderWidth: borda.fina, borderColor: cor.borda, backgroundColor: cor.superficie },
     titulo: { ...fonte["titulo-secao"], color: cor.texto, marginBottom: espaco[2] },
     metrica: { paddingVertical: espaco[2], gap: espaco[1] },
     separador: { borderTopWidth: borda.fina, borderTopColor: cor.borda },
@@ -83,7 +83,7 @@ function criarEstilos({ cor }: Tema) {
     palavra: { ...fonte.rotulo },
     texto: { ...fonte.corpo, color: cor["texto-2"] },
     legenda: { ...fonte.legenda, marginTop: espaco[3], color: cor["texto-2"] },
-    aviso: { flexDirection: "row", alignItems: "flex-start", gap: espaco[2], padding: espaco[3], borderRadius: raio.medio, backgroundColor: cor["superficie-2"] },
+    aviso: { flexDirection: "row", alignItems: "flex-start", gap: espaco[2], padding: espaco[3], borderRadius: raio.bloco, backgroundColor: cor["superficie-2"] },
     avisoTexto: { ...fonte.corpo, color: cor.texto, flex: 1 },
   });
 }

@@ -198,7 +198,7 @@ function criarEstilos({ cor }: Tema) {
       marginTop: espaco[4],
       padding: espaco[4],
       gap: espaco[3],
-      borderRadius: raio.grande,
+      borderRadius: raio.cartao,
       borderWidth: borda.fina,
       borderColor: cor.borda,
       backgroundColor: cor.superficie,

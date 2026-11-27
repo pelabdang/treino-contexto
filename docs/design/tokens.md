@@ -1,9 +1,9 @@
 ---
 tipo: design
-status: rascunho
+status: aprovado
 dono: lia
-atualizado: 2026-11-16
-links: [[design/guia-visual]], [[design/telas/evolucao-tiros]], [[modulos/mobile]]
+atualizado: 2026-11-27
+links: [[design/identidade-visual-v3]], [[design/guia-visual]], [[design/telas/evolucao-tiros]], [[modulos/mobile]]
 ---
 # Design: tokens do tema
 
@@ -19,25 +19,29 @@ Tema claro e escuro. O app segue o tema do sistema.
 
 | token | claro | escuro | uso |
 |---|---|---|---|
-| `cor.fundo` | `#F6F5F1` | `#121517` | fundo da tela ("papel") |
-| `cor.superficie` | `#FFFFFF` | `#1C2023` | cartão, cabeçalho, área do gráfico |
-| `cor.superficie-2` | `#ECEAE4` | `#262B2F` | realce dentro do cartão: detalhe da sessão, esqueleto do carregando |
-| `cor.borda` | `#DEDBD3` | `#33393E` | divisória e contorno do cartão (decorativa, sem mínimo) |
+| `cor.fundo` | `#F6F5F1` | `#0F1214` | fundo da tela ("papel") |
+| `cor.superficie` | `#FFFFFF` | `#181C1F` | cartão, cabeçalho, área do gráfico |
+| `cor.superficie-2` | `#ECEAE4` | `#232A2E` | realce dentro do cartão: detalhe da sessão, esqueleto do carregando |
+| `cor.borda` | `#DEDBD3` | `#2C3236` | divisória e contorno do cartão (decorativa, sem mínimo) |
 | `cor.borda-forte` | `#7D7A72` | `#80878D` | contorno do botão secundário e de campo (mínimo 3:1) |
 | `cor.texto` | `#1A1D1F` | `#ECEEEF` | texto principal e números |
 | `cor.texto-2` | `#4C5257` | `#B4BBC0` | texto secundário, rótulo, eixo, rodapé |
 | `cor.texto-desligado` | `#9A9890` | `#5E656A` | texto de botão desligado (a WCAG não exige contraste de item desligado) |
-| `cor.destaque` | `#0B6A6E` | `#5CC8C4` | botão primário, link, item selecionado |
-| `cor.destaque-pressionado` | `#08514F` | `#86DAD6` | botão primário pressionado |
-| `cor.sobre-destaque` | `#FFFFFF` | `#0B1A1B` | texto e ícone sobre o destaque |
-| `cor.destaque-suave` | `#DCEFEE` | `#163536` | fundo de item selecionado |
-| `cor.foco` | `#0B6A6E` | `#5CC8C4` | anel de foco (teclado na web) |
+| `cor.marca` | `#C6F432` | `#D2FF3C` | volt: ícone do app, aba ativa, faixa de check-in, símbolo do logo. Nunca texto sobre fundo claro |
+| `cor.sobre-marca` | `#12200A` | `#121A05` | texto e ícone sobre `cor.marca` |
+| `cor.botao` | `#12200A` | `#D2FF3C` | botão primário (claro: tinta; escuro: volt) |
+| `cor.botao-pressionado` | `#2C4416` | `#B5DE2B` | botão primário pressionado (proposta do Rafa, aprovada pela Lia) |
+| `cor.sobre-botao` | `#C6F432` | `#121A05` | rótulo e ícone sobre `cor.botao` |
+| `cor.link` | `#2F6600` | `#D2FF3C` | link, ação em texto, ícone de ação, item selecionado; substitui o teal `destaque` da v2 |
+| `cor.marca-suave` | `#EEF9C9` | `#232B10` | fundo de item selecionado, selo "No normal", faixa de análise |
+| `cor.foco` | `#2F6600` | `#D2FF3C` | anel de foco (teclado na web); igual a `cor.link` |
 | `cor.sucesso` | `#1B6E3A` | `#6FD08E` | texto e ícone de sucesso |
 | `cor.sucesso-suave` | `#E3F2E8` | `#17301F` | fundo do aviso de sucesso |
 | `cor.alerta` | `#8A5300` | `#F2B851` | texto e ícone de alerta |
 | `cor.alerta-suave` | `#FCEFD6` | `#3A2C12` | fundo do aviso de alerta |
 | `cor.erro` | `#B3261E` | `#FF8A80` | texto e ícone de erro |
 | `cor.erro-suave` | `#FBE6E4` | `#3D1C1A` | fundo do aviso de erro |
+| `cor.sobre-erro` | `#FFFFFF` | `#3D1C1A` | texto sobre `cor.erro` (selo numérico da aba Treinos) |
 | `cor.corrida` | `#B4470F` | `#FF9A5C` | modalidade corrida: ícone, chip, marca |
 | `cor.ciclismo` | `#6B3FB0` | `#BFA2F2` | modalidade ciclismo |
 | `cor.natacao` | `#1A5FA8` | `#7DB7F0` | modalidade natação |
@@ -61,66 +65,75 @@ contorno, ícone sem texto) 3,0. Todo par de texto do guia usa o mínimo de text
 <!-- contraste:inicio -->
 | primeiro plano | fundo | tipo | mínimo AA | claro | escuro | passa |
 |---|---|---|---|---|---|---|
-| `cor.texto` | `cor.fundo` | texto | 4,50 | 15,53 | 15,75 | sim |
-| `cor.texto` | `cor.superficie` | texto | 4,50 | 16,94 | 14,09 | sim |
-| `cor.texto` | `cor.superficie-2` | texto | 4,50 | 14,08 | 12,28 | sim |
-| `cor.texto-2` | `cor.fundo` | texto | 4,50 | 7,26 | 9,44 | sim |
-| `cor.texto-2` | `cor.superficie` | texto | 4,50 | 7,92 | 8,44 | sim |
-| `cor.texto-2` | `cor.superficie-2` | texto | 4,50 | 6,58 | 7,36 | sim |
-| `cor.destaque` | `cor.fundo` | texto | 4,50 | 5,83 | 9,18 | sim |
-| `cor.destaque` | `cor.superficie` | texto | 4,50 | 6,36 | 8,21 | sim |
-| `cor.destaque` | `cor.destaque-suave` | texto | 4,50 | 5,34 | 6,59 | sim |
-| `cor.texto` | `cor.destaque-suave` | texto | 4,50 | 14,22 | 11,30 | sim |
-| `cor.sobre-destaque` | `cor.destaque` | texto | 4,50 | 6,36 | 8,93 | sim |
-| `cor.sobre-destaque` | `cor.destaque-pressionado` | texto | 4,50 | 9,13 | 11,05 | sim |
-| `cor.sucesso` | `cor.superficie` | texto | 4,50 | 6,29 | 8,66 | sim |
+| `cor.texto` | `cor.fundo` | texto | 4,50 | 15,53 | 16,15 | sim |
+| `cor.texto` | `cor.superficie` | texto | 4,50 | 16,94 | 14,73 | sim |
+| `cor.texto` | `cor.superficie-2` | texto | 4,50 | 14,08 | 12,51 | sim |
+| `cor.texto-2` | `cor.fundo` | texto | 4,50 | 7,26 | 9,68 | sim |
+| `cor.texto-2` | `cor.superficie` | texto | 4,50 | 7,92 | 8,83 | sim |
+| `cor.texto-2` | `cor.superficie-2` | texto | 4,50 | 6,58 | 7,50 | sim |
+| `cor.link` | `cor.fundo` | texto | 4,50 | 6,37 | 16,21 | sim |
+| `cor.link` | `cor.superficie` | texto | 4,50 | 6,95 | 14,79 | sim |
+| `cor.link` | `cor.marca-suave` | texto | 4,50 | 6,30 | 12,71 | sim |
+| `cor.texto` | `cor.marca-suave` | texto | 4,50 | 15,35 | 12,67 | sim |
+| `cor.sobre-botao` | `cor.botao` | texto | 4,50 | 13,25 | 15,40 | sim |
+| `cor.sobre-botao` | `cor.botao-pressionado` | texto | 4,50 | 8,42 | 11,44 | sim |
+| `cor.sobre-marca` | `cor.marca` | texto | 4,50 | 13,25 | 15,40 | sim |
+| `cor.botao` | `cor.fundo` | grafico | 3,00 | 15,57 | 16,21 | sim |
+| `cor.botao` | `cor.superficie` | grafico | 3,00 | 16,98 | 14,79 | sim |
+| `cor.sobre-erro` | `cor.erro` | texto | 4,50 | 6,54 | 6,67 | sim |
+| `cor.sucesso` | `cor.superficie` | texto | 4,50 | 6,29 | 9,05 | sim |
 | `cor.sucesso` | `cor.sucesso-suave` | texto | 4,50 | 5,43 | 7,50 | sim |
 | `cor.texto` | `cor.sucesso-suave` | texto | 4,50 | 14,63 | 12,20 | sim |
-| `cor.alerta` | `cor.superficie` | texto | 4,50 | 6,33 | 9,18 | sim |
+| `cor.alerta` | `cor.superficie` | texto | 4,50 | 6,33 | 9,59 | sim |
 | `cor.alerta` | `cor.alerta-suave` | texto | 4,50 | 5,56 | 7,59 | sim |
 | `cor.texto` | `cor.alerta-suave` | texto | 4,50 | 14,89 | 11,65 | sim |
-| `cor.erro` | `cor.superficie` | texto | 4,50 | 6,54 | 7,19 | sim |
+| `cor.erro` | `cor.superficie` | texto | 4,50 | 6,54 | 7,51 | sim |
 | `cor.erro` | `cor.erro-suave` | texto | 4,50 | 5,46 | 6,67 | sim |
 | `cor.texto` | `cor.erro-suave` | texto | 4,50 | 14,15 | 13,08 | sim |
-| `cor.corrida` | `cor.superficie` | texto | 4,50 | 5,46 | 7,83 | sim |
-| `cor.corrida` | `cor.fundo` | texto | 4,50 | 5,00 | 8,76 | sim |
-| `cor.ciclismo` | `cor.superficie` | texto | 4,50 | 7,09 | 7,55 | sim |
-| `cor.ciclismo` | `cor.fundo` | texto | 4,50 | 6,50 | 8,44 | sim |
-| `cor.natacao` | `cor.superficie` | texto | 4,50 | 6,47 | 7,74 | sim |
-| `cor.natacao` | `cor.fundo` | texto | 4,50 | 5,93 | 8,65 | sim |
-| `cor.grafico.pace` | `cor.superficie` | texto | 4,50 | 8,40 | 7,03 | sim |
-| `cor.grafico.fc` | `cor.superficie` | texto | 4,50 | 7,17 | 7,44 | sim |
-| `cor.grafico.media` | `cor.superficie` | grafico | 3,00 | 4,94 | 5,46 | sim |
-| `cor.grafico.pace` | `cor.superficie-2` | grafico | 3,00 | 6,98 | 6,13 | sim |
-| `cor.grafico.fc` | `cor.superficie-2` | grafico | 3,00 | 5,96 | 6,49 | sim |
-| `cor.bloco.esforco` | `cor.superficie` | grafico | 3,00 | 16,94 | 14,09 | sim |
-| `cor.bloco.recuperacao` | `cor.superficie` | grafico | 3,00 | 3,49 | 4,15 | sim |
-| `cor.bloco.aquecimento` | `cor.superficie` | grafico | 3,00 | 3,49 | 4,15 | sim |
-| `cor.bloco.leve` | `cor.superficie` | grafico | 3,00 | 3,49 | 4,15 | sim |
-| `cor.borda-forte` | `cor.superficie` | grafico | 3,00 | 4,29 | 4,51 | sim |
-| `cor.borda-forte` | `cor.fundo` | grafico | 3,00 | 3,93 | 5,04 | sim |
-| `cor.foco` | `cor.fundo` | grafico | 3,00 | 5,83 | 9,18 | sim |
-| `cor.foco` | `cor.superficie` | grafico | 3,00 | 6,36 | 8,21 | sim |
+| `cor.corrida` | `cor.superficie` | texto | 4,50 | 5,46 | 8,19 | sim |
+| `cor.corrida` | `cor.fundo` | texto | 4,50 | 5,00 | 8,98 | sim |
+| `cor.ciclismo` | `cor.superficie` | texto | 4,50 | 7,09 | 7,89 | sim |
+| `cor.ciclismo` | `cor.fundo` | texto | 4,50 | 6,50 | 8,65 | sim |
+| `cor.natacao` | `cor.superficie` | texto | 4,50 | 6,47 | 8,09 | sim |
+| `cor.natacao` | `cor.fundo` | texto | 4,50 | 5,93 | 8,87 | sim |
+| `cor.grafico.pace` | `cor.superficie` | texto | 4,50 | 8,40 | 7,35 | sim |
+| `cor.grafico.fc` | `cor.superficie` | texto | 4,50 | 7,17 | 7,78 | sim |
+| `cor.grafico.media` | `cor.superficie` | grafico | 3,00 | 4,94 | 5,71 | sim |
+| `cor.grafico.pace` | `cor.superficie-2` | grafico | 3,00 | 6,98 | 6,24 | sim |
+| `cor.grafico.fc` | `cor.superficie-2` | grafico | 3,00 | 5,96 | 6,61 | sim |
+| `cor.bloco.esforco` | `cor.superficie` | grafico | 3,00 | 16,94 | 14,73 | sim |
+| `cor.bloco.recuperacao` | `cor.superficie` | grafico | 3,00 | 3,49 | 4,34 | sim |
+| `cor.bloco.aquecimento` | `cor.superficie` | grafico | 3,00 | 3,49 | 4,34 | sim |
+| `cor.bloco.leve` | `cor.superficie` | grafico | 3,00 | 3,49 | 4,34 | sim |
+| `cor.borda-forte` | `cor.superficie` | grafico | 3,00 | 4,29 | 4,71 | sim |
+| `cor.borda-forte` | `cor.fundo` | grafico | 3,00 | 3,93 | 5,16 | sim |
+| `cor.foco` | `cor.fundo` | grafico | 3,00 | 6,37 | 16,21 | sim |
+| `cor.foco` | `cor.superficie` | grafico | 3,00 | 6,95 | 14,79 | sim |
 <!-- contraste:fim -->
 
 ## Tipografia
-Fonte: **Inter** (SIL Open Font License 1.1), pelo pacote `@expo-google-fonts/inter` (MIT). Reserva: fonte do
-sistema. Todo número (pace, FC, distância, data, eixo) usa algarismos tabulares: `fontVariant: ["tabular-nums"]`.
+Fontes: **Inter** (SIL OFL 1.1, `@expo-google-fonts/inter`) no texto e **Barlow Condensed** (SIL OFL 1.1, `@expo-google-fonts/barlow-condensed`)
+nos números e títulos curtos, como decidiu o Angelo ([[design/identidade-visual-v3]]). Reserva: fonte do sistema. Todo número usa algarismos
+tabulares: `fontVariant: ["tabular-nums"]`.
 
-| token | peso | tamanho / altura da linha | uso |
+| token | fonte e peso | tamanho / altura da linha | uso |
 |---|---|---|---|
-| `fonte.numero-destaque` | 700 (Inter_700Bold) | 40 / 44, tabular | valor principal: melhor pace da sessão |
-| `fonte.titulo-tela` | 700 | 24 / 30 | título da tela |
-| `fonte.titulo-secao` | 600 (Inter_600SemiBold) | 18 / 24 | título de cartão e de painel |
-| `fonte.corpo` | 400 (Inter_400Regular) | 16 / 24 | texto corrido, mensagens |
-| `fonte.corpo-forte` | 600 | 16 / 24 | valor na lista, ênfase |
-| `fonte.botao` | 600 | 16 / 20 | texto de botão |
-| `fonte.rotulo` | 500 (Inter_500Medium) | 14 / 20 | rótulo de valor, chip, legenda do gráfico |
-| `fonte.legenda` | 400 | 13 / 18 | rodapé, nota pequena |
-| `fonte.eixo` | 500 | 12 / 16, tabular | só rótulos de eixo e datas do gráfico |
+| `fonte.numero-heroi` | Barlow Condensed 800 (BarlowCondensed_800ExtraBold), tabular | 76 / 80 | número do treino no cartão do último treino |
+| `fonte.numero-destaque` | Barlow Condensed 800, tabular | 30 / 34 | valor principal (melhor pace da sessão, cartão da lista) |
+| `fonte.numero-grande` | Barlow Condensed 800, tabular | 24 / 28 | valores finais da quinzena |
+| `fonte.titulo-tela` | Inter 800 (Inter_800ExtraBold) | 26 / 32 | título da tela |
+| `fonte.titulo-secao` | Inter 800 | 18 / 24 | título de cartão e de grupo |
+| `fonte.titulo-cartao` | Inter 800 | 15,5 / 22 | modalidade e tipo no cartão |
+| `fonte.corpo` | Inter 400 (Inter_400Regular) | 16 / 24 | texto corrido, mensagens |
+| `fonte.corpo-forte` | Inter 600 (Inter_600SemiBold) | 16 / 24 | valor na lista, ênfase |
+| `fonte.botao` | Inter 600 | 16 / 20 | texto de botão |
+| `fonte.rotulo` | Inter 500 (Inter_500Medium) | 14 / 20 | rótulo de valor, chip, legenda do gráfico |
+| `fonte.legenda` | Inter 400 | 13 / 18 | rodapé, nota pequena |
+| `fonte.sobretitulo` | Inter 800, letras espaçadas 1 | 12 / 16 | "ÚLTIMO TREINO", "FEEDBACK" |
+| `fonte.eixo` | Inter 500, tabular | 12 / 16 | só rótulos de eixo e datas do gráfico |
 
-Nada abaixo de 12. O texto acompanha o tamanho de fonte do sistema (`allowFontScaling` ligado);
-`fonte.numero-destaque` e `fonte.titulo-tela` limitam a escala com `maxFontSizeMultiplier: 1.5` para não quebrar a linha.
+Nada abaixo de 12. O texto acompanha o tamanho de fonte do sistema (`allowFontScaling` ligado); os números e `fonte.titulo-tela`
+limitam a escala com `maxFontSizeMultiplier: 1.3` (números) e 1,5 (título) para não quebrar a linha.
 
 ## Espaçamento
 Base 4.
@@ -137,12 +150,16 @@ Base 4.
 | `largura.conteudo-max` | 720 | largura máxima do conteúdo na web (professor no computador) |
 
 ## Raios, bordas e sombras
+Cantos mais discretos (v3, decisão do Angelo).
+
 | token | valor | uso |
 |---|---|---|
-| `raio.pequeno` | 4 | barra da faixa do treino, esqueleto de texto |
-| `raio.medio` | 8 | botão, campo, aviso, detalhe da sessão |
-| `raio.grande` | 12 | cartão |
-| `raio.pilula` | 999 | chip de modalidade |
+| `raio.pequeno` | 4 | barra de tiro, esqueleto de texto |
+| `raio.bloco` | 8 | quadrado do ícone de modalidade, aviso, faixa de análise, detalhe da sessão |
+| `raio.botao` | 10 | botão e campo (altura 48) |
+| `raio.cartao` | 12 | cartão |
+| `raio.cartao-destaque` | 14 | cartão do último treino |
+| `raio.pilula` | 999 | selo, filtro, chip |
 | `borda.fina` | 1 | contorno de cartão, divisória |
 | `borda.foco` | 2, afastada 2 | anel de foco |
 | `sombra.nenhuma` | sem sombra | padrão de cartão: separa por `cor.borda` e `cor.superficie` |

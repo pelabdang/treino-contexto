@@ -68,10 +68,10 @@ export function FolhaTipo({ visivel, subtitulo, sugerido, escolhido, aoEscolher,
                   onPress={() => aoEscolher(t.valor)}
                   style={comFoco([styles.opcao, marcado && styles.opcaoMarcada], styles.foco)}
                 >
-                  <MaterialIcons name={marcado ? "radio-button-checked" : "radio-button-unchecked"} size={tamanho.iconeGrande} color={marcado ? tema.cor.destaque : tema.cor["borda-forte"]} accessible={false} />
+                  <MaterialIcons name={marcado ? "radio-button-checked" : "radio-button-unchecked"} size={tamanho.iconeGrande} color={marcado ? tema.cor.link : tema.cor["borda-forte"]} accessible={false} />
                   <Text style={styles.opcaoTexto}>{t.texto}</Text>
                   {t.valor === sugerido && <Text style={styles.sugerido}>Sugerido</Text>}
-                  {marcado && <MaterialIcons name="check" size={tamanho.iconeMedio} color={tema.cor.destaque} accessible={false} />}
+                  {marcado && <MaterialIcons name="check" size={tamanho.iconeMedio} color={tema.cor.link} accessible={false} />}
                 </Pressable>
               );
             })}
@@ -91,9 +91,9 @@ function criarEstilos({ cor }: Tema, computador: boolean) {
       padding: espaco[4],
       gap: espaco[2],
       backgroundColor: cor.superficie,
-      borderTopLeftRadius: raio.grande,
-      borderTopRightRadius: raio.grande,
-      ...(computador ? { borderBottomLeftRadius: raio.grande, borderBottomRightRadius: raio.grande } : {}),
+      borderTopLeftRadius: raio.cartao,
+      borderTopRightRadius: raio.cartao,
+      ...(computador ? { borderBottomLeftRadius: raio.cartao, borderBottomRightRadius: raio.cartao } : {}),
       borderWidth: borda.fina,
       borderColor: cor.borda,
     },
@@ -102,8 +102,8 @@ function criarEstilos({ cor }: Tema, computador: boolean) {
     foco: { outlineWidth: borda.foco, outlineStyle: "solid", outlineColor: cor.foco, outlineOffset: 2 },
     fechar: { width: tamanho.alvoMinimo, height: tamanho.alvoMinimo, alignItems: "center", justifyContent: "center" },
     subtitulo: { ...fonte.rotulo, color: cor["texto-2"] },
-    opcao: { minHeight: 56, flexDirection: "row", alignItems: "center", gap: espaco[3], paddingHorizontal: espaco[3], borderRadius: raio.medio, borderWidth: 2, borderColor: "transparent" },
-    opcaoMarcada: { backgroundColor: cor["destaque-suave"], borderColor: cor.destaque },
+    opcao: { minHeight: 56, flexDirection: "row", alignItems: "center", gap: espaco[3], paddingHorizontal: espaco[3], borderRadius: raio.bloco, borderWidth: 2, borderColor: "transparent" },
+    opcaoMarcada: { backgroundColor: cor["marca-suave"], borderColor: cor.link },
     opcaoTexto: { ...fonte.corpo, color: cor.texto, flex: 1 },
     sugerido: { ...fonte.legenda, color: cor["texto-2"] },
   });

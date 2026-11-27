@@ -28,7 +28,7 @@ export function Faixa({ tipo, texto, testID }: Props) {
 
 function criarEstilos({ cor }: Tema) {
   return StyleSheet.create({
-    faixa: { flexDirection: "row", alignItems: "flex-start", gap: espaco[2], padding: espaco[3], borderRadius: raio.medio, borderWidth: borda.fina },
+    faixa: { flexDirection: "row", alignItems: "flex-start", gap: espaco[2], padding: espaco[3], borderRadius: raio.bloco, borderWidth: borda.fina },
     erro: { backgroundColor: cor["erro-suave"], borderColor: cor.erro },
     info: { backgroundColor: cor["superficie-2"], borderColor: cor.borda },
     texto: { ...fonte.corpo, flex: 1 },

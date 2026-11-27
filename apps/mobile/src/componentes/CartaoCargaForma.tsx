@@ -100,7 +100,7 @@ export function CartaoCargaForma({ carga, forma }: Props) {
 
 function criarEstilos({ cor }: Tema) {
   return StyleSheet.create({
-    cartao: { marginTop: espaco[4], padding: espaco[4], borderRadius: raio.grande, borderWidth: borda.fina, borderColor: cor.borda, backgroundColor: cor.superficie },
+    cartao: { marginTop: espaco[4], padding: espaco[4], borderRadius: raio.cartao, borderWidth: borda.fina, borderColor: cor.borda, backgroundColor: cor.superficie },
     titulo: { ...fonte["titulo-secao"], color: cor.texto },
     chip: { alignSelf: "flex-start", marginVertical: espaco[2], paddingHorizontal: espaco[3], borderRadius: raio.pilula, backgroundColor: cor["superficie-2"] },
     chipTexto: { ...fonte.rotulo, color: cor.texto },
@@ -113,7 +113,7 @@ function criarEstilos({ cor }: Tema) {
     rotuloLinha: { ...fonte.corpo, color: cor["texto-2"], flex: 1 },
     valorLinha: { ...fonte["corpo-forte"], fontVariant: ["tabular-nums"], color: cor.texto },
     definicao: { ...fonte.legenda, color: cor["texto-2"], paddingBottom: espaco[2] },
-    aviso: { flexDirection: "row", alignItems: "flex-start", gap: espaco[2], marginTop: espaco[2], padding: espaco[3], borderRadius: raio.medio, backgroundColor: cor["superficie-2"] },
+    aviso: { flexDirection: "row", alignItems: "flex-start", gap: espaco[2], marginTop: espaco[2], padding: espaco[3], borderRadius: raio.bloco, backgroundColor: cor["superficie-2"] },
     avisoTexto: { ...fonte.corpo, color: cor.texto, flex: 1 },
     legenda: { ...fonte.legenda, marginTop: espaco[3], color: cor["texto-2"] },
   });

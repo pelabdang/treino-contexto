@@ -135,7 +135,7 @@ export function CartaoTransicao({ transicao, apiUrl, atletaId, atividadeId, fetc
 
 function criarEstilos({ cor }: Tema) {
   return StyleSheet.create({
-    cartao: { marginTop: espaco[4], padding: espaco[4], borderRadius: raio.grande, borderWidth: borda.fina, borderColor: cor.borda, backgroundColor: cor.superficie },
+    cartao: { marginTop: espaco[4], padding: espaco[4], borderRadius: raio.cartao, borderWidth: borda.fina, borderColor: cor.borda, backgroundColor: cor.superficie },
     titulo: { ...fonte["titulo-secao"], color: cor.texto, marginBottom: espaco[2] },
     linhaTexto: { flexDirection: "row", alignItems: "flex-start", gap: espaco[2] },
     corpo: { ...fonte.corpo, color: cor.texto },
@@ -145,14 +145,14 @@ function criarEstilos({ cor }: Tema) {
       minHeight: tamanho.botaoAltura,
       alignItems: "center",
       justifyContent: "center",
-      borderRadius: raio.medio,
+      borderRadius: raio.botao,
       borderWidth: borda.fina,
       borderColor: cor["borda-forte"],
       backgroundColor: cor.superficie,
     },
     botaoTexto: { ...fonte.botao, color: cor.texto },
     botaoTextoLink: { marginTop: espaco[2], minHeight: tamanho.botaoAltura, justifyContent: "center", alignSelf: "flex-start" },
-    link: { ...fonte.botao, color: cor.destaque },
+    link: { ...fonte.botao, color: cor.link },
     desligado: { opacity: 0.6 },
     erro: { flexDirection: "row", alignItems: "center", gap: espaco[2], marginTop: espaco[2] },
     erroTexto: { ...fonte.corpo, color: cor.erro, flex: 1 },

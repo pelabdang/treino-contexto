@@ -78,7 +78,7 @@ export function CartoesCheckin({ atividade, apiUrl, atletaId, aoFazerCheckin, ao
                 onPress={aoEditarCheckin}
                 style={[styles.botaoSecundario, { flex: 2 }]}
               >
-                <MaterialIcons name="edit" size={tamanho.iconeMedio} color={tema.cor.destaque} accessible={false} />
+                <MaterialIcons name="edit" size={tamanho.iconeMedio} color={tema.cor.link} accessible={false} />
                 <Text style={styles.botaoSecundarioTexto}>Editar</Text>
               </Pressable>
               <Pressable
@@ -164,14 +164,14 @@ function criarEstilos({ cor }: Tema) {
     justifyContent: "center",
     alignItems: "center",
     paddingHorizontal: espaco[4],
-    borderRadius: raio.medio,
+    borderRadius: raio.botao,
   } as const;
   return StyleSheet.create({
     cartao: {
       marginTop: espaco[4],
       padding: espaco[4],
       gap: espaco[2],
-      borderRadius: raio.grande,
+      borderRadius: raio.cartao,
       borderWidth: borda.fina,
       borderColor: cor.borda,
       backgroundColor: cor.superficie,
@@ -197,8 +197,8 @@ function criarEstilos({ cor }: Tema) {
     rotuloLinha: { ...fonte.corpo, color: cor["texto-2"] },
     valorLinha: { ...fonte["corpo-forte"], color: cor.texto, flexShrink: 1, textAlign: "right" },
     acoes: { flexDirection: "row", gap: espaco[2], marginTop: espaco[2] },
-    botaoPrimario: { ...botao, backgroundColor: cor.destaque, alignSelf: "stretch" },
-    botaoPrimarioTexto: { ...fonte.botao, color: cor["sobre-destaque"] },
+    botaoPrimario: { ...botao, backgroundColor: cor.botao, alignSelf: "stretch" },
+    botaoPrimarioTexto: { ...fonte.botao, color: cor["sobre-botao"] },
     botaoSecundario: { ...botao, borderWidth: borda.fina, borderColor: cor["borda-forte"], backgroundColor: cor.superficie },
     botaoSecundarioTexto: { ...fonte.botao, color: cor.texto },
     botaoTexto: botao,

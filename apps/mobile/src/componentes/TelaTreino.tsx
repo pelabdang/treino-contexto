@@ -83,7 +83,7 @@ export function TelaTreino({ apiUrl, atletaId, atividadeId, aoVoltar, aoFazerChe
     <ScrollView testID="rolagem-tela" contentContainerStyle={styles.container}>
       {aoVoltar && (
         <Pressable accessibilityRole="button" accessibilityLabel="Voltar" onPress={aoVoltar} style={styles.voltar}>
-          <MaterialIcons name="arrow-back" size={tamanho.iconeMedio} color={tema.cor.destaque} />
+          <MaterialIcons name="arrow-back" size={tamanho.iconeMedio} color={tema.cor.link} />
           <Text style={styles.voltarTexto}>Voltar</Text>
         </Pressable>
       )}
@@ -301,7 +301,7 @@ function criarEstilos({ cor }: Tema, margem: number = espaco[4]) {
       alignSelf: "center",
     },
     voltar: { flexDirection: "row", alignItems: "center", gap: espaco[2], minHeight: tamanho.alvoMinimo, alignSelf: "flex-start" },
-    voltarTexto: { ...fonte.botao, color: cor.destaque },
+    voltarTexto: { ...fonte.botao, color: cor.link },
     titulo: { ...fonte["titulo-tela"], color: cor.texto },
     cabecalho: { flexDirection: "row", flexWrap: "wrap", alignItems: "center", columnGap: espaco[3], rowGap: espaco[2], marginTop: espaco[2] },
     chip: {
@@ -323,14 +323,14 @@ function criarEstilos({ cor }: Tema, margem: number = espaco[4]) {
       minHeight: tamanho.botaoAltura,
       justifyContent: "center",
       paddingHorizontal: espaco[4],
-      borderRadius: raio.medio,
-      backgroundColor: cor.destaque,
+      borderRadius: raio.botao,
+      backgroundColor: cor.botao,
     },
-    botaoTexto: { ...fonte.botao, color: cor["sobre-destaque"] },
+    botaoTexto: { ...fonte.botao, color: cor["sobre-botao"] },
     cartao: {
       marginTop: espaco[4],
       padding: espaco[4],
-      borderRadius: raio.grande,
+      borderRadius: raio.cartao,
       borderWidth: borda.fina,
       borderColor: cor.borda,
       backgroundColor: cor.superficie,
@@ -356,7 +356,7 @@ function criarEstilos({ cor }: Tema, margem: number = espaco[4]) {
       alignItems: "flex-start",
       gap: espaco[2],
       padding: espaco[3],
-      borderRadius: raio.medio,
+      borderRadius: raio.bloco,
       backgroundColor: cor["superficie-2"],
     },
     avisoTexto: { ...fonte.corpo, flex: 1 },

@@ -98,7 +98,7 @@ export function TelaTrocarSenha({ primeiroAcesso = false, aoTrocar, aoConcluir, 
       <View style={styles.cartao}>
         {!primeiroAcesso && aoVoltar && !salvo && (
           <Pressable testID="voltar" accessibilityRole="button" accessibilityLabel="Voltar" onPress={aoVoltar} style={comFoco(styles.voltar, styles.foco)}>
-            <MaterialIcons name="arrow-back" size={tamanho.iconeGrande} color={tema.cor.destaque} accessible={false} />
+            <MaterialIcons name="arrow-back" size={tamanho.iconeGrande} color={tema.cor.link} accessible={false} />
             <Text style={styles.voltarTexto}>Voltar</Text>
           </Pressable>
         )}
@@ -155,19 +155,19 @@ function criarEstilos({ cor }: Tema, margem: number, larga: boolean) {
       maxWidth: 420,
       alignSelf: larga ? "center" : "stretch",
       gap: espaco[3],
-      ...(larga ? { padding: espaco[5], backgroundColor: cor.superficie, borderWidth: borda.fina, borderColor: cor.borda, borderRadius: raio.grande } : {}),
+      ...(larga ? { padding: espaco[5], backgroundColor: cor.superficie, borderWidth: borda.fina, borderColor: cor.borda, borderRadius: raio.cartao } : {}),
     },
     voltar: { minHeight: tamanho.botaoAltura, flexDirection: "row", alignItems: "center", gap: espaco[1], alignSelf: "flex-start" },
-    voltarTexto: { ...fonte.botao, color: cor.destaque },
+    voltarTexto: { ...fonte.botao, color: cor.link },
     titulo: { ...fonte["titulo-tela"], color: cor.texto },
     texto: { ...fonte.corpo, color: cor["texto-2"] },
-    sucesso: { flexDirection: "row", alignItems: "center", gap: espaco[2], padding: espaco[3], borderRadius: raio.medio, backgroundColor: cor["sucesso-suave"], borderWidth: borda.fina, borderColor: cor.sucesso },
+    sucesso: { flexDirection: "row", alignItems: "center", gap: espaco[2], padding: espaco[3], borderRadius: raio.bloco, backgroundColor: cor["sucesso-suave"], borderWidth: borda.fina, borderColor: cor.sucesso },
     sucessoTexto: { ...fonte["corpo-forte"], color: cor.sucesso },
-    botao: { minHeight: tamanho.botaoAltura, alignItems: "center", justifyContent: "center", borderRadius: raio.medio, backgroundColor: cor.destaque, paddingHorizontal: espaco[4] },
+    botao: { minHeight: tamanho.botaoAltura, alignItems: "center", justifyContent: "center", borderRadius: raio.botao, backgroundColor: cor.botao, paddingHorizontal: espaco[4] },
     secundario: { backgroundColor: cor.superficie, borderWidth: borda.fina, borderColor: cor["borda-forte"] },
     secundarioTexto: { ...fonte.botao, color: cor.texto },
     botaoDesligado: { backgroundColor: cor["superficie-2"] },
-    botaoTexto: { ...fonte.botao, color: cor["sobre-destaque"] },
+    botaoTexto: { ...fonte.botao, color: cor["sobre-botao"] },
     botaoTextoDesligado: { color: cor["texto-desligado"] },
     foco: { outlineWidth: borda.foco, outlineStyle: "solid", outlineColor: cor.foco, outlineOffset: 2 },
   });

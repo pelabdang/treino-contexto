@@ -42,10 +42,29 @@ describe("tema x docs/design/tokens.md", () => {
 
   it("espaçamento, raio e tipografia batem com o guia", () => {
     expect(Object.values(espaco)).toEqual([4, 8, 12, 16, 24, 32, 48]);
-    expect(raio).toEqual({ pequeno: 4, medio: 8, grande: 12, pilula: 999 });
+    expect(raio).toEqual({ pequeno: 4, bloco: 8, botao: 10, cartao: 12, "cartao-destaque": 14, pilula: 999 });
     expect(fonte.corpo).toMatchObject({ fontFamily: "Inter_400Regular", fontSize: 16, lineHeight: 24 });
-    expect(fonte["numero-destaque"]).toMatchObject({ fontSize: 40, lineHeight: 44, fontVariant: ["tabular-nums"] });
+    expect(fonte["numero-destaque"]).toMatchObject({ fontFamily: "BarlowCondensed_800ExtraBold", fontSize: 30, fontVariant: ["tabular-nums"] });
+    expect(fonte["numero-heroi"]).toMatchObject({ fontFamily: "BarlowCondensed_800ExtraBold", fontSize: 76 });
+    expect(fonte["titulo-tela"]).toMatchObject({ fontFamily: "Inter_800ExtraBold", fontSize: 26 });
     expect(fonte.eixo).toMatchObject({ fontSize: 12, fontVariant: ["tabular-nums"] });
+  });
+});
+
+describe("identidade v3", () => {
+  it("o volt é a marca e o botão primário muda de tinta no escuro", () => {
+    expect(cores.claro.marca).toBe("#C6F432");
+    expect(cores.claro.botao).toBe("#12200A");
+    expect(cores.claro["sobre-botao"]).toBe("#C6F432");
+    expect(cores.escuro.botao).toBe("#D2FF3C");
+    expect(cores.escuro["sobre-botao"]).toBe("#121A05");
+  });
+
+  it("o teal da v2 saiu do tema", () => {
+    for (const nome of ["destaque", "destaque-suave", "destaque-pressionado", "sobre-destaque"]) {
+      expect(nome in cores.claro).toBe(false);
+      expect(nome in cores.escuro).toBe(false);
+    }
   });
 });
 
@@ -59,7 +78,7 @@ describe("useTema", () => {
   it("segue o tema escuro do sistema", async () => {
     esquema.mockReturnValue("dark");
     await render(<Amostra />);
-    expect(screen.getByText("escuro #121517")).toBeTruthy();
+    expect(screen.getByText("escuro #0F1214")).toBeTruthy();
   });
 
   it("usa o claro quando o sistema é claro ou não informa", async () => {

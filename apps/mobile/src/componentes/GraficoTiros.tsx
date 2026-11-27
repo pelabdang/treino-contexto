@@ -271,7 +271,7 @@ function criarEstilos({ cor }: Tema) {
     tituloPainel: { ...fonte.rotulo, height: ALTURA_TITULO, paddingTop: espaco[2], color: cor.texto },
     aviso: { ...fonte.rotulo, color: cor["texto-2"], paddingVertical: espaco[3] },
     texto: { ...fonte.corpo, color: cor.texto },
-    detalhe: { marginTop: espaco[2], padding: espaco[3], borderRadius: raio.medio, backgroundColor: cor["superficie-2"] },
+    detalhe: { marginTop: espaco[2], padding: espaco[3], borderRadius: raio.bloco, backgroundColor: cor["superficie-2"] },
     detalheTitulo: { ...fonte["corpo-forte"], color: cor.texto },
   });
 }

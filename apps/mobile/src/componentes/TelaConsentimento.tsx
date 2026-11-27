@@ -79,7 +79,7 @@ export function TelaConsentimento({ apiUrl, atletaId, aoVoltar, aoAbrirTermo, at
       <View style={styles.coluna}>
         {aoVoltar && (
           <Pressable testID="voltar" accessibilityRole="button" accessibilityLabel="Voltar" onPress={aoVoltar} style={comFoco(styles.voltar, styles.foco)}>
-            <MaterialIcons name="arrow-back" size={tamanho.iconeMedio} color={tema.cor.destaque} accessible={false} />
+            <MaterialIcons name="arrow-back" size={tamanho.iconeMedio} color={tema.cor.link} accessible={false} />
             <Text style={styles.voltarTexto}>Voltar</Text>
           </Pressable>
         )}
@@ -199,18 +199,18 @@ function criarEstilos({ cor }: Tema, margem: number) {
     container: { padding: margem, alignItems: "center" },
     coluna: { width: "100%", maxWidth: larguraConteudoMax, gap: espaco[3] },
     voltar: { minHeight: tamanho.botaoAltura, flexDirection: "row", alignItems: "center", gap: espaco[1], alignSelf: "flex-start" },
-    voltarTexto: { ...fonte.botao, color: cor.destaque },
+    voltarTexto: { ...fonte.botao, color: cor.link },
     titulo: { ...fonte["titulo-tela"], color: cor.texto },
     texto: { ...fonte.corpo, color: cor["texto-2"] },
     estado: { alignItems: "center", gap: espaco[3], paddingVertical: espaco[5] },
-    cartao: { padding: espaco[4], gap: espaco[2], backgroundColor: cor.superficie, borderWidth: borda.fina, borderColor: cor.borda, borderRadius: raio.grande },
+    cartao: { padding: espaco[4], gap: espaco[2], backgroundColor: cor.superficie, borderWidth: borda.fina, borderColor: cor.borda, borderRadius: raio.cartao },
     nome: { ...fonte["titulo-secao"], color: cor.texto },
     linhaEstado: { flexDirection: "row", alignItems: "center", gap: espaco[2] },
     estadoTexto: { ...fonte["corpo-forte"], color: cor["texto-2"] },
     legenda: { ...fonte.legenda, color: cor["texto-2"] },
-    botao: { minHeight: tamanho.botaoAltura, alignItems: "center", justifyContent: "center", borderRadius: raio.medio, paddingHorizontal: espaco[4] },
-    primario: { backgroundColor: cor.destaque },
-    primarioTexto: { ...fonte.botao, color: cor["sobre-destaque"] },
+    botao: { minHeight: tamanho.botaoAltura, alignItems: "center", justifyContent: "center", borderRadius: raio.botao, paddingHorizontal: espaco[4] },
+    primario: { backgroundColor: cor.botao },
+    primarioTexto: { ...fonte.botao, color: cor["sobre-botao"] },
     secundario: { borderWidth: borda.fina, borderColor: cor["borda-forte"], backgroundColor: cor.superficie },
     secundarioTexto: { ...fonte.botao, color: cor.texto },
     foco: { outlineWidth: borda.foco, outlineStyle: "solid", outlineColor: cor.foco, outlineOffset: 2 },
@@ -228,16 +228,16 @@ function criarEstilosDialogo({ cor }: Tema, computador: boolean) {
       backgroundColor: cor.superficie,
       borderWidth: borda.fina,
       borderColor: cor.borda,
-      borderTopLeftRadius: raio.grande,
-      borderTopRightRadius: raio.grande,
-      ...(computador ? { borderBottomLeftRadius: raio.grande, borderBottomRightRadius: raio.grande } : {}),
+      borderTopLeftRadius: raio.cartao,
+      borderTopRightRadius: raio.cartao,
+      ...(computador ? { borderBottomLeftRadius: raio.cartao, borderBottomRightRadius: raio.cartao } : {}),
     },
     titulo: { ...fonte["titulo-secao"], color: cor.texto },
     texto: { ...fonte.corpo, color: cor["texto-2"] },
     botoes: { flexDirection: "row", gap: espaco[3] },
-    botao: { flex: 1, minHeight: tamanho.botaoAltura, alignItems: "center", justifyContent: "center", borderRadius: raio.medio },
-    primario: { backgroundColor: cor.destaque },
-    primarioTexto: { ...fonte.botao, color: cor["sobre-destaque"] },
+    botao: { flex: 1, minHeight: tamanho.botaoAltura, alignItems: "center", justifyContent: "center", borderRadius: raio.botao },
+    primario: { backgroundColor: cor.botao },
+    primarioTexto: { ...fonte.botao, color: cor["sobre-botao"] },
     secundario: { borderWidth: borda.fina, borderColor: cor["borda-forte"], backgroundColor: cor.superficie },
     secundarioTexto: { ...fonte.botao, color: cor.texto },
     foco: { outlineWidth: borda.foco, outlineStyle: "solid", outlineColor: cor.foco, outlineOffset: 2 },

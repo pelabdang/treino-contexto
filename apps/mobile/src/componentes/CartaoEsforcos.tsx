@@ -100,7 +100,7 @@ export function CartaoEsforcos({ esforcos }: { esforcos: Esforcos | null | undef
               style={styles.verTodos}
             >
               <Text style={styles.link}>{todos ? "Ver menos" : `Ver todos os ${lista.length} esforços`}</Text>
-              <MaterialIcons name={todos ? "expand-less" : "expand-more"} size={tamanho.iconeMedio} color={tema.cor.destaque} />
+              <MaterialIcons name={todos ? "expand-less" : "expand-more"} size={tamanho.iconeMedio} color={tema.cor.link} />
             </Pressable>
           )}
           {desaquecimento.map((b) => (
@@ -123,7 +123,7 @@ export function CartaoEsforcos({ esforcos }: { esforcos: Esforcos | null | undef
 
 function criarEstilos({ cor }: Tema) {
   return StyleSheet.create({
-    cartao: { marginTop: espaco[4], padding: espaco[4], borderRadius: raio.grande, borderWidth: borda.fina, borderColor: cor.borda, backgroundColor: cor.superficie },
+    cartao: { marginTop: espaco[4], padding: espaco[4], borderRadius: raio.cartao, borderWidth: borda.fina, borderColor: cor.borda, backgroundColor: cor.superficie },
     titulo: { ...fonte["titulo-secao"], color: cor.texto, marginBottom: espaco[2] },
     rotulo: { ...fonte.rotulo, color: cor["texto-2"], paddingVertical: espaco[1] },
     linha: { flexDirection: "row", alignItems: "center" },
@@ -134,8 +134,8 @@ function criarEstilos({ cor }: Tema) {
     semDado: { ...fonte.corpo, color: cor["texto-2"], textAlign: "right" },
     legenda: { ...fonte.legenda, color: cor["texto-2"], paddingBottom: espaco[2] },
     verTodos: { flexDirection: "row", alignItems: "center", gap: espaco[1], minHeight: tamanho.botaoAltura, alignSelf: "flex-start" },
-    link: { ...fonte.botao, color: cor.destaque },
-    aviso: { flexDirection: "row", alignItems: "flex-start", gap: espaco[2], marginTop: espaco[2], padding: espaco[3], borderRadius: raio.medio, backgroundColor: cor["superficie-2"] },
+    link: { ...fonte.botao, color: cor.link },
+    aviso: { flexDirection: "row", alignItems: "flex-start", gap: espaco[2], marginTop: espaco[2], padding: espaco[3], borderRadius: raio.bloco, backgroundColor: cor["superficie-2"] },
     avisoTexto: { ...fonte.corpo, color: cor.texto, flex: 1 },
   });
 }

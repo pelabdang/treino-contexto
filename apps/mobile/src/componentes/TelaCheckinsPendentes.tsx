@@ -51,7 +51,7 @@ export function TelaCheckinsPendentes({ apiUrl, atletaId, aoAbrirCheckin, aoVolt
     <ScrollView testID="rolagem-tela" contentContainerStyle={styles.container}>
       {aoVoltar && (
         <Pressable accessibilityRole="button" accessibilityLabel="Voltar" onPress={aoVoltar} style={styles.voltar}>
-          <MaterialIcons name="arrow-back" size={tamanho.iconeMedio} color={tema.cor.destaque} accessible={false} />
+          <MaterialIcons name="arrow-back" size={tamanho.iconeMedio} color={tema.cor.link} accessible={false} />
           <Text style={styles.voltarTexto}>Voltar</Text>
         </Pressable>
       )}
@@ -145,7 +145,7 @@ function criarEstilos({ cor }: Tema, margem: number = espaco[4]) {
       alignSelf: "center",
     },
     voltar: { flexDirection: "row", alignItems: "center", gap: espaco[2], minHeight: tamanho.alvoMinimo, alignSelf: "flex-start" },
-    voltarTexto: { ...fonte.botao, color: cor.destaque },
+    voltarTexto: { ...fonte.botao, color: cor.link },
     titulo: { ...fonte["titulo-tela"], color: cor.texto },
     texto: { ...fonte.corpo, color: cor["texto-2"] },
     textoCentro: { ...fonte.corpo, color: cor["texto-2"], textAlign: "center" },
@@ -157,13 +157,13 @@ function criarEstilos({ cor }: Tema, margem: number = espaco[4]) {
       minHeight: tamanho.botaoAltura,
       justifyContent: "center",
       paddingHorizontal: espaco[4],
-      borderRadius: raio.medio,
-      backgroundColor: cor.destaque,
+      borderRadius: raio.botao,
+      backgroundColor: cor.botao,
     },
-    botaoTexto: { ...fonte.botao, color: cor["sobre-destaque"] },
+    botaoTexto: { ...fonte.botao, color: cor["sobre-botao"] },
     cartao: {
       marginTop: espaco[3],
-      borderRadius: raio.grande,
+      borderRadius: raio.cartao,
       borderWidth: borda.fina,
       borderColor: cor.borda,
       backgroundColor: cor.superficie,
