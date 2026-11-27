@@ -118,6 +118,7 @@ const corrida: Atividade = {
   },
   clima: {
     estado: "ok",
+    recente: false,
     temperatura_c: 24.3,
     sensacao_c: 25.1,
     umidade_pct: 61,
@@ -273,11 +274,11 @@ export const atividades = {
     distancia_m: 8000,
     distancia: "8,00 km",
     pace_medio: "5:30",
-    clima: { estado: "indoor" },
+    clima: { estado: "indoor", recente: false },
   } as Atividade,
-  sem_posicao: { ...corrida, atividade_id: 103, clima: { estado: "sem_posicao" } } as Atividade,
-  pendente: { ...corrida, atividade_id: 104, clima: { estado: "pendente" } } as Atividade,
-  falha: { ...corrida, atividade_id: 105, clima: { estado: "falha" } } as Atividade,
+  sem_posicao: { ...corrida, atividade_id: 103, clima: { estado: "sem_posicao", recente: false } } as Atividade,
+  pendente: { ...corrida, atividade_id: 104, clima: { estado: "pendente", recente: false } } as Atividade,
+  falha: { ...corrida, atividade_id: 105, clima: { estado: "falha", recente: false } } as Atividade,
   natacao: {
     atividade_id: 106,
     modalidade: "natacao",
@@ -316,6 +317,6 @@ export const atividades = {
       motivo: "modalidade_sem_metricas",
       texto: "Ainda não há linha de base para natação.",
     },
-    clima: { estado: "indoor" },
+    clima: { estado: "indoor", recente: false },
   } as Atividade,
 } satisfies Record<string, Atividade>;
