@@ -254,7 +254,8 @@ class PontoSerieOut(BaseModel):
     valor: float | None  # 1 casa; só para desenhar. Pace e ritmo em s/km e s/100 m
     valor_texto: str | None  # pronto: "5:42", "150", "25,3"; a unidade vem em `unidade`. null sem valor e no condicionamento que ainda aprende
     melhor: bool  # losango: o melhor do período (só em pace, ritmo e velocidade)
-    fora_do_normal: bool | None  # null sem faixa do normal
+    fora_do_normal: bool | None  # triângulo: o selo do PRÓPRIO treino (linha_base@3 dele, 84 dias antes); null sem selo ou aprendendo
+    normal_estado: Literal["fora", "dentro", "aprendendo"] | None  # o mesmo selo da lista e da tela do treino
     aprendendo: bool  # condicionamento: o dia ainda aprende (linha pontilhada)
     parcial: bool  # volume: a semana em curso
     rotulo: str  # o que o leitor de tela lê no ponto

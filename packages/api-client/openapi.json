@@ -3186,6 +3186,22 @@
             "title": "Melhor",
             "type": "boolean"
           },
+          "normal_estado": {
+            "anyOf": [
+              {
+                "enum": [
+                  "fora",
+                  "dentro",
+                  "aprendendo"
+                ],
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Normal Estado"
+          },
           "parcial": {
             "title": "Parcial",
             "type": "boolean"
@@ -3225,6 +3241,7 @@
           "valor_texto",
           "melhor",
           "fora_do_normal",
+          "normal_estado",
           "aprendendo",
           "parcial",
           "rotulo"

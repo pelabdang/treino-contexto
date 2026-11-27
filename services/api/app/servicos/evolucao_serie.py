@@ -5,9 +5,12 @@ Tudo calculado aqui; o app só desenha: pontos com texto pronto, eixos, a faixa 
 
 FAIXA DO NORMAL (escolha nossa, a mesma conta da `linha_base@3` para o selo e o gráfico não discordarem): mediana e desvio robusto
 (`medida_robusta`, com o piso da métrica) dos pontos das 12 semanas até ontem; a faixa é mediana ± 2,5 desvios (o `limite_fora` da linha de base);
-"fora do normal" = ponto fora da faixa. Só com 8 pontos (o mínimo da linha de base); com menos, `aprendendo` e a faixa não existe. Só em séries de
-treino e de tiros (volume e condicionamento não têm faixa). Diferença conhecida: a linha de base do TREINO usa só os 84 dias ANTES dele; aqui a
-faixa é uma só para a série (o normal de hoje), então um ponto antigo pode estar fora aqui e dentro lá.
+Só com 8 pontos (o mínimo da linha de base); com menos, `aprendendo` e a faixa não existe. Só em séries de treino e de tiros (volume e condicionamento não têm
+faixa). A faixa é o normal DE AGORA, contexto visual.
+
+O TRIÂNGULO (`fora_do_normal`) NÃO sai da faixa: é o selo do próprio treino (`normal_treino@1` sobre a `linha_base@3` dele, 84 dias ANTES do treino, a mesma
+da lista e da tela do treino), em lote (`linha_base_resultados`, sem N+1). Assim o gráfico, a lista e o treino nunca discordam. Observação: o selo é do
+treino inteiro (qualquer métrica fora), não só da métrica da série.
 """
 
 from __future__ import annotations
@@ -16,10 +19,15 @@ from dataclasses import dataclass
 from datetime import date, datetime, timedelta
 from typing import Literal
 
+from sqlalchemy import select
 from sqlalchemy.orm import Session
 
+from app.servicos.linha_base_leitura import linha_base_resultados
+
 from app.graficos.escala import Escala, escala_eixo
+from app.db.models import Atividade
 from app.metricas import linha_base as lb
+from app.metricas.normal_treino import normal_treino
 from app.metricas.tiros_1km import formatar_pace
 from app.servicos import frase_evolucao as fe
 from app.servicos.evolucao_series import (
@@ -55,6 +63,7 @@ class PontoOut:
     valor_texto: str | None
     melhor: bool
     fora_do_normal: bool | None
+    normal_estado: str | None  # o selo do treino: fora, dentro, aprendendo ou None
     aprendendo: bool
     parcial: bool
     rotulo: str
@@ -193,6 +202,15 @@ def _eixo(frase_tipo: str, valores: list[float]) -> Eixo | None:
     return Eixo(round(esc.min, 1), round(esc.max, 1), invertido, [Marca(round(m.valor, 1), m.rotulo) for m in esc.marcas])
 
 
+def _selos(session: Session, ids: list[int]) -> dict[int, str | None]:
+    """O selo "normal" de cada treino (`normal_treino@1` sobre a `linha_base@3`), com uma consulta de historico para todos."""
+    if not ids:
+        return {}
+    ativs = list(session.scalars(select(Atividade).where(Atividade.id.in_(ids))))
+    bases = linha_base_resultados(session, ativs)
+    return {i: normal_treino(b.estado, [m.estado for m in b.metricas]) for i, b in bases.items()}
+
+
 def serie(session: Session, atleta_id: int, serie_id: str, periodo: Periodo = "12s", agora: datetime | None = None) -> SerieLida:
     """`KeyError` se `serie_id` não existe no catálogo. Série sem treino do atleta devolve pontos vazios e a frase "sem treino"."""
     s = POR_ID[serie_id]
@@ -208,13 +226,15 @@ def serie(session: Session, atleta_id: int, serie_id: str, periodo: Periodo = "1
         escolhido = _MELHOR[s.frase](com_valor, key=lambda p: (p.valor, -p.dia.toordinal()))
         melhor_id = (escolhido.dia, escolhido.atividade_id)
     semana_atual = segunda(hoje)
+    normais = _selos(session, [p.atividade_id for p in no_periodo if p.atividade_id is not None])
     pontos: list[PontoOut] = []
     for p in no_periodo:
         texto = None if p.valor is None or p.aprendendo else valor_texto(s.frase, p.valor)
-        fora = None if ref is None or p.valor is None else not (ref.minimo <= p.valor <= ref.maximo)
+        selo = normais.get(p.atividade_id) if p.atividade_id is not None and p.valor is not None else None
+        fora = None if selo in (None, "aprendendo") else selo == "fora"
         data_t = f"semana de {p.dia:%d/%m}" if s.tipo == "volume" else data_texto(p.dia)
         pontos.append(PontoOut(
-            p.atividade_id, p.dia, data_t, None if p.valor is None else round(p.valor, 1), texto, melhor_id == (p.dia, p.atividade_id), fora,
+            p.atividade_id, p.dia, data_t, None if p.valor is None else round(p.valor, 1), texto, melhor_id == (p.dia, p.atividade_id), fora, selo,
             p.aprendendo, s.tipo == "volume" and p.dia == semana_atual, _rotulo_ponto(s, p.dia, data_t, p.valor, texto, fora, unidade)))
     # o último: o treino mais recente com valor; no volume a última semana COMPLETA (a em curso é parcial); no condicionamento, o dia mais recente com número
     candidatos = [p for p in pontos if not p.parcial and p.valor_texto is not None]
