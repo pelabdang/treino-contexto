@@ -486,7 +486,7 @@ const caixaDe = (id) => {
 //   tela (ver os comentários acima: atleta 7, 8, 9... e professor 2, 3...) continuam valendo, agora pela conta e não por variável de ambiente.
 //   primeiro-acesso@exemplo.com = atleta 1 com a senha provisória (a troca é obrigatória)
 //   muitas@exemplo.com = sempre 429 com espere_s 300      servidor@exemplo.com = sempre 500       desativada@exemplo.com = 401 (o mesmo)
-// O acesso é "token-sintetico-<papel>-<N>" (qualquer N de 1 a 30 vale, sem relógio): "token-sintetico-expirado" dá sempre 401 e
+// O acesso é "token-sintetico-<papel>-<N>" (qualquer N de 1 a 40 vale, sem relógio): "token-sintetico-expirado" dá sempre 401 e
 // "token-sintetico-trocar" é o atleta 1 com a troca obrigatória. As capturas (scripts/capturas.mjs) usam esses acessos sem passar pela tela.
 // Sair revoga o acesso; trocar a senha revoga e devolve outro. Todas as rotas de dado pedem o Bearer (401) e o id do caminho tem de ser o da conta (404).
 const SENHA_SINTETICA = "senha-sintetica-123";
@@ -500,7 +500,7 @@ const contaDoToken = (t) => {
   if (t === "token-sintetico-trocar") return { papel: "atleta", id: 1 };
   const m = t.match(RE_TOKEN);
   const id = m ? Number(m[2]) : 0;
-  return m && id >= 1 && id <= 30 ? { papel: m[1], id } : null;
+  return m && id >= 1 && id <= 40 ? { papel: m[1], id } : null;
 };
 const quemSou = (conta, token) => ({
   papel: conta.papel,

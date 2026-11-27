@@ -73,15 +73,17 @@ export function GraficoSerie({ serie, selecionado, aoSelecionar }: Props) {
   const ref = serie.referencia;
   const base = barras && eixo ? y(Math.max(eixo.minimo, 0)) : 0;
   const legenda = [
-    { chave: "treino", texto: "treino" },
-    { chave: "fora", texto: "fora do normal" },
-    { chave: "melhor", texto: "melhor" },
+    barras ? { chave: "semana", texto: "semana" } : { chave: "treino", texto: "treino" },
+    ...(!barras && serie.pontos.some((p) => p.fora_do_normal) ? [{ chave: "fora", texto: "fora do normal" }] : []),
+    ...(!barras && serie.pontos.some((p) => p.melhor) ? [{ chave: "melhor", texto: "melhor" }] : []),
     ...(ref ? [{ chave: "normal", texto: "normal" }] : []),
   ];
   const datas = (() => {
     const n = serie.pontos.length;
     if (n === 0) return [];
-    const idx = n === 1 ? [0] : n === 2 ? [0, 1] : [0, Math.floor((n - 1) / 2), n - 1];
+    // Datas longas ("semana de 10/03") não cabem três no eixo: só a primeira e a última.
+    const longa = serie.pontos.some((p) => p.data_texto.length > 9);
+    const idx = n === 1 ? [0] : n === 2 || longa ? [0, n - 1] : [0, Math.floor((n - 1) / 2), n - 1];
     return idx.map((i, k) => ({ i, ancora: k === 0 ? "start" : k === idx.length - 1 ? "end" : "middle", texto: serie.pontos[i].data_texto }));
   })();
 
@@ -179,6 +181,7 @@ export function GraficoSerie({ serie, selecionado, aoSelecionar }: Props) {
         {legenda.map((l) => (
           <View key={l.chave} style={styles.legendaItem}>
             <Svg width={16} height={16}>
+              {l.chave === "semana" && <Rect x={2} y={2} width={12} height={12} fill={cor["grafico.pace"]} />}
               {l.chave === "treino" && <Circle cx={8} cy={8} r={5} fill={cor.superficie} stroke={cor["grafico.pace"]} strokeWidth={2} />}
               {l.chave === "fora" && <Polygon points="8,2 15,14 1,14" fill={cor.alerta} />}
               {l.chave === "melhor" && <Polygon points="8,0 16,8 8,16 0,8" fill={cor["grafico.pace"]} />}
