@@ -57,9 +57,31 @@ describe("tela de um treino", () => {
   it("cada linha do clima é um item só, lido como 'rótulo, valor'", async () => {
     await render(tela(fetchCom(200, atividades.ok)));
     const cartao = await screen.findByTestId("cartao-clima");
-    for (const rotulo of ["Temperatura, 24,3 °C", "Sensação térmica, 25,1 °C", "Umidade, 61 %", "Vento, 8,2 km/h"]) {
+    for (const rotulo of ["Temperatura, 24 °C", "Sensação térmica, 25 °C", "Umidade, 61 %", "Vento, 8 km/h"]) {
       expect(within(cartao).getByLabelText(rotulo).props.accessible).toBe(true);
     }
+  });
+
+  it("clima ok: mostra os textos da API como vêm, sem arredondar no app", async () => {
+    const clima = { ...atividades.ok.clima!, temperatura_texto: "-4 °C", sensacao_texto: "0 °C", umidade_texto: "62 %", vento_texto: "13 km/h" };
+    await render(tela(fetchCom(200, { ...atividades.ok, clima })));
+    const cartao = within(await screen.findByTestId("cartao-clima"));
+    for (const t of ["-4 °C", "0 °C", "62 %", "13 km/h"]) expect(cartao.getByText(t)).toBeTruthy();
+  });
+
+  it("clima ok: texto ausente vira 'sem dado'", async () => {
+    const { temperatura_texto: _t, vento_texto: _v, ...resto } = atividades.ok.clima!;
+    await render(tela(fetchCom(200, { ...atividades.ok, clima: resto })));
+    const cartao = within(await screen.findByTestId("cartao-clima"));
+    expect(cartao.getAllByText("sem dado")).toHaveLength(2);
+    expect(cartao.getByText("61 %")).toBeTruthy();
+  });
+
+  it("clima pendente de treino recente: promete até uma semana", async () => {
+    const pendente = { ...atividades.pendente, clima: { estado: "pendente", recente: true } } as typeof atividades.pendente;
+    await render(tela(fetchCom(200, pendente)));
+    await screen.findByTestId("cartao-clima");
+    expect(screen.getByText("O clima deste treino ainda não chegou. Costuma levar até uma semana.")).toBeTruthy();
   });
 
   it("clima ok: resumo com campos prontos, valores do clima e atribuição", async () => {
@@ -74,10 +96,10 @@ describe("tela de um treino", () => {
     for (const r of ["Distância, 10,00 km", "Pace médio, 5:12 min/km", "FC média, 152 bpm"]) {
       expect(within(screen.getByTestId("cartao-resumo")).getByLabelText(r)).toBeTruthy();
     }
-    expect(screen.getByText("24,3 °C")).toBeTruthy();
-    expect(screen.getByText("25,1 °C")).toBeTruthy();
+    expect(screen.getByText("24 °C")).toBeTruthy();
+    expect(screen.getByText("25 °C")).toBeTruthy();
     expect(screen.getByText("61 %")).toBeTruthy();
-    expect(screen.getByText("8,2 km/h")).toBeTruthy();
+    expect(screen.getByText("8 km/h")).toBeTruthy();
     expect(screen.getByText("Weather data by Open-Meteo.com")).toBeTruthy();
   });
 
@@ -120,7 +142,7 @@ describe("tela de um treino", () => {
   it.each([
     ["indoor", "Treino em ambiente fechado: não há clima para mostrar."],
     ["sem_posicao", "O arquivo não tem posição, então não dá para buscar o clima."],
-    ["pendente", "O clima deste treino ainda não chegou. Treinos recentes podem levar cerca de uma semana."],
+    ["pendente", "O clima deste treino ainda não foi buscado."],
     ["falha", "Não foi possível obter o clima deste treino."],
   ] as const)("clima %s: frase própria, sem valores nem atribuição", async (chave, frase) => {
     await render(tela(fetchCom(200, atividades[chave])));

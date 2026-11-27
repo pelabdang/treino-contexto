@@ -72,10 +72,15 @@ const corrida = (id) => ({
   fc_media: 152,
   clima: {
     estado: "ok",
+    recente: false,
     temperatura_c: 24.3,
+    temperatura_texto: "24 °C",
     sensacao_c: 25.1,
+    sensacao_texto: "25 °C",
     umidade_pct: 61,
+    umidade_texto: "61 %",
     vento_kmh: 8.2,
+    vento_texto: "8 km/h",
     atribuicao: "Weather data by Open-Meteo.com",
   },
 });
@@ -94,7 +99,7 @@ const natacao = (id) => ({
   distancia: "1.800 m",
   pace_medio: null,
   fc_media: null,
-  clima: { estado: "indoor" },
+  clima: { estado: "indoor", recente: false },
 });
 // Semana-padrão sintética (#268): segunda fartlek + natação, terça ciclismo intervalado, quarta corrida
 // intervalado + natação; duas vigências. O PUT guarda em memória e devolve `atividades_reaplicadas: 0`.

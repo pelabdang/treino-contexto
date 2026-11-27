@@ -31,6 +31,7 @@ const ENTRAR_ANA = [["campo-email", "atleta1@exemplo.com"], ["campo-senha", SENH
 const TROCAR_OK = [["campo-senha-atual", SENHA_SINTETICA], ["campo-senha-nova", "outra-senha-sintetica"], ["campo-senha-repetida", "outra-senha-sintetica"]];
 const ROTAS = [
   { nome: "treino-pronto", caminho: "/treino/107" }, // check-in feito, feedback pronto, carga pela PSE
+  { nome: "treino-pronto-clima", caminho: "/treino/107", rolarAoFim: true }, // rola até o fim: o cartão Clima (último) aparece inteiro
   { nome: "treino-feedback-pendente", caminho: "/treino/112" },
   { nome: "treino-feedback-desatualizado", caminho: "/treino/113" },
   { nome: "treino-feedback-indisponivel", caminho: "/treino/114" },

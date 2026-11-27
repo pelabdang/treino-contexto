@@ -2,7 +2,7 @@
 tipo: design
 status: rascunho
 dono: lia
-atualizado: 2026-11-17
+atualizado: 2026-11-27
 links: [[design/guia-visual]], [[design/tokens]], [[design/telas/evolucao-tiros]], [[design/telas/checkin]], [[design/telas/feedback]], [[modulos/mobile]], [[decisoes/0004-contrato-tela-evolucao]], [[decisoes/0007-clima-da-atividade]], [[decisoes/0008-deteccao-de-esforcos]], [[decisoes/0009-treino-de-transicao]], [[decisoes/0010-carga-de-treino]], [[decisoes/0011-linha-de-base-e-semana-padrao]], [[metricas/linha-base]], [[metricas/serie-carga]], [[metricas/transicao]], [[produto/roadmap]]
 ---
 # Tela: um treino, com o clima e (Meta 12) o treino inteiro
@@ -42,10 +42,10 @@ Celular de 360, tema claro (a margem é 16; a partir de 600 é 24, largura máxi
 │ │ FC média: 152 bpm            │ │  ou "sem FC"
 │ └──────────────────────────────┘ │
 │ ┌ Clima ───────────────────────┐ │  cartão
-│ │ Temperatura          24,3 °C │ │  linhas de 44
-│ │ Sensação térmica     25,1 °C │ │
+│ │ Temperatura            24 °C │ │  linhas de 44
+│ │ Sensação térmica       25 °C │ │
 │ │ Umidade                61 %  │ │
-│ │ Vento                8,2 km/h│ │
+│ │ Vento                 8 km/h │ │
 │ │ Weather data by Open-Meteo…  │ │  fonte.legenda
 │ └──────────────────────────────┘ │
 └──────────────────────────────────┘
@@ -80,8 +80,9 @@ Segue o padrão do [[design/guia-visual]] e da [[design/telas/evolucao-tiros]] (
 | `ok` | quatro linhas e a atribuição `clima.atribuicao`; valor ausente vira "sem dado" | "Weather data by Open-Meteo.com" |
 | `indoor` | aviso neutro com `info-outline` | "Treino em ambiente fechado: não há clima para mostrar." |
 | `sem_posicao` | aviso neutro com `info-outline` | "O arquivo não tem posição, então não dá para buscar o clima." |
-| `pendente` | aviso neutro com `info-outline` | "O clima deste treino ainda não chegou. Treinos recentes podem levar cerca de uma semana." |
+| `pendente` | aviso neutro com `info-outline` | `recente: true`: "O clima deste treino ainda não chegou. Costuma levar até uma semana."; `recente: false`: "O clima deste treino ainda não foi buscado." |
 | `falha` | aviso de alerta, `warning-amber`, `cor.alerta` sobre `cor.alerta-suave` | "Não foi possível obter o clima deste treino." |
+**Inteiros (#563, PR #565):** temperatura, sensação térmica, umidade e vento aparecem sem casa decimal (24,3 vira "24 °C"; 8,2 vira "8 km/h"). **Quem arredonda é a API** ([[modulos/api]], #569): o app mostra `temperatura_texto`, `sensacao_texto`, `umidade_texto` e `vento_texto` como vêm, sem cálculo; texto ausente vira "sem dado". Capturas em `docs/design/telas/clima-inteiro/`.
 Sem o campo `clima`, o cartão não aparece. A atribuição é obrigatória com `ok` (CC BY 4.0, [[decisoes/0007-clima-da-atividade]]).
 
 ## Entrada pela lista da evolução
@@ -92,7 +93,7 @@ Implementado no #217 (antes a tela só abria digitando a URL). Sem quebrar a sel
 
 ## Acessibilidade
 - Ordem de leitura: Voltar, título, modalidade e data, duração, distância, pace, FC, clima, atribuição.
-- Cada linha do clima é lida junta: "Temperatura, 24,3 °C" (um item, não dois).
+- Cada linha do clima é lida junta: "Temperatura, 24 °C" (um item, não dois).
 - Faixa de erro com `accessibilityRole="alert"`; o esqueleto fica fora da leitura e o texto "Carregando o treino..." é anunciado.
 - Alvos de toque de 44 ou mais; contraste conforme [[design/tokens]]. Ícone nunca sozinho: sempre há texto.
 
