@@ -23,6 +23,12 @@ export const ABAS_PROFESSOR: Aba[] = [
 ];
 export const abasDoPapel = (papel: Papel): Aba[] => (papel === "professor" ? ABAS_PROFESSOR : ABAS_ATLETA);
 
+/** Treinos: check-ins pendentes; Conta: pedidos de consentimento. */
+function unidadeDoSelo(rota: string, n: number): string {
+  if (rota === "treinos") return n === 1 ? "check-in pendente" : "check-ins pendentes";
+  return n === 1 ? "pedido" : "pedidos";
+}
+
 type Props = {
   abas: Aba[];
   ativa: string;
@@ -47,7 +53,7 @@ export function BarraDeAbas({ abas, ativa, aoEscolher, lateral, selos = {} }: Pr
             testID={`aba-${a.rota}`}
             accessibilityRole="tab"
             accessibilityState={{ selected: marcada }}
-            accessibilityLabel={selo > 0 ? `${a.rotulo}, ${selo} ${selo === 1 ? "pedido" : "pedidos"}` : a.rotulo}
+            accessibilityLabel={selo > 0 ? `${a.rotulo}, ${selo} ${unidadeDoSelo(a.rota, selo)}` : a.rotulo}
             onPress={() => aoEscolher(a.rota)}
             style={comFoco([styles.aba, marcada && styles.abaMarcada], styles.foco)}
           >
@@ -78,7 +84,7 @@ function criarEstilos({ cor }: Tema, lateral: boolean) {
     abaMarcada: { backgroundColor: cor["marca-suave"] },
     rotulo: { ...fonte.rotulo, color: cor["texto-2"] },
     rotuloMarcado: { color: cor.link, fontFamily: fonte["corpo-forte"].fontFamily },
-    selo: { position: "absolute", top: -4, right: -10, minWidth: 18, height: 18, borderRadius: 9, paddingHorizontal: 4, alignItems: "center", justifyContent: "center", backgroundColor: cor.erro },
+    selo: { position: "absolute", top: -4, right: -10, minWidth: 18, height: 18, borderRadius: raio.pilula, paddingHorizontal: 4, alignItems: "center", justifyContent: "center", backgroundColor: cor.erro },
     seloTexto: { ...fonte.legenda, lineHeight: 16, color: cor["sobre-erro"], fontFamily: fonte["corpo-forte"].fontFamily },
     foco: { outlineWidth: borda.foco, outlineStyle: "solid", outlineColor: cor.foco, outlineOffset: -2 },
   });

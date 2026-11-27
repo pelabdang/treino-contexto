@@ -5,6 +5,7 @@ import { MaterialIcons } from "@expo/vector-icons";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { ActivityIndicator, FlatList, Pressable, StyleSheet, Text, View } from "react-native";
 
+import { BotaoEnviarFit } from "./BotaoEnviarFit";
 import { buscarTreinos, type ItemTreino, type ModalidadeFiltro } from "../treinos/api";
 import { comFoco } from "../tema/foco";
 import { EsqueletoPendentes } from "./Esqueleto";
@@ -22,12 +23,15 @@ type Props = {
   atualizar?: number;
   fetchFn?: typeof fetch;
   limite?: number;
+  /** Depois de enviar um FIT com sucesso a lista é buscada de novo; esta função avisa o resto do app (selo da aba). */
+  aoEnviar?: () => void;
 };
 
 type Estado = { tipo: "carregando" } | { tipo: "erro"; rede: boolean } | { tipo: "ok" };
 
+export const TEXTO_TODAS = "Todas as modalidades";
 const CHIPS: { valor: ModalidadeFiltro | null; texto: string }[] = [
-  { valor: null, texto: "Todos" },
+  { valor: null, texto: TEXTO_TODAS },
   { valor: "corrida", texto: "Corrida" },
   { valor: "natacao", texto: "Natação" },
   { valor: "ciclismo", texto: "Ciclismo" },
@@ -35,11 +39,11 @@ const CHIPS: { valor: ModalidadeFiltro | null; texto: string }[] = [
 
 const TIPOS: Record<string, string> = { leve: "Leve", moderado: "Moderado", longo: "Longo", intervalado: "Intervalado", fartlek: "Fartlek" };
 
-export const TEXTO_VAZIO = "Nenhum treino ainda";
+export const TEXTO_VAZIO = "Nenhum treino ainda. Envie o arquivo do seu relógio e a análise aparece aqui.";
 export const TEXTO_VAZIO_FILTRO = "Nenhum treino com esses filtros.";
 export const TEXTO_FIM = "Esses são todos os seus treinos.";
 
-export function TelaTreinos({ apiUrl, atletaId, aoAbrirTreino, semCheckinInicial = false, atualizar = 0, fetchFn, limite = 20 }: Props) {
+export function TelaTreinos({ apiUrl, atletaId, aoAbrirTreino, semCheckinInicial = false, atualizar = 0, fetchFn, limite = 20, aoEnviar }: Props) {
   const tema = useTema();
   const margem = useMargemTela();
   const styles = useMemo(() => criarEstilos(tema, margem), [tema, margem]);
@@ -51,6 +55,7 @@ export function TelaTreinos({ apiUrl, atletaId, aoAbrirTreino, semCheckinInicial
   const [maisCarregando, setMaisCarregando] = useState(false);
   const [maisErro, setMaisErro] = useState(false);
   const [tentativa, setTentativa] = useState(0);
+  const [recarregar, setRecarregar] = useState(0);
   // Cada busca de primeira página invalida as respostas atrasadas das anteriores (troca de filtro).
   const geracao = useRef(0);
   const opcoes = useMemo(() => ({ baseUrl: apiUrl, fetch: fetchFn }), [apiUrl, fetchFn]);
@@ -66,6 +71,9 @@ export function TelaTreinos({ apiUrl, atletaId, aoAbrirTreino, semCheckinInicial
     const minha = ++geracao.current;
     buscarTreinos(atletaId, { limite, modalidade, checkinPendente: semCheckin }, opcoes).then((r) => {
       if (minha !== geracao.current) return;
+      // Uma busca nova invalida a página seguinte em andamento: sem isto, `maisCarregando` ficava preso em true
+      // (a resposta atrasada é descartada e nunca o desligava) e a rolagem infinita parava.
+      setMaisCarregando(false);
       if (r.ok) {
         setItens(r.dados.itens);
         setProximo(r.dados.proximo ?? null);
@@ -76,7 +84,7 @@ export function TelaTreinos({ apiUrl, atletaId, aoAbrirTreino, semCheckinInicial
         setEstado((atual) => (atual.tipo === "ok" ? atual : { tipo: "erro", rede: r.erro.tipo === "rede" }));
       }
     });
-  }, [atletaId, limite, modalidade, semCheckin, opcoes, tentativa, atualizar]);
+  }, [atletaId, limite, modalidade, semCheckin, opcoes, tentativa, atualizar, recarregar]);
 
   const escolher = useCallback((m: ModalidadeFiltro | null) => {
     setModalidade(m);
@@ -94,6 +102,11 @@ export function TelaTreinos({ apiUrl, atletaId, aoAbrirTreino, semCheckinInicial
     setEstado({ tipo: "carregando" });
     setTentativa((n) => n + 1);
   }, []);
+
+  const enviado = useCallback(() => {
+    setRecarregar((n) => n + 1);
+    aoEnviar?.();
+  }, [aoEnviar]);
 
   const carregarMais = useCallback(async () => {
     if (!proximo || maisCarregando || estado.tipo !== "ok") return;
@@ -115,9 +128,12 @@ export function TelaTreinos({ apiUrl, atletaId, aoAbrirTreino, semCheckinInicial
 
   const cabecalho = (
     <View style={styles.cabecalho}>
-      <Text accessibilityRole="header" style={styles.titulo}>
-        Treinos
-      </Text>
+      <View style={styles.titulos}>
+        <Text accessibilityRole="header" style={styles.titulo}>
+          Treinos
+        </Text>
+        <BotaoEnviarFit apiUrl={apiUrl} atletaId={atletaId} fetchFn={fetchFn} aoEnviar={enviado} rotulo="Enviar FIT" />
+      </View>
       <View accessibilityRole="radiogroup" style={styles.chips}>
         {CHIPS.map((c) => {
           const marcado = modalidade === c.valor;
@@ -207,6 +223,7 @@ export function TelaTreinos({ apiUrl, atletaId, aoAbrirTreino, semCheckinInicial
               <Text accessibilityRole="header" style={styles.estadoTitulo}>
                 {filtrado ? TEXTO_VAZIO_FILTRO : TEXTO_VAZIO}
               </Text>
+              {!filtrado && <BotaoEnviarFit apiUrl={apiUrl} atletaId={atletaId} fetchFn={fetchFn} aoEnviar={enviado} variante="primario" rotulo="Enviar FIT" />}
             </View>
           )}
         </View>
@@ -216,6 +233,8 @@ export function TelaTreinos({ apiUrl, atletaId, aoAbrirTreino, semCheckinInicial
   );
 }
 
+type Selo = { chave: string; icone: React.ComponentProps<typeof MaterialIcons>["name"]; texto: string; atencao: boolean };
+
 type Estilos = ReturnType<typeof criarEstilos>;
 
 function CartaoTreino({ item, aoAbrir, styles, tema }: { item: ItemTreino; aoAbrir: () => void; styles: Estilos; tema: Tema }) {
@@ -223,12 +242,16 @@ function CartaoTreino({ item, aoAbrir, styles, tema }: { item: ItemTreino; aoAbr
   const nome = mod?.nome ?? "Treino";
   const quando = `${dataCurta(item.data_local)} às ${item.hora_local}`;
   const tipo = item.tipo_treino ? TIPOS[item.tipo_treino] : null;
-  const selos: { chave: string; icone: React.ComponentProps<typeof MaterialIcons>["name"]; texto: string; atencao: boolean }[] = [];
-  if (item.checkin_estado === "pendente") selos.push({ chave: "pendente", icone: "assignment", texto: "Check-in pendente", atencao: true });
-  if (item.checkin_estado === "vencido") selos.push({ chave: "vencido", icone: "event-busy", texto: "Check-in vencido", atencao: false });
-  if (item.feedback_estado === "pronto") selos.push({ chave: "pronto", icone: "check-circle-outline", texto: "Feedback pronto", atencao: false });
-  if (item.feedback_estado === "desatualizado") selos.push({ chave: "desatualizado", icone: "update", texto: "Feedback desatualizado", atencao: true });
-  const resumo = [nome, quando, tipo, item.duracao, item.distancia, ...selos.map((s) => s.texto)].filter(Boolean).join(", ");
+  // Um selo só, o primeiro que valer (spec v3): sem check-in, check-in vencido. Os selos de "normal" dependem de campo
+  // que a lista ainda não traz (linha de base); entram quando a API mandar.
+  const selo: Selo | null =
+    item.checkin_estado === "pendente"
+      ? { chave: "pendente", icone: "schedule", texto: "Sem check-in", atencao: true }
+      : item.checkin_estado === "vencido"
+        ? { chave: "vencido", icone: "event-busy", texto: "Check-in vencido", atencao: false }
+        : null;
+  const principal = item.destaque ?? item.duracao;
+  const resumo = [nome, quando, tipo, item.duracao, item.distancia, selo?.texto].filter(Boolean).join(", ");
   return (
     <Pressable
       testID={`treino-${item.atividade_id}`}
@@ -247,41 +270,26 @@ function CartaoTreino({ item, aoAbrir, styles, tema }: { item: ItemTreino; aoAbr
         )}
       </View>
       <Text style={styles.quando}>{quando}</Text>
-      <View style={styles.numeros}>
-        <Numero rotulo="Duração" valor={item.duracao} styles={styles} />
-        {item.distancia ? <Numero rotulo="Distância" valor={item.distancia} styles={styles} /> : null}
-      </View>
-      {item.destaque ? (
-        <Text testID={`destaque-${item.atividade_id}`} style={styles.destaque}>
-          {item.destaque}
-        </Text>
-      ) : null}
-      {selos.length > 0 && (
+      <Text testID={`principal-${item.atividade_id}`} style={item.destaque ? styles.principalTexto : styles.principal}>
+        {principal}
+      </Text>
+      <Text style={styles.meta}>{[item.destaque ? item.duracao : null, item.distancia].filter(Boolean).join(" · ")}</Text>
+      {selo && (
         <View style={styles.selos}>
-          {selos.map((s) => (
-            <View key={s.chave} testID={`selo-${s.chave}-${item.atividade_id}`} style={[styles.selo, s.atencao && styles.seloAtencao]}>
-              <MaterialIcons name={s.icone} size={tamanho.iconePequeno} color={s.atencao ? tema.cor.alerta : tema.cor["texto-2"]} accessible={false} />
-              <Text style={[styles.seloTexto, s.atencao && { color: tema.cor.alerta }]}>{s.texto}</Text>
-            </View>
-          ))}
+          <View testID={`selo-${selo.chave}-${item.atividade_id}`} style={[styles.selo, selo.atencao && styles.seloAtencao]}>
+            <MaterialIcons name={selo.icone} size={tamanho.iconePequeno} color={selo.atencao ? tema.cor.alerta : tema.cor["texto-2"]} accessible={false} />
+            <Text style={[styles.seloTexto, selo.atencao && { color: tema.cor.alerta }]}>{selo.texto}</Text>
+          </View>
         </View>
       )}
     </Pressable>
   );
 }
 
-function Numero({ rotulo, valor, styles }: { rotulo: string; valor: string; styles: Estilos }) {
-  return (
-    <View style={styles.numero}>
-      <Text style={styles.numeroRotulo}>{rotulo}</Text>
-      <Text style={styles.numeroValor}>{valor}</Text>
-    </View>
-  );
-}
-
 function criarEstilos({ cor }: Tema, margem: number) {
   return StyleSheet.create({
     container: { padding: margem, alignSelf: "center", width: "100%", maxWidth: larguraConteudoMax + 2 * margem, flexGrow: 1 },
+    titulos: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", gap: espaco[3], flexWrap: "wrap" },
     cabecalho: { gap: espaco[3], marginBottom: espaco[3] },
     titulo: { ...fonte["titulo-tela"], color: cor.texto },
     texto: { ...fonte.corpo, color: cor["texto-2"] },
@@ -297,11 +305,9 @@ function criarEstilos({ cor }: Tema, margem: number) {
     tipo: { paddingHorizontal: espaco[2], paddingVertical: 2, borderRadius: raio.pilula, backgroundColor: cor["superficie-2"] },
     tipoTexto: { ...fonte.legenda, color: cor.texto },
     quando: { ...fonte.rotulo, color: cor["texto-2"] },
-    numeros: { flexDirection: "row", gap: espaco[5], marginTop: espaco[1] },
-    numero: { gap: 2 },
-    numeroRotulo: { ...fonte.legenda, color: cor["texto-2"] },
-    numeroValor: { ...fonte["titulo-secao"], color: cor.texto, fontVariant: ["tabular-nums"] },
-    destaque: { ...fonte.corpo, color: cor.texto },
+    principal: { ...fonte["numero-destaque"], color: cor.texto },
+    principalTexto: { ...fonte["titulo-secao"], color: cor.texto },
+    meta: { ...fonte.rotulo, color: cor["texto-2"] },
     selos: { flexDirection: "row", flexWrap: "wrap", gap: espaco[2], marginTop: espaco[1] },
     selo: { flexDirection: "row", alignItems: "center", gap: espaco[1], paddingHorizontal: espaco[2], paddingVertical: 4, borderRadius: raio.pilula, backgroundColor: cor["superficie-2"] },
     seloAtencao: { backgroundColor: cor["alerta-suave"] },

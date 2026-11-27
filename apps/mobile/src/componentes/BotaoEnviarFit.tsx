@@ -12,6 +12,8 @@ type Props = {
   aoEnviar?: () => void;
   /** "secundario" (padrão, guia visual) com dados na tela; "primario" no estado vazio. */
   variante?: "primario" | "secundario";
+  /** Texto do botão; padrão "Enviar arquivo FIT". */
+  rotulo?: string;
   /** Troque nos testes. Padrão: o fetch global. */
   fetchFn?: typeof fetch;
 };
@@ -35,7 +37,7 @@ export function mensagemErroEnvio(erro: ErroApi): string {
   }
 }
 
-export function BotaoEnviarFit({ apiUrl, atletaId, aoEnviar, fetchFn, variante = "secundario" }: Props) {
+export function BotaoEnviarFit({ apiUrl, atletaId, aoEnviar, fetchFn, variante = "secundario", rotulo = "Enviar arquivo FIT" }: Props) {
   const tema = useTema();
   const styles = useMemo(() => criarEstilos(tema), [tema]);
   const [estado, setEstado] = useState<Estado>({ tipo: "parado" });
@@ -81,7 +83,7 @@ export function BotaoEnviarFit({ apiUrl, atletaId, aoEnviar, fetchFn, variante =
           enviando && styles.desligado,
         ]}
       >
-        <Text style={[styles.botaoTexto, variante === "secundario" && styles.botaoTextoSecundario, enviando && styles.botaoTextoDesligado]}>Enviar arquivo FIT</Text>
+        <Text style={[styles.botaoTexto, variante === "secundario" && styles.botaoTextoSecundario, enviando && styles.botaoTextoDesligado]}>{rotulo}</Text>
       </Pressable>
       {enviando && (
         <View style={styles.linha}>
