@@ -7,6 +7,8 @@ links: [[design/guia-visual]], [[design/tokens]], [[modulos/mobile]], [[decisoes
 ---
 # Tela: evolução dos tiros de 1 km (exemplo do guia)
 
+> **Em 27/11 a [[design/telas/evolucao-v1]] passa a ser o desenho da tela de evolução** (seletor de séries, faixa do normal e frase). Esta nota fica como história do primeiro desenho.
+
 Aplicação do [[design/guia-visual]] à tela que já existe (`TelaEvolucao`, `GraficoTiros` e `BotaoEnviarFit`, em
 [[modulos/mobile]]). É um esboço para a issue do tema, do Rafa: nada em `apps/mobile/` muda nesta nota.
 Todos os números são **sintéticos**.
