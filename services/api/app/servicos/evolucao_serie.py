@@ -193,6 +193,11 @@ def _eixo(frase_tipo: str, valores: list[float]) -> Eixo | None:
     return Eixo(round(esc.min, 1), round(esc.max, 1), invertido, [Marca(round(m.valor, 1), m.rotulo) for m in esc.marcas])
 
 
+def frase_da_serie(s: SerieDef, brutos: list[PontoSerie], hoje: date) -> fe.FraseEvolucao:
+    """A frase da série sobre os pontos por treino (por dia no condicionamento); os tiros pedem 2 por janela."""
+    return fe.frase_evolucao(s.frase, [fe.Ponto(p.dia, p.valor, p.aprendendo) for p in brutos], hoje, sujeito(s), 2 if s.tipo == "tiros" else None)
+
+
 def serie(session: Session, atleta_id: int, serie_id: str, periodo: Periodo = "12s", agora: datetime | None = None) -> SerieLida:
     """`KeyError` se `serie_id` não existe no catálogo. Série sem treino do atleta devolve pontos vazios e a frase "sem treino"."""
     s = POR_ID[serie_id]
@@ -228,7 +233,6 @@ def serie(session: Session, atleta_id: int, serie_id: str, periodo: Periodo = "1
         valores_eixo += [ref.minimo, ref.maximo]
     if s.tipo == "volume":
         valores_eixo.append(0.0)
-    minimo_frase = 2 if s.tipo == "tiros" else None
-    frase = fe.frase_evolucao(s.frase, [fe.Ponto(p.dia, p.valor, p.aprendendo) for p in brutos], hoje, sujeito(s), minimo_frase)
+    frase = frase_da_serie(s, brutos, hoje)
     return SerieLida(s, periodo, ini, hoje, unidade, pontos, None if ultimo is None else ultimo.valor_texto, ultimo_rotulo, ref,
                      aprendendo_texto, _eixo(s.frase, valores_eixo), frase, VERSAO)
