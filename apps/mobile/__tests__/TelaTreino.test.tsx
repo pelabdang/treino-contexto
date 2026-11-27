@@ -62,19 +62,26 @@ describe("tela de um treino", () => {
     }
   });
 
-  it.each([
-    [23.4, "23 °C"],
-    [23.5, "24 °C"],
-    [-3.4, "-3 °C"],
-    [-3.5, "-4 °C"],
-    [-0.4, "0 °C"],
-  ])("clima arredondado: temperatura %s aparece como %s", async (t, texto) => {
-    const clima = { ...atividades.ok.clima!, temperatura_c: t, sensacao_c: t, umidade_pct: 60.5, vento_kmh: 12.4 };
+  it("clima ok: mostra os textos da API como vêm, sem arredondar no app", async () => {
+    const clima = { ...atividades.ok.clima!, temperatura_texto: "-4 °C", sensacao_texto: "0 °C", umidade_texto: "62 %", vento_texto: "13 km/h" };
     await render(tela(fetchCom(200, { ...atividades.ok, clima })));
     const cartao = within(await screen.findByTestId("cartao-clima"));
-    expect(cartao.getAllByText(texto)).toHaveLength(2);
+    for (const t of ["-4 °C", "0 °C", "62 %", "13 km/h"]) expect(cartao.getByText(t)).toBeTruthy();
+  });
+
+  it("clima ok: texto ausente vira 'sem dado'", async () => {
+    const { temperatura_texto: _t, vento_texto: _v, ...resto } = atividades.ok.clima!;
+    await render(tela(fetchCom(200, { ...atividades.ok, clima: resto })));
+    const cartao = within(await screen.findByTestId("cartao-clima"));
+    expect(cartao.getAllByText("sem dado")).toHaveLength(2);
     expect(cartao.getByText("61 %")).toBeTruthy();
-    expect(cartao.getByText("12 km/h")).toBeTruthy();
+  });
+
+  it("clima pendente de treino recente: promete até uma semana", async () => {
+    const pendente = { ...atividades.pendente, clima: { estado: "pendente", recente: true } } as typeof atividades.pendente;
+    await render(tela(fetchCom(200, pendente)));
+    await screen.findByTestId("cartao-clima");
+    expect(screen.getByText("O clima deste treino ainda não chegou. Costuma levar até uma semana.")).toBeTruthy();
   });
 
   it("clima ok: resumo com campos prontos, valores do clima e atribuição", async () => {
@@ -135,7 +142,7 @@ describe("tela de um treino", () => {
   it.each([
     ["indoor", "Treino em ambiente fechado: não há clima para mostrar."],
     ["sem_posicao", "O arquivo não tem posição, então não dá para buscar o clima."],
-    ["pendente", "O clima deste treino ainda não chegou. Treinos recentes podem levar cerca de uma semana."],
+    ["pendente", "O clima deste treino ainda não foi buscado."],
     ["falha", "Não foi possível obter o clima deste treino."],
   ] as const)("clima %s: frase própria, sem valores nem atribuição", async (chave, frase) => {
     await render(tela(fetchCom(200, atividades[chave])));

@@ -43,12 +43,6 @@ function mensagemErro(erro: ErroApi): string {
   }
 }
 
-/** Inteiro arredondado (meio para longe do zero: 23,5 → 24 e -23,5 → -24), sem "-0". */
-function inteiro(n: number): string {
-  const r = Math.sign(n) * Math.round(Math.abs(n));
-  return String(r === 0 ? 0 : r);
-}
-
 export function TelaTreino({ apiUrl, atletaId, atividadeId, aoVoltar, aoFazerCheckin, aoEditarCheckin, atualizar = 0, fetchFn }: Props) {
   const tema = useTema();
   const margem = useMargemTela();
@@ -246,16 +240,16 @@ function Bloco({ styles, n, titulo }: { styles: Estilos; n: number; titulo: stri
 }
 
 function CartaoClima({ clima, styles, tema }: { clima: ClimaAtividade; styles: Estilos; tema: Tema }) {
-  const valor = (n: number | null | undefined, unidade: string) => (n == null ? "sem dado" : `${inteiro(n)} ${unidade}`);
+  const valor = (texto: string | null | undefined) => texto || "sem dado";
   let corpo: ReactNode;
   switch (clima.estado) {
     case "ok":
       corpo = (
         <>
-          <Linha styles={styles} rotulo="Temperatura" valor={valor(clima.temperatura_c, "°C")} />
-          <Linha styles={styles} rotulo="Sensação térmica" valor={valor(clima.sensacao_c, "°C")} />
-          <Linha styles={styles} rotulo="Umidade" valor={valor(clima.umidade_pct, "%")} />
-          <Linha styles={styles} rotulo="Vento" valor={valor(clima.vento_kmh, "km/h")} />
+          <Linha styles={styles} rotulo="Temperatura" valor={valor(clima.temperatura_texto)} />
+          <Linha styles={styles} rotulo="Sensação térmica" valor={valor(clima.sensacao_texto)} />
+          <Linha styles={styles} rotulo="Umidade" valor={valor(clima.umidade_texto)} />
+          <Linha styles={styles} rotulo="Vento" valor={valor(clima.vento_texto)} />
           {clima.atribuicao ? <Text style={styles.atribuicao}>{clima.atribuicao}</Text> : null}
         </>
       );
@@ -272,7 +266,11 @@ function CartaoClima({ clima, styles, tema }: { clima: ClimaAtividade; styles: E
           styles={styles}
           tema={tema}
           icone="info-outline"
-          texto="O clima deste treino ainda não chegou. Treinos recentes podem levar cerca de uma semana."
+          texto={
+            clima.recente
+              ? "O clima deste treino ainda não chegou. Costuma levar até uma semana."
+              : "O clima deste treino ainda não foi buscado."
+          }
         />
       );
       break;

@@ -80,9 +80,9 @@ Segue o padrão do [[design/guia-visual]] e da [[design/telas/evolucao-tiros]] (
 | `ok` | quatro linhas e a atribuição `clima.atribuicao`; valor ausente vira "sem dado" | "Weather data by Open-Meteo.com" |
 | `indoor` | aviso neutro com `info-outline` | "Treino em ambiente fechado: não há clima para mostrar." |
 | `sem_posicao` | aviso neutro com `info-outline` | "O arquivo não tem posição, então não dá para buscar o clima." |
-| `pendente` | aviso neutro com `info-outline` | "O clima deste treino ainda não chegou. Treinos recentes podem levar cerca de uma semana." |
+| `pendente` | aviso neutro com `info-outline` | `recente: true`: "O clima deste treino ainda não chegou. Costuma levar até uma semana."; `recente: false`: "O clima deste treino ainda não foi buscado." |
 | `falha` | aviso de alerta, `warning-amber`, `cor.alerta` sobre `cor.alerta-suave` | "Não foi possível obter o clima deste treino." |
-**Inteiros (#563, PR #565):** temperatura, sensação térmica, umidade e vento aparecem sem casa decimal (24,3 vira "24 °C"; 8,2 vira "8 km/h"). O app arredonda o valor que a API manda, com meio para longe do zero (23,5 vira 24; -3,5 vira -4) e sem "-0" (-0,4 vira "0 °C"). A API segue mandando o número com casas ([[modulos/api]]). Capturas em `docs/design/telas/clima-inteiro/`.
+**Inteiros (#563, PR #565):** temperatura, sensação térmica, umidade e vento aparecem sem casa decimal (24,3 vira "24 °C"; 8,2 vira "8 km/h"). **Quem arredonda é a API** ([[modulos/api]], #569): o app mostra `temperatura_texto`, `sensacao_texto`, `umidade_texto` e `vento_texto` como vêm, sem cálculo; texto ausente vira "sem dado". Capturas em `docs/design/telas/clima-inteiro/`.
 Sem o campo `clima`, o cartão não aparece. A atribuição é obrigatória com `ok` (CC BY 4.0, [[decisoes/0007-clima-da-atividade]]).
 
 ## Entrada pela lista da evolução
