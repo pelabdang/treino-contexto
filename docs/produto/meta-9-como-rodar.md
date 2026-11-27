@@ -64,8 +64,7 @@ A Bia também rodou o provedor de verdade em 11/11, só com fixtures sintéticas
    for i in 18 12 2 5; do curl -s localhost:8059/atletas/1/atividades/$i | python3 -c "import json,sys; print($i, json.load(sys.stdin)['feedback'])"; done
    ```
    Esperado:
-   - 18 (com check-in): `estado` `pendente`, `mensagem` "O feedback deste treino ainda não foi gerado. Toque em Atualizar para
-     ver se já está pronto.";
+   - 18 (com check-in): `estado` `pendente`, `mensagem` "O feedback deste treino ainda não foi gerado. Ele é preparado em lote; volte mais tarde.";
    - 12 (sem check-in, no prazo): `sem_checkin`, `checkin_aberto` `true`, "Faça o check-in para ver o feedback.";
    - 2 (fora do prazo): `sem_checkin`, `checkin_aberto` `false`, "O prazo do check-in deste treino acabou, então ele fica sem
      feedback.";
