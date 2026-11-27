@@ -10,6 +10,7 @@ Privacidade: o log e o relatorio so levam `atividade_id`, estado e contagens, nu
 
 from __future__ import annotations
 
+from decimal import ROUND_HALF_UP, Decimal
 import hashlib
 import logging
 import time
@@ -114,6 +115,20 @@ def _fim(a: Atividade) -> datetime:
     return para_utc(a.inicio) + timedelta(seconds=a.duracao_s or 0)
 
 
+def inteiro_texto(valor: float | None, unidade: str) -> str | None:
+    """Valor em inteiro com a unidade ("24 °C"): meio para longe do zero, sem "-0" (23,5 -> 24; -3,5 -> -4; -0,4 -> 0)."""
+    if valor is None:
+        return None
+    n = int(Decimal(str(valor)).quantize(Decimal(1), rounding=ROUND_HALF_UP))
+    return f"{n} {unidade}"
+
+
+def fim_recente(a: Atividade, agora: datetime | None = None) -> bool:
+    """O fim do treino tem menos de `JANELA_ATRASO` (7 dias): a mesma regra com que `preencher_clima` nao busca (#569)."""
+    agora = agora or datetime.now(timezone.utc)
+    return _fim(a) > agora - JANELA_ATRASO
+
+
 def preencher_clima(
     session: Session,
     cliente: ClienteClima,
@@ -136,7 +151,7 @@ def preencher_clima(
     linhas = {c.atividade_id: c for c in session.scalars(select(ClimaAtividade))}
     rel = RelatorioClima()
     for a in list(session.scalars(consulta)):
-        if e_indoor(a.subtipo) or _fim(a) > agora - JANELA_ATRASO:
+        if e_indoor(a.subtipo) or fim_recente(a, agora):
             continue  # dentro dos 7 dias: pendente sem consultar e sem contar rodada
         entrada = entrada_de(a)
         linha = linhas.get(a.id)
