@@ -28,7 +28,7 @@ describe("cartão Feedback: um teste por estado", () => {
     expect(screen.getByTestId("feedback-texto").props.selectable).toBe(true);
     expect(screen.getByTestId("feedback-origem")).toHaveTextContent(ORIGEM_AUTOMATICO);
     expect(screen.queryByTestId("selo-teste")).toBeNull();
-    expect(screen.queryByText("Atualizar")).toBeNull();
+    expect(screen.queryByText("Verificar de novo")).toBeNull();
     expect(screen.queryByText("Fazer check-in")).toBeNull();
   });
 
@@ -67,9 +67,9 @@ describe("cartão Feedback: um teste por estado", () => {
   });
 
   it.each([
-    ["pendente", "O feedback deste treino ainda não foi gerado. Toque em Atualizar para ver se já está pronto."],
-    ["desatualizado", "Você editou o check-in. O feedback será refeito."],
-  ] as const)("%s: info-outline, a mensagem (reserva se faltar) e 'Atualizar'", async (estado, reserva) => {
+    ["pendente", "O feedback deste treino ainda não foi gerado. Ele é preparado em lote; volte mais tarde."],
+    ["desatualizado", "Você editou o check-in. O feedback será refeito. Volte mais tarde para ler."],
+  ] as const)("%s: info-outline, a mensagem (reserva se faltar) e 'Verificar de novo'", async (estado, reserva) => {
     const atualizar = jest.fn(async () => pronto);
     await render(<CartaoFeedback feedback={{ estado }} aoAtualizar={atualizar} />);
     expect(screen.getByTestId("feedback-mensagem")).toHaveTextContent(reserva);
@@ -79,10 +79,16 @@ describe("cartão Feedback: um teste por estado", () => {
     await waitFor(() => expect(atualizar).toHaveBeenCalledTimes(1));
   });
 
-  it("a mensagem da API vence a frase de reserva", async () => {
-    await render(<CartaoFeedback feedback={{ estado: "pendente", mensagem: "Frase vinda da API." }} aoAtualizar={jest.fn()} />);
-    expect(screen.getByTestId("feedback-mensagem")).toHaveTextContent("Frase vinda da API.");
-    expect(screen.queryByText(/ainda não foi gerado/)).toBeNull();
+  it("desatualizado: a mensagem da API vence a reserva e ganha 'Volte mais tarde para ler.'", async () => {
+    await render(<CartaoFeedback feedback={{ estado: "desatualizado", mensagem: "Frase vinda da API." }} aoAtualizar={jest.fn()} />);
+    expect(screen.getByTestId("feedback-mensagem")).toHaveTextContent("Frase vinda da API. Volte mais tarde para ler.");
+  });
+
+  it("pendente: o texto é do app, mesmo que a API ainda mande a frase antiga com 'Atualizar'", async () => {
+    const antiga = "O feedback deste treino ainda não foi gerado. Toque em Atualizar para ver se já está pronto.";
+    await render(<CartaoFeedback feedback={{ estado: "pendente", mensagem: antiga }} aoAtualizar={jest.fn()} />);
+    expect(screen.getByTestId("feedback-mensagem")).toHaveTextContent("O feedback deste treino ainda não foi gerado. Ele é preparado em lote; volte mais tarde.");
+    expect(screen.queryByText(/Toque em Atualizar/)).toBeNull();
   });
 
   it("indisponível: só a mensagem, sem botão; o motivo nunca aparece nem muda o desenho", async () => {
@@ -145,10 +151,19 @@ describe("'Atualizar': recarga e anúncio", () => {
     await waitFor(() => expect(anuncio).toHaveBeenLastCalledWith("Feedback pronto."));
     atualizar.mockResolvedValueOnce({ estado: "pendente" });
     await fireEvent.press(screen.getByTestId("feedback-atualizar"));
-    await waitFor(() => expect(anuncio).toHaveBeenLastCalledWith("O feedback ainda não está pronto."));
+    await waitFor(() => expect(anuncio).toHaveBeenLastCalledWith("Ainda não foi gerado."));
     atualizar.mockResolvedValueOnce(undefined);
     await fireEvent.press(screen.getByTestId("feedback-atualizar"));
-    await waitFor(() => expect(anuncio).toHaveBeenLastCalledWith("Não foi possível atualizar o feedback."));
+    await waitFor(() => expect(anuncio).toHaveBeenLastCalledWith("Não foi possível verificar o feedback."));
+  });
+
+  it("continua pendente depois do toque: linha pequena 'Ainda não foi gerado.' e o botão volta ao nome", async () => {
+    const atualizar = jest.fn(async () => ({ estado: "pendente" }) as FeedbackTreino | null | undefined);
+    await render(<CartaoFeedback feedback={{ estado: "pendente" }} aoAtualizar={atualizar} />);
+    expect(screen.queryByTestId("feedback-ainda-pendente")).toBeNull();
+    await fireEvent.press(screen.getByTestId("feedback-atualizar"));
+    await waitFor(() => expect(screen.getByTestId("feedback-ainda-pendente")).toHaveTextContent("Ainda não foi gerado."));
+    expect(within(screen.getByTestId("feedback-atualizar")).getByText("Verificar de novo")).toBeTruthy();
   });
 
   it("região viva (Android): elemento sempre montado com accessibilityLiveRegion polite, que recebe o anúncio", async () => {
@@ -169,21 +184,21 @@ describe("'Atualizar': recarga e anúncio", () => {
     try {
       await render(<CartaoFeedback feedback={{ estado: "pendente" }} aoAtualizar={jest.fn(async () => ({ estado: "pendente" }) as FeedbackTreino)} />);
       await fireEvent.press(screen.getByTestId("feedback-atualizar"));
-      await waitFor(() => expect(screen.getByTestId("feedback-anuncio")).toHaveTextContent("O feedback ainda não está pronto."));
+      await waitFor(() => expect(screen.getByTestId("feedback-anuncio")).toHaveTextContent("Ainda não foi gerado."));
       expect(anuncio).not.toHaveBeenCalled();
     } finally {
       Platform.OS = os;
     }
   });
 
-  it("enquanto busca, o botão fica desligado ('Atualizando...') e não dispara duas buscas", async () => {
+  it("enquanto busca, o botão fica desligado ('Verificando...') e não dispara duas buscas", async () => {
     let solta: (f: FeedbackTreino) => void = () => {};
     const atualizar = jest.fn(() => new Promise<FeedbackTreino>((r) => (solta = r)));
     await render(<CartaoFeedback feedback={{ estado: "pendente" }} aoAtualizar={atualizar} />);
     await fireEvent.press(screen.getByTestId("feedback-atualizar"));
     const botao = await screen.findByTestId("feedback-atualizar");
     expect(botao.props.accessibilityState.disabled).toBe(true);
-    expect(within(botao).getByText("Atualizando...")).toBeTruthy();
+    expect(within(botao).getByText("Verificando...")).toBeTruthy();
     await fireEvent.press(botao);
     expect(atualizar).toHaveBeenCalledTimes(1);
     await waitFor(() => solta(pronto));
@@ -253,7 +268,7 @@ describe("cartão Feedback na tela do treino", () => {
     });
     await render(tela(f as unknown as typeof fetch));
     await fireEvent.press(await screen.findByTestId("feedback-atualizar"));
-    await waitFor(() => expect(anuncio).toHaveBeenLastCalledWith("Não foi possível atualizar o feedback."));
+    await waitFor(() => expect(anuncio).toHaveBeenLastCalledWith("Não foi possível verificar o feedback."));
     expect(screen.getByTestId("feedback-mensagem")).toBeTruthy();
     expect(screen.getByTestId("cartao-resumo")).toBeTruthy();
     anuncio.mockRestore();
