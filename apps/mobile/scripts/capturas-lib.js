@@ -19,6 +19,10 @@ const ACESSOS = {
   atleta24: "token-sintetico-atleta-24",
   atleta25: "token-sintetico-atleta-25",
   atleta27: "token-sintetico-atleta-27",
+  // Lista de treinos: 2 vazia, 28 responde 500, 29 derruba a conexão, 30 erra na segunda página.
+  atleta28: "token-sintetico-atleta-28",
+  atleta29: "token-sintetico-atleta-29",
+  atleta30: "token-sintetico-atleta-30",
 };
 const ENTRAR_ANA = [["campo-email", "atleta1@exemplo.com"], ["campo-senha", SENHA_SINTETICA]];
 const TROCAR_OK = [["campo-senha-atual", SENHA_SINTETICA], ["campo-senha-nova", "outra-senha-sintetica"], ["campo-senha-repetida", "outra-senha-sintetica"]];
@@ -76,6 +80,13 @@ const ROTAS = [
   // Navegação por abas (UX, auditoria da Lia): barra na base (390) e menu lateral (1280). Início e Evolução mostram os tiros de 1 km.
   { nome: "aba-inicio", caminho: "/" },
   { nome: "aba-treinos", caminho: "/treinos" },
+  { nome: "aba-treinos-modalidade", caminho: "/treinos", clicar: ["chip-natacao"] },
+  { nome: "aba-treinos-sem-checkin", caminho: "/treinos?filtro=sem-checkin" },
+  { nome: "aba-treinos-fim", caminho: "/treinos", clicar: ["chip-sem-checkin"] }, // 3 pendentes: lista curta, com "Esses são todos os seus treinos."
+  { nome: "aba-treinos-vazio", caminho: "/treinos", acesso: "atleta2" },
+  { nome: "aba-treinos-erro", caminho: "/treinos", acesso: "atleta28" },
+  { nome: "aba-treinos-mais-erro", caminho: "/treinos", acesso: "atleta30", rolarAoFim: true }, // a 2ª página falha: "Não foi possível carregar mais treinos."
+  { nome: "aba-treinos-erro-rede", caminho: "/treinos", acesso: "atleta29" },
   { nome: "aba-evolucao", caminho: "/evolucao" },
   { nome: "aba-conta", caminho: "/conta" }, // atleta 1 tem pedido de consentimento: selo na aba e no item
   { nome: "aba-conta-sem-pedido", caminho: "/conta", acesso: "atleta2" },
