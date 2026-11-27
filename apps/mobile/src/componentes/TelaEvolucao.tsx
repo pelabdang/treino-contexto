@@ -1,4 +1,11 @@
-import { buscarEvolucaoTiros1km, type ErroApi, type EvolucaoTiros1km } from "@treino/api-client";
+import {
+  buscarCatalogoSeries,
+  buscarSerieEvolucao,
+  type CatalogoSeries,
+  type ErroApi,
+  type PeriodoSerie,
+  type SerieEvolucao,
+} from "@treino/api-client";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { MaterialIcons } from "@expo/vector-icons";
 import { Pressable, ScrollView, StyleSheet, Text, useWindowDimensions, View } from "react-native";
@@ -10,6 +17,7 @@ import { EsqueletoEvolucao } from "./Esqueleto";
 import {
   borda,
   espaco,
+  familia,
   fonte,
   larguraConteudoMax,
   larguraMargemGrande,
@@ -19,7 +27,9 @@ import {
   useTema,
   type Tema,
 } from "../tema";
-import { dataCurta, GraficoTiros } from "./GraficoTiros";
+import { gravarUltimaSerie, lerUltimaSerie } from "../sessao/armazenamento";
+import { GraficoSerie } from "./GraficoSerie";
+import { SeletorSerie } from "./SeletorSerie";
 
 type Props = {
   apiUrl: string;
@@ -40,20 +50,17 @@ type Props = {
   fetchFn?: typeof fetch;
 };
 
-type Estado =
-  | { tipo: "carregando" }
-  | { tipo: "ok"; dados: EvolucaoTiros1km }
-  | { tipo: "erro"; erro: ErroApi };
+type EstadoCatalogo = { tipo: "carregando" } | { tipo: "ok"; dados: CatalogoSeries } | { tipo: "erro"; erro: ErroApi };
+type EstadoSerie = { tipo: "carregando" } | { tipo: "ok"; dados: SerieEvolucao } | { tipo: "erro"; erro: ErroApi };
+
+const PERIODOS: { id: PeriodoSerie; texto: string }[] = [
+  { id: "12s", texto: "12 semanas" },
+  { id: "6m", texto: "6 meses" },
+  { id: "1a", texto: "1 ano" },
+];
 
 function mensagemErro(erro: ErroApi): string {
-  switch (erro.tipo) {
-    case "nao_encontrado":
-      return "Atleta não encontrado";
-    case "rede":
-      return "Não foi possível falar com o servidor";
-    default:
-      return "Não foi possível carregar os tiros. Tente de novo mais tarde.";
-  }
+  return erro.tipo === "nao_encontrado" ? "Atleta não encontrado" : "Não foi possível carregar esta série.";
 }
 
 export function TelaEvolucao({
@@ -70,18 +77,73 @@ export function TelaEvolucao({
   const tema = useTema();
   const margem = useMargemTela();
   const styles = useMemo(() => criarEstilos(tema, margem), [tema, margem]);
-  const [estado, setEstado] = useState<Estado>({ tipo: "carregando" });
+  const [catalogo, setCatalogo] = useState<EstadoCatalogo>({ tipo: "carregando" });
+  const [serie, setSerie] = useState<EstadoSerie>({ tipo: "carregando" });
   const [tentativa, setTentativa] = useState(0);
+  const [escolhidaId, setEscolhidaId] = useState<string | null>(null);
+  const [periodo, setPeriodo] = useState<PeriodoSerie>("12s");
+  const [selecionado, setSelecionado] = useState<number | null>(null);
+  const [lista, setLista] = useState(false);
+  const [abrirFolha, setAbrirFolha] = useState(0);
+  const larga = useWindowDimensions().width >= larguraMargemGrande;
 
+  // 1) Catálogo. A série inicial: a última que o atleta escolheu (guardada no aparelho); na primeira vez, a `serie_padrao`.
   useEffect(() => {
     let ativo = true;
-    buscarEvolucaoTiros1km(atletaId, {}, { baseUrl: apiUrl, fetch: fetchFn }).then((r) => {
-      if (ativo) setEstado(r.ok ? { tipo: "ok", dados: r.dados } : { tipo: "erro", erro: r.erro });
-    });
+    (async () => {
+      const [r, guardada] = await Promise.all([
+        buscarCatalogoSeries(atletaId, { baseUrl: apiUrl, fetch: fetchFn }),
+        lerUltimaSerie(atletaId),
+      ]);
+      if (!ativo) return;
+      if (!r.ok) return setCatalogo({ tipo: "erro", erro: r.erro });
+      setCatalogo({ tipo: "ok", dados: r.dados });
+      setEscolhidaId((atual) => {
+        if (atual && r.dados.series.some((s) => s.id === atual)) return atual;
+        const lembrada = r.dados.series.find((s) => s.id === guardada && s.disponivel);
+        return lembrada?.id ?? r.dados.serie_padrao ?? r.dados.series.find((s) => s.disponivel)?.id ?? r.dados.series[0]?.id ?? null;
+      });
+    })();
     return () => {
       ativo = false;
     };
   }, [apiUrl, atletaId, fetchFn, tentativa]);
+
+  // 2) A série escolhida, no período escolhido.
+  const catalogoOk = catalogo.tipo === "ok" ? catalogo.dados : null;
+  const entrada = catalogoOk?.series.find((x) => x.id === escolhidaId);
+  const buscaSerie = entrada?.disponivel ? escolhidaId : null;
+  useEffect(() => {
+    if (!buscaSerie) return;
+    let ativo = true;
+    buscarSerieEvolucao(atletaId, buscaSerie, periodo, { baseUrl: apiUrl, fetch: fetchFn }).then((r) => {
+      if (!ativo) return;
+      setSelecionado(null);
+      setSerie(r.ok ? { tipo: "ok", dados: r.dados } : { tipo: "erro", erro: r.erro });
+    });
+    return () => {
+      ativo = false;
+    };
+  }, [apiUrl, atletaId, fetchFn, buscaSerie, periodo, tentativa]);
+
+  const escolher = useCallback(
+    (id: string) => {
+      if (id === escolhidaId) return;
+      setSerie({ tipo: "carregando" });
+      setEscolhidaId(id);
+      setSelecionado(null);
+      void gravarUltimaSerie(atletaId, id);
+    },
+    [atletaId, escolhidaId],
+  );
+  const mudarPeriodo = useCallback(
+    (p: PeriodoSerie) => {
+      if (p === periodo) return;
+      setSerie({ tipo: "carregando" });
+      setPeriodo(p);
+    },
+    [periodo],
+  );
 
   // Total de treinos sem check-in (uma chamada a mais ao abrir). Se falhar, a linha aparece sem número.
   const [pendentes, setPendentes] = useState<number | null>(null);
@@ -112,19 +174,21 @@ export function TelaEvolucao({
   }, [querPedidos, apiUrl, atletaId, fetchFn, atualizar]);
 
   const tentarDeNovo = useCallback(() => {
-    setEstado({ tipo: "carregando" });
+    setCatalogo((c) => (c.tipo === "erro" ? { tipo: "carregando" } : c));
+    setSerie({ tipo: "carregando" });
     setTentativa((n) => n + 1);
   }, []);
 
   // Depois de um envio com sucesso, busca a evolução de novo (sem esconder o que já está na tela).
   const recarregar = useCallback(() => setTentativa((n) => n + 1), []);
 
-  const vazio = estado.tipo === "ok" && estado.dados.sessoes.length === 0;
+  const semNenhuma = catalogoOk !== null && !catalogoOk.series.some((x) => x.disponivel);
+  const vazio = semNenhuma;
 
   return (
     <ScrollView testID="rolagem-tela" contentContainerStyle={styles.container}>
       <Text accessibilityRole="header" style={styles.titulo}>
-        Evolução dos tiros de 1 km
+        Evolução
       </Text>
       {aoAbrirConsentimento && pedidos > 0 && (
         <View testID="aviso-consentimento" accessibilityLiveRegion="polite" style={styles.avisoPedido}>
@@ -170,148 +234,268 @@ export function TelaEvolucao({
           variante={vazio ? "primario" : "secundario"}
         />
       )}
-      {estado.tipo === "carregando" && (
+      {catalogo.tipo === "carregando" && (
         <View>
           <Text accessibilityLiveRegion="polite" style={styles.texto}>
-            Carregando seus tiros...
+            Carregando...
           </Text>
           <EsqueletoEvolucao />
         </View>
       )}
-      {estado.tipo === "erro" && (
-        <View testID="estado-erro" style={styles.estado}>
-          <MaterialIcons
-            name={estado.erro.tipo === "rede" ? "wifi-off" : "error-outline"}
-            size={tamanho.iconeEstado}
-            color={tema.cor.erro}
-            accessible={false}
-          />
-          <Text accessibilityRole="alert" style={styles.erro}>
-            {mensagemErro(estado.erro)}
+      {catalogo.tipo === "erro" && <Erro erro={catalogo.erro} aoTentar={tentarDeNovo} styles={styles} tema={tema} />}
+      {catalogoOk && semNenhuma && (
+        <View testID="estado-vazio" style={styles.estado}>
+          <MaterialIcons name="insert-chart-outlined" size={tamanho.iconeEstado} color={tema.cor["texto-2"]} accessible={false} />
+          <Text accessibilityRole="header" style={styles.estadoTitulo}>
+            Ainda não há evolução para mostrar
           </Text>
-          {estado.erro.tipo === "rede" && (
-            <Pressable
-              accessibilityRole="button"
-              onPress={tentarDeNovo}
-              style={({ pressed }) => [styles.botao, pressed && { backgroundColor: tema.cor["botao-pressionado"] }]}
-            >
-              <Text style={styles.botaoTexto}>Tentar de novo</Text>
-            </Pressable>
-          )}
+          <Text style={styles.texto}>Envie o arquivo do seu relógio pela aba Conta e a evolução aparece aqui.</Text>
         </View>
       )}
-      {estado.tipo === "ok" && <Sucesso dados={estado.dados} aoAbrirTreino={aoAbrirTreino} styles={styles} tema={tema} />}
+      {catalogoOk && !semNenhuma && escolhidaId && (
+        <View style={larga ? styles.duasColunas : undefined}>
+          <View style={larga ? styles.colunaEsq : undefined}>
+            <Text style={styles.subtitulo}>Escolha o que acompanhar</Text>
+            <SeletorSerie series={catalogoOk.series} escolhida={escolhidaId} aoEscolher={(x) => escolher(x.id)} larga={larga} abrirFolha={abrirFolha} />
+          </View>
+          <View style={larga ? styles.colunaDir : undefined}>
+            {entrada && !entrada.disponivel && (
+              <View testID="serie-indisponivel" style={styles.estado}>
+                <MaterialIcons name="insert-chart-outlined" size={tamanho.iconeEstado} color={tema.cor["texto-2"]} accessible={false} />
+                <Text accessibilityRole="header" style={styles.estadoTitulo}>
+                  {entrada.titulo}
+                </Text>
+                <Text style={styles.texto}>{entrada.motivo}</Text>
+                <EscolherOutra styles={styles} aoPressionar={() => setAbrirFolha((n) => n + 1)} visivel={!larga} />
+              </View>
+            )}
+            {entrada?.disponivel && serie.tipo === "carregando" && (
+              <View>
+                <Text accessibilityLiveRegion="polite" style={styles.apenasLeitor}>
+                  Carregando
+                </Text>
+                <EsqueletoEvolucao />
+              </View>
+            )}
+            {entrada?.disponivel && serie.tipo === "erro" && <Erro erro={serie.erro} aoTentar={tentarDeNovo} styles={styles} tema={tema} />}
+            {entrada?.disponivel && serie.tipo === "ok" && (
+              <SerieOk
+                dados={serie.dados}
+                periodo={periodo}
+                aoMudarPeriodo={mudarPeriodo}
+                selecionado={selecionado}
+                aoSelecionar={setSelecionado}
+                lista={lista}
+                aoAlternarLista={() => setLista((v) => !v)}
+                aoAbrirTreino={aoAbrirTreino}
+                aoEscolherOutra={() => setAbrirFolha((n) => n + 1)}
+                larga={larga}
+                styles={styles}
+                tema={tema}
+              />
+            )}
+          </View>
+        </View>
+      )}
     </ScrollView>
   );
 }
 
-function Sucesso({
+function Erro({ erro, aoTentar, styles, tema }: { erro: ErroApi; aoTentar: () => void; styles: Estilos; tema: Tema }) {
+  return (
+    <View testID="estado-erro" style={styles.estado}>
+      <MaterialIcons name={erro.tipo === "rede" ? "wifi-off" : "error-outline"} size={tamanho.iconeEstado} color={tema.cor.erro} accessible={false} />
+      <Text accessibilityRole="alert" style={styles.erro}>
+        {mensagemErro(erro)}
+      </Text>
+      {erro.tipo !== "nao_encontrado" && (
+        <>
+          <Text style={styles.texto}>Verifique a conexão e tente de novo.</Text>
+          <Pressable
+            accessibilityRole="button"
+            onPress={aoTentar}
+            style={({ pressed }) => [styles.botao, pressed && { backgroundColor: tema.cor["botao-pressionado"] }]}
+          >
+            <Text style={styles.botaoTexto}>Tentar de novo</Text>
+          </Pressable>
+        </>
+      )}
+    </View>
+  );
+}
+
+function EscolherOutra({ styles, aoPressionar, visivel }: { styles: Estilos; aoPressionar: () => void; visivel: boolean }) {
+  if (!visivel) return null;
+  return (
+    <Pressable testID="escolher-outra" accessibilityRole="button" onPress={aoPressionar} style={styles.verTreino}>
+      <Text style={styles.verTreinoTexto}>Escolher outra série</Text>
+    </Pressable>
+  );
+}
+
+function SerieOk({
   dados,
+  periodo,
+  aoMudarPeriodo,
+  selecionado,
+  aoSelecionar,
+  lista,
+  aoAlternarLista,
   aoAbrirTreino,
+  aoEscolherOutra,
+  larga,
   styles,
   tema,
 }: {
-  dados: EvolucaoTiros1km;
+  dados: SerieEvolucao;
+  periodo: PeriodoSerie;
+  aoMudarPeriodo: (p: PeriodoSerie) => void;
+  selecionado: number | null;
+  aoSelecionar: (i: number | null) => void;
+  lista: boolean;
+  aoAlternarLista: () => void;
   aoAbrirTreino?: (atividadeId: number) => void;
+  aoEscolherOutra: () => void;
+  larga: boolean;
   styles: Estilos;
   tema: Tema;
 }) {
-  // A API manda as sessões em ordem de data crescente: a última é o último treino.
-  const ultima = dados.sessoes.at(-1);
-  // A seleção é única: ponto do gráfico e linha da lista escolhem a mesma sessão.
-  const [selecionadaId, setSelecionadaId] = useState<number | null>(null);
-  const larga = useWindowDimensions().width >= larguraMargemGrande;
+  const pontos = dados.pontos;
+  if (pontos.length === 0) {
+    return (
+      <View testID="estado-vazio" style={styles.estado}>
+        <MaterialIcons name="insert-chart-outlined" size={tamanho.iconeEstado} color={tema.cor["texto-2"]} accessible={false} />
+        <Text accessibilityRole="header" style={styles.estadoTitulo}>
+          {dados.titulo}
+        </Text>
+        <Text style={styles.texto}>{dados.frase.texto}</Text>
+        <EscolherOutra styles={styles} aoPressionar={aoEscolherOutra} visivel />
+      </View>
+    );
+  }
+  const ponto = selecionado != null ? pontos[selecionado] : null;
+  const vizinho = (passo: number) => {
+    if (selecionado == null) return null;
+    for (let i = selecionado + passo; i >= 0 && i < pontos.length; i += passo) if (pontos[i].valor != null) return i;
+    return null;
+  };
+  const anterior = vizinho(-1);
+  const seguinte = vizinho(1);
+  const selo = (p: (typeof pontos)[number]) =>
+    p.normal_estado === "fora" ? "fora do seu normal" : p.normal_estado === "dentro" ? "dentro do seu normal" : p.normal_estado === "aprendendo" ? "normal em aprendizado" : null;
   return (
     <View>
-      {dados.sessoes.length === 0 ? (
-        <View testID="estado-vazio" style={styles.estado}>
-          <MaterialIcons name="insert-chart-outlined" size={tamanho.iconeEstado} color={tema.cor["texto-2"]} accessible={false} />
-          <Text accessibilityRole="header" style={styles.estadoTitulo}>
-            Ainda não há treinos de tiros de 1 km
-          </Text>
-          <Text style={styles.texto}>Envie o arquivo FIT de um treino com tiros para ver a evolução aqui.</Text>
-        </View>
-      ) : (
-        <>
-          {ultima && (
-            <View testID="cartao-ultimo-treino" style={styles.cartao}>
-              <Text style={styles.cartaoTitulo}>Último treino · {dataCurta(ultima.data)}</Text>
-              <Text style={styles.rotulo}>Melhor tiro</Text>
-              <Text style={styles.destaque}>
-                {ultima.pace_melhor} <Text style={styles.unidade}>min/km</Text>
-              </Text>
-              <Text style={styles.corpo}>
-                FC do melhor tiro: {ultima.fc_melhor_tiro === null ? "sem FC" : `${ultima.fc_melhor_tiro} bpm`}
-              </Text>
-              <Text style={styles.secundario}>
-                Média dos tiros: {ultima.pace_medio} min/km · {ultima.n_tiros} tiros
-              </Text>
+      <View testID="frase-evolucao" style={styles.frase}>
+        <Text style={styles.sobretitulo}>EM UMA FRASE</Text>
+        <Text style={styles.fraseTexto}>{dados.frase.texto}</Text>
+      </View>
+      <View style={styles.cartao}>
+        {dados.ultimo_valor_texto != null && (
+          <View accessible accessibilityLabel={`${dados.ultimo_valor_texto} ${dados.unidade}, ${dados.ultimo_rotulo ?? ""}`}>
+            <View style={styles.valorLinhaGrande}>
+              <Text style={styles.numeroGrande}>{dados.ultimo_valor_texto}</Text>
+              <Text style={styles.unidade}>{dados.unidade}</Text>
             </View>
-          )}
-          <View style={styles.cartao}>
-            <Text style={styles.cartaoTitulo}>Evolução</Text>
-            <GraficoTiros dados={dados} selecionadaId={selecionadaId} aoSelecionar={setSelecionadaId} />
-            {aoAbrirTreino && selecionadaId !== null && (
+            {dados.ultimo_rotulo && <Text style={styles.rotulo}>{dados.ultimo_rotulo}</Text>}
+          </View>
+        )}
+        <GraficoSerie serie={dados} selecionado={selecionado} aoSelecionar={aoSelecionar} />
+        {dados.aprendendo_texto && (
+          <Text testID="aprendendo" style={styles.aviso}>
+            {dados.aprendendo_texto}
+          </Text>
+        )}
+        <View accessibilityRole="tablist" style={styles.periodos}>
+          {PERIODOS.map((p) => (
+            <Pressable
+              key={p.id}
+              testID={`periodo-${p.id}`}
+              accessibilityRole="tab"
+              accessibilityState={{ selected: p.id === periodo }}
+              onPress={() => aoMudarPeriodo(p.id)}
+              style={[styles.periodo, p.id === periodo && styles.periodoAtivo]}
+            >
+              <Text style={[styles.periodoTexto, p.id === periodo && styles.periodoTextoAtivo]}>{p.texto}</Text>
+            </Pressable>
+          ))}
+        </View>
+        {ponto ? (
+          <View testID="detalhe-ponto" style={styles.detalhe}>
+            <Text style={styles.detalheTitulo}>{ponto.data_texto}</Text>
+            <View style={styles.valorLinhaGrande}>
+              <Text style={styles.detalheValor}>{ponto.valor_texto ?? "sem valor"}</Text>
+              {ponto.valor_texto != null && <Text style={styles.unidade}>{dados.unidade}</Text>}
+            </View>
+            {selo(ponto) && <Text style={styles.rotulo}>{selo(ponto)}</Text>}
+            <Text style={styles.legenda}>{ponto.rotulo}</Text>
+            {aoAbrirTreino && ponto.atividade_id != null && (
               <Pressable
-                testID="ver-treino"
+                testID="abrir-treino"
                 accessibilityRole="button"
-                accessibilityLabel="Ver treino"
-                onPress={() => aoAbrirTreino(selecionadaId)}
-                style={({ pressed }) => [styles.verTreino, pressed && { backgroundColor: tema.cor["marca-suave"] }]}
+                onPress={() => aoAbrirTreino(ponto.atividade_id as number)}
+                style={({ pressed }) => [styles.botao, pressed && { backgroundColor: tema.cor["botao-pressionado"] }]}
               >
-                <Text style={styles.verTreinoTexto}>Ver treino</Text>
-                <MaterialIcons name="chevron-right" size={tamanho.iconeMedio} color={tema.cor.link} accessible={false} />
+                <Text style={styles.botaoTexto}>Abrir treino</Text>
               </Pressable>
             )}
+            <View style={styles.setas}>
+              <Pressable
+                testID="treino-anterior"
+                accessibilityRole="button"
+                accessibilityState={{ disabled: anterior == null }}
+                disabled={anterior == null}
+                onPress={() => anterior != null && aoSelecionar(anterior)}
+                style={[styles.seta, anterior == null && styles.setaOff]}
+              >
+                <Text style={styles.verTreinoTexto}>{dados.id.includes("volume") ? "Semana anterior" : "Treino anterior"}</Text>
+              </Pressable>
+              <Pressable
+                testID="treino-seguinte"
+                accessibilityRole="button"
+                accessibilityState={{ disabled: seguinte == null }}
+                disabled={seguinte == null}
+                onPress={() => seguinte != null && aoSelecionar(seguinte)}
+                style={[styles.seta, seguinte == null && styles.setaOff]}
+              >
+                <Text style={styles.verTreinoTexto}>{dados.id.includes("volume") ? "Semana seguinte" : "Treino seguinte"}</Text>
+              </Pressable>
+            </View>
           </View>
-          <View testID="lista-sessoes" style={styles.cartao}>
-            <Text style={styles.cartaoTitulo}>Treinos</Text>
-            {larga && (
-              <View testID="cabecalho-lista" style={styles.cabecalhoLista}>
-                <Text style={[styles.colunaTitulo, styles.colData]}>Data</Text>
-                <Text style={[styles.colunaTitulo, styles.colPace]}>Melhor tiro</Text>
-                <Text style={[styles.colunaTitulo, styles.colFc]}>FC do melhor tiro</Text>
-                <Text style={[styles.colunaTitulo, styles.colunaMedia]}>Média dos tiros</Text>
-              </View>
-            )}
-            {[...dados.sessoes].reverse().map((s) => {
-              const selecionada = s.atividade_id === selecionadaId;
-              return (
-                <Pressable
-                  key={s.atividade_id}
-                  testID={`linha-sessao-${s.atividade_id}`}
-                  accessibilityRole="button"
-                  accessibilityState={{ selected: selecionada }}
-                  accessibilityLabel={`Sessão de ${dataCurta(s.data)}, melhor tiro ${s.pace_melhor} min/km`}
-                  onPress={() => setSelecionadaId(s.atividade_id)}
-                  style={({ pressed }) => [
-                    styles.linha,
-                    (selecionada || pressed) && { backgroundColor: tema.cor["marca-suave"] },
-                  ]}
-                >
-                  <Text style={[styles.celula, larga && styles.colData]}>{dataCurta(s.data)}</Text>
-                  <Text style={[styles.celula, larga && styles.colPace]}>{s.pace_melhor} min/km</Text>
-                  <Text style={[styles.celula, larga && styles.colFc]}>
-                    {s.fc_melhor_tiro === null ? "sem FC" : `${s.fc_melhor_tiro} bpm`}
-                  </Text>
-                  {larga ? (
-                    <Text style={[styles.secundarioLinha, styles.colunaMedia]}>
-                      {s.pace_medio} min/km · {s.n_tiros} tiros
-                    </Text>
-                  ) : (
-                    <Text style={styles.secundarioLinha}>
-                      média {s.pace_medio} · {s.n_tiros} tiros
-                    </Text>
-                  )}
-                </Pressable>
-              );
-            })}
+        ) : (
+          <Text style={styles.legenda}>
+            {pontos.length} {pontos.length === 1 ? "ponto" : "pontos"} no período. Toque num ponto para ver os detalhes.
+          </Text>
+        )}
+        <Pressable
+          testID="ver-lista"
+          accessibilityRole="button"
+          accessibilityState={{ expanded: lista }}
+          onPress={aoAlternarLista}
+          style={styles.verTreino}
+        >
+          <Text style={styles.verTreinoTexto}>{lista ? "Esconder a lista" : "Ver os valores em lista"}</Text>
+        </Pressable>
+        {lista && (
+          <View testID="lista-pontos" accessibilityRole="list">
+            {[...pontos.keys()].reverse().map((i) => (
+              <Pressable
+                key={i}
+                testID={`linha-ponto-${i}`}
+                accessibilityRole="button"
+                accessibilityState={{ selected: i === selecionado }}
+                accessibilityLabel={pontos[i].rotulo}
+                onPress={() => aoSelecionar(i)}
+                style={[styles.linhaPonto, i === selecionado && { backgroundColor: tema.cor["marca-suave"] }]}
+              >
+                <Text style={styles.celula}>{pontos[i].data_texto}</Text>
+                <Text style={styles.celula}>{pontos[i].valor_texto ?? "sem valor"}</Text>
+              </Pressable>
+            ))}
           </View>
-        </>
-      )}
+        )}
+      </View>
       <View style={styles.rodape}>
         <Text style={styles.pequeno}>cálculo: {dados.versao_calculo}</Text>
-        {dados.reclassificacao_pendente && <Text style={styles.pequeno}>cálculo em atualização</Text>}
       </View>
     </View>
   );
@@ -389,6 +573,30 @@ function criarEstilos({ cor }: Tema, margem: number = espaco[4]) {
     colunaMedia: { flexBasis: 0, flexGrow: 1 },
     celula: { ...fonte.rotulo, fontVariant: ["tabular-nums"], color: cor.texto },
     rodape: { marginTop: espaco[5] },
+    subtitulo: { ...fonte.rotulo, color: cor["texto-2"], marginBottom: espaco[2] },
+    duasColunas: { flexDirection: "row", gap: espaco[5], alignItems: "flex-start" },
+    colunaEsq: { width: 300 },
+    colunaDir: { flex: 1 },
+    apenasLeitor: { position: "absolute", width: 1, height: 1, opacity: 0 },
+    frase: { marginTop: espaco[4], padding: espaco[3], borderRadius: raio.bloco, backgroundColor: cor["marca-suave"] },
+    sobretitulo: { ...fonte.sobretitulo, color: cor["texto-2"], marginBottom: espaco[1] },
+    fraseTexto: { fontFamily: familia.regular, fontSize: 14.5, lineHeight: 21, color: cor.texto },
+    valorLinhaGrande: { flexDirection: "row", alignItems: "baseline", gap: espaco[1] },
+    numeroGrande: { ...fonte["numero-grande"], fontSize: 44, lineHeight: 48, color: cor.texto },
+    aviso: { ...fonte.rotulo, color: cor["texto-2"], marginTop: espaco[2] },
+    periodos: { flexDirection: "row", gap: espaco[2], flexWrap: "wrap", marginTop: espaco[3] },
+    periodo: { minHeight: tamanho.alvoMinimo, justifyContent: "center", paddingHorizontal: espaco[3], borderRadius: raio.botao, borderWidth: borda.fina, borderColor: cor.borda },
+    periodoAtivo: { backgroundColor: cor["marca-suave"], borderColor: cor.link },
+    periodoTexto: { ...fonte.rotulo, color: cor.texto },
+    periodoTextoAtivo: { color: cor.link },
+    detalhe: { marginTop: espaco[3], padding: espaco[3], borderLeftWidth: 4, borderLeftColor: cor["grafico.pace"], backgroundColor: cor["superficie-2"], borderRadius: raio.bloco, gap: espaco[1] },
+    detalheTitulo: { ...fonte["titulo-cartao"], color: cor.texto },
+    detalheValor: { ...fonte["numero-destaque"], color: cor.texto },
+    legenda: { ...fonte.legenda, color: cor["texto-2"], marginTop: espaco[2] },
+    setas: { flexDirection: "row", flexWrap: "wrap", gap: espaco[2], marginTop: espaco[1] },
+    seta: { minHeight: tamanho.alvoMinimo, justifyContent: "center", paddingRight: espaco[2] },
+    setaOff: { opacity: 0.4 },
+    linhaPonto: { minHeight: tamanho.alvoMinimo, flexDirection: "row", alignItems: "center", gap: espaco[3], paddingHorizontal: espaco[2], borderBottomWidth: borda.fina, borderBottomColor: cor.borda },
     pequeno: { ...fonte.legenda, color: cor["texto-2"] },
   });
 }

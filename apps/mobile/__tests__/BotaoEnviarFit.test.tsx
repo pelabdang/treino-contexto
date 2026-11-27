@@ -1,14 +1,14 @@
-import type { EvolucaoTiros1km } from "@treino/api-client";
 import { act, fireEvent, render, screen, waitFor } from "@testing-library/react-native";
 import * as DocumentPicker from "expo-document-picker";
 
-import exemplo from "../../../packages/api-client/exemplos/evolucao-tiros-1km.json";
+import { fetchEvolucao } from "../__fixtures__/evolucao";
 import { TelaEvolucao } from "../src/componentes/TelaEvolucao";
 
+jest.mock("@expo/vector-icons", () => require("../__fixtures__/iconesFalsos"));
 jest.mock("expo-document-picker", () => ({ getDocumentAsync: jest.fn() }));
 const escolher = DocumentPicker.getDocumentAsync as jest.Mock;
 
-const evolucao = exemplo as unknown as EvolucaoTiros1km;
+const evolucao = fetchEvolucao();
 const resposta = (status: number, corpo: unknown) =>
   ({ ok: status >= 200 && status < 300, status, json: async () => corpo }) as Response;
 const ok = { resultado: "inserida", atividade_id: 7, avisos: [] };
@@ -16,14 +16,15 @@ const ok = { resultado: "inserida", atividade_id: 7, avisos: [] };
 /** fetch falso: GET devolve a evolução; POST devolve `post` (ou rejeita). */
 function fetchFalso(post: () => Promise<Response>) {
   return jest.fn(async (url: string, init?: RequestInit) =>
-    init?.method === "POST" ? post() : resposta(200, evolucao),
+    init?.method === "POST" ? post() : evolucao(url),
   ) as unknown as typeof fetch & jest.Mock;
 }
-const gets = (f: jest.Mock) => f.mock.calls.filter((c) => c[1]?.method !== "POST").length;
+// Só o catálogo conta: "busca a evolução de novo" é buscar o catálogo outra vez.
+const gets = (f: jest.Mock) => f.mock.calls.filter((c) => c[1]?.method !== "POST" && String(c[0]).endsWith("/evolucao/series")).length;
 
 async function abrir(f: typeof fetch) {
   await render(<TelaEvolucao apiUrl="http://api.teste" atletaId={1} fetchFn={f} />);
-  await screen.findByTestId("lista-sessoes");
+  await screen.findByTestId("frase-evolucao");
 }
 const clicar = async () => {
   await fireEvent.press(screen.getByText("Enviar arquivo FIT"));

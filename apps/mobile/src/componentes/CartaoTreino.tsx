@@ -4,7 +4,7 @@ import { Pressable, StyleSheet, Text, View } from "react-native";
 
 import { comFoco } from "../tema/foco";
 import type { ItemTreino } from "../treinos/api";
-import { dataCurta } from "./GraficoTiros";
+import { dataCurta } from "./dataCurta";
 import { MODALIDADES } from "./modalidades";
 import { borda, espaco, fonte, raio, tamanho, useTema, type Tema } from "../tema";
 

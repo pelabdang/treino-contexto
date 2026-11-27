@@ -40,7 +40,7 @@ import {
 import { borda, espaco, fonte, larguraConteudoMax, raio, tamanho, useMargemTela, useTema, type Tema } from "../tema";
 import { ChipsAtalhos, Dialogo, Folha, GradePse, ListaSensacao } from "./CheckinOpcoes";
 import { EsqueletoCheckin } from "./Esqueleto";
-import { dataCurta } from "./GraficoTiros";
+import { dataCurta } from "./dataCurta";
 import { MODALIDADES } from "./modalidades";
 
 export type OrigemCheckin = "treino" | "pendentes";

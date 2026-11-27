@@ -4,6 +4,13 @@ import type { components, operations } from "./schema";
 
 export type { components, operations } from "./schema";
 
+export type CatalogoSeries = components["schemas"]["CatalogoSeriesOut"];
+export type SerieCatalogo = components["schemas"]["SerieCatalogoOut"];
+export type SerieEvolucao = components["schemas"]["SerieEvolucaoOut"];
+export type PontoSerie = components["schemas"]["PontoSerieOut"];
+export type PeriodoSerie = SerieEvolucao["periodo"];
+export type CartoesInicio = components["schemas"]["CartoesOut"];
+export type CartaoInicio = components["schemas"]["CartaoOut"];
 export type EvolucaoTiros1km = components["schemas"]["EvolucaoTiros1km"];
 export type SessaoTiros = components["schemas"]["SessaoOut"];
 export type TiroSessao = components["schemas"]["TiroOut"];
@@ -251,4 +258,57 @@ export async function enviarAtividadeFit(
     ok: false,
     erro: typeof detail === "string" ? { tipo: "http", status: resposta.status, detail } : { tipo: "http", status: resposta.status },
   };
+}
+
+async function lerJson<T>(url: string, opcoes: OpcoesCliente): Promise<Resultado<T>> {
+  let resposta: Response;
+  try {
+    resposta = await (opcoes.fetch ?? fetch)(url, { headers: { Accept: "application/json" } });
+  } catch (e) {
+    return { ok: false, erro: { tipo: "rede", mensagem: e instanceof Error ? e.message : String(e) } };
+  }
+  if (resposta.ok) {
+    try {
+      return { ok: true, dados: (await resposta.json()) as T };
+    } catch {
+      return { ok: false, erro: { tipo: "http", status: resposta.status } };
+    }
+  }
+  if (resposta.status === 404 || resposta.status === 422) {
+    try {
+      const detalhe = await resposta.json();
+      return resposta.status === 404
+        ? { ok: false, erro: { tipo: "nao_encontrado", status: 404, detalhe: detalhe as ErroNaoEncontrado } }
+        : { ok: false, erro: { tipo: "validacao", status: 422, detalhe: detalhe as ErroValidacao } };
+    } catch {
+      // corpo que não é JSON: cai no erro HTTP genérico
+    }
+  }
+  return { ok: false, erro: { tipo: "http", status: resposta.status } };
+}
+
+const raiz = (opcoes: OpcoesCliente, atletaId: number) =>
+  `${(opcoes.baseUrl ?? BASE_URL_PADRAO).replace(/\/+$/, "")}/atletas/${encodeURIComponent(String(atletaId))}`;
+
+/** `GET /atletas/{atletaId}/evolucao/series`: o catálogo de séries da Evolução (ADR 0004, adendo 15). Nunca lança. */
+export function buscarCatalogoSeries(atletaId: number, opcoes: OpcoesCliente = {}): Promise<Resultado<CatalogoSeries>> {
+  return lerJson<CatalogoSeries>(`${raiz(opcoes, atletaId)}/evolucao/series`, opcoes);
+}
+
+/** `GET /atletas/{atletaId}/evolucao/series/{serieId}?periodo=`: pontos, faixa do normal, eixo e frase prontos. Nunca lança. */
+export function buscarSerieEvolucao(
+  atletaId: number,
+  serieId: string,
+  periodo: PeriodoSerie = "12s",
+  opcoes: OpcoesCliente = {},
+): Promise<Resultado<SerieEvolucao>> {
+  return lerJson<SerieEvolucao>(
+    `${raiz(opcoes, atletaId)}/evolucao/series/${encodeURIComponent(serieId)}?periodo=${encodeURIComponent(periodo)}`,
+    opcoes,
+  );
+}
+
+/** `GET /atletas/{atletaId}/inicio/cartoes`: até 5 cartões do início, com texto pronto e destino. Nunca lança. */
+export function buscarCartoesInicio(atletaId: number, opcoes: OpcoesCliente = {}): Promise<Resultado<CartoesInicio>> {
+  return lerJson<CartoesInicio>(`${raiz(opcoes, atletaId)}/inicio/cartoes`, opcoes);
 }

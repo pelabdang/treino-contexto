@@ -1,7 +1,6 @@
-import type { EvolucaoTiros1km } from "@treino/api-client";
 import { fireEvent, render, screen } from "@testing-library/react-native";
 
-import exemplo from "../../../packages/api-client/exemplos/evolucao-tiros-1km.json";
+import { fetchEvolucao } from "../__fixtures__/evolucao";
 import { TelaEvolucao } from "../src/componentes/TelaEvolucao";
 import { pendentes } from "../__fixtures__/checkin";
 
@@ -17,12 +16,13 @@ const resposta = (status: number, corpo: unknown) =>
 
 /** Evolução e pendentes no mesmo `fetch` falso; `pendentesFalha` derruba só a chamada dos pendentes. */
 function servidor(opcoes: { pendentesFalha?: boolean; total?: number } = {}) {
+  const evolucao = fetchEvolucao();
   return jest.fn(async (url: unknown) => {
     if (String(url).includes("/checkins/pendentes")) {
       if (opcoes.pendentesFalha) throw new Error("x");
       return resposta(200, { ...pendentes, total: opcoes.total ?? pendentes.total });
     }
-    return resposta(200, exemplo as unknown as EvolucaoTiros1km);
+    return evolucao(url as string);
   }) as unknown as typeof fetch & jest.Mock;
 }
 
@@ -42,13 +42,13 @@ describe("entrada 'Check-ins pendentes' na evolução", () => {
 
   it("sem pendentes (total 0) a linha aparece sem número", async () => {
     await render(tela(servidor({ total: 0 })));
-    await screen.findByTestId("lista-sessoes");
+    await screen.findByTestId("frase-evolucao");
     expect(screen.getByText("Check-ins pendentes")).toBeTruthy();
   });
 
   it("se a busca falhar, a linha aparece sem número e a evolução segue normal", async () => {
     await render(tela(servidor({ pendentesFalha: true })));
-    await screen.findByTestId("lista-sessoes");
+    await screen.findByTestId("frase-evolucao");
     expect(screen.getByText("Check-ins pendentes")).toBeTruthy();
   });
 
@@ -64,7 +64,7 @@ describe("entrada 'Check-ins pendentes' na evolução", () => {
   it("sem o callback, a linha não aparece e a API de pendentes nem é chamada", async () => {
     const f = servidor();
     await render(<TelaEvolucao apiUrl="http://api.teste" atletaId={1} fetchFn={f} />);
-    await screen.findByTestId("lista-sessoes");
+    await screen.findByTestId("frase-evolucao");
     expect(screen.queryByTestId("abrir-checkins-pendentes")).toBeNull();
     expect(f.mock.calls.some((c) => String(c[0]).includes("pendentes"))).toBe(false);
   });

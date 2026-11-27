@@ -26,7 +26,7 @@ import { borda, espaco, fonte, larguraConteudoMax, raio, tamanho, useMargemTela,
 import { BarraLote, type ErroLote } from "./BarraLote";
 import { EsqueletoCaixa } from "./Esqueleto";
 import { FolhaTipo } from "./FolhaTipo";
-import { dataCurta } from "./GraficoTiros";
+import { dataCurta } from "./dataCurta";
 import { MODALIDADES } from "./modalidades";
 
 type Props = {
