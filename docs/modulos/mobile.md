@@ -44,6 +44,11 @@ O app não calcula pace: todo `m:ss` virá da [[modulos/api]].
 - Testes: `__tests__/abas.test.tsx` (e os de rota e de sessão ajustados). Capturas (sintéticas, claro e escuro, 390 e 1280) em `docs/design/telas/navegacao/`: uma por aba (início, treinos, evolução, conta com e sem pedido, conta do professor, caixa do dia) e o diálogo de sair.
 - Fonte da proposta: [[design/auditoria-ux-e-inicio-do-atleta]] (arquitetura de informação). Pendente: a tela inicial nova. A lista de treinos entrou na #539.
 
+## Identidade v3 (#547)
+- Spec [[design/identidade-visual-v3]]; tabela oficial em [[design/tokens]]. Tema (`src/tema/tokens.ts`): volt `cor.marca`, `cor.botao`/`cor.sobre-botao` (botão primário), `cor.link` (também o anel de foco), `cor.marca-suave` (item selecionado) e `cor.sobre-erro`; saiu o teal `destaque`. Raios mais discretos: `raio.bloco` 8, `raio.botao` 10, `raio.cartao` 12, `raio.cartao-destaque` 14.
+- Fonte: Barlow Condensed 800 nos números (`fonte.numero-heroi`, `-destaque` 30, `-grande`) e Inter 800 nos títulos, carregadas em `src/tema/fontes.ts` (`@expo-google-fonts/barlow-condensed`). `LogoPulso` (SVG) aparece na tela Entrar. Ícone, ícone adaptativo e favicon vêm dos SVG de `docs/design/marca/` por `node scripts/gerar-icones.mjs`.
+- Só troca de tema: nenhuma tela mudou de estrutura (início v3 e treino v3 vêm depois). Capturas sintéticas em `docs/design/telas/identidade-v3-app/`.
+
 ## Aba Treinos (#539)
 - Consome `GET /atletas/{id}/atividades` ([[modulos/api]], #537, adendo 13 da [[decisoes/0004-contrato-tela-evolucao]]). Código: `src/treinos/api.ts` (`buscarTreinos`, nunca lança) e `src/componentes/TelaTreinos.tsx`; o tipo do item vem do cliente gerado ([[modulos/api-client]]).
 - Mais recente primeiro, com **rolagem infinita** pelo cursor `proximo` da API (o app não monta cursor). Filtros: modalidade (Todos, Corrida, Natação, Ciclismo) e "Sem check-in". Trocar o filtro invalida as respostas atrasadas da busca anterior. A aba busca a primeira página de novo quando volta ao foco.

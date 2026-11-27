@@ -30,7 +30,7 @@ Tema claro e escuro. O app segue o tema do sistema.
 | `cor.marca` | `#C6F432` | `#D2FF3C` | volt: ícone do app, aba ativa, faixa de check-in, símbolo do logo. Nunca texto sobre fundo claro |
 | `cor.sobre-marca` | `#12200A` | `#121A05` | texto e ícone sobre `cor.marca` |
 | `cor.botao` | `#12200A` | `#D2FF3C` | botão primário (claro: tinta; escuro: volt) |
-| `cor.botao-pressionado` | `#2C4416` | `#B5DE2B` | botão primário pressionado (proposta do Rafa, a Lia confere) |
+| `cor.botao-pressionado` | `#2C4416` | `#B5DE2B` | botão primário pressionado (proposta do Rafa, aprovada pela Lia) |
 | `cor.sobre-botao` | `#C6F432` | `#121A05` | rótulo e ícone sobre `cor.botao` |
 | `cor.link` | `#2F6600` | `#D2FF3C` | link, ação em texto, ícone de ação, item selecionado; substitui o teal `destaque` da v2 |
 | `cor.marca-suave` | `#EEF9C9` | `#232B10` | fundo de item selecionado, selo "No normal", faixa de análise |
