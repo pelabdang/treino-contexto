@@ -8,11 +8,12 @@ arredonda. Calculado por dia (hoje do atleta), então "Em movimento" só muda qu
 3. `volume_4_semanas`: as 4 semanas completas (4 barras) da modalidade de mais tempo, com a diferença para as 4 anteriores (`frase_evolucao@1`).
 4. `em_movimento`: a série de treino ou de tiros cuja mudança entre as janelas da frase é a maior em relação ao piso da série (mínimo 1,0). Volume e
    condicionamento ficam de fora (o 3 já cobre o volume).
-5. `melhor_marca`: o recorde do relógio (Garmin) batido nos últimos 30 dias; só categorias de tempo que sabemos nomear.
+5. `melhor_marca`: o recorde do relógio (Garmin) batido nos últimos 30 dias; só os tipos de tempo no formato documentado do leitor de recordes.
 """
 
 from __future__ import annotations
 
+import re
 from dataclasses import dataclass
 from datetime import date, datetime, timedelta
 from typing import Literal
@@ -165,21 +166,20 @@ def _em_movimento(m: es.Material) -> Cartao | None:
 
 
 # ---------- 5. melhor marca ----------
-_NOMES_MARCA = {"1km": "1 km", "1mile": "1 milha", "5km": "5 km", "10km": "10 km", "40km": "40 km", "100m": "100 m", "400m": "400 m",
-                "750m": "750 m", "1000m": "1000 m", "1500m": "1500 m"}
+_PADRAO_MARCA = re.compile(r"^Best (\d+(?:\.\d+)?)(km|m|mile) (?:Run|Cycle|Pool Swim|Swim)$")
+_UNIDADE_MARCA = {"km": "km", "m": "m", "mile": "milha"}
 
 
 def _nome_da_marca(categoria: str) -> str | None:
-    """"Best 5km Run" -> "5 km"; só as categorias de tempo que sabemos nomear (o resto não vira cartão)."""
+    """Nome do tipo de recorde de TEMPO da Garmin ("Best <N><km|m|mile> <Run|Cycle|Pool Swim>", "Best Half Marathon", "Best Marathon"):
+    "Best 5km Run" -> "5 km". Qualquer distância desse formato vale; o que não segue o formato (distância, potência, passos) fica fora."""
     c = categoria.strip()
     if c == "Best Half Marathon":
         return "meia maratona"
     if c == "Best Marathon":
         return "maratona"
-    partes = c.split()
-    if len(partes) >= 3 and partes[0] == "Best" and partes[1] in _NOMES_MARCA and partes[2] in ("Run", "Cycle", "Pool"):
-        return _NOMES_MARCA[partes[1]]
-    return None
+    m = _PADRAO_MARCA.match(c)
+    return None if m is None else f"{m.group(1)} {_UNIDADE_MARCA[m.group(2)]}"
 
 
 def _tempo(s: float) -> str:

@@ -182,7 +182,7 @@ def test_melhor_marca_some_fora_dos_30_dias_ou_sem_nome_conhecido(client, sessio
     _ativ(session, atleta, 1)
     _recorde(session, atleta, "Best 10km Run", 2700.0, 45)  # antigo
     _recorde(session, atleta, "Farthest Run", 21000.0, 2, unidade="m")  # não é tempo
-    _recorde(session, atleta, "Best 3km Run", 800.0, 2)  # sem nome conhecido
+    _recorde(session, atleta, "Best Tipo Novo", 800.0, 2)  # fora do formato dos recordes de tempo
     session.commit()
     assert "melhor_marca" not in _por_id(_cartoes(client, atleta))
 
@@ -222,3 +222,11 @@ def test_openapi(client):
     esquema = client.get("/openapi.json").json()
     assert "/atletas/{atleta_id}/inicio/cartoes" in esquema["paths"]
     assert {"id", "formato", "rotulo", "valor", "apoio", "texto", "barras", "destino", "rotulo_acessivel"} <= set(esquema["components"]["schemas"]["CartaoOut"]["required"])
+
+
+def test_nome_da_marca_generico():
+    from app.servicos.inicio_cartoes import _nome_da_marca as n
+
+    assert [n(c) for c in ("Best 1km Run", "Best 1mile Run", "Best 3km Run", "Best 400m Pool Swim", "Best 40km Cycle", "Best Half Marathon",
+                           "Best Marathon")] == ["1 km", "1 milha", "3 km", "400 m", "40 km", "meia maratona", "maratona"]
+    assert [n(c) for c in ("Farthest Run", "Max Avg Power (20 min)", "Most Steps in a Day", "Best Tipo Novo", "Longest Pool Swim")] == [None] * 5
