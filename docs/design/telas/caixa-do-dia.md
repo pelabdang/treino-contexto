@@ -7,6 +7,8 @@ links: [[design/guia-visual]], [[design/tokens]], [[design/telas/checkin]], [[de
 ---
 # Tela: caixa do dia do professor
 
+> **Cores (27/11, #547):** `destaque`, `sobre-destaque` e `destaque-suave` desta spec viraram `cor.link`/`cor.botao`, `cor.sobre-botao` e `cor.marca-suave` na [[design/identidade-visual-v3]]; tabela em [[design/tokens]].
+
 Spec da issue #420 (Meta 11), antes da implementação (o Rafa, depois que a #424 entregar a API). Contrato em
 [[decisoes/0015-caixa-do-dia-do-professor]] (aceita com o "ok para as 7" do Angelo) e decisões do Angelo de 16/11
 em [[produto/roadmap]], "Meta 11". Todos os nomes, datas e textos são **sintéticos** (alunos fictícios, escritos à
