@@ -1,4 +1,4 @@
-import { fireEvent, render, screen, waitFor } from "@testing-library/react-native";
+import { fireEvent, render, screen, waitFor, within } from "@testing-library/react-native";
 
 import { TEXTO_FIM, TEXTO_VAZIO, TEXTO_VAZIO_FILTRO, TelaTreinos } from "../src/componentes/TelaTreinos";
 import { buscarTreinos, type ItemTreino } from "../src/treinos/api";
@@ -41,7 +41,7 @@ describe("api da lista de treinos", () => {
 });
 
 describe("aba Treinos", () => {
-  it("mostra o cartão com modalidade, data e hora, tipo, números, destaque e selos em ícone e palavra", async () => {
+  it("mostra o cartão com modalidade, data e hora, tipo, valor principal, meta e um selo só", async () => {
     const f = servidor(() =>
       resposta(200, lista([item(1, { destaque: "5 x 1 km a 4:11 min/km", checkin_estado: "pendente", feedback_estado: "sem_checkin" }), item(2, { modalidade: "natacao", tipo_treino: null, distancia: null, checkin_estado: "vencido", feedback_estado: "desatualizado" })])),
     );
@@ -50,21 +50,24 @@ describe("aba Treinos", () => {
     expect(screen.getAllByText("Corrida")).toBeTruthy();
     expect(screen.getAllByText("18/03/25 às 06:30")).toHaveLength(2);
     expect(screen.getByText("Intervalado")).toBeTruthy();
-    expect(screen.getAllByText("0:52:05")).toHaveLength(2);
-    expect(screen.getByText("10,00 km")).toBeTruthy();
-    expect(screen.getByTestId("destaque-1").props.children).toBe("5 x 1 km a 4:11 min/km");
-    expect(screen.getByText("Check-in pendente")).toBeTruthy();
+    // Com texto da API, ele é o valor principal e a duração vai para a meta; sem ele, a duração é o valor principal.
+    expect(screen.getByTestId("principal-1").props.children).toBe("5 x 1 km a 4:11 min/km");
+    expect(screen.getByText("0:52:05 · 10,00 km")).toBeTruthy();
+    expect(screen.getByTestId("principal-2").props.children).toBe("0:52:05");
+    expect(screen.getByTestId("selo-pendente-1")).toBeTruthy();
     expect(screen.getByText("Check-in vencido")).toBeTruthy();
-    expect(screen.getByText("Feedback desatualizado")).toBeTruthy();
+    // Um selo por treino: o feedback não ganha selo.
+    expect(screen.queryByText("Feedback desatualizado")).toBeNull();
     expect(screen.queryByText("Feedback pronto")).toBeNull();
-    expect(screen.getByTestId("treino-1").props.accessibilityLabel).toContain("Check-in pendente");
+    expect(screen.getAllByTestId(/^selo-/)).toHaveLength(2);
+    expect(screen.getByTestId("treino-1").props.accessibilityLabel).toContain("Sem check-in");
+    expect(within(screen.getByTestId("selo-pendente-1")).getByText("Sem check-in")).toBeTruthy();
   });
 
-  it("feedback pronto tem selo; check-in feito não", async () => {
+  it("check-in feito não tem selo", async () => {
     await render(tela(servidor(() => resposta(200, lista([item(1)])))));
     await screen.findByTestId("treino-1");
-    expect(screen.getByText("Feedback pronto")).toBeTruthy();
-    expect(screen.queryByText("Check-in pendente")).toBeNull();
+    expect(screen.queryAllByTestId(/^selo-/)).toHaveLength(0);
   });
 
   it("tocar no cartão abre o treino", async () => {
@@ -126,6 +129,8 @@ describe("aba Treinos", () => {
   it("vazio: 'Nenhum treino ainda'; vazio com filtro tem frase própria", async () => {
     await render(tela(servidor(() => resposta(200, lista([])))));
     expect(await screen.findByText(TEXTO_VAZIO)).toBeTruthy();
+    expect(TEXTO_VAZIO).toBe("Nenhum treino ainda. Envie o arquivo do seu relógio e a análise aparece aqui.");
+    expect(screen.getAllByText("Enviar FIT")).toHaveLength(2); // o do cabeçalho e o do estado vazio
     await render(tela(servidor(() => resposta(200, lista([]))), { semCheckinInicial: true }));
     expect(await screen.findByText(TEXTO_VAZIO_FILTRO)).toBeTruthy();
   });
@@ -148,5 +153,44 @@ describe("aba Treinos", () => {
   it("carregando: mostra o texto de espera", async () => {
     await render(tela(jest.fn(() => new Promise<Response>(() => {})) as unknown as typeof fetch));
     expect(screen.getByText("Carregando seus treinos...")).toBeTruthy();
+  });
+});
+
+describe("aba Treinos: ajustes do #545", () => {
+  it("o primeiro filtro é 'Todas as modalidades' e o cabeçalho tem 'Enviar FIT'", async () => {
+    await render(tela(servidor(() => resposta(200, lista([item(1)])))));
+    await screen.findByTestId("treino-1");
+    expect(screen.getByText("Todas as modalidades")).toBeTruthy();
+    expect(screen.queryByText("Todos")).toBeNull();
+    expect(screen.getAllByText("Enviar FIT")).toHaveLength(1);
+  });
+
+  it("vazio com filtro não oferece o envio no estado vazio", async () => {
+    await render(tela(servidor(() => resposta(200, lista([]))), { semCheckinInicial: true }));
+    await screen.findByText(TEXTO_VAZIO_FILTRO);
+    expect(screen.getAllByText("Enviar FIT")).toHaveLength(1);
+  });
+
+  // Bug apontado na revisão do #540: se o filtro muda durante a busca da página seguinte, a resposta atrasada é descartada
+  // e `maisCarregando` ficava em true para sempre; a rolagem infinita parava.
+  it("trocar o filtro durante 'carregar mais' não trava a rolagem infinita", async () => {
+    let soltar: (r: Response) => void = () => {};
+    const f = servidor((url) => {
+      if (url.includes("antes_de=c1")) return new Promise<Response>((ok) => (soltar = ok));
+      if (url.includes("antes_de=n1")) return resposta(200, lista([item(11, { modalidade: "natacao" })], null));
+      if (url.includes("modalidade=natacao")) return resposta(200, lista([item(10, { modalidade: "natacao" })], "n1"));
+      return resposta(200, lista([item(1)], "c1"));
+    });
+    await render(tela(f));
+    await screen.findByTestId("treino-1");
+    void fireEvent(screen.getByTestId("tela-treinos"), "endReached"); // página 2 fica pendente (não se espera)
+    await waitFor(() => expect(f.mock.calls.some((c) => String(c[0]).includes("antes_de=c1"))).toBe(true));
+    await fireEvent.press(screen.getByTestId("chip-natacao")); // troca o filtro no meio da busca
+    await screen.findByTestId("treino-10");
+    soltar(resposta(200, lista([item(2)], null))); // a resposta atrasada chega e é descartada
+    await fireEvent(screen.getByTestId("tela-treinos"), "endReached");
+    await screen.findByTestId("treino-11"); // a página seguinte do novo filtro foi pedida
+    expect(screen.queryByTestId("treino-2")).toBeNull();
+    expect(screen.queryByTestId("carregando-mais")).toBeNull();
   });
 });

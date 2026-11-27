@@ -34,6 +34,15 @@ describe("barra de abas", () => {
     expect(aoEscolher).toHaveBeenCalledWith("conta");
   });
 
+  it("selo em Treinos: número de check-ins pendentes, dito ao leitor de tela", async () => {
+    await render(<BarraDeAbas abas={ABAS_ATLETA} ativa="index" aoEscolher={jest.fn()} lateral={false} selos={{ treinos: 2 }} />);
+    expect(screen.getByTestId("selo-treinos")).toBeTruthy();
+    expect(screen.getByTestId("aba-treinos").props.accessibilityLabel).toBe("Treinos, 2 check-ins pendentes");
+    expect(screen.queryByTestId("selo-conta")).toBeNull();
+    await render(<BarraDeAbas abas={ABAS_ATLETA} ativa="index" aoEscolher={jest.fn()} lateral={false} selos={{ treinos: 1 }} />);
+    expect(screen.getAllByTestId("aba-treinos").at(-1)!.props.accessibilityLabel).toBe("Treinos, 1 check-in pendente");
+  });
+
   it("selo na Conta: número visível e dito ao leitor de tela; sem pedido não há selo", async () => {
     await render(<BarraDeAbas abas={ABAS_ATLETA} ativa="index" aoEscolher={jest.fn()} lateral={false} selos={{ conta: 2 }} />);
     expect(screen.getByTestId("selo-conta")).toBeTruthy();

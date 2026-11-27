@@ -4,6 +4,7 @@ import { router, Tabs, usePathname } from "expo-router";
 import { useWindowDimensions } from "react-native";
 
 import { abasDoPapel, BarraDeAbas } from "../../../componentes/BarraDeAbas";
+import { usePendentes } from "../../../checkin/usePendentes";
 import { usePedidos } from "../../../consentimento/usePedidos";
 import { useSessao } from "../../../sessao/SessaoProvider";
 import { larguraMargemGrande, useTema } from "../../../tema";
@@ -17,6 +18,7 @@ export default function Abas() {
   const caminho = usePathname();
   // O selo da Conta se atualiza a cada troca de tela (por exemplo, depois de dar ou retirar o consentimento).
   const pedidos = usePedidos(papel === "atleta" && atletaId > 0, apiUrl, atletaId, fetchFn, caminho);
+  const pendentes = usePendentes(papel === "atleta" && atletaId > 0, apiUrl, atletaId, fetchFn, caminho);
   const abas = abasDoPapel(papel);
   return (
     <Tabs
@@ -27,7 +29,7 @@ export default function Abas() {
           ativa={props.state.routes[props.state.index]?.name ?? ""}
           aoEscolher={(rota) => router.navigate((rota === "index" ? "/" : `/${rota}`) as "/")}
           lateral={computador}
-          selos={{ conta: pedidos }}
+          selos={{ conta: pedidos, treinos: pendentes }}
         />
       )}
     >
