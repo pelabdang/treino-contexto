@@ -2348,6 +2348,22 @@
             "title": "Modalidade",
             "type": "string"
           },
+          "normal_estado": {
+            "anyOf": [
+              {
+                "enum": [
+                  "fora",
+                  "dentro",
+                  "aprendendo"
+                ],
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Normal Estado"
+          },
           "subtipo": {
             "anyOf": [
               {
@@ -2392,7 +2408,8 @@
           "distancia",
           "destaque",
           "checkin_estado",
-          "feedback_estado"
+          "feedback_estado",
+          "normal_estado"
         ],
         "title": "ListaAtividadesItemOut",
         "type": "object"

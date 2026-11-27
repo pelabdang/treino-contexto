@@ -242,3 +242,44 @@ def test_exemplo_sintetico_da_resposta(client, session, atleta, capsys):
     session.commit()
     j = _lista(client, atleta, limite=2)
     assert set(j) == {"atleta_id", "limite", "itens", "proximo"} and len(j["itens"]) == 2
+
+
+# ---------- selo "normal" (#551, normal_treino@1) ----------
+
+def test_normal_estado_da_lista_bate_com_a_linha_base_da_tela_de_treino(client, session, atleta):
+    from app.metricas.normal_treino import normal_treino
+
+    for i in range(8):  # historico de leves parecidos
+        _ativ(session, atleta, i, 40 - i * 4, dur=1800.0 + i * 5, tipo_treino="leve", fc_media=140.0 + i % 2)
+    _ativ(session, atleta, 20, 4, dur=1820.0, tipo_treino="leve", fc_media=141.0)  # no normal
+    _ativ(session, atleta, 21, 3, dur=2600.0, tipo_treino="leve", fc_media=170.0)  # fora
+    _ativ(session, atleta, 22, 2)  # sem tipo
+    _ativ(session, atleta, 23, 1, modalidade="natacao", tipo_treino="leve", dist=1500.0)  # sem metricas de linha de base
+    session.commit()
+    itens = _lista(client, atleta, limite=100)["itens"]
+    estados = {i["atividade_id"]: i["normal_estado"] for i in itens}
+    assert set(estados.values()) >= {"fora", "dentro", None}
+    for i in itens:  # a mesma regra do detalhe: normal_treino sobre a linha_base do GET da atividade
+        lb = client.get(f"/atletas/{atleta.id}/atividades/{i['atividade_id']}").json()["linha_base"]
+        assert i["normal_estado"] == normal_treino(lb["estado"], [m["estado"] for m in lb["metricas"]]), i["atividade_id"]
+
+
+def test_normal_estado_sem_n_mais_1(client, session, engine):
+    def consultas(nome, n):
+        at = Atleta(nome=nome)
+        session.add(at)
+        session.flush()
+        for k in range(n):
+            _ativ(session, at, k, k + 1, tipo_treino="leve", fc_media=140.0)
+        session.commit()
+        session.expire_all()
+        c = []
+        conta = lambda *_a, **_k: c.append(1)  # noqa: E731
+        event.listen(engine, "before_cursor_execute", conta)
+        try:
+            _lista(client, at, limite=100)
+        finally:
+            event.remove(engine, "before_cursor_execute", conta)
+        return len(c)
+
+    assert consultas("Atleta G", 30) - consultas("Atleta P", 3) <= 1
