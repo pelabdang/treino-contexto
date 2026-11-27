@@ -11,7 +11,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from datetime import UTC, datetime, timedelta
 
-from sqlalchemy import select
+from sqlalchemy import or_, select
 from sqlalchemy.orm import Session, selectinload
 
 from app.db.models import Atividade
@@ -238,6 +238,37 @@ def linha_base_resultado(session: Session, a: Atividade) -> lb.LinhaBase:
         .options(selectinload(Atividade.blocos), selectinload(Atividade.carga), selectinload(Atividade.rotulo_transicao))
     ).all()
     return lb.linha_base(sessao, [_treino(c) for c in candidatas])
+
+
+def linha_base_resultados(session: Session, atividades: list[Atividade]) -> dict[int, lb.LinhaBase]:
+    """`linha_base_resultado` de varias atividades do MESMO atleta com UMA consulta de historico (a lista de treinos, sem N+1).
+    Mesmo resultado, atividade por atividade, que `linha_base_resultado`: a funcao pura `linha_base` filtra modalidade, tipo, grupo e janela."""
+    out: dict[int, lb.LinhaBase] = {}
+    if not atividades:
+        return out
+    # As atividades da pagina entram na MESMA consulta do historico: assim blocos, carga e rotulo de transicao delas tambem vem em lote.
+    ids = {a.id for a in atividades}
+    corte = min(data_local(a.inicio, a.fuso_min) for a in atividades) - timedelta(days=lb.PADRAO.janela_dias + 1)
+    candidatas = session.scalars(
+        select(Atividade)
+        .where(
+            Atividade.atleta_id.in_({a.atleta_id for a in atividades}),
+            Atividade.modalidade.in_({a.modalidade for a in atividades}),
+            or_(Atividade.id.in_(ids), Atividade.tipo_treino.in_({a.tipo_treino for a in atividades if a.tipo_treino is not None})),
+            Atividade.inicio >= datetime(corte.year, corte.month, corte.day, tzinfo=UTC),
+            Atividade.inicio <= max(_utc(a.inicio) for a in atividades),
+        )
+        .options(selectinload(Atividade.blocos), selectinload(Atividade.carga), selectinload(Atividade.rotulo_transicao))
+    ).all()
+    treinos = {c.id: (c.atleta_id, _treino(c)) for c in candidatas}
+    for a in atividades:
+        sessao = _treino(a)
+        motivo = lb.motivo_sem_linha_base(sessao)
+        if motivo is not None:
+            out[a.id] = lb.LinhaBase(lb.VERSAO, "sem_linha_base", motivo, ())
+        else:
+            out[a.id] = lb.linha_base(sessao, [t for atleta, t in treinos.values() if atleta == a.atleta_id])
+    return out
 
 
 def linha_base_da_atividade(session: Session, a: Atividade) -> LinhaBaseTexto:
