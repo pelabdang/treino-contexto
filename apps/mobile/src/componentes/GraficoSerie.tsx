@@ -193,7 +193,13 @@ export function GraficoSerie({ serie, selecionado, aoSelecionar }: Props) {
               {l.chave === "treino" && <Circle cx={8} cy={8} r={5} fill={cor.superficie} stroke={cor["grafico.pace"]} strokeWidth={2} />}
               {l.chave === "fora" && <Polygon points="8,2 15,14 1,14" fill={cor.alerta} />}
               {l.chave === "melhor" && <Polygon points="8,0 16,8 8,16 0,8" fill={cor["grafico.pace"]} />}
-              {l.chave === "normal" && <Rect x={0} y={3} width={16} height={10} fill={cor["marca-suave"]} stroke={cor.borda} />}
+              {l.chave === "normal" && (
+                <G>
+                  <Rect x={0} y={3} width={16} height={10} fill={cor["marca-suave"]} />
+                  <Line x1={0} x2={16} y1={3} y2={3} stroke={cor.link} strokeWidth={1} />
+                  <Line x1={0} x2={16} y1={13} y2={13} stroke={cor.link} strokeWidth={1} />
+                </G>
+              )}
             </Svg>
             <Text style={styles.legendaTexto}>{l.texto}</Text>
           </View>
