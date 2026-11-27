@@ -355,6 +355,29 @@
         "title": "AtividadeOut",
         "type": "object"
       },
+      "BarraOut": {
+        "properties": {
+          "data_texto": {
+            "title": "Data Texto",
+            "type": "string"
+          },
+          "destaque": {
+            "title": "Destaque",
+            "type": "boolean"
+          },
+          "valor_texto": {
+            "title": "Valor Texto",
+            "type": "string"
+          }
+        },
+        "required": [
+          "data_texto",
+          "valor_texto",
+          "destaque"
+        ],
+        "title": "BarraOut",
+        "type": "object"
+      },
       "BlocoOut": {
         "description": "Um bloco do treino (ADR 0008). Textos prontos para a tela; os numeros seguem para quem precisar (1 casa).",
         "properties": {
@@ -844,6 +867,113 @@
         "title": "CargaSerieOut",
         "type": "object"
       },
+      "CartaoOut": {
+        "properties": {
+          "apoio": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Apoio"
+          },
+          "barras": {
+            "items": {
+              "$ref": "#/components/schemas/BarraOut"
+            },
+            "title": "Barras",
+            "type": "array"
+          },
+          "destino": {
+            "$ref": "#/components/schemas/DestinoOut"
+          },
+          "formato": {
+            "enum": [
+              "pequeno",
+              "largo"
+            ],
+            "title": "Formato",
+            "type": "string"
+          },
+          "id": {
+            "enum": [
+              "esta_semana",
+              "hoje_na_semana",
+              "volume_4_semanas",
+              "em_movimento",
+              "melhor_marca"
+            ],
+            "title": "Id",
+            "type": "string"
+          },
+          "rotulo": {
+            "title": "Rotulo",
+            "type": "string"
+          },
+          "rotulo_acessivel": {
+            "title": "Rotulo Acessivel",
+            "type": "string"
+          },
+          "texto": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Texto"
+          },
+          "valor": {
+            "title": "Valor",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "formato",
+          "rotulo",
+          "valor",
+          "apoio",
+          "texto",
+          "barras",
+          "destino",
+          "rotulo_acessivel"
+        ],
+        "title": "CartaoOut",
+        "type": "object"
+      },
+      "CartoesOut": {
+        "properties": {
+          "atleta_id": {
+            "title": "Atleta Id",
+            "type": "integer"
+          },
+          "cartoes": {
+            "items": {
+              "$ref": "#/components/schemas/CartaoOut"
+            },
+            "title": "Cartoes",
+            "type": "array"
+          },
+          "data": {
+            "format": "date",
+            "title": "Data",
+            "type": "string"
+          }
+        },
+        "required": [
+          "atleta_id",
+          "data",
+          "cartoes"
+        ],
+        "title": "CartoesOut",
+        "type": "object"
+      },
       "CatalogoSeriesOut": {
         "properties": {
           "atleta_id": {
@@ -1223,6 +1353,46 @@
           "transicao"
         ],
         "title": "CorrecaoIn",
+        "type": "object"
+      },
+      "DestinoOut": {
+        "properties": {
+          "atividade_id": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Atividade Id"
+          },
+          "serie_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Serie Id"
+          },
+          "tela": {
+            "enum": [
+              "evolucao",
+              "semana_padrao",
+              "treino"
+            ],
+            "title": "Tela",
+            "type": "string"
+          }
+        },
+        "required": [
+          "tela"
+        ],
+        "title": "DestinoOut",
         "type": "object"
       },
       "DetalheOut": {
@@ -5515,6 +5685,64 @@
         "summary": "Evolucao Tiros 1Km Png",
         "tags": [
           "evolução"
+        ]
+      }
+    },
+    "/atletas/{atleta_id}/inicio/cartoes": {
+      "get": {
+        "description": "Os cartões \"Seus números\" (#575): Esta semana, Hoje na sua semana, Volume das 4 semanas, Em movimento e Melhor marca. Sem dado, o cartão não vem.",
+        "operationId": "cartoesDoInicio",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "atleta_id",
+            "required": true,
+            "schema": {
+              "title": "Atleta Id",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CartoesOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Erro"
+                }
+              }
+            },
+            "description": "Atleta não encontrado"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Cartoes Do Inicio",
+        "tags": [
+          "início"
         ]
       }
     },
