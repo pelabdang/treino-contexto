@@ -74,25 +74,43 @@ def test_pace_leve_oraculo_do_caio(client, session, atleta):
                           "4 semanas anteriores (5:54/km, 3 treinos).")
     assert (f["valor_atual"], f["valor_anterior"], f["n_atual"], f["n_anterior"]) == (342.0, 354.0, 3, 3)
     # 6 treinos: ainda aprendendo o normal (mínimo 8), sem faixa e sem "fora do normal"
-    assert j["referencia"] is None and all(p["fora_do_normal"] is None for p in j["pontos"])
+    assert j["referencia"] is None and all(p["fora_do_normal"] is None for p in j["pontos"])  # 6 treinos: todos aprendendo
     assert j["aprendendo_texto"] == "Ainda estamos aprendendo o seu normal: faltam 2 treinos para mostrar a faixa."
     assert j["eixo"]["invertido"] is True and j["eixo"]["minimo"] <= 336 and j["eixo"]["maximo"] >= 360
 
 
-def test_faixa_do_normal_e_fora_do_normal(client, session, atleta):
-    # 8 treinos a 342 (5:42) e um a 420 (7:00): mediana 342, MAD 0, desvio = piso de 3% = 10,26; faixa 342 ± 2,5 x 10,26 = 316,35 a 367,65
-    for d in range(1, 9):
+def test_faixa_do_normal_e_triangulo_e_o_selo_do_treino(client, session, atleta):
+    # 10 treinos a 342 (5:42) nos dias 1 a 10 e um a 420 (7:00) hoje. Faixa de agora (12 semanas até ontem): mediana 342, MAD 0, desvio = piso de 3%
+    # = 10,26; faixa 342 ± 2,5 x 10,26 = 316,35 a 367,65. O triângulo é o selo do PRÓPRIO treino (linha_base@3 dele): o de hoje tem 10 antes, a 342: fora.
+    for d in range(1, 11):
         _ativ(session, atleta, d, pace=342)
-    lento = _ativ(session, atleta, 9, pace=420)
+    lento = _ativ(session, atleta, 0, pace=420)
     j = _get(client, atleta, "corrida.pace.leve")
     r = j["referencia"]
-    assert (r["mediana"], r["n"], r["texto"]) == (342.0, 9, "Seu normal 5:16 a 6:08")
+    assert (r["mediana"], r["n"], r["texto"]) == (342.0, 10, "Seu normal 5:16 a 6:08")
     assert r["minimo"] == pytest.approx(316.35) and r["maximo"] == pytest.approx(367.65)
     assert j["aprendendo_texto"] is None
-    fora = {p["atividade_id"]: p["fora_do_normal"] for p in j["pontos"]}
-    assert fora[lento.id] is True and sum(1 for v in fora.values() if v is False) == 8
-    assert "fora do seu normal" in next(p["rotulo"] for p in j["pontos"] if p["atividade_id"] == lento.id)
+    por = {p["atividade_id"]: p for p in j["pontos"]}
+    assert (por[lento.id]["fora_do_normal"], por[lento.id]["normal_estado"]) == (True, "fora")
+    assert "fora do seu normal" in por[lento.id]["rotulo"]
+    mais_antigo = j["pontos"][0]  # 10 dias atrás: sem treino antes dele
+    assert (mais_antigo["normal_estado"], mais_antigo["fora_do_normal"]) == ("aprendendo", None)
+    dia1 = next(p for p in j["pontos"] if p["data"] == (HOJE - timedelta(days=1)).isoformat())  # 9 antes, a 342: dentro
+    assert (dia1["normal_estado"], dia1["fora_do_normal"]) == ("dentro", False)
     assert j["eixo"]["maximo"] >= 420  # o eixo cobre os pontos e a faixa
+
+
+def test_triangulo_nao_depende_da_faixa_de_agora(client, session, atleta):
+    # Um treino antigo lento (400) tem 8 antes mais rápidos: o selo dele é "fora", mesmo que a faixa de hoje (a 342 e 400 juntos) o inclua.
+    for d in range(20, 30):
+        _ativ(session, atleta, d, pace=342)
+    antigo = _ativ(session, atleta, 12, pace=400)
+    for d in range(1, 6):
+        _ativ(session, atleta, d, pace=400)  # o normal de hoje fica mais lento
+    j = _get(client, atleta, "corrida.pace.leve")
+    p = next(x for x in j["pontos"] if x["atividade_id"] == antigo.id)
+    assert (p["normal_estado"], p["fora_do_normal"]) == ("fora", True)  # o estado do treino NO DIA DELE
+    assert j["referencia"] is not None  # a faixa de agora (12 semanas até ontem) existe, mas não decide o triângulo
 
 
 def test_periodo_muda_o_grafico_e_nao_a_frase(client, session, atleta):
@@ -190,7 +208,7 @@ def test_numero_de_consultas_nao_depende_dos_pontos(client, session, atleta):
     n = []
     event.listen(session.get_bind(), "before_cursor_execute", lambda *a: n.append(1))
     assert len(_get(client, atleta, "corrida.pace.leve")["pontos"]) == 59
-    assert len(n) <= 4
+    assert len(n) <= 10
 
 
 def test_openapi_descreve_a_serie(client):

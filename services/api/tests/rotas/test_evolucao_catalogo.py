@@ -144,14 +144,16 @@ def test_natacao_ritmo_so_na_piscina(client, session, atleta):
     assert not any(i.startswith("corrida") for i in por)
 
 
-def test_ciclismo_separa_ar_livre_virtual_e_rolo(client, session, atleta):
+def test_ciclismo_separa_na_rua_e_em_casa(client, session, atleta):
     for d in range(1, 9):
         _ativ(session, atleta, d, modalidade="ciclismo", tipo=None, subtipo=None, dist=30000.0)
     _ativ(session, atleta, 3, modalidade="ciclismo", tipo=None, subtipo="virtual", dist=30000.0)
+    _ativ(session, atleta, 4, modalidade="ciclismo", tipo=None, subtipo="esteira", dist=30000.0)  # rolo
     por = _por_id(_get(client, atleta))
-    assert por["ciclismo.velocidade.ar_livre"]["n_pontos"] == 8 and por["ciclismo.velocidade.ar_livre"]["disponivel"] is True
-    assert por["ciclismo.velocidade.virtual"]["n_pontos"] == 1 and por["ciclismo.velocidade.virtual"]["disponivel"] is False
-    assert "ciclismo.velocidade.rolo" not in por and "ciclismo.fc.rolo" not in por
+    assert por["ciclismo.velocidade.rua"]["n_pontos"] == 8 and por["ciclismo.velocidade.rua"]["disponivel"] is True
+    assert por["ciclismo.velocidade.casa"]["n_pontos"] == 2 and por["ciclismo.velocidade.casa"]["disponivel"] is False  # virtual + rolo juntos
+    assert por["ciclismo.velocidade.casa"]["titulo"] == "Velocidade em casa" and por["ciclismo.fc.rua"]["titulo"] == "FC no pedal na rua"
+    assert not any(i.endswith(("ar_livre", "virtual", "rolo")) for i in por)
 
 
 def test_multiesporte_pai_e_troca_ficam_fora(client, session, atleta):
