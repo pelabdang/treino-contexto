@@ -1,6 +1,6 @@
 ---
 tipo: design
-status: rascunho
+status: aprovado
 dono: lia
 atualizado: 2026-11-27
 links: [[design/identidade-visual-v3]], [[design/telas/inicio-atleta]], [[design/auditoria-ux-e-inicio-do-atleta]], [[design/telas/treino]], [[design/telas/checkin]], [[design/telas/feedback]], [[metricas/serie-carga]], [[metricas/linha-base]], [[modulos/mobile]]
@@ -8,8 +8,8 @@ links: [[design/identidade-visual-v3]], [[design/telas/inicio-atleta]], [[design
 # Telas v3 do atleta: início, treino, lista de treinos e quinzena (especificação)
 
 Aplica as decisões do Angelo de 18/11 à [[design/telas/inicio-atleta]] (v2). Tokens, fontes, cantos e logo estão em
-[[design/identidade-visual-v3]]. **Nada aqui muda o app** até o Angelo aprovar; depois, o Rafa implementa por partes.
-O nome **Pulso** é de trabalho e não está confirmado. Atleta (Ana), treinos e números **sintéticos**.
+[[design/identidade-visual-v3]]. **Aprovada pelo Angelo** ("ok em tudo", ver "Decisões do Angelo"). **Nada aqui muda o app** até o Rafa
+implementar, por partes. O nome **Pulso** é de trabalho: INPI e lojas antes de lançar. Atleta (Ana), treinos e números **sintéticos**.
 
 **Linha do tempo dos esboços (vale para todos):** hoje é **sexta, 21/03/25**. Treinos: natação qui 20/03 07:00 (0:45:12, 1.800 m),
 ciclismo qua 19/03 06:30 (0:52:10, 24,1 km), corrida intervalada ter 18/03 06:30 (10,00 km, melhor tiro 4:11), corrida longa sáb 15/03,
@@ -86,7 +86,7 @@ Nunca "bom" ou "ruim".
 ### Dados
 `GET /atletas/{id}/atividades` (lista, [[modulos/mobile]]) para o último treino e os recentes; `GET /atletas/{id}/carga` para a
 quinzena; `GET /atletas/{id}/checkins/pendentes?dias=7` para as faixas. **Prazo do check-in:** o app só lê `checkin_aberto`; por isso os
-esboços **não** mostram "faltam N dias". Se o Angelo quiser a contagem, a API precisa entregar o prazo (pergunta 5).
+esboços **não** mostram "faltam N dias". A contagem "faltam N dias" **fica para depois** e pede um campo novo na API.
 
 ## 2. Treino v3 (ordem aprovada)
 ![[design/telas/inicio-atleta/treino-v3-celular-claro.svg]]
@@ -122,10 +122,10 @@ A lista real já existe no app (PR #540, `GET /atletas/{id}/atividades`, rolagem
 **valor principal** em número grande e **um selo de estado**.
 
 ### Hierarquia
-1. Título "Treinos" e o botão secundário "Enviar FIT" (sai daqui se o Angelo preferir só na Conta; pergunta 6).
+1. Título "Treinos" e o botão secundário "Enviar FIT" (fica aqui, decidido).
 2. **Filtros:** Todos, Corrida, Natação, Ciclismo e "Sem check-in · N". Alvo de toque de **44**; o esboço mostra o desenho de 36 e o
    alvo é maior que o desenho. No celular a fileira **rola na horizontal** e o último filtro aparece cortado para sinalizar que há mais.
-   O rótulo "Todos" pode confundir com "sem filtro" quando "Sem check-in" está ligado (visto no PR #540); ver pergunta 7.
+   O primeiro filtro se chama **"Todas as modalidades"** (decidido), não "Todos", para não parecer "sem filtro" quando "Sem check-in" está ligado. O esboço ainda mostra "Todos".
 3. **Grupos por semana:** "ESTA SEMANA", "SEMANA PASSADA", depois "SEMANA DE 03/03" (data da segunda-feira).
 4. **Cartões de treino**, do mais recente ao mais antigo.
 5. "Carregar treinos mais antigos" no fim da lista (rolagem infinita; o botão aparece se o carregamento falhar).
@@ -196,14 +196,13 @@ Cartão "Seus últimos 14 dias" do início (ver as duas telas acima) e o estado 
 - Textos até 2x de escala sem cortar; números limitam a 1,3x e a linha do número pode quebrar a unidade para baixo.
 - Respeita "reduzir movimento".
 
-## Perguntas ao Angelo
-1. **Nome:** "Pulso" fica? Ainda não confirmado, e não foi pesquisado no INPI nem nas lojas. Se trocar, mudo só a palavra do logo.
-2. **Logo e ícone:** a linha de pulso em quadrado volt (`docs/design/marca/`) serve, ou prefere outro símbolo?
-3. **Início:** no cenário 1, o convite do check-in **dentro** do cartão do último treino (faixa volt) é o que você quer, ou prefere o
-   convite como cartão separado logo abaixo, como no cenário 2?
-4. **Lista:** **um** selo por treino (sem check-in, fora do normal, no normal, aprendendo), nessa prioridade, está bom?
-5. **Prazo do check-in:** quer ver "faltam N dias" no convite? Isso pede um campo novo na API (decisão do Theo e da Duda); sem ele, o
-   convite não mostra prazo.
-6. **Enviar FIT:** fica na aba Treinos ou só na Conta?
-7. **Filtro:** trocar "Todos" por "Todas as modalidades" para não confundir com "sem filtro"?
-8. **Fonte nova:** pode entrar o pacote gratuito `@expo-google-fonts/barlow-condensed` (OFL, sem conta)? Se não, o plano B é Inter 800.
+## Decisões do Angelo (27/11, "ok em tudo")
+- **Pulso** fica como nome de trabalho; checar INPI e lojas antes de lançar. O logo da linha de pulso em quadrado volt está **aprovado**.
+- O convite do check-in fica **dentro do cartão** do último treino (cenário 1). No cenário 2, a faixa fica logo abaixo do cartão.
+- **Um selo só** por treino na lista, na prioridade: sem check-in, fora do normal, no normal, aprendendo.
+- "Faltam N dias" no convite: **depois**. Sem campo novo na API por ora.
+- "Enviar FIT" fica na aba Treinos. O primeiro filtro é "Todas as modalidades".
+- O pacote `@expo-google-fonts/barlow-condensed` pode entrar (OFL, sem conta).
+
+## Pendência para outros papéis
+A frase de análise da quinzena deve vir da API, como texto fixo aprovado pelo Caio (Caio e Duda).

@@ -1,14 +1,14 @@
 ---
 tipo: design
-status: rascunho
+status: aprovado
 dono: lia
 atualizado: 2026-11-27
 links: [[design/identidade-visual-v2]], [[design/tokens]], [[design/guia-visual]], [[design/telas/inicio-atleta-v3]], [[design/auditoria-ux-e-inicio-do-atleta]], [[modulos/mobile]]
 ---
-# Identidade visual v3: tokens, tipografia, cantos e logo (proposta final)
+# Identidade visual v3: tokens, tipografia, cantos e logo (aprovada)
 
 Fecha a [[design/identidade-visual-v2]] com as decisões do Angelo de 18/11. Esta nota traz a **tabela de tokens v3**, que o Rafa
-transforma em tema depois do aval do Angelo à spec. Enquanto isso, [[design/tokens]] continua sendo a tabela oficial e o app não muda.
+transforma em tema pois o Angelo aprovou a spec (27/11). Até lá, [[design/tokens]] continua sendo a tabela oficial e o app não muda.
 As telas que usam estes tokens estão em [[design/telas/inicio-atleta-v3]]. Atleta (Ana), treinos e números **sintéticos**.
 
 ## O que o Angelo decidiu (18/11)
@@ -82,7 +82,7 @@ texto; a modalidade tem ícone e nome; as duas linhas do gráfico diferem por tr
 
 - **Por quê Barlow Condensed:** é o rosto de relógio e placar; o número ocupa pouco de largura e cabe grande em celular de 360 de
   largura (`0:45:12` a 76 cabe com folga). Tabular, para as colunas alinharem.
-- Pacote novo: `@expo-google-fonts/barlow-condensed` (OFL, gratuito, sem conta). Plano B: Inter 800 tabular.
+- Pacote novo aprovado: `@expo-google-fonts/barlow-condensed` (OFL, gratuito, sem conta).
 - **Texto mínimo:** 11,5 só em eixo e nota; o resto parte de 12,5. O texto corrido escala até 2x; os números grandes limitam a 1,3x
   (`maxFontSizeMultiplier`) para não quebrar a linha.
 - Os esboços usam Barlow se estiver instalada e, senão, uma condensada do sistema; a largura real varia um pouco.
@@ -109,7 +109,7 @@ número.
   erro (mensagem curta, causa e "Tentar de novo"). Detalhe por tela em [[design/telas/inicio-atleta-v3]].
 
 ## Nome e logo
-**"Pulso" é nome de trabalho e não está confirmado.** Nada foi pesquisado no INPI nem nas lojas. Se o Angelo trocar o nome, só muda a
+**"Pulso" fica como nome de trabalho** (decisão de 27/11). Falta pesquisar INPI e lojas antes de lançar. Se o Angelo trocar o nome, só muda a
 palavra; o símbolo (linha de pulso em quadrado volt) serve a qualquer um.
 
 | arquivo | o que é |
@@ -130,5 +130,5 @@ sem ser em tinta; não girar nem esticar. O ícone de fundo do Android adaptativ
 3. Componentes: `CartaoUltimoTreino`, `FaixaCheckin`, `CartaoQuinzena`, `CartaoTreino` (lista e início), `SeloEstado`, `Abas`.
 4. Sem conta nova e sem serviço pago.
 
-## Perguntas ao Angelo
-Estão no fim de [[design/telas/inicio-atleta-v3]], junto com as das telas.
+## Decisões do Angelo
+27/11, "ok em tudo": nome de trabalho Pulso, logo aprovado, pacote da Barlow Condensed liberado. Demais decisões das telas em [[design/telas/inicio-atleta-v3]].
