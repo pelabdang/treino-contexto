@@ -32,7 +32,7 @@ from app.metricas import carga as cg
 from app.servicos import carga_textos as ct
 from app.servicos.carga_leitura import CargaLida, carga_da_atividade, serie_do_atleta
 from app.servicos.carga_pse_leitura import CargaPseLida, carga_pse_da_atividade
-from app.servicos.clima import ClimaDaAtividade, EstadoClima, assinatura_clima, clima_da_atividade
+from app.servicos.clima import ClimaDaAtividade, EstadoClima, assinatura_clima, clima_da_atividade, fim_recente, inteiro_texto
 from app.servicos.distancia_texto import distancia_da_atividade
 from app.servicos.esforcos_leitura import esforcos_da_atividade
 from app.servicos.feedback import tipo_atual, transicao_atual
@@ -56,10 +56,15 @@ class ClimaOut(BaseModel):
     """Clima da atividade (ADR 0007, item 5). Os quatro valores so existem em `ok`; nos outros estados nem aparecem."""
 
     estado: EstadoClima
+    recente: bool = False  # o fim do treino tem menos de 7 dias (a mesma regra do preenchimento): `pendente` aqui e espera, nao erro
     temperatura_c: float | None = Field(None, exclude_if=lambda v: v is None)
     sensacao_c: float | None = Field(None, exclude_if=lambda v: v is None)
     umidade_pct: float | None = Field(None, exclude_if=lambda v: v is None)
     vento_kmh: float | None = Field(None, exclude_if=lambda v: v is None)
+    temperatura_texto: str | None = Field(None, exclude_if=lambda v: v is None)  # "24 °C" (#569): o app nao arredonda
+    sensacao_texto: str | None = Field(None, exclude_if=lambda v: v is None)
+    umidade_texto: str | None = Field(None, exclude_if=lambda v: v is None)  # "61 %"
+    vento_texto: str | None = Field(None, exclude_if=lambda v: v is None)  # "8 km/h"
     atribuicao: str | None = Field(None, exclude_if=lambda v: v is None)  # so em `ok` (ADR 0007, item 4)
 
 
@@ -298,13 +303,18 @@ def _esforcos_out(session: Session, a: Atividade) -> EsforcosOut | None:
     )
 
 
-def _clima_out(c: ClimaDaAtividade) -> ClimaOut:
+def _clima_out(c: ClimaDaAtividade, a: Atividade) -> ClimaOut:
     return ClimaOut(
         estado=c.estado,
+        recente=fim_recente(a),
         temperatura_c=c.temperatura_c,
         sensacao_c=c.sensacao_c,
         umidade_pct=c.umidade_pct,
         vento_kmh=c.vento_kmh,
+        temperatura_texto=inteiro_texto(c.temperatura_c, "°C"),
+        sensacao_texto=inteiro_texto(c.sensacao_c, "°C"),
+        umidade_texto=inteiro_texto(c.umidade_pct, "%"),
+        vento_texto=inteiro_texto(c.vento_kmh, "km/h"),
         atribuicao=ATRIBUICAO_CLIMA if c.estado == "ok" else None,
     )
 
@@ -432,7 +442,7 @@ def buscar_atividade(
         duracao_s=a.duracao_s,
         distancia_m=a.distancia_m,
         fc_media=a.fc_media,
-        clima=None if clima is None else _clima_out(clima),
+        clima=None if clima is None else _clima_out(clima, a),
         esforcos=_esforcos_out(session, a),
         transicao=transicao_da_atividade(session, a),
         carga=None if carga is None else _carga_out(carga),
