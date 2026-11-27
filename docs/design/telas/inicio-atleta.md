@@ -7,6 +7,8 @@ links: [[design/identidade-visual-v2]], [[design/auditoria-ux-e-inicio-do-atleta
 ---
 # Telas v2 do atleta: início e treino (proposta em alta fidelidade)
 
+> **Superada em parte pela v3** ([[design/telas/inicio-atleta-v3]]): último treino primeiro no início, ordem do treino aprovada, cantos mais discretos e lista de treinos. As datas e o prazo do check-in daqui valem só para os esboços v2.
+
 Resposta do Angelo à [[design/auditoria-ux-e-inicio-do-atleta]]: a tela inicial é "uma mistura das direções", o gráfico de carga e
 forma é **quinzenal com uma frase de análise**, e a ordem do primeiro olhar depois do treino é "proponha". Aqui estão a **tela
 inicial v2** e a **tela do treino** redesenhadas, já na identidade de [[design/identidade-visual-v2]]. Rascunho para ele reagir: nenhuma
