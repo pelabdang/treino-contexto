@@ -1,6 +1,6 @@
 ---
 tipo: design
-status: rascunho
+status: aprovado
 dono: lia
 atualizado: 2026-11-27
 links: [[design/identidade-visual-v3]], [[design/telas/evolucao-tiros]], [[design/telas/inicio-v4]], [[design/telas/inicio-atleta-v3]], [[design/telas/treino]], [[design/referencias-evolucao-inicio]], [[metricas/evolucao-series]], [[metricas/linha-base]], [[metricas/tiros-1km]], [[decisoes/0004-contrato-tela-evolucao]], [[modulos/mobile]]
@@ -73,7 +73,7 @@ Três ideias para não virar uma lista longa:
 | computador (≥ 900) | **coluna fixa** à esquerda dos gráficos, grupos com título; a escolhida tem barra `cor.link` à esquerda |
 | mais de 12 séries numa modalidade | fora do v1; se acontecer, entra busca no topo da folha |
 
-- **Série ao abrir:** a do último treino (proposta do Caio); depois, a última que o atleta escolheu (o app lembra no aparelho, é conveniência).
+- **Série ao abrir:** a do último treino na primeira vez; depois, **a última que o atleta escolheu** (o app lembra no aparelho; decidido pelo Angelo em 27/11).
 - Cada linha: título (`fonte.titulo-cartao`) e uma linha dizendo o que o gráfico mostra (`fonte.rotulo`, `texto-2`).
 - Folha: arrastar ou "Fechar" (alvo 44). Escolher fecha a folha e põe o foco no título da série.
 
@@ -94,7 +94,7 @@ Nada depende só da cor: forma (círculo, losango, triângulo), rótulo escrito 
 triângulo âmbar sobre `superficie` 6,3 e 9,6.
 
 **Janelas da frase.** A frase compara as **4 semanas até ontem** com as **4 anteriores** (mediana). O gráfico **não** desenha essas janelas
-no v1 (poluiria); a frase diz os números. Se o Angelo estranhar, o v2 pode sombrear as duas janelas.
+no v1 (poluiria); a frase diz os números. O v2 pode sombrear as duas janelas.
 
 **Pontos próximos.** Se dois pontos ficarem a menos de 44 de distância (período de 1 ano), o toque escolhe o ponto **mais próximo no eixo do tempo**,
 e o detalhe tem setas "treino anterior" e "treino seguinte" (alvo 44).
@@ -115,7 +115,7 @@ o gráfico confirma. Até 4 linhas no celular; o texto escala até 2x sem cortar
 2. **Botão "Abrir treino":** abre a [[design/telas/treino]]. "Voltar" devolve à evolução **com o mesmo ponto selecionado**.
 3. Por que dois passos: o dedo cobre o ponto; o primeiro toque mostra o que é, o segundo decide. Evita abrir o treino errado.
 4. Séries **sem treino por ponto** (volume e carga por semana, recordes sem atividade): o detalhe mostra só o valor e a data; **sem** botão.
-   (Pergunta ao Theo: recorde do Garmin tem `atividade_id`?)
+   (Se o recorde do Garmin tiver `atividade_id`, ganha o botão; a API decide.)
 
 ## Estados
 | estado | o que aparece | texto |
@@ -160,3 +160,7 @@ Título "Evolução"; subtítulo "Escolha o que acompanhar"; rótulo "SÉRIE"; "
 ## Fora do v1
 Sombrear as janelas da frase; comparar duas séries na mesma tela; busca no seletor; "Ver os treinos da semana" a partir de uma barra de volume; zoom e arrasto no gráfico;
 metas e alertas.
+
+## Decisões do Angelo (27/11, "ok em tudo")
+Ciclismo em casa e na rua em séries separadas; período inicial de 12 semanas, com 6 meses e 1 ano; treino "quente" = sensação de 28 °C ou mais;
+natação e ciclismo evoluem por ritmo, volume e FC por enquanto; a Evolução lembra a última série escolhida.

@@ -1,6 +1,6 @@
 ---
 tipo: design
-status: rascunho
+status: aprovado
 dono: lia
 atualizado: 2026-11-27
 links: [[design/identidade-visual-v3]], [[design/telas/inicio-atleta-v3]], [[design/telas/evolucao-v1]], [[design/referencias-evolucao-inicio]], [[metricas/evolucao-series]], [[metricas/frase-forma]], [[metricas/recuperacao]], [[design/telas/semana-padrao]], [[modulos/mobile]]
@@ -50,7 +50,7 @@ Ordem fixa. A coluna "dado" diz o que a API precisa devolver; a coluna "aparece 
 | 4 | **Em movimento** | largo, só texto | "o que mudou mais nas últimas 4 semanas?" | a API escolhe a série de maior mudança (mínimo 1,0 do limiar) e traz o título e a frase | Evolução, essa série | "Pace dos seus treinos leves nas últimas 4 semanas: 5:42/km (mediana de 3 treinos), 12 s/km mais rápido que nas 4 anteriores (5:54/km)." |
 | 5 | **Melhor marca** | pequeno | "bati um recorde?" | há recorde do relógio nos **últimos 30 dias** (proposta minha; o Caio confirma) | Evolução, série "Marcas" | "21:10 · 5 km" e "novo recorde · 12/03" |
 | (6) | Noite | pequeno | "como dormi?" | **depois**: precisa da rota "última noite" e de importação de saúde | | "6 h 40" e "sono dentro do seu normal" |
-Ficam **fora do v4**: Mistura de tipos, CTL em 6 meses, Limiar (valor baixo), **Regularidade** (pergunta ao Angelo), Clima (pertence ao treino, não ao dia).
+Ficam **fora do v4**: Mistura de tipos, CTL em 6 meses, Limiar (valor baixo), **Regularidade** (o Angelo decidiu em 27/11 que não entra, para não virar cobrança), Clima (pertence ao treino, não ao dia).
 
 ### Layout
 - **Pequenos ficam em pares** (2 colunas, 12 de espaço, altura 112). Um pequeno sozinho ocupa a **largura inteira**.
@@ -72,10 +72,9 @@ Ficam **fora do v4**: Mistura de tipos, CTL em 6 meses, Limiar (valor baixo), **
 | sem treinos no app | o início vazio da v3; nenhum cartão | |
 | atualização | o cartão "Em movimento" só muda quando o dia muda (a API calcula por dia), para não trocar a cada abertura | |
 
-## Personalização (pergunta ao Angelo, não decisão)
-O atleta poderia **esconder** ou **reordenar** os cartões. Recomendo **não no v4**: ordem fixa e regra "sem dado, não aparece". Esconder entra depois
-do piloto, se o atleta pedir. Reordenar fica para o fim (o Garmin Connect deixa reordenar, mas muita gente não usa e a tela vira configuração; ver [[design/referencias-evolucao-inicio]]).
-Se o Angelo quiser personalizar: começar por **esconder** (um menu "Ocultar" em cada cartão, desfeito em Conta > "Cartões do início").
+## Personalização (decidido em 27/11)
+**Sem personalização agora:** ordem fixa e regra "sem dado, não aparece". **Esconder** cartões só depois do piloto (um menu "Ocultar" em cada cartão, desfeito em
+Conta > "Cartões do início"). Reordenar não está previsto. O início mostra **até 5 cartões**; a "Noite" fica para depois. Ver [[design/referencias-evolucao-inicio]].
 
 ## Acessibilidade
 - Cada cartão é um grupo com título; rótulo falado junta tudo: "Esta semana, 3 treinos, 2 horas e 37 minutos, semana passada 4 treinos. Abre a evolução do volume."
@@ -88,3 +87,6 @@ Se o Angelo quiser personalizar: começar por **esconder** (um menu "Ocultar" em
 |---|---|
 | último treino, quinzena, recentes | + seção "Seus números" com até 5 cartões |
 | toque no cartão da quinzena abre a Evolução | cada cartão leva à Evolução com a série escolhida ([[design/telas/evolucao-v1]]) |
+
+## Decisões do Angelo (27/11, "ok em tudo")
+Cartão "Hoje na sua semana" sim; regularidade não; até 5 cartões, "Noite" depois; sem personalização agora.
