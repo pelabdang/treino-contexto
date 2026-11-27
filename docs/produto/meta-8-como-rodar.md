@@ -9,6 +9,8 @@ links: [[produto/meta-7-como-rodar]], [[produto/meta-6-como-rodar]], [[produto/r
 
 > **Desde a #502 (Meta 13):** o app não lê mais `EXPO_PUBLIC_ATLETA_ID` nem `EXPO_PUBLIC_PROFESSOR_ID`; o atleta ou o professor é o da conta que entrou em `/entrar`. Para forçar um estado, entre com `atleta<N>@exemplo.com` ou `professor<N>@exemplo.com` (senha sintética, ver `apps/mobile/scripts/api-falsa.mjs`), onde `<N>` faz o papel do antigo id. Onde o texto abaixo manda pôr a variável, leia "entre com a conta de mesmo número". Detalhes em [[modulos/mobile]].
 
+> **Desde a #532 (abas):** o app tem quatro abas (Início, Treinos, Evolução, Conta; o professor tem Caixa do dia e Conta). "Enviar arquivo FIT", "Semana-padrão", "Consentimento", "Trocar senha" e "Sair" ficam na aba **Conta** (não há mais menu "Conta" no topo), e o link "Check-ins pendentes" continua na tela de Início. Detalhes em [[modulos/mobile]].
+
 
 Passo a passo da Meta 8 com as fixtures: Postgres próprio, migrações até a 0012, 18 atividades sintéticas, o check-in (`PUT`, `GET`,
 `DELETE`) pela API, a carga pela PSE (`carga_pse@1`), a lista de pendentes, o `GET` da atividade com `checkin`, `checkin_aberto` e

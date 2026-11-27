@@ -2038,53 +2038,6 @@
         "title": "ItemIn",
         "type": "object"
       },
-      "ItemOut": {
-        "properties": {
-          "dia_semana": {
-            "title": "Dia Semana",
-            "type": "integer"
-          },
-          "dia_semana_texto": {
-            "title": "Dia Semana Texto",
-            "type": "string"
-          },
-          "modalidade": {
-            "enum": [
-              "corrida",
-              "natacao",
-              "ciclismo"
-            ],
-            "title": "Modalidade",
-            "type": "string"
-          },
-          "tipo_treino": {
-            "anyOf": [
-              {
-                "enum": [
-                  "leve",
-                  "moderado",
-                  "longo",
-                  "intervalado",
-                  "fartlek"
-                ],
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Tipo Treino"
-          }
-        },
-        "required": [
-          "dia_semana",
-          "dia_semana_texto",
-          "modalidade",
-          "tipo_treino"
-        ],
-        "title": "ItemOut",
-        "type": "object"
-      },
       "LinhaBaseOut": {
         "description": "Linha de base da atividade contra o proprio historico, so no mesmo tipo de treino (`linha_base@3`, ADR 0011).\nCalculada na leitura. Compara com o historico do atleta; nao diz se o treino foi bom ou ruim.",
         "properties": {
@@ -2169,6 +2122,44 @@
           "metricas"
         ],
         "title": "LinhaBaseOut",
+        "type": "object"
+      },
+      "ListaOut": {
+        "properties": {
+          "atleta_id": {
+            "title": "Atleta Id",
+            "type": "integer"
+          },
+          "itens": {
+            "items": {
+              "$ref": "#/components/schemas/app__rotas__lista_atividades__ItemOut"
+            },
+            "title": "Itens",
+            "type": "array"
+          },
+          "limite": {
+            "title": "Limite",
+            "type": "integer"
+          },
+          "proximo": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Proximo"
+          }
+        },
+        "required": [
+          "atleta_id",
+          "limite",
+          "itens",
+          "proximo"
+        ],
+        "title": "ListaOut",
         "type": "object"
       },
       "MarcaFc": {
@@ -2787,7 +2778,7 @@
           },
           "itens": {
             "items": {
-              "$ref": "#/components/schemas/ItemOut"
+              "$ref": "#/components/schemas/app__rotas__semana_padrao__ItemOut"
             },
             "title": "Itens",
             "type": "array"
@@ -3430,7 +3421,7 @@
           },
           "itens": {
             "items": {
-              "$ref": "#/components/schemas/ItemOut"
+              "$ref": "#/components/schemas/app__rotas__semana_padrao__ItemOut"
             },
             "title": "Itens",
             "type": "array"
@@ -3515,6 +3506,194 @@
         ],
         "title": "VinculoOut",
         "type": "object"
+      },
+      "app__rotas__lista_atividades__ItemOut": {
+        "properties": {
+          "atividade_id": {
+            "title": "Atividade Id",
+            "type": "integer"
+          },
+          "checkin_estado": {
+            "enum": [
+              "feito",
+              "pendente",
+              "vencido",
+              "nao_se_aplica"
+            ],
+            "title": "Checkin Estado",
+            "type": "string"
+          },
+          "data_local": {
+            "title": "Data Local",
+            "type": "string"
+          },
+          "destaque": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Destaque"
+          },
+          "distancia": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Distancia"
+          },
+          "distancia_m": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Distancia M"
+          },
+          "duracao": {
+            "title": "Duracao",
+            "type": "string"
+          },
+          "duracao_s": {
+            "title": "Duracao S",
+            "type": "number"
+          },
+          "feedback_estado": {
+            "anyOf": [
+              {
+                "enum": [
+                  "pronto",
+                  "sem_checkin",
+                  "pendente",
+                  "desatualizado",
+                  "indisponivel"
+                ],
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Feedback Estado"
+          },
+          "hora_local": {
+            "title": "Hora Local",
+            "type": "string"
+          },
+          "inicio": {
+            "format": "date-time",
+            "title": "Inicio",
+            "type": "string"
+          },
+          "modalidade": {
+            "title": "Modalidade",
+            "type": "string"
+          },
+          "subtipo": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Subtipo"
+          },
+          "tipo_treino": {
+            "anyOf": [
+              {
+                "enum": [
+                  "leve",
+                  "moderado",
+                  "longo",
+                  "intervalado",
+                  "fartlek"
+                ],
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Tipo Treino"
+          }
+        },
+        "required": [
+          "atividade_id",
+          "inicio",
+          "data_local",
+          "hora_local",
+          "modalidade",
+          "subtipo",
+          "tipo_treino",
+          "duracao_s",
+          "duracao",
+          "distancia_m",
+          "distancia",
+          "destaque",
+          "checkin_estado",
+          "feedback_estado"
+        ],
+        "title": "ItemOut",
+        "type": "object"
+      },
+      "app__rotas__semana_padrao__ItemOut": {
+        "properties": {
+          "dia_semana": {
+            "title": "Dia Semana",
+            "type": "integer"
+          },
+          "dia_semana_texto": {
+            "title": "Dia Semana Texto",
+            "type": "string"
+          },
+          "modalidade": {
+            "enum": [
+              "corrida",
+              "natacao",
+              "ciclismo"
+            ],
+            "title": "Modalidade",
+            "type": "string"
+          },
+          "tipo_treino": {
+            "anyOf": [
+              {
+                "enum": [
+                  "leve",
+                  "moderado",
+                  "longo",
+                  "intervalado",
+                  "fartlek"
+                ],
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Tipo Treino"
+          }
+        },
+        "required": [
+          "dia_semana",
+          "dia_semana_texto",
+          "modalidade",
+          "tipo_treino"
+        ],
+        "title": "ItemOut",
+        "type": "object"
       }
     },
     "securitySchemes": {
@@ -3531,6 +3710,121 @@
   },
   "openapi": "3.1.0",
   "paths": {
+    "/atletas/{atleta_id}/atividades": {
+      "get": {
+        "description": "Os treinos do atleta, do mais recente para o mais antigo, `limite` por pagina.",
+        "operationId": "listarAtividades",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "atleta_id",
+            "required": true,
+            "schema": {
+              "title": "Atleta Id",
+              "type": "integer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "limite",
+            "required": false,
+            "schema": {
+              "default": 20,
+              "maximum": 100,
+              "minimum": 1,
+              "title": "Limite",
+              "type": "integer"
+            }
+          },
+          {
+            "description": "cursor: o `proximo` da pagina anterior",
+            "in": "query",
+            "name": "antes_de",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "cursor: o `proximo` da pagina anterior",
+              "title": "Antes De"
+            }
+          },
+          {
+            "in": "query",
+            "name": "modalidade",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "enum": [
+                    "corrida",
+                    "natacao",
+                    "ciclismo",
+                    "outra"
+                  ],
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Modalidade"
+            }
+          },
+          {
+            "description": "so treinos que pedem check-in, ainda sem ele e dentro do prazo",
+            "in": "query",
+            "name": "checkin_pendente",
+            "required": false,
+            "schema": {
+              "default": false,
+              "description": "so treinos que pedem check-in, ainda sem ele e dentro do prazo",
+              "title": "Checkin Pendente",
+              "type": "boolean"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ListaOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Erro"
+                }
+              }
+            },
+            "description": "Atleta de outro (o mesmo 404 de atleta inexistente)"
+          },
+          "422": {
+            "description": "`antes_de` mal formado, `limite` fora de 1 a 100 ou `modalidade` desconhecida"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Listar Atividades",
+        "tags": [
+          "atividades"
+        ]
+      }
+    },
     "/atletas/{atleta_id}/atividades/fit": {
       "post": {
         "description": "Envia um FIT (campo multipart `arquivo`). `201` se a atividade é nova; `200` se já existia.",

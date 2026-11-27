@@ -179,6 +179,9 @@ Item 5 da [[decisoes/0007-clima-da-atividade]]. Devolve a atividade (`atividade_
   Se a tela precisar do clima por sessão, basta acrescentar um `clima` opcional em `SessaoOut`.
 - Testes: `services/api/tests/rotas/test_atividade_clima.py` (um por estado, os `404`, a posição fora da resposta, os campos prontos e o OpenAPI).
 
+## Lista de treinos: `GET /atletas/{atleta_id}/atividades` (#537, adendo 13 da [[decisoes/0004-contrato-tela-evolucao]])
+Código em `app/rotas/lista_atividades.py` e `app/servicos/lista_atividades.py`; testes em `tests/rotas/test_lista_atividades.py`. Só o atleta dono. Mais recente primeiro, `limite` de 1 a 100 (padrão 20), paginação por cursor (`antes_de` recebe o `proximo` da página anterior; `null` = acabou; cursor ruim, `422 cursor_invalido`), filtros `modalidade` e `checkin_pendente`. Cada item é enxuto (data e hora locais, modalidade, tipo, duração e distância em texto, `destaque`, `checkin_estado` e `feedback_estado`), sem nenhum texto de saúde. **A noite e o clima não entram no `feedback_estado` da lista**: pode estar `pronto` aqui e `desatualizado` no detalhe. Uma consulta por página, sem N+1.
+
 ## Treino de transição (#170, [[decisoes/0009-treino-de-transicao]])
 Listar, comparar e corrigir o rótulo. O grupo **não é guardado**: sai dos rótulos finais (`transicao = true`, por linha `sugerido` ou
 `atleta`) em `servicos/transicao_grupos.py`: atividades rotuladas em sequência, cada uma começando até `INTERVALO_MAX_S` (30 min) depois do

@@ -15,10 +15,10 @@ export function destinoValido(caminho: string | null | undefined): caminho is st
 
 const SO_PROFESSOR = ["/caixa-do-dia"];
 
-/** O papel pode abrir esse caminho? A caixa é do professor; as demais telas (início, treino, check-in, semana-padrão) são do atleta. */
+/** O papel pode abrir esse caminho? A caixa é do professor; a Conta é dos dois; as demais telas (início, treinos, evolução, treino, check-in, semana-padrão, consentimento) são do atleta. */
 export function caminhoDoPapel(papel: Papel, caminho: string): boolean {
   const raiz = "/" + (caminho.split(/[?#]/)[0].split("/")[1] ?? "");
-  if (raiz === "/entrar" || raiz === "/trocar-senha") return true;
+  if (raiz === "/entrar" || raiz === "/trocar-senha" || raiz === "/conta") return true; // a Conta é das duas abas
   const doProfessor = SO_PROFESSOR.includes(raiz);
   return papel === "professor" ? doProfessor : !doProfessor;
 }
