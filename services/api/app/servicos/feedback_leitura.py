@@ -16,7 +16,7 @@ from app.servicos.feedback import _NAO_SEI, motivos_desatualizado
 
 MSG_SEM_CHECKIN = "Faça o check-in para ver o feedback."
 MSG_PRAZO_VENCIDO = "O prazo do check-in deste treino acabou, então ele fica sem feedback."
-MSG_PENDENTE = "O feedback deste treino ainda não foi gerado. Toque em Atualizar para ver se já está pronto."
+MSG_PENDENTE = "O feedback deste treino ainda não foi gerado. Ele é preparado em lote; volte mais tarde."
 MSG_DESATUALIZADO = "Você editou o check-in. O feedback será refeito."
 MSG_DESATUALIZADO_VERSAO = "O feedback será refeito."  # #402: so a versao do pacote de fatos mudou; o atleta nao fez nada
 MSG_DESATUALIZADO_NOITE = "Os dados da noite anterior foram atualizados. O feedback será refeito."  # #396: so a noite mudou

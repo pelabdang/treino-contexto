@@ -1,7 +1,7 @@
 """GET /atletas/{id}/atividades/{id} com o objeto `clima` (issue #114, ADR 0007 item 5). Dados inventados."""
 
 import json
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 
 import pytest
 from app.db.models import Atividade, Atleta, ClimaAtividade
@@ -54,36 +54,37 @@ def test_clima_ok_com_os_quatro_valores(client, session, atleta):
     assert r.status_code == 200
     j = r.json()
     assert j["atividade_id"] == a.id and j["modalidade"] == "corrida" and j["distancia_m"] == 5000.0
-    assert j["clima"] == {"estado": "ok", "temperatura_c": 24.3, "sensacao_c": 25.1, "umidade_pct": 61, "vento_kmh": 8.2,
+    assert j["clima"] == {"estado": "ok", "recente": False, "temperatura_c": 24.3, "sensacao_c": 25.1, "umidade_pct": 61, "vento_kmh": 8.2,
+                    "temperatura_texto": "24 °C", "sensacao_texto": "25 °C", "umidade_texto": "61 %", "vento_texto": "8 km/h",
                     "atribuicao": "Weather data by Open-Meteo.com"}
 
 
 def test_clima_indoor(client, session, atleta):
     a = _atividade(session, atleta, 2, subtipo="esteira", posicao=False)
-    assert client.get(URL.format(atleta.id, a.id)).json()["clima"] == {"estado": "indoor"}
+    assert client.get(URL.format(atleta.id, a.id)).json()["clima"] == {"estado": "indoor", "recente": False}
 
 
 def test_clima_sem_posicao(client, session, atleta):
     a = _atividade(session, atleta, 3, posicao=False)
-    assert client.get(URL.format(atleta.id, a.id)).json()["clima"] == {"estado": "sem_posicao"}
+    assert client.get(URL.format(atleta.id, a.id)).json()["clima"] == {"estado": "sem_posicao", "recente": False}
 
 
 def test_clima_pendente_sem_linha(client, session, atleta):
     a = _atividade(session, atleta, 4)
-    assert client.get(URL.format(atleta.id, a.id)).json()["clima"] == {"estado": "pendente"}
+    assert client.get(URL.format(atleta.id, a.id)).json()["clima"] == {"estado": "pendente", "recente": False}
 
 
 def test_clima_pendente_com_linha_pendente(client, session, atleta):
     a = _atividade(session, atleta, 5)
     _linha(session, a, "pendente", tentativas=1)
-    assert client.get(URL.format(atleta.id, a.id)).json()["clima"] == {"estado": "pendente"}
+    assert client.get(URL.format(atleta.id, a.id)).json()["clima"] == {"estado": "pendente", "recente": False}
 
 
 def test_clima_falha_nao_vaza_o_erro(client, session, atleta):
     a = _atividade(session, atleta, 6)
     _linha(session, a, "falha", tentativas=1, erro="HTTP 500 interno")
     j = client.get(URL.format(atleta.id, a.id)).json()
-    assert j["clima"] == {"estado": "falha"}
+    assert j["clima"] == {"estado": "falha", "recente": False}
     assert "interno" not in json.dumps(j)
 
 
@@ -209,3 +210,40 @@ def test_openapi_campos_prontos_obrigatorios_e_pace_opcional(client):
     for c in ("data_local", "hora_local", "duracao"):
         assert c in ativ["required"]
     assert "pace_medio" not in ativ["required"]
+
+
+def test_recente_quando_o_fim_tem_menos_de_7_dias(client, session, atleta):
+    a = _atividade(session, atleta, 20)
+    a.inicio = datetime.now(timezone.utc) - timedelta(days=3)
+    session.commit()
+    assert client.get(URL.format(atleta.id, a.id)).json()["clima"] == {"estado": "pendente", "recente": True}
+
+
+def test_recente_usa_o_fim_e_nao_o_inicio(client, session, atleta):
+    a = _atividade(session, atleta, 21)  # duracao 1800 s
+    a.inicio = datetime.now(timezone.utc) - timedelta(days=7, minutes=10)  # comecou ha mais de 7 dias, terminou ha menos
+    session.commit()
+    assert client.get(URL.format(atleta.id, a.id)).json()["clima"]["recente"] is True
+    a.inicio = datetime.now(timezone.utc) - timedelta(days=7, hours=1)  # terminou ha mais de 7 dias
+    session.commit()
+    assert client.get(URL.format(atleta.id, a.id)).json()["clima"]["recente"] is False
+
+
+def test_indoor_recente_tambem_leva_o_campo(client, session, atleta):
+    a = _atividade(session, atleta, 22, subtipo="esteira", posicao=False)
+    a.inicio = datetime.now(timezone.utc) - timedelta(days=1)
+    session.commit()
+    assert client.get(URL.format(atleta.id, a.id)).json()["clima"] == {"estado": "indoor", "recente": True}
+
+
+@pytest.mark.parametrize("v,esperado", [(23.5, "24 °C"), (-3.5, "-4 °C"), (-0.4, "0 °C"), (0.5, "1 °C"), (24.3, "24 °C"), (-0.5, "-1 °C")])
+def test_inteiro_texto_meio_para_longe_do_zero(v, esperado):
+    from app.servicos.clima import inteiro_texto
+
+    assert inteiro_texto(v, "°C") == esperado
+
+
+def test_inteiro_texto_nulo():
+    from app.servicos.clima import inteiro_texto
+
+    assert inteiro_texto(None, "%") is None

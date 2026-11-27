@@ -178,6 +178,7 @@ Item 5 da [[decisoes/0007-clima-da-atividade]]. Devolve a atividade (`atividade_
   (oráculo da #161, textos, aviso de referência, lista vazia com a versão, `404`, modalidade sem detecção, a leitura não detecta, OpenAPI).
 - `estado` é `ok`, `indoor`, `sem_posicao`, `pendente` ou `falha`. Os quatro valores só aparecem em `ok`; nos outros estados
   a chave nem vem. O texto do erro da consulta (`erro` da tabela) nunca sai.
+- **`recente` e textos em inteiro (#569):** `clima.recente` (`bool`, em todo estado) é `true` quando o **fim** do treino (início + duração) tem menos de 7 dias, a mesma regra de `preencher_clima` (`fim_recente`, `app/servicos/clima.py`): nesse caso `pendente` é espera, não erro. Em `ok` vêm também `temperatura_texto` ("24 °C"), `sensacao_texto`, `umidade_texto` ("61 %") e `vento_texto` ("8 km/h"): inteiros, meio para longe do zero, sem "-0" (23,5 → 24; -3,5 → -4; -0,4 → 0); a chave nem vem quando o valor é `null`. O app não calcula nem arredonda. Os decimais (`temperatura_c`...) continuam.
 - `clima` é campo opcional no schema. A posição de início (`inicio_lat/lon`) nunca está na resposta nem no OpenAPI.
 - `404` com `Erro {detail}`: atleta inexistente (`atleta não encontrado`) ou atividade inexistente ou de outro atleta
   (`atividade não encontrada`).

@@ -344,7 +344,7 @@ def test_05_estados_do_get_antes_do_worker(ctx):
     """Item: `feedback` no GET da atividade, com os estados e a frase pronta em português."""
     f18 = _fb(ctx, "2026-11-09/cor2")
     assert f18["estado"] == "pendente" and f18["texto"] is None
-    assert f18["mensagem"] == "O feedback deste treino ainda não foi gerado. Toque em Atualizar para ver se já está pronto."
+    assert f18["mensagem"] == "O feedback deste treino ainda não foi gerado. Ele é preparado em lote; volte mais tarde."
     f12 = _fb(ctx, "2026-11-05/cor1")
     assert (f12["estado"], f12["checkin_aberto"], f12["mensagem"]) == ("sem_checkin", True, "Faça o check-in para ver o feedback.")
     f2 = _fb(ctx, "2026-11-01/cor1")

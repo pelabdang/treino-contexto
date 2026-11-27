@@ -30,7 +30,7 @@ V = "fatos_treino@2"
 FRASES = {
     "sem_checkin": "Faça o check-in para ver o feedback.",
     "prazo": "O prazo do check-in deste treino acabou, então ele fica sem feedback.",
-    "pendente": "O feedback deste treino ainda não foi gerado. Toque em Atualizar para ver se já está pronto.",
+    "pendente": "O feedback deste treino ainda não foi gerado. Ele é preparado em lote; volte mais tarde.",
     "desatualizado": "Você editou o check-in. O feedback será refeito.",
     "desatualizado_versao": "O feedback será refeito.",
     "desatualizado_noite": "Os dados da noite anterior foram atualizados. O feedback será refeito.",

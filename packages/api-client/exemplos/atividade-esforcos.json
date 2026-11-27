@@ -7,7 +7,8 @@
   "distancia_m": 7500.0,
   "fc_media": 151.0,
   "clima": {
-    "estado": "sem_posicao"
+    "estado": "sem_posicao",
+    "recente": false
   },
   "esforcos": {
     "versao": "esforcos@1",
