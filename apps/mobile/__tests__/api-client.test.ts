@@ -150,6 +150,14 @@ describe("buscarCarga", () => {
     }
   });
 
+  it("monta a URL com os últimos N dias (ultimos) e combina com o período", async () => {
+    const falso = jest.fn().mockResolvedValue(respostaJson(exemploCarga));
+    await buscarCarga(1, { ultimos: 14 }, { baseUrl: "http://api.local:8000", fetch: falso });
+    expect(falso.mock.calls[0][0]).toBe("http://api.local:8000/atletas/1/carga?ultimos=14");
+    await buscarCarga(1, { inicio: "2025-03-01", ultimos: 7 }, { baseUrl: "http://api.local:8000", fetch: falso });
+    expect(falso.mock.calls[1][0]).toBe("http://api.local:8000/atletas/1/carga?inicio=2025-03-01&ultimos=7");
+  });
+
   it("404 vira nao_encontrado", async () => {
     const falso = jest.fn().mockResolvedValue(respostaJson({ detail: "atleta não encontrado" }, 404));
     const r = await buscarCarga(9, {}, { fetch: falso });

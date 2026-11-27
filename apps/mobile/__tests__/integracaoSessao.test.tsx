@@ -25,7 +25,7 @@ jest.mock("../src/sessao/armazenamento", () => ({
 }));
 
 import CaixaDoDia from "../src/app/(app)/(abas)/caixa-do-dia";
-import Inicio from "../src/app/(app)/(abas)/index";
+import Inicio from "../src/app/(app)/(abas)/evolucao"; // a evolução dos tiros mora na aba Evolução (o início é a TelaInicio)
 import { SessaoProvider, useSessao } from "../src/sessao/SessaoProvider";
 
 const API = "http://api.teste";

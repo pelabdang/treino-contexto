@@ -4,7 +4,7 @@ import { StyleSheet } from "react-native";
 import { fireEvent, render, screen, waitFor, within } from "@testing-library/react-native";
 
 import exemplo from "../../../packages/api-client/exemplos/evolucao-tiros-1km.json";
-import Inicio from "../src/app/(app)/(abas)/index";
+import Inicio from "../src/app/(app)/(abas)/evolucao"; // a evolução dos tiros mora na aba Evolução (o início é a TelaInicio)
 import { TelaEvolucao } from "../src/componentes/TelaEvolucao";
 
 // Os ícones carregam a fonte de forma assíncrona (não existe no Jest): vira um texto com o nome e o tamanho.
@@ -42,7 +42,7 @@ describe("tela de evolução", () => {
     jest.restoreAllMocks();
   });
 
-  it("mostra o título (rota inicial)", async () => {
+  it("mostra o título (rota da aba Evolução)", async () => {
     const original = globalThis.fetch;
     globalThis.fetch = fetchCom(200, base);
     await render(<ComSessao><Inicio /></ComSessao>);
@@ -146,7 +146,7 @@ describe("tela de evolução", () => {
     expect(screen.queryByTestId("ver-treino")).toBeNull();
   });
 
-  it("na rota inicial, 'Ver treino' navega para /treino/<id>", async () => {
+  it("na rota da aba Evolução, 'Ver treino' navega para /treino/<id>", async () => {
     const original = globalThis.fetch;
     globalThis.fetch = fetchCom(200, base);
     await render(<ComSessao><Inicio /></ComSessao>);

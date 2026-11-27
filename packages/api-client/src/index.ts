@@ -152,16 +152,23 @@ export async function buscarAtividade(
   return { ok: false, erro: { tipo: "http", status: resposta.status } };
 }
 
-/** `GET /atletas/{atletaId}/carga`: série diária de CTL, ATL e TSB. `inicio`/`fim` só recortam `dias`. Nunca lança. */
+/** Recorte da série de carga: por datas ou pelos últimos N dias (`ultimos`, serie_carga@2). */
+export type FiltroCarga = FiltroPeriodo & {
+  /** Só os últimos N dias da série. */
+  ultimos?: number;
+};
+
+/** `GET /atletas/{atletaId}/carga`: série diária de CTL, ATL e TSB. `inicio`/`fim`/`ultimos` só recortam `dias`. Nunca lança. */
 export async function buscarCarga(
   atletaId: number,
-  filtro: FiltroPeriodo = {},
+  filtro: FiltroCarga = {},
   opcoes: OpcoesCliente = {},
 ): Promise<Resultado<SerieCarga>> {
   const base = (opcoes.baseUrl ?? BASE_URL_PADRAO).replace(/\/+$/, "");
   const consulta = new URLSearchParams();
   if (filtro.inicio) consulta.set("inicio", filtro.inicio);
   if (filtro.fim) consulta.set("fim", filtro.fim);
+  if (filtro.ultimos) consulta.set("ultimos", String(filtro.ultimos));
   const texto = consulta.toString();
   const url = `${base}/atletas/${encodeURIComponent(String(atletaId))}/carga${texto ? `?${texto}` : ""}`;
 
