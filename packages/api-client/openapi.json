@@ -1079,6 +1079,11 @@
             "title": "Estado",
             "type": "string"
           },
+          "recente": {
+            "default": false,
+            "title": "Recente",
+            "type": "boolean"
+          },
           "sensacao_c": {
             "anyOf": [
               {
@@ -1089,6 +1094,17 @@
               }
             ],
             "title": "Sensacao C"
+          },
+          "sensacao_texto": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Sensacao Texto"
           },
           "temperatura_c": {
             "anyOf": [
@@ -1101,6 +1117,17 @@
             ],
             "title": "Temperatura C"
           },
+          "temperatura_texto": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Temperatura Texto"
+          },
           "umidade_pct": {
             "anyOf": [
               {
@@ -1112,6 +1139,17 @@
             ],
             "title": "Umidade Pct"
           },
+          "umidade_texto": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Umidade Texto"
+          },
           "vento_kmh": {
             "anyOf": [
               {
@@ -1122,6 +1160,17 @@
               }
             ],
             "title": "Vento Kmh"
+          },
+          "vento_texto": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Vento Texto"
           }
         },
         "required": [
