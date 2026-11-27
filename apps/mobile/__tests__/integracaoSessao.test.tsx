@@ -3,7 +3,7 @@
 import { render, screen, waitFor } from "@testing-library/react-native";
 import { type ReactNode } from "react";
 
-import exemplo from "../../../packages/api-client/exemplos/evolucao-tiros-1km.json";
+import { fetchEvolucao } from "../__fixtures__/evolucao";
 
 jest.mock("@expo/vector-icons", () => require("../__fixtures__/iconesFalsos"));
 jest.mock("expo-router", () => ({
@@ -13,6 +13,8 @@ jest.mock("expo-router", () => ({
 
 const mockMem = new Map<string, string>();
 jest.mock("../src/sessao/armazenamento", () => ({
+  lerUltimaSerie: async () => null,
+  gravarUltimaSerie: async () => undefined,
   lerToken: async () => mockMem.get("t") ?? null,
   gravarToken: async (v: string) => void mockMem.set("t", v),
   lerDestino: async () => mockMem.get("d") ?? null,
@@ -49,14 +51,15 @@ beforeEach(() => mockMem.clear());
 describe("rotas com sessão", () => {
   it("o atleta da sessão (3) vem da conta, não de variável de ambiente, e a chamada leva o Bearer", async () => {
     mockMem.set("t", "token-sintetico-3");
+    const evolucao = fetchEvolucao();
     const f = jest.fn(async (input: RequestInfo | URL) =>
       String(input).endsWith("/sessao")
         ? resposta(200, quem({ papel: "atleta", atleta_id: 3, professor_id: null }))
-        : resposta(200, exemplo),
+        : evolucao(input),
     ) as unknown as typeof fetch & jest.Mock;
     await render(app(<Inicio />, f));
-    await waitFor(() => expect(f.mock.calls.some((c) => String(c[0]) === `${API}/atletas/3/evolucao/tiros-1km`)).toBe(true));
-    const chamada = f.mock.calls.find((c) => String(c[0]) === `${API}/atletas/3/evolucao/tiros-1km`);
+    await waitFor(() => expect(f.mock.calls.some((c) => String(c[0]) === `${API}/atletas/3/evolucao/series`)).toBe(true));
+    const chamada = f.mock.calls.find((c) => String(c[0]) === `${API}/atletas/3/evolucao/series`);
     expect(new Headers(chamada?.[1]?.headers).get("authorization")).toBe("Bearer token-sintetico-3");
     expect(screen.queryByTestId("abrir-conta")).toBeNull(); // o menu Conta do topo saiu: a Conta é uma aba
   });

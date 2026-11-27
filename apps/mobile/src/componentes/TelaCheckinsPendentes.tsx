@@ -7,7 +7,7 @@ import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 import { buscarCheckinsPendentes } from "../checkin/api";
 import { borda, espaco, fonte, larguraConteudoMax, raio, tamanho, useMargemTela, useTema, type Tema } from "../tema";
 import { EsqueletoPendentes } from "./Esqueleto";
-import { dataCurta } from "./GraficoTiros";
+import { dataCurta } from "./dataCurta";
 import { MODALIDADES } from "./modalidades";
 
 type Props = {

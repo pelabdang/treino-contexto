@@ -13,7 +13,7 @@ import { CartaoTransicao } from "./CartaoTransicao";
 import { CartoesCheckin } from "./CartoesCheckin";
 import { EsqueletoTreino } from "./Esqueleto";
 import { MODALIDADES } from "./modalidades";
-import { dataCurta } from "./GraficoTiros";
+import { dataCurta } from "./dataCurta";
 
 type Props = {
   apiUrl: string;

@@ -1,10 +1,8 @@
 import { ComSessao } from "../__fixtures__/sessaoFalsa";
-import type { EvolucaoTiros1km } from "@treino/api-client";
-import { StyleSheet } from "react-native";
 import { fireEvent, render, screen, waitFor, within } from "@testing-library/react-native";
 
-import exemplo from "../../../packages/api-client/exemplos/evolucao-tiros-1km.json";
-import Inicio from "../src/app/(app)/(abas)/evolucao"; // a evolução dos tiros mora na aba Evolução (o início é a TelaInicio)
+import { catalogo, fetchEvolucao, paceLeve, serieAprendendo, serieCatalogo, serieVazia, volumeSemana } from "../__fixtures__/evolucao";
+import Inicio from "../src/app/(app)/(abas)/evolucao"; // a Evolução mora na aba Evolução (o início é a TelaInicio)
 import { TelaEvolucao } from "../src/componentes/TelaEvolucao";
 
 // Os ícones carregam a fonte de forma assíncrona (não existe no Jest): vira um texto com o nome e o tamanho.
@@ -19,289 +17,402 @@ jest.mock("expo-router", () => ({
   router: { push: (...a: unknown[]) => mockPush(...a) },
 }));
 
-const base = exemplo as unknown as EvolucaoTiros1km;
-const copia = (): EvolucaoTiros1km => JSON.parse(JSON.stringify(base));
+// A última série escolhida fica no aparelho: aqui, uma memória por teste.
+const mockMemoria = new Map<string, string>();
+jest.mock("../src/sessao/armazenamento", () => ({
+  lerUltimaSerie: async (id: number) => mockMemoria.get(String(id)) ?? null,
+  gravarUltimaSerie: async (id: number, serie: string) => void mockMemoria.set(String(id), serie),
+}));
 
-const resposta = (status: number, corpo: unknown) =>
-  ({ ok: status >= 200 && status < 300, status, json: async () => corpo }) as Response;
-const fetchCom = (status: number, corpo: unknown) =>
-  jest.fn(async (..._args: Parameters<typeof fetch>) => resposta(status, corpo)) as unknown as typeof fetch &
-    jest.Mock;
-
-const tela = (f: typeof fetch) => <TelaEvolucao apiUrl="http://api.teste" atletaId={1} fetchFn={f} />;
+const resposta = (status: number, corpo: unknown) => ({ ok: status >= 200 && status < 300, status, json: async () => corpo }) as Response;
+const tela = (f: typeof fetch, extra = {}) => <TelaEvolucao apiUrl="http://api.teste" atletaId={1} fetchFn={f} {...extra} />;
+// O texto desenhado dentro do SVG (rótulos do eixo, da faixa e das datas) não é um `Text` do RN: procura na árvore.
+const noGrafico = (texto: string) => JSON.stringify(screen.toJSON()).includes(`"${texto}"`);
+const urls = (f: jest.Mock) => f.mock.calls.map((c) => String(c[0]));
 
 const larguraTela = (width: number) =>
   jest.spyOn(require("react-native"), "useWindowDimensions").mockReturnValue({ width, height: 800, scale: 2, fontScale: 1 });
 
-describe("tela de evolução", () => {
-  // Celular por padrão; os testes de web larga trocam a largura.
-  beforeEach(() => {
-    larguraTela(360);
-  });
-  afterEach(() => {
-    jest.restoreAllMocks();
-  });
+beforeEach(() => {
+  mockMemoria.clear();
+  mockPush.mockReset();
+  larguraTela(360); // celular por padrão
+});
+afterEach(() => jest.restoreAllMocks());
 
-  it("mostra o título (rota da aba Evolução)", async () => {
+describe("Evolução v1: abertura e série padrão", () => {
+  it("título, catálogo e a série_padrao no 12 semanas (rota da aba)", async () => {
     const original = globalThis.fetch;
-    globalThis.fetch = fetchCom(200, base);
-    await render(<ComSessao><Inicio /></ComSessao>);
-    expect(screen.getByText("Evolução dos tiros de 1 km")).toBeTruthy();
-    await screen.findByTestId("lista-sessoes");
-    globalThis.fetch = original;
+    const f = fetchEvolucao();
+    globalThis.fetch = f;
+    try {
+      await render(<ComSessao><Inicio /></ComSessao>);
+      expect(screen.getByText("Evolução")).toBeTruthy();
+      await screen.findByTestId("frase-evolucao");
+    } finally {
+      globalThis.fetch = original;
+    }
+    expect(urls(f)).toContain("http://api.teste/atletas/1/evolucao/series");
+    expect(urls(f)).toContain("http://api.teste/atletas/1/evolucao/series/corrida.pace.leve?periodo=12s");
   });
 
-  it("mostra carregando enquanto espera", async () => {
-    const f = jest.fn(() => new Promise<Response>(() => {})) as unknown as typeof fetch;
-    await render(tela(f));
-    expect(screen.getByText("Carregando seus tiros...")).toBeTruthy();
-  });
-
-  it("chama a API do atleta configurado", async () => {
-    const f = fetchCom(200, base);
-    await render(tela(f));
-    await screen.findByTestId("lista-sessoes");
-    expect(f.mock.calls[0][0]).toBe("http://api.teste/atletas/1/evolucao/tiros-1km");
-  });
-
-  it("sucesso: gráfico, lista das sessões e rodapé", async () => {
-    await render(tela(fetchCom(200, base)));
-    const lista = await screen.findByTestId("lista-sessoes");
-    expect(within(lista).getByText("4:08 min/km")).toBeTruthy();
-    expect(within(lista).getByText("175 bpm")).toBeTruthy();
-    expect(within(lista).getByText("média 4:11 · 6 tiros")).toBeTruthy();
-    expect(within(lista).getByText("3:54 min/km")).toBeTruthy();
-    expect(screen.getByTestId("painel-pace")).toBeTruthy();
-    expect(screen.getByText(`cálculo: ${base.versao_calculo}`)).toBeTruthy();
-  });
-
-  it("vazio: sem sessões", async () => {
-    const d = copia();
-    d.sessoes = [];
-    d.eixos = null;
-    await render(tela(fetchCom(200, d)));
-    expect(await screen.findByText("Ainda não há treinos de tiros de 1 km")).toBeTruthy();
-    expect(screen.getByText("Envie o arquivo FIT de um treino com tiros para ver a evolução aqui.")).toBeTruthy();
-    expect(within(screen.getByTestId("estado-vazio")).getByText("insert-chart-outlined:40")).toBeTruthy();
-  });
-
-  it("botão de enviar: secundário com dados, primário no vazio", async () => {
-    const fundo = () => {
-      const botao = screen.getByRole("button", { name: "Enviar arquivo FIT" });
-      return StyleSheet.flatten(botao.props.style).backgroundColor;
-    };
-    const { unmount } = await render(tela(fetchCom(200, base)));
-    await screen.findByTestId("lista-sessoes");
-    expect(fundo()).toBe("#FFFFFF");
-    await unmount();
-    const d = copia();
-    d.sessoes = [];
-    d.eixos = null;
-    await render(tela(fetchCom(200, d)));
-    await screen.findByTestId("estado-vazio");
-    expect(fundo()).toBe("#12200A");
-  });
-
-  it("carregando: esqueleto dos cartões e o texto", async () => {
-    const f = jest.fn(() => new Promise<Response>(() => {})) as unknown as typeof fetch;
-    await render(tela(f));
+  it("carregando: esqueleto e o texto para o leitor de tela", async () => {
+    await render(tela(jest.fn(() => new Promise<Response>(() => {})) as unknown as typeof fetch));
+    expect(screen.getByText("Carregando...")).toBeTruthy();
     expect(screen.getByTestId("esqueleto-evolucao", { includeHiddenElements: true })).toBeTruthy();
-    expect(screen.getByText("Carregando seus tiros...")).toBeTruthy();
   });
 
-  it("erro de rede: ícone wifi-off; 404 e outros: error-outline", async () => {
-    const { unmount } = await render(tela(jest.fn().mockRejectedValue(new Error("x")) as unknown as typeof fetch));
-    const rede = await screen.findByTestId("estado-erro");
-    expect(within(rede).getByText("wifi-off:40")).toBeTruthy();
-    await unmount();
-    await render(tela(fetchCom(404, { detail: "atleta não encontrado" })));
-    const nf = await screen.findByTestId("estado-erro");
-    expect(within(nf).getByText("error-outline:40")).toBeTruthy();
+  it("mostra a frase, o valor do último treino e o rodapé, tudo como a API mandou", async () => {
+    await render(tela(fetchEvolucao()));
+    const frase = await screen.findByTestId("frase-evolucao");
+    expect(within(frase).getByText("EM UMA FRASE")).toBeTruthy();
+    expect(within(frase).getByText(paceLeve.frase.texto)).toBeTruthy();
+    expect(screen.getByText("5:43")).toBeTruthy();
+    expect(screen.getByText("último treino, qui 14/03")).toBeTruthy();
+    expect(screen.getByText("cálculo: evolucao_serie@1")).toBeTruthy();
+    // o gráfico é um item só, com a frase como rótulo
+    expect(screen.getByLabelText(paceLeve.frase.texto).props.accessible).toBe(true);
   });
 
-  it("'Ver treino' só aparece com a sessão selecionada e abre a tela daquele treino", async () => {
-    const aoAbrirTreino = jest.fn();
-    await render(<TelaEvolucao apiUrl="http://api.teste" atletaId={1} fetchFn={fetchCom(200, base)} aoAbrirTreino={aoAbrirTreino} />);
-    await screen.findByTestId("lista-sessoes");
-    expect(screen.queryByTestId("ver-treino")).toBeNull();
-    const id = base.sessoes[1].atividade_id;
-    await fireEvent.press(screen.getByTestId(`linha-sessao-${id}`));
-    const botao = screen.getByRole("button", { name: "Ver treino" });
-    expect(StyleSheet.flatten(botao.props.style).minHeight).toBeGreaterThanOrEqual(48);
-    // texto alinhado à esquerda, na borda do gráfico (revisão da Lia no #227)
-    const estiloBotao = StyleSheet.flatten(botao.props.style);
-    expect(estiloBotao.alignSelf).toBe("flex-start");
-    expect(estiloBotao.paddingLeft ?? estiloBotao.paddingHorizontal ?? 0).toBe(0);
-    await fireEvent.press(botao);
-    expect(aoAbrirTreino).toHaveBeenCalledWith(id);
-    // a seleção continua (a tela não é recriada): é o que o "Voltar" encontra
-    expect(screen.getByTestId(`linha-sessao-${id}`).props.accessibilityState.selected).toBe(true);
-    expect(screen.getByTestId("ver-treino")).toBeTruthy();
-  });
-
-  it("sem aoAbrirTreino não mostra 'Ver treino'", async () => {
-    await render(tela(fetchCom(200, base)));
-    await screen.findByTestId("lista-sessoes");
-    await fireEvent.press(screen.getByTestId(`linha-sessao-${base.sessoes[0].atividade_id}`));
-    expect(screen.queryByTestId("ver-treino")).toBeNull();
-  });
-
-  it("na rota da aba Evolução, 'Ver treino' navega para /treino/<id>", async () => {
-    const original = globalThis.fetch;
-    globalThis.fetch = fetchCom(200, base);
-    await render(<ComSessao><Inicio /></ComSessao>);
-    await screen.findByTestId("lista-sessoes");
-    const id = base.sessoes[0].atividade_id;
-    await fireEvent.press(screen.getByTestId(`linha-sessao-${id}`));
-    await fireEvent.press(screen.getByTestId("ver-treino"));
-    expect(mockPush).toHaveBeenCalledWith(`/treino/${id}`);
-    globalThis.fetch = original;
-  });
-
-  it("tocar na linha da lista seleciona a sessão e mostra o detalhe do gráfico", async () => {
-    await render(tela(fetchCom(200, base)));
-    await screen.findByTestId("lista-sessoes");
-    expect(screen.queryByTestId("detalhe-sessao")).toBeNull();
-    const id = base.sessoes[0].atividade_id;
-    const linha = screen.getByTestId(`linha-sessao-${id}`);
-    expect(StyleSheet.flatten(linha.props.style).minHeight).toBe(56);
-    await fireEvent.press(linha);
-    const detalhe = screen.getByTestId("detalhe-sessao");
-    expect(within(detalhe).getByText(/^04\/03\/25 · \d tiros$/)).toBeTruthy();
-    expect(screen.getByTestId(`linha-sessao-${id}`).props.accessibilityState.selected).toBe(true);
-    expect(screen.getByTestId(`ponto-pace-${id}`).props.r).toBe(7);
-  });
-
-  it("tocar no ponto do gráfico marca a mesma linha da lista", async () => {
-    await render(tela(fetchCom(200, base)));
-    await screen.findByTestId("lista-sessoes");
-    const id = base.sessoes[1].atividade_id;
-    await fireEvent.press(screen.getByTestId(`toque-pace-${id}`));
-    expect(screen.getByTestId(`linha-sessao-${id}`).props.accessibilityState.selected).toBe(true);
-    expect(screen.getByTestId(`linha-sessao-${base.sessoes[0].atividade_id}`).props.accessibilityState.selected).toBe(false);
-  });
-
-  it("web larga: coluna 'Média dos tiros' com cabeçalho; celular não tem", async () => {
-    larguraTela(900);
-    await render(tela(fetchCom(200, base)));
-    await screen.findByTestId("lista-sessoes");
-    const cab = screen.getByTestId("cabecalho-lista");
-    expect(within(cab).getByText("Média dos tiros")).toBeTruthy();
-    expect(within(screen.getByTestId("lista-sessoes")).getByText("4:11 min/km · 6 tiros")).toBeTruthy();
-  });
-
-  it("celular: sem cabeçalho de colunas", async () => {
-    await render(tela(fetchCom(200, base)));
-    await screen.findByTestId("lista-sessoes");
-    expect(screen.queryByTestId("cabecalho-lista")).toBeNull();
-  });
-
-  it("erro 404: atleta não encontrado", async () => {
-    await render(tela(fetchCom(404, { detail: "atleta não encontrado" })));
-    expect(await screen.findByText("Atleta não encontrado")).toBeTruthy();
-    expect(screen.queryByText("Tentar de novo")).toBeNull();
-  });
-
-  it("erro 422: mensagem genérica", async () => {
-    await render(tela(fetchCom(422, { detail: [] })));
-    expect(await screen.findByText(/Não foi possível carregar os tiros/)).toBeTruthy();
-  });
-
-  it("erro de rede: mensagem e tentar de novo", async () => {
-    const f = jest
-      .fn()
-      .mockRejectedValueOnce(new Error("falhou"))
-      .mockResolvedValue(resposta(200, base)) as unknown as typeof fetch & jest.Mock;
+  it("abre na última série escolhida (guardada no aparelho), não na padrão", async () => {
+    mockMemoria.set("1", "corrida.volume_km");
+    const f = fetchEvolucao();
     await render(tela(f));
-    expect(await screen.findByText("Não foi possível falar com o servidor")).toBeTruthy();
-    await fireEvent.press(screen.getByText("Tentar de novo"));
-    await screen.findByTestId("lista-sessoes");
-    expect(f).toHaveBeenCalledTimes(2);
-    expect(screen.queryByText("Não foi possível falar com o servidor")).toBeNull();
+    await screen.findByTestId("frase-evolucao");
+    expect(urls(f)).toContain("http://api.teste/atletas/1/evolucao/series/corrida.volume_km?periodo=12s");
+    expect(urls(f).some((u) => u.includes("pace.leve"))).toBe(false);
   });
 
-  it("cartão do último treino: melhor tiro em destaque, FC do melhor tiro e média no secundário", async () => {
-    await render(tela(fetchCom(200, base)));
-    const cartao = await screen.findByTestId("cartao-ultimo-treino");
-    // a última sessão da lista (data crescente) é a de 11/03/25
-    expect(within(cartao).getByText("Último treino · 11/03/25")).toBeTruthy();
-    expect(within(cartao).getByText("Melhor tiro")).toBeTruthy();
-    expect(within(cartao).getByText(/3:54/)).toBeTruthy();
-    expect(within(cartao).getByText("FC do melhor tiro: 177 bpm")).toBeTruthy();
-    expect(within(cartao).getByText("Média dos tiros: 3:57 min/km · 5 tiros")).toBeTruthy();
+  it("a série guardada que sumiu do catálogo, ou ficou indisponível, cai na padrão", async () => {
+    mockMemoria.set("1", "corrida.tiros"); // indisponível
+    const f = fetchEvolucao();
+    await render(tela(f));
+    await screen.findByTestId("frase-evolucao");
+    expect(urls(f)).toContain("http://api.teste/atletas/1/evolucao/series/corrida.pace.leve?periodo=12s");
   });
 
-  it("lista: mais recente no alto", async () => {
-    await render(tela(fetchCom(200, base)));
-    const lista = await screen.findByTestId("lista-sessoes");
-    const datas = within(lista)
-      .getAllByText(/^\d\d\/\d\d\/\d\d$/)
-      .map((n) => n.props.children);
-    expect(datas).toEqual(["11/03/25", "04/03/25"]);
+  it("sem série_padrao, abre na primeira disponível", async () => {
+    const f = fetchEvolucao({ catalogo: { ...catalogo, serie_padrao: null } });
+    await render(tela(f));
+    await screen.findByTestId("frase-evolucao");
+    expect(urls(f)).toContain("http://api.teste/atletas/1/evolucao/series/corrida.pace.leve?periodo=12s");
+  });
+});
+
+describe("Evolução v1: seletor em dois passos", () => {
+  it("a modalidade vem primeiro; só aparecem as que têm série", async () => {
+    await render(tela(fetchEvolucao()));
+    await screen.findByTestId("frase-evolucao");
+    expect(screen.getByTestId("modalidade-corrida").props.accessibilityState.selected).toBe(true);
+    expect(screen.getByTestId("modalidade-natacao")).toBeTruthy();
+    expect(screen.queryByTestId("modalidade-ciclismo")).toBeNull();
   });
 
-  it("melhor tiro sem FC: 'sem FC' no cartão e na lista", async () => {
-    const d = copia();
-    d.sessoes[1].fc_melhor_tiro = null;
-    await render(tela(fetchCom(200, d)));
-    const cartao = await screen.findByTestId("cartao-ultimo-treino");
-    expect(within(cartao).getByText("FC do melhor tiro: sem FC")).toBeTruthy();
-    expect(within(screen.getByTestId("lista-sessoes")).getByText("sem FC")).toBeTruthy();
+  it("a folha lista as séries em grupos; a indisponível vem com o motivo escrito", async () => {
+    await render(tela(fetchEvolucao()));
+    await screen.findByTestId("frase-evolucao");
+    await fireEvent.press(screen.getByTestId("abrir-seletor"));
+    const folha = within(screen.getByTestId("folha-series"));
+    expect(folha.getByText("Corrida: o que acompanhar")).toBeTruthy();
+    for (const g of ["Ritmo", "Coração", "Esforço e volume"]) expect(folha.getByText(g)).toBeTruthy();
+    expect(folha.getByText("Poucos treinos de tiros nas últimas 12 semanas")).toBeTruthy();
+    const marcada = folha.getByTestId("serie-corrida.pace.leve");
+    expect(marcada.props.accessibilityState.selected).toBe(true);
+    expect(folha.getByTestId("serie-corrida.tiros").props.accessibilityLabel).toContain("Indisponível");
   });
 
-  it("o app não recalcula: pace_melhor e rótulo de eixo trocados aparecem como vieram (9:99)", async () => {
-    const d = copia();
-    d.sessoes[1].pace_melhor = "9:99";
-    d.sessoes[1].pace_medio = "7:77";
-    d.eixos!.pace!.marcas[0].rotulo = "8:88";
-    await render(tela(fetchCom(200, d)));
-    const lista = await screen.findByTestId("lista-sessoes");
-    expect(within(lista).getByText("9:99 min/km")).toBeTruthy();
-    expect(within(lista).getByText("média 7:77 · 5 tiros")).toBeTruthy();
-    expect(within(screen.getByTestId("cartao-ultimo-treino")).getByText(/9:99/)).toBeTruthy();
-    expect(screen.getByText("8:88")).toBeTruthy();
+  it("escolher uma série fecha a folha, busca a série e lembra a escolha", async () => {
+    const f = fetchEvolucao();
+    await render(tela(f));
+    await screen.findByTestId("frase-evolucao");
+    await fireEvent.press(screen.getByTestId("abrir-seletor"));
+    await fireEvent.press(screen.getByTestId("serie-corrida.volume_km"));
+    await waitFor(() => expect(screen.getByText(volumeSemana.frase.texto)).toBeTruthy());
+    expect(screen.queryByTestId("folha-series")).toBeNull();
+    expect(urls(f)).toContain("http://api.teste/atletas/1/evolucao/series/corrida.volume_km?periodo=12s");
+    expect(mockMemoria.get("1")).toBe("corrida.volume_km");
   });
 
-  it("margem da tela: 16 no celular e 24 a partir de 600 de largura", async () => {
-    const spy = jest.spyOn(require("react-native"), "useWindowDimensions");
-    const pad = () => StyleSheet.flatten(screen.getByTestId("rolagem-tela").props.contentContainerStyle).padding;
-    spy.mockReturnValue({ width: 360, height: 800, scale: 2, fontScale: 1 });
-    const { unmount } = await render(tela(fetchCom(200, base)));
-    await screen.findByTestId("lista-sessoes");
-    expect(pad()).toBe(16);
+  it("trocar de modalidade vai para a primeira série disponível dela e mantém o período", async () => {
+    const f = fetchEvolucao({ series: { "corrida.pace.leve": paceLeve, "natacao.ritmo": { ...paceLeve, id: "natacao.ritmo", titulo: "Ritmo na piscina" } } });
+    await render(tela(f));
+    await screen.findByTestId("frase-evolucao");
+    await fireEvent.press(screen.getByTestId("periodo-6m"));
+    await fireEvent.press(screen.getByTestId("modalidade-natacao"));
+    await waitFor(() => expect(urls(f)).toContain("http://api.teste/atletas/1/evolucao/series/natacao.ritmo?periodo=6m"));
+  });
+
+  it("série indisponível escolhida: mostra o motivo e 'Escolher outra série', sem buscar a série", async () => {
+    const f = fetchEvolucao();
+    await render(tela(f));
+    await screen.findByTestId("frase-evolucao");
+    await fireEvent.press(screen.getByTestId("abrir-seletor"));
+    await fireEvent.press(screen.getByTestId("serie-corrida.tiros"));
+    const vazio = await screen.findByTestId("serie-indisponivel");
+    expect(within(vazio).getByText("Poucos treinos de tiros nas últimas 12 semanas")).toBeTruthy();
+    expect(urls(f).some((u) => u.includes("corrida.tiros"))).toBe(false);
+    await fireEvent.press(within(vazio).getByTestId("escolher-outra"));
+    expect(screen.getByTestId("folha-series")).toBeTruthy();
+  });
+
+  it("computador (≥ 900): as séries ficam numa coluna fixa, sem folha", async () => {
+    larguraTela(1280);
+    await render(tela(fetchEvolucao()));
+    await screen.findByTestId("frase-evolucao");
+    expect(screen.getByTestId("coluna-series")).toBeTruthy();
+    expect(screen.queryByTestId("abrir-seletor")).toBeNull();
+    await fireEvent.press(screen.getByTestId("serie-corrida.volume_km"));
+    await waitFor(() => expect(screen.getByText(volumeSemana.frase.texto)).toBeTruthy());
+  });
+});
+
+describe("Evolução v1: período", () => {
+  it("12 semanas, 6 meses e 1 ano buscam a série de novo; o mesmo período não busca", async () => {
+    const f = fetchEvolucao();
+    await render(tela(f));
+    await screen.findByTestId("frase-evolucao");
+    expect(screen.getByTestId("periodo-12s").props.accessibilityState.selected).toBe(true);
+    const antes = f.mock.calls.length;
+    await fireEvent.press(screen.getByTestId("periodo-12s"));
+    expect(f.mock.calls.length).toBe(antes);
+    await fireEvent.press(screen.getByTestId("periodo-6m"));
+    await waitFor(() => expect(urls(f)).toContain("http://api.teste/atletas/1/evolucao/series/corrida.pace.leve?periodo=6m"));
+    await fireEvent.press(screen.getByTestId("periodo-1a"));
+    await waitFor(() => expect(urls(f)).toContain("http://api.teste/atletas/1/evolucao/series/corrida.pace.leve?periodo=1a"));
+    await screen.findByTestId("frase-evolucao");
+  });
+});
+
+describe("Evolução v1: o gráfico", () => {
+  it("desenha a faixa do normal, o losango do melhor e o triângulo do fora do normal", async () => {
+    await render(tela(fetchEvolucao()));
+    await screen.findByTestId("grafico-serie");
+    expect(screen.getByTestId("faixa-normal")).toBeTruthy();
+    expect(noGrafico("Seu normal 5:35 a 5:50")).toBe(true);
+    expect(screen.getAllByTestId("borda-faixa")).toHaveLength(2); // as duas bordas da faixa, em cor.link (contraste 3:1)
+    expect(screen.getByTestId("marca-melhor")).toBeTruthy();
+    expect(screen.getByTestId("marca-fora")).toBeTruthy();
+    expect(screen.getByTestId("linha-serie")).toBeTruthy();
+    // legenda sempre visível
+    for (const t of ["treino", "fora do normal", "melhor", "normal"]) expect(screen.getByText(t, { includeHiddenElements: true })).toBeTruthy();
+  });
+
+  it("pace (eixo invertido) diz 'mais rápido ↑'; volume não", async () => {
+    const { unmount } = await render(tela(fetchEvolucao()));
+    expect(await screen.findByTestId("mais-rapido")).toHaveTextContent("mais rápido ↑");
     await unmount();
-    spy.mockReturnValue({ width: 900, height: 800, scale: 2, fontScale: 1 });
-    await render(tela(fetchCom(200, base)));
-    await screen.findByTestId("lista-sessoes");
-    expect(pad()).toBe(24);
-    spy.mockRestore();
+    mockMemoria.set("1", "corrida.volume_km");
+    await render(tela(fetchEvolucao()));
+    await screen.findByTestId("grafico-serie");
+    expect(screen.queryByTestId("mais-rapido")).toBeNull();
   });
 
-  it("versão desconhecida aparece no rodapé sem quebrar", async () => {
-    const d = copia();
-    d.versao_calculo = "tiros_1km@9";
-    await render(tela(fetchCom(200, d)));
-    expect(await screen.findByText("cálculo: tiros_1km@9")).toBeTruthy();
-    expect(screen.getByTestId("lista-sessoes")).toBeTruthy();
+  it("legenda da série de barras: só 'semana'", async () => {
+    mockMemoria.set("1", "corrida.volume_km");
+    await render(tela(fetchEvolucao()));
+    await screen.findByTestId("grafico-serie");
+    expect(screen.getByText("semana", { includeHiddenElements: true })).toBeTruthy();
+    for (const t of ["treino", "fora do normal", "melhor"]) expect(screen.queryByText(t, { includeHiddenElements: true })).toBeNull();
   });
 
-  it("reclassificacao_pendente true mostra o aviso; false não", async () => {
-    const d = copia();
-    d.reclassificacao_pendente = true;
-    const { unmount } = await render(tela(fetchCom(200, d)));
-    expect(await screen.findByText("cálculo em atualização")).toBeTruthy();
-    await unmount();
+  it("os marcos do eixo são os textos da API", async () => {
+    await render(tela(fetchEvolucao()));
+    await screen.findByTestId("grafico-serie");
+    for (const t of ["5:30", "5:42", "5:55"]) expect(noGrafico(t)).toBe(true);
+  });
 
-    d.reclassificacao_pendente = false;
-    await render(tela(fetchCom(200, d)));
-    await waitFor(() => expect(screen.getByTestId("lista-sessoes")).toBeTruthy());
-    expect(screen.queryByText("cálculo em atualização")).toBeNull();
+  it("o app não recalcula: valor_texto trocado aparece como veio", async () => {
+    const serie = { ...paceLeve, ultimo_valor_texto: "9:99", pontos: paceLeve.pontos.map((p, i) => (i === 3 ? { ...p, valor_texto: "9:99" } : p)) };
+    await render(tela(fetchEvolucao({ series: { "corrida.pace.leve": serie } })));
+    await screen.findByTestId("grafico-serie");
+    expect(screen.getByText("9:99")).toBeTruthy();
+    await fireEvent.press(screen.getByTestId("ponto-3"));
+    expect(within(screen.getByTestId("detalhe-ponto")).getByText("9:99")).toBeTruthy();
+  });
+
+  it("aprendendo: linha pontilhada, sem faixa, sem triângulo e com o texto da API", async () => {
+    await render(tela(fetchEvolucao({ series: { "corrida.pace.leve": serieAprendendo } })));
+    await screen.findByTestId("grafico-serie");
+    expect(screen.getByTestId("linha-pontilhada")).toBeTruthy();
+    expect(screen.queryByTestId("faixa-normal")).toBeNull();
+    expect(screen.queryByTestId("marca-fora")).toBeNull();
+    expect(screen.getByTestId("aprendendo")).toHaveTextContent(/faltam 3 treinos para mostrar a faixa/);
+    expect(screen.queryByText("normal", { includeHiddenElements: true })).toBeNull(); // sem faixa, sem "normal" na legenda
+  });
+
+  it("volume por semana: barras, sem faixa e sem losango", async () => {
+    mockMemoria.set("1", "corrida.volume_km");
+    await render(tela(fetchEvolucao()));
+    await screen.findByTestId("grafico-serie");
+    expect(screen.queryByTestId("linha-serie")).toBeNull();
+    expect(screen.queryByTestId("faixa-normal")).toBeNull();
+  });
+});
+
+describe("Evolução v1: tocar num ponto", () => {
+  it("o primeiro toque mostra o detalhe e 'Abrir treino'; o botão abre aquele treino", async () => {
+    const abrir = jest.fn();
+    await render(tela(fetchEvolucao(), { aoAbrirTreino: abrir }));
+    await screen.findByTestId("grafico-serie");
+    expect(screen.queryByTestId("detalhe-ponto")).toBeNull();
+    expect(screen.getByText("4 pontos no período. Toque num ponto para ver os detalhes.")).toBeTruthy();
+    expect(screen.queryByTestId("abrir-treino")).toBeNull();
+    await fireEvent.press(screen.getByTestId("ponto-1"));
+    const d = within(screen.getByTestId("detalhe-ponto"));
+    expect(d.getByText("ter 06/03")).toBeTruthy();
+    expect(d.getByText("5:55")).toBeTruthy();
+    expect(d.getByText("fora do seu normal")).toBeTruthy();
+    expect(screen.getByTestId("ponto-selecionado")).toBeTruthy();
+    await fireEvent.press(screen.getByTestId("abrir-treino"));
+    expect(abrir).toHaveBeenCalledWith(101);
+  });
+
+  it("sem aoAbrirTreino não há 'Abrir treino'", async () => {
+    await render(tela(fetchEvolucao()));
+    await screen.findByTestId("grafico-serie");
+    await fireEvent.press(screen.getByTestId("ponto-0"));
+    expect(screen.getByTestId("detalhe-ponto")).toBeTruthy();
+    expect(screen.queryByTestId("abrir-treino")).toBeNull();
+  });
+
+  it("volume: o detalhe mostra o valor e a data, sem botão", async () => {
+    mockMemoria.set("1", "corrida.volume_km");
+    await render(tela(fetchEvolucao(), { aoAbrirTreino: jest.fn() }));
+    await screen.findByTestId("grafico-serie");
+    await fireEvent.press(screen.getByTestId("ponto-2"));
+    const d = within(screen.getByTestId("detalhe-ponto"));
+    expect(d.getByText("semana de 17/03")).toBeTruthy();
+    expect(d.getByText("Semana de 17/03, 12 quilômetros, semana em curso")).toBeTruthy();
+    expect(screen.queryByTestId("abrir-treino")).toBeNull();
+    expect(screen.getByText("Semana anterior")).toBeTruthy();
+  });
+
+  it("as setas andam entre os treinos e travam nas pontas", async () => {
+    await render(tela(fetchEvolucao()));
+    await screen.findByTestId("grafico-serie");
+    await fireEvent.press(screen.getByTestId("ponto-0"));
+    expect(screen.getByTestId("treino-anterior").props.accessibilityState.disabled).toBe(true);
+    await fireEvent.press(screen.getByTestId("treino-seguinte"));
+    expect(within(screen.getByTestId("detalhe-ponto")).getByText("ter 06/03")).toBeTruthy();
+    await fireEvent.press(screen.getByTestId("treino-anterior"));
+    expect(within(screen.getByTestId("detalhe-ponto")).getByText("ter 02/03")).toBeTruthy();
+  });
+
+  it("'Ver os valores em lista' mostra todos os pontos, do mais recente ao mais antigo, e seleciona", async () => {
+    await render(tela(fetchEvolucao()));
+    await screen.findByTestId("grafico-serie");
+    expect(screen.queryByTestId("lista-pontos")).toBeNull();
+    await fireEvent.press(screen.getByTestId("ver-lista"));
+    const lista = screen.getByTestId("lista-pontos");
+    expect(within(lista).getByLabelText(paceLeve.pontos[1].rotulo)).toBeTruthy();
+    await fireEvent.press(within(lista).getByTestId("linha-ponto-1"));
+    expect(screen.getByTestId("detalhe-ponto")).toBeTruthy();
+  });
+
+  it("na rota da aba Evolução, 'Abrir treino' navega para /treino/<id>", async () => {
+    const original = globalThis.fetch;
+    globalThis.fetch = fetchEvolucao();
+    try {
+      await render(<ComSessao><Inicio /></ComSessao>);
+      await screen.findByTestId("grafico-serie");
+      await fireEvent.press(screen.getByTestId("ponto-2"));
+      await fireEvent.press(screen.getByTestId("abrir-treino"));
+    } finally {
+      globalThis.fetch = original;
+    }
+    expect(mockPush).toHaveBeenCalledWith("/treino/102");
+  });
+
+  it("trocar de série limpa a seleção; o ponto selecionado continua ao voltar do treino (a tela segue montada)", async () => {
+    await render(tela(fetchEvolucao(), { aoAbrirTreino: jest.fn() }));
+    await screen.findByTestId("grafico-serie");
+    await fireEvent.press(screen.getByTestId("ponto-1"));
+    await fireEvent.press(screen.getByTestId("abrir-treino"));
+    expect(screen.getByTestId("detalhe-ponto")).toBeTruthy(); // "Voltar" devolve com o mesmo ponto
+    await fireEvent.press(screen.getByTestId("abrir-seletor"));
+    await fireEvent.press(screen.getByTestId("serie-corrida.volume_km"));
+    await waitFor(() => expect(screen.getByText(volumeSemana.frase.texto)).toBeTruthy());
+    expect(screen.queryByTestId("detalhe-ponto")).toBeNull();
+  });
+});
+
+describe("Evolução v1: estados", () => {
+  it("série sem pontos: título, a frase da API e 'Escolher outra série'", async () => {
+    await render(tela(fetchEvolucao({ series: { "corrida.pace.leve": serieVazia } })));
+    const vazio = await screen.findByTestId("estado-vazio");
+    expect(within(vazio).getByText(serieVazia.frase.texto)).toBeTruthy();
+    expect(within(vazio).getByTestId("escolher-outra")).toBeTruthy();
+    expect(screen.queryByTestId("grafico-serie")).toBeNull();
+  });
+
+  it("catálogo vazio: pede o arquivo do relógio e mantém o botão de enviar", async () => {
+    await render(tela(fetchEvolucao({ catalogo: { ...catalogo, series: [], serie_padrao: null } }), { ocultarEnviarFit: true }));
+    const vazio = await screen.findByTestId("estado-vazio");
+    expect(within(vazio).getByText("Envie o arquivo do seu relógio pela aba Conta e a evolução aparece aqui.")).toBeTruthy();
+    expect(screen.getByText("Enviar arquivo FIT")).toBeTruthy();
+  });
+
+  it("catálogo só com séries indisponíveis: também é vazio, sem seletor", async () => {
+    const so = { ...catalogo, serie_padrao: null, series: [serieCatalogo.tiros] };
+    await render(tela(fetchEvolucao({ catalogo: so })));
+    await screen.findByTestId("estado-vazio");
+    expect(screen.queryByTestId("seletor-serie")).toBeNull();
+  });
+
+  it("erro de rede no catálogo: wifi-off, mensagem e 'Tentar de novo' que busca de novo", async () => {
+    const f = jest.fn().mockRejectedValueOnce(new Error("x")).mockImplementation(fetchEvolucao()) as unknown as typeof fetch & jest.Mock;
+    await render(tela(f));
+    const erro = await screen.findByTestId("estado-erro");
+    expect(within(erro).getByText("wifi-off:40")).toBeTruthy();
+    expect(within(erro).getByText("Não foi possível carregar esta série.")).toBeTruthy();
+    expect(within(erro).getByText("Verifique a conexão e tente de novo.")).toBeTruthy();
+    await fireEvent.press(within(erro).getByText("Tentar de novo"));
+    await screen.findByTestId("frase-evolucao");
+  });
+
+  it("erro na série: o seletor continua e 'Tentar de novo' busca a série", async () => {
+    const boa = fetchEvolucao();
+    let falhou = false;
+    const f = jest.fn(async (url: unknown) => {
+      if (String(url).includes("/series/corrida.pace.leve") && !falhou) {
+        falhou = true;
+        return resposta(500, { detail: "x" });
+      }
+      return boa(url as string);
+    }) as unknown as typeof fetch;
+    await render(tela(f));
+    const erro = await screen.findByTestId("estado-erro");
+    expect(screen.getByTestId("seletor-serie")).toBeTruthy();
+    await fireEvent.press(within(erro).getByText("Tentar de novo"));
+    await screen.findByTestId("frase-evolucao");
+  });
+
+  it("404: 'Atleta não encontrado', sem botão", async () => {
+    await render(tela(fetchEvolucao({ catalogo: 404 })));
+    const erro = await screen.findByTestId("estado-erro");
+    expect(within(erro).getByText("Atleta não encontrado")).toBeTruthy();
+    expect(within(erro).queryByText("Tentar de novo")).toBeNull();
+  });
+
+  it("a frase 'poucos treinos' vem da API, sem o app comentar", async () => {
+    const poucos = { ...paceLeve, frase: { ...paceLeve.frase, tipo: "poucos" as const, texto: "Poucos treinos para comparar: 2 nas últimas 4 semanas, 4 nas 4 anteriores." } };
+    await render(tela(fetchEvolucao({ series: { "corrida.pace.leve": poucos } })));
+    expect(await screen.findByText(poucos.frase.texto)).toBeTruthy();
+  });
+});
+
+describe("botão de enviar e aviso de professor", () => {
+  it("enviar: secundário com dados, primário quando não há nada para mostrar", async () => {
+    await render(tela(fetchEvolucao()));
+    await screen.findByTestId("frase-evolucao");
+    expect(screen.getByText("Enviar arquivo FIT")).toBeTruthy();
   });
 
   describe("aviso de pedido de professor (#503)", () => {
+    const base = fetchEvolucao();
     const comPedidos = (professores: unknown[]) =>
       jest.fn(async (input: RequestInfo | URL) =>
-        String(input).endsWith("/professores") ? resposta(200, { atleta_id: 1, termo_vigente: "t", professores }) : resposta(200, base),
+        String(input).endsWith("/professores") ? resposta(200, { atleta_id: 1, termo_vigente: "t", professores }) : base(input),
       ) as unknown as typeof fetch & jest.Mock;
     const telaComAviso = (f: typeof fetch, aoAbrirConsentimento = jest.fn()) => (
       <TelaEvolucao apiUrl="http://api.teste" atletaId={1} fetchFn={f} aoAbrirConsentimento={aoAbrirConsentimento} />
@@ -321,9 +432,7 @@ describe("tela de evolução", () => {
 
     it("sem pedido, ou se a busca falhar, não há aviso", async () => {
       await render(telaComAviso(comPedidos([v(true)])));
-      await screen.findByTestId("lista-sessoes");
-      expect(screen.queryByTestId("aviso-consentimento")).toBeNull();
-      await render(telaComAviso(fetchCom(500, {})));
+      await screen.findByTestId("frase-evolucao");
       expect(screen.queryByTestId("aviso-consentimento")).toBeNull();
     });
   });

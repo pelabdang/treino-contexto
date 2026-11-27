@@ -4,7 +4,7 @@ import { useMemo, useState } from "react";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 
 import { borda, espaco, fonte, raio, tamanho, useTema, type Tema } from "../tema";
-import { dataCurta } from "./GraficoTiros";
+import { dataCurta } from "./dataCurta";
 
 type FormaDoDia = NonNullable<Atividade["forma_do_dia"]>;
 

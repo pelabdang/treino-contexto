@@ -29,6 +29,75 @@ const sessoes = datas.map((data, i) => {
     tiros,
   };
 });
+
+// Evolução v1 (#582, ADR 0004 adendo 15): catálogo e séries sintéticos, no formato da API (textos prontos; o app não calcula).
+const CATALOGO = [
+  { id: "corrida.pace.leve", titulo: "Pace dos treinos leves", descricao: "Quanto tempo você leva por quilômetro nos treinos leves", modalidade: "corrida", grupo: "Ritmo", n_pontos: 12, disponivel: true, motivo: null },
+  { id: "corrida.tiros", titulo: "Melhor tiro de 1 km", descricao: "O seu tiro mais rápido de cada sessão", modalidade: "corrida", grupo: "Ritmo", n_pontos: 2, disponivel: false, motivo: "Poucos treinos de tiros nas últimas 12 semanas" },
+  { id: "corrida.fc.moderado", titulo: "FC dos treinos moderados", descricao: "A frequência cardíaca média nos treinos moderados", modalidade: "corrida", grupo: "Coração", n_pontos: 9, disponivel: true, motivo: null },
+  { id: "corrida.volume_km", titulo: "Volume por semana", descricao: "Quantos quilômetros você correu em cada semana", modalidade: "corrida", grupo: "Esforço e volume", n_pontos: 12, disponivel: true, motivo: null },
+  { id: "natacao.ritmo", titulo: "Ritmo na piscina", descricao: "Tempo por 100 m, com pausas", modalidade: "natacao", grupo: "Ritmo", n_pontos: 9, disponivel: true, motivo: null },
+  { id: "ciclismo.velocidade.rua", titulo: "Velocidade na rua", descricao: "Velocidade média nos treinos ao ar livre", modalidade: "ciclismo", grupo: "Ritmo", n_pontos: 3, disponivel: false, motivo: "Poucos treinos de ciclismo nas últimas 12 semanas" },
+  { id: "geral.ctl", titulo: "Condicionamento", descricao: "Como o seu preparo evolui ao longo das semanas", modalidade: "geral", grupo: "Esforço e volume", n_pontos: 12, disponivel: true, motivo: null },
+];
+const DIAS_DO_PERIODO = { "12s": 84, "6m": 182, "1a": 365 };
+const SEMANAS = ["jan", "fev", "mar", "abr"];
+function serieFalsa(id, periodo, atleta) {
+  const e = CATALOGO.find((x) => x.id === id);
+  if (!e) return null;
+  const volume = id.endsWith("volume_km");
+  const ctl = id === "geral.ctl";
+  const n = volume ? { "12s": 12, "6m": 26, "1a": 52 }[periodo] : Math.min(e.n_pontos + (periodo === "12s" ? 0 : periodo === "6m" ? 8 : 20), 40);
+  const aprendendo = atleta === 31 && id === "corrida.pace.leve";
+  const fim = Date.UTC(2025, 2, 20);
+  const dia = 86400000;
+  const passo = volume ? 7 : Math.max(2, Math.floor(DIAS_DO_PERIODO[periodo] / n));
+  const base = { "corrida.pace.leve": 345, "corrida.fc.moderado": 150, "natacao.ritmo": 128 }[id] ?? 20;
+  const pace = ["corrida.pace.leve", "natacao.ritmo"].includes(id);
+  const txt = (v) => (pace ? `${Math.floor(v / 60)}:${String(Math.round(v % 60)).padStart(2, "0")}` : volume ? String(v.toFixed(1)).replace(".", ",") : String(Math.round(v)));
+  const pontos = Array.from({ length: n }, (_, i) => {
+    const t = new Date(fim - (n - 1 - i) * passo * dia);
+    const iso = t.toISOString().slice(0, 10);
+    const ruido = Math.sin(i * 1.7) * (pace ? 9 : 3) - (pace ? i * 0.6 : -i * 0.2);
+    const v = volume ? 18 + ((i * 7) % 5) * 4 + (i === n - 1 ? -10 : 0) : ctl ? 38 + i * 0.5 : base + ruido + (i === 5 ? (pace ? 28 : 12) : 0);
+    const fora = !volume && !ctl && !aprendendo && i === 5;
+    const dd = iso.slice(8) + "/" + iso.slice(5, 7);
+    const sem = ["dom", "seg", "ter", "qua", "qui", "sex", "sáb"][t.getUTCDay()];
+    return {
+      atividade_id: volume || ctl ? null : 107 + (i % 3),
+      data: iso,
+      data_texto: volume ? `semana de ${dd}` : `${sem} ${dd}`,
+      valor: Math.round(v * 10) / 10,
+      valor_texto: txt(v),
+      melhor: pace && i === n - 3,
+      fora_do_normal: volume || ctl || aprendendo ? null : fora,
+      normal_estado: volume || ctl ? null : aprendendo ? "aprendendo" : fora ? "fora" : "dentro",
+      aprendendo: aprendendo,
+      parcial: volume && i === n - 1,
+      rotulo: `${volume ? "Semana de" : "Treino de"} ${dd}, ${txt(v)} ${e.titulo.toLowerCase()}${fora ? ", fora do seu normal" : volume || ctl ? "" : ", dentro do seu normal"}`,
+    };
+  });
+  const valores = pontos.map((p) => p.valor);
+  const lo = volume ? 0 : Math.min(...valores) - (pace ? 10 : 4);
+  const hi = Math.max(...valores) + (pace ? 10 : 4);
+  const marcas = [lo, (lo + hi) / 2, hi].map((v) => ({ valor: Math.round(v * 10) / 10, rotulo: txt(v) }));
+  const ref = volume || ctl || aprendendo ? null : { minimo: base - 12, maximo: base + 12, mediana: base, n: Math.min(n, 12), texto: `Seu normal ${txt(base - 12)} a ${txt(base + 12)}` };
+  const ultimo = pontos.at(-1);
+  return {
+    atleta_id: atleta, id, titulo: e.titulo, descricao: e.descricao, modalidade: e.modalidade, grupo: e.grupo, periodo,
+    inicio: new Date(fim - DIAS_DO_PERIODO[periodo] * dia).toISOString().slice(0, 10), fim: "2025-03-20",
+    unidade: pace ? (id.startsWith("natacao") ? "/100 m" : "/km") : volume ? "km" : id.includes("fc") ? "bpm" : "pontos",
+    versao_calculo: "evolucao_serie@1", pontos, ultimo_valor_texto: ultimo.valor_texto,
+    ultimo_rotulo: volume ? "última semana completa" : `último treino, ${ultimo.data_texto}`,
+    referencia: ref, aprendendo_texto: aprendendo ? "Ainda estamos aprendendo o seu normal no treino leve: faltam 3 treinos para mostrar a faixa." : null,
+    eixo: { minimo: lo, maximo: hi, invertido: pace, marcas },
+    frase: {
+      versao: "frase_evolucao@1", tipo: "comparada", mudanca: "menor", a_favor: pace, valor_atual: base, valor_anterior: base + 12, n_atual: 3, n_anterior: 3,
+      texto: pace ? `${e.titulo} nas últimas 4 semanas: ${txt(base)}${id.startsWith("natacao") ? "/100 m" : "/km"} (mediana de 3 treinos), 12 s mais rápido que nas 4 semanas anteriores (${txt(base + 12)}, 3 treinos).` : `${e.titulo} nas últimas 4 semanas: ${txt(base)} ${volume ? "km por semana" : "bpm"}, parecido com o das 4 semanas anteriores.`,
+    },
+  };
+}
+
 const evolucao = {
   atleta_id: 1,
   metrica: "tiros_1km",
@@ -417,7 +486,7 @@ const caixaDe = (id) => {
 //   tela (ver os comentários acima: atleta 7, 8, 9... e professor 2, 3...) continuam valendo, agora pela conta e não por variável de ambiente.
 //   primeiro-acesso@exemplo.com = atleta 1 com a senha provisória (a troca é obrigatória)
 //   muitas@exemplo.com = sempre 429 com espere_s 300      servidor@exemplo.com = sempre 500       desativada@exemplo.com = 401 (o mesmo)
-// O acesso é "token-sintetico-<papel>-<N>" (qualquer N de 1 a 30 vale, sem relógio): "token-sintetico-expirado" dá sempre 401 e
+// O acesso é "token-sintetico-<papel>-<N>" (qualquer N de 1 a 40 vale, sem relógio): "token-sintetico-expirado" dá sempre 401 e
 // "token-sintetico-trocar" é o atleta 1 com a troca obrigatória. As capturas (scripts/capturas.mjs) usam esses acessos sem passar pela tela.
 // Sair revoga o acesso; trocar a senha revoga e devolve outro. Todas as rotas de dado pedem o Bearer (401) e o id do caminho tem de ser o da conta (404).
 const SENHA_SINTETICA = "senha-sintetica-123";
@@ -431,7 +500,7 @@ const contaDoToken = (t) => {
   if (t === "token-sintetico-trocar") return { papel: "atleta", id: 1 };
   const m = t.match(RE_TOKEN);
   const id = m ? Number(m[2]) : 0;
-  return m && id >= 1 && id <= 30 ? { papel: m[1], id } : null;
+  return m && id >= 1 && id <= 40 ? { papel: m[1], id } : null;
 };
 const quemSou = (conta, token) => ({
   papel: conta.papel,
@@ -762,6 +831,20 @@ createServer((req, res) => {
       ? { tipo: "aprendendo", tendencia: null, texto: "Ainda estamos aprendendo o seu ritmo: faltam alguns dias de treino para comparar.", versao: "frase_forma@1" }
       : { tipo: "acima", tendencia: "subiu", texto: "Sua fadiga está acima do seu condicionamento. É um retrato do que você treinou, não uma recomendação.", versao: "frase_forma@1" };
     return res.writeHead(200, cabecalhos).end(JSON.stringify({ atleta_id: atleta, aviso: null, dias, frase_forma: frase, periodo: { inicio: "2025-03-07", fim: "2025-03-20" }, totais: { atividades_importadas: 5, calculadas: 5, ignoradas_multiesporte: 0, pendentes: 0, por_motivo: {}, sem_carga_total: 0 }, versao: "serie_carga@2", versao_carga: "carga@2" }));
+  }
+  const ser = pathname.match(/^\/atletas\/(\d+)\/evolucao\/series(?:\/([^/]+))?$/);
+  if (ser) {
+    const atleta = Number(ser[1]);
+    if (atleta === 29) return req.destroy();
+    if (atleta === 2) return res.writeHead(200, cabecalhos).end(JSON.stringify({ atleta_id: atleta, series: [], serie_padrao: null }));
+    if (!ser[2]) {
+      const series = CATALOGO.map((c) => ({ ...c, n_pontos: atleta === 31 && c.id === "corrida.pace.leve" ? 5 : c.n_pontos }));
+      return res.writeHead(200, cabecalhos).end(JSON.stringify({ atleta_id: atleta, series, serie_padrao: "corrida.pace.leve" }));
+    }
+    const periodo = searchParams.get("periodo") ?? "12s";
+    const serie = serieFalsa(decodeURIComponent(ser[2]), periodo, atleta);
+    if (atleta === 32) return res.writeHead(500, cabecalhos).end(JSON.stringify({ detail: "erro" }));
+    return res.writeHead(serie ? 200 : 404, cabecalhos).end(JSON.stringify(serie ?? { detail: "série não encontrada" }));
   }
   if (/^\/atletas\/\d+\/evolucao\/tiros-1km$/.test(pathname)) corpo = evolucao;
   const m = pathname.match(/^\/atletas\/(\d+)\/atividades\/(\d+)$/);

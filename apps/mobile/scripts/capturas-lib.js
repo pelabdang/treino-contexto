@@ -26,6 +26,9 @@ const ACESSOS = {
   // Início v3: 21 quinzena aprendendo, 22 quinzena responde 500.
   atleta21: "token-sintetico-atleta-21",
   atleta22: "token-sintetico-atleta-22",
+  // Evolução v1: 2 sem séries, 29 derruba o catálogo, 31 pace aprendendo (sem faixa), 32 a série responde 500.
+  atleta31: "token-sintetico-atleta-31",
+  atleta32: "token-sintetico-atleta-32",
 };
 const ENTRAR_ANA = [["campo-email", "atleta1@exemplo.com"], ["campo-senha", SENHA_SINTETICA]];
 const TROCAR_OK = [["campo-senha-atual", SENHA_SINTETICA], ["campo-senha-nova", "outra-senha-sintetica"], ["campo-senha-repetida", "outra-senha-sintetica"]];
@@ -94,7 +97,15 @@ const ROTAS = [
   { nome: "aba-treinos-erro", caminho: "/treinos", acesso: "atleta28" },
   { nome: "aba-treinos-mais-erro", caminho: "/treinos", acesso: "atleta30", rolarAoFim: true }, // a 2ª página falha: "Não foi possível carregar mais treinos."
   { nome: "aba-treinos-erro-rede", caminho: "/treinos", acesso: "atleta29" },
-  { nome: "aba-evolucao", caminho: "/evolucao" },
+  { nome: "aba-evolucao", caminho: "/evolucao" }, // Evolução v1: série padrão (pace dos treinos leves, 12 semanas)
+  { nome: "evolucao-ponto", caminho: "/evolucao", clicar: ["ponto-5"] }, // detalhe do ponto fora do normal e "Abrir treino"
+  { nome: "evolucao-seletor", caminho: "/evolucao", clicar: ["?abrir-seletor"] }, // folha com os grupos; uma série cinza com o motivo
+  { nome: "evolucao-volume-6m", caminho: "/evolucao", clicar: ["?abrir-seletor", "serie-corrida.volume_km", "periodo-6m"] },
+  { nome: "evolucao-aprendendo", caminho: "/evolucao", acesso: "atleta31" },
+  { nome: "evolucao-sem-series", caminho: "/evolucao", acesso: "atleta2" },
+  { nome: "evolucao-erro-catalogo", caminho: "/evolucao", acesso: "atleta29" },
+  { nome: "evolucao-erro-serie", caminho: "/evolucao", acesso: "atleta32" },
+  { nome: "evolucao-indisponivel", caminho: "/evolucao", clicar: ["?abrir-seletor", "serie-corrida.tiros"] },
   { nome: "aba-conta", caminho: "/conta" }, // atleta 1 tem pedido de consentimento: selo na aba e no item
   { nome: "aba-conta-sem-pedido", caminho: "/conta", acesso: "atleta2" },
   { nome: "aba-conta-professor", caminho: "/conta", acesso: "professor" },

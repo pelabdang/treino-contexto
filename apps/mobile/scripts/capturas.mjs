@@ -177,7 +177,13 @@ async function principal() {
     await pagina.goto(base + rota.caminho, { waitUntil: sim?.sessao?.pendurar && sim.sessao.metodo === "GET" ? "load" : "networkidle" });
     await pagina.evaluate(() => document.fonts.ready);
     for (const [id, texto] of rota.preencher ?? []) await pagina.getByTestId(id).fill(texto);
-    for (const id of rota.clicar ?? []) await pagina.getByTestId(id).click();
+    // "?id" é clique opcional: só se o elemento existe (ex.: o seletor em folha não existe nos 1280, onde as séries ficam numa coluna).
+    for (const id of rota.clicar ?? []) {
+      if (id.startsWith("?")) {
+        const alvo = pagina.getByTestId(id.slice(1));
+        if (await alvo.count()) await alvo.click();
+      } else await pagina.getByTestId(id).click();
+    }
     if (rota.rolarAoFim) {
       // A rolagem é de um elemento da tela, não da página: leva o que mais rola até o fim.
       await pagina.evaluate(() => {

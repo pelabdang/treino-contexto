@@ -1,4 +1,12 @@
-import { buscarCarga, buscarEvolucaoTiros1km, enviarAtividadeFit, type EvolucaoTiros1km } from "@treino/api-client";
+import {
+  buscarCarga,
+  buscarCartoesInicio,
+  buscarCatalogoSeries,
+  buscarEvolucaoTiros1km,
+  buscarSerieEvolucao,
+  enviarAtividadeFit,
+  type EvolucaoTiros1km,
+} from "@treino/api-client";
 
 // Exemplo gerado pelo TestClient com as fixtures sintéticas (services/api/scripts/exportar_openapi.py).
 import exemplo from "../../../packages/api-client/exemplos/evolucao-tiros-1km.json";
@@ -162,5 +170,44 @@ describe("buscarCarga", () => {
     const falso = jest.fn().mockResolvedValue(respostaJson({ detail: "atleta não encontrado" }, 404));
     const r = await buscarCarga(9, {}, { fetch: falso });
     expect(r).toEqual({ ok: false, erro: { tipo: "nao_encontrado", status: 404, detalhe: { detail: "atleta não encontrado" } } });
+  });
+});
+
+describe("Evolução v1 e cartões do início", () => {
+  it("catálogo: monta a URL e devolve o JSON", async () => {
+    const falso = jest.fn().mockResolvedValue(respostaJson({ atleta_id: 1, series: [], serie_padrao: null }));
+    const r = await buscarCatalogoSeries(1, { baseUrl: "http://api.local:8000/", fetch: falso });
+    expect(falso.mock.calls[0][0]).toBe("http://api.local:8000/atletas/1/evolucao/series");
+    expect(r.ok && r.dados.serie_padrao).toBeNull();
+  });
+
+  it("série: o id é codificado e o período vai na query (padrão 12s)", async () => {
+    const falso = jest.fn().mockResolvedValue(respostaJson({ id: "corrida.pace.leve" }));
+    await buscarSerieEvolucao(2, "corrida.pace.leve", undefined, { baseUrl: "http://a", fetch: falso });
+    await buscarSerieEvolucao(2, "a b", "6m", { baseUrl: "http://a", fetch: falso });
+    expect(falso.mock.calls[0][0]).toBe("http://a/atletas/2/evolucao/series/corrida.pace.leve?periodo=12s");
+    expect(falso.mock.calls[1][0]).toBe("http://a/atletas/2/evolucao/series/a%20b?periodo=6m");
+  });
+
+  it("cartões: monta a URL", async () => {
+    const falso = jest.fn().mockResolvedValue(respostaJson({ atleta_id: 3, data: "2025-03-20", cartoes: [] }));
+    const r = await buscarCartoesInicio(3, { baseUrl: "http://a", fetch: falso });
+    expect(falso.mock.calls[0][0]).toBe("http://a/atletas/3/inicio/cartoes");
+    expect(r.ok).toBe(true);
+  });
+
+  it.each([
+    [404, "nao_encontrado"],
+    [422, "validacao"],
+    [500, "http"],
+  ])("status %s vira erro %s, sem lançar", async (status, tipo) => {
+    const falso = jest.fn().mockResolvedValue(respostaJson({ detail: "x" }, status));
+    const r = await buscarSerieEvolucao(1, "x", "12s", { fetch: falso });
+    expect(!r.ok && r.erro.tipo).toBe(tipo);
+  });
+
+  it("rede caiu: erro de rede", async () => {
+    const r = await buscarCatalogoSeries(1, { fetch: jest.fn().mockRejectedValue(new Error("off")) });
+    expect(!r.ok && r.erro.tipo).toBe("rede");
   });
 });

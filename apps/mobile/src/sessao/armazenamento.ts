@@ -53,3 +53,25 @@ export async function apagarTudo(manterDestino = false): Promise<void> {
   await apagar(CHAVE_TOKEN);
   if (!manterDestino) await apagar(CHAVE_DESTINO);
 }
+
+// Preferência de tela (não é acesso): a última série da Evolução. No celular, o cofre; na web, `localStorage` (sobrevive à aba).
+// Só o id da série (texto do catálogo), nunca dado de treino. Nunca lança.
+const chaveSerie = (atletaId: number) => `treino.evolucao.serie.${atletaId}`;
+
+export async function lerUltimaSerie(atletaId: number): Promise<string | null> {
+  try {
+    if (Platform.OS === "web") return globalThis.localStorage?.getItem(chaveSerie(atletaId)) ?? null;
+    return await cofre().getItemAsync(chaveSerie(atletaId));
+  } catch {
+    return null;
+  }
+}
+
+export async function gravarUltimaSerie(atletaId: number, serieId: string): Promise<void> {
+  try {
+    if (Platform.OS === "web") globalThis.localStorage?.setItem(chaveSerie(atletaId), serieId);
+    else await cofre().setItemAsync(chaveSerie(atletaId), serieId);
+  } catch {
+    // sem armazenamento: na próxima vez abre na série padrão
+  }
+}
