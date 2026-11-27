@@ -286,3 +286,4 @@ Base da aba "Treinos" e da tela inicial nova ([[design/auditoria-ux-e-inicio-do-
 2. **Só as séries do atleta**, por modalidade, grupo e ordem do catálogo; indisponível aparece com o motivo escrito ("Poucos treinos leves de corrida nas últimas 12 semanas").
 3. **Regra de disponível** (Caio, [[metricas/evolucao-series]]): 8 pontos em 12 semanas ou 3 (2 nos tiros) em cada janela de 28 dias; volume 3 semanas; condicionamento 8 dias.
 4. **Ids estáveis**: o app guarda o último escolhido. Série nova entra sem mudar as antigas.
+5. **Série, `GET /atletas/{atleta_id}/evolucao/series/{serie_id}?periodo=12s|6m|1a` (#574).** `pontos` com `atividade_id` (null no volume e no condicionamento), texto pronto e `rotulo` de leitor de tela; `eixo`; `referencia` (faixa do normal: mediana ± 2,5 desvios da `linha_base@3`, só com 8 pontos); `frase` da `frase_evolucao@1` (igual em todo período). O app não calcula nada.
