@@ -14,6 +14,7 @@ jest.mock("@expo/vector-icons", () => {
 const mockPush = jest.fn();
 jest.mock("expo-router", () => ({
   useFocusEffect: (cb: () => void) => require("react").useEffect(cb, [cb]),
+  useLocalSearchParams: () => ({}),
   router: { push: (...a: unknown[]) => mockPush(...a) },
 }));
 
@@ -163,6 +164,30 @@ describe("Evolução v1: seletor em dois passos", () => {
     expect(screen.queryByTestId("abrir-seletor")).toBeNull();
     await fireEvent.press(screen.getByTestId("serie-corrida.volume_km"));
     await waitFor(() => expect(screen.getByText(volumeSemana.frase.texto)).toBeTruthy());
+  });
+});
+
+describe("Evolução v1: série pedida pelo cartão do início", () => {
+  it("com a tela aberta, um novo pedido troca de série uma vez e não grava como escolha do atleta", async () => {
+    const f = fetchEvolucao();
+    const { rerender } = await render(tela(f));
+    await screen.findByTestId("frase-evolucao");
+    await rerender(tela(f, { serieInicial: "corrida.volume_km" }));
+    await waitFor(() => expect(screen.getByText(volumeSemana.frase.texto)).toBeTruthy());
+    expect(urls(f)).toContain("http://api.teste/atletas/1/evolucao/series/corrida.volume_km?periodo=12s");
+    expect(mockMemoria.has("1")).toBe(false);
+    // o atleta escolhe outra série: o mesmo pedido não volta a valer
+    await fireEvent.press(screen.getByTestId("abrir-seletor"));
+    await fireEvent.press(screen.getByTestId("serie-corrida.pace.leve"));
+    await waitFor(() => expect(screen.getByText(paceLeve.frase.texto)).toBeTruthy());
+  });
+
+  it("série pedida indisponível: mostra o motivo, sem buscar a série", async () => {
+    const f = fetchEvolucao();
+    await render(tela(f, { serieInicial: "corrida.tiros" }));
+    const vazio = await screen.findByTestId("serie-indisponivel");
+    expect(within(vazio).getByText("Poucos treinos de tiros nas últimas 12 semanas")).toBeTruthy();
+    expect(urls(f).some((u) => u.includes("corrida.tiros"))).toBe(false);
   });
 });
 

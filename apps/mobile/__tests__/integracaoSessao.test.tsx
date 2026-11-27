@@ -8,6 +8,7 @@ import { fetchEvolucao } from "../__fixtures__/evolucao";
 jest.mock("@expo/vector-icons", () => require("../__fixtures__/iconesFalsos"));
 jest.mock("expo-router", () => ({
   useFocusEffect: (cb: () => void) => require("react").useEffect(cb, [cb]),
+  useLocalSearchParams: () => ({}),
   router: { push: jest.fn(), replace: jest.fn(), canGoBack: () => false, back: jest.fn() },
 }));
 

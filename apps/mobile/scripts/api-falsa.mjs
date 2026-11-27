@@ -98,6 +98,16 @@ function serieFalsa(id, periodo, atleta) {
   };
 }
 
+// Início v4 (#583): cartões de "Seus números" no formato da API (texto pronto, só os que têm dado). Atleta 2 não tem nenhum,
+// 33 só o da melhor marca, 34 a busca responde 500.
+const CARTOES = [
+  { id: "esta_semana", formato: "pequeno", rotulo: "Esta semana", valor: "3 treinos", apoio: "2 h 37 min · semana passada: 4", texto: null, barras: [], destino: { tela: "evolucao", serie_id: "corrida.volume_km", atividade_id: null }, rotulo_acessivel: "Esta semana, 3 treinos, 2 horas e 37 minutos, semana passada 4 treinos. Abre a evolução do volume." },
+  { id: "hoje_na_semana", formato: "pequeno", rotulo: "Hoje, sexta", valor: "Corrida leve", apoio: "da sua rotina", texto: null, barras: [], destino: { tela: "semana_padrao", serie_id: null, atividade_id: null }, rotulo_acessivel: "Hoje, sexta, corrida leve, da sua rotina. Abre a semana-padrão." },
+  { id: "volume_4_semanas", formato: "largo", rotulo: "Volume das 4 semanas", valor: "30 km por semana", apoio: null, texto: "10 km a menos que nas 4 semanas anteriores.", barras: [{ data_texto: "03/02", valor_texto: "40 km", destaque: false }, { data_texto: "10/02", valor_texto: "35 km", destaque: false }, { data_texto: "17/02", valor_texto: "30 km", destaque: false }, { data_texto: "24/02", valor_texto: "25 km", destaque: true }], destino: { tela: "evolucao", serie_id: "corrida.volume_km", atividade_id: null }, rotulo_acessivel: "Volume das 4 semanas, 30 km por semana, 10 km a menos que nas 4 semanas anteriores. Abre a evolução do volume." },
+  { id: "em_movimento", formato: "largo", rotulo: "Em movimento", valor: "Pace dos seus treinos leves", apoio: null, texto: "Pace dos seus treinos leves nas últimas 4 semanas: 5:42/km (mediana de 3 treinos), 12 s/km mais rápido que nas 4 anteriores (5:54/km).", barras: [], destino: { tela: "evolucao", serie_id: "corrida.pace.leve", atividade_id: null }, rotulo_acessivel: "Em movimento, pace dos seus treinos leves. Abre a evolução." },
+  { id: "melhor_marca", formato: "pequeno", rotulo: "Melhor marca", valor: "21:10 · 5 km", apoio: "novo recorde · 12/03", texto: null, barras: [], destino: { tela: "treino", serie_id: null, atividade_id: 107 }, rotulo_acessivel: "Melhor marca, 21 minutos e 10 segundos nos 5 quilômetros, novo recorde em 12 de março. Abre o treino." },
+];
+
 const evolucao = {
   atleta_id: 1,
   metrica: "tiros_1km",
@@ -831,6 +841,13 @@ createServer((req, res) => {
       ? { tipo: "aprendendo", tendencia: null, texto: "Ainda estamos aprendendo o seu ritmo: faltam alguns dias de treino para comparar.", versao: "frase_forma@1" }
       : { tipo: "acima", tendencia: "subiu", texto: "Sua fadiga está acima do seu condicionamento. É um retrato do que você treinou, não uma recomendação.", versao: "frase_forma@1" };
     return res.writeHead(200, cabecalhos).end(JSON.stringify({ atleta_id: atleta, aviso: null, dias, frase_forma: frase, periodo: { inicio: "2025-03-07", fim: "2025-03-20" }, totais: { atividades_importadas: 5, calculadas: 5, ignoradas_multiesporte: 0, pendentes: 0, por_motivo: {}, sem_carga_total: 0 }, versao: "serie_carga@2", versao_carga: "carga@2" }));
+  }
+  const cart = pathname.match(/^\/atletas\/(\d+)\/inicio\/cartoes$/);
+  if (cart) {
+    const atleta = Number(cart[1]);
+    if (atleta === 34) return res.writeHead(500, cabecalhos).end(JSON.stringify({ detail: "erro sintético" }));
+    const lista = atleta === 2 ? [] : atleta === 33 ? CARTOES.filter((c) => c.id === "melhor_marca") : CARTOES;
+    return res.writeHead(200, cabecalhos).end(JSON.stringify({ atleta_id: atleta, data: "2025-03-21", cartoes: lista }));
   }
   const ser = pathname.match(/^\/atletas\/(\d+)\/evolucao\/series(?:\/([^/]+))?$/);
   if (ser) {
