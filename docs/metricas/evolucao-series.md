@@ -44,7 +44,7 @@ Vale para as séries "por treino" (pace, FC, eficiência, melhor esforço). Tudo
 ## Catálogo de séries
 
 A coluna "precisa para existir" diz o que a fonte tem de entregar para a série ter pontos (nada aqui descreve um atleta). Existe na API: **sim** / **parcial** (dado e conta existem, falta a rota) / **não** (falta métrica).
-Janela do gráfico sugerida: 12 semanas, 6 meses e 1 ano (escolha do atleta); a frase não muda com ela.
+Janela do gráfico (decidida): abre em 12 semanas, com 6 meses e 1 ano como opção do atleta; a frase não muda com ela.
 
 ### Corrida
 | id | o que o gráfico mostra | origem | precisa para existir | na API | piso |
@@ -82,7 +82,7 @@ Sem braçadas, SWOLF ou estilo: o modelo de dados não os guarda.
 | `ciclismo.carga` | carga por semana e CTL | `carga@2` | pedal com carga calculada | **sim**, via `/carga` | 5% |
 | `ciclismo.recordes` | melhor 40 km, maior distância, potência média de 20 min | `recorde_pessoal` | marcas pessoais do export Garmin importado | **parcial** | sem limiar |
 Limitações: **sem potência, cadência nem altimetria** no modelo de dados (só o recorde de 20 min vem do Garmin): não há potência normalizada nem
-eficiência por watt. O ar livre e o virtual têm física diferente: **não misturar** na mesma série (pergunta 1).
+eficiência por watt. O ar livre e o virtual têm física diferente: **séries separadas** (decisão do Angelo, 27/11).
 
 ### Transversais (todas as modalidades)
 | id | o que o gráfico mostra | origem | precisa para existir | na API | limiar |
@@ -131,7 +131,7 @@ Os números vêm da conta; o app só mostra o texto. Nenhuma frase usa sigla, ad
    (mínimo 14, mesma conta da `recuperacao@1`: mediana, `desvio = max(1,4826 x MAD; 0,05 x |mediana|)`, `z = (mR - mA)/desvio`, `|z| >= 2,0` fora).
    "Nas últimas 2 semanas sua variabilidade da frequência cardíaca (VFC) mediana foi 44 ms, abaixo do seu normal (50 ms nas 4 semanas antes)."
    Abaixo ou acima é direção, nunca bom ou ruim. Poucas noites: só "Poucas noites com este dado."
-8. **Calor.** Marca, nos gráficos de pace e FC dos treinos leves, o treino com sensação térmica de 28 °C ou mais (limiar: escolha nossa, pergunta 4).
+8. **Calor.** Marca, nos gráficos de pace e FC dos treinos leves, o treino com sensação térmica de 28 °C ou mais (corte decidido pelo Angelo, 27/11).
    Frase só quando há 3 ou mais treinos quentes e 3 ou mais não quentes na janela de 12 semanas: "Nos 5 treinos leves com 28 °C ou mais, o pace foi 14 s/km mais
    lento que nos 11 sem calor (mediana)." Descreve, não corrige nem explica. A mesma regra de piso e mínimo.
 9. **Mistura de tipos.** Sem frase de tendência: "Nas últimas 4 semanas: 6 treinos leves, 2 intervalados e 1 longo." (contagem).
@@ -160,19 +160,21 @@ texto pronto da API, sem número calculado no app.
 | 6 | **Recuperação da noite**: sono, VFC e FC de repouso contra o normal | `recuperacao@1` | parcial (existe por treino; falta "última noite") | M | M |
 | 7 | **Mistura das 4 semanas** (leve, longo, intervalado) em contagem | `tipo_treino` | parcial | M | P |
 | 8 | **Condicionamento (CTL) em 6 meses**, com a frase de período | `serie_carga@2` | sim (falta o recorte longo na tela) | M | P |
-| 9 | **Regularidade**: semanas seguidas com ao menos 1 treino | `atividade` | não | M (pode soar como jogo; pergunta 5) | P |
-| 10 | **Limiar atual** do relógio | `limiar_atleta` | parcial | B | P |
+| 9 | **Limiar atual** do relógio | `limiar_atleta` | parcial | B | P |
 
-Já existem no início: último treino, check-in e a quinzena de forma. Recomendo os cartões **1, 2 e 3** primeiro (valor alto, pouco custo, dado já
-existente), depois **4 e 5**; **6** depende da importação de saúde de cada atleta e fica atrás de "tem dado" (sem dado, o cartão não aparece).
+Já existem no início: último treino, check-in e a quinzena de forma. **Decisão do Angelo (27/11): até 5 cartões no início**, sem personalizar por
+enquanto (esconder cartões só depois do piloto). Conjunto proposto: **1, 2, 3, 4 e 5**. O cartão da noite (6) fica para depois; se entrar, depende da
+importação de saúde de cada atleta e só aparece com dado. **Regularidade (semanas seguidas) não entra**, para não virar cobrança. Os cartões 7 a 9 ficam
+como reserva, fora do limite de 5.
 
-## Perguntas para o Angelo (só escolha de produto)
-1. Para atletas que pedalam em casa e na rua: séries separadas (recomendo) ou uma só?
-2. O gráfico abre em 12 semanas, com 6 meses e 1 ano como opção. Serve? A frase compara sempre 4 semanas com as 4 anteriores.
-3. Cartão "Hoje na sua semana" mostra a rotina que o próprio atleta cadastrou, sem sugerir treino. Pode?
-4. Calor: marcar treino com sensação de **28 °C ou mais** como "quente". Esse corte vale, ou outro?
-5. Cartão de **regularidade** (semanas seguidas treinando): quer ou evita, para não virar cobrança?
-6. Natação e ciclismo sem carga/potência: aceita que a evolução deles seja ritmo, volume e FC por enquanto?
+## Decisões do Angelo (27/11, "ok em tudo")
+1. Ciclismo em casa (virtual, rolo) e na rua (ar livre): séries separadas.
+2. O gráfico abre em 12 semanas, com 6 meses e 1 ano como opção; a frase compara sempre 4 semanas com as 4 anteriores.
+3. Cartão "Hoje na sua semana" (rotina que o atleta cadastrou, sem sugerir treino): sim.
+4. Treino "quente": sensação térmica de 28 °C ou mais.
+5. Cartão de regularidade: não entra.
+6. Natação e ciclismo evoluem por ritmo, volume e FC por enquanto.
+7. Início sem personalização agora; a Evolução lembra a última série escolhida; até 5 cartões, "Noite" depois.
 
 ## Limitações e quando não usar
 - Quantos atletas terão cada série depende do que cada um importa (FIT, export Garmin, saúde) e de ter treinos tipados; a API diz por atleta se a série está disponível.
