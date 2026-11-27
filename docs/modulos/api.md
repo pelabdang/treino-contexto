@@ -2,7 +2,7 @@
 tipo: modulo
 status: em-uso
 dono: theo
-atualizado: 2026-11-17
+atualizado: 2026-11-27
 links: [[metricas/frase-forma]], [[decisoes/0015-caixa-do-dia-do-professor]], [[decisoes/0013-feedback-automatico]], [[decisoes/0012-check-in-pos-treino]], [[decisoes/0011-linha-de-base-e-semana-padrao]], [[metricas/serie-carga]], [[decisoes/0010-carga-de-treino]], [[decisoes/0001-modelo-de-dados-minimo]], [[decisoes/0003-fuso-da-atividade]], [[decisoes/0004-contrato-tela-evolucao]], [[metricas/tiros-1km]], [[modulos/grafico-tiros]], [[modulos/banco]], [[modulos/worker]], [[modulos/infra]], [[modulos/api-client]], [[decisoes/0006-upload-de-fit]], [[produto/meta-2-como-rodar]], [[decisoes/0007-clima-da-atividade]], [[modulos/clima]], [[produto/meta-4-como-rodar]], [[decisoes/0008-deteccao-de-esforcos]], [[metricas/esforcos]], [[decisoes/0009-treino-de-transicao]]
 ---
 # Módulo: api
@@ -121,10 +121,10 @@ curl "http://localhost:8000/atletas/1/evolucao/tiros-1km?inicio=2025-03-01"
   ```
 - Testes: `services/api/tests/rotas/test_evolucao_tiros.py` (banco com as fixtures importadas).
 
-## Catálogo de séries da Evolução: `GET /atletas/{atleta_id}/evolucao/series` (#573, adendo 14 da [[decisoes/0004-contrato-tela-evolucao]], [[metricas/evolucao-series]])
-Só o atleta dono (sessão). `series[]`: `id` (estável: `corrida.pace.leve`, `corrida.fc.moderado`, `corrida.tiros`, `corrida.volume_km`, `natacao.ritmo`, `ciclismo.velocidade.ar_livre|virtual|rolo`, `geral.ctl`...), `titulo`, `descricao` (uma linha), `modalidade` (`corrida`, `natacao`, `ciclismo`, `geral`), `grupo` (`Ritmo`, `Coração`, `Esforço e volume`, `Marcas`), `n_pontos`, `disponivel` e `motivo` (texto pronto, só quando indisponível). `serie_padrao`: a do último treino entre as disponíveis (`null` sem nenhuma). A série só aparece se o atleta tem ao menos um treino dela; indisponível vem com o motivo, nunca some.
+## Catálogo de séries da Evolução: `GET /atletas/{atleta_id}/evolucao/series` (#573, adendo 15 da [[decisoes/0004-contrato-tela-evolucao]], [[metricas/evolucao-series]])
+Só o atleta dono (sessão). `series[]`: `id` (estável: `corrida.pace.leve`, `corrida.fc.moderado`, `corrida.tiros`, `corrida.volume_km`, `natacao.ritmo`, `ciclismo.velocidade.rua|casa`, `geral.ctl`...), `titulo`, `descricao` (uma linha), `modalidade` (`corrida`, `natacao`, `ciclismo`, `geral`), `grupo` (`Ritmo`, `Coração`, `Esforço e volume`, `Marcas`), `n_pontos`, `disponivel` e `motivo` (texto pronto, só quando indisponível). `serie_padrao`: a do último treino entre as disponíveis (`null` sem nenhuma). A série só aparece se o atleta tem ao menos um treino dela; indisponível vem com o motivo, nunca some.
 - **Disponível:** 8 pontos nas últimas 12 semanas **ou** o mínimo (3; 2 nos tiros) em cada janela da frase (28 dias até ontem e os 28 anteriores). Volume: 3 semanas com volume nas últimas 12. Condicionamento: 8 dias. Escolha de engenharia do Caio, sem calibração.
-- **O que entra:** pace só de corrida do tipo, fora a esteira; ritmo da natação só na piscina ("com pausas", não é pace); ciclismo separa ar livre, virtual (`subtipo` `virtual`) e rolo (`esteira`); volume e FC contam a esteira. `multiesporte_pai` e `troca` ficam fora. Treino sem tipo só entra no volume.
+- **O que entra:** pace só de corrida do tipo, fora a esteira; ritmo da natação só na piscina ("com pausas", não é pace); ciclismo separa **na rua** (ar livre) e **em casa** (`subtipo` `virtual` e `esteira`, o rolo), duas séries por decisão do Angelo; volume e FC contam a esteira. `multiesporte_pai` e `troca` ficam fora. Treino sem tipo só entra no volume.
 - **Custo:** uma consulta de colunas das atividades, uma das sessões de tiros e a série de carga: sem N+1, qualquer que seja o número de séries (teste conta as consultas).
 - Código: `app/servicos/evolucao_series.py` (definições e leitura), rota em `app/rotas/evolucao.py`. Testes: `tests/rotas/test_evolucao_catalogo.py`. A rota da série (pontos, janela, frase) é a #574.
 

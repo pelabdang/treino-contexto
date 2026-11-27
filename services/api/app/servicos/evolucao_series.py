@@ -123,13 +123,13 @@ def _metros(l: Linha) -> float | None:
 
 
 def _ambiente_ciclismo(l: Linha) -> str:
-    """Ar livre, virtual ou rolo (subtipo `esteira` no ciclismo = bicicleta em rolo/indoor): séries separadas (decisão do Angelo, 27/11)."""
-    return "virtual" if l.subtipo == "virtual" else "rolo" if l.subtipo == "esteira" else "ar_livre"
+    """Na rua (ar livre) ou em casa (virtual e rolo; subtipo `esteira` no ciclismo = bicicleta em rolo/indoor): duas séries (decisão do Angelo, 27/11)."""
+    return "casa" if l.subtipo in ("virtual", "esteira") else "rua"
 
 
 _TIPOS = ("leve", "moderado", "longo")
 _ROTULO_TIPO = {"leve": "leves", "moderado": "moderados", "longo": "longos"}
-_AMBIENTES = {"ar_livre": "ao ar livre", "virtual": "virtual", "rolo": "no rolo"}
+_AMBIENTES = {"rua": "na rua", "casa": "em casa"}
 
 
 def _definicoes() -> list[SerieDef]:
