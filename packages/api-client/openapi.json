@@ -844,6 +844,39 @@
         "title": "CargaSerieOut",
         "type": "object"
       },
+      "CatalogoSeriesOut": {
+        "properties": {
+          "atleta_id": {
+            "title": "Atleta Id",
+            "type": "integer"
+          },
+          "serie_padrao": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Serie Padrao"
+          },
+          "series": {
+            "items": {
+              "$ref": "#/components/schemas/SerieCatalogoOut"
+            },
+            "title": "Series",
+            "type": "array"
+          }
+        },
+        "required": [
+          "atleta_id",
+          "series",
+          "serie_padrao"
+        ],
+        "title": "CatalogoSeriesOut",
+        "type": "object"
+      },
       "CheckinDetalheOut": {
         "properties": {
           "atalhos": {
@@ -3207,6 +3240,73 @@
         "title": "SemanaPadraoOut",
         "type": "object"
       },
+      "SerieCatalogoOut": {
+        "properties": {
+          "descricao": {
+            "title": "Descricao",
+            "type": "string"
+          },
+          "disponivel": {
+            "title": "Disponivel",
+            "type": "boolean"
+          },
+          "grupo": {
+            "enum": [
+              "Ritmo",
+              "Coração",
+              "Esforço e volume",
+              "Marcas"
+            ],
+            "title": "Grupo",
+            "type": "string"
+          },
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "modalidade": {
+            "enum": [
+              "corrida",
+              "natacao",
+              "ciclismo",
+              "geral"
+            ],
+            "title": "Modalidade",
+            "type": "string"
+          },
+          "motivo": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Motivo"
+          },
+          "n_pontos": {
+            "title": "N Pontos",
+            "type": "integer"
+          },
+          "titulo": {
+            "title": "Titulo",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "titulo",
+          "descricao",
+          "modalidade",
+          "grupo",
+          "n_pontos",
+          "disponivel",
+          "motivo"
+        ],
+        "title": "SerieCatalogoOut",
+        "type": "object"
+      },
       "SessaoOut": {
         "properties": {
           "atividade_id": {
@@ -4663,6 +4763,64 @@
         "summary": "Listar Checkins Pendentes",
         "tags": [
           "check-in"
+        ]
+      }
+    },
+    "/atletas/{atleta_id}/evolucao/series": {
+      "get": {
+        "description": "O catálogo de séries da Evolução do atleta (#573). Uma série aparece se o atleta tem treino dela; `disponivel` segue a regra do Caio\n(8 pontos nas últimas 12 semanas ou o mínimo em cada janela da frase); indisponível vem com o motivo escrito, nunca some.",
+        "operationId": "catalogoSeriesEvolucao",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "atleta_id",
+            "required": true,
+            "schema": {
+              "title": "Atleta Id",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CatalogoSeriesOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Erro"
+                }
+              }
+            },
+            "description": "Atleta não encontrado"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Catalogo Series",
+        "tags": [
+          "evolução"
         ]
       }
     },

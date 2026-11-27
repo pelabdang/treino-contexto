@@ -2,8 +2,8 @@
 tipo: decisao
 status: em-uso
 dono: theo
-atualizado: 2026-11-18
-links: [[decisoes/0013-feedback-automatico]], [[modulos/api]], [[modulos/grafico-tiros]], [[modulos/mobile]], [[modulos/worker]], [[metricas/tiros-1km]], [[decisoes/0002-segmento-intensidade-e-versao]], [[decisoes/0003-fuso-da-atividade]], [[decisoes/0005-serie-de-tiros-o-que-entra]], [[decisoes/0006-upload-de-fit]], [[decisoes/0007-clima-da-atividade]], [[produto/roadmap]], [[design/telas/treino]], [[decisoes/0009-treino-de-transicao]]
+atualizado: 2026-11-27
+links: [[decisoes/0013-feedback-automatico]], [[modulos/api]], [[modulos/grafico-tiros]], [[modulos/mobile]], [[modulos/worker]], [[metricas/tiros-1km]], [[decisoes/0002-segmento-intensidade-e-versao]], [[decisoes/0003-fuso-da-atividade]], [[decisoes/0005-serie-de-tiros-o-que-entra]], [[decisoes/0006-upload-de-fit]], [[decisoes/0007-clima-da-atividade]], [[produto/roadmap]], [[design/telas/treino]], [[decisoes/0009-treino-de-transicao]], [[metricas/evolucao-series]]
 ---
 # ADR: 0004 Contrato da tela de evolução dos tiros (Meta 2)
 
@@ -284,3 +284,9 @@ Base da aba "Treinos" e da tela inicial nova ([[design/auditoria-ux-e-inicio-do-
 ## Adendo 14 (2026-11-27): `clima.recente` e textos do clima em inteiro (#569)
 1. **`recente`** (`bool`, em todo estado do `clima`): `true` quando o fim do treino tem menos de 7 dias, a regra do preenchimento ([[decisoes/0007-clima-da-atividade]]). O app mostra `pendente` recente como espera ("o clima chega em até 7 dias"), não como erro.
 2. **Textos prontos** em `ok`: `temperatura_texto` ("24 °C"), `sensacao_texto`, `umidade_texto` ("61 %") e `vento_texto` ("8 km/h"). Inteiro, meio para longe do zero, sem "-0". Ausentes quando o valor é `null`. Os decimais continuam. O app não arredonda (o e2e proíbe `Math.` na TelaTreino).
+
+## Adendo 15 (2026-11-27): catálogo de séries da Evolução, `GET /atletas/{atleta_id}/evolucao/series` (#573)
+1. **Rota nova**, ao lado de `/evolucao/tiros-1km` (que continua). Devolve `series[]` (`id`, `titulo`, `descricao`, `modalidade`, `grupo`, `n_pontos`, `disponivel`, `motivo`) e `serie_padrao`. Detalhes em [[modulos/api]].
+2. **Só as séries do atleta**, por modalidade, grupo e ordem do catálogo; indisponível aparece com o motivo escrito ("Poucos treinos leves de corrida nas últimas 12 semanas").
+3. **Regra de disponível** (Caio, [[metricas/evolucao-series]]): 8 pontos em 12 semanas ou 3 (2 nos tiros) em cada janela de 28 dias; volume 3 semanas; condicionamento 8 dias.
+4. **Ids estáveis**: o app guarda o último escolhido. Série nova entra sem mudar as antigas.
