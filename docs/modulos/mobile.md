@@ -8,7 +8,7 @@ links: [[design/identidade-visual-v2]], [[design/telas/feedback]], [[decisoes/00
 # Módulo: mobile
 
 ## Para que serve
-App em React Native com Expo (TypeScript, Expo Router) para iOS, Android e web. Hoje tem a tela "Evolução" (séries por modalidade, Evolução v1) ligada à API (botão "Enviar arquivo FIT", gráfico de dois painéis, lista das sessões e rodapé) e a leitura da configuração. Com login por e-mail e senha desde a #502 (ADR 0016) e sem deploy: roda local, na web e no Expo Go.
+App em React Native com Expo (TypeScript, Expo Router) para iOS, Android e web. Hoje tem a tela "Evolução" (séries por modalidade, Evolução v1) ligada à API (botão "Enviar arquivo FIT", seletor de séries, gráfico com a faixa do normal e a frase, lista dos valores e rodapé) e a leitura da configuração. Com login por e-mail e senha desde a #502 (ADR 0016) e sem deploy: roda local, na web e no Expo Go.
 
 O app não calcula pace: todo `m:ss` virá da [[modulos/api]].
 

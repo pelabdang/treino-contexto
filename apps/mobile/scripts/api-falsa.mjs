@@ -87,7 +87,7 @@ function serieFalsa(id, periodo, atleta) {
     atleta_id: atleta, id, titulo: e.titulo, descricao: e.descricao, modalidade: e.modalidade, grupo: e.grupo, periodo,
     inicio: new Date(fim - DIAS_DO_PERIODO[periodo] * dia).toISOString().slice(0, 10), fim: "2025-03-20",
     unidade: pace ? (id.startsWith("natacao") ? "/100 m" : "/km") : volume ? "km" : id.includes("fc") ? "bpm" : "pontos",
-    versao_calculo: "evolucao_serie@sintetico", pontos, ultimo_valor_texto: ultimo.valor_texto,
+    versao_calculo: "evolucao_serie@1", pontos, ultimo_valor_texto: ultimo.valor_texto,
     ultimo_rotulo: volume ? "última semana completa" : `último treino, ${ultimo.data_texto}`,
     referencia: ref, aprendendo_texto: aprendendo ? "Ainda estamos aprendendo o seu normal no treino leve: faltam 3 treinos para mostrar a faixa." : null,
     eixo: { minimo: lo, maximo: hi, invertido: pace, marcas },
