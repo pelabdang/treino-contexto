@@ -199,7 +199,7 @@ const TEXTO_FEEDBACK = "Texto de exemplo do feedback.\nSegunda linha do texto de
 const FEEDBACK_POR_ID = {
   107: { estado: "pronto", texto: TEXTO_FEEDBACK, origem: "automatico" },
   111: { estado: "pronto", texto: TEXTO_FEEDBACK, origem: "teste" },
-  112: { estado: "pendente", mensagem: "O feedback deste treino ainda não foi gerado. Toque em Atualizar para ver se já está pronto." },
+  112: { estado: "pendente", mensagem: "O feedback deste treino ainda não foi gerado. Ele é preparado em lote; volte mais tarde." },
   113: { estado: "desatualizado", mensagem: "Você editou o check-in. O feedback será refeito." },
   114: { estado: "indisponivel", motivo: "provedor_erro", mensagem: "Ainda não foi possível gerar o feedback deste treino. Uma nova tentativa será feita mais tarde." },
   115: { estado: "indisponivel", motivo: "provedor_nao_configurado", mensagem: "O feedback automático não está ligado neste app." },

@@ -14,10 +14,12 @@ export const ORIGEM_TESTE = "Texto de teste, gerado sem o provedor de verdade. N
 /** Frases de reserva, só para quando a API não manda a `mensagem` (spec, tabela de estados). */
 const RESERVA: Record<Exclude<EstadoFeedback, "pronto">, string> = {
   sem_checkin: "Faça o check-in para ver o feedback.",
-  pendente: "O feedback deste treino ainda não foi gerado. Toque em Atualizar para ver se já está pronto.",
+  pendente: "O feedback deste treino ainda não foi gerado. Ele é preparado em lote; volte mais tarde.",
   desatualizado: "Você editou o check-in. O feedback será refeito.",
   indisponivel: "Ainda não foi possível gerar o feedback deste treino. Uma nova tentativa será feita mais tarde.",
 };
+const VOLTE_MAIS_TARDE = "Volte mais tarde para ler.";
+const AINDA_NAO_GERADO = "Ainda não foi gerado.";
 const RESERVA_PRAZO = "O prazo do check-in deste treino acabou, então ele fica sem feedback.";
 
 type Props = {
@@ -26,7 +28,7 @@ type Props = {
   /** "Fazer check-in" (só `sem_checkin` com prazo aberto). Sem a função, o botão não aparece. */
   aoFazerCheckin?: () => void;
   /**
-   * "Atualizar" (`pendente` e `desatualizado`): a tela busca a atividade de novo, sem apagar o que está na tela, e devolve
+   * "Verificar de novo" (`pendente` e `desatualizado`): a tela busca a atividade de novo, sem apagar o que está na tela, e devolve
    * o feedback novo (ou `undefined` se a busca falhar). Sem a função, o botão não aparece.
    */
   aoAtualizar?: () => Promise<FeedbackTreino | null | undefined>;
@@ -37,13 +39,16 @@ export function CartaoFeedback({ feedback, aoFazerCheckin, aoAtualizar }: Props)
   const styles = useMemo(() => criarEstilos(tema), [tema]);
   const [atualizando, setAtualizando] = useState(false);
   const [anuncio, setAnuncio] = useState("");
+  const [aindaPendente, setAindaPendente] = useState(false);
   if (!feedback) return null;
 
   const texto = feedback.estado === "pronto" && feedback.texto ? feedback.texto : null;
   const teste = texto !== null && feedback.origem === "teste";
   const estadoSemTexto = (feedback.estado === "pronto" ? "indisponivel" : feedback.estado) as Exclude<EstadoFeedback, "pronto">;
   const prazoVencido = feedback.estado === "sem_checkin" && feedback.checkin_aberto === false;
-  const mensagem = feedback.mensagem || (prazoVencido ? RESERVA_PRAZO : RESERVA[estadoSemTexto]);
+  // A `mensagem` da API vence a reserva; em `desatualizado` ganha "Volte mais tarde para ler.".
+  const base = feedback.mensagem || (prazoVencido ? RESERVA_PRAZO : RESERVA[estadoSemTexto]);
+  const mensagem = estadoSemTexto === "desatualizado" ? `${base} ${VOLTE_MAIS_TARDE}` : base;
   const icone = estadoSemTexto === "sem_checkin" && !prazoVencido ? "assignment" : "info-outline";
   const podeAtualizar = !texto && (estadoSemTexto === "pendente" || estadoSemTexto === "desatualizado") && !!aoAtualizar;
   const podeFazerCheckin = !texto && estadoSemTexto === "sem_checkin" && feedback.checkin_aberto === true && !!aoFazerCheckin;
@@ -63,8 +68,9 @@ export function CartaoFeedback({ feedback, aoFazerCheckin, aoAtualizar }: Props)
     setAtualizando(true);
     const novo = await aoAtualizar();
     setAtualizando(false);
-    if (novo === undefined) anunciar("Não foi possível atualizar o feedback.");
-    else anunciar(novo?.estado === "pronto" ? "Feedback pronto." : "O feedback ainda não está pronto.");
+    setAindaPendente(novo !== undefined && novo?.estado !== "pronto");
+    if (novo === undefined) anunciar("Não foi possível verificar o feedback.");
+    else anunciar(novo?.estado === "pronto" ? "Feedback pronto." : AINDA_NAO_GERADO);
   };
 
   return (
@@ -121,8 +127,13 @@ export function CartaoFeedback({ feedback, aoFazerCheckin, aoAtualizar }: Props)
               style={styles.botaoTexto}
             >
               <MaterialIcons name="refresh" size={tamanho.iconeMedio} color={tema.cor.link} accessible={false} />
-              <Text style={styles.botaoTextoDestaque}>{atualizando ? "Atualizando..." : "Atualizar"}</Text>
+              <Text style={styles.botaoTextoDestaque}>{atualizando ? "Verificando..." : "Verificar de novo"}</Text>
             </Pressable>
+          )}
+          {podeAtualizar && aindaPendente && !atualizando && (
+            <Text testID="feedback-ainda-pendente" style={styles.legenda}>
+              {AINDA_NAO_GERADO}
+            </Text>
           )}
         </>
       )}
