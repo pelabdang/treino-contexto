@@ -2,8 +2,8 @@
 tipo: modulo
 status: em-uso
 dono: rafa
-atualizado: 2026-11-16
-links: [[design/telas/feedback]], [[decisoes/0013-feedback-automatico]], [[modulos/api]], [[modulos/api-client]], [[produto/roadmap]], [[decisoes/0004-contrato-tela-evolucao]], [[produto/meta-2-como-rodar]], [[decisoes/0006-upload-de-fit]], [[design/guia-visual]], [[design/tokens]], [[decisoes/0007-clima-da-atividade]], [[modulos/clima]], [[design/telas/treino]], [[design/telas/semana-padrao]], [[decisoes/0011-linha-de-base-e-semana-padrao]], [[design/telas/checkin]], [[decisoes/0012-check-in-pos-treino]], [[design/telas/caixa-do-dia]], [[decisoes/0015-caixa-do-dia-do-professor]]
+atualizado: 2026-11-27
+links: [[design/identidade-visual-v2]], [[design/telas/feedback]], [[decisoes/0013-feedback-automatico]], [[modulos/api]], [[modulos/api-client]], [[produto/roadmap]], [[decisoes/0004-contrato-tela-evolucao]], [[produto/meta-2-como-rodar]], [[decisoes/0006-upload-de-fit]], [[design/guia-visual]], [[design/tokens]], [[decisoes/0007-clima-da-atividade]], [[modulos/clima]], [[design/telas/treino]], [[design/telas/semana-padrao]], [[decisoes/0011-linha-de-base-e-semana-padrao]], [[design/telas/checkin]], [[decisoes/0012-check-in-pos-treino]], [[design/telas/caixa-do-dia]], [[decisoes/0015-caixa-do-dia-do-professor]]
 ---
 # Módulo: mobile
 
@@ -29,7 +29,7 @@ O app não calcula pace: todo `m:ss` virá da [[modulos/api]].
 | `src/app/(app)/trocar-senha.tsx` | `/trocar-senha` | `TelaTrocarSenha`: primeiro acesso ou troca voluntária; confirmação com "Continuar" |
 | `src/app/(app)/(abas)/_layout.tsx` | (grupo `(abas)`) | **abas** (#532): base no celular, menu à esquerda no computador (`BarraDeAbas`); o atleta tem Início, Treinos, Evolução e Conta, o professor tem Caixa do dia e Conta; o papel errado não vê as abas do outro. O selo da aba Conta vem de `usePedidos` |
 | `src/app/(app)/(abas)/index.tsx` | `/` | **Início** do atleta: por enquanto a `TelaEvolucao` (a tela inicial nova vem da proposta da Lia, [[design/auditoria-ux-e-inicio-do-atleta]]); o professor cai em `/caixa-do-dia` |
-| `src/app/(app)/(abas)/treinos.tsx` | `/treinos` | `TelaEmBreve`: "Em breve, todos os seus treinos aqui" (depende da rota da lista de atividades, que a API ainda não tem) |
+| `src/app/(app)/(abas)/treinos.tsx` | `/treinos` | `TelaTreinos` (#539): todos os treinos do atleta; `?filtro=sem-checkin` abre já filtrada (link "Check-ins pendentes" do Início). Detalhes na seção "Aba Treinos (#539)" |
 | `src/app/(app)/(abas)/evolucao.tsx` | `/evolucao` | `TelaEvolucao`: os tiros de 1 km |
 | `src/app/(app)/(abas)/conta.tsx` | `/conta` | `TelaConta`: atleta com Semana-padrão, Consentimento (selo de pedidos), Enviar arquivo FIT, Trocar senha e Sair; professor com Trocar senha e Sair. As duas abas abrem a Conta
 | `src/app/(app)/semana-padrao.tsx` | `/semana-padrao` | `TelaSemanaPadrao` (#268); aberta pelo botão "Semana-padrão" da evolução |
@@ -39,10 +39,18 @@ O app não calcula pace: todo `m:ss` virá da [[modulos/api]].
 | `src/app/(app)/(abas)/caixa-do-dia.tsx` | `/caixa-do-dia` | `TelaCaixaDoDia` (#426), com o professor da sessão; é o início do papel professor |
 
 ## Abas do atleta e do professor (#532)
-- Estrutura `src/app/(app)/(abas)/` dentro do grupo `(app)` (a guarda de sessão continua no `(app)/_layout.tsx`). **As URLs não mudam**: as telas de detalhe (treino, check-in, semana-padrão, consentimento, trocar senha) abrem por cima das abas, no `Stack` do `(app)`, sem a barra. Código: `src/componentes/BarraDeAbas.tsx` (`abasDoPapel`), `TelaConta.tsx`, `TelaEmBreve.tsx`; `src/sessao/destino.ts` deixa `/conta` aberta aos dois papéis e `/caixa-do-dia` só ao professor.
+- Estrutura `src/app/(app)/(abas)/` dentro do grupo `(app)` (a guarda de sessão continua no `(app)/_layout.tsx`). **As URLs não mudam**: as telas de detalhe (treino, check-in, semana-padrão, consentimento, trocar senha) abrem por cima das abas, no `Stack` do `(app)`, sem a barra. Código: `src/componentes/BarraDeAbas.tsx` (`abasDoPapel`), `TelaConta.tsx` (o `TelaEmBreve.tsx` saiu na #539); `src/sessao/destino.ts` deixa `/conta` aberta aos dois papéis e `/caixa-do-dia` só ao professor.
 - **A `BarraConta` e o menu "Conta" do topo foram removidos**; "Enviar arquivo FIT" saiu da evolução e foi para a aba Conta (`ocultarEnviarFit`). O selo de pedidos (consentimento aguardando) aparece na aba Conta e no item Consentimento, atualizado a cada troca de tela (`src/consentimento/usePedidos.ts`).
 - Testes: `__tests__/abas.test.tsx` (e os de rota e de sessão ajustados). Capturas (sintéticas, claro e escuro, 390 e 1280) em `docs/design/telas/navegacao/`: uma por aba (início, treinos, evolução, conta com e sem pedido, conta do professor, caixa do dia) e o diálogo de sair.
-- Fonte da proposta: [[design/auditoria-ux-e-inicio-do-atleta]] (arquitetura de informação). Pendente: a lista de treinos (API) e a tela inicial nova.
+- Fonte da proposta: [[design/auditoria-ux-e-inicio-do-atleta]] (arquitetura de informação). Pendente: a tela inicial nova. A lista de treinos entrou na #539.
+
+## Aba Treinos (#539)
+- Consome `GET /atletas/{id}/atividades` ([[modulos/api]], #537, adendo 13 da [[decisoes/0004-contrato-tela-evolucao]]). Código: `src/treinos/api.ts` (`buscarTreinos`, nunca lança) e `src/componentes/TelaTreinos.tsx`; o tipo do item vem do cliente gerado ([[modulos/api-client]]).
+- Mais recente primeiro, com **rolagem infinita** pelo cursor `proximo` da API (o app não monta cursor). Filtros: modalidade (Todos, Corrida, Natação, Ciclismo) e "Sem check-in". Trocar o filtro invalida as respostas atrasadas da busca anterior. A aba busca a primeira página de novo quando volta ao foco.
+- Cartão no formato proposto em [[design/identidade-visual-v2]]: modalidade, data e hora, números e selos de estado (check-in e feedback) em ícone e palavra. Os selos vêm do `checkin_estado` e do `feedback_estado` da API; o app não decide estado. Tocar abre `/treino/<id>` ([[design/telas/treino]]).
+- Estados: carregando (esqueleto), vazio ("Nenhum treino ainda"), vazio com filtro, erro e erro de rede (com "Tentar de novo"), erro ao carregar mais (a lista fica) e fim ("Esses são todos os seus treinos."). Usa os tokens atuais; a identidade v2 chega depois.
+- Testes: `__tests__/TelaTreinos.test.tsx` e `abas.test.tsx` (ajustado). Capturas sintéticas (claro e escuro, 390 e 1280) em `docs/design/telas/navegacao/aba-treinos-*`; a API falsa serve a lista com dado fictício.
+- Privacidade: nada do corpo da lista vai para log, console nem mensagem de erro.
 
 ## Consentimento do atleta (#503)
 - Spec [[design/telas/consentimento]], API do #516 ([[modulos/api]], [[decisoes/0016-login-e-deploy-do-piloto]], item 7). Código: `src/consentimento/api.ts` (`buscarProfessores`, termo, aceitar, retirar; nunca lançam, sem nome de professor nem versão em log), `src/componentes/TelaConsentimento.tsx` e `TelaTermo.tsx`.
