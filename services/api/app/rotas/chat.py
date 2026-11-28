@@ -22,7 +22,7 @@ import app.chat  # noqa: F401  (registra as ferramentas)
 from app.autenticacao import ContaAtual, conta_liberada
 from app.chat import laco, prompt
 from app.chat.registro import Consulta, Quem, executar
-from app.db.models import CHAT_PERGUNTA_MAX, CHAT_TITULO_MAX, Conversa, Mensagem
+from app.db.models import CHAT_PERGUNTA_MAX, CHAT_TITULO_MAX, Conversa, Mensagem, VinculoProfessorAtleta
 from app.db.session import get_session
 from app.explicacao import checagens_chat as ck
 from app.llm.camada import Redator, criar_redator
@@ -35,7 +35,7 @@ log = logging.getLogger(__name__)
 
 PERGUNTAS_POR_HORA = 20  # por atleta (ADR 0017, "A confirmar" 5); conta as linhas de `mensagem`, vale com varias instancias
 FRASE_ERRO = "Não consegui responder agora. Tente de novo em instantes."
-FRASE_LIMITE = "Você já fez muitas perguntas nesta hora. Tente de novo em alguns minutos."
+FRASE_LIMITE = f"Você fez {PERGUNTAS_POR_HORA} perguntas na última hora."
 MAX_LINKS = 5
 
 
@@ -72,6 +72,7 @@ class LinkOut(BaseModel):
     rotulo: str  # "Abrir treino" ou "Abrir na Evolução"
     atividade_id: int | None = None
     serie_id: str | None = None
+    data_texto: str | None = None  # so no link do treino: a data como veio da ferramenta ("14/03"), para o app distinguir links do mesmo tipo
 
 
 class MensagemOut(BaseModel):
@@ -102,7 +103,8 @@ class ListaConversasOut(BaseModel):
 
 
 class Muitas(BaseModel):
-    detail: str
+    detail: str  # "Você fez 20 perguntas na última hora."
+    espere_texto: str  # pronto, o app nao converte segundos: "Você pode perguntar de novo em 12 min."
     espere_s: int
 
 
@@ -124,7 +126,7 @@ def _links(m: Mensagem) -> list[LinkOut]:
         if isinstance(x, dict):
             aid, data = x.get("atividade_id"), x.get("data_texto")
             if isinstance(aid, int) and isinstance(data, str) and data in m.resposta and aid not in {l.atividade_id for l in treinos}:
-                treinos.append(LinkOut(tipo="treino", rotulo="Abrir treino", atividade_id=aid))
+                treinos.append(LinkOut(tipo="treino", rotulo="Abrir treino", atividade_id=aid, data_texto=data))
             sid = x.get("serie_id")
             if isinstance(sid, str) and sid not in {l.serie_id for l in series}:
                 series.append(LinkOut(tipo="evolucao", rotulo="Abrir na Evolução", serie_id=sid))
@@ -175,10 +177,16 @@ def _historico(session: Session, conversa_id: int) -> list[tuple[str, str]]:
     return [(p, r) for p, r in linhas]
 
 
+def _tem_professor(session: Session, atleta_id: int) -> bool:
+    return session.scalar(select(VinculoProfessorAtleta.professor_id).where(VinculoProfessorAtleta.atleta_id == atleta_id).limit(1)) is not None
+
+
 def _responder_e_gravar(session: Session, redator: Redator, conta: ContaAtual, atleta_id: int, conversa: Conversa, pergunta: str) -> Mensagem:
     historico = _historico(session, conversa.id) if conversa.id is not None else []
     consulta = Consulta(Quem("atleta", conta.conta_id), atleta_id, hoje_local())
     r = laco.responder(redator, lambda nome, args: executar(session, consulta, nome, args), consulta, pergunta, historico)
+    if r.estado == "recusada" and r.motivo == "pedido_de_mudanca" and not _tem_professor(session, atleta_id):
+        r.resposta = r.resposta.split(". ")[0] + "."  # sem professor vinculado: so a primeira frase (ADR 0017, item 4; a API decide)
     ordem = 1 if conversa.id is None else (session.scalar(select(func.max(Mensagem.ordem)).where(Mensagem.conversa_id == conversa.id)) or 0) + 1
     motivo = r.motivo if r.estado != "respondida" else None
     if r.estado in ("reprovada", "erro", "recusada") and not motivo:
@@ -191,15 +199,20 @@ def _responder_e_gravar(session: Session, redator: Redator, conta: ContaAtual, a
     return m
 
 
+def espere_texto(espere_s: int) -> str:
+    """O tempo em minutos inteiros (para cima, no minimo 1), pronto para o app mostrar."""
+    return f"Você pode perguntar de novo em {max(1, -(-espere_s // 60))} min."
+
+
 def _checar_limite(session: Session, atleta_id: int):
     espera = _espera_do_limite(session, atleta_id, datetime.now(timezone.utc))
     if espera is None:
         return None
-    return JSONResponse(status_code=429, content={"detail": FRASE_LIMITE, "espere_s": espera}, headers={"Retry-After": str(espera)})
+    return JSONResponse(status_code=429, content={"detail": FRASE_LIMITE, "espere_texto": espere_texto(espera), "espere_s": espera}, headers={"Retry-After": str(espera)})
 
 
 @router.post("", response_model=ConversaOut, status_code=201, operation_id="criarConversa", responses={**_404, **_422,
-             429: {"model": Muitas, "description": "20 perguntas por hora por atleta; `espere_s` e `Retry-After` em segundos"}})
+             429: {"model": Muitas, "description": "20 perguntas por hora por atleta; `espere_texto` (frase pronta), `espere_s` e `Retry-After` em segundos"}})
 def criar_conversa(atleta_id: int, corpo: PerguntaIn, conta: ContaAtual = Depends(conta_liberada), session: Session = Depends(get_session),
                    redator: Redator = Depends(get_redator)):
     """Abre uma conversa com a primeira pergunta e a responde (sincrono, sem streaming). O titulo e a pergunta cortada, sem passar pelo provedor."""
@@ -215,7 +228,7 @@ def criar_conversa(atleta_id: int, corpo: PerguntaIn, conta: ContaAtual = Depend
 
 
 @router.post("/{conversa_id}/mensagens", response_model=MensagemOut, operation_id="enviarMensagem", responses={**_404, **_422,
-             429: {"model": Muitas, "description": "20 perguntas por hora por atleta; `espere_s` e `Retry-After` em segundos"}})
+             429: {"model": Muitas, "description": "20 perguntas por hora por atleta; `espere_texto` (frase pronta), `espere_s` e `Retry-After` em segundos"}})
 def enviar_mensagem(atleta_id: int, conversa_id: int, corpo: PerguntaIn, conta: ContaAtual = Depends(conta_liberada),
                     session: Session = Depends(get_session), redator: Redator = Depends(get_redator)):
     """Continua uma conversa: a pergunta e a resposta de uma vez (sincrono)."""

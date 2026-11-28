@@ -76,7 +76,7 @@ def test_criar_conversa_responde_a_primeira_pergunta_com_link_do_treino(client, 
     assert c["titulo"] == "Como foi o meu último treino?" and len(c["mensagens"]) == 1
     m = c["mensagens"][0]
     assert m["estado"] == "respondida" and m["motivo"] is None and m["ordem"] == 1 and "8,20 km" in m["texto"]
-    assert m["links"] == [{"tipo": "treino", "rotulo": "Abrir treino", "atividade_id": mundo["ativ"], "serie_id": None}]
+    assert m["links"] == [{"tipo": "treino", "rotulo": "Abrir treino", "atividade_id": mundo["ativ"], "serie_id": None, "data_texto": mundo["data"]}]
     gravada = session.query(Mensagem).one()  # uma linha por turno, com as ferramentas e os resultados
     assert gravada.estado == "respondida" and gravada.versao_checagens == "checagens_chat@1" and gravada.versao_prompt == "prompt_chat@2"
     assert gravada.chamadas_ferramenta[0]["nome"] == "listar_atividades" and gravada.chamadas_ferramenta[0]["resultado"]["total"] == 1
@@ -173,6 +173,8 @@ def test_limite_de_20_perguntas_por_hora_com_espere_s(client, session, mundo, pr
     antes = prov["falso"].chamadas
     r = client.post(f"/atletas/{mundo['ana']}/conversas/{cid}/mensagens", json={"pergunta": "mais uma?"}, headers=h)
     assert r.status_code == 429 and 1 <= r.json()["espere_s"] <= 1830 and r.headers["retry-after"] == str(r.json()["espere_s"])
+    assert r.json()["detail"] == "Você fez 20 perguntas na última hora."
+    assert r.json()["espere_texto"] == "Você pode perguntar de novo em 30 min."  # a mais antiga foi ha 30 min: libera em ~30 min
     assert prov["falso"].chamadas == antes  # nem chegou ao provedor
     assert client.post(f"/atletas/{mundo['bia']}/conversas", json={"pergunta": "oi?"}, headers=_h(client, "bia")).status_code != 429  # o limite e por atleta
 
@@ -182,3 +184,25 @@ def test_nada_da_pergunta_vai_para_log(client, mundo, prov, caplog):
     prov["falso"].roteiro = [ErroProvedor()]
     client.post(f"/atletas/{mundo['ana']}/conversas", json={"pergunta": f"Pergunta {MARCA}?"}, headers=_h(client, "ana"))
     assert MARCA not in caplog.text
+
+
+@pytest.mark.parametrize("espere_s,texto", [(1, "1 min"), (60, "1 min"), (61, "2 min"), (720, "12 min"), (721, "13 min"), (3600, "60 min")])
+def test_espere_texto_em_minutos_para_cima(espere_s, texto):
+    from app.rotas.chat import espere_texto
+    assert espere_texto(espere_s) == f"Você pode perguntar de novo em {texto}."
+
+
+def test_pedido_de_mudanca_sem_professor_so_a_primeira_frase_e_com_professor_as_duas(client, mundo, prov):
+    pedido = [RespostaConversa(chamadas=(ChamadaFerramenta("c1", "recusar", {"motivo": "pedido_de_mudanca"}),))]
+    prov["falso"].roteiro = list(pedido)
+    com = client.post(f"/atletas/{mundo['ana']}/conversas", json={"pergunta": "Monte meu treino?"}, headers=_h(client, "ana")).json()["mensagens"][0]
+    prov["falso"].roteiro = list(pedido)
+    sem = client.post(f"/atletas/{mundo['bia']}/conversas", json={"pergunta": "Monte meu treino?"}, headers=_h(client, "bia")).json()["mensagens"][0]
+    assert com["texto"].endswith("na conversa com ele.") and "Posso mostrar" in com["texto"]  # a Ana tem professor vinculado
+    assert sem["texto"] == "Mudar o treino é com o seu professor." and sem["estado"] == "recusada"  # a Bia nao tem
+
+
+def test_link_do_treino_traz_a_data_como_veio_da_ferramenta(client, mundo, prov):
+    prov["falso"].roteiro = _roteiro_feliz(mundo)
+    m = client.post(f"/atletas/{mundo['ana']}/conversas", json={"pergunta": "Como foi?"}, headers=_h(client, "ana")).json()["mensagens"][0]
+    assert m["links"][0]["data_texto"] == mundo["data"]
