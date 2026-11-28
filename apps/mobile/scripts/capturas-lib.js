@@ -6,7 +6,7 @@ const { join, normalize, sep } = require("node:path");
 // Só dado sintético da API falsa (scripts/api-falsa.mjs). Os ids vêm do cabeçalho daquele arquivo.
 // Acesso (#502): o app só abre com sessão. Cada captura começa com um acesso sintético já guardado em sessionStorage (ver ACESSOS), sem passar
 // pela tela de entrar: `acesso: null` abre sem acesso; sem o campo, a caixa do dia usa o professor 1 e as demais telas o atleta 1.
-// `preencher` digita nos campos (testID, texto) antes dos `clicar`.
+// `soCarregar` não espera a rede ficar ociosa (para ver um estado de carregando que dura segundos). `preencher` digita nos campos (testID, texto) antes dos `clicar`.
 const SENHA_SINTETICA = "senha-sintetica-123";
 const ACESSOS = {
   atleta: "token-sintetico-atleta-1",
@@ -38,6 +38,10 @@ const ACESSOS = {
   atleta37: "token-sintetico-atleta-37",
   // Início v5: o atleta 7 não tem check-in pendente (check-ins em dia).
   atleta7: "token-sintetico-atleta-7",
+  // Perguntas prontas da API (#629): 38 a rota dá 500 (plano B), 39 demora 6 s (esqueletos), 40 a avaliação dá 500.
+  atleta38: "token-sintetico-atleta-38",
+  atleta39: "token-sintetico-atleta-39",
+  atleta40: "token-sintetico-atleta-40",
 };
 const ENTRAR_ANA = [["campo-email", "atleta1@exemplo.com"], ["campo-senha", SENHA_SINTETICA]];
 const TROCAR_OK = [["campo-senha-atual", SENHA_SINTETICA], ["campo-senha-nova", "outra-senha-sintetica"], ["campo-senha-repetida", "outra-senha-sintetica"]];
@@ -99,6 +103,7 @@ const ROTAS = [
   { nome: "inicio-v5-pendente-fim", caminho: "/", rolarAoFim: true },
   { nome: "inicio-v5-em-dia", caminho: "/", acesso: "atleta7" },
   { nome: "inicio-v5-em-dia-fim", caminho: "/", acesso: "atleta7", rolarAoFim: true },
+  { nome: "inicio-v5-prontas-carregando", caminho: "/", acesso: "atleta39", soCarregar: true },
   { nome: "inicio-v5-vazio", caminho: "/", acesso: "atleta2" },
   { nome: "inicio-v3", caminho: "/" },
   { nome: "inicio-v4-numeros", caminho: "/" }, // a seção "Seus números" com os cinco cartões
@@ -132,6 +137,10 @@ const ROTAS = [
   { nome: "chat-conversas", caminho: "/chat/conversas" },
   { nome: "chat-apagar", caminho: "/chat/conversas", clicar: ["mais-101", "apagar-101"] },
   { nome: "chat-comeco", caminho: "/chat" },
+  { nome: "chat-prontas-carregando", caminho: "/chat", acesso: "atleta39", soCarregar: true },
+  { nome: "chat-prontas-plano-b", caminho: "/chat", acesso: "atleta38" },
+  { nome: "chat-resposta-gostei", caminho: "/chat", clicar: ["pergunta-pronta-0", "chat-gostei"] },
+  { nome: "chat-resposta-avaliar-erro", caminho: "/chat", acesso: "atleta40", clicar: ["pergunta-pronta-0", "chat-nao-gostei"] },
   { nome: "chat-sem-treinos", caminho: "/chat", acesso: "atleta2" },
   { nome: "chat-resposta", caminho: "/chat", clicar: ["pergunta-pronta-0"] },
   { nome: "chat-pensando", caminho: "/chat", preencher: [["chat-campo", "Quanto demorar para responder?"]], clicar: ["chat-enviar"] },

@@ -175,7 +175,7 @@ async function principal() {
       });
     }
     // Uma chamada pendurada de propósito na abertura (acesso-verificando) nunca deixa a rede ociosa: espera só o carregamento.
-    await pagina.goto(base + rota.caminho, { waitUntil: sim?.sessao?.pendurar && sim.sessao.metodo === "GET" ? "load" : "networkidle" });
+    await pagina.goto(base + rota.caminho, { waitUntil: rota.soCarregar || (sim?.sessao?.pendurar && sim.sessao.metodo === "GET") ? "load" : "networkidle" });
     await pagina.evaluate(() => document.fonts.ready);
     for (const [id, texto] of rota.preencher ?? []) await pagina.getByTestId(id).fill(texto);
     // "?id" é clique opcional: só se o elemento existe (ex.: o seletor em folha não existe nos 1280, onde as séries ficam numa coluna).

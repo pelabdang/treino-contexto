@@ -63,6 +63,26 @@ async function chamar<T>(atletaId: number, caminho: string, init: RequestInit, o
   return { ok: false, erro: { tipo: "http", status: resposta.status } };
 }
 
+/** `GET /atletas/{id}/chat/perguntas-prontas` (#629): as perguntas prontas escolhidas pela API conforme os treinos (até 6; o app ignora o que passar). */
+export async function buscarPerguntasProntas(atletaId: number, opcoes: Opcoes = {}): Promise<ResultadoChat<string[]>> {
+  const base = (opcoes.baseUrl ?? BASE_PADRAO).replace(/\/+$/, "");
+  const url = `${base}/atletas/${encodeURIComponent(String(atletaId))}/chat/perguntas-prontas`;
+  try {
+    const resposta = await (opcoes.fetch ?? fetch)(url, { headers: JSON_ACEITO });
+    if (!resposta.ok) return { ok: false, erro: { tipo: "http", status: resposta.status } };
+    const corpo = (await resposta.json()) as { perguntas?: unknown };
+    const lista = Array.isArray(corpo.perguntas) ? corpo.perguntas.filter((p): p is string => typeof p === "string" && p.trim() !== "") : [];
+    return { ok: true, dados: lista.slice(0, 6) };
+  } catch {
+    return { ok: false, erro: { tipo: "rede" } };
+  }
+}
+
+/** `PUT .../conversas/{id}/mensagens/{mid}/avaliacao`: `1` (👍), `-1` (👎) ou `null` (desfaz). Só o valor vai; nada do texto. */
+export function avaliarMensagem(atletaId: number, conversaId: number, mensagemId: number, valor: 1 | -1 | null, opcoes: Opcoes = {}): Promise<ResultadoChat<MensagemChat>> {
+  return chamar<MensagemChat>(atletaId, `/${conversaId}/mensagens/${mensagemId}/avaliacao`, { method: "PUT", headers: JSON_ENVIADO, body: JSON.stringify({ valor }) }, opcoes);
+}
+
 /** `GET /atletas/{id}/conversas`: da mais recente para a mais antiga. */
 export async function listarConversas(atletaId: number, opcoes: Opcoes = {}): Promise<ResultadoChat<ConversaResumo[]>> {
   const r = await chamar<{ conversas: ConversaResumo[] }>(atletaId, "", { headers: JSON_ACEITO }, opcoes);

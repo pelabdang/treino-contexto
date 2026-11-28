@@ -232,6 +232,8 @@ function criarEstilos({ cor }: Tema) {
     },
     barra: { borderRadius: raio.pequeno, backgroundColor: cor["superficie-2"] },
     semCartao: { gap: espaco[2] },
+    colunaPerguntas: { gap: espaco[3] },
+    fileiraPerguntas: { flexDirection: "row", gap: espaco[2] },
   });
 }
 
@@ -243,6 +245,16 @@ export function EsqueletoResposta() {
       {barra("100%", 14, "a")}
       {barra("92%", 14, "b")}
       {barra("60%", 14, "c")}
+    </Animated.View>
+  );
+}
+
+/** Esqueletos das perguntas prontas (48 de altura, como as linhas): 3 no Início, 6 no começo do chat. Só decorativo. */
+export function EsqueletoPerguntas({ quantidade, linhas = true }: { quantidade: number; linhas?: boolean }) {
+  const { styles, opacidade, barra } = useBase();
+  return (
+    <Animated.View testID="esqueleto-perguntas" accessibilityElementsHidden importantForAccessibility="no-hide-descendants" style={[{ opacity: opacidade }, linhas ? styles.colunaPerguntas : styles.fileiraPerguntas]}>
+      {Array.from({ length: quantidade }, (_, i) => barra(linhas ? "100%" : 150, linhas ? 48 : 44, `p${i}`))}
     </Animated.View>
   );
 }

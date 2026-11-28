@@ -549,6 +549,9 @@ const RESPOSTAS_CHAT = {
   "o que escrevi no check-in de ontem?": { texto: "No check-in de ontem você marcou esforço 6 de 10 e escreveu: pernas pesadas no começo, melhorou depois do quarto quilômetro.", links: [{ tipo: "treino", rotulo: "Abrir treino", atividade_id: 107, data_texto: "qui 20/03" }] },
   "como foi meu último treino?": { texto: "O seu último treino foi uma rodagem de 10,2 km em 58:41, pace médio de 5:45 por km, dentro do seu normal.", links: [{ tipo: "treino", rotulo: "Abrir treino", atividade_id: 107, data_texto: "qui 20/03" }] },
 };
+// Perguntas prontas e avaliação (#629): o atleta 38 recebe 500 (plano B), o 39 demora 6 s (esqueletos e plano B depois de 4 s), o 2 recebe lista vazia
+// (plano B) e o 40 falha ao avaliar. Os demais recebem a lista da API, diferente das 6 fixas do app para dar para ver de onde veio.
+const PRONTAS_DA_API = ["Como foi a minha natação de quinta?", "Meu melhor 5 km melhorou?", "Quanto nadei em março?", "Como está minha carga esta semana?", "Qual foi meu treino mais longo?", "O que escrevi no último check-in?"];
 const TEXTO_RECUSA_TEMA = "Eu respondo perguntas sobre os seus treinos. Pergunte, por exemplo, sobre o seu pace, a sua carga ou como foi a sua semana.";
 const TEXTO_RECUSA_MUDANCA = "Mudar o treino é com o seu professor. Posso mostrar o que os seus treinos dizem, se isso ajudar na conversa com ele.";
 const TEXTO_FALHA = "Não consegui responder agora. Tente de novo em instantes.";
@@ -710,6 +713,27 @@ createServer((req, res) => {
     return falar(404, dono[1] === "professores" ? professorInexistente : { detail: "não encontrado" });
   }
   if (pathname === "/termo-de-consentimento" && req.method === "GET") return falar(200, TERMO);
+  const prontas = pathname.match(/^\/atletas\/(\d+)\/chat\/perguntas-prontas$/);
+  if (prontas && req.method === "GET") {
+    const atleta = Number(prontas[1]);
+    if (atleta === 38) return falar(500, { detail: "erro sintético" });
+    const corpo = { atleta_id: atleta, versao: "perguntas_prontas@1", perguntas: atleta === 2 ? [] : PRONTAS_DA_API };
+    return atleta === 39 ? void setTimeout(() => falar(200, corpo), 6000) : falar(200, corpo);
+  }
+  const avalia = pathname.match(/^\/atletas\/(\d+)\/conversas\/(\d+)\/mensagens\/(\d+)\/avaliacao$/);
+  if (avalia && req.method === "PUT") {
+    const atleta = Number(avalia[1]);
+    if (atleta === 40) return falar(500, { detail: "erro sintético" });
+    const conversa = conversasDe(atleta).find((c) => c.id === Number(avalia[2]));
+    const mensagem = conversa?.mensagens.find((m) => m.id === Number(avalia[3]));
+    if (!mensagem) return falar(404, { detail: "não encontrado" });
+    lerJson(req).then((c) => {
+      if (![1, -1, null].includes(c?.valor)) return falar(422, { detail: [{ loc: ["body", "valor"], msg: "valor inválido", type: "literal_error" }] });
+      mensagem.avaliacao = c.valor;
+      falar(200, mensagem);
+    });
+    return;
+  }
   const chat = pathname.match(/^\/atletas\/(\d+)\/conversas(?:\/(\d+))?(\/mensagens)?$/);
   if (chat) {
     const atleta = Number(chat[1]);

@@ -6,6 +6,7 @@ import { type ComponentRef, useCallback, useEffect, useMemo, useRef, useState } 
 import { KeyboardAvoidingView, Platform, Pressable, ScrollView, StyleSheet, Text, TextInput, View, useWindowDimensions } from "react-native";
 
 import {
+  avaliarMensagem,
   buscarConversa,
   criarConversa,
   enviarMensagem,
@@ -20,7 +21,6 @@ import {
   CONTADOR_A_PARTIR_DE,
   FRASE_COMECO,
   MAXIMO_PERGUNTA,
-  PERGUNTAS_PRONTAS,
   PLACEHOLDER,
   PLACEHOLDER_ESPERA,
   ROTULO_IA,
@@ -34,6 +34,9 @@ import {
 } from "../chat/textos";
 import { comFoco } from "../tema/foco";
 import { buscarTreinos } from "../treinos/api";
+import { usePerguntasProntas } from "../chat/prontas";
+import { AcoesResposta } from "./AcoesResposta";
+import { EsqueletoPerguntas } from "./Esqueleto";
 import { EsperaChat } from "./EsperaChat";
 import { Faixa } from "./Faixa";
 import { borda, espaco, fonte, larguraConteudoMax, raio, tamanho, useMargemTela, useTema, type Tema } from "../tema";
@@ -88,6 +91,7 @@ export function TelaChat({ apiUrl, atletaId, fetchFn, conversaId, perguntaInicia
   const rolagem = useRef<ComponentRef<typeof ScrollView>>(null);
   const campo = useRef<ComponentRef<typeof TextInput>>(null);
   const altura = useWindowDimensions().height;
+  const { perguntas } = usePerguntasProntas(apiUrl, atletaId, fetchFn, conversaId == null);
 
   // Conversa existente: busca as mensagens.
   useEffect(() => {
@@ -164,11 +168,12 @@ export function TelaChat({ apiUrl, atletaId, fetchFn, conversaId, perguntaInicia
     [atletaId, opcoes, aoCriada],
   );
 
-  const primeiraVez = useRef(true);
+  // A pergunta pronta do Início vale quando a lista já existe (ela vem do mesmo cache do Início); envia uma vez só.
+  const jaEnviouInicial = useRef(false);
   useEffect(() => {
-    if (!primeiraVez.current) return;
-    primeiraVez.current = false;
-    if (perguntaInicial && conversaId == null) void enviar(perguntaInicial);
+    if (jaEnviouInicial.current || !perguntaInicial || conversaId != null) return;
+    jaEnviouInicial.current = true;
+    void enviar(perguntaInicial);
   }, [perguntaInicial, conversaId, enviar]);
 
   const limiteAtivo = aviso?.tipo === "limite";
@@ -239,7 +244,13 @@ export function TelaChat({ apiUrl, atletaId, fetchFn, conversaId, perguntaInicia
             ) : (
               <>
                 <Text style={styles.apoio}>{FRASE_COMECO}</Text>
-                {PERGUNTAS_PRONTAS.map((q, i) => (
+                {perguntas === null && (
+                  <View testID="chat-prontas-carregando">
+                    <Text accessibilityLiveRegion="polite" style={styles.apenasLeitor}>Carregando perguntas sugeridas</Text>
+                    <EsqueletoPerguntas quantidade={6} />
+                  </View>
+                )}
+                {(perguntas ?? []).map((q, i) => (
                   <Pressable key={q} testID={`pergunta-pronta-${i}`} accessibilityRole="button" onPress={() => void enviar(q)} style={comFoco(styles.pronta, styles.foco)}>
                     <Text style={styles.prontaTexto}>{q}</Text>
                     <MaterialIcons name="chevron-right" size={tamanho.iconeGrande} color={tema.cor["texto-2"]} accessible={false} />
@@ -264,7 +275,7 @@ export function TelaChat({ apiUrl, atletaId, fetchFn, conversaId, perguntaInicia
               {item.msg === null ? (
                 <EsperaChat aoEsperarNoInicio={aoEsperarNoInicio} />
               ) : (
-                <CartaoResposta msg={item.msg} aoTentar={() => void enviar(item.pergunta, item.local ? item.chave : undefined)} aoAbrirTreino={aoAbrirTreino} aoAbrirEvolucao={aoAbrirEvolucao} desligado={pensando || limite} styles={styles} tema={tema} />
+                <CartaoResposta msg={item.msg} aoAvaliar={async (v) => idAtual.current != null && (await avaliarMensagem(atletaId, idAtual.current, item.msg!.id, v, opcoes)).ok} aoTentar={() => void enviar(item.pergunta, item.local ? item.chave : undefined)} aoAbrirTreino={aoAbrirTreino} aoAbrirEvolucao={aoAbrirEvolucao} desligado={pensando || limite} styles={styles} tema={tema} />
               )}
             </View>
           );
@@ -320,7 +331,7 @@ export function TelaChat({ apiUrl, atletaId, fetchFn, conversaId, perguntaInicia
 
 type Estilos = ReturnType<typeof criarEstilos>;
 
-function CartaoResposta({ msg, aoTentar, aoAbrirTreino, aoAbrirEvolucao, desligado, styles, tema }: { msg: MensagemChat; aoTentar: () => void; aoAbrirTreino: (id: number) => void; aoAbrirEvolucao: (serie: string) => void; desligado: boolean; styles: Estilos; tema: Tema }) {
+function CartaoResposta({ msg, aoAvaliar, aoTentar, aoAbrirTreino, aoAbrirEvolucao, desligado, styles, tema }: { msg: MensagemChat; aoAvaliar: (valor: 1 | -1 | null) => Promise<boolean>; aoTentar: () => void; aoAbrirTreino: (id: number) => void; aoAbrirEvolucao: (serie: string) => void; desligado: boolean; styles: Estilos; tema: Tema }) {
   const hora = msg.criada_em ? horaCurta(msg.criada_em) : "";
   const abrir = (l: LinkChat) => {
     if (l.tipo === "treino" && l.atividade_id != null) aoAbrirTreino(l.atividade_id);
@@ -356,6 +367,7 @@ function CartaoResposta({ msg, aoTentar, aoAbrirTreino, aoAbrirEvolucao, desliga
         </Pressable>
       ))}
       <Text style={styles.hora}>{hora ? `${hora} · ${ROTULO_IA}` : ROTULO_IA}</Text>
+      <AcoesResposta texto={msg.texto} avaliacaoInicial={msg.avaliacao ?? null} aoAvaliar={aoAvaliar} />
     </View>
   );
 }
@@ -371,6 +383,7 @@ function criarEstilos({ cor }: Tema, margem: number) {
     historico: { flex: 1 },
     conteudo: { padding: margem, gap: espaco[4], flexGrow: 1 },
     apoio: { ...fonte.corpo, color: cor["texto-2"] },
+    apenasLeitor: { position: "absolute", width: 1, height: 1, opacity: 0 },
     estado: { alignItems: "center", gap: espaco[3], paddingVertical: espaco[5] },
     textoErro: { ...fonte["corpo-forte"], color: cor.erro, textAlign: "center" },
     comeco: { gap: espaco[3] },
