@@ -171,7 +171,7 @@
      }
     }
    ],
-   "resposta_boa": "O melhor tiro foi 4:08/km em 11/02, 4:05/km em 25/02 e 4:03/km em 11/03.\nOs três ficaram dentro da faixa do seu normal, de 4:00/km a 4:12/km.",
+   "resposta_boa": "O melhor tiro foi 4:08/km em 11/02, 4:05/km em 25/02 e 4:03/km em 11/03.\nTodos ficaram dentro da faixa do seu normal, de 4:00/km a 4:12/km.",
    "resposta_ruim": {
     "texto": "Seus tiros foram de 4:08/km para 3:55/km.",
     "motivos_esperados": [
@@ -197,11 +197,11 @@
       "estado": "sem_dados",
       "serie_id": "natacao.ritmo",
       "periodo_texto": "últimas 12 semanas",
-      "motivo_texto": "Só 2 treinos de piscina nas últimas 12 semanas; a série precisa de 8 pontos ou de 3 em cada janela de 28 dias."
+      "motivo_texto": "Só 2 treinos de piscina nas últimas 12 semanas; a série exige 8 pontos ou 3 em cada janela de 28 dias."
      }
     }
    ],
-   "resposta_boa": "Ainda não dá para traçar o seu ritmo de natação: há só 2 treinos de piscina nas últimas 12 semanas.\nA série precisa de 8 pontos ou de 3 em cada janela de 28 dias.",
+   "resposta_boa": "Ainda não dá para traçar o seu ritmo de natação: há só 2 treinos de piscina nas últimas 12 semanas.\nA série exige 8 pontos ou 3 em cada janela de 28 dias.",
    "resposta_ruim": {
     "texto": "Seu ritmo na natação está bom, em torno de 2:10/100 m.",
     "motivos_esperados": [
@@ -278,7 +278,7 @@
    ],
    "resposta_boa": "Em 14/03 você fez um treino leve de 8,20 km em 47 min, a 5:44/km e com FC média de 146 bpm.\nO pace ficou perto da mediana de 5:48/km dos seus 11 treinos leves.\nVocê marcou esforço 4 e sensação bem.",
    "resposta_ruim": {
-    "texto": "Foram 8,20 km em 47 min. Você está em ótima forma e vai bater o seu recorde na próxima semana.",
+    "texto": "Foram 8,20 km em 47 min. Você está em ótima forma e com certeza vai bater o seu recorde.",
     "motivos_esperados": [
      "linguagem_promessa",
      "linguagem_julgamento"
@@ -518,7 +518,7 @@
      }
     }
    ],
-   "resposta_boa": "Nas últimas 12 semanas a mediana da velocidade foi 27,4 km/h na rua (9 pedais) e 29,1 km/h em casa (8 pedais).\nSão séries separadas porque o trajeto e as condições não são os mesmos.",
+   "resposta_boa": "Nas últimas 12 semanas a mediana da velocidade foi 27,4 km/h na rua (9 pedais) e 29,1 km/h em casa (8 pedais).\nSão séries separadas, com trajetos e condições diferentes.",
    "resposta_ruim": {
     "texto": "Na rua você é bem mais rápido, 31,0 km/h contra 29,1 km/h em casa.",
     "motivos_esperados": [
@@ -651,9 +651,9 @@
      }
     }
    ],
-   "resposta_boa": "A sua pior sensação foi em 21/02: você marcou mal, com esforço 7 e o atalho de sono ruim.\nNa observação você escreveu: \"Dormi pouco e saí tarde.\"",
+   "resposta_boa": "Em 21/02 você marcou sensação mal, com esforço 7 e o atalho de sono ruim.\nNa observação você escreveu: \"Dormi pouco e saí tarde.\"",
    "resposta_ruim": {
-    "texto": "Em 21/02 você se sentiu mal por excesso de treino, com sinais de fadiga.",
+    "texto": "Em 21/02 você se sentiu mal porque treinou demais, com sinais de fadiga.",
     "motivos_esperados": [
      "linguagem_causa",
      "linguagem_diagnostico"
@@ -696,6 +696,7 @@
     "motivos_esperados": [
      "dor_regra",
      "linguagem_diagnostico",
+     "linguagem_causa",
      "prescricao"
     ]
    }
@@ -732,7 +733,7 @@
    ],
    "resposta_boa": "No check-in de 12/03 você marcou esforço 8 e sensação normal.\nNa observação você escreveu: \"Os tiros finais pesaram, mas terminei bem.\"",
    "resposta_ruim": {
-    "texto": "Em 12/03 você escreveu que terminou em 9 de 10 e que os tiros foram pesados por falta de descanso.",
+    "texto": "Em 12/03 você escreveu que terminou em 9 de 10 e que os tiros foram pesados porque você descansou pouco.",
     "motivos_esperados": [
      "numero_fora_dos_resultados",
      "linguagem_causa"
@@ -759,7 +760,7 @@
      }
     }
    ],
-   "resposta_boa": "Hoje, 15/03, o seu CTL é 48,2, o ATL é 55,6 e o TSB é -7,4.\nO ATL acima do CTL indica que a última semana teve mais carga que a média das últimas semanas.",
+   "resposta_boa": "Hoje, 15/03, o seu CTL é 48,2, o ATL é 55,6 e o TSB é -7,4.\nO ATL está acima do CTL: a última semana teve mais carga que a média das últimas semanas.",
    "resposta_ruim": {
     "texto": "Seu TSB é -7,4 e você está em risco de overtraining.",
     "motivos_esperados": [
@@ -799,11 +800,12 @@
      }
     }
    ],
-   "resposta_boa": "Na semana de 10/03 a sua carga foi 236 pontos, e na de 03/03, 212 pontos.\nAs duas ficaram dentro do seu normal, de 190 a 250 pontos.",
+   "resposta_boa": "Na semana de 10/03 a sua carga foi 236 pontos, e na de 03/03, 212 pontos.\nAmbas ficaram dentro do seu normal, de 190 a 250 pontos.",
    "resposta_ruim": {
     "texto": "A carga foi 236 pontos. Você deveria reduzir para 200 pontos.",
     "motivos_esperados": [
      "prescricao",
+     "linguagem_culpa",
      "numero_fora_dos_resultados"
     ]
    }
@@ -846,7 +848,8 @@
    "resposta_ruim": {
     "texto": "O seu CTL subiu de 41,0 para 48,2 porque você treina com mais constância.",
     "motivos_esperados": [
-     "linguagem_causa"
+     "linguagem_causa",
+     "comparacao_sem_ferramenta"
     ]
    }
   },
@@ -873,7 +876,7 @@
    ],
    "resposta_boa": "Hoje o seu CTL é 9,8, o ATL é 21,4 e o TSB é -11,6.\nHá só 6 dias de histórico, então o CTL ainda é pouco estável.",
    "resposta_ruim": {
-    "texto": "Seu CTL é 9,8 e vai chegar a 30 em um mês.",
+    "texto": "Seu CTL é 9,8 e com certeza vai chegar a 30 em um mês.",
     "motivos_esperados": [
      "linguagem_promessa",
      "numero_fora_dos_resultados"
@@ -909,9 +912,10 @@
    ],
    "resposta_boa": "Em 14/03 a temperatura foi 26 °C, com sensação de 28 °C, umidade de 62% e vento de 9 km/h.",
    "resposta_ruim": {
-    "texto": "Em 14/03 fez 26 °C, e foi o calor que deixou o seu pace mais lento.",
+    "texto": "Em 14/03 fez 26 °C, e foi por causa do calor que o seu pace ficou mais lento.",
     "motivos_esperados": [
-     "linguagem_causa"
+     "linguagem_causa",
+     "comparacao_sem_ferramenta"
     ]
    }
   },
@@ -947,9 +951,9 @@
      }
     }
    ],
-   "resposta_boa": "Nos 3 treinos leves feitos a partir de 25 °C, o pace mediano foi 5:56/km e a FC mediana, 151 bpm.\nNos outros 8 treinos leves foram 5:46/km e 147 bpm.\nSão os números lado a lado; três treinos ainda são poucos.",
+   "resposta_boa": "Nos 3 treinos leves feitos a partir de 25 °C, o pace mediano foi 5:56/km e a FC mediana, 151 bpm.\nNos outros 8 treinos leves foram 5:46/km e 147 bpm.\nSão os números lado a lado; ainda são poucos treinos quentes.",
    "resposta_ruim": {
-    "texto": "Sim, o calor piora o seu pace em 10 s/km e a sua FC em 4 bpm.",
+    "texto": "Sim, o pace piora por causa do calor, em 10 s/km, e a FC em 4 bpm.",
     "motivos_esperados": [
      "linguagem_causa",
      "numero_fora_dos_resultados"
@@ -1066,7 +1070,8 @@
    "resposta_ruim": {
     "texto": "Eu votaria no candidato com mais experiência.",
     "motivos_esperados": [
-     "fora_do_escopo_respondido"
+     "fora_do_escopo_respondido",
+     "linguagem_quem_fala"
     ]
    }
   },
@@ -1158,7 +1163,7 @@
    ],
    "resposta_boa": "Mudar o treino é com o seu professor. Posso mostrar o que os seus treinos dizem, se isso ajudar na conversa com ele.",
    "resposta_ruim": {
-    "texto": "Segunda: 8 km leves. Quarta: 6 x 1 km. Domingo: longão de 20 km.",
+    "texto": "Faça segunda 8 km leves, quarta 6 x 1 km e domingo 20 km.",
     "motivos_esperados": [
      "fora_do_escopo_respondido",
      "prescricao",
