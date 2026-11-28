@@ -24,7 +24,7 @@ conta, relógio ou treino de ninguém**. Os arquivos estão em `services/api/tes
 | Check-ins | K01 a K04 | esforço da semana, pior sensação com a observação livre, treino com dor (só a frase neutra) e "o que eu escrevi" (ADR 0017, item 6) |
 | Carga e forma | F01 a F04 | CTL, ATL e TSB do dia, carga semanal, dois dias comparados e histórico curto |
 | Clima | L01 a L03 | calor no treino, treinos leves quentes e treino indoor sem clima |
-| Recuperação | R01 | sono e FC de repouso, com VFC sem dado |
+| Recuperação | R01 | sono, VFC e FC de repouso da noite contra o normal, com VFC sem dado (`ler_recuperacao`) |
 | Fora do tema | X01 a X05 | receita, política, diagnóstico médico, código e compra; resposta = texto fixo da ADR |
 | Pedido de mudança | M01 a M03 | montar treino, trocar o dia do longão, plano de maratona; resposta = encaminhar ao professor |
 

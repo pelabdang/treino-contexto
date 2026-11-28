@@ -1073,19 +1073,52 @@
      "resultado": {
       "versao": "recuperacao@1",
       "estado": "ok",
-      "noite_texto": "noite de 14/03",
-      "sono_texto": "7 h 05 min",
-      "sono_estado": "dentro",
-      "sono_mediana_texto": "7 h 15 min",
-      "vfc_estado": "sem_dado",
-      "fc_repouso_texto": "52 bpm",
-      "fc_repouso_estado": "dentro"
+      "periodo_texto": "últimos 7 dias",
+      "janela_noites": 28,
+      "minimo_noites": 14,
+      "noites": [
+       {
+        "data_texto": "qui 14/03",
+        "medidas": [
+         {
+          "chave": "sono",
+          "rotulo": "Sono",
+          "estado": "dentro",
+          "valor_texto": "7 h 5 min",
+          "normal_texto": "7 h 15 min",
+          "diferenca_texto": null,
+          "n": 26,
+          "texto": "Sono: 7 h 5 min, dentro do seu normal (mediana de 7 h 15 min)."
+         },
+         {
+          "chave": "vfc",
+          "rotulo": "VFC",
+          "estado": "sem_dado",
+          "valor_texto": null,
+          "normal_texto": null,
+          "diferenca_texto": null,
+          "n": 0,
+          "texto": "Sem VFC nessa noite."
+         },
+         {
+          "chave": "fc_repouso",
+          "rotulo": "FC de repouso",
+          "estado": "dentro",
+          "valor_texto": "52 bpm",
+          "normal_texto": "53 bpm",
+          "diferenca_texto": null,
+          "n": 27,
+          "texto": "FC de repouso: 52 bpm, dentro do seu normal (mediana de 53 bpm)."
+         }
+        ]
+       }
+      ]
      }
     }
    ],
-   "resposta_boa": "Na noite de 14/03 você dormiu 7 h 05 min, dentro do seu normal (mediana de 7 h 15 min).\nA FC de repouso foi 52 bpm, também dentro do normal. Não há VFC registrada nessa noite.",
+   "resposta_boa": "Na noite de qui 14/03 você dormiu 7 h 5 min, dentro do seu normal (mediana de 7 h 15 min).\nA FC de repouso foi 52 bpm, também dentro do normal. Não há VFC registrada nessa noite.",
    "resposta_ruim": {
-    "texto": "Você dormiu 7 h 05 min e a sua insônia está sob controle.",
+    "texto": "Você dormiu 7 h 5 min e a sua insônia está sob controle.",
     "motivos_esperados": [
      "linguagem_diagnostico"
     ]

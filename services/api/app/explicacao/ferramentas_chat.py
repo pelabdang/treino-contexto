@@ -14,13 +14,15 @@ from __future__ import annotations
 import dataclasses
 import math
 import statistics
-from datetime import date, datetime, timedelta
+from datetime import date, datetime, time, timedelta
 from typing import Any
 
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from app.db.models import Atividade
+from app.explicacao import fatos_treino as ft
+from app.metricas import recuperacao as rc
 from app.metricas import serie_carga as sc
 from app.servicos import evolucao_serie as ev
 from app.servicos import frase_evolucao as fe
@@ -30,6 +32,7 @@ from app.servicos.carga_textos import aprendendo_texto, numero_texto, tsb_texto
 from app.servicos.evolucao_series import POR_ID, carregar
 from app.servicos.fuso import data_local
 from app.servicos.linha_base_leitura import linha_base_da_atividade
+from app.servicos.recuperacao_banco import noites_do_atleta
 
 VERSAO = "ferramentas_chat@1"
 
@@ -332,3 +335,47 @@ def linha_base(session: Session, atleta_id: int, modalidade: str, tipo_treino: s
     tem_normal = any(m["estado"] in ("dentro", "fora") for m in metricas)  # sem nenhuma métrica com normal calculado, o estado é parcial
     return {"versao": r.versao, "estado": "ok" if tem_normal else "parcial", "modalidade": modalidade, "tipo_treino": tipo_treino,
             "janela_semanas": r.janela_semanas, "minimo_treinos": r.minimo_treinos, "treino_de_referencia": ref, "metricas": metricas}
+
+
+# ---------------------------------------------------------------- ler_recuperacao
+ROTULO_MEDIDA = {"sono": "Sono", "vfc": "VFC", "fc_repouso": "FC de repouso"}
+LIMITE_NOITES = 14  # no máximo as 14 noites mais recentes do período com alguma medida
+
+
+def _texto_medida(m: dict[str, Any]) -> str:
+    rotulo, valor = ROTULO_MEDIDA[m["chave"]], m["valor_texto"]
+    if m["estado"] == rc.SEM_DADO:
+        return f"Sem {rotulo} nessa noite."
+    if m["estado"] == rc.APRENDENDO:
+        return f"{rotulo}: {valor}; {m['n']} de {rc.PADRAO.minimo_noites} noites para estimar o seu normal."
+    if m["estado"] == rc.DENTRO:
+        return f"{rotulo}: {valor}, dentro do seu normal (mediana de {m['normal_texto']})."
+    return f"{rotulo}: {valor}, {m['diferenca_texto']} da mediana de {m['normal_texto']}."
+
+
+def recuperacao_noites(session: Session, atleta_id: int, periodo: str | None = None, de: str | None = None, ate: str | None = None,
+                       agora: datetime | None = None) -> dict[str, Any]:
+    """`ler_recuperacao`: sono, VFC e FC de repouso de cada noite do período contra o normal do atleta (`recuperacao@1`, ADR 0014: mediana das 28 noites
+    anteriores, mínimo de 14, "abaixo" e "acima" são direção, nunca bom ou ruim). Os textos são os do pacote de fatos do feedback (`fatos_treino`). A data é a de
+    acordar; `sem_dados` se nada foi importado no período. As 14 noites mais recentes, da mais nova para a mais antiga."""
+    janela = _janela(_hoje(session, atleta_id, agora), periodo or "ultimos_7_dias", de, ate)
+    if janela is None:
+        return erro("argumento_invalido", campo="periodo")
+    ini, fim, texto_periodo = janela
+    gravadas = noites_do_atleta(session, atleta_id)
+    todas = [rc.Noite(n.noite, n.sono_s, n.vfc_ms, n.fc_repouso_bpm) for n in gravadas.values()]
+    primeira = min(gravadas, default=None)
+    noites = []
+    for dia in sorted((d for d in gravadas if ini <= d <= fim and not rc.Noite(d, gravadas[d].sono_s, gravadas[d].vfc_ms, gravadas[d].fc_repouso_bpm).vazia()),
+                      reverse=True)[:LIMITE_NOITES]:
+        r = rc.recuperacao(dia, time(12, 0), todas, primeira_noite=primeira)  # a noite de `dia` contra as 28 anteriores; meio-dia: nunca é madrugada
+        medidas = []
+        for m in r.medidas:
+            f = ft._medida_recuperacao(m)
+            medidas.append({"chave": f["chave"], "rotulo": ROTULO_MEDIDA[f["chave"]], "estado": f["estado"], "valor_texto": f["valor_texto"],
+                            "normal_texto": f["normal_texto"], "diferenca_texto": f["diferenca_texto"], "n": f["n"], "texto": _texto_medida(f)})
+        noites.append({"data_texto": ev.data_texto(dia), "medidas": medidas})
+    base = {"versao": rc.VERSAO, "periodo_texto": texto_periodo, "janela_noites": rc.PADRAO.janela_noites, "minimo_noites": rc.PADRAO.minimo_noites}
+    if not noites:
+        return {**base, "estado": "sem_dados", "motivo_texto": "Sem sono, VFC nem FC de repouso importados nesse período."}
+    return {**base, "estado": "ok", "noites": noites}
