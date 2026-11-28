@@ -15,7 +15,7 @@ from __future__ import annotations
 
 import math
 import re
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from datetime import date, datetime, timedelta
 from typing import Literal
 
@@ -33,6 +33,8 @@ JANELA_MARCA_DIAS = 30
 MINIMO_MOVIMENTO = 1.0  # |d| / piso da série
 SEMANAS_COM_VOLUME = 3  # das 4 semanas completas
 DIAS = ("segunda", "terça", "quarta", "quinta", "sexta", "sábado", "domingo")
+DIAS_CURTOS = ("seg", "ter", "qua", "qui", "sex", "sáb", "dom")
+MODALIDADE_NOME = {"corrida": "corrida", "natacao": "natação", "ciclismo": "ciclismo", "outra": "treino"}
 MODALIDADE_ROTULO = {"corrida": "Corrida", "natacao": "Natação", "ciclismo": "Ciclismo"}
 VOLUME_DA_MODALIDADE = {"corrida": "corrida.volume_km", "ciclismo": "ciclismo.volume_km", "natacao": "natacao.volume_m"}
 
@@ -55,6 +57,14 @@ class Destino:
 
 
 @dataclass(frozen=True)
+class DiaDaSemana:
+    rotulo: str  # "seg"
+    estado: Literal["feito", "hoje", "vazio"]  # `hoje` e o dia de hoje (com ou sem treino); `feito`: dia passado com treino; `vazio`: o resto
+    modalidades: list[str]  # as modalidades do dia, sem repetir, na ordem do dia ("corrida", "natacao")
+    rotulo_acessivel: str  # "segunda, corrida e natação feitas"
+
+
+@dataclass(frozen=True)
 class Cartao:
     id: str
     formato: Formato
@@ -65,6 +75,9 @@ class Cartao:
     barras: list[Barra]
     destino: Destino
     rotulo_acessivel: str
+    dias: list[DiaDaSemana] = field(default_factory=list)  # so no `esta_semana`: 7 itens, seg a dom
+    apoio_curto: str | None = None  # so no `esta_semana`: "3 treinos · 2 h 37 min"
+    comparacao_texto: str | None = None  # so no `esta_semana`: "semana passada: 4" ou "sem semana anterior"
 
 
 def _duracao(s: float) -> str:
@@ -78,6 +91,35 @@ def _treinos(n: int) -> str:
 
 
 # ---------- 1. esta semana ----------
+def _lista_pt(nomes: list[str]) -> str:
+    return nomes[0] if len(nomes) == 1 else ", ".join(nomes[:-1]) + " e " + nomes[-1]
+
+
+FEMININAS = {"corrida", "natacao"}  # concordancia de "feita(s)": so feminino se TODAS forem femininas
+
+
+def _feitas(mods: list[str]) -> str:
+    fem = all(m in FEMININAS for m in mods)
+    return ("feita" if fem else "feito") + ("" if len(mods) == 1 else "s")
+
+
+def _dias_da_semana(atual, seg: date, hoje: date) -> list[DiaDaSemana]:
+    """Os 7 dias da semana em curso (segunda a domingo local), prontos para o app desenhar e ler."""
+    dias = []
+    for i in range(7):
+        dia = seg + timedelta(days=i)
+        mods = list(dict.fromkeys(l.modalidade for l in sorted((l for l in atual if l.dia == dia), key=lambda l: l.inicio)))
+        feito = f"{_lista_pt([MODALIDADE_NOME.get(m, 'treino') for m in mods])} {_feitas(mods)}" if mods else ""
+        if dia == hoje:
+            estado, resto = "hoje", f"hoje, {feito}" if mods else "hoje, sem treino ainda"
+        elif mods:
+            estado, resto = "feito", feito
+        else:
+            estado, resto = "vazio", "sem treino" if dia < hoje else "ainda por vir"
+        dias.append(DiaDaSemana(DIAS_CURTOS[i], estado, mods, f"{DIAS[i]}, {resto}"))
+    return dias
+
+
 def _esta_semana(m: es.Material, destino: Destino) -> Cartao | None:
     seg = es.segunda(m.hoje)
     ant = seg - timedelta(days=7)
@@ -86,10 +128,12 @@ def _esta_semana(m: es.Material, destino: Destino) -> Cartao | None:
         return None
     passada = [l for l in m.linhas if ant <= l.dia < seg]
     tempo = _duracao(sum(l.duracao_s for l in atual))
-    apoio = f"{tempo} · semana passada: {len(passada)}" if passada else f"{tempo} · sem semana anterior"
+    comparacao = f"semana passada: {len(passada)}" if passada else "sem semana anterior"
+    apoio = f"{tempo} · {comparacao}"  # mantido por compatibilidade; o app novo usa `apoio_curto` e `comparacao_texto`
     valor = _treinos(len(atual))
     return Cartao("esta_semana", "pequeno", "Esta semana", valor, apoio, None, [], destino,
-                  f"Esta semana, {valor}, {tempo}, " + (f"semana passada {_treinos(len(passada))}" if passada else "sem semana anterior"))
+                  f"Esta semana, {valor}, {tempo}, " + (f"semana passada {_treinos(len(passada))}" if passada else "sem semana anterior"),
+                  dias=_dias_da_semana(atual, seg, m.hoje), apoio_curto=f"{valor} · {tempo}", comparacao_texto=comparacao)
 
 
 # ---------- 2. hoje na sua semana ----------

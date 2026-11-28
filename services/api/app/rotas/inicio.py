@@ -28,6 +28,13 @@ class DestinoOut(BaseModel):
     atividade_id: int | None = Field(None, exclude_if=lambda v: v is None)  # o treino a abrir (melhor marca com treino conhecido)
 
 
+class DiaOut(BaseModel):
+    rotulo: str  # "seg"
+    estado: Literal["feito", "hoje", "vazio"]
+    modalidades: list[str]  # "corrida", "natacao", "ciclismo", "outra" (sem repetir)
+    rotulo_acessivel: str  # "segunda, corrida e natação feitas"
+
+
 class CartaoOut(BaseModel):
     id: Literal["esta_semana", "hoje_na_semana", "volume_4_semanas", "em_movimento", "melhor_marca"]
     formato: Literal["pequeno", "largo"]
@@ -38,6 +45,9 @@ class CartaoOut(BaseModel):
     barras: list[BarraOut]  # só no volume das 4 semanas
     destino: DestinoOut
     rotulo_acessivel: str  # o que o leitor de tela lê, juntando tudo
+    dias: list[DiaOut] = []  # só no `esta_semana`: os 7 dias da semana, seg a dom
+    apoio_curto: str | None = None  # só no `esta_semana`: "3 treinos · 2 h 37 min"
+    comparacao_texto: str | None = None  # só no `esta_semana`: "semana passada: 4" ou "sem semana anterior"
 
 
 class CartoesOut(BaseModel):
@@ -56,5 +66,6 @@ def cartoes_do_inicio(atleta_id: int, session: Session = Depends(get_session)) -
         cartoes=[CartaoOut(id=c.id, formato=c.formato, rotulo=c.rotulo, valor=c.valor, apoio=c.apoio, texto=c.texto,
                            barras=[BarraOut(**vars(b)) for b in c.barras],
                            destino=DestinoOut(tela=c.destino.tela, serie_id=c.destino.serie_id, atividade_id=c.destino.atividade_id),
-                           rotulo_acessivel=c.rotulo_acessivel) for c in r.cartoes],
+                           rotulo_acessivel=c.rotulo_acessivel, dias=[DiaOut(**vars(d)) for d in c.dias], apoio_curto=c.apoio_curto,
+                           comparacao_texto=c.comparacao_texto) for c in r.cartoes],
     )
