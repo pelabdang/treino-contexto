@@ -1,0 +1,12 @@
+{
+ "versao": "fixtures_chat@1",
+ "aviso": "Atletas e números 100% sintéticos; nada vem de conta, relógio ou treino de ninguém.",
+ "atletas": {
+  "atleta_a": {
+   "descricao": "corredora fictícia, 14 semanas de histórico, 11 treinos leves, intervalados e longões, clima e check-ins completos"
+  },
+  "atleta_b": {
+   "descricao": "atleta fictício de natação e ciclismo, pouco histórico (começou há semanas), alguns treinos indoor"
+  }
+ }
+}
