@@ -184,6 +184,7 @@ class PendenteOut(BaseModel):
     hora_local: str  # HH:MM
     duracao: str  # h:mm:ss
     titulo: str  # pronto: "Corrida, 45 min"
+    pergunta_texto: str  # a pergunta do check-in com a data relativa: "Como foi a natação de ontem?", "Como foi a corrida de terça?"
 
 
 class PendentesOut(BaseModel):
@@ -213,5 +214,5 @@ def listar_checkins_pendentes(
         local = inicio_local(a.inicio, a.fuso_min)
         itens.append(PendenteOut(
             atividade_id=a.id, modalidade=a.modalidade, data_local=local.date().isoformat(), hora_local=local.strftime("%H:%M"),
-            duracao=svc.duracao_hms(a.duracao_s), titulo=svc.titulo(a)))
+            duracao=svc.duracao_hms(a.duracao_s), titulo=svc.titulo(a), pergunta_texto=svc.pergunta_do_checkin(a)))
     return PendentesOut(dias=dias, total=len(itens), pendentes=itens)

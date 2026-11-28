@@ -108,7 +108,7 @@ def test_pendentes_padrao_e_7_dias(client, banco):
 def test_pendentes_traz_so_campos_prontos_e_nenhum_do_checkin(client, banco):
     j, _ = _pendentes(client, banco)
     p = j["pendentes"][0]
-    assert set(p) == {"atividade_id", "modalidade", "data_local", "hora_local", "duracao", "titulo"}
+    assert set(p) == {"atividade_id", "modalidade", "data_local", "hora_local", "duracao", "titulo", "pergunta_texto"}
     assert (p["modalidade"], p["data_local"], p["hora_local"], p["duracao"], p["titulo"]) == (
         "corrida", "2026-11-05", "07:00", "0:45:00", "Corrida, 45 min")
     texto = json.dumps(j)

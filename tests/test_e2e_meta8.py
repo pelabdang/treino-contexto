@@ -390,8 +390,12 @@ def test_11_pendentes_batem_com_o_oraculo_e_nao_trazem_o_checkin(ctx):
     assert [fonte[x["atividade_id"]] for x in p["pendentes"]] == esperado
     assert (p["dias"], p["total"]) == (7, 4)
     assert [x["atividade_id"] for x in p["pendentes"]] == [12, 11, 10, 4]
-    assert set(p["pendentes"][0]) == {"atividade_id", "modalidade", "data_local", "hora_local", "duracao", "titulo"}
+    # o conjunto de campos continua fechado: so o que ja e da atividade (e a pergunta pronta, que nao tem dado do check-in); nada do check-in
+    assert set(p["pendentes"][0]) == {"atividade_id", "modalidade", "data_local", "hora_local", "duracao", "titulo", "pergunta_texto"}
     assert p["pendentes"][0]["titulo"] == "Corrida, 45 min"
+    for x in p["pendentes"]:
+        assert x["pergunta_texto"].startswith("Como foi ") and x["pergunta_texto"].endswith("?") and len(x["pergunta_texto"]) < 50, x["pergunta_texto"]
+    assert not {"pse", "sensacao", "atalhos", "texto", "nada_a_relatar", "feedback"} & set(p["pendentes"][0])
     assert [x["atividade_id"] for x in _get(ctx, "/atletas/1/checkins/pendentes?dias=5")["pendentes"]] == [12, 11]
     assert _get(ctx, "/atletas/1/checkins/pendentes?dias=3")["total"] == 0
     assert _get(ctx, "/atletas/1/checkins/pendentes?dias=1")["pendentes"] == []
