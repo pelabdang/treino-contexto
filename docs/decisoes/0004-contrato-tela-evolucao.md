@@ -319,3 +319,10 @@ Base da aba "Treinos" e da tela inicial nova ([[design/auditoria-ux-e-inicio-do-
   - **`apoio_curto`** ("3 treinos · 2 h 37 min") e **`comparacao_texto`** ("semana passada: 4" ou "sem semana anterior"): o `apoio` antigo ("2 h 37 min · semana passada: 4") **continua igual**, por compatibilidade.
   - Os outros quatro cartões trazem `dias = []` e os dois textos `null`.
 - **`GET /atletas/{id}/checkins/pendentes`, `PendenteOut.pergunta_texto`**: a pergunta pronta com a data relativa. Hoje e ontem por extenso ("Como foi a natação de ontem?"); de 2 a 6 dias atrás, o dia da semana ("Como foi a corrida de terça?"); antes disso, "do dia 08/03" (o dia da semana já se repetiu). Artigo e nome pela modalidade: "a corrida", "a natação", "o ciclismo", "o treino" (`outra`).
+
+## Adendo 19 (2026-11-28): limite do provedor no chat, `provedor_limite` (#636)
+**Status: proposto (Duda).** Nenhuma rota nem campo muda. Muda só o que acontece quando o Groq recusa por limite de requisições ou de tokens por minuto (HTTP 429).
+- **Espera curta e uma repetição.** O laço espera `retry-after` do provedor (se vier como número) ou **5 s** e repete a chamada **uma vez** por pergunta (conta no teto de 8 chamadas ao provedor, [[decisoes/0017-chat-do-atleta]], item 3). Se o `retry-after` passar de **15 s**, ou se não sobrar tempo dos 45 s da pergunta, desiste sem esperar. Nada do corpo da resposta do provedor é lido ou guardado.
+- **`MensagemOut` com `estado = "erro"` e `motivo = "provedor_limite"`** quando o limite persiste. O código é novo e só vale no chat (no feedback segue `limite_de_chamadas`). A coluna `mensagem.motivo` já aceita (texto de até 40, sem lista no `CHECK`).
+- **`texto`** nesse caso é a frase fixa **"O serviço de IA está ocupado. Tente de novo em 1 minuto."**; os outros erros seguem com "Não consegui responder agora. Tente de novo em instantes.". O app mostra o `texto` como veio e não interpreta o `motivo`.
+- Não é o `429` do limite de 20 perguntas por hora (adendo 16): aquele é status HTTP `429` da nossa rota, com `espere_texto`; este é uma resposta `200` (ou `201`, na 1ª pergunta) com a mensagem em `estado = erro`, como toda falha do provedor.

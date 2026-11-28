@@ -36,6 +36,7 @@ log = logging.getLogger(__name__)
 
 PERGUNTAS_POR_HORA = 20  # por atleta (ADR 0017, "A confirmar" 5); conta as linhas de `mensagem`, vale com varias instancias
 FRASE_ERRO = "Não consegui responder agora. Tente de novo em instantes."
+FRASE_OCUPADO = "O serviço de IA está ocupado. Tente de novo em 1 minuto."  # o provedor recusou por limite (429) mesmo depois de esperar
 FRASE_LIMITE = f"Você fez {PERGUNTAS_POR_HORA} perguntas na última hora."
 MAX_LINKS = 5
 
@@ -144,7 +145,7 @@ def _links(m: Mensagem) -> list[LinkOut]:
 
 
 def _mensagem_out(m: Mensagem) -> MensagemOut:
-    texto = m.resposta if m.resposta else FRASE_ERRO
+    texto = m.resposta if m.resposta else (FRASE_OCUPADO if m.motivo == "provedor_limite" else FRASE_ERRO)
     return MensagemOut(id=m.id, ordem=m.ordem, pergunta=m.pergunta, estado=m.estado, motivo=m.motivo, texto=texto, links=_links(m),
                        avaliacao=m.avaliacao, criada_em=_com_fuso(m.criada_em))
 

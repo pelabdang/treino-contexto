@@ -47,7 +47,19 @@ def test_texto_final_limpo_e_erros_viram_motivo(litellm_falso):
         resposta["valor"] = erro
         assert redator.conversar([], FERRAMENTAS).motivo == motivo
     resposta["valor"] = type("RateLimitError", (Exception,), {})()
-    assert redator.conversar([], FERRAMENTAS).motivo == "limite_de_chamadas" and redator.limite_do_provedor
+    r = redator.conversar([], FERRAMENTAS)
+    assert r.motivo == "provedor_limite" and r.retry_apos_s is None and redator.limite_do_provedor
+
+
+@pytest.mark.parametrize("cabecalho,esperado", [("7", 7.0), ("2.5", 2.5), (None, None), ("amanha", None), ("-3", None), ("99999", None)])
+def test_o_429_leva_o_retry_after_do_cabecalho(litellm_falso, cabecalho, esperado):
+    _, resposta = litellm_falso
+    erro = type("RateLimitError", (Exception,), {})("corpo com dado de saude MARCA")
+    erro.response = SimpleNamespace(headers={} if cabecalho is None else {"retry-after": cabecalho})
+    resposta["valor"] = erro
+    r = Redator(ProvedorLiteLLM("groq", "m", "k"), "groq", "m").conversar([], FERRAMENTAS)
+    assert r.motivo == "provedor_limite" and r.retry_apos_s == esperado
+    assert "MARCA" not in repr(r)
 
 
 def test_limite_de_chamadas_da_instancia_vale_para_conversar(litellm_falso):
