@@ -137,6 +137,11 @@ def _chamadas_de_escopo(b1):
         "listar_atividades": [{}, {"periodo": "ultimo_ano"}],
         "ver_atividade": [{"atividade_id": b1.id}],
         "listar_checkins": [{}, {"periodo": "ultimo_ano"}],
+        # as ferramentas de métricas (#594) têm o escopo provado em `test_ferramentas_metricas.py`; aqui só entram para o teste de cobertura
+        "ler_serie": [{"serie_id": "corrida.pace.leve"}],
+        "comparar_periodos": [{"serie_id": "corrida.pace.leve"}],
+        "ler_carga_forma": [{}],
+        "ler_linha_base": [{"modalidade": "corrida", "tipo_treino": "leve"}],
     }
 
 
