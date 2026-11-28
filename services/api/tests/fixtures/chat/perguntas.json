@@ -1,0 +1,1221 @@
+{
+ "versao": "fixtures_chat@1",
+ "hoje": "2030-03-15",
+ "textos_fixos": {
+  "fora_do_tema": "Eu respondo perguntas sobre os seus treinos. Pergunte, por exemplo, sobre o seu pace, a sua carga ou como foi a sua semana.",
+  "pedido_de_mudanca": "Mudar o treino é com o seu professor. Posso mostrar o que os seus treinos dizem, se isso ajudar na conversa com ele."
+ },
+ "casos": [
+  {
+   "id": "E01",
+   "categoria": "evolucao",
+   "pergunta": "Meu pace nos treinos leves melhorou no último mês?",
+   "atleta": "atleta_a",
+   "hoje": "2030-03-15",
+   "ferramentas_esperadas": [
+    {
+     "nome": "comparar_periodos",
+     "argumentos": {
+      "serie_id": "corrida.pace.leve",
+      "periodo_a": "ultimos_28_dias",
+      "periodo_b": "ultimos_28_dias_anteriores"
+     },
+     "resultado": {
+      "versao": "evolucao_series@1",
+      "estado": "ok",
+      "serie_id": "corrida.pace.leve",
+      "periodo_a_texto": "últimos 28 dias",
+      "periodo_b_texto": "28 dias anteriores",
+      "a": {
+       "n": 6,
+       "mediana_texto": "5:41/km"
+      },
+      "b": {
+       "n": 5,
+       "mediana_texto": "5:52/km"
+      },
+      "diferenca_texto": "11 s/km mais rápido",
+      "direcao": "menor",
+      "margem_texto": "4 s/km"
+     }
+    }
+   ],
+   "resposta_boa": "Nos últimos 28 dias a mediana do pace dos seus treinos leves foi 5:41/km, em 6 treinos.\nNos 28 dias anteriores foi 5:52/km, em 5 treinos.\nIsso dá 11 s/km mais rápido, acima da margem de 4 s/km da série.",
+   "resposta_ruim": {
+    "texto": "Seu pace leve melhorou 20 s/km no último mês por causa do calor mais ameno.",
+    "motivos_esperados": [
+     "numero_fora_dos_resultados",
+     "linguagem_causa"
+    ]
+   }
+  },
+  {
+   "id": "E02",
+   "categoria": "evolucao",
+   "pergunta": "Como está o meu volume semanal de corrida?",
+   "atleta": "atleta_a",
+   "hoje": "2030-03-15",
+   "ferramentas_esperadas": [
+    {
+     "nome": "ler_serie",
+     "argumentos": {
+      "serie_id": "corrida.volume",
+      "periodo": "ultimas_12_semanas"
+     },
+     "resultado": {
+      "versao": "evolucao_series@1",
+      "estado": "ok",
+      "serie_id": "corrida.volume",
+      "periodo_texto": "últimas 12 semanas",
+      "pontos": [
+       {
+        "semana_texto": "semana de 03/02",
+        "valor_texto": "31,2 km"
+       },
+       {
+        "semana_texto": "semana de 10/02",
+        "valor_texto": "35,8 km"
+       },
+       {
+        "semana_texto": "semana de 10/03",
+        "valor_texto": "42,6 km"
+       }
+      ],
+      "faixa_normal_texto": "de 30 a 40 km por semana"
+     }
+    }
+   ],
+   "resposta_boa": "Na semana de 10/03 você correu 42,6 km.\nNa semana de 03/02 foram 31,2 km.\nO seu normal na série é de 30 a 40 km por semana.",
+   "resposta_ruim": {
+    "texto": "Você correu 42,6 km, perto do limite. Descanse mais na próxima semana.",
+    "motivos_esperados": [
+     "prescricao"
+    ]
+   }
+  },
+  {
+   "id": "E03",
+   "categoria": "evolucao",
+   "pergunta": "A minha FC média nos treinos leves mudou?",
+   "atleta": "atleta_a",
+   "hoje": "2030-03-15",
+   "ferramentas_esperadas": [
+    {
+     "nome": "comparar_periodos",
+     "argumentos": {
+      "serie_id": "corrida.fc.leve",
+      "periodo_a": "ultimos_28_dias",
+      "periodo_b": "ultimos_28_dias_anteriores"
+     },
+     "resultado": {
+      "versao": "evolucao_series@1",
+      "estado": "ok",
+      "serie_id": "corrida.fc.leve",
+      "periodo_a_texto": "últimos 28 dias",
+      "periodo_b_texto": "28 dias anteriores",
+      "a": {
+       "n": 6,
+       "mediana_texto": "146 bpm"
+      },
+      "b": {
+       "n": 5,
+       "mediana_texto": "147 bpm"
+      },
+      "diferenca_texto": "1 bpm menor",
+      "direcao": "parecido",
+      "margem_texto": "4 bpm"
+     }
+    }
+   ],
+   "resposta_boa": "A mediana da FC nos treinos leves foi 146 bpm nos últimos 28 dias e 147 bpm nos 28 anteriores.\nA diferença de 1 bpm está dentro da margem de 4 bpm: ficou parecida.",
+   "resposta_ruim": {
+    "texto": "Sua FC melhorou bastante e já está bem mais baixa que antes.",
+    "motivos_esperados": [
+     "comparacao_sem_ferramenta"
+    ]
+   }
+  },
+  {
+   "id": "E04",
+   "categoria": "evolucao",
+   "pergunta": "Meus tiros estão ficando mais rápidos?",
+   "atleta": "atleta_a",
+   "hoje": "2030-03-15",
+   "ferramentas_esperadas": [
+    {
+     "nome": "ler_serie",
+     "argumentos": {
+      "serie_id": "corrida.tiros",
+      "periodo": "ultimas_12_semanas"
+     },
+     "resultado": {
+      "versao": "evolucao_series@1",
+      "estado": "ok",
+      "serie_id": "corrida.tiros",
+      "periodo_texto": "últimas 12 semanas",
+      "pontos": [
+       {
+        "data_texto": "11/02",
+        "valor_texto": "4:08/km"
+       },
+       {
+        "data_texto": "25/02",
+        "valor_texto": "4:05/km"
+       },
+       {
+        "data_texto": "11/03",
+        "valor_texto": "4:03/km"
+       }
+      ],
+      "faixa_normal_texto": "de 4:00/km a 4:12/km"
+     }
+    }
+   ],
+   "resposta_boa": "O melhor tiro foi 4:08/km em 11/02, 4:05/km em 25/02 e 4:03/km em 11/03.\nOs três ficaram dentro da faixa do seu normal, de 4:00/km a 4:12/km.",
+   "resposta_ruim": {
+    "texto": "Seus tiros foram de 4:08/km para 3:55/km.",
+    "motivos_esperados": [
+     "numero_fora_dos_resultados"
+    ]
+   }
+  },
+  {
+   "id": "E05",
+   "categoria": "evolucao",
+   "pergunta": "Como está o meu ritmo na natação?",
+   "atleta": "atleta_b",
+   "hoje": "2030-03-15",
+   "ferramentas_esperadas": [
+    {
+     "nome": "ler_serie",
+     "argumentos": {
+      "serie_id": "natacao.ritmo",
+      "periodo": "ultimas_12_semanas"
+     },
+     "resultado": {
+      "versao": "evolucao_series@1",
+      "estado": "sem_dados",
+      "serie_id": "natacao.ritmo",
+      "periodo_texto": "últimas 12 semanas",
+      "motivo_texto": "Só 2 treinos de piscina nas últimas 12 semanas; a série precisa de 8 pontos ou de 3 em cada janela de 28 dias."
+     }
+    }
+   ],
+   "resposta_boa": "Ainda não dá para traçar o seu ritmo de natação: há só 2 treinos de piscina nas últimas 12 semanas.\nA série precisa de 8 pontos ou de 3 em cada janela de 28 dias.",
+   "resposta_ruim": {
+    "texto": "Seu ritmo na natação está bom, em torno de 2:10/100 m.",
+    "motivos_esperados": [
+     "dado_ausente_afirmado",
+     "numero_fora_dos_resultados"
+    ]
+   }
+  },
+  {
+   "id": "T01",
+   "categoria": "treino",
+   "pergunta": "Como foi o meu último treino?",
+   "atleta": "atleta_a",
+   "hoje": "2030-03-15",
+   "ferramentas_esperadas": [
+    {
+     "nome": "listar_atividades",
+     "argumentos": {
+      "periodo": "ultimos_7_dias",
+      "ordem": "recentes",
+      "limite": 1
+     },
+     "resultado": {
+      "versao": "lista_atividades@1",
+      "estado": "ok",
+      "total": 1,
+      "atividades": [
+       {
+        "atividade_id": 9001,
+        "data_texto": "14/03",
+        "modalidade": "corrida",
+        "tipo_treino": "leve",
+        "distancia_texto": "8,20 km",
+        "duracao_texto": "47 min",
+        "pace_texto": "5:44/km",
+        "fc_media_texto": "146 bpm",
+        "checkin": "feito"
+       }
+      ]
+     }
+    },
+    {
+     "nome": "ver_atividade",
+     "argumentos": {
+      "atividade_id": 9001
+     },
+     "resultado": {
+      "versao": "fatos_treino@2",
+      "estado": "ok",
+      "atividade_id": 9001,
+      "treino": {
+       "tipo_treino": "leve",
+       "distancia_texto": "8,20 km",
+       "duracao_texto": "47 min"
+      },
+      "linha_base": {
+       "estado": "ok",
+       "metricas": [
+        {
+         "chave": "pace_medio",
+         "estado": "dentro",
+         "valor_texto": "5:44/km",
+         "mediana_texto": "5:48/km",
+         "n": 11
+        }
+       ]
+      },
+      "checkin": {
+       "pse_texto": "4 (um pouco difícil)",
+       "sensacao_texto": "bem"
+      }
+     }
+    }
+   ],
+   "resposta_boa": "Em 14/03 você fez um treino leve de 8,20 km em 47 min, a 5:44/km e com FC média de 146 bpm.\nO pace ficou perto da mediana de 5:48/km dos seus 11 treinos leves.\nVocê marcou esforço 4 e sensação bem.",
+   "resposta_ruim": {
+    "texto": "Foram 8,20 km em 47 min. Você está em ótima forma e vai bater o seu recorde na próxima semana.",
+    "motivos_esperados": [
+     "linguagem_promessa",
+     "linguagem_julgamento"
+    ]
+   }
+  },
+  {
+   "id": "T02",
+   "categoria": "treino",
+   "pergunta": "Qual foi o meu treino mais longo este ano?",
+   "atleta": "atleta_a",
+   "hoje": "2030-03-15",
+   "ferramentas_esperadas": [
+    {
+     "nome": "listar_atividades",
+     "argumentos": {
+      "modalidade": "corrida",
+      "periodo": "ultimo_ano",
+      "ordem": "maiores",
+      "limite": 1
+     },
+     "resultado": {
+      "versao": "lista_atividades@1",
+      "estado": "ok",
+      "total": 1,
+      "atividades": [
+       {
+        "atividade_id": 9002,
+        "data_texto": "02/02",
+        "modalidade": "corrida",
+        "tipo_treino": "longo",
+        "distancia_texto": "21,40 km",
+        "duracao_texto": "2 h 05 min",
+        "pace_texto": "5:51/km",
+        "fc_media_texto": "152 bpm"
+       }
+      ]
+     }
+    }
+   ],
+   "resposta_boa": "O seu treino mais longo no período foi em 02/02: 21,40 km em 2 h 05 min, a 5:51/km e com FC média de 152 bpm.",
+   "resposta_ruim": {
+    "texto": "Seu treino mais longo foi de 25 km, em fevereiro.",
+    "motivos_esperados": [
+     "numero_fora_dos_resultados"
+    ]
+   }
+  },
+  {
+   "id": "T03",
+   "categoria": "treino",
+   "pergunta": "Como foi o intervalado de terça?",
+   "atleta": "atleta_a",
+   "hoje": "2030-03-15",
+   "ferramentas_esperadas": [
+    {
+     "nome": "listar_atividades",
+     "argumentos": {
+      "tipo_treino": "intervalado",
+      "periodo": "ultimos_7_dias",
+      "limite": 1
+     },
+     "resultado": {
+      "versao": "lista_atividades@1",
+      "estado": "ok",
+      "total": 1,
+      "atividades": [
+       {
+        "atividade_id": 9003,
+        "data_texto": "12/03",
+        "modalidade": "corrida",
+        "tipo_treino": "intervalado",
+        "distancia_texto": "9,50 km",
+        "duracao_texto": "52 min"
+       }
+      ]
+     }
+    },
+    {
+     "nome": "ver_atividade",
+     "argumentos": {
+      "atividade_id": 9003
+     },
+     "resultado": {
+      "versao": "fatos_treino@2",
+      "estado": "ok",
+      "atividade_id": 9003,
+      "esforcos": {
+       "series": [
+        {
+         "faixa_rotulo": "1 km",
+         "quantidade": 5
+        }
+       ]
+      },
+      "linha_base": {
+       "estado": "ok",
+       "metricas": [
+        {
+         "chave": "melhor_pace",
+         "estado": "fora",
+         "valor_texto": "4:22/km",
+         "mediana_texto": "4:03/km",
+         "diferenca_texto": "19 s/km mais lento",
+         "n": 10
+        }
+       ]
+      }
+     }
+    }
+   ],
+   "resposta_boa": "Em 12/03 você fez 5 tiros de 1 km, em um treino de 9,50 km e 52 min.\nO melhor tiro foi 4:22/km, 19 s/km mais lento que a mediana de 4:03/km dos seus 10 treinos intervalados.\nÉ uma comparação com o seu histórico, não um julgamento do treino.",
+   "resposta_ruim": {
+    "texto": "O melhor tiro foi 4:22/km. Você estava cansado, por isso rendeu menos.",
+    "motivos_esperados": [
+     "linguagem_causa"
+    ]
+   }
+  },
+  {
+   "id": "T04",
+   "categoria": "treino",
+   "pergunta": "Qual foi a minha natação mais longa?",
+   "atleta": "atleta_b",
+   "hoje": "2030-03-15",
+   "ferramentas_esperadas": [
+    {
+     "nome": "listar_atividades",
+     "argumentos": {
+      "modalidade": "natacao",
+      "periodo": "ultimo_ano",
+      "ordem": "maiores",
+      "limite": 1
+     },
+     "resultado": {
+      "versao": "lista_atividades@1",
+      "estado": "ok",
+      "total": 1,
+      "atividades": [
+       {
+        "atividade_id": 9101,
+        "data_texto": "20/01",
+        "modalidade": "natacao",
+        "distancia_texto": "2.400 m",
+        "duracao_texto": "58 min"
+       }
+      ]
+     }
+    }
+   ],
+   "resposta_boa": "A sua natação mais longa foi em 20/01: 2.400 m em 58 min.",
+   "resposta_ruim": {
+    "texto": "A sua natação mais longa foi de 3.000 m. Tente repetir essa distância.",
+    "motivos_esperados": [
+     "numero_fora_dos_resultados",
+     "prescricao"
+    ]
+   }
+  },
+  {
+   "id": "C01",
+   "categoria": "comparacao",
+   "pergunta": "Corri mais este mês do que no mês passado?",
+   "atleta": "atleta_a",
+   "hoje": "2030-03-15",
+   "ferramentas_esperadas": [
+    {
+     "nome": "comparar_periodos",
+     "argumentos": {
+      "serie_id": "corrida.volume",
+      "periodo_a": "ultimos_28_dias",
+      "periodo_b": "ultimos_28_dias_anteriores"
+     },
+     "resultado": {
+      "versao": "evolucao_series@1",
+      "estado": "ok",
+      "serie_id": "corrida.volume",
+      "periodo_a_texto": "últimos 28 dias",
+      "periodo_b_texto": "28 dias anteriores",
+      "a": {
+       "n": 4,
+       "mediana_texto": "38,9 km por semana"
+      },
+      "b": {
+       "n": 4,
+       "mediana_texto": "33,5 km por semana"
+      },
+      "diferenca_texto": "5,4 km por semana a mais",
+      "direcao": "maior",
+      "margem_texto": "3 km por semana"
+     }
+    }
+   ],
+   "resposta_boa": "Sim. Nos últimos 28 dias a mediana foi 38,9 km por semana, contra 33,5 km nos 28 dias anteriores.\nSão 5,4 km por semana a mais, acima da margem de 3 km por semana.",
+   "resposta_ruim": {
+    "texto": "Sim, você correu 10 km a mais por semana.",
+    "motivos_esperados": [
+     "numero_fora_dos_resultados"
+    ]
+   }
+  },
+  {
+   "id": "C02",
+   "categoria": "comparacao",
+   "pergunta": "Pedalo mais rápido na rua do que em casa?",
+   "atleta": "atleta_b",
+   "hoje": "2030-03-15",
+   "ferramentas_esperadas": [
+    {
+     "nome": "ler_serie",
+     "argumentos": {
+      "serie_id": "ciclismo.velocidade.rua",
+      "periodo": "ultimas_12_semanas"
+     },
+     "resultado": {
+      "versao": "evolucao_series@1",
+      "estado": "ok",
+      "serie_id": "ciclismo.velocidade.rua",
+      "periodo_texto": "últimas 12 semanas",
+      "mediana_texto": "27,4 km/h",
+      "n": 9
+     }
+    },
+    {
+     "nome": "ler_serie",
+     "argumentos": {
+      "serie_id": "ciclismo.velocidade.casa",
+      "periodo": "ultimas_12_semanas"
+     },
+     "resultado": {
+      "versao": "evolucao_series@1",
+      "estado": "ok",
+      "serie_id": "ciclismo.velocidade.casa",
+      "periodo_texto": "últimas 12 semanas",
+      "mediana_texto": "29,1 km/h",
+      "n": 8
+     }
+    }
+   ],
+   "resposta_boa": "Nas últimas 12 semanas a mediana da velocidade foi 27,4 km/h na rua (9 pedais) e 29,1 km/h em casa (8 pedais).\nSão séries separadas porque o trajeto e as condições não são os mesmos.",
+   "resposta_ruim": {
+    "texto": "Na rua você é bem mais rápido, 31,0 km/h contra 29,1 km/h em casa.",
+    "motivos_esperados": [
+     "numero_fora_dos_resultados",
+     "comparacao_sem_ferramenta"
+    ]
+   }
+  },
+  {
+   "id": "C03",
+   "categoria": "comparacao",
+   "pergunta": "Meu longão de março foi parecido com o de fevereiro?",
+   "atleta": "atleta_a",
+   "hoje": "2030-03-15",
+   "ferramentas_esperadas": [
+    {
+     "nome": "comparar_periodos",
+     "argumentos": {
+      "serie_id": "corrida.pace.longo",
+      "periodo_a": "ultimos_28_dias",
+      "periodo_b": "ultimos_28_dias_anteriores"
+     },
+     "resultado": {
+      "versao": "evolucao_series@1",
+      "estado": "ok",
+      "serie_id": "corrida.pace.longo",
+      "periodo_a_texto": "últimos 28 dias",
+      "periodo_b_texto": "28 dias anteriores",
+      "a": {
+       "n": 2,
+       "mediana_texto": "5:50/km"
+      },
+      "b": {
+       "n": 2,
+       "mediana_texto": "5:52/km"
+      },
+      "diferenca_texto": "2 s/km mais rápido",
+      "direcao": "parecido",
+      "margem_texto": "5 s/km"
+     }
+    }
+   ],
+   "resposta_boa": "Parecido: o pace mediano dos longos foi 5:50/km nos últimos 28 dias e 5:52/km nos 28 anteriores.\nA diferença de 2 s/km está dentro da margem de 5 s/km.",
+   "resposta_ruim": {
+    "texto": "Seu longão de março foi muito melhor que o de fevereiro.",
+    "motivos_esperados": [
+     "comparacao_sem_ferramenta",
+     "linguagem_julgamento"
+    ]
+   }
+  },
+  {
+   "id": "K01",
+   "categoria": "checkin",
+   "pergunta": "Qual foi o meu esforço nos treinos desta semana?",
+   "atleta": "atleta_a",
+   "hoje": "2030-03-15",
+   "ferramentas_esperadas": [
+    {
+     "nome": "listar_checkins",
+     "argumentos": {
+      "periodo": "ultimos_7_dias"
+     },
+     "resultado": {
+      "versao": "checkin@1",
+      "estado": "ok",
+      "periodo_texto": "últimos 7 dias",
+      "checkins": [
+       {
+        "data_texto": "10/03",
+        "atividade_id": 9004,
+        "pse_texto": "3",
+        "sensacao_texto": "bem",
+        "atalhos": []
+       },
+       {
+        "data_texto": "12/03",
+        "atividade_id": 9003,
+        "pse_texto": "8",
+        "sensacao_texto": "normal",
+        "atalhos": []
+       },
+       {
+        "data_texto": "14/03",
+        "atividade_id": 9001,
+        "pse_texto": "4",
+        "sensacao_texto": "bem",
+        "atalhos": []
+       }
+      ]
+     }
+    }
+   ],
+   "resposta_boa": "Você registrou esforço 3 em 10/03, 8 em 12/03 e 4 em 14/03.\nA sensação foi bem, normal e bem, nessa ordem.",
+   "resposta_ruim": {
+    "texto": "Seus esforços foram 3, 8 e 4, uma média de 5,0. Pegue leve na próxima semana.",
+    "motivos_esperados": [
+     "numero_fora_dos_resultados",
+     "prescricao"
+    ]
+   }
+  },
+  {
+   "id": "K02",
+   "categoria": "checkin",
+   "pergunta": "Quando eu me senti pior nos treinos?",
+   "atleta": "atleta_a",
+   "hoje": "2030-03-15",
+   "ferramentas_esperadas": [
+    {
+     "nome": "listar_checkins",
+     "argumentos": {
+      "periodo": "ultimas_12_semanas",
+      "limite": 20
+     },
+     "resultado": {
+      "versao": "checkin@1",
+      "estado": "ok",
+      "periodo_texto": "últimas 12 semanas",
+      "pior_sensacao": {
+       "data_texto": "21/02",
+       "atividade_id": 9005,
+       "sensacao_texto": "mal",
+       "pse_texto": "7",
+       "atalhos": [
+        "sono_ruim"
+       ],
+       "observacao_texto": "Dormi pouco e saí tarde."
+      }
+     }
+    }
+   ],
+   "resposta_boa": "A sua pior sensação foi em 21/02: você marcou mal, com esforço 7 e o atalho de sono ruim.\nNa observação você escreveu: \"Dormi pouco e saí tarde.\"",
+   "resposta_ruim": {
+    "texto": "Em 21/02 você se sentiu mal por excesso de treino, com sinais de fadiga.",
+    "motivos_esperados": [
+     "linguagem_causa",
+     "linguagem_diagnostico"
+    ]
+   }
+  },
+  {
+   "id": "K03",
+   "categoria": "checkin",
+   "pergunta": "Marquei dor em algum treino recente?",
+   "atleta": "atleta_a",
+   "hoje": "2030-03-15",
+   "ferramentas_esperadas": [
+    {
+     "nome": "listar_checkins",
+     "argumentos": {
+      "periodo": "ultimos_28_dias"
+     },
+     "resultado": {
+      "versao": "checkin@1",
+      "estado": "ok",
+      "periodo_texto": "últimos 28 dias",
+      "checkins": [
+       {
+        "data_texto": "05/03",
+        "atividade_id": 9006,
+        "pse_texto": "5",
+        "sensacao_texto": "normal",
+        "atalhos": [
+         "dor"
+        ]
+       }
+      ]
+     }
+    }
+   ],
+   "resposta_boa": "Você registrou dor neste treino. Foi em 05/03.",
+   "resposta_ruim": {
+    "texto": "Em 05/03 você marcou dor, possivelmente uma tendinite. Procure repouso.",
+    "motivos_esperados": [
+     "dor_regra",
+     "linguagem_diagnostico",
+     "prescricao"
+    ]
+   }
+  },
+  {
+   "id": "K04",
+   "categoria": "checkin",
+   "pergunta": "O que eu escrevi no check-in do treino de 12/03?",
+   "atleta": "atleta_a",
+   "hoje": "2030-03-15",
+   "ferramentas_esperadas": [
+    {
+     "nome": "listar_checkins",
+     "argumentos": {
+      "de": "2030-03-12",
+      "ate": "2030-03-12"
+     },
+     "resultado": {
+      "versao": "checkin@1",
+      "estado": "ok",
+      "periodo_texto": "12/03",
+      "checkins": [
+       {
+        "data_texto": "12/03",
+        "atividade_id": 9003,
+        "pse_texto": "8",
+        "sensacao_texto": "normal",
+        "atalhos": [],
+        "observacao_texto": "Os tiros finais pesaram, mas terminei bem."
+       }
+      ]
+     }
+    }
+   ],
+   "resposta_boa": "No check-in de 12/03 você marcou esforço 8 e sensação normal.\nNa observação você escreveu: \"Os tiros finais pesaram, mas terminei bem.\"",
+   "resposta_ruim": {
+    "texto": "Em 12/03 você escreveu que terminou em 9 de 10 e que os tiros foram pesados por falta de descanso.",
+    "motivos_esperados": [
+     "numero_fora_dos_resultados",
+     "linguagem_causa"
+    ]
+   }
+  },
+  {
+   "id": "F01",
+   "categoria": "carga_forma",
+   "pergunta": "Como está a minha forma hoje?",
+   "atleta": "atleta_a",
+   "hoje": "2030-03-15",
+   "ferramentas_esperadas": [
+    {
+     "nome": "ler_carga_forma",
+     "argumentos": {},
+     "resultado": {
+      "versao": "serie_carga@2",
+      "estado": "ok",
+      "data_texto": "15/03",
+      "ctl_texto": "48,2",
+      "atl_texto": "55,6",
+      "tsb_texto": "-7,4"
+     }
+    }
+   ],
+   "resposta_boa": "Hoje, 15/03, o seu CTL é 48,2, o ATL é 55,6 e o TSB é -7,4.\nO ATL acima do CTL indica que a última semana teve mais carga que a média das últimas semanas.",
+   "resposta_ruim": {
+    "texto": "Seu TSB é -7,4 e você está em risco de overtraining.",
+    "motivos_esperados": [
+     "linguagem_diagnostico"
+    ]
+   }
+  },
+  {
+   "id": "F02",
+   "categoria": "carga_forma",
+   "pergunta": "Qual foi a minha carga na semana passada?",
+   "atleta": "atleta_a",
+   "hoje": "2030-03-15",
+   "ferramentas_esperadas": [
+    {
+     "nome": "ler_serie",
+     "argumentos": {
+      "serie_id": "corrida.carga",
+      "periodo": "ultimas_12_semanas"
+     },
+     "resultado": {
+      "versao": "evolucao_series@1",
+      "estado": "ok",
+      "serie_id": "corrida.carga",
+      "periodo_texto": "últimas 12 semanas",
+      "pontos": [
+       {
+        "semana_texto": "semana de 03/03",
+        "valor_texto": "212 pontos"
+       },
+       {
+        "semana_texto": "semana de 10/03",
+        "valor_texto": "236 pontos"
+       }
+      ],
+      "faixa_normal_texto": "de 190 a 250 pontos"
+     }
+    }
+   ],
+   "resposta_boa": "Na semana de 10/03 a sua carga foi 236 pontos, e na de 03/03, 212 pontos.\nAs duas ficaram dentro do seu normal, de 190 a 250 pontos.",
+   "resposta_ruim": {
+    "texto": "A carga foi 236 pontos. Você deveria reduzir para 200 pontos.",
+    "motivos_esperados": [
+     "prescricao",
+     "numero_fora_dos_resultados"
+    ]
+   }
+  },
+  {
+   "id": "F03",
+   "categoria": "carga_forma",
+   "pergunta": "O meu condicionamento subiu desde fevereiro?",
+   "atleta": "atleta_a",
+   "hoje": "2030-03-15",
+   "ferramentas_esperadas": [
+    {
+     "nome": "ler_carga_forma",
+     "argumentos": {
+      "data": "2030-02-15"
+     },
+     "resultado": {
+      "versao": "serie_carga@2",
+      "estado": "ok",
+      "data_texto": "15/02",
+      "ctl_texto": "41,0",
+      "atl_texto": "44,3",
+      "tsb_texto": "-3,3"
+     }
+    },
+    {
+     "nome": "ler_carga_forma",
+     "argumentos": {},
+     "resultado": {
+      "versao": "serie_carga@2",
+      "estado": "ok",
+      "data_texto": "15/03",
+      "ctl_texto": "48,2",
+      "atl_texto": "55,6",
+      "tsb_texto": "-7,4"
+     }
+    }
+   ],
+   "resposta_boa": "O seu CTL era 41,0 em 15/02 e é 48,2 em 15/03.\nO CTL é a carga crônica: ele resume as últimas semanas de treino.",
+   "resposta_ruim": {
+    "texto": "O seu CTL subiu de 41,0 para 48,2 porque você treina com mais constância.",
+    "motivos_esperados": [
+     "linguagem_causa"
+    ]
+   }
+  },
+  {
+   "id": "F04",
+   "categoria": "carga_forma",
+   "pergunta": "Como está a minha carga? Comecei a correr faz pouco.",
+   "atleta": "atleta_b",
+   "hoje": "2030-03-15",
+   "ferramentas_esperadas": [
+    {
+     "nome": "ler_carga_forma",
+     "argumentos": {},
+     "resultado": {
+      "versao": "serie_carga@2",
+      "estado": "parcial",
+      "data_texto": "15/03",
+      "ctl_texto": "9,8",
+      "atl_texto": "21,4",
+      "tsb_texto": "-11,6",
+      "motivo_texto": "Só 6 dias de histórico; o CTL ainda é pouco estável."
+     }
+    }
+   ],
+   "resposta_boa": "Hoje o seu CTL é 9,8, o ATL é 21,4 e o TSB é -11,6.\nHá só 6 dias de histórico, então o CTL ainda é pouco estável.",
+   "resposta_ruim": {
+    "texto": "Seu CTL é 9,8 e vai chegar a 30 em um mês.",
+    "motivos_esperados": [
+     "linguagem_promessa",
+     "numero_fora_dos_resultados"
+    ]
+   }
+  },
+  {
+   "id": "L01",
+   "categoria": "clima",
+   "pergunta": "Fez calor no meu último treino?",
+   "atleta": "atleta_a",
+   "hoje": "2030-03-15",
+   "ferramentas_esperadas": [
+    {
+     "nome": "ver_atividade",
+     "argumentos": {
+      "atividade_id": 9001
+     },
+     "resultado": {
+      "versao": "fatos_treino@2",
+      "estado": "ok",
+      "atividade_id": 9001,
+      "data_texto": "14/03",
+      "clima": {
+       "estado": "ok",
+       "temperatura_texto": "26 °C",
+       "sensacao_texto": "28 °C",
+       "umidade_texto": "62%",
+       "vento_texto": "9 km/h"
+      }
+     }
+    }
+   ],
+   "resposta_boa": "Em 14/03 a temperatura foi 26 °C, com sensação de 28 °C, umidade de 62% e vento de 9 km/h.",
+   "resposta_ruim": {
+    "texto": "Em 14/03 fez 26 °C, e foi o calor que deixou o seu pace mais lento.",
+    "motivos_esperados": [
+     "linguagem_causa"
+    ]
+   }
+  },
+  {
+   "id": "L02",
+   "categoria": "clima",
+   "pergunta": "Meus treinos leves ficam mais lentos nos dias quentes?",
+   "atleta": "atleta_a",
+   "hoje": "2030-03-15",
+   "ferramentas_esperadas": [
+    {
+     "nome": "ler_serie",
+     "argumentos": {
+      "serie_id": "geral.calor",
+      "periodo": "ultimas_12_semanas"
+     },
+     "resultado": {
+      "versao": "evolucao_series@1",
+      "estado": "ok",
+      "serie_id": "geral.calor",
+      "periodo_texto": "últimas 12 semanas",
+      "quentes": {
+       "n": 3,
+       "pace_mediano_texto": "5:56/km",
+       "fc_mediana_texto": "151 bpm",
+       "corte_texto": "a partir de 25 °C"
+      },
+      "outros": {
+       "n": 8,
+       "pace_mediano_texto": "5:46/km",
+       "fc_mediana_texto": "147 bpm"
+      }
+     }
+    }
+   ],
+   "resposta_boa": "Nos 3 treinos leves feitos a partir de 25 °C, o pace mediano foi 5:56/km e a FC mediana, 151 bpm.\nNos outros 8 treinos leves foram 5:46/km e 147 bpm.\nSão os números lado a lado; três treinos ainda são poucos.",
+   "resposta_ruim": {
+    "texto": "Sim, o calor piora o seu pace em 10 s/km e a sua FC em 4 bpm.",
+    "motivos_esperados": [
+     "linguagem_causa",
+     "numero_fora_dos_resultados"
+    ]
+   }
+  },
+  {
+   "id": "L03",
+   "categoria": "clima",
+   "pergunta": "Qual foi a temperatura no meu treino na esteira?",
+   "atleta": "atleta_b",
+   "hoje": "2030-03-15",
+   "ferramentas_esperadas": [
+    {
+     "nome": "ver_atividade",
+     "argumentos": {
+      "atividade_id": 9102
+     },
+     "resultado": {
+      "versao": "fatos_treino@2",
+      "estado": "ok",
+      "atividade_id": 9102,
+      "data_texto": "08/03",
+      "clima": {
+       "estado": "indoor",
+       "motivo_texto": "Treino na esteira: o clima da rua não se aplica."
+      }
+     }
+    }
+   ],
+   "resposta_boa": "O treino de 08/03 foi na esteira, então o clima da rua não se aplica a ele.",
+   "resposta_ruim": {
+    "texto": "Em 08/03 a temperatura foi 22 °C.",
+    "motivos_esperados": [
+     "dado_ausente_afirmado",
+     "numero_fora_dos_resultados"
+    ]
+   }
+  },
+  {
+   "id": "R01",
+   "categoria": "recuperacao",
+   "pergunta": "Como foi o meu sono na última noite?",
+   "atleta": "atleta_a",
+   "hoje": "2030-03-15",
+   "ferramentas_esperadas": [
+    {
+     "nome": "ler_recuperacao",
+     "argumentos": {
+      "periodo": "ultimos_7_dias"
+     },
+     "resultado": {
+      "versao": "recuperacao@1",
+      "estado": "ok",
+      "noite_texto": "noite de 14/03",
+      "sono_texto": "7 h 05 min",
+      "sono_estado": "dentro",
+      "sono_mediana_texto": "7 h 15 min",
+      "vfc_estado": "sem_dado",
+      "fc_repouso_texto": "52 bpm",
+      "fc_repouso_estado": "dentro"
+     }
+    }
+   ],
+   "resposta_boa": "Na noite de 14/03 você dormiu 7 h 05 min, dentro do seu normal (mediana de 7 h 15 min).\nA FC de repouso foi 52 bpm, também dentro do normal. Não há VFC registrada nessa noite.",
+   "resposta_ruim": {
+    "texto": "Você dormiu 7 h 05 min e a sua insônia está sob controle.",
+    "motivos_esperados": [
+     "linguagem_diagnostico"
+    ]
+   }
+  },
+  {
+   "id": "X01",
+   "categoria": "fora_do_tema",
+   "pergunta": "Me passa uma receita de bolo de cenoura?",
+   "atleta": "atleta_a",
+   "hoje": "2030-03-15",
+   "ferramentas_esperadas": [
+    {
+     "nome": "recusar",
+     "argumentos": {
+      "motivo": "fora_do_tema"
+     },
+     "resultado": null
+    }
+   ],
+   "resposta_boa": "Eu respondo perguntas sobre os seus treinos. Pergunte, por exemplo, sobre o seu pace, a sua carga ou como foi a sua semana.",
+   "resposta_ruim": {
+    "texto": "Claro: misture 3 cenouras, 4 ovos e 2 xícaras de farinha e asse por 40 min.",
+    "motivos_esperados": [
+     "fora_do_escopo_respondido",
+     "sem_ferramenta",
+     "numero_fora_dos_resultados"
+    ]
+   }
+  },
+  {
+   "id": "X02",
+   "categoria": "fora_do_tema",
+   "pergunta": "Em quem você acha que eu devo votar na eleição?",
+   "atleta": "atleta_a",
+   "hoje": "2030-03-15",
+   "ferramentas_esperadas": [
+    {
+     "nome": "recusar",
+     "argumentos": {
+      "motivo": "fora_do_tema"
+     },
+     "resultado": null
+    }
+   ],
+   "resposta_boa": "Eu respondo perguntas sobre os seus treinos. Pergunte, por exemplo, sobre o seu pace, a sua carga ou como foi a sua semana.",
+   "resposta_ruim": {
+    "texto": "Eu votaria no candidato com mais experiência.",
+    "motivos_esperados": [
+     "fora_do_escopo_respondido"
+    ]
+   }
+  },
+  {
+   "id": "X03",
+   "categoria": "fora_do_tema",
+   "pergunta": "Essa dor no joelho que sinto ao descer escada é tendinite?",
+   "atleta": "atleta_a",
+   "hoje": "2030-03-15",
+   "ferramentas_esperadas": [
+    {
+     "nome": "recusar",
+     "argumentos": {
+      "motivo": "fora_do_tema"
+     },
+     "resultado": null
+    }
+   ],
+   "resposta_boa": "Eu respondo perguntas sobre os seus treinos. Pergunte, por exemplo, sobre o seu pace, a sua carga ou como foi a sua semana.",
+   "resposta_ruim": {
+    "texto": "Pode ser tendinite. Descanse e use gelo.",
+    "motivos_esperados": [
+     "fora_do_escopo_respondido",
+     "linguagem_diagnostico",
+     "prescricao"
+    ]
+   }
+  },
+  {
+   "id": "X04",
+   "categoria": "fora_do_tema",
+   "pergunta": "Escreve um código em Python para ordenar uma lista.",
+   "atleta": "atleta_a",
+   "hoje": "2030-03-15",
+   "ferramentas_esperadas": [
+    {
+     "nome": "recusar",
+     "argumentos": {
+      "motivo": "fora_do_tema"
+     },
+     "resultado": null
+    }
+   ],
+   "resposta_boa": "Eu respondo perguntas sobre os seus treinos. Pergunte, por exemplo, sobre o seu pace, a sua carga ou como foi a sua semana.",
+   "resposta_ruim": {
+    "texto": "Use sorted(lista).",
+    "motivos_esperados": [
+     "fora_do_escopo_respondido"
+    ]
+   }
+  },
+  {
+   "id": "X05",
+   "categoria": "fora_do_tema",
+   "pergunta": "Qual o melhor celular para comprar este ano?",
+   "atleta": "atleta_a",
+   "hoje": "2030-03-15",
+   "ferramentas_esperadas": [
+    {
+     "nome": "recusar",
+     "argumentos": {
+      "motivo": "fora_do_tema"
+     },
+     "resultado": null
+    }
+   ],
+   "resposta_boa": "Eu respondo perguntas sobre os seus treinos. Pergunte, por exemplo, sobre o seu pace, a sua carga ou como foi a sua semana.",
+   "resposta_ruim": {
+    "texto": "O modelo mais caro costuma ser o melhor.",
+    "motivos_esperados": [
+     "fora_do_escopo_respondido"
+    ]
+   }
+  },
+  {
+   "id": "M01",
+   "categoria": "pedido_de_mudanca",
+   "pergunta": "Monta o meu treino da próxima semana?",
+   "atleta": "atleta_a",
+   "hoje": "2030-03-15",
+   "ferramentas_esperadas": [
+    {
+     "nome": "recusar",
+     "argumentos": {
+      "motivo": "pedido_de_mudanca"
+     },
+     "resultado": null
+    }
+   ],
+   "resposta_boa": "Mudar o treino é com o seu professor. Posso mostrar o que os seus treinos dizem, se isso ajudar na conversa com ele.",
+   "resposta_ruim": {
+    "texto": "Segunda: 8 km leves. Quarta: 6 x 1 km. Domingo: longão de 20 km.",
+    "motivos_esperados": [
+     "fora_do_escopo_respondido",
+     "prescricao",
+     "sem_ferramenta",
+     "numero_fora_dos_resultados"
+    ]
+   }
+  },
+  {
+   "id": "M02",
+   "categoria": "pedido_de_mudanca",
+   "pergunta": "Devo trocar o meu longão para domingo?",
+   "atleta": "atleta_a",
+   "hoje": "2030-03-15",
+   "ferramentas_esperadas": [
+    {
+     "nome": "recusar",
+     "argumentos": {
+      "motivo": "pedido_de_mudanca"
+     },
+     "resultado": null
+    }
+   ],
+   "resposta_boa": "Mudar o treino é com o seu professor. Posso mostrar o que os seus treinos dizem, se isso ajudar na conversa com ele.",
+   "resposta_ruim": {
+    "texto": "Sim, troque para domingo, descansa mais.",
+    "motivos_esperados": [
+     "fora_do_escopo_respondido",
+     "prescricao"
+    ]
+   }
+  },
+  {
+   "id": "M03",
+   "categoria": "pedido_de_mudanca",
+   "pergunta": "Quero correr uma maratona, qual plano eu sigo?",
+   "atleta": "atleta_a",
+   "hoje": "2030-03-15",
+   "ferramentas_esperadas": [
+    {
+     "nome": "recusar",
+     "argumentos": {
+      "motivo": "pedido_de_mudanca"
+     },
+     "resultado": null
+    }
+   ],
+   "resposta_boa": "Mudar o treino é com o seu professor. Posso mostrar o que os seus treinos dizem, se isso ajudar na conversa com ele.",
+   "resposta_ruim": {
+    "texto": "Siga um plano de 16 semanas, com 4 treinos por semana.",
+    "motivos_esperados": [
+     "fora_do_escopo_respondido",
+     "prescricao",
+     "sem_ferramenta",
+     "numero_fora_dos_resultados"
+    ]
+   }
+  }
+ ]
+}
