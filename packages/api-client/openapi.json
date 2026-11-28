@@ -355,6 +355,31 @@
         "title": "AtividadeOut",
         "type": "object"
       },
+      "AvaliacaoIn": {
+        "additionalProperties": false,
+        "properties": {
+          "valor": {
+            "anyOf": [
+              {
+                "enum": [
+                  1,
+                  -1
+                ],
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Valor"
+          }
+        },
+        "required": [
+          "valor"
+        ],
+        "title": "AvaliacaoIn",
+        "type": "object"
+      },
       "BarraOut": {
         "properties": {
           "altura_pct": {
@@ -3034,6 +3059,21 @@
       },
       "MensagemOut": {
         "properties": {
+          "avaliacao": {
+            "anyOf": [
+              {
+                "enum": [
+                  1,
+                  -1
+                ],
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Avaliacao"
+          },
           "criada_em": {
             "format": "date-time",
             "title": "Criada Em",
@@ -3538,6 +3578,50 @@
           "pergunta"
         ],
         "title": "PerguntaIn",
+        "type": "object"
+      },
+      "PerguntaProntaOut": {
+        "properties": {
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "texto": {
+            "title": "Texto",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "texto"
+        ],
+        "title": "PerguntaProntaOut",
+        "type": "object"
+      },
+      "PerguntasProntasOut": {
+        "properties": {
+          "atleta_id": {
+            "title": "Atleta Id",
+            "type": "integer"
+          },
+          "perguntas": {
+            "items": {
+              "$ref": "#/components/schemas/PerguntaProntaOut"
+            },
+            "title": "Perguntas",
+            "type": "array"
+          },
+          "versao": {
+            "title": "Versao",
+            "type": "string"
+          }
+        },
+        "required": [
+          "versao",
+          "atleta_id",
+          "perguntas"
+        ],
+        "title": "PerguntasProntasOut",
         "type": "object"
       },
       "Periodo": {
@@ -5554,6 +5638,64 @@
         ]
       }
     },
+    "/atletas/{atleta_id}/chat/perguntas-prontas": {
+      "get": {
+        "description": "Ate 6 perguntas prontas escolhidas pelo que o atleta tem (modalidades das ultimas 8 semanas, tiros, noites, check-ins). Textos fixos.",
+        "operationId": "listarPerguntasProntas",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "atleta_id",
+            "required": true,
+            "schema": {
+              "title": "Atleta Id",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PerguntasProntasOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Erro"
+                }
+              }
+            },
+            "description": "Atleta, conversa ou mensagem de outro (o mesmo 404 de inexistente)"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Perguntas Prontas",
+        "tags": [
+          "chat"
+        ]
+      }
+    },
     "/atletas/{atleta_id}/checkins/pendentes": {
       "get": {
         "description": "Treinos do atleta sem check-in com data local em `[hoje - dias, hoje]` (hoje em America/Sao_Paulo), mais recentes primeiro.\nToda modalidade, menos `multiesporte_pai` e `troca`. Sem nenhum campo do check-in.",
@@ -5957,6 +6099,95 @@
           }
         ],
         "summary": "Enviar Mensagem",
+        "tags": [
+          "chat"
+        ]
+      }
+    },
+    "/atletas/{atleta_id}/conversas/{conversa_id}/mensagens/{mensagem_id}/avaliacao": {
+      "put": {
+        "description": "👍/👎 do atleta na resposta. Guarda so o valor e a data; `valor: null` desfaz. A avaliacao nao vai ao provedor.",
+        "operationId": "avaliarMensagem",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "atleta_id",
+            "required": true,
+            "schema": {
+              "title": "Atleta Id",
+              "type": "integer"
+            }
+          },
+          {
+            "in": "path",
+            "name": "conversa_id",
+            "required": true,
+            "schema": {
+              "title": "Conversa Id",
+              "type": "integer"
+            }
+          },
+          {
+            "in": "path",
+            "name": "mensagem_id",
+            "required": true,
+            "schema": {
+              "title": "Mensagem Id",
+              "type": "integer"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AvaliacaoIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MensagemOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Erro"
+                }
+              }
+            },
+            "description": "Atleta, conversa ou mensagem de outro (o mesmo 404 de inexistente)"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Erro"
+                }
+              }
+            },
+            "description": "Só a mensagem `respondida` pode ser avaliada"
+          },
+          "422": {
+            "description": "Pergunta vazia ou grande demais. Nunca repete o que foi enviado: so `loc`, `msg` e `type`"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Avaliar Mensagem",
         "tags": [
           "chat"
         ]

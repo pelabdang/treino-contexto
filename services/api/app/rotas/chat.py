@@ -14,13 +14,13 @@ from typing import Literal
 
 from fastapi import APIRouter, Depends, HTTPException, Query, Response
 from fastapi.responses import JSONResponse
-from pydantic import BaseModel, Field, field_validator
+from pydantic import BaseModel, ConfigDict, Field, field_validator
 from sqlalchemy import delete, func, select
 from sqlalchemy.orm import Session
 
 import app.chat  # noqa: F401  (registra as ferramentas)
 from app.autenticacao import ContaAtual, conta_liberada
-from app.chat import laco, prompt
+from app.chat import laco, perguntas_prontas as pp, prompt
 from app.chat.recusa import RECUSA_MUDANCA_COM_PROFESSOR, RECUSA_MUDANCA_SEM_PROFESSOR
 from app.chat.registro import Consulta, Quem, executar
 from app.db.models import CHAT_PERGUNTA_MAX, CHAT_TITULO_MAX, Conversa, Mensagem, VinculoProfessorAtleta
@@ -84,6 +84,7 @@ class MensagemOut(BaseModel):
     motivo: str | None  # codigo; so em recusada, reprovada e erro
     texto: str  # o que o app mostra: a resposta aprovada, o texto fixo da recusa ou a frase fixa de erro
     links: list[LinkOut]
+    avaliacao: Literal[1, -1] | None = None  # 👍 (1), 👎 (-1) ou nulo; so em `respondida`; nunca vai ao provedor
     criada_em: datetime  # America/Sao_Paulo
 
 
@@ -145,7 +146,7 @@ def _links(m: Mensagem) -> list[LinkOut]:
 def _mensagem_out(m: Mensagem) -> MensagemOut:
     texto = m.resposta if m.resposta else FRASE_ERRO
     return MensagemOut(id=m.id, ordem=m.ordem, pergunta=m.pergunta, estado=m.estado, motivo=m.motivo, texto=texto, links=_links(m),
-                       criada_em=_com_fuso(m.criada_em))
+                       avaliacao=m.avaliacao, criada_em=_com_fuso(m.criada_em))
 
 
 def _resumo(c: Conversa) -> dict:
@@ -265,3 +266,55 @@ def apagar_conversa(atleta_id: int, conversa_id: int, session: Session = Depends
     session.delete(c)
     session.commit()
     return Response(status_code=204)
+
+
+class AvaliacaoIn(BaseModel):
+    model_config = ConfigDict(extra="forbid", strict=True)  # sem texto livre nem campo extra; `true` nao vale como 1
+
+    valor: Literal[1, -1] | None  # 1 = 👍, -1 = 👎, null desfaz; sem texto livre
+
+    @field_validator("valor", mode="before")
+    @classmethod
+    def _nao_e_booleano(cls, v):
+        if isinstance(v, bool):  # `true` e igual a 1 em Python; aqui nao vale
+            raise ValueError("valor inválido")
+        return v
+
+
+@router.put("/{conversa_id}/mensagens/{mensagem_id}/avaliacao", response_model=MensagemOut, operation_id="avaliarMensagem",
+            responses={**_404, 409: {"model": Erro, "description": "Só a mensagem `respondida` pode ser avaliada"}, **_422})
+def avaliar_mensagem(atleta_id: int, conversa_id: int, mensagem_id: int, corpo: AvaliacaoIn, session: Session = Depends(get_session)):
+    """👍/👎 do atleta na resposta. Guarda so o valor e a data; `valor: null` desfaz. A avaliacao nao vai ao provedor."""
+    c = _conversa_do_atleta(session, atleta_id, conversa_id)
+    m = session.scalar(select(Mensagem).where(Mensagem.id == mensagem_id, Mensagem.conversa_id == c.id))
+    if m is None:
+        raise HTTPException(status_code=404, detail="mensagem não encontrada")
+    if m.estado != "respondida":
+        raise HTTPException(status_code=409, detail="só a resposta pode ser avaliada")
+    m.avaliacao = corpo.valor
+    m.avaliada_em = None if corpo.valor is None else datetime.now(timezone.utc)
+    session.commit()
+    return _mensagem_out(m)
+
+
+# --- perguntas prontas ---------------------------------------------------------------------------------------------------------------
+
+router_chat = APIRouter(prefix="/atletas/{atleta_id}/chat", tags=["chat"], route_class=RotaChat)
+
+
+class PerguntaProntaOut(BaseModel):
+    id: str  # estavel (para o app guardar o que o atleta usou)
+    texto: str  # a frase fixa; o app a envia como pergunta comum
+
+
+class PerguntasProntasOut(BaseModel):
+    versao: str
+    atleta_id: int
+    perguntas: list[PerguntaProntaOut]  # ate 6, em ordem estavel
+
+
+@router_chat.get("/perguntas-prontas", response_model=PerguntasProntasOut, operation_id="listarPerguntasProntas", responses=_404)
+def perguntas_prontas(atleta_id: int, session: Session = Depends(get_session)):
+    """Ate 6 perguntas prontas escolhidas pelo que o atleta tem (modalidades das ultimas 8 semanas, tiros, noites, check-ins). Textos fixos."""
+    return PerguntasProntasOut(versao=pp.VERSAO, atleta_id=atleta_id,
+                               perguntas=[PerguntaProntaOut(id=p.id, texto=p.texto) for p in pp.perguntas_prontas(session, atleta_id, hoje_local())])
