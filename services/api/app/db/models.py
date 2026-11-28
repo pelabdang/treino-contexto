@@ -15,12 +15,14 @@ from sqlalchemy import (
     Float,
     ForeignKey,
     Integer,
+    JSON,
     String,
     UniqueConstraint,
     false,
     func,
     true,
 )
+from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.db.base import Base
@@ -62,6 +64,11 @@ FEEDBACK_TEXTO_MAX = 700  # ADR 0013, item 2
 FEEDBACK_ESTADOS = ("pronto", "sem_feedback")
 FEEDBACK_MOTIVOS = ("texto_reprovado", "provedor_erro", "provedor_tempo_limite", "provedor_nao_configurado",
                     "limite_de_chamadas")
+
+CHAT_DONOS = ("atleta", "professor")  # ADR 0017, item 7; so `atleta` na Meta 14
+CHAT_ESTADOS = ("respondida", "recusada", "reprovada", "erro")
+CHAT_PERGUNTA_MAX, CHAT_RESPOSTA_MAX, CHAT_TITULO_MAX = 1000, 900, 80
+_JSON_CHAT = JSON().with_variant(JSONB(), "postgresql")  # JSON no SQLite dos testes, JSONB no Postgres
 
 FUSO_MIN_MIN, FUSO_MIN_MAX = -720, 840  # minutos: UTC-12 a UTC+14
 
@@ -657,3 +664,58 @@ class RecuperacaoDia(Base):
     fc_repouso_bpm: Mapped[int | None] = mapped_column(Integer)
     versao_leitura: Mapped[str] = mapped_column(String(40))
     importado_em: Mapped[datetime] = mapped_column(DateTime(timezone=True))
+
+
+class Conversa(Base):
+    """Conversa do chat (ADR 0017, item 7). Dado de saude: pergunta e resultado de ferramenta nunca em log nem em mensagem de erro.
+
+    `dono_papel`/`dono_conta_id` dizem quem conversa (so `atleta` na Meta 14; `professor` na 16). A lista do atleta filtra
+    `dono_papel = 'atleta' AND atleta_id = sessao`. Apagada com a conta (`CASCADE`) ou pelo atleta (`DELETE`).
+    """
+
+    __tablename__ = "conversa"
+    __table_args__ = (CheckConstraint(_in("dono_papel", CHAT_DONOS), name="dono_papel"),)
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    atleta_id: Mapped[int] = mapped_column(ForeignKey("atleta.id", ondelete="CASCADE"), index=True)
+    dono_papel: Mapped[str] = mapped_column(String(10), default="atleta", server_default="atleta")
+    dono_conta_id: Mapped[int] = mapped_column(ForeignKey("conta.id", ondelete="CASCADE"), index=True)
+    titulo: Mapped[str] = mapped_column(String(CHAT_TITULO_MAX))  # primeira pergunta cortada, sem passar pelo provedor
+    criada_em: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+    atualizada_em: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+
+    mensagens: Mapped[list["Mensagem"]] = relationship(back_populates="conversa", order_by="Mensagem.ordem",
+                                                       cascade="all, delete-orphan", passive_deletes=True)
+
+
+class Mensagem(Base):
+    """Uma pergunta e a resposta dela (uma linha por turno; ADR 0017, item 7).
+
+    `chamadas_ferramenta`: lista de `{nome, argumentos, resultado}`. Resposta reprovada ou com erro grava so o `motivo` (codigo),
+    nunca o texto; `recusada` grava o texto fixo do codigo. `respondida` exige resposta e nao tem motivo.
+    """
+
+    __tablename__ = "mensagem"
+    __table_args__ = (
+        UniqueConstraint("conversa_id", "ordem", name="uq_mensagem_ordem"),
+        CheckConstraint(_in("estado", CHAT_ESTADOS), name="estado"),
+        CheckConstraint("(estado = 'respondida') = (resposta IS NOT NULL AND motivo IS NULL)", name="resposta_e_estado"),
+        CheckConstraint("estado <> 'recusada' OR resposta IS NOT NULL", name="recusada_com_texto"),
+        CheckConstraint("estado NOT IN ('reprovada', 'erro') OR (resposta IS NULL AND motivo IS NOT NULL)", name="sem_texto_reprovado"),
+    )
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    conversa_id: Mapped[int] = mapped_column(ForeignKey("conversa.id", ondelete="CASCADE"), index=True)
+    ordem: Mapped[int] = mapped_column(Integer)
+    pergunta: Mapped[str] = mapped_column(String(CHAT_PERGUNTA_MAX))
+    chamadas_ferramenta: Mapped[list] = mapped_column(_JSON_CHAT, default=list)
+    resposta: Mapped[str | None] = mapped_column(String(CHAT_RESPOSTA_MAX))
+    estado: Mapped[str] = mapped_column(String(12))
+    motivo: Mapped[str | None] = mapped_column(String(40))
+    versao_checagens: Mapped[str] = mapped_column(String(40))
+    versao_prompt: Mapped[str] = mapped_column(String(40))
+    provedor: Mapped[str | None] = mapped_column(String(40))
+    modelo: Mapped[str | None] = mapped_column(String(80))
+    criada_em: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+
+    conversa: Mapped[Conversa] = relationship(back_populates="mensagens")
