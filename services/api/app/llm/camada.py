@@ -29,6 +29,7 @@ MOTIVO_NAO_CONFIGURADO = "provedor_nao_configurado"
 MOTIVO_ERRO = "provedor_erro"
 MOTIVO_TEMPO_LIMITE = "provedor_tempo_limite"
 MOTIVO_LIMITE = "limite_de_chamadas"
+MOTIVO_PROVEDOR_LIMITE = "provedor_limite"  # so no chat: o 429 do provedor (no feedback continua `limite_de_chamadas`, do CHECK da tabela)
 MOTIVOS = (MOTIVO_NAO_CONFIGURADO, MOTIVO_ERRO, MOTIVO_TEMPO_LIMITE, MOTIVO_LIMITE)
 
 PROVEDOR_FALSO = "falso"
@@ -41,7 +42,22 @@ class TempoLimite(Exception):
 
 
 class LimiteDoProvedor(Exception):
-    """O provedor recusou por limite de requisicoes ou de tokens por minuto (HTTP 429). Sem a mensagem do provedor."""
+    """O provedor recusou por limite de requisicoes ou de tokens por minuto (HTTP 429). Sem a mensagem do provedor.
+
+    `retry_apos_s`: o `retry-after` do provedor em segundos, se veio e e um numero (so o numero; nada do corpo da resposta)."""
+
+    def __init__(self, retry_apos_s: float | None = None) -> None:
+        super().__init__()
+        self.retry_apos_s = retry_apos_s
+
+
+def _retry_apos(e: BaseException) -> float | None:
+    """O cabecalho `retry-after` da resposta 429, em segundos (0 a 3600), ou `None`. Le so o cabecalho; descarta o resto da excecao."""
+    try:
+        valor = float(e.response.headers.get("retry-after"))  # type: ignore[attr-defined]
+    except Exception:  # noqa: BLE001
+        return None
+    return valor if 0 <= valor <= 3600 else None
 
 
 class ErroProvedor(Exception):
@@ -79,6 +95,7 @@ class ResultadoConversa:
     motivo: str | None
     provedor: str | None
     modelo: str | None
+    retry_apos_s: float | None = None  # so com `motivo = provedor_limite`: o `retry-after` do provedor, se veio
 
 
 class ProvedorLLM(Protocol):
@@ -224,7 +241,7 @@ class ProvedorLiteLLM:
             if isinstance(e, TimeoutError) or "Timeout" in e.__class__.__name__:
                 raise TempoLimite() from None
             if "RateLimit" in e.__class__.__name__ or getattr(e, "status_code", None) == 429:
-                raise LimiteDoProvedor() from None
+                raise LimiteDoProvedor(_retry_apos(e)) from None
             raise ErroProvedor() from None
         if chamadas:
             return RespostaConversa(chamadas=chamadas)
@@ -289,8 +306,8 @@ class Redator:
         """Uma volta do chat. Mesmas regras de `redigir`: nunca levanta, devolve um motivo; sem nova tentativa; conta no limite da instancia."""
         self.limite_do_provedor = False
 
-        def res(r: RespostaConversa | None = None, motivo: str | None = None) -> ResultadoConversa:
-            return ResultadoConversa(r, motivo, self.nome_provedor, self.modelo)
+        def res(r: RespostaConversa | None = None, motivo: str | None = None, retry_apos_s: float | None = None) -> ResultadoConversa:
+            return ResultadoConversa(r, motivo, self.nome_provedor, self.modelo, retry_apos_s)
 
         if self._provedor is None:
             return res(motivo=MOTIVO_NAO_CONFIGURADO)
@@ -303,9 +320,9 @@ class Redator:
             r = self._provedor.conversar(mensagens, ferramentas, self.timeout_s if timeout_s is None else timeout_s)
         except TempoLimite:
             return res(motivo=MOTIVO_TEMPO_LIMITE)
-        except LimiteDoProvedor:
+        except LimiteDoProvedor as e:
             self.limite_do_provedor = True
-            return res(motivo=MOTIVO_LIMITE)
+            return res(motivo=MOTIVO_PROVEDOR_LIMITE, retry_apos_s=e.retry_apos_s)
         except Exception:  # noqa: BLE001  (nunca repete nem registra a excecao)
             return res(motivo=MOTIVO_ERRO)
         if not isinstance(r, RespostaConversa) or not (r.chamadas or (isinstance(r.texto, str) and r.texto.strip())):

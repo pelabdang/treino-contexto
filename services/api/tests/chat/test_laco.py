@@ -124,7 +124,7 @@ def test_argumentos_malformados_do_provedor_viram_erro_de_argumento():
     assert r.chamadas_ferramenta[0]["resultado"]["codigo"] == "argumento_invalido"
 
 
-@pytest.mark.parametrize("evento,motivo", [(ErroProvedor(), "provedor_erro"), (TempoLimite(), "provedor_tempo_limite"), (LimiteDoProvedor(), "limite_de_chamadas")])
+@pytest.mark.parametrize("evento,motivo", [(ErroProvedor(), "provedor_erro"), (TempoLimite(), "provedor_tempo_limite")])
 def test_erro_do_provedor_vira_motivo_em_codigo(evento, motivo):
     r, _ = _rodar(CASOS["T01"], [evento])
     assert (r.estado, r.motivo, r.resposta) == ("erro", motivo, None)
@@ -214,3 +214,67 @@ def test_o_laco_enxerga_as_ferramentas_de_metricas_do_atleta_de_ponta_a_ponta(se
     [feita] = r.chamadas_ferramenta
     assert feita["nome"] == "ler_serie" and feita["resultado"].get("estado") != "erro", feita["resultado"]
     assert r.estado in ("respondida", "reprovada")  # chegou ate as checagens com o resultado real da ferramenta
+
+
+# --- 429 do provedor: codigo proprio e uma espera curta antes de desistir ------------------------------------------------------------
+
+def _com_sono(roteiro, por_volta=1.0):
+    """Redator com relogio falso: cada chamada ao provedor gasta `por_volta` s e cada `dormir(x)` avanca `x` s. Devolve (redator, prov, relogio, dormir, esperas)."""
+    agora, esperas = [0.0], []
+    redator, prov = _redator(roteiro)
+    original = redator.conversar
+
+    def conversar(m, f, timeout_s=None):
+        agora[0] += por_volta
+        return original(m, f, timeout_s)
+
+    def dormir(x):
+        esperas.append(x)
+        agora[0] += x
+    redator.conversar = conversar
+    return redator, prov, (lambda: agora[0]), dormir, esperas
+
+
+def _responder_com(redator, relogio, dormir, caso):
+    return laco.responder(redator, _executor(caso), CONSULTA, caso["pergunta"], relogio=relogio, dormir=dormir)
+
+
+def test_429_espera_uns_segundos_repete_e_responde():
+    caso = CASOS["T01"]
+    redator, prov, relogio, dormir, esperas = _com_sono([LimiteDoProvedor(), _chamadas(caso), caso["resposta_boa"]])
+    r = _responder_com(redator, relogio, dormir, caso)
+    assert r.estado == "respondida" and esperas == [laco.ESPERA_NO_429_S] and prov.chamadas == 3  # a repeticao conta como chamada ao provedor
+
+
+def test_429_respeita_o_retry_after_do_provedor():
+    caso = CASOS["T01"]
+    redator, prov, relogio, dormir, esperas = _com_sono([LimiteDoProvedor(retry_apos_s=3.0), _chamadas(caso), caso["resposta_boa"]])
+    assert _responder_com(redator, relogio, dormir, caso).estado == "respondida" and esperas == [3.0]
+
+
+def test_429_com_retry_after_longo_desiste_sem_esperar_e_usa_o_codigo_proprio():
+    caso = CASOS["T01"]
+    redator, prov, relogio, dormir, esperas = _com_sono([LimiteDoProvedor(retry_apos_s=60.0), caso["resposta_boa"]])
+    r = _responder_com(redator, relogio, dormir, caso)
+    assert (r.estado, r.motivo, r.resposta) == ("erro", "provedor_limite", None) and esperas == [] and prov.chamadas == 1
+
+
+def test_429_so_repete_uma_vez_por_pergunta():
+    caso = CASOS["T01"]
+    redator, prov, relogio, dormir, esperas = _com_sono([LimiteDoProvedor(), LimiteDoProvedor(), caso["resposta_boa"]])
+    r = _responder_com(redator, relogio, dormir, caso)
+    assert (r.estado, r.motivo) == ("erro", "provedor_limite") and len(esperas) == 1 and prov.chamadas == 2
+
+
+def test_429_nao_espera_se_nao_sobra_tempo_dentro_dos_45_segundos():
+    caso = CASOS["T01"]
+    redator, prov, relogio, dormir, esperas = _com_sono([LimiteDoProvedor(), caso["resposta_boa"]], por_volta=43.0)  # a 1a volta ja gastou 43 s
+    r = _responder_com(redator, relogio, dormir, caso)
+    assert (r.motivo, esperas) == ("provedor_limite", []) and prov.chamadas == 1
+
+
+def test_o_limite_de_chamadas_do_laco_nao_se_confunde_com_o_429():
+    caso = CASOS["T01"]
+    redator, _ = _redator([RespostaConversa(chamadas=(ChamadaFerramenta("x", "listar_atividades", {}),))] * 3, limite_chamadas=2)
+    r = laco.responder(redator, _executor(caso), CONSULTA, caso["pergunta"])
+    assert (r.estado, r.motivo) == ("erro", "limite_de_chamadas")  # o da instancia continua com o codigo antigo

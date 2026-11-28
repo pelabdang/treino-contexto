@@ -7,7 +7,7 @@ from datetime import datetime, timedelta, timezone
 import pytest
 from app.db.models import Assessoria, Atividade, Atleta, Conversa, Mensagem, Professor, VinculoProfessorAtleta
 from app.db.session import get_session
-from app.llm.camada import ChamadaFerramenta, ErroProvedor, ProvedorFalso, Redator, RespostaConversa
+from app.llm.camada import ChamadaFerramenta, ErroProvedor, LimiteDoProvedor, ProvedorFalso, Redator, RespostaConversa
 from app.main import criar_app
 from app.rotas.chat import FRASE_ERRO, PERGUNTAS_POR_HORA, get_redator
 from app.servicos import conta as svc
@@ -209,3 +209,15 @@ def test_link_do_treino_traz_a_data_como_veio_da_ferramenta(client, mundo, prov)
     prov["falso"].roteiro = _roteiro_feliz(mundo)
     m = client.post(f"/atletas/{mundo['ana']}/conversas", json={"pergunta": "Como foi?"}, headers=_h(client, "ana")).json()["mensagens"][0]
     assert m["links"][0]["data_texto"] == mundo["data"]
+
+
+def test_429_do_provedor_mostra_a_frase_de_servico_ocupado(client, session, mundo, prov, monkeypatch):
+    from app.chat import laco
+    from app.rotas.chat import FRASE_OCUPADO
+    monkeypatch.setattr(laco.time, "sleep", lambda _s: None)  # sem esperar de verdade
+    prov["falso"].roteiro = [LimiteDoProvedor(), LimiteDoProvedor()]
+    r = client.post(f"/atletas/{mundo['ana']}/conversas", json={"pergunta": "Oi?"}, headers=_h(client, "ana"))
+    m = r.json()["mensagens"][0]
+    assert r.status_code == 201 and (m["estado"], m["motivo"], m["texto"]) == ("erro", "provedor_limite", FRASE_OCUPADO)
+    assert FRASE_OCUPADO == "O serviço de IA está ocupado. Tente de novo em 1 minuto." and session.query(Mensagem).one().resposta is None
+    assert client.get(f"/atletas/{mundo['ana']}/conversas/{r.json()['id']}", headers=_h(client, "ana")).json()["mensagens"][0]["texto"] == FRASE_OCUPADO

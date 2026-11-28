@@ -21,7 +21,7 @@ from typing import Any
 from app.chat import prompt
 from app.chat.registro import Consulta, esquemas_para, erro
 from app.explicacao import checagens_chat as ck
-from app.llm.camada import ChamadaFerramenta, Redator
+from app.llm.camada import MOTIVO_PROVEDOR_LIMITE, ChamadaFerramenta, Redator
 
 MAX_FERRAMENTAS = 6
 MAX_CHAMADAS_PROVEDOR = 8
@@ -29,6 +29,10 @@ TIMEOUT_CHAMADA_S = 20.0
 TIMEOUT_PERGUNTA_S = 45.0
 MAX_ERROS_DE_FERRAMENTA = 1  # o segundo erro da pergunta encerra
 MAX_TROCAS_NO_HISTORICO = 6
+ESPERA_NO_429_S = 5.0  # espera curta antes de repetir a chamada que o provedor recusou por limite (429), quando nao vem `retry-after`
+ESPERA_MAX_NO_429_S = 15.0  # com `retry-after` maior que isto, desiste sem esperar: o atleta nao espera tanto (a frase fixa diz "tente em 1 minuto")
+MARGEM_DEPOIS_DA_ESPERA_S = 5.0  # a chamada repetida precisa de pelo menos isto dentro dos 45 s da pergunta
+MAX_RETRY_NO_429 = 1  # uma repeticao por pergunta (conta no limite de 8 chamadas ao provedor)
 
 RESPONDIDA, RECUSADA, REPROVADA, ERRO = "respondida", "recusada", "reprovada", "erro"
 Executor = Callable[[str, Any], dict[str, Any]]
@@ -67,6 +71,7 @@ def responder(
     historico: Sequence[tuple[str, str]] = (),
     hoje: date | None = None,
     relogio: Callable[[], float] = time.monotonic,
+    dormir: Callable[[float], None] | None = None,
 ) -> ResultadoPergunta:
     """Roda uma pergunta ate o texto final. Nunca levanta. `executar(nome, argumentos)` ja leva a sessao e a `Consulta`."""
     inicio = relogio()
@@ -76,6 +81,7 @@ def responder(
     r = ResultadoPergunta(ERRO, provedor=redator.nome_provedor, modelo=redator.modelo)
     chamadas_ao_provedor = erros_de_ferramenta = 0
     regenerou = False
+    repeticoes_no_429 = 0
 
     def encerra(motivo: str) -> ResultadoPergunta:
         r.estado, r.resposta, r.motivo = ERRO, None, motivo
@@ -90,6 +96,13 @@ def responder(
         chamadas_ao_provedor += 1
         volta = redator.conversar(mensagens, ferramentas, min(TIMEOUT_CHAMADA_S, restante))
         r.provedor, r.modelo = volta.provedor, volta.modelo
+        if volta.motivo == MOTIVO_PROVEDOR_LIMITE and repeticoes_no_429 < MAX_RETRY_NO_429:
+            espera = ESPERA_NO_429_S if volta.retry_apos_s is None else volta.retry_apos_s  # respeita o `retry-after` do provedor
+            sobra = TIMEOUT_PERGUNTA_S - (relogio() - inicio) - espera
+            if espera <= ESPERA_MAX_NO_429_S and sobra >= MARGEM_DEPOIS_DA_ESPERA_S:
+                repeticoes_no_429 += 1
+                (dormir or time.sleep)(espera)  # resolvido na hora: os testes trocam `time.sleep`
+                continue  # repete a MESMA volta (as mensagens nao mudaram); conta como chamada ao provedor
         if volta.motivo is not None or volta.resposta is None:
             return encerra(volta.motivo or "provedor_erro")
         resposta = volta.resposta
