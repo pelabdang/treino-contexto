@@ -130,6 +130,7 @@ async function principal() {
     const acesso = acessoDaRota(rota);
     if (acesso) await ctx.addInitScript((t) => sessionStorage.setItem("treino.acesso", t), acesso);
     const pagina = await ctx.newPage();
+    if (rota.avancarMs) await pagina.clock.install(); // relógio da página, para ver a espera longa do chat sem esperar 25 s
     const sim = rota.simular ? SIMULACOES[rota.simular] : null;
     if (sim?.abortar || sim?.alterar || sim?.status) {
       await pagina.route("**/professores/*/caixa-do-dia", async (r) => {
@@ -184,6 +185,7 @@ async function principal() {
         if (await alvo.count()) await alvo.click();
       } else await pagina.getByTestId(id).click();
     }
+    if (rota.avancarMs) await pagina.clock.fastForward(rota.avancarMs);
     if (rota.rolarAoFim) {
       // A rolagem é de um elemento da tela, não da página: leva o que mais rola até o fim.
       await pagina.evaluate(() => {

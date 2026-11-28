@@ -2,8 +2,8 @@
 tipo: modulo
 status: em-uso
 dono: rafa
-atualizado: 2026-11-27
-links: [[design/identidade-visual-v2]], [[design/telas/feedback]], [[decisoes/0013-feedback-automatico]], [[modulos/api]], [[modulos/api-client]], [[produto/roadmap]], [[decisoes/0004-contrato-tela-evolucao]], [[produto/meta-2-como-rodar]], [[decisoes/0006-upload-de-fit]], [[design/guia-visual]], [[design/tokens]], [[decisoes/0007-clima-da-atividade]], [[modulos/clima]], [[design/telas/treino]], [[design/telas/semana-padrao]], [[decisoes/0011-linha-de-base-e-semana-padrao]], [[design/telas/checkin]], [[decisoes/0012-check-in-pos-treino]], [[design/telas/caixa-do-dia]], [[decisoes/0015-caixa-do-dia-do-professor]]
+atualizado: 2026-11-28
+links: [[design/identidade-visual-v2]], [[design/telas/feedback]], [[decisoes/0013-feedback-automatico]], [[modulos/api]], [[modulos/api-client]], [[produto/roadmap]], [[decisoes/0004-contrato-tela-evolucao]], [[produto/meta-2-como-rodar]], [[decisoes/0006-upload-de-fit]], [[design/guia-visual]], [[design/tokens]], [[decisoes/0007-clima-da-atividade]], [[modulos/clima]], [[design/telas/treino]], [[design/telas/semana-padrao]], [[decisoes/0011-linha-de-base-e-semana-padrao]], [[design/telas/checkin]], [[decisoes/0012-check-in-pos-treino]], [[design/telas/caixa-do-dia]], [[decisoes/0015-caixa-do-dia-do-professor]], [[decisoes/0017-chat-do-atleta]], [[design/telas/chat]]
 ---
 # Módulo: mobile
 
@@ -156,6 +156,16 @@ Spec em [[design/telas/checkin]]; contrato na [[decisoes/0012-check-in-pos-trein
 - Testes: `__tests__/TelaSemanaPadrao.test.tsx` (todos os estados acima), `semanaPadraoDatas.test.ts`, `rotaSemanaPadrao.test.tsx`; dados em `__fixtures__/semanaPadrao.ts`. A API falsa (`npm run api-falsa`) serve os dois endpoints com dados sintéticos (PUT em memória, por atleta). Para forçar estados, rode o app com `EXPO_PUBLIC_ATLETA_ID=<id>` (reinicie o `expo start`): `2` = sem plano (estado vazio), `3` = o GET derruba a conexão (erro de rede ao carregar), `4` = o PUT responde 422, `5` = o GET responde 404, `6` = o PUT derruba a conexão (erro de rede ao salvar); `1` e os outros ids usam o plano de exemplo.
 - Layout (revisão da Lia): o chip da modalidade tem largura mínima de 100, então os seletores de tipo alinham entre Corrida, Natação e Ciclismo; o seletor tem largura mínima de 120 e a linha do item quebra (`flexWrap`), então com fonte grande ele desce para a linha de baixo (conferido só por teste de estilo, não em aparelho). A barra de salvar tem a largura da coluna do conteúdo (720 mais as margens), centralizada. A folha de opções fecha pelo `close`, pelo fundo, pelo botão voltar do Android e por Esc na web.
 - Capturas (dados sintéticos, tema claro, 390 de largura) em `docs/design/telas/semana-padrao/`: `semana-padrao-claro-390-topo-268.jpg`, `-dias-268.jpg`, `-folha-tipo-268.jpg`, `-vazio-268.jpg` e `-erro-salvar-422-268.jpg`. Foram tiradas com a página dentro de um quadro de 390 de largura e o tema forçado por um proxy local de captura (fora do repositório); sem o proxy, o tema vem do `prefers-color-scheme` do navegador.
+
+## Chat "Pergunte ao seu treino" (#600, Meta 14)
+Spec: [[design/telas/chat]]. Contrato: adendo 16 da [[decisoes/0004-contrato-tela-evolucao]]; decisão: [[decisoes/0017-chat-do-atleta]]. Sem aba nova: telas empilhadas no grupo `(app)`, sem a barra de abas.
+- **Rotas:** `/chat` (conversa nova; `?pergunta=` já envia), `/chat/<id>` (existente), `/chat/conversas` (lista, "Nova conversa", apagar). Só do atleta (`caminhoDoPapel`).
+- **Entrada:** `EntradaChat`, um cartão no Início atual, ligado pela prop `aoAbrirChat` e por `ENTRADA_CHAT_NO_INICIO` (`src/chat/textos.ts`). O Início v5 (#601) vai trocar este bloco.
+- **Chamadas:** `src/chat/api.ts` (`listarConversas`, `criarConversa`, `enviarMensagem`, `buscarConversa`, `apagarConversa`), nunca lançam. O pedido desiste em 60 s. O `429` traz `detail` e, se vier, `espere_texto`; o app mostra os dois como vieram e só usa `espere_s` para reabrir o campo.
+- **Constantes que ainda podem mudar** (`src/chat/textos.ts`): `PERGUNTAS_PRONTAS` (as 6 fixas), `ENTRADA_CHAT_NO_INICIO`, `COPIAR_E_AVALIAR` (sem copiar e sem 👍/👎 na primeira versão).
+- **Estados:** respondida (texto e `links[]`), recusada (cartão tracejado neutro, sem erro), reprovada e erro (frase fixa e "Tentar de novo", sem o `motivo`), limite (faixa e campo desligado), sem rede (a pergunta fica no campo), 404 e espera (texto troca aos 10 s e 25 s, sem porcentagem).
+- **O app não calcula:** horas e dias são recortes do texto de `criada_em` (`src/chat/hora.ts`); o teste `TelaChat` varre o código atrás de `Math`, `toFixed` e afins.
+- **Testes e capturas:** `TelaChat`, `TelaConversas`, `EntradaChat`, `chatApi`, `chatHora`; a API falsa responde o chat (gatilhos "receita", "mude", "quebrar", "reprovar", "demorar"; atletas 35, 36 e 37) e `npm run capturas -- --so=chat-...` gera as telas.
 
 ## Botão "Enviar arquivo FIT" (`BotaoEnviarFit`)
 `src/componentes/BotaoEnviarFit.tsx`, no alto da `TelaEvolucao`, usa o mesmo `apiUrl` e `atletaId` da tela. Toque abre o seletor do `expo-document-picker` (`getDocumentAsync`, `type: "*/*"`); na web entrega o `File`, no celular o `uri`. Envia com `enviarAtividadeFit` ([[modulos/api-client]]) e mostra um estado por vez:

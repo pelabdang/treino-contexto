@@ -32,6 +32,10 @@ const ACESSOS = {
   // Início v4: 33 só o cartão da melhor marca, 34 a busca dos cartões responde 500 (a seção some em silêncio).
   atleta33: "token-sintetico-atleta-33",
   atleta34: "token-sintetico-atleta-34",
+  // Chat (#600): 35 limite de perguntas com espere_texto, 36 limite sem espere_texto (só o detail), 37 derruba a conexão ao perguntar.
+  atleta35: "token-sintetico-atleta-35",
+  atleta36: "token-sintetico-atleta-36",
+  atleta37: "token-sintetico-atleta-37",
 };
 const ENTRAR_ANA = [["campo-email", "atleta1@exemplo.com"], ["campo-senha", SENHA_SINTETICA]];
 const TROCAR_OK = [["campo-senha-atual", SENHA_SINTETICA], ["campo-senha-nova", "outra-senha-sintetica"], ["campo-senha-repetida", "outra-senha-sintetica"]];
@@ -113,6 +117,25 @@ const ROTAS = [
   { nome: "evolucao-erro-catalogo", caminho: "/evolucao", acesso: "atleta29" },
   { nome: "evolucao-erro-serie", caminho: "/evolucao", acesso: "atleta32" },
   { nome: "evolucao-indisponivel", caminho: "/evolucao", clicar: ["?abrir-seletor", "serie-corrida.tiros"] },
+  // Chat "Pergunte ao seu treino" (#600, spec docs/design/telas/chat.md). Gatilhos da API falsa: "receita" = fora do tema, "mude" = pedido de mudança,
+  // "quebrar" = erro, "reprovar" = reprovada, "demorar" = só responde depois de 40 s (`avancarMs` adianta o relógio da página para ver a espera longa).
+  // A lista e o apagar vêm primeiro: as perguntas das outras capturas entram na mesma conversa em memória da API falsa.
+  { nome: "chat-conversa", caminho: "/chat/101" },
+  { nome: "chat-conversas", caminho: "/chat/conversas" },
+  { nome: "chat-apagar", caminho: "/chat/conversas", clicar: ["mais-101", "apagar-101"] },
+  { nome: "chat-comeco", caminho: "/chat" },
+  { nome: "chat-sem-treinos", caminho: "/chat", acesso: "atleta2" },
+  { nome: "chat-resposta", caminho: "/chat", clicar: ["pergunta-pronta-0"] },
+  { nome: "chat-pensando", caminho: "/chat", preencher: [["chat-campo", "Quanto demorar para responder?"]], clicar: ["chat-enviar"] },
+  { nome: "chat-pensando-longo", caminho: "/chat", preencher: [["chat-campo", "Quanto demorar para responder?"]], clicar: ["chat-enviar"], avancarMs: 26000 },
+  { nome: "chat-recusa-fora-do-tema", caminho: "/chat", preencher: [["chat-campo", "Me dá uma receita de bolo"]], clicar: ["chat-enviar"] },
+  { nome: "chat-recusa-pedido-de-mudanca", caminho: "/chat", preencher: [["chat-campo", "Mude o meu treino de amanhã"]], clicar: ["chat-enviar"] },
+  { nome: "chat-erro", caminho: "/chat", preencher: [["chat-campo", "Vai quebrar?"]], clicar: ["chat-enviar"] },
+  { nome: "chat-reprovada", caminho: "/chat", preencher: [["chat-campo", "Vai reprovar?"]], clicar: ["chat-enviar"] },
+  { nome: "chat-limite", caminho: "/chat", acesso: "atleta35", preencher: [["chat-campo", "Como foi minha semana?"]], clicar: ["chat-enviar"] },
+  { nome: "chat-limite-sem-texto-pronto", caminho: "/chat", acesso: "atleta36", preencher: [["chat-campo", "Como foi minha semana?"]], clicar: ["chat-enviar"] },
+  { nome: "chat-sem-rede", caminho: "/chat", acesso: "atleta37", preencher: [["chat-campo", "Como foi minha semana?"]], clicar: ["chat-enviar"] },
+  { nome: "chat-conversa-nao-encontrada", caminho: "/chat/999" },
   { nome: "aba-conta", caminho: "/conta" }, // atleta 1 tem pedido de consentimento: selo na aba e no item
   { nome: "aba-conta-sem-pedido", caminho: "/conta", acesso: "atleta2" },
   { nome: "aba-conta-professor", caminho: "/conta", acesso: "professor" },

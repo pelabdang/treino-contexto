@@ -533,6 +533,49 @@ const lerJson = (req) =>
     });
   });
 const emailDaConta = (c) => `${c.papel}${c.id}@exemplo.com`;
+
+// Chat "Pergunte ao seu treino" (#600, ADR 0017, adendo 16): conversas sintéticas em memória, no formato da API. Gatilhos na pergunta:
+// "receita" = fora do tema; "mude" = pedido de mudança; "quebrar" = estado erro; "reprovar" = reprovada; "demorar" = responde só depois de 40 s.
+// Atleta 35: 429 com espere_texto; 36: 429 sem espere_texto (só o detail); 37: derruba a conexão ao perguntar; 2 não tem treinos.
+const SP = new Intl.DateTimeFormat("sv-SE", { timeZone: "America/Sao_Paulo", year: "numeric", month: "2-digit", day: "2-digit", hour: "2-digit", minute: "2-digit", second: "2-digit" });
+const emSaoPaulo = (d) => `${SP.format(d).replace(" ", "T")}-03:00`;
+const ha = (minutos) => emSaoPaulo(new Date(Date.now() - minutos * 60000));
+const RESPOSTAS_CHAT = {
+  "como foi minha semana?": { texto: "Nesta semana você correu 3 vezes, 28,4 km no total. O treino mais longo foi de 12,1 km, no domingo. O pace dos treinos leves ficou perto do seu normal.", links: [{ tipo: "evolucao", rotulo: "Abrir na Evolução", serie_id: "corrida.volume_km" }, { tipo: "treino", rotulo: "Abrir treino", atividade_id: 107 }] },
+  "meu pace nos treinos leves melhorou?": { texto: "Sim. Nas últimas 12 semanas o seu pace nos treinos leves foi de 5:52 para 5:41 por km, e a FC média ficou parecida.", links: [{ tipo: "evolucao", rotulo: "Abrir na Evolução", serie_id: "corrida.pace.leve" }] },
+  "quanto corri neste mês?": { texto: "Neste mês você correu 96,3 km em 9 treinos.", links: [{ tipo: "evolucao", rotulo: "Abrir na Evolução", serie_id: "corrida.volume_km" }] },
+  "como estão minha carga e minha forma?": { texto: "Sua carga dos últimos 7 dias está um pouco acima da média das últimas semanas. A sua forma está em 4, um valor de quem está descansado o bastante.", links: [{ tipo: "evolucao", rotulo: "Abrir na Evolução", serie_id: "geral.ctl" }] },
+  "o que escrevi no check-in de ontem?": { texto: "No check-in de ontem você marcou esforço 6 de 10 e escreveu: pernas pesadas no começo, melhorou depois do quarto quilômetro.", links: [{ tipo: "treino", rotulo: "Abrir treino", atividade_id: 107 }] },
+  "como foi meu último treino?": { texto: "O seu último treino foi uma rodagem de 10,2 km em 58:41, pace médio de 5:45 por km, dentro do seu normal.", links: [{ tipo: "treino", rotulo: "Abrir treino", atividade_id: 107 }] },
+};
+const TEXTO_RECUSA_TEMA = "Eu respondo perguntas sobre os seus treinos. Pergunte, por exemplo, sobre o seu pace, a sua carga ou como foi a sua semana.";
+const TEXTO_RECUSA_MUDANCA = "Mudar o treino é com o seu professor. Posso mostrar o que os seus treinos dizem, se isso ajudar na conversa com ele.";
+const TEXTO_FALHA = "Não consegui responder agora. Tente de novo em instantes.";
+const conversasChat = new Map();
+let proximaConversa = 100;
+let proximaMensagem = 1000;
+function conversasDe(atleta) {
+  if (!conversasChat.has(atleta)) {
+    const msg = (ordem, pergunta, minutos) => ({ id: ++proximaMensagem, ordem, pergunta, estado: "respondida", motivo: null, ...RESPOSTAS_CHAT[pergunta.toLowerCase()], criada_em: ha(minutos) });
+    const mk = (titulo, minutos, mensagens) => ({ id: ++proximaConversa, titulo, criada_em: ha(minutos + 5), atualizada_em: ha(minutos), mensagens });
+    conversasChat.set(atleta, [
+      mk("Como foi minha semana?", 30, [msg(1, "Como foi minha semana?", 30)]),
+      mk("Meu pace nos treinos leves melhorou?", 26 * 60, [msg(1, "Meu pace nos treinos leves melhorou?", 26 * 60)]),
+      mk("Quanto corri neste mês?", 5 * 24 * 60, [msg(1, "Quanto corri neste mês?", 5 * 24 * 60)]),
+    ]);
+  }
+  return conversasChat.get(atleta);
+}
+function responderChat(pergunta) {
+  const p = pergunta.toLowerCase();
+  const base = { id: ++proximaMensagem, pergunta, links: [], criada_em: emSaoPaulo(new Date()) };
+  if (p.includes("receita")) return { ...base, estado: "recusada", motivo: "fora_do_tema", texto: TEXTO_RECUSA_TEMA };
+  if (p.includes("mude")) return { ...base, estado: "recusada", motivo: "pedido_de_mudanca", texto: TEXTO_RECUSA_MUDANCA };
+  if (p.includes("quebrar")) return { ...base, estado: "erro", motivo: "provedor", texto: TEXTO_FALHA };
+  if (p.includes("reprovar")) return { ...base, estado: "reprovada", motivo: "numero_nao_confere", texto: TEXTO_FALHA };
+  const pronta = RESPOSTAS_CHAT[p.trim()];
+  return { ...base, estado: "respondida", motivo: null, ...(pronta ?? { texto: "Pelo que vejo nos seus treinos, está tudo dentro do seu normal nas últimas semanas.", links: [] }) };
+}
 const NAO_AUTENTICADO = { detail: "não autenticado" };
 
 // Consentimento do atleta e termo sintéticos (#503, ADR 0016 item 7): `GET /termo-de-consentimento` e, por atleta, em memória,
@@ -666,6 +709,45 @@ createServer((req, res) => {
     return falar(404, dono[1] === "professores" ? professorInexistente : { detail: "não encontrado" });
   }
   if (pathname === "/termo-de-consentimento" && req.method === "GET") return falar(200, TERMO);
+  const chat = pathname.match(/^\/atletas\/(\d+)\/conversas(?:\/(\d+))?(\/mensagens)?$/);
+  if (chat) {
+    const atleta = Number(chat[1]);
+    const lista = conversasDe(atleta);
+    const conversa = chat[2] ? lista.find((c) => c.id === Number(chat[2])) : null;
+    const naoAchou = { detail: "não encontrado" };
+    if (!chat[2] && req.method === "GET") return falar(200, { atleta_id: atleta, conversas: lista.map(({ mensagens, ...resumo }) => resumo) });
+    if (chat[2] && !chat[3] && req.method === "GET") return conversa ? falar(200, conversa) : falar(404, naoAchou);
+    if (chat[2] && !chat[3] && req.method === "DELETE") {
+      if (!conversa) return falar(404, naoAchou);
+      lista.splice(lista.indexOf(conversa), 1);
+      return falar(204);
+    }
+    if (req.method === "POST" && (!chat[2] || chat[3])) {
+      if (atleta === 37) return req.destroy();
+      if (atleta === 35) return res.writeHead(429, { ...cabecalhos, "retry-after": "720" }).end(JSON.stringify({ detail: "Você fez 20 perguntas na última hora.", espere_texto: "Você pode perguntar de novo em 12 min.", espere_s: 720 }));
+      if (atleta === 36) return res.writeHead(429, { ...cabecalhos, "retry-after": "720" }).end(JSON.stringify({ detail: "Você fez 20 perguntas na última hora.", espere_s: 720 }));
+      lerJson(req).then((c) => {
+        const pergunta = typeof c?.pergunta === "string" ? c.pergunta.trim() : "";
+        if (!pergunta || pergunta.length > 1000) return falar(422, { detail: [{ loc: ["body", "pergunta"], msg: "pergunta inválida", type: "string_too_short" }] });
+        if (chat[2] && !conversa) return falar(404, naoAchou);
+        const demora = pergunta.toLowerCase().includes("demorar") ? 40000 : 0;
+        setTimeout(() => {
+          const m = responderChat(pergunta);
+          if (conversa) {
+            m.ordem = conversa.mensagens.length + 1;
+            conversa.mensagens.push(m);
+            conversa.atualizada_em = m.criada_em;
+            return falar(200, m);
+          }
+          m.ordem = 1;
+          const nova = { id: ++proximaConversa, titulo: pergunta.slice(0, 80), criada_em: m.criada_em, atualizada_em: m.criada_em, mensagens: [m] };
+          lista.unshift(nova);
+          falar(201, nova);
+        }, demora);
+      });
+      return;
+    }
+  }
   const co = pathname.match(/^\/atletas\/(\d+)\/professores(?:\/(\d+)\/consentimento)?$/);
   if (co) {
     const atleta = Number(co[1]);
