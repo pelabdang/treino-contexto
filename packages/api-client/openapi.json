@@ -910,6 +910,17 @@
             ],
             "title": "Apoio"
           },
+          "apoio_curto": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Apoio Curto"
+          },
           "barras": {
             "items": {
               "$ref": "#/components/schemas/BarraOut"
@@ -917,8 +928,27 @@
             "title": "Barras",
             "type": "array"
           },
+          "comparacao_texto": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Comparacao Texto"
+          },
           "destino": {
             "$ref": "#/components/schemas/DestinoOut"
+          },
+          "dias": {
+            "default": [],
+            "items": {
+              "$ref": "#/components/schemas/DiaOut"
+            },
+            "title": "Dias",
+            "type": "array"
           },
           "formato": {
             "enum": [
@@ -1628,6 +1658,43 @@
           "sem_carga"
         ],
         "title": "DiaCargaOut",
+        "type": "object"
+      },
+      "DiaOut": {
+        "properties": {
+          "estado": {
+            "enum": [
+              "feito",
+              "hoje",
+              "vazio",
+              "futuro"
+            ],
+            "title": "Estado",
+            "type": "string"
+          },
+          "modalidades": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Modalidades",
+            "type": "array"
+          },
+          "rotulo": {
+            "title": "Rotulo",
+            "type": "string"
+          },
+          "rotulo_acessivel": {
+            "title": "Rotulo Acessivel",
+            "type": "string"
+          }
+        },
+        "required": [
+          "rotulo",
+          "estado",
+          "modalidades",
+          "rotulo_acessivel"
+        ],
+        "title": "DiaOut",
         "type": "object"
       },
       "DiferencaParteOut": {
@@ -3524,6 +3591,10 @@
             "title": "Modalidade",
             "type": "string"
           },
+          "pergunta_texto": {
+            "title": "Pergunta Texto",
+            "type": "string"
+          },
           "titulo": {
             "title": "Titulo",
             "type": "string"
@@ -3535,7 +3606,8 @@
           "data_local",
           "hora_local",
           "duracao",
-          "titulo"
+          "titulo",
+          "pergunta_texto"
         ],
         "title": "PendenteOut",
         "type": "object"

@@ -16,7 +16,7 @@ from sqlalchemy.dialects.sqlite import insert as _insert_sqlite
 from sqlalchemy.orm import Session
 
 from app.db.models import CHECKIN_ATALHOS, CHECKIN_VERSAO, Atividade, CheckinTreino, FeedbackTreino
-from app.servicos.fuso import FUSO_PADRAO, data_local
+from app.servicos.fuso import FUSO_PADRAO, data_local, inicio_local
 
 # --- Parametros de produto, faceis de mudar (ADR 0012, "A confirmar" 1 e 2) -------------------------------------------
 PRAZO_DIAS = 7  # criar o check-in ate 7 dias depois do dia do treino; editar e apagar nao tem prazo
@@ -187,6 +187,29 @@ TITULO_MODALIDADE = {"corrida": "Corrida", "natacao": "Natação", "ciclismo": "
 def titulo(a: Atividade) -> str:
     """"Corrida, 45 min": modalidade e minutos arredondados. Nao e dado de saude."""
     return f"{TITULO_MODALIDADE.get(a.modalidade, 'Treino')}, {int(a.duracao_s / 60 + 0.5)} min"
+
+
+_NOME_DO_TREINO = {"corrida": ("a", "corrida"), "natacao": ("a", "natação"), "ciclismo": ("o", "ciclismo")}
+_DIA_DA_SEMANA = ("segunda", "terça", "quarta", "quinta", "sexta", "sábado", "domingo")
+
+
+def pergunta_do_checkin(a: Atividade, hoje: date | None = None) -> str:
+    """A pergunta pronta do check-in com a data relativa: "Como foi a natação de ontem?", "Como foi a corrida de terça?".
+
+    Hoje e ontem por extenso; de 2 a 6 dias atras, o dia da semana; antes disso, "do dia 12/03" (o dia da semana ja se repetiu)."""
+    hoje = hoje or hoje_local()
+    dia = inicio_local(a.inicio, a.fuso_min).date()
+    artigo, nome = _NOME_DO_TREINO.get(a.modalidade, ("o", "treino"))
+    atras = (hoje - dia).days
+    if atras <= 0:
+        quando = "de hoje"
+    elif atras == 1:
+        quando = "de ontem"
+    elif atras <= 6:
+        quando = f"de {_DIA_DA_SEMANA[dia.weekday()]}"
+    else:
+        quando = f"do dia {dia:%d/%m}"
+    return f"Como foi {artigo} {nome} {quando}?"
 
 
 def pendentes(session: Session, atleta_id: int, dias: int, hoje: date | None = None) -> list[Atividade]:
