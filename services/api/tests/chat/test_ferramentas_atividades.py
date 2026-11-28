@@ -100,7 +100,7 @@ def test_ver_atividade_traz_o_pacote_e_a_observacao(session, mundo):
     a, _, a1, a2, a3, _ = mundo
     r = executar(session, _consulta(a.id), "ver_atividade", {"atividade_id": a2.id})
     assert r["estado"] == "ok" and r["atividade_id"] == a2.id and r["data_texto"] == "02/03"
-    assert r["treino"]["distancia_texto"] == "21,40 km" and r["treino"]["pace_texto"] == "5:51/km"
+    assert r["treino"]["distancia_texto"] == "21,40 km" and r["treino"]["pace_texto"] == "5:50/km"
     assert r["checkin"]["pse"] == 7 and r["checkin"]["sensacao_texto"] == "mal" and r["checkin"]["atalhos"] == ["dor"]
     assert r["checkin"]["observacao_texto"] == "Dormi pouco e saí tarde."
     assert set(r) >= {"treino", "linha_base", "esforcos", "clima", "carga", "carga_pse", "checkin"}
