@@ -2,7 +2,7 @@
 
 `excluir_atleta` apaga, na ordem das chaves estrangeiras (sem depender de `ON DELETE CASCADE`, que o SQLite dos testes nao aplica):
 conta e sessoes, tentativas de login do e-mail da conta, atividades e tudo que pende delas (segmentos, blocos, carga, clima, rotulo de
-transicao, check-in e feedback), carga e recuperacao do atleta, limiares e zonas, recordes, semana-padrao, vinculos, a trilha de
+transicao, check-in e feedback), carga e recuperacao do atleta, limiares e zonas, recordes, semana-padrao, conversas e mensagens do chat (ADR 0017), vinculos, a trilha de
 consentimento (`consentimento_evento`, padrao da ADR: apagada junto) e o proprio atleta. Os FIT guardados em disco saem depois do commit.
 O professor e a assessoria NAO sao do atleta e ficam; o `tipo_confirmado_por` some junto com a atividade.
 
@@ -26,7 +26,7 @@ from sqlalchemy.orm import Session
 
 from app.db.models import (
     Atividade, Atleta, BlocoAtividade, CargaAtividade, CargaGarminDia, CheckinTreino, ClimaAtividade, Conta, ConsentimentoEvento,
-    FeedbackTreino, LimiarAtleta, RecordePessoal, RecuperacaoDia, RotuloTransicao, Segmento, SemanaPadrao, SemanaPadraoItem, Sessao,
+    Conversa, FeedbackTreino, LimiarAtleta, Mensagem, RecordePessoal, RecuperacaoDia, RotuloTransicao, Segmento, SemanaPadrao, SemanaPadraoItem, Sessao,
     TentativaLogin, VinculoProfessorAtleta, ZonaFcAtleta,
 )
 from app.ingestao.fit_guardado import pasta_fit
@@ -36,7 +36,7 @@ from app.servicos.conta import hash_do_email
 TABELAS_APAGADAS = (
     "feedback_treino", "checkin_treino", "segmento", "bloco_atividade", "carga_atividade", "clima_atividade", "rotulo_transicao",
     "atividade", "carga_garmin_dia", "limiar_atleta", "recorde_pessoal", "recuperacao_dia", "zona_fc_atleta", "semana_padrao_item",
-    "semana_padrao", "consentimento_evento", "vinculo_professor_atleta", "sessao", "tentativa_login", "conta", "atleta",
+    "semana_padrao", "mensagem", "conversa", "consentimento_evento", "vinculo_professor_atleta", "sessao", "tentativa_login", "conta", "atleta",
 )
 # Tabelas que existem e NAO sao dados do atleta (nada delas e apagado aqui, de proposito).
 TABELAS_QUE_FICAM = frozenset({"professor", "assessoria"})
@@ -112,6 +112,9 @@ def excluir_atleta(session: Session, atleta_id: int, fit_dir: Path | None = None
     _apagar(session, r, SemanaPadrao, SemanaPadrao.atleta_id == atleta_id)
     _apagar(session, r, ConsentimentoEvento, ConsentimentoEvento.atleta_id == atleta_id)
     _apagar(session, r, VinculoProfessorAtleta, VinculoProfessorAtleta.atleta_id == atleta_id)
+    # chat (ADR 0017): mensagens pela conversa, conversas pelo atleta
+    _apagar(session, r, Mensagem, Mensagem.conversa_id.in_(select(Conversa.id).where(Conversa.atleta_id == atleta_id)))
+    _apagar(session, r, Conversa, Conversa.atleta_id == atleta_id)
     # conta, sessoes e as tentativas de login do e-mail (guardadas so pelo hash dele)
     _apagar(session, r, Sessao, Sessao.conta_id.in_(contas))
     for e in emails:

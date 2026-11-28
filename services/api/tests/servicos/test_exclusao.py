@@ -36,6 +36,7 @@ AJUSTES = {
 EXTRAS = {  # colunas anulaveis que o CHECK exige preenchidas
     "carga_atividade": {"motivo": "sem_fc"},
     "feedback_treino": {"motivo": "provedor_erro"},
+    "mensagem": {"resposta": "x"},
     "rotulo_transicao": {},
 }
 
