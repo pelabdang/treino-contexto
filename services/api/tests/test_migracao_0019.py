@@ -1,6 +1,7 @@
 """Migracao 0019: conversa e mensagem do chat (#597, ADR 0017). Dados sinteticos."""
 
 import pytest
+import sqlalchemy as sa
 from alembic import command
 from alembic.autogenerate import compare_metadata
 from alembic.migration import MigrationContext
@@ -22,9 +23,11 @@ def _base(conn):
 
 
 def _msg(conn, ordem, estado, resposta, motivo):
-    conn.exec_driver_sql(
+    # `text()` com parametros nomeados vale no SQLite e no Postgres (`?` so existe no SQLite)
+    conn.execute(sa.text(
         "INSERT INTO mensagem (conversa_id, ordem, pergunta, chamadas_ferramenta, resposta, estado, motivo, versao_checagens, versao_prompt)"
-        " VALUES (1, ?, 'p', '[]', ?, ?, ?, 'checagens_chat@1', 'prompt_chat@1')", (ordem, resposta, estado, motivo))
+        " VALUES (1, :ordem, 'p', '[]', :resposta, :estado, :motivo, 'checagens_chat@1', 'prompt_chat@1')"),
+        {"ordem": ordem, "resposta": resposta, "estado": estado, "motivo": motivo})
 
 
 def test_0019_sobe_desce_e_sobe_de_novo(db_url):  # noqa: F811
