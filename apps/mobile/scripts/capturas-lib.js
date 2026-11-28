@@ -36,6 +36,8 @@ const ACESSOS = {
   atleta35: "token-sintetico-atleta-35",
   atleta36: "token-sintetico-atleta-36",
   atleta37: "token-sintetico-atleta-37",
+  // Início v5: o atleta 7 não tem check-in pendente (check-ins em dia).
+  atleta7: "token-sintetico-atleta-7",
 };
 const ENTRAR_ANA = [["campo-email", "atleta1@exemplo.com"], ["campo-senha", SENHA_SINTETICA]];
 const TROCAR_OK = [["campo-senha-atual", SENHA_SINTETICA], ["campo-senha-nova", "outra-senha-sintetica"], ["campo-senha-repetida", "outra-senha-sintetica"]];
@@ -92,6 +94,12 @@ const ROTAS = [
   { nome: "trocar-senha-nova-invalida", caminho: "/trocar-senha", preencher: [["campo-senha-atual", SENHA_SINTETICA], ["campo-senha-nova", "curta"], ["campo-senha-repetida", "curta"]], clicar: ["botao-salvar"] },
   { nome: "trocar-senha-salva", caminho: "/trocar-senha", simular: "troca-ok", preencher: TROCAR_OK, clicar: ["botao-salvar"] },
   // Navegação por abas (UX, auditoria da Lia): barra na base (390) e menu lateral (1280). Início e Evolução mostram os tiros de 1 km.
+  // Início v5 (#627, spec inicio-v5-direcoes): atleta 1 tem pendências; atleta 7 está em dia; atleta 2 não tem treinos.
+  { nome: "inicio-v5-pendente", caminho: "/" },
+  { nome: "inicio-v5-pendente-fim", caminho: "/", rolarAoFim: true },
+  { nome: "inicio-v5-em-dia", caminho: "/", acesso: "atleta7" },
+  { nome: "inicio-v5-em-dia-fim", caminho: "/", acesso: "atleta7", rolarAoFim: true },
+  { nome: "inicio-v5-vazio", caminho: "/", acesso: "atleta2" },
   { nome: "inicio-v3", caminho: "/" },
   { nome: "inicio-v4-numeros", caminho: "/" }, // a seção "Seus números" com os cinco cartões
   { nome: "inicio-v4-um-cartao", caminho: "/", acesso: "atleta33" },

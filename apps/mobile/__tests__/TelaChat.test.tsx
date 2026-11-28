@@ -310,7 +310,7 @@ describe("tela do chat: conversa existente", () => {
 describe("tela do chat: o app não calcula", () => {
   it("o código do chat não usa Math, toFixed, reduce, Intl nem toLocale", () => {
     const fs = require("node:fs");
-    for (const arq of ["src/componentes/TelaChat.tsx", "src/componentes/TelaConversas.tsx", "src/componentes/EsperaChat.tsx", "src/componentes/EntradaChat.tsx", "src/chat/hora.ts", "src/chat/textos.ts"]) {
+    for (const arq of ["src/componentes/TelaChat.tsx", "src/componentes/TelaConversas.tsx", "src/componentes/EsperaChat.tsx", "src/componentes/ChatNoInicio.tsx", "src/componentes/BlocoSemana.tsx", "src/componentes/CartaoCheckinGrande.tsx", "src/chat/hora.ts", "src/chat/textos.ts"]) {
       expect(fs.readFileSync(arq, "utf8")).not.toMatch(/toFixed|Math\.|\.reduce\(|toLocale|Intl\.|mediana\(|parseFloat/);
     }
   });
