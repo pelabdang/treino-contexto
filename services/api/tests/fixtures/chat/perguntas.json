@@ -670,7 +670,7 @@
   {
    "id": "K02",
    "categoria": "checkin",
-   "pergunta": "Quando eu me senti pior nos treinos?",
+   "pergunta": "Em quais treinos eu me senti mal?",
    "atleta": "atleta_a",
    "hoje": "2030-03-15",
    "ferramentas_esperadas": [
@@ -684,16 +684,26 @@
       "versao": "checkin@1",
       "estado": "ok",
       "periodo_texto": "últimas 12 semanas",
-      "pior_sensacao": {
-       "data_texto": "21/02",
-       "atividade_id": 9005,
-       "sensacao_texto": "mal",
-       "pse_texto": "7",
-       "atalhos": [
-        "sono_ruim"
-       ],
-       "observacao_texto": "Dormi pouco e saí tarde."
-      }
+      "total": 2,
+      "checkins": [
+       {
+        "data_texto": "21/02",
+        "atividade_id": 9005,
+        "pse_texto": "7",
+        "sensacao_texto": "mal",
+        "atalhos": [
+         "sono_ruim"
+        ],
+        "observacao_texto": "Dormi pouco e saí tarde."
+       },
+       {
+        "data_texto": "05/03",
+        "atividade_id": 9006,
+        "pse_texto": "5",
+        "sensacao_texto": "normal",
+        "atalhos": []
+       }
+      ]
      }
     }
    ],
