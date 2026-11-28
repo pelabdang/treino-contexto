@@ -1,17 +1,17 @@
 ---
-source_file: "docs/produto/metas/meta-1-tiros-1km.md"
-type: "concept"
-community: "Mapa, upload de FIT e ADRs"
+source_file: "docs/decisoes/0005-serie-de-tiros-o-que-entra.md"
+type: "document"
+community: "Modelo de dados e tabelas"
 tags:
-  - graphify/concept
-  - graphify/EXTRACTED
-  - community/Mapa_upload_de_FIT_e_ADRs
+  - graphify/document
+  - graphify/INFERRED
+  - community/Modelo_de_dados_e_tabelas
 ---
 
 # Regra tiros_1km (versões @1 a @4)
 
 ## Connections
-- [[Meta 1 tiros de 1 km]] - `references` [EXTRACTED]
-- [[Meta 5 detecção de esforços]] - `conceptually_related_to` [INFERRED]
+- [[ADR 0005 Série de tiros o que entra e como a regra muda]] - `mentions` [EXTRACTED]
+- [[Coluna segmento.versao_deteccao]] - `versions` [INFERRED]
 
-#graphify/concept #graphify/EXTRACTED #community/Mapa_upload_de_FIT_e_ADRs
+#graphify/document #graphify/INFERRED #community/Modelo_de_dados_e_tabelas

@@ -1,17 +1,16 @@
 ---
 source_file: "docs/_templates/regra.md"
 type: "document"
-community: "Templates de regra e texto"
+community: "Mapa, metas e templates"
 tags:
   - graphify/document
-  - graphify/INFERRED
-  - community/Templates_de_regra_e_texto
+  - graphify/EXTRACTED
+  - community/Mapa_metas_e_templates
 ---
 
-# Template: regra
+# Template regra
 
 ## Connections
-- [[Template artigo]] - `references` [INFERRED]
-- [[Template entrevista]] - `references` [EXTRACTED]
+- [[Modelos de nota (_templates)]] - `contains` [EXTRACTED]
 
-#graphify/document #graphify/INFERRED #community/Templates_de_regra_e_texto
+#graphify/document #graphify/EXTRACTED #community/Mapa_metas_e_templates

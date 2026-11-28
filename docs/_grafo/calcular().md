@@ -1,8 +1,8 @@
 ---
-source_file: "docs/design/contraste.py"
+source_file: "design/contraste.py"
 type: "code"
 community: "Script de contraste"
-location: "L107"
+location: "L111"
 tags:
   - graphify/code
   - graphify/EXTRACTED

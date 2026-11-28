@@ -1,8 +1,8 @@
 ---
-source_file: "docs/design/contraste.py"
+source_file: "design/contraste.py"
 type: "rationale"
 community: "Script de contraste"
-location: "L82"
+location: "L86"
 tags:
   - graphify/rationale
   - graphify/EXTRACTED

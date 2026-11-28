@@ -1,17 +1,16 @@
 ---
 source_file: "docs/_templates/artigo.md"
 type: "document"
-community: "Templates de regra e texto"
+community: "Mapa, metas e templates"
 tags:
   - graphify/document
   - graphify/EXTRACTED
-  - community/Templates_de_regra_e_texto
+  - community/Mapa_metas_e_templates
 ---
 
-# Template: artigo
+# Template artigo
 
 ## Connections
-- [[Template métrica]] - `references` [EXTRACTED]
-- [[Template regra]] - `references` [INFERRED]
+- [[Modelos de nota (_templates)]] - `contains` [EXTRACTED]
 
-#graphify/document #graphify/EXTRACTED #community/Templates_de_regra_e_texto
+#graphify/document #graphify/EXTRACTED #community/Mapa_metas_e_templates
