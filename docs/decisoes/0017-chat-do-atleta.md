@@ -11,7 +11,7 @@ links: [[decisoes/0004-contrato-tela-evolucao]], [[decisoes/0010-carga-de-treino
 > números, textos e exemplos são **sintéticos**. Pergunta, resultado de ferramenta e resposta são dado pessoal e de saúde: nada disso, real,
 > no repositório, em log ou em captura.
 > Dá base para #592 (fixtures), #593 e #594 (ferramentas), #595 (`checagens_chat@1`), #596 (laço), #597 (banco), #598 (rotas), #599 e #600 (tela).
-> **Falta a revisão da Duda** nos itens 4, 8 e 9 (banco, rotas e camada de LLM): os valores deles estão marcados como padrão em "A confirmar".
+> **Revisão da Duda feita em 28/11** nos itens 7 e 8 (banco, rotas e camada de LLM), contra `models.py`, o alembic e a `camada.py` do `main`: confirmado, com dois ajustes (tipo JSON e limite por hora) e uma pendência para o Angelo (chave de LLM no servidor, ADR 0016).
 
 ## Contexto
 A Meta 14 entrega o chat "Pergunte ao seu treino": o atleta escreve (ou toca num atalho) e recebe uma resposta sobre os próprios treinos, com
@@ -177,12 +177,12 @@ O Angelo aceitou o Groq com o dado dele (decisão 2). Isso **não** responde à 
 `ler_observacao(atividade_id)` à parte, com o aviso na tela, sem mexer no resto. Está em "A confirmar", 1.
 
 ### 7. Modelo de dados (para a aprovação do Theo)
-Uma migração `0019`, **só aditiva**. Revisão da Duda pendente.
+Uma migração `0019`, **só aditiva** (a última é a `0018`; confirmado pela Duda). Os testes rodam em SQLite: `chamadas_ferramenta` usa `sa.JSON` com variante `JSONB` no Postgres, não `JSONB` puro, e o `CHECK` entra na migração por `batch_alter_table`/`create_table`, como nas anteriores.
 
 | Tabela | Colunas | Observações |
 |---|---|---|
 | `conversa` | `id`; `atleta_id` FK `atleta.id` `ON DELETE CASCADE`; `dono_papel` (`atleta` na Meta 14; `professor` na 16); `dono_conta_id` FK `conta.id` `ON DELETE CASCADE`; `titulo` (texto 80, vem da primeira pergunta cortada, **sem passar pelo provedor**); `criada_em`; `atualizada_em` | `CHECK dono_papel IN ('atleta','professor')`. Na Meta 14 todo registro é `atleta`. A lista do atleta filtra `dono_papel = 'atleta' AND atleta_id = sessão`. |
-| `mensagem` | `id`; `conversa_id` FK `conversa.id` `ON DELETE CASCADE`; `ordem` (inteiro, `UNIQUE (conversa_id, ordem)`); `pergunta` (texto, até 1000); `chamadas_ferramenta` (JSONB: lista de `{nome, argumentos, resultado}`); `resposta` (texto, anulável, até 900); `estado` (`respondida`, `recusada`, `reprovada`, `erro`); `motivo` (código, anulável); `versao_checagens` (`checagens_chat@1`); `versao_prompt` (`prompt_chat@1`); `provedor`; `modelo`; `criada_em` | `CHECK (estado = 'respondida') = (resposta IS NOT NULL AND motivo IS NULL)` (recusada grava o texto fixo; reprovada e erro **sem texto**). Uma linha por pergunta e resposta. |
+| `mensagem` | `id`; `conversa_id` FK `conversa.id` `ON DELETE CASCADE`; `ordem` (inteiro, `UNIQUE (conversa_id, ordem)`); `pergunta` (texto, até 1000); `chamadas_ferramenta` (JSON, `JSONB` no Postgres: lista de `{nome, argumentos, resultado}`); `resposta` (texto, anulável, até 900); `estado` (`respondida`, `recusada`, `reprovada`, `erro`); `motivo` (código, anulável); `versao_checagens` (`checagens_chat@1`); `versao_prompt` (`prompt_chat@1`); `provedor`; `modelo`; `criada_em` | `CHECK (estado = 'respondida') = (resposta IS NOT NULL AND motivo IS NULL)` (recusada grava o texto fixo; reprovada e erro **sem texto**). Uma linha por pergunta e resposta. |
 
 - **Resultado das ferramentas é guardado** (padrão, "A confirmar", 3): é o que permite repetir a checagem e abrir o "por que esse número?" depois. É
   dado de saúde, apagado com a conta e fora de log, como o feedback.
@@ -193,10 +193,11 @@ Uma migração `0019`, **só aditiva**. Revisão da Duda pendente.
 - **O professor não vê:** não há rota do professor para `conversa`, e a leitura do aluno pela caixa do dia (ADR 0015) não faz join com essas tabelas;
   um teste de rota prova `404` para o professor com vínculo e consentimento ativos.
 - **Sem retenção automática** no piloto: a conversa fica até o atleta apagar ou excluir a conta.
-- Rotas ficam para a #598 (adendo da ADR 0004), com o `{id}` comparado com a sessão (item 5 da ADR 0016) e **síncronas** nesta meta (sem streaming).
+- Rotas ficam para a #598 (adendo da ADR 0004), com o `{id}` comparado com a sessão (item 5 da ADR 0016) e **síncronas** nesta meta (sem streaming). Confirmado pela Duda: usam a dependência `atleta_da_sessao` de `autenticacao.py` (que já dá o `404` uniforme, inclusive ao professor), e `conversa_id`/`mensagem` de outro atleta também dão `404`.
+- **Limite de 20 por hora:** a Duda conta as linhas de `mensagem` da última hora do atleta (join por `conversa`), sem contador em memória, para valer com mais de uma instância e depois de reinício. Apagar a conversa zera a contagem; no piloto é aceitável, e o `429` leva `espere_s` como o do login.
 
 ### 8. Provedor e camada trocável
-- **Groq, pelo LiteLLM**, `LLM_PROVIDER` e `LLM_MODEL` do `.env` (ADR 0013, item 3). Nunca chamar o provedor direto.
+- **Groq, pelo LiteLLM** (confirmado pela Duda: `ProvedorLLM`/`ProvedorFalso`/`ProvedorLiteLLM`/`Redator` em `app/llm/camada.py`, `completar` intacto), `LLM_PROVIDER` e `LLM_MODEL` do `.env` (ADR 0013, item 3). Nunca chamar o provedor direto.
 - A camada ganha um **método novo** `conversar(mensagens, ferramentas, timeout_s)` que devolve **ou** texto **ou** a lista de chamadas
   (`nome`, `argumentos` já validados como JSON). `completar` não muda. Mesmas regras: nunca levanta (devolve motivo), sem log de conteúdo, sem nova
   tentativa dentro da chamada, limite de chamadas por instância.
@@ -230,12 +231,13 @@ que cada ruim reprova exatamente pelos motivos esperados; outro confere que os n
 1. **Observação livre do check-in no provedor** (pergunta ao Angelo). **Fica fora**, em todas as ferramentas. Alternativa: ferramenta `ler_observacao`
    à parte, com o aviso na tela, para ele poder perguntar "o que eu escrevi no treino de ontem?".
 2. **Regeneração depois de reprovar.** **Uma**, com os códigos do motivo. Alternativa: nenhuma (o atleta repete a pergunta), mais simples.
-3. **Guardar os resultados das ferramentas na mensagem** (Duda). **Sim.** Alternativa: só nome e argumentos, e a conferência refaz a consulta.
+3. **Guardar os resultados das ferramentas na mensagem** (Duda). **Sim, confirmado pela Duda.** Alternativa: só nome e argumentos, e a conferência refaz a consulta.
 4. **Banco e rotas** (Duda): `conversa`/`mensagem` como no item 7, uma linha por pergunta; rotas `POST` e `GET` em `/atletas/{id}/conversas`,
-   `GET` e `DELETE` por id e `POST .../mensagens` síncrono. **Padrão: como está.** Sem resposta dela, vale.
+   `GET` e `DELETE` por id e `POST .../mensagens` síncrono. **Confirmado pela Duda** (com `sa.JSON`/`JSONB` e o `CHECK` acima).
 5. **Limite por atleta.** **20 perguntas por hora.** Alternativa: só o limite por instância da camada.
-6. **Laço:** **6 ferramentas, 8 chamadas ao provedor, 20 s por chamada, 45 s por pergunta, 1 correção de erro de ferramenta** (valores nossos, sem fonte).
-7. **`LLM_MODEL` do chat** (Duda e Angelo). **`openai/gpt-oss-120b` no Groq** (suporte confirmado no mapa local). Vale só depois da rodada real do #603.
+6. **Laço:** **6 ferramentas, 8 chamadas ao provedor, 20 s por chamada, 45 s por pergunta, 1 correção de erro de ferramenta** (valores nossos, sem fonte). **Confirmado pela Duda**; o `llm_timeout_s` de 20 s já existe na `config.py`, o de 45 s por pergunta é novo (`llm_timeout_pergunta_s`).
+7. **`LLM_MODEL` do chat** (Duda e Angelo). **`openai/gpt-oss-120b` no Groq** (suporte confirmado no mapa local; a Duda confirma por ser o do `.env` do Angelo). Vale só depois da rodada real do #603.
+11. **Chave de LLM no servidor** (Angelo; apontado pela Duda). A ADR 0016 (item 14 e "Segredos") deixa o LLM **desligado no servidor** até um novo "sim" do Angelo. O chat só funciona no piloto hospedado com a chave do Groq como segredo do provedor, a revisão do termo e a consulta de LGPD. **Padrão: chat só local até esse "sim"**; as rotas respondem `provedor_nao_configurado` sem a chave.
 8. **Histórico de contexto:** **6 trocas aprovadas**, sem resultados antigos. Alternativa: só a pergunta atual.
 9. **Dica de pergunta e atalhos** são da Lia (#599); aqui o atalho é só uma pergunta pronta que entra no mesmo fluxo.
 10. **Conversa do professor (Meta 16):** **conversa própria** (`dono_papel = 'professor'`), sem ver a do atleta. Alternativa: nenhuma conversa guardada para ele.
