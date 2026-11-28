@@ -33,7 +33,7 @@ Regra própria do projeto, sem artigo: decisões do Angelo de 10/11 e 28/11 e as
 obriga a rever esta; qualquer mudança de regra sobe a versão (gravada em `mensagem.versao_checagens`).
 
 ## Casos
-O oráculo é [[metricas/chat-oraculo]]: as 32 respostas boas (menos as recusas) passam e as 32 ruins reprovam **exatamente** pelos motivos declarados. O teste é
+O oráculo é [[metricas/chat-oraculo]]: as 24 respostas boas de treino passam e as 32 ruins reprovam **exatamente** pelos motivos declarados. O teste é
 `services/api/tests/explicacao/test_checagens_chat.py`.
 
 ## Limitações e quando não usar
