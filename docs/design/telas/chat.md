@@ -83,12 +83,12 @@ continuam 4 (Início, Treinos, Evolução, Conta) e **somem na tela do chat**, p
 | pede mudança | `recusada`, `motivo = pedido_de_mudanca` | idem | "Mudar o treino é com o seu professor. Posso mostrar o que os seus treinos dizem, se isso ajudar na conversa com ele." (sem professor: só a primeira frase; **a API decide**) |
 | reprovada | `reprovada` | cartão de erro (`cor.erro-suave`) | o `texto` fixo: "Não consegui responder agora. Tente de novo em instantes." e o botão **"Tentar de novo"** |
 | erro do provedor | `erro` | igual à reprovada (mesma frase, **sem** o motivo na tela) | idem |
-| limite | HTTP `429` | faixa de alerta (`cor.alerta-suave`) acima do compositor; campo e ↑ desligados | "Você fez 20 perguntas na última hora. Espere N min para perguntar de novo." |
+| limite | HTTP `429` | faixa de alerta (`cor.alerta-suave`) acima do compositor; campo e ↑ desligados | o `detail` da API ("Você fez 20 perguntas na última hora.") e o `espere_texto` pronto ("Você pode perguntar de novo em 12 min."), os dois **como vieram** |
 | sem rede | falha de conexão | faixa neutra sobre o compositor, a pergunta **fica no campo** | "Sem conexão. Verifique a internet e tente de novo." |
 | conversa não encontrada | `404` | tela de erro simples com "Voltar às conversas" | "Não encontramos esta conversa." |
 - **Recusa não é erro:** contorno tracejado em cor neutra, sem ícone de alerta, sem "Tentar de novo". Quem lê vê que o chat entendeu e disse o que faz.
 - **Tentar de novo** reenvia a **mesma pergunta** como mensagem nova (a pergunta que falhou continua no histórico; a API a guardou). Conta no limite de 20 por hora.
-- **Limite:** o tempo "N min" vem da API (como no login, [[design/telas/entrar]] usa `espere_s`); o app **só mostra**. Se faltar `espere_s`, vale "Espere alguns minutos". Quando o tempo acaba, a faixa some e o campo volta sozinho.
+- **Limite:** o tempo vem **pronto** em `espere_texto` (a API formata; o app **não converte** `espere_s` em minutos, regra do e2e da meta 12). O app mostra `detail` e `espere_texto` sem mexer. Se `espere_texto` faltar, mostra só o `detail`. Quando o tempo acaba (contagem interna em `espere_s`, só para reabrir o campo, sem mostrar número), a faixa some e o campo volta sozinho; o campo desligado diz "Aguarde para perguntar…".
 - O `422` (pergunta vazia ou maior que 1000) não deve ocorrer: o ↑ fica desligado com campo vazio e o campo para em 1000 caracteres; a partir de 900, um contador "950 de 1000" aparece sob o campo.
 
 ## A espera (sem streaming, até uns 45 s)
@@ -135,7 +135,7 @@ Pelo cliente gerado do adendo 16 (#598); nada é calculado no app.
 | `apagarConversa` (`DELETE .../conversas/{id}`) | `204` | apagar |
 | `MensagemOut` | `id`, `ordem`, `pergunta`, `estado`, `motivo`, `texto`, `links[]`, `criada_em` | balão, cartão de resposta, estado visual |
 | `links[]` | `tipo`, `rotulo`, `atividade_id` ou `serie_id` | botões de link |
-| `429` | `detail`, `espere_s`, cabeçalho `Retry-After` | faixa do limite |
+| `429` | `detail`, `espere_texto`, `espere_s`, cabeçalho `Retry-After` | faixa do limite (texto) e hora de reabrir o campo (`espere_s`) |
 - O app **mostra `texto` como veio** em qualquer `estado` (inclusive os textos fixos de recusa e erro). O `motivo` **não aparece** para o atleta; serve só para escolher o estilo do cartão (neutro na recusa, erro na reprovada e no erro).
 - Horas de `criada_em` já vêm em `America/Sao_Paulo`; o app só as escreve no formato "14:32".
 
@@ -154,6 +154,6 @@ pode ir ao serviço de IA quando o atleta pergunta sobre ele (decisão do Angelo
 1. **Sem aba nova para o chat** (entrada pelo Início e tela empilhada). Alternativa: aba "Perguntar" no lugar de outra. Recomendo sem aba.
 2. **Perguntas prontas fixas no app** (6 frases acima), porque não há rota para elas. Alternativa: a API manda a lista (permite variar com o dado do atleta, mas exige rota e a regra de quando aparece). Recomendo fixas no piloto.
 3. **Texto "Abrir treino"** (do contrato) no lugar de "Ver treino" (do pedido). Recomendo seguir o contrato.
-4. **Sair da tela enquanto pensa:** a resposta fica guardada para quando o atleta voltar? Depende da API (o pedido é síncrono; se o app fechar a conexão, o servidor termina e grava?). **Pergunta para a Duda/Theo.** Se não, tiro o botão "Voltar ao Início e esperar lá".
-5. **Limite em minutos:** a API manda só `espere_s`; converter em "N min" é formatação do app (como no login). Se preferirem, a API manda a frase pronta em `detail`.
+4. ~~Sair da tela enquanto pensa~~ A Duda espera que a resposta seja gravada mesmo assim e confirmará com um teste (Theo, 28/11). Mantido "Voltar ao Início e esperar lá"; se o teste falhar, o botão sai.
+5. ~~Limite em minutos~~ **Decidido (Theo, 28/11): a API manda `espere_texto` pronto.**
 6. **Primeira versão sem "Copiar resposta" e sem avaliar a resposta (👍/👎).** Dá para somar depois; sem pedido ainda.
