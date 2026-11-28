@@ -159,7 +159,7 @@ Spec em [[design/telas/checkin]]; contrato na [[decisoes/0012-check-in-pos-trein
 
 ## Chat "Pergunte ao seu treino" (#600, Meta 14)
 Spec: [[design/telas/chat]]. Contrato: adendo 16 da [[decisoes/0004-contrato-tela-evolucao]]; decisão: [[decisoes/0017-chat-do-atleta]]. Sem aba nova: telas empilhadas no grupo `(app)`, sem a barra de abas.
-- **Rotas:** `/chat` (conversa nova; `?pergunta=` já envia), `/chat/<id>` (existente), `/chat/conversas` (lista, "Nova conversa", apagar). Só do atleta (`caminhoDoPapel`).
+- **Rotas:** `/chat` (conversa nova; `?pergunta=` já envia; depois da 1ª resposta a rota vira `/chat/<id>` por `router.replace`), `/chat/<id>` (existente), `/chat/conversas` (lista, "Nova conversa", apagar). Só do atleta (`caminhoDoPapel`).
 - **Entrada:** `EntradaChat`, um cartão no Início atual, ligado pela prop `aoAbrirChat` e por `ENTRADA_CHAT_NO_INICIO` (`src/chat/textos.ts`). O Início v5 (#601) vai trocar este bloco.
 - **Chamadas:** `src/chat/api.ts` (`listarConversas`, `criarConversa`, `enviarMensagem`, `buscarConversa`, `apagarConversa`), nunca lançam. O pedido desiste em 60 s. O `429` traz `detail` e, se vier, `espere_texto`; o app mostra os dois como vieram e só usa `espere_s` para reabrir o campo. Os links mostram `data_texto` quando vem ("Abrir treino · qui 20/03"). Na espera longa (25 s) o botão "Voltar ao Início e esperar lá" leva ao Início; a API grava a resposta mesmo com o atleta fora da tela (#622).
 - **Constantes que ainda podem mudar** (`src/chat/textos.ts`): `PERGUNTAS_PRONTAS` (as 6 fixas), `ENTRADA_CHAT_NO_INICIO`, `COPIAR_E_AVALIAR` (sem copiar e sem 👍/👎 na primeira versão).

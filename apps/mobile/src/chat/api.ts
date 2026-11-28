@@ -10,8 +10,8 @@ export type ConversaResumo = components["schemas"]["ConversaResumoOut"];
 export type MensagemChat = components["schemas"]["MensagemOut"];
 export type LinkChat = components["schemas"]["LinkOut"];
 
-/** `429`: `detail` e `espere_texto` prontos (a API formata; o app não converte `espere_s` em minutos). `espere_texto` pode faltar. */
-export type LimiteChat = { detail: string; espere_texto?: string; espere_s: number };
+/** `429`: `detail` e `espere_texto` prontos (a API formata; o app não converte `espere_s` em minutos). Tolerante: se `espere_texto` faltar, só o `detail` aparece. */
+export type LimiteChat = Omit<components["schemas"]["app__rotas__chat__Muitas"], "espere_texto"> & Partial<Pick<components["schemas"]["app__rotas__chat__Muitas"], "espere_texto">>;
 
 export type ErroChat =
   | { tipo: "rede" }

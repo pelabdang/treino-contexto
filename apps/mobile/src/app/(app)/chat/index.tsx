@@ -14,6 +14,7 @@ export default function ChatNovo() {
       fetchFn={fetchFn}
       perguntaInicial={typeof pergunta === "string" && pergunta ? pergunta : undefined}
       aoVoltar={() => (router.canGoBack() ? router.back() : router.replace("/"))}
+      aoCriada={(id) => router.replace(`/chat/${id}`)}
       aoEsperarNoInicio={() => router.replace("/")}
       aoAbrirConversas={() => router.push("/chat/conversas")}
       aoAbrirTreino={(id) => router.push(`/treino/${id}`)}

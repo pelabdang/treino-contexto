@@ -88,6 +88,15 @@ describe("tela do chat: perguntar e responder", () => {
     expect(screen.getByText("Nesta semana você correu 3 vezes, 28,4 km no total.")).toBeTruthy();
   });
 
+  it("depois da primeira resposta avisa a rota para trocar o endereço", async () => {
+    const criada = jest.fn();
+    await render(tela(api().fetchFn, { aoCriada: criada }));
+    await digitar("Oi");
+    await fireEvent.press(screen.getByTestId("chat-enviar"));
+    await screen.findByTestId("chat-resposta");
+    expect(criada).toHaveBeenCalledWith(7);
+  });
+
   it("as seguintes usam enviarMensagem na mesma conversa", async () => {
     const a = api();
     await render(tela(a.fetchFn));

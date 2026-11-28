@@ -52,6 +52,8 @@ type Props = {
   aoAbrirEvolucao: (serieId: string) => void;
   /** Espera longa: volta ao Início; a API grava a resposta mesmo assim e ela aparece na conversa depois. */
   aoEsperarNoInicio?: () => void;
+  /** A conversa nova foi criada: a rota troca o endereço para `/chat/<id>` (recarregar a página não perde o fio). */
+  aoCriada?: (id: number) => void;
   agora?: () => Date;
 };
 
@@ -67,7 +69,7 @@ function erroLocal(chave: string, pergunta: string): Item {
   return { chave, pergunta, msg, local: true };
 }
 
-export function TelaChat({ apiUrl, atletaId, fetchFn, conversaId, perguntaInicial, aoVoltar, aoAbrirConversas, aoAbrirTreino, aoAbrirEvolucao, aoEsperarNoInicio, agora = () => new Date() }: Props) {
+export function TelaChat({ apiUrl, atletaId, fetchFn, conversaId, perguntaInicial, aoVoltar, aoAbrirConversas, aoAbrirTreino, aoAbrirEvolucao, aoEsperarNoInicio, aoCriada, agora = () => new Date() }: Props) {
   const tema = useTema();
   const margem = useMargemTela();
   const styles = useMemo(() => criarEstilos(tema, margem), [tema, margem]);
@@ -147,6 +149,7 @@ export function TelaChat({ apiUrl, atletaId, fetchFn, conversaId, perguntaInicia
         if (r.ok) {
           idAtual.current = r.dados.id;
           trocarPor(r.dados.mensagens[r.dados.mensagens.length - 1] ?? null);
+          aoCriada?.(r.dados.id);
         } else falhou(r);
       } else {
         const r = await enviarMensagem(atletaId, idAtual.current, p, opcoes);
@@ -156,7 +159,7 @@ export function TelaChat({ apiUrl, atletaId, fetchFn, conversaId, perguntaInicia
       emCurso.current = false;
       campo.current?.focus();
     },
-    [atletaId, opcoes],
+    [atletaId, opcoes, aoCriada],
   );
 
   const primeiraVez = useRef(true);
