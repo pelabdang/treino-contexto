@@ -31,14 +31,14 @@ O Angelo escolheu uma **mistura das três** com o **chat em tamanho médio**. Mo
 | 1 | saudação | sempre | "Olá, Ana" e a data |
 | 2 | cartão de check-in grande | há treino com `checkin_aberto` e sem check-in | "Como foi a natação de ontem?"; "3 perguntas, uns 30 segundos. Você recebe o feedback deste treino."; botão "Responder o check-in"; "+ N treino(s) sem check-in" se houver mais |
 | 3 | esta semana | tem ao menos 1 treino na semana | pendente: linha com "3 treinos · 2 h 37 min" e os 7 dias; em dia: número grande, "semana passada: 4" e os 7 dias |
-| 4 | Pergunte ao seu treino | sempre (depende do chat da Meta 14) | título com "Conversas ›" (lista de conversas); caixa "Ex.: como foi minha semana?"; perguntas prontas **fixas no app** (as 3 primeiras da lista de [[design/telas/chat]]); botão "Enviar pergunta". Toque numa pergunta pronta abre o chat e envia; toque na caixa abre o chat com o teclado |
+| 4 | Pergunte ao seu treino | sempre (depende do chat da Meta 14) | título com "Conversas ›" (lista de conversas); caixa "Ex.: como foi minha semana?"; perguntas prontas **fixas no app** (as 3 primeiras da lista de spec do chat (PR #621)); botão "Enviar pergunta". Toque numa pergunta pronta abre o chat e envia; toque na caixa abre o chat com o teclado |
 | 5 | hoje e último treino (par) | só **sem pendência** (com pendência o último treino já está no cartão de check-in); "Hoje" só com semana-padrão | "Corrida leve · da sua rotina"; "0:45:12 · Natação · qui 20/03" |
 | 6 | check-ins em dia | só sem pendência e com ao menos 1 check-in | "✓ Check-ins em dia" e "Ver feedback ›" |
 | 7 | seu professor | sempre | conectado: "Carlos vê seus treinos e check-ins" (toque abre a conexão); sem conexão: "Tem um código do seu professor?" e "Digitar ›" |
 | 8 | abaixo da dobra | como na [[design/telas/inicio-v4]] | quinzena, "Seus números" e treinos recentes |
 
 - **Dia da semana:** ✓ com a cor da modalidade (ter corrida, qua ciclismo, qui natação); hoje tem anel; dia sem treino fica cinza. O ✓ e o anel dizem o estado sem a cor.
-- **Perguntas prontas:** alvo de 44 de altura; o texto é fixo no app (sem rota; ver [[design/telas/chat]]); a fileira tem rolagem horizontal e cada botão é focável.
+- **Perguntas prontas:** alvo de 44 de altura; o texto é fixo no app (sem rota; ver spec do chat (PR #621)); a fileira tem rolagem horizontal e cada botão é focável.
 - **Estados do chat:** carregando = esqueleto da fileira; erro = a fileira some e a caixa fica ("Não deu para carregar as perguntas prontas. Você ainda pode escrever.").
 - **O convite do professor** e a linha do professor dividem o mesmo lugar; um atleta nunca vê os dois.
 - O app não calcula nada: "3 treinos", "2 h 37 min" e as frases vêm prontas.
