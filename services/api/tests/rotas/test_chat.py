@@ -78,7 +78,7 @@ def test_criar_conversa_responde_a_primeira_pergunta_com_link_do_treino(client, 
     assert m["estado"] == "respondida" and m["motivo"] is None and m["ordem"] == 1 and "8,20 km" in m["texto"]
     assert m["links"] == [{"tipo": "treino", "rotulo": "Abrir treino", "atividade_id": mundo["ativ"], "serie_id": None, "data_texto": mundo["data"]}]
     gravada = session.query(Mensagem).one()  # uma linha por turno, com as ferramentas e os resultados
-    assert gravada.estado == "respondida" and gravada.versao_checagens == "checagens_chat@1" and gravada.versao_prompt == "prompt_chat@2"
+    assert gravada.estado == "respondida" and gravada.versao_checagens == "checagens_chat@1" and gravada.versao_prompt == "prompt_chat@3"
     assert gravada.chamadas_ferramenta[0]["nome"] == "listar_atividades" and gravada.chamadas_ferramenta[0]["resultado"]["total"] == 1
     assert (gravada.provedor, gravada.modelo) == ("falso", "falso-1")
     conv = session.query(Conversa).one()
@@ -168,7 +168,7 @@ def test_limite_de_20_perguntas_por_hora_com_espere_s(client, session, mundo, pr
     cid = client.post(f"/atletas/{mundo['ana']}/conversas", json={"pergunta": "Oi?"}, headers=h).json()["id"]
     for i in range(PERGUNTAS_POR_HORA - 1):
         session.add(Mensagem(conversa_id=cid, ordem=10 + i, pergunta="p", chamadas_ferramenta=[], resposta=None, estado="erro", motivo="provedor_erro",
-                             versao_checagens="checagens_chat@1", versao_prompt="prompt_chat@2", criada_em=AGORA - timedelta(minutes=30)))
+                             versao_checagens="checagens_chat@1", versao_prompt="prompt_chat@3", criada_em=AGORA - timedelta(minutes=30)))
     session.commit()
     antes = prov["falso"].chamadas
     r = client.post(f"/atletas/{mundo['ana']}/conversas/{cid}/mensagens", json={"pergunta": "mais uma?"}, headers=h)

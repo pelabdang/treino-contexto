@@ -28,6 +28,9 @@ reprovou. Texto reprovado é descartado e o atleta recebe uma frase fixa ([[deci
 | `forma` | mais de 8 linhas, mais de 900 caracteres, Markdown, link, emoji ou nome próprio (siglas FC, PSE, UA, CTL, ATL, TSB e VFC e a observação citada entre aspas ficam de fora) |
 | `fora_do_escopo_respondido` | o modelo chamou `recusar`: o atleta lê só o texto fixo (`TEXTOS_FIXOS`), nunca o do modelo |
 
+## O prompt (`prompt_chat@3`)
+As palavras proibidas do prompt saem das **mesmas listas** das checagens (nenhuma cópia): diagnóstico, culpa e comparação, e a frase da dor é a `FRASE_DOR`. Regras explícitas de dor (a frase igual, uma vez, mais a data; interpretação da dor vai para `recusar`), de culpa e julgamento ("em vez de 'pior treino', liste o dado"), de comparação (só com `direcao`) e de carga e forma (só as siglas e a `leitura_texto`). Um teste confere que cada lista está no prompt.
+
 ## Fontes e versão
 Regra própria do projeto, sem artigo: decisões do Angelo de 10/11 e 28/11 e as listas da `checagens_feedback@6`. `checagens_chat@1`. Mudar uma lista de lá
 obriga a rever esta; qualquer mudança de regra sobe a versão (gravada em `mensagem.versao_checagens`).
