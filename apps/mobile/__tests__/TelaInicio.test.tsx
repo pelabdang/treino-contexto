@@ -1,10 +1,7 @@
-import type { Atividade } from "@treino/api-client";
 import { StyleSheet } from "react-native";
 import { fireEvent, render, screen, waitFor, within } from "@testing-library/react-native";
 
-import { atividades } from "../__fixtures__/atividades";
-import { cartoes as cartoesApi, emMovimento, estaSemana, hojeNaSemana, melhorMarca, volume4 } from "../__fixtures__/cartoes";
-import { ORIGEM_AUTOMATICO } from "../src/componentes/CartaoFeedback";
+import { cartoes as cartoesApi } from "../__fixtures__/cartoes";
 import { TelaInicio } from "../src/componentes/TelaInicio";
 import type { ItemTreino } from "../src/treinos/api";
 
@@ -30,13 +27,10 @@ const item = (id: number, extra: Partial<ItemTreino> = {}): ItemTreino => ({
   ...extra,
 });
 const lista = (itens: ItemTreino[]) => ({ atleta_id: 1, limite: 5, itens, proximo: null });
-const pend = (id: number, modalidade = "ciclismo") => ({ atividade_id: id, data_local: "2025-03-19", hora_local: "06:30", duracao: "0:52:10", modalidade, titulo: `Treino ${id}` });
 const dia = (i: number, ctl: number, atl: number) => ({ data: `2025-03-${7 + i}`, ctl, atl, tsb: 0, carga: 0, atividades: 0, calculadas: 0, sem_carga: 0, aprendendo: false, ctl_texto: `${ctl}`, atl_texto: `${atl}` });
 const quinzena = { atleta_id: 1, aviso: null, dias: [dia(0, 40, 50), dia(1, 44, 58)], frase_forma: { tipo: "acima", tendencia: "subiu", texto: "Frase da quinzena.", versao: "frase_forma@1" }, periodo: null, totais: {}, versao: "serie_carga@2", versao_carga: "carga@2" };
-const comFeedback = (fb: unknown, extra: Partial<Atividade> = {}) => ({ ...atividades.ok, feedback: fb, ...extra }) as Atividade;
-const feedbackPronto = { estado: "pronto", texto: "Linha 1\nLinha 2\nLinha 3\nLinha 4", origem: "automatico", checkin_aberto: false };
 
-type Rotas = { cartoes?: unknown; lista?: unknown; atividade?: unknown; pendentes?: unknown; quinzena?: unknown; falhar?: string[] };
+type Rotas = { cartoes?: unknown; lista?: unknown; pendentes?: unknown; quinzena?: unknown; falhar?: string[] };
 function servidor(r: Rotas = {}) {
   return jest.fn(async (input: RequestInfo | URL) => {
     const url = String(input).replace("http://api.teste", "");
@@ -44,123 +38,188 @@ function servidor(r: Rotas = {}) {
     if (url.includes("/checkins/pendentes")) return quebra("pendentes") ? resposta(500, {}) : resposta(200, r.pendentes ?? { dias: 7, pendentes: [], total: 0 });
     if (url.includes("/inicio/cartoes")) return quebra("cartoes") ? resposta(500, {}) : resposta(200, r.cartoes ?? { atleta_id: 1, data: "2025-03-21", cartoes: [] });
     if (url.includes("/carga")) return quebra("quinzena") ? resposta(500, {}) : resposta(200, r.quinzena ?? quinzena);
-    if (/\/atividades\/\d+$/.test(url)) return quebra("atividade") ? resposta(500, {}) : resposta(200, r.atividade ?? comFeedback(feedbackPronto));
     return quebra("lista") ? resposta(500, {}) : resposta(200, r.lista ?? lista([item(1)]));
   }) as unknown as jest.Mock & typeof fetch;
 }
 const urls = (f: jest.Mock) => f.mock.calls.map((c) => String(c[0]).replace("http://api.teste", ""));
 
+
+const pend = (id: number, modalidade = "natacao") => ({ atividade_id: id, data_local: "2025-03-20", hora_local: "07:00", duracao: "0:45:12", modalidade, titulo: `Treino ${id}` });
+const comPendentes = (...p: ReturnType<typeof pend>[]) => ({ dias: 7, pendentes: p, total: p.length });
 const props = () => ({ aoAbrirTreino: jest.fn(), aoResponderCheckin: jest.fn(), aoVerTodos: jest.fn() });
+const chat = () => ({ aoAbrirChat: jest.fn(), aoPerguntar: jest.fn(), aoAbrirConversas: jest.fn() });
 const tela = (f: typeof fetch, extra = {}) => <TelaInicio apiUrl="http://api.teste" atletaId={1} fetchFn={f} nome="Ana Souza" agora={() => new Date(2025, 2, 21)} {...props()} {...extra} />;
 
-describe("início v3", () => {
-  it("saudação com o primeiro nome e a data de hoje", async () => {
-    await render(tela(servidor()));
-    expect(screen.getByText("Olá, Ana")).toBeTruthy();
-    expect(screen.getByTestId("data-hoje").props.children).toBe("sexta, 21/03");
-    await screen.findByTestId("ultimo-treino");
-  });
-
-  it("busca a lista (5), o treino, os pendentes (7 dias) e a quinzena (ultimos=14)", async () => {
-    const f = servidor();
-    await render(tela(f));
-    await screen.findByTestId("quinzena");
-    await screen.findByTestId("numero-treino");
-    const u = urls(f);
-    expect(u).toContain("/atletas/1/atividades?limite=5");
-    expect(u).toContain("/atletas/1/atividades/1");
-    expect(u).toContain("/atletas/1/checkins/pendentes?dias=7");
-    expect(u).toContain("/atletas/1/carga?ultimos=14");
-  });
-
-  it("cenário 2: número, apoio, selo de normal e as três primeiras linhas do feedback", async () => {
+describe("início v5: com check-in pendente", () => {
+  it("o cartão grande abre o check-in do treino, mostra o treino e '+ N treinos sem check-in'", async () => {
     const p = props();
-    await render(tela(servidor(), p));
-    await screen.findByTestId("feedback-resumo");
-    expect(screen.getByTestId("numero-treino").props.children).toBe("5:12");
-    expect(screen.getByText("10,00 km · 0:52:05 · FC média 152 bpm")).toBeTruthy();
-    expect(screen.getByTestId("selo-normal-dentro")).toBeTruthy();
-    expect(screen.getByText("Linha 1\nLinha 2\nLinha 3")).toBeTruthy();
-    expect(screen.getByText(ORIGEM_AUTOMATICO)).toBeTruthy();
-    expect(screen.queryByTestId("convite-checkin")).toBeNull();
-    await fireEvent.press(screen.getByTestId("ler-feedback"));
+    const f = servidor({ pendentes: comPendentes(pend(7), pend(8, "ciclismo"), pend(9, "corrida")), cartoes: cartoesApi });
+    await render(tela(f, { ...p, aoVerPendentes: jest.fn(), aoAbrirDestino: jest.fn() }));
+    const cartao = await screen.findByTestId("checkin-grande");
+    expect(within(cartao).getByText("Como foi o treino de natação?")).toBeTruthy();
+    expect(within(cartao).getByText("Natação · qui 20/03 · 07:00 · 0:45:12")).toBeTruthy();
+    expect(within(cartao).getByText("3 perguntas, uns 30 segundos. Você recebe o feedback deste treino.")).toBeTruthy();
+    expect(within(cartao).getByText("+ 2 treinos sem check-in ›")).toBeTruthy();
+    await fireEvent.press(within(cartao).getByTestId("responder-checkin"));
+    expect(p.aoResponderCheckin).toHaveBeenCalledWith(7);
+  });
+
+  it("'+ N' abre a lista de pendentes", async () => {
+    const aoVerPendentes = jest.fn();
+    await render(tela(servidor({ pendentes: comPendentes(pend(7), pend(8)) }), { aoVerPendentes }));
+    await fireEvent.press(await screen.findByTestId("outros-sem-checkin"));
+    expect(aoVerPendentes).toHaveBeenCalled();
+  });
+
+  it("'Esta semana' encolhe para uma linha, e 'hoje e último treino' e 'Check-ins em dia' não aparecem", async () => {
+    await render(tela(servidor({ pendentes: comPendentes(pend(7)), cartoes: cartoesApi }), { aoAbrirDestino: jest.fn() }));
+    await screen.findByTestId("checkin-grande");
+    expect(await screen.findByTestId("semana-linha")).toBeTruthy();
+    expect(screen.getByText("3 treinos · 2 h 37 min · semana passada: 4")).toBeTruthy();
+    expect(screen.queryByTestId("semana-valor")).toBeNull();
+    expect(screen.queryByTestId("hoje-e-ultimo")).toBeNull();
+    expect(screen.queryByTestId("checkins-em-dia")).toBeNull();
+  });
+});
+
+describe("início v5: sem pendência (check-ins em dia)", () => {
+  const emDia = (extra = {}) => tela(servidor({ cartoes: cartoesApi, lista: lista([item(1), item(2)]) }), { aoAbrirDestino: jest.fn(), ...chat(), ...extra });
+
+  it("sem cartão de check-in; 'Esta semana' é o herói com os textos da API", async () => {
+    await render(emDia());
+    expect(await screen.findByTestId("semana-valor")).toBeTruthy();
+    expect(screen.getByText("3 treinos")).toBeTruthy();
+    expect(screen.getByText("2 h 37 min · semana passada: 4")).toBeTruthy();
+    expect(screen.queryByTestId("checkin-grande")).toBeNull();
+  });
+
+  it("mostra '✓ Check-ins em dia' com 'Ver feedback ›', que abre o último treino", async () => {
+    const p = props();
+    await render(emDia(p));
+    expect(await screen.findByText("✓ Check-ins em dia")).toBeTruthy();
+    await fireEvent.press(screen.getByTestId("ver-feedback"));
     expect(p.aoAbrirTreino).toHaveBeenCalledWith(1);
   });
 
-  it("o selo do normal segue o normal_estado da lista: o mesmo treino não muda de selo entre as telas", async () => {
-    const base = atividades.ok.linha_base!;
-    const detalhe = comFeedback(feedbackPronto, {
-      linha_base: { ...base, metricas: [{ ...base.metricas[0], chave: "pace_medio", estado: "dentro" }, { ...base.metricas[1], chave: "fc_media", estado: "fora", diferenca_texto: "11 bpm acima" }] },
-    } as Partial<Atividade>);
-    await render(tela(servidor({ lista: lista([item(1, { normal_estado: "fora" })]), atividade: detalhe })));
-    const selo = await screen.findByTestId("selo-normal-fora");
-    expect(within(selo).getByText("Fora do seu normal: 11 bpm acima")).toBeTruthy();
-    expect(screen.queryByTestId("selo-normal-dentro")).toBeNull();
-  });
-
-  it("cenário 1: sem check-in, o convite fica dentro do cartão e abre o check-in; mostra '+ N treinos'", async () => {
+  it("hoje e último treino em par; o último treino mostra a duração e 'Natação · data' prontas da lista", async () => {
     const p = props();
-    const f = servidor({
-      lista: lista([item(1, { checkin_estado: "pendente", feedback_estado: "sem_checkin" })]),
-      atividade: comFeedback({ estado: "sem_checkin", checkin_aberto: true, mensagem: "Faça o check-in para ver o feedback." }),
-      pendentes: { dias: 7, pendentes: [pend(1, "corrida"), pend(2), pend(3)], total: 3 },
-    });
-    await render(tela(f, p));
-    const convite = await screen.findByTestId("convite-checkin");
-    expect(within(screen.getByTestId("ultimo-treino")).getByTestId("convite-checkin")).toBe(convite);
-    expect(within(convite).getByText("Responda o check-in e receba o feedback deste treino.")).toBeTruthy();
-    expect(screen.getByTestId("outros-sem-checkin").props.children).toBe("+ 2 treinos sem check-in");
-    expect(screen.queryByTestId("faixa-outro-checkin")).toBeNull();
-    await fireEvent.press(screen.getByTestId("responder-checkin"));
-    expect(p.aoResponderCheckin).toHaveBeenCalledWith(1);
+    await render(emDia(p));
+    const par = await screen.findByTestId("hoje-e-ultimo");
+    expect(within(par).getByText("Corrida leve")).toBeTruthy();
+    expect(within(par).getByText("da sua rotina")).toBeTruthy();
+    expect(within(par).getByTestId("numero-treino").props.children).toBe("0:52:05");
+    expect(within(par).getByText("Corrida · ter 18/03")).toBeTruthy();
+    await fireEvent.press(within(par).getByTestId("abrir-ultimo-treino"));
+    expect(p.aoAbrirTreino).toHaveBeenCalledWith(1);
   });
 
-  it("cenário 2 com outro treino sem check-in: faixa abaixo do cartão 'Como foi o ciclismo?'", async () => {
-    const p = props();
-    const f = servidor({ pendentes: { dias: 7, pendentes: [pend(2)], total: 1 } });
-    await render(tela(f, p));
-    const faixa = await screen.findByTestId("faixa-outro-checkin");
-    expect(within(faixa).getByText("Como foi o ciclismo?")).toBeTruthy();
-    expect(within(faixa).getByText("qua 19/03")).toBeTruthy();
-    expect(screen.queryByTestId("convite-checkin")).toBeNull();
-    await fireEvent.press(screen.getByTestId("responder-outro"));
-    expect(p.aoResponderCheckin).toHaveBeenCalledWith(2);
+  it("'Seus números' fica abaixo e não repete 'Esta semana' nem 'Hoje'", async () => {
+    await render(emDia());
+    const secao = await screen.findByTestId("secao-numeros");
+    expect(within(secao).queryByTestId("cartao-esta_semana")).toBeNull();
+    expect(within(secao).queryByTestId("cartao-hoje_na_semana")).toBeNull();
+    expect(within(secao).getAllByTestId(/^cartao-/).map((c) => c.props.testID)).toEqual(["cartao-volume_4_semanas", "cartao-em_movimento", "cartao-melhor_marca"]);
+    const ids = JSON.stringify(screen.toJSON());
+    expect(ids.indexOf('"semana-valor"')).toBeLessThan(ids.indexOf('"chat-no-inicio"'));
+    expect(ids.indexOf('"hoje-e-ultimo"')).toBeLessThan(ids.indexOf('"quinzena"'));
+    expect(ids.indexOf('"quinzena"')).toBeLessThan(ids.indexOf('"secao-numeros"'));
+    expect(ids.indexOf('"secao-numeros"')).toBeLessThan(ids.indexOf('"recentes"'));
   });
 
-  it("feedback pendente: mostra a mensagem da API no lugar das linhas", async () => {
-    const f = servidor({ atividade: comFeedback({ estado: "pendente", mensagem: "Ainda estamos preparando o feedback." }) });
-    await render(tela(f));
-    expect((await screen.findByTestId("feedback-estado")).props.children.props.children).toBe("Ainda estamos preparando o feedback.");
-    expect(screen.queryByTestId("feedback-resumo")).toBeNull();
+  it("'Esta semana' abre o destino do cartão", async () => {
+    const aoAbrirDestino = jest.fn();
+    await render(emDia({ aoAbrirDestino }));
+    await fireEvent.press(await screen.findByTestId("bloco-semana"));
+    expect(aoAbrirDestino).toHaveBeenCalledWith(cartoesApi.cartoes[0].destino);
+  });
+
+  it("falha nos pendentes: nem o cartão de check-in nem 'Check-ins em dia' (não se afirma o que não se sabe)", async () => {
+    await render(tela(servidor({ falhar: ["pendentes"] })));
+    await screen.findByTestId("tela-inicio");
+    await waitFor(() => expect(screen.queryByText("Carregando")).toBeNull());
+    expect(screen.queryByTestId("checkin-grande")).toBeNull();
+    expect(screen.queryByTestId("checkins-em-dia")).toBeNull();
+  });
+});
+
+describe("início v5: o chat", () => {
+  it("título, 'Conversas ›', caixa, ↑ e as 3 primeiras perguntas prontas", async () => {
+    const c = chat();
+    await render(tela(servidor(), c));
+    const bloco = await screen.findByTestId("chat-no-inicio");
+    expect(within(bloco).getByText("Pergunte ao seu treino")).toBeTruthy();
+    expect(within(bloco).getByText("Ex.: como foi minha semana?")).toBeTruthy();
+    expect(within(bloco).getAllByTestId(/^inicio-pronta-/)).toHaveLength(3);
+    expect(within(bloco).getByText("Quanto corri neste mês?")).toBeTruthy();
+    expect(within(bloco).queryByText("Como estão minha carga e minha forma?")).toBeNull();
+    await fireEvent.press(within(bloco).getByTestId("inicio-conversas"));
+    expect(c.aoAbrirConversas).toHaveBeenCalled();
+    await fireEvent.press(within(bloco).getByTestId("inicio-caixa"));
+    await fireEvent.press(within(bloco).getByTestId("inicio-enviar"));
+    expect(c.aoAbrirChat).toHaveBeenCalledTimes(2);
+  });
+
+  it("tocar numa pergunta pronta manda o índice dela", async () => {
+    const c = chat();
+    await render(tela(servidor(), c));
+    await fireEvent.press(await screen.findByTestId("inicio-pronta-1"));
+    expect(c.aoPerguntar).toHaveBeenCalledWith(1);
+  });
+
+  it("sem os callbacks do chat o bloco não aparece; sem treinos some a fileira, mas a caixa fica", async () => {
+    const { unmount } = await render(tela(servidor()));
+    await screen.findByTestId("tela-inicio");
+    expect(screen.queryByTestId("chat-no-inicio")).toBeNull();
+    await unmount();
+    await render(tela(servidor({ lista: lista([]) }), chat()));
+    await screen.findByTestId("estado-vazio");
+    expect(screen.getByTestId("inicio-caixa")).toBeTruthy();
+    expect(screen.queryByTestId("inicio-prontas")).toBeNull();
+  });
+});
+
+describe("início v5: professor (Meta 15)", () => {
+  it("fica fora enquanto a API não manda o dado (constante desligada)", async () => {
+    await render(tela(servidor(), { professor: { texto: "Carlos vê seus treinos e check-ins", aoAbrir: jest.fn() } }));
+    await screen.findByTestId("tela-inicio");
+    expect(screen.queryByTestId("linha-professor")).toBeNull();
+  });
+});
+
+describe("início v5: o que já valia", () => {
+  it("saudação com o primeiro nome e a data de hoje", async () => {
+    await render(tela(servidor()));
+    expect(await screen.findByText("Olá, Ana")).toBeTruthy();
+    expect(screen.getByTestId("data-hoje").props.children).toBe("sexta, 21/03");
+  });
+
+  it("busca a lista (5), os pendentes (7 dias), a quinzena (ultimos=14) e os cartões", async () => {
+    const f = servidor();
+    await render(tela(f, { aoAbrirDestino: jest.fn() }));
+    await screen.findByTestId("tela-inicio");
+    await waitFor(() => expect(urls(f).length).toBeGreaterThanOrEqual(4));
+    expect(urls(f)).toEqual(expect.arrayContaining(["/atletas/1/atividades?limite=5", "/atletas/1/checkins/pendentes?dias=7", "/atletas/1/carga?ultimos=14", "/atletas/1/inicio/cartoes"]));
   });
 
   it("quinzena com a frase da API e treinos recentes (do 2º ao 5º) com 'Ver todos'", async () => {
     const p = props();
-    const f = servidor({ lista: lista([item(1), item(2), item(3), item(4), item(5)]) });
-    await render(tela(f, p));
-    await screen.findByTestId("quinzena");
-    expect(screen.getByTestId("frase-quinzena").props.children).toBe("Frase da quinzena.");
-    const recentes = screen.getByTestId("recentes");
-    for (const id of [2, 3, 4, 5]) expect(within(recentes).getByTestId(`treino-${id}`)).toBeTruthy();
-    expect(within(recentes).queryByTestId("treino-1")).toBeNull();
-    await fireEvent.press(within(recentes).getByTestId("treino-3"));
-    expect(p.aoAbrirTreino).toHaveBeenCalledWith(3);
+    await render(tela(servidor({ lista: lista([item(1), item(2), item(3), item(4), item(5)]) }), p));
+    expect(await screen.findByText("Frase da quinzena.")).toBeTruthy();
+    expect(within(screen.getByTestId("recentes")).getAllByTestId(/^treino-/)).toHaveLength(4);
     await fireEvent.press(screen.getByTestId("ver-todos"));
     expect(p.aoVerTodos).toHaveBeenCalled();
   });
 
   it("um treino só: sem 'Treinos recentes'", async () => {
     await render(tela(servidor()));
-    await screen.findByTestId("ultimo-treino");
+    await screen.findByTestId("tela-inicio");
     expect(screen.queryByTestId("recentes")).toBeNull();
   });
 
   it("sem treinos: frase e botão de enviar o arquivo", async () => {
     await render(tela(servidor({ lista: lista([]) })));
-    await screen.findByTestId("estado-vazio");
-    expect(screen.getByText("Nenhum treino ainda. Envie o arquivo do seu relógio e a análise aparece aqui.")).toBeTruthy();
+    expect(await screen.findByText("Nenhum treino ainda. Envie o arquivo do seu relógio e a análise aparece aqui.")).toBeTruthy();
     expect(screen.getByText("Enviar arquivo FIT")).toBeTruthy();
-    expect(screen.queryByTestId("ultimo-treino")).toBeNull();
   });
 
   it("carregando: texto para leitor de tela", async () => {
@@ -169,160 +228,29 @@ describe("início v3", () => {
     expect(screen.getAllByText("Carregando").length).toBeGreaterThan(0);
   });
 
-  it("cada cartão falha sozinho e 'Tentar de novo' busca de novo", async () => {
-    let quinzenaFalha = true;
-    const base = servidor();
-    const f = jest.fn(async (input: RequestInfo | URL) => (String(input).includes("/carga") && quinzenaFalha ? resposta(500, {}) : base(input))) as unknown as typeof fetch;
+  it("cada bloco falha sozinho e 'Tentar de novo' busca de novo", async () => {
+    const f = servidor({ falhar: ["lista", "quinzena"] });
     await render(tela(f));
-    await screen.findByTestId("erro-quinzena");
-    expect(screen.getByTestId("ultimo-treino")).toBeTruthy(); // o resto da tela segue
-    quinzenaFalha = false;
-    await fireEvent.press(screen.getByTestId("erro-quinzena-tentar"));
-    await screen.findByTestId("quinzena");
-    expect(screen.queryByTestId("erro-quinzena")).toBeNull();
-  });
-
-  it("erro na lista: mensagem do cartão", async () => {
-    await render(tela(servidor({ falhar: ["lista"] })));
     expect(await screen.findByTestId("erro-ultimo")).toBeTruthy();
-    expect(screen.queryByTestId("ultimo-treino")).toBeNull();
+    expect(screen.getByTestId("erro-quinzena")).toBeTruthy();
+    await fireEvent.press(screen.getByTestId("erro-quinzena-tentar"));
+    await waitFor(() => expect(urls(f).filter((u) => u.includes("/carga")).length).toBe(2));
   });
 
-  it("erro no detalhe: o cartão fica com o que a lista traz e avisa", async () => {
-    await render(tela(servidor({ falhar: ["atividade"] })));
-    expect(await screen.findByTestId("erro-detalhe")).toBeTruthy();
-    expect(screen.getByTestId("numero-treino").props.children).toBe("0:52:05");
-  });
-
-  it("tocar no cartão do último treino abre o treino; o rótulo falado traz o número e o selo", async () => {
-    const p = props();
-    await render(tela(servidor(), p));
-    const botao = await screen.findByTestId("abrir-ultimo-treino");
-    await waitFor(() => expect(screen.getByTestId("abrir-ultimo-treino").props.accessibilityLabel).toContain("Dentro do seu normal"));
-    expect(botao.props.accessibilityLabel).toContain("Pace médio, 5:12");
-    await fireEvent.press(screen.getByTestId("abrir-ultimo-treino"));
-    expect(p.aoAbrirTreino).toHaveBeenCalledWith(1);
-  });
-});
-
-describe("início v4: Seus números", () => {
-  const comNumeros = (extra = {}) => tela(servidor({ cartoes: cartoesApi }), { aoAbrirDestino: jest.fn(), ...extra });
-
-  it("busca os cartões e mostra a seção entre a quinzena e os treinos recentes, na ordem da API", async () => {
-    const f = servidor({ cartoes: cartoesApi, lista: lista([item(1), item(2)]) });
-    await render(tela(f, { aoAbrirDestino: jest.fn() }));
-    const secao = await screen.findByTestId("secao-numeros");
-    expect(urls(f)).toContain("/atletas/1/inicio/cartoes");
-    expect(within(secao).getByText("Seus números")).toBeTruthy();
-    const ordem = within(secao).getAllByTestId(/^cartao-/).map((c) => c.props.testID);
-    expect(ordem).toEqual(["cartao-esta_semana", "cartao-hoje_na_semana", "cartao-volume_4_semanas", "cartao-em_movimento", "cartao-melhor_marca"]);
-    // celular: quinzena, depois "Seus números", depois os recentes
-    const ids = JSON.stringify(screen.toJSON());
-    expect(ids.indexOf('"quinzena"')).toBeLessThan(ids.indexOf('"secao-numeros"'));
-    expect(ids.indexOf('"secao-numeros"')).toBeLessThan(ids.indexOf('"recentes"'));
-  });
-
-  it("os textos são os da API, sem recalcular", async () => {
-    await render(comNumeros());
-    const secao = await screen.findByTestId("secao-numeros");
-    for (const t of ["3 treinos", "2 h 37 min · semana passada: 4", "Corrida leve", "da sua rotina", "21:10 · 5 km", "novo recorde · 12/03", "30 km por semana", emMovimento.texto as string]) {
-      expect(within(secao).getByText(t)).toBeTruthy();
-    }
-  });
-
-  it("pequenos em pares, o largo na linha toda e o pequeno sozinho ocupa a linha", async () => {
-    await render(comNumeros());
-    const linhas = await screen.findAllByTestId("linha-cartoes");
-    expect(linhas.map((l) => within(l).getAllByTestId(/^cartao-/).length)).toEqual([2, 1, 1, 1]);
-  });
-
-  it("o cartão do volume tem 4 barras com valor e data, a mais recente em destaque", async () => {
-    await render(comNumeros());
-    const barras = within(await screen.findByTestId("barras-volume_4_semanas"));
-    for (const t of ["40 km", "03/02", "25 km", "24/02"]) expect(barras.getByText(t)).toBeTruthy();
-    expect(barras.getAllByText(/ km$/)).toHaveLength(4);
-  });
-
-  it("a altura de cada barra segue o altura_pct da API (o app só desenha)", async () => {
-    await render(comNumeros());
-    const barras = within(await screen.findByTestId("barras-volume_4_semanas"));
-    const alturas = [0, 1, 2, 3].map((i) => StyleSheet.flatten(barras.getByTestId(`barra-altura-${i}`).props.style).height);
-    expect(alturas).toEqual(["100%", "88%", "75%", "63%"]);
-    expect(new Set(alturas).size).toBe(4); // não são mais todas iguais
-  });
-
-  it("cada cartão é um botão com o rótulo falado da API, e o toque abre o destino dele", async () => {
-    const abrir = jest.fn();
-    await render(comNumeros({ aoAbrirDestino: abrir }));
-    await screen.findByTestId("secao-numeros");
-    const c = screen.getByTestId("cartao-esta_semana");
-    expect(c.props.accessibilityRole).toBe("button");
-    expect(c.props.accessibilityLabel).toBe(estaSemana.rotulo_acessivel);
-    await fireEvent.press(c);
-    expect(abrir).toHaveBeenLastCalledWith(estaSemana.destino);
-    await fireEvent.press(screen.getByTestId("cartao-hoje_na_semana"));
-    expect(abrir).toHaveBeenLastCalledWith(hojeNaSemana.destino);
-    await fireEvent.press(screen.getByTestId("cartao-volume_4_semanas"));
-    expect(abrir).toHaveBeenLastCalledWith(volume4.destino);
-    await fireEvent.press(screen.getByTestId("cartao-melhor_marca"));
-    expect(abrir).toHaveBeenLastCalledWith(melhorMarca.destino);
-  });
-
-  it("só aparecem os cartões que a API mandou", async () => {
-    await render(tela(servidor({ cartoes: { ...cartoesApi, cartoes: [melhorMarca] } }), { aoAbrirDestino: jest.fn() }));
-    const secao = await screen.findByTestId("secao-numeros");
-    expect(within(secao).getAllByTestId(/^cartao-/)).toHaveLength(1);
-    expect(screen.queryByTestId("cartao-esta_semana")).toBeNull();
-  });
-
-  it("sem nenhum cartão, a seção e o título somem", async () => {
-    await render(tela(servidor({ cartoes: { ...cartoesApi, cartoes: [] } }), { aoAbrirDestino: jest.fn() }));
-    await screen.findByTestId("quinzena");
-    await waitFor(() => expect(screen.queryByTestId("carregando-numeros")).toBeNull());
-    expect(screen.queryByTestId("secao-numeros")).toBeNull();
-    expect(screen.queryByText("Seus números")).toBeNull();
-  });
-
-  it("erro na busca dos cartões: a seção some em silêncio e o resto do início segue", async () => {
+  it("erro na busca dos cartões: 'Esta semana' e 'Seus números' somem em silêncio", async () => {
     await render(tela(servidor({ falhar: ["cartoes"] }), { aoAbrirDestino: jest.fn() }));
-    await screen.findByTestId("quinzena");
+    await screen.findByTestId("tela-inicio");
     await waitFor(() => expect(screen.queryByTestId("carregando-numeros")).toBeNull());
-    expect(screen.queryByTestId("secao-numeros")).toBeNull();
-    expect(screen.queryByTestId("erro-ultimo")).toBeNull();
-    expect(screen.queryByText("Não foi possível carregar.")).toBeNull();
-  });
-
-  it("carregando: esqueleto dos cartões, com o texto para o leitor de tela", async () => {
-    const f = jest.fn((input: RequestInfo | URL) => (String(input).includes("/inicio/cartoes") ? new Promise<Response>(() => {}) : servidor()(input))) as unknown as typeof fetch;
-    await render(tela(f, { aoAbrirDestino: jest.fn() }));
-    expect(screen.getByText("Carregando seus números")).toBeTruthy();
-    expect(screen.getByTestId("esqueleto-cartoes", { includeHiddenElements: true })).toBeTruthy();
-  });
-
-  it("sem treinos no app: o início vazio, sem cartões", async () => {
-    await render(tela(servidor({ lista: lista([]) }), { aoAbrirDestino: jest.fn() }));
-    await screen.findByTestId("estado-vazio");
+    expect(screen.queryByTestId("bloco-semana")).toBeNull();
     expect(screen.queryByTestId("secao-numeros")).toBeNull();
   });
 
-  it("sem aoAbrirDestino a seção não aparece nem busca", async () => {
+  it("sem aoAbrirDestino não há 'Esta semana' nem 'Seus números'", async () => {
     const f = servidor({ cartoes: cartoesApi });
     await render(tela(f));
-    await screen.findByTestId("quinzena");
+    await screen.findByTestId("tela-inicio");
+    expect(screen.queryByTestId("bloco-semana")).toBeNull();
     expect(screen.queryByTestId("secao-numeros")).toBeNull();
-  });
-
-  it("computador: 'Seus números' fica na coluna do último treino", async () => {
-    jest.spyOn(require("react-native"), "useWindowDimensions").mockReturnValue({ width: 1280, height: 800, scale: 2, fontScale: 1 });
-    try {
-      await render(comNumeros());
-      await screen.findByTestId("secao-numeros");
-      const json = JSON.stringify(screen.toJSON());
-      // coluna 1 = último treino e "Seus números"; coluna 2 = quinzena
-      expect(json.indexOf('"ultimo-treino"')).toBeLessThan(json.indexOf('"secao-numeros"'));
-      expect(json.indexOf('"secao-numeros"')).toBeLessThan(json.indexOf('"quinzena"'));
-    } finally {
-      jest.restoreAllMocks();
-    }
+    expect(urls(f)).toContain("/atletas/1/inicio/cartoes");
   });
 });
