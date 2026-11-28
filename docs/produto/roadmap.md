@@ -1141,7 +1141,7 @@ Revisadas ao fim de cada meta com o que se aprendeu. Ordem tirada da "Fundação
   v3 e o **chat do professor** sobre cada aluno, com as ferramentas da Meta 14 no escopo do professor (vínculo e consentimento; sem a
   Evolução e sem as conversas do atleta).
 - **Quem:** lia-design (#606), rafa-app, duda-dados, caio-ciencia, bia-qa.
-- **Fora:** rascunho de devolutiva e quem gera o feedback, até a pergunta aberta abaixo ("PRECISA DO ANGELO") ter resposta.
+- **Fora:** devolutivas do professor, semanais e quinzenais, até o tema 7 de "PRECISA DO ANGELO" (em discussão) ter decisão.
 
 ### Candidatas sem número
 - **Tela dos esforços e dos treinos de transição no app** (rafa-app, com a Lia): na Meta 12 (#467). A Meta 5 entregou só a API. A tela de
@@ -1395,9 +1395,23 @@ Pendentes com o Angelo (o time segue em volta delas):
 5. **Feedback dos treinos reais com a `linha_base@3`:** refazer localmente quando você quiser (nada no repositório).
 6. **Antes do primeiro aluno real:** termo de consentimento (o do app fica provisório e marcado até lá), contrato com a assessoria,
    consulta de LGPD e CNPJ (decisões 3, 4 e 7 da Meta 11; decisão 5 da Meta 13); login e deploy na Meta 13.
-7. **Pergunta aberta (28/11): "o professor é quem vai gerar o feedback".** Hoje o feedback do treino é gerado pela IA e vai direto ao
-   atleta (Meta 9, ADR 0013). O time **não decidiu nada**: o feedback automático segue como está. Falta saber se o professor passa a
-   escrever ou aprovar o feedback, se a IA vira só o rascunho dele ou se os dois convivem. Entra no desenho da Meta 16.
+7. **Em discussão (28/11), sem decisão: devolutivas e o papel do professor.** Nasceu da frase "o professor é quem vai gerar o
+   feedback". O Angelo respondeu em 28/11:
+   - **sempre existe a devolutiva automática** de cada treino com check-in (o feedback de hoje, Meta 9, ADR 0013);
+   - ele quer também **devolutivas semanais e quinzenais**;
+   - para o professor, **duas opções em aberto**: (1) os dois fazem devolutiva, a IA e o professor; (2) a IA aprende a persona do
+     professor e passa a dar as devolutivas no estilo dele;
+   - ele quer **reler a proposta original** do [[produto/plano-mvp-execucao]]: as linhas 11 e 12 (os dois canais, feedback automático e
+     feedback do professor), 137 (regras de envio por canal), 172 e 173 (semanal e quinzenal na tabela da cadência) e 208 (rascunho de
+     devolutiva na tela do professor).
+
+   **Ponto para discutir, não para decidir:** a opção (2) esbarra na regra da linha 137 do plano (as mensagens em nome do professor só
+   saem com a aprovação dele; só o feedback automático e as respostas do agente vão direto ao aluno, porque se baseiam em fatos calculados)
+   e no princípio de que **o modelo nunca fala em nome do professor sem aprovação**. Uma IA "no estilo do professor" enviando sozinha
+   seria uma mensagem em nome dele; caberia discutir se ela vai assinada como automática, se passa pela aprovação dele ou se a regra muda.
+   Também é preciso lembrar que o semanal do plano compara com o planejado, que hoje vem só da semana-padrão.
+
+   Até a decisão, o feedback automático segue como está e nada disso entra na Meta 14. O tema volta no desenho da Meta 16 (#606).
 8. **Pergunta aberta (Meta 14): a observação livre do check-in no chat.** Desde a Meta 9 ela nunca vai ao provedor. Padrão da ADR 0017
    (#591) até a resposta: **continua fora**, e o chat responde sem ela.
 
