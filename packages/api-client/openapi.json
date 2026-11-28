@@ -2719,6 +2719,17 @@
             ],
             "title": "Atividade Id"
           },
+          "data_texto": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Data Texto"
+          },
           "rotulo": {
             "title": "Rotulo",
             "type": "string"
@@ -3253,24 +3264,6 @@
           "texto"
         ],
         "title": "MotivoOut",
-        "type": "object"
-      },
-      "Muitas": {
-        "properties": {
-          "detail": {
-            "title": "Detail",
-            "type": "string"
-          },
-          "espere_s": {
-            "title": "Espere S",
-            "type": "integer"
-          }
-        },
-        "required": [
-          "detail",
-          "espere_s"
-        ],
-        "title": "Muitas",
         "type": "object"
       },
       "NovoOut": {
@@ -4764,6 +4757,47 @@
         ],
         "title": "VinculoOut",
         "type": "object"
+      },
+      "app__rotas__chat__Muitas": {
+        "properties": {
+          "detail": {
+            "title": "Detail",
+            "type": "string"
+          },
+          "espere_s": {
+            "title": "Espere S",
+            "type": "integer"
+          },
+          "espere_texto": {
+            "title": "Espere Texto",
+            "type": "string"
+          }
+        },
+        "required": [
+          "detail",
+          "espere_texto",
+          "espere_s"
+        ],
+        "title": "Muitas",
+        "type": "object"
+      },
+      "app__rotas__sessao__Muitas": {
+        "properties": {
+          "detail": {
+            "title": "Detail",
+            "type": "string"
+          },
+          "espere_s": {
+            "title": "Espere S",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "detail",
+          "espere_s"
+        ],
+        "title": "Muitas",
+        "type": "object"
       }
     },
     "securitySchemes": {
@@ -5706,11 +5740,11 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/Muitas"
+                  "$ref": "#/components/schemas/app__rotas__chat__Muitas"
                 }
               }
             },
-            "description": "20 perguntas por hora por atleta; `espere_s` e `Retry-After` em segundos"
+            "description": "20 perguntas por hora por atleta; `espere_texto` (frase pronta), `espere_s` e `Retry-After` em segundos"
           }
         },
         "security": [
@@ -5910,11 +5944,11 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/Muitas"
+                  "$ref": "#/components/schemas/app__rotas__chat__Muitas"
                 }
               }
             },
-            "description": "20 perguntas por hora por atleta; `espere_s` e `Retry-After` em segundos"
+            "description": "20 perguntas por hora por atleta; `espere_texto` (frase pronta), `espere_s` e `Retry-After` em segundos"
           }
         },
         "security": [
@@ -7133,7 +7167,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/Muitas"
+                  "$ref": "#/components/schemas/app__rotas__sessao__Muitas"
                 }
               }
             },
