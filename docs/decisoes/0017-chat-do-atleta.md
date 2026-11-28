@@ -1,13 +1,13 @@
 ---
 tipo: decisao
-status: proposta
+status: aceita
 dono: caio
 atualizado: 2026-11-28
 links: [[decisoes/0004-contrato-tela-evolucao]], [[decisoes/0010-carga-de-treino]], [[decisoes/0011-linha-de-base-e-semana-padrao]], [[decisoes/0012-check-in-pos-treino]], [[decisoes/0013-feedback-automatico]], [[decisoes/0014-recuperacao-diaria]], [[decisoes/0016-login-e-deploy-do-piloto]], [[metricas/checagens-feedback]], [[metricas/evolucao-series]], [[metricas/linha-base]], [[produto/roadmap]], [[produto/plano-mvp-execucao]], [[glossario]]
 ---
 # ADR: 0017 Chat do atleta com ferramentas de consulta
 
-> **Proposta** (issue #591, Meta 14), para o Theo aceitar e o Angelo ler. **Nenhuma linha de código nem migração muda neste PR.** Todos os
+> **Aceita em 28/11** (issue #591, Meta 14). O Angelo aprovou a ADR e respondeu à pergunta aberta do item 1 de "A confirmar": **a observação livre do check-in pode ir ao Groq no chat** (itens 1, 5 e 6). **Nenhuma linha de código nem migração muda neste PR.** Todos os
 > números, textos e exemplos são **sintéticos**. Pergunta, resultado de ferramenta e resposta são dado pessoal e de saúde: nada disso, real,
 > no repositório, em log ou em captura.
 > Dá base para #592 (fixtures), #593 e #594 (ferramentas), #595 (`checagens_chat@1`), #596 (laço), #597 (banco), #598 (rotas), #599 e #600 (tela).
@@ -58,8 +58,8 @@ pronto, para o modelo dizer o que falta em vez de "não sei". Todo número sai c
 | Ferramenta | Argumentos | O que devolve | Quem usa |
 |---|---|---|---|
 | `listar_atividades` | `modalidade?` (corrida, natacao, ciclismo), `periodo?` (item abaixo), `tipo_treino?`, `ordem?` (`recentes`, `maiores`), `limite?` (1 a 20, padrão 10) | por treino: `atividade_id`, data local, modalidade, tipo, distância e duração em texto, pace ou velocidade, FC média em texto, estado do check-in; mais `total` | atleta e professor |
-| `ver_atividade` | `atividade_id` | o pacote de fatos da atividade (`fatos_treino`, sem o texto livre do check-in): treino, linha de base, esforços, clima, carga (FC e PSE), check-in (PSE, sensação, atalhos) | atleta e professor |
-| `listar_checkins` | `periodo?`, `limite?` | PSE, sensação e atalhos marcados por treino; **nunca a observação livre** (item 6) | atleta e professor |
+| `ver_atividade` | `atividade_id` | o pacote de fatos da atividade (`fatos_treino`) mais, no check-in, a `observacao_texto` (item 6): treino, linha de base, esforços, clima, carga (FC e PSE), check-in (PSE, sensação, atalhos) | atleta e professor |
+| `listar_checkins` | `periodo?`, `limite?` | PSE, sensação, atalhos marcados e a **observação livre** (`observacao_texto`, só quando existe) por treino (item 6) | atleta e professor |
 | `ler_serie` | `serie_id` (do catálogo de [[metricas/evolucao-series]]), `periodo?` | pontos da série (data e `valor_texto`), faixa do normal, estado `disponivel` ou o motivo | **só o atleta** (a Evolução não é do professor) |
 | `comparar_periodos` | `serie_id`, `periodo_a`, `periodo_b` | por código: valor de cada período, diferença em texto e `direcao` (`maior`, `menor`, `parecido` dentro da margem da série) | **só o atleta** |
 | `ler_carga_forma` | `data?` (padrão: hoje do atleta) | CTL, ATL e TSB do dia, em texto, com `versao` (`serie_carga@2`) e o estado (por exemplo, poucos dias de histórico) | atleta e professor |
@@ -156,12 +156,11 @@ fixa dos erros e a API devolve o motivo em código. Nenhum texto de reserva escr
 
 ### 5. O que vai ao provedor e o que nunca vai
 **Vai:** a pergunta como o atleta digitou, as últimas 6 trocas aprovadas, o "hoje" do atleta, os esquemas das ferramentas e os **resultados das
-ferramentas** (números e rótulos em texto, datas locais dos treinos, modalidade, tipo, clima, check-in só com PSE, sensação e atalhos marcados).
+ferramentas** (números e rótulos em texto, datas locais dos treinos, modalidade, tipo, clima, check-in com PSE, sensação, atalhos marcados e a **observação livre**, decisão do Angelo de 28/11).
 **Nunca vai:**
-- **a observação livre do check-in** (padrão revisável, pergunta ao Angelo em "A confirmar", 1);
 - nome, e-mail, hash de senha, token de sessão, `conta_id`, `atleta_id` (o provedor não precisa de identificador: a sessão é do código);
 - posição, coordenadas, trajeto, nome de lugar e o arquivo FIT;
-- a observação de qualquer outra tabela e o texto de feedback de outro treino que o código não tenha aprovado.
+- observação ou texto livre de qualquer outra tabela e o texto de feedback de outro treino que o código não tenha aprovado.
 
 **Pergunta livre é do atleta:** ele pode digitar um nome ou um lugar, e isso segue ao provedor porque ele escreveu. A tela dirá, sob o campo, que "a
 pergunta vai a um serviço de IA" (texto da Lia, no termo da Nina). Não há como o código garantir que a pergunta não tenha dado.
@@ -171,10 +170,19 @@ da ferramenta, duração e `conta_id` (como no item 9 da ADR 0016). A configura�
 `redact_messages_in_exceptions`) vale para o método novo. **Um teste** faz uma pergunta com marcas sintéticas e provedor falso que falha, e confere
 que nenhuma marca aparece na saída capturada.
 
-### 6. O que o Angelo aceitou e o que ainda é pergunta
-O Angelo aceitou o Groq com o dado dele (decisão 2). Isso **não** responde à observação do check-in: o texto livre é onde o atleta escreve
-"dor no joelho" ou o que quiser. **Padrão desta ADR: a observação fica fora do provedor.** Se o Angelo quiser a observação no chat, entra uma ferramenta
-`ler_observacao(atividade_id)` à parte, com o aviso na tela, sem mexer no resto. Está em "A confirmar", 1.
+### 6. A observação livre do check-in (decisão do Angelo, 28/11)
+O Angelo respondeu à pergunta aberta: **a observação livre do check-in pode ir ao Groq no chat**, sob a mesma aceitação de risco da decisão 2 (o dado
+é dele). Em consequência:
+- `ver_atividade` e `listar_checkins` devolvem `observacao_texto` (o texto como o atleta escreveu, cortado em 500 caracteres) quando há observação; o chat
+  pode responder "o que eu escrevi no treino de ontem?". Quem monta o campo é a **ferramenta**, a partir de `checkin_treino`, com o `atleta_id` da sessão.
+- **O feedback automático não muda.** A exceção da Meta 9 continua valendo: o **pacote de fatos** (`fatos_treino`, ADR 0013, decisão 2) **nunca** leva
+  a observação, e o `fatos_treino.py` não é tocado. O texto livre só chega ao provedor pelo chat, pelas duas ferramentas acima.
+- **Continuam fora** do provedor: nome, e-mail, posição, coordenadas, trajeto e o arquivo FIT. Se o atleta escreveu um nome ou lugar na observação,
+  isso segue porque ele escreveu (mesma regra da pergunta livre).
+- As checagens tratam `observacao_texto` como resultado de ferramenta: número que o atleta escreveu pode ser repetido; a linguagem proibida **continua
+  valendo para o texto da resposta**, então diagnóstico ou causa citados da observação reprovam a resposta (a resposta reformula, sem repetir o termo).
+- Regra de log, apagar com a conta e "o professor não vê" valem como para o resto: a observação nas `chamadas_ferramenta` é dado de saúde.
+- O termo e a tela (Nina e Lia) passam a dizer que o texto livre do check-in vai ao serviço de IA quando o atleta pergunta sobre ele. Fica para o #599 e o #602.
 
 ### 7. Modelo de dados (para a aprovação do Theo)
 Uma migração `0019`, **só aditiva** (a última é a `0018`; confirmado pela Duda). Os testes rodam em SQLite: `chamadas_ferramenta` usa `sa.JSON` com variante `JSONB` no Postgres, não `JSONB` puro, e o `CHECK` entra na migração por `batch_alter_table`/`create_table`, como nas anteriores.
@@ -228,8 +236,7 @@ que cada ruim reprova exatamente pelos motivos esperados; outro confere que os n
 - **Modelo do provedor sem chamada de ferramentas confirmada (por exemplo, o padrão do mapa local para o Llama 3.3 70B):** fica fora até a rodada real.
 
 ## A confirmar (padrão em negrito; sem resposta, vale o padrão)
-1. **Observação livre do check-in no provedor** (pergunta ao Angelo). **Fica fora**, em todas as ferramentas. Alternativa: ferramenta `ler_observacao`
-   à parte, com o aviso na tela, para ele poder perguntar "o que eu escrevi no treino de ontem?".
+1. ~~Observação livre do check-in no provedor~~ **Decidido (Angelo, 28/11): pode ir ao Groq no chat**, pelas ferramentas `ver_atividade` e `listar_checkins`; o feedback segue sem ela.
 2. **Regeneração depois de reprovar.** **Uma**, com os códigos do motivo. Alternativa: nenhuma (o atleta repete a pergunta), mais simples.
 3. **Guardar os resultados das ferramentas na mensagem** (Duda). **Sim, confirmado pela Duda.** Alternativa: só nome e argumentos, e a conferência refaz a consulta.
 4. **Banco e rotas** (Duda): `conversa`/`mensagem` como no item 7, uma linha por pergunta; rotas `POST` e `GET` em `/atletas/{id}/conversas`,
