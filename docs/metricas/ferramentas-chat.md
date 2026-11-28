@@ -40,5 +40,10 @@ CTL/ATL/TSB de um treino de carga 100 (2,3528 e 13,3122 no dia; −9,2426 no dia
 ## Fontes e versão
 As das métricas lidas: [[metricas/evolucao-series]] (Leys et al. 2013 na mediana e MAD), [[metricas/serie-carga]] (Banister et al. 1976), [[metricas/linha-base]]. `ferramentas_chat@1`.
 
+## Registro e escopo
+`app/chat/ferramentas_metricas.py` registra as quatro funções no registro da #593 ([[modulos/api]]): o esquema não tem campo de atleta e recusa argumento extra; o `atleta_id` e o "hoje" vêm da `Consulta`.
+`ler_serie` e `comparar_periodos` são só do papel `atleta` (o professor não vê a Evolução); `ler_carga_forma` e `ler_linha_base` valem para os dois. Testes de escopo em `tests/chat/test_ferramentas_metricas.py`.
+
 ## Limitações e quando não usar
-Não são o registro do chat: o escopo por sessão, os papéis e o esquema dos argumentos são da #593 (Duda). Estas funções assumem que o `atleta_id` já foi conferido.
+É lista fechada de períodos: pergunta sobre um intervalo livre ("de 3 a 9 de fevereiro") usa `ler_serie` com `de` e `ate`, mas `comparar_periodos` só aceita os nomes acima e o mês `AAAA-MM`. Os valores são de séries com
+poucos treinos por período (semana): o resultado diz o `n` e, abaixo do mínimo, não dá direção.
