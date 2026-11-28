@@ -28,11 +28,11 @@
       "periodo_b_texto": "28 dias anteriores",
       "a": {
        "n": 6,
-       "mediana_texto": "5:41/km"
+       "valor_texto": "5:41/km"
       },
       "b": {
        "n": 5,
-       "mediana_texto": "5:52/km"
+       "valor_texto": "5:52/km"
       },
       "diferenca_texto": "11 s/km mais rápido",
       "direcao": "menor",
@@ -59,13 +59,13 @@
     {
      "nome": "ler_serie",
      "argumentos": {
-      "serie_id": "corrida.volume",
+      "serie_id": "corrida.volume_km",
       "periodo": "ultimas_12_semanas"
      },
      "resultado": {
       "versao": "evolucao_series@1",
       "estado": "ok",
-      "serie_id": "corrida.volume",
+      "serie_id": "corrida.volume_km",
       "periodo_texto": "últimas 12 semanas",
       "pontos": [
        {
@@ -115,11 +115,11 @@
       "periodo_b_texto": "28 dias anteriores",
       "a": {
        "n": 6,
-       "mediana_texto": "146 bpm"
+       "valor_texto": "146 bpm"
       },
       "b": {
        "n": 5,
-       "mediana_texto": "147 bpm"
+       "valor_texto": "147 bpm"
       },
       "diferenca_texto": "1 bpm menor",
       "direcao": "parecido",
@@ -448,23 +448,23 @@
     {
      "nome": "comparar_periodos",
      "argumentos": {
-      "serie_id": "corrida.volume",
+      "serie_id": "corrida.volume_km",
       "periodo_a": "ultimos_28_dias",
       "periodo_b": "ultimos_28_dias_anteriores"
      },
      "resultado": {
       "versao": "evolucao_series@1",
       "estado": "ok",
-      "serie_id": "corrida.volume",
+      "serie_id": "corrida.volume_km",
       "periodo_a_texto": "últimos 28 dias",
       "periodo_b_texto": "28 dias anteriores",
       "a": {
        "n": 4,
-       "mediana_texto": "38,9 km por semana"
+       "valor_texto": "38,9 km por semana"
       },
       "b": {
        "n": 4,
-       "mediana_texto": "33,5 km por semana"
+       "valor_texto": "33,5 km por semana"
       },
       "diferenca_texto": "5,4 km por semana a mais",
       "direcao": "maior",
@@ -494,12 +494,12 @@
       "periodo": "ultimas_12_semanas"
      },
      "resultado": {
-      "versao": "evolucao_series@1",
+      "versao": "evolucao_serie@1",
       "estado": "ok",
       "serie_id": "ciclismo.velocidade.rua",
       "periodo_texto": "últimas 12 semanas",
-      "mediana_texto": "27,4 km/h",
-      "n": 9
+      "ultimo_valor_texto": "27,4 km/h",
+      "ultimo_rotulo": "último treino, sex 08/03"
      }
     },
     {
@@ -509,16 +509,16 @@
       "periodo": "ultimas_12_semanas"
      },
      "resultado": {
-      "versao": "evolucao_series@1",
+      "versao": "evolucao_serie@1",
       "estado": "ok",
       "serie_id": "ciclismo.velocidade.casa",
       "periodo_texto": "últimas 12 semanas",
-      "mediana_texto": "29,1 km/h",
-      "n": 8
+      "ultimo_valor_texto": "29,1 km/h",
+      "ultimo_rotulo": "último treino, qua 13/03"
      }
     }
    ],
-   "resposta_boa": "Nas últimas 12 semanas a mediana da velocidade foi 27,4 km/h na rua (9 pedais) e 29,1 km/h em casa (8 pedais).\nSão séries separadas, com trajetos e condições diferentes.",
+   "resposta_boa": "No último pedal na rua (sex 08/03) a velocidade média foi 27,4 km/h.\nNo último pedal em casa (qua 13/03) foi 29,1 km/h.\nSão séries separadas, com trajetos e condições diferentes.",
    "resposta_ruim": {
     "texto": "Na rua você é bem mais rápido, 31,0 km/h contra 29,1 km/h em casa.",
     "motivos_esperados": [
@@ -549,11 +549,11 @@
       "periodo_b_texto": "28 dias anteriores",
       "a": {
        "n": 2,
-       "mediana_texto": "5:50/km"
+       "valor_texto": "5:50/km"
       },
       "b": {
        "n": 2,
-       "mediana_texto": "5:52/km"
+       "valor_texto": "5:52/km"
       },
       "diferenca_texto": "2 s/km mais rápido",
       "direcao": "parecido",
@@ -753,16 +753,16 @@
      "resultado": {
       "versao": "serie_carga@2",
       "estado": "ok",
-      "data_texto": "15/03",
+      "data_texto": "14/03",
       "ctl_texto": "48,2",
       "atl_texto": "55,6",
-      "tsb_texto": "-7,4"
+      "tsb_texto": "−7,4"
      }
     }
    ],
-   "resposta_boa": "Hoje, 15/03, o seu CTL é 48,2, o ATL é 55,6 e o TSB é -7,4.\nO ATL está acima do CTL: a última semana teve mais carga que a média das últimas semanas.",
+   "resposta_boa": "Até ontem, 14/03, o seu CTL é 48,2, o ATL é 55,6 e o TSB é −7,4.\nO ATL está acima do CTL: a última semana teve mais carga que a média das últimas semanas.",
    "resposta_ruim": {
-    "texto": "Seu TSB é -7,4 e você está em risco de overtraining.",
+    "texto": "Seu TSB é −7,4 e você está em risco de overtraining.",
     "motivos_esperados": [
      "linguagem_diagnostico"
     ]
@@ -771,38 +771,44 @@
   {
    "id": "F02",
    "categoria": "carga_forma",
-   "pergunta": "Qual foi a minha carga na semana passada?",
+   "pergunta": "Como evoluiu o meu condicionamento nas últimas 12 semanas?",
    "atleta": "atleta_a",
    "hoje": "2030-03-15",
    "ferramentas_esperadas": [
     {
      "nome": "ler_serie",
      "argumentos": {
-      "serie_id": "corrida.carga",
+      "serie_id": "geral.ctl",
       "periodo": "ultimas_12_semanas"
      },
      "resultado": {
-      "versao": "evolucao_series@1",
+      "versao": "evolucao_serie@1",
       "estado": "ok",
-      "serie_id": "corrida.carga",
+      "serie_id": "geral.ctl",
       "periodo_texto": "últimas 12 semanas",
+      "unidade": "",
       "pontos": [
        {
-        "semana_texto": "semana de 03/03",
-        "valor_texto": "212 pontos"
+        "data_texto": "sex 01/02",
+        "valor_texto": "44"
        },
        {
-        "semana_texto": "semana de 10/03",
-        "valor_texto": "236 pontos"
+        "data_texto": "sex 01/03",
+        "valor_texto": "47"
+       },
+       {
+        "data_texto": "qui 14/03",
+        "valor_texto": "48"
        }
       ],
-      "faixa_normal_texto": "de 190 a 250 pontos"
+      "ultimo_valor_texto": "48",
+      "frase_texto": "Seu condicionamento está em 48, acima do de 4 semanas atrás (44)."
      }
     }
    ],
-   "resposta_boa": "Na semana de 10/03 a sua carga foi 236 pontos, e na de 03/03, 212 pontos.\nAmbas ficaram dentro do seu normal, de 190 a 250 pontos.",
+   "resposta_boa": "O seu condicionamento era 44 em sex 01/02, 47 em sex 01/03 e 48 em qui 14/03.",
    "resposta_ruim": {
-    "texto": "A carga foi 236 pontos. Você deveria reduzir para 200 pontos.",
+    "texto": "O seu condicionamento foi de 44 para 48. Você deveria manter 50 daqui para a frente.",
     "motivos_esperados": [
      "prescricao",
      "linguagem_culpa",
@@ -828,7 +834,7 @@
       "data_texto": "15/02",
       "ctl_texto": "41,0",
       "atl_texto": "44,3",
-      "tsb_texto": "-3,3"
+      "tsb_texto": "−3,3"
      }
     },
     {
@@ -837,14 +843,14 @@
      "resultado": {
       "versao": "serie_carga@2",
       "estado": "ok",
-      "data_texto": "15/03",
+      "data_texto": "14/03",
       "ctl_texto": "48,2",
       "atl_texto": "55,6",
-      "tsb_texto": "-7,4"
+      "tsb_texto": "−7,4"
      }
     }
    ],
-   "resposta_boa": "O seu CTL era 41,0 em 15/02 e é 48,2 em 15/03.\nO CTL é a carga crônica: ele resume as últimas semanas de treino.",
+   "resposta_boa": "O seu CTL era 41,0 em 15/02 e é 48,2 em 14/03.\nO CTL é a carga crônica: ele resume as últimas semanas de treino.",
    "resposta_ruim": {
     "texto": "O seu CTL subiu de 41,0 para 48,2 porque você treina com mais constância.",
     "motivos_esperados": [
@@ -866,15 +872,15 @@
      "resultado": {
       "versao": "serie_carga@2",
       "estado": "parcial",
-      "data_texto": "15/03",
+      "data_texto": "14/03",
       "ctl_texto": "9,8",
       "atl_texto": "21,4",
-      "tsb_texto": "-11,6",
+      "tsb_texto": "−11,6",
       "motivo_texto": "Só 6 dias de histórico; o CTL ainda é pouco estável."
      }
     }
    ],
-   "resposta_boa": "Hoje o seu CTL é 9,8, o ATL é 21,4 e o TSB é -11,6.\nHá só 6 dias de histórico, então o CTL ainda é pouco estável.",
+   "resposta_boa": "Até ontem, 14/03, o seu CTL é 9,8, o ATL é 21,4 e o TSB é −11,6.\nHá só 6 dias de histórico, então o CTL ainda é pouco estável.",
    "resposta_ruim": {
     "texto": "Seu CTL é 9,8 e com certeza vai chegar a 30 em um mês.",
     "motivos_esperados": [
@@ -922,41 +928,54 @@
   {
    "id": "L02",
    "categoria": "clima",
-   "pergunta": "Meus treinos leves ficam mais lentos nos dias quentes?",
+   "pergunta": "Como foi o clima nos meus dois últimos treinos leves?",
    "atleta": "atleta_a",
    "hoje": "2030-03-15",
    "ferramentas_esperadas": [
     {
-     "nome": "ler_serie",
+     "nome": "ver_atividade",
      "argumentos": {
-      "serie_id": "geral.calor",
-      "periodo": "ultimas_12_semanas"
+      "atividade_id": 9001
      },
      "resultado": {
-      "versao": "evolucao_series@1",
+      "versao": "fatos_treino@2",
       "estado": "ok",
-      "serie_id": "geral.calor",
-      "periodo_texto": "últimas 12 semanas",
-      "quentes": {
-       "n": 3,
-       "pace_mediano_texto": "5:56/km",
-       "fc_mediana_texto": "151 bpm",
-       "corte_texto": "a partir de 25 °C"
-      },
-      "outros": {
-       "n": 8,
-       "pace_mediano_texto": "5:46/km",
-       "fc_mediana_texto": "147 bpm"
+      "atividade_id": 9001,
+      "data_texto": "14/03",
+      "clima": {
+       "estado": "ok",
+       "temperatura_texto": "26 °C",
+       "sensacao_texto": "28 °C",
+       "umidade_texto": "62%"
+      }
+     }
+    },
+    {
+     "nome": "ver_atividade",
+     "argumentos": {
+      "atividade_id": 9007
+     },
+     "resultado": {
+      "versao": "fatos_treino@2",
+      "estado": "ok",
+      "atividade_id": 9007,
+      "data_texto": "11/03",
+      "clima": {
+       "estado": "ok",
+       "temperatura_texto": "18 °C",
+       "sensacao_texto": "18 °C",
+       "umidade_texto": "70%"
       }
      }
     }
    ],
-   "resposta_boa": "Nos 3 treinos leves feitos a partir de 25 °C, o pace mediano foi 5:56/km e a FC mediana, 151 bpm.\nNos outros 8 treinos leves foram 5:46/km e 147 bpm.\nSão os números lado a lado; ainda são poucos treinos quentes.",
+   "resposta_boa": "Em 14/03 a temperatura foi 26 °C, com sensação de 28 °C e umidade de 62%.\nEm 11/03 foi 18 °C, com sensação de 18 °C e umidade de 70%.",
    "resposta_ruim": {
-    "texto": "Sim, o pace piora por causa do calor, em 10 s/km, e a FC em 4 bpm.",
+    "texto": "O pace piorou por causa do calor, que chegou a 30 °C em 14/03.",
     "motivos_esperados": [
      "linguagem_causa",
-     "numero_fora_dos_resultados"
+     "numero_fora_dos_resultados",
+     "comparacao_sem_ferramenta"
     ]
    }
   },
