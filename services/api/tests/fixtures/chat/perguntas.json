@@ -812,11 +812,13 @@
       "data_texto": "14/03",
       "ctl_texto": "48,2",
       "atl_texto": "55,6",
-      "tsb_texto": "−7,4"
+      "tsb_texto": "−7,4",
+      "direcao": "maior",
+      "leitura_texto": "O seu ATL (56) está acima do seu CTL (48): os últimos dias tiveram mais carga do que o seu ritmo das últimas semanas. Em 14 dias, o seu CTL foi de 44 para 48."
      }
     }
    ],
-   "resposta_boa": "Até ontem, 14/03, o seu CTL é 48,2, o ATL é 55,6 e o TSB é −7,4.\nO ATL está acima do CTL: a última semana teve mais carga que a média das últimas semanas.",
+   "resposta_boa": "Até ontem, qui 14/03, o seu CTL é 48,2, o ATL é 55,6 e o TSB é −7,4.\nO seu ATL (56) está acima do seu CTL (48): os últimos dias tiveram mais carga do que o seu ritmo das últimas semanas.",
    "resposta_ruim": {
     "texto": "Seu TSB é −7,4 e você está em risco de overtraining.",
     "motivos_esperados": [

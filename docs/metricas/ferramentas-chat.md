@@ -16,7 +16,7 @@ devolve um `dict` com os números em **texto pronto** (`*_texto`, com a unidade)
 |---|---|---|---|
 | `ler_serie` | `serie_evolucao` | `evolucao_serie` (a mesma da rota da Evolução) | pontos do período com `valor_texto` e unidade, o último valor, a faixa do normal e a frase de 4 semanas; `sem_dados` com o motivo se não há ponto |
 | `comparar_periodos` | `comparar_periodos` | `frase_evolucao@1` | dois períodos de mesmo tamanho (ver abaixo): valor e `n` de cada um, `direcao` (`maior`, `menor`, `parecido`), `diferenca_texto`, `diferenca_pct_texto` e `margem_texto` (o limite de "parecido") |
-| `ler_carga_forma` | `carga_e_forma` | `serie_carga@2` e `frase_forma@1` | CTL, ATL, TSB (sinal explícito) e carga do dia, a frase da forma e `estimativa: true`; `parcial` com o aviso "aprendendo" nos 42 primeiros dias |
+| `ler_carga_forma` | `carga_e_forma` | `serie_carga@2` e `frase_forma@1` | CTL, ATL, TSB (sinal explícito) e carga do dia, a `leitura_texto` (a faixa e a tendência da `frase_forma@1`, em texto neutro) com a `direcao` do ATL contra o CTL, e `estimativa: true`; `parcial` com o aviso "aprendendo" nos 42 primeiros dias |
 | `ler_recuperacao` | `recuperacao_noites` | `recuperacao@1` e os textos do pacote de fatos | sono, VFC e FC de repouso de cada noite do período (as 14 mais recentes, padrão 7 dias) contra a mediana das 28 noites anteriores: valor, normal, diferença ("abaixo" e "acima" são direção, nunca bom ou ruim) e `texto` pronto; `aprendendo` com menos de 14 noites; `sem_dados` se nada foi importado. Só do papel atleta |
 | `ler_linha_base` | `linha_base` | `linha_base@3` | mediana, `n` e estado de cada métrica do tipo, lidos pelo treino mais recente do tipo; `parcial` sem nenhuma métrica com normal |
 
@@ -43,6 +43,13 @@ A rota do chat monta o "Abrir na Evolução" a partir do `serie_id` que aparece 
 
 ## Fontes e versão
 As das métricas lidas: [[metricas/evolucao-series]] (Leys et al. 2013 na mediana e MAD), [[metricas/serie-carga]] (Banister et al. 1976), [[metricas/linha-base]]. `ferramentas_chat@1`.
+
+## Texto das ferramentas que o chat pode repetir (rodada real, 28/11)
+Na rodada com o Groq (só dado sintético) o texto pronto de duas ferramentas reprovava o próprio modelo que o copiava: a `frase_forma@1` do app diz "fadiga" (`linguagem_diagnostico`) e "subiu", "bem mais" (`comparacao_sem_ferramenta`), e o `texto` da linha de base traz "bom ou ruim" (`linguagem_culpa`). Por isso, **no chat**:
+- `ler_carga_forma` devolve `leitura_texto` no lugar de `frase_texto`: o mesmo resultado da `frase_forma@1` (a faixa e a tendência), com ATL e CTL no lugar de "fadiga" e "condicionamento" e "muito acima" no lugar de "bem acima"; e `direcao` (`maior`, `menor`, `parecido`) para o ATL contra o CTL, calculada pelo código. A API e o app continuam com a frase deles.
+- `ler_serie` devolve `direcao` quando a frase de 4 semanas compara (a da `frase_evolucao@1`), para a resposta poder repetir "mais rápido" ou "a mais".
+- `ler_linha_base` não devolve o `texto` da API: só estado, mediana, valor do treino e `n`.
+Um teste confere que cada faixa e tendência da `leitura_texto`, copiada igual, passa nas `checagens_chat@1`.
 
 ## Registro e escopo
 `app/chat/ferramentas_metricas.py` registra as quatro funções no registro da #593 ([[modulos/api]]): o esquema não tem campo de atleta e recusa argumento extra; o `atleta_id` e o "hoje" vêm da `Consulta`.

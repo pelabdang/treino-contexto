@@ -122,6 +122,8 @@ def serie_evolucao(session: Session, atleta_id: int, serie_id: str, periodo: str
         out["faixa_normal_texto"] = lida.referencia.texto
     if lida.aprendendo_texto:
         out["aprendendo_texto"] = lida.aprendendo_texto
+    if lida.frase.mudanca is not None:  # a comparação de 28 contra 28 dias é do código: com ela, a resposta pode dizer "mais rápido", "a mais"...
+        out["direcao"] = lida.frase.mudanca
     return out
 
 
@@ -289,6 +291,33 @@ def comparar_periodos(session: Session, atleta_id: int, serie_id: str, periodo_a
 
 
 # ---------------------------------------------------------------- ler_carga_forma
+# A `frase_forma@1` do app diz "fadiga" e "subiu"; no chat essas palavras reprovam (diagnóstico, comparação sem ferramenta). Aqui o MESMO resultado da
+# `frase_forma@1` (a faixa e a tendência) vira texto neutro, com ATL e CTL no lugar de "fadiga" e "condicionamento", e a direção vai como campo.
+_DIRECAO_ATL = {"parecidos": "parecido", "acima": "maior", "bem_acima": "maior", "abaixo": "menor", "bem_abaixo": "menor"}
+_FAIXA_TEXTO = {
+    "parecidos": "O seu ATL ({F}) e o seu CTL ({C}) estão parecidos.",
+    "acima": "O seu ATL ({F}) está acima do seu CTL ({C}): os últimos dias tiveram mais carga do que o seu ritmo das últimas semanas.",
+    "abaixo": "O seu ATL ({F}) está abaixo do seu CTL ({C}): os últimos dias tiveram menos carga do que o seu ritmo das últimas semanas.",
+    "bem_acima": "O seu ATL ({F}) está muito acima do seu CTL ({C}): os últimos dias tiveram muito mais carga do que o seu ritmo das últimas semanas.",
+    "bem_abaixo": "O seu ATL ({F}) está muito abaixo do seu CTL ({C}): os últimos dias tiveram muito menos carga do que o seu ritmo das últimas semanas.",
+}
+_TENDENCIA_TEXTO = {"subiu": "Em 14 dias, o seu CTL foi de {C14} para {C}.", "caiu": "Em 14 dias, o seu CTL foi de {C14} para {C}.",
+                    "perto": "Em 14 dias, o seu CTL ficou perto de {C}."}
+_SEM_TREINO_TEXTO = "Você não teve treino com carga calculada nos últimos 14 dias. O seu CTL está em {C} e o seu ATL em {F}."
+
+
+def _leitura_forma(frase: ff.FraseForma, f: int, c: int, c14: int, avisos: list[str]) -> str:
+    if frase.tipo == "aprendendo":
+        return frase.texto
+    if frase.tipo == "sem_treino_recente":
+        partes = [_SEM_TREINO_TEXTO.format(F=f, C=c)]
+    else:
+        partes = [_FAIXA_TEXTO[frase.tipo].format(F=f, C=c)]
+        if frase.tendencia is not None:
+            partes.append(_TENDENCIA_TEXTO[frase.tendencia].format(C14=c14, C=c))
+    return " ".join([*partes, *avisos])
+
+
 def carga_e_forma(session: Session, atleta_id: int, data: str | None = None, agora: datetime | None = None) -> dict[str, Any]:
     """`ler_carga_forma`: CTL, ATL e TSB do dia (`serie_carga@2`) e a frase de forma (`frase_forma@1`). A série vai **até ontem** (hoje não acabou), então
     `data` ausente ou posterior vale o último dia calculado; `data` antes do primeiro dia com carga é `sem_dados`. Dia que ainda aprende (42 dias) é `parcial`."""
@@ -310,9 +339,14 @@ def carga_e_forma(session: Session, atleta_id: int, data: str | None = None, ago
                            "ctl_texto": numero_texto(d.ctl), "atl_texto": numero_texto(d.atl), "tsb_texto": tsb_texto(d.tsb), "estimativa": True}
     if d.aprendendo:
         out["motivo_texto"] = aprendendo_texto(sc.DIAS_APRENDENDO - (d.dia - serie.dias[0].dia).days)
-    frase = ff.frase_forma(ate_o_dia, lida.pendentes if i == len(serie.dias) - 1 else 0)
+    pendentes = lida.pendentes if i == len(serie.dias) - 1 else 0
+    frase = ff.frase_forma(ate_o_dia, pendentes)
     if frase is not None:
-        out["frase_texto"] = frase.texto
+        janela = ate_o_dia.dias[-ff.JANELA_DIAS:]
+        out["leitura_texto"] = _leitura_forma(frase, ff.inteiro(d.atl), ff.inteiro(d.ctl), ff.inteiro(janela[0].ctl),
+                                              ff._avisos(pendentes, sum(x.sem_carga_avisavel for x in janela)))
+        if frase.tipo in _DIRECAO_ATL:
+            out["direcao"] = _DIRECAO_ATL[frase.tipo]  # ATL contra CTL: "acima" e "abaixo" são do código
     return out
 
 
@@ -330,8 +364,8 @@ def linha_base(session: Session, atleta_id: int, modalidade: str, tipo_treino: s
     ref = {"atividade_id": a.id, "data_texto": ev.data_texto(data_local(a.inicio, a.fuso_min))}
     if r.estado == "sem_linha_base":
         return {"versao": r.versao, "estado": "sem_dados", "modalidade": modalidade, "tipo_treino": tipo_treino, "motivo_texto": r.texto, "treino_de_referencia": ref}
-    metricas = [{"chave": m.chave, "rotulo": m.rotulo, "estado": m.estado, "mediana_texto": m.mediana_texto, "valor_do_treino_texto": m.valor_texto, "n": m.n,
-                 "texto": m.texto} for m in r.metricas]
+    metricas = [{"chave": m.chave, "rotulo": m.rotulo, "estado": m.estado, "mediana_texto": m.mediana_texto, "valor_do_treino_texto": m.valor_texto, "n": m.n}
+               for m in r.metricas]  # sem o `texto` da API: ele traz "bom ou ruim" e "fora do seu normal", palavras que o chat não pode repetir
     tem_normal = any(m["estado"] in ("dentro", "fora") for m in metricas)  # sem nenhuma métrica com normal calculado, o estado é parcial
     return {"versao": r.versao, "estado": "ok" if tem_normal else "parcial", "modalidade": modalidade, "tipo_treino": tipo_treino,
             "janela_semanas": r.janela_semanas, "minimo_treinos": r.minimo_treinos, "treino_de_referencia": ref, "metricas": metricas}

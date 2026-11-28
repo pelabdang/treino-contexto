@@ -192,7 +192,7 @@ def test_nada_da_pergunta_dos_resultados_ou_da_resposta_vai_para_log_ou_saida(ca
 
 def test_prompt_manda_citar_datas_e_numeros_como_nos_resultados():
     from app.chat import prompt
-    assert prompt.VERSAO == "prompt_chat@2"
+    assert prompt.VERSAO == "prompt_chat@3"
     texto = prompt.sistema(date(2030, 3, 15))
     assert "EXATAMENTE como estao nos resultados" in texto and "data_texto" in texto
 
