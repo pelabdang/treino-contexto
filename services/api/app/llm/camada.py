@@ -56,8 +56,35 @@ class ResultadoLLM:
     modelo: str | None  # valor de LLM_MODEL no momento
 
 
+@dataclass(frozen=True)
+class ChamadaFerramenta:
+    """Uma chamada de ferramenta pedida pelo modelo. `argumentos` e `None` quando o JSON do provedor veio malformado."""
+
+    id: str
+    nome: str
+    argumentos: dict[str, Any] | None
+
+
+@dataclass(frozen=True)
+class RespostaConversa:
+    """O que o modelo devolveu numa volta do chat: texto final OU chamadas de ferramenta (ADR 0017, item 8)."""
+
+    texto: str | None = None
+    chamadas: tuple[ChamadaFerramenta, ...] = ()
+
+
+@dataclass(frozen=True)
+class ResultadoConversa:
+    resposta: RespostaConversa | None
+    motivo: str | None
+    provedor: str | None
+    modelo: str | None
+
+
 class ProvedorLLM(Protocol):
     def completar(self, sistema: str, usuario: str, timeout_s: float) -> str: ...
+
+    def conversar(self, mensagens: list[dict[str, Any]], ferramentas: list[dict[str, Any]], timeout_s: float) -> RespostaConversa: ...
 
 
 class ProvedorFalso:
@@ -75,11 +102,27 @@ class ProvedorFalso:
         "Voce deveria treinar mais.\nO professor aprovou.\nLinha extra.\n"
     )
 
-    def __init__(self, texto: str | None = None, modo: str = "bom") -> None:
+    def __init__(self, texto: str | None = None, modo: str = "bom", roteiro: list[Any] | None = None) -> None:
         if modo not in ("bom", "ruim", "vazio", "erro", "tempo", "limite"):
             raise ValueError("modo invalido")
         self.texto, self.modo = texto, modo
         self.chamadas = 0
+        # `conversar`: lista de respostas na ordem das chamadas. Cada item e um `RespostaConversa`, um `str` (texto final) ou uma
+        # excecao do provedor (`ErroProvedor`, `TempoLimite`, `LimiteDoProvedor`), que e levantada. Roteiro esgotado = erro.
+        self.roteiro = list(roteiro) if roteiro is not None else None
+        self.ferramentas_recebidas: list[list[dict[str, Any]]] = []  # os esquemas de cada chamada
+        self.recebidas: list[list[dict[str, Any]]] = []  # as mensagens de cada chamada, para os testes conferirem o que iria ao provedor
+
+    def conversar(self, mensagens: list[dict[str, Any]], ferramentas: list[dict[str, Any]], timeout_s: float) -> RespostaConversa:
+        self.chamadas += 1
+        self.recebidas.append(json.loads(json.dumps(mensagens)))
+        self.ferramentas_recebidas.append(ferramentas)
+        if not self.roteiro:
+            raise ErroProvedor()
+        item = self.roteiro.pop(0)
+        if isinstance(item, BaseException):
+            raise item
+        return RespostaConversa(texto=item) if isinstance(item, str) else item
 
     def completar(self, sistema: str, usuario: str, timeout_s: float) -> str:
         self.chamadas += 1
@@ -162,6 +205,41 @@ class ProvedorLiteLLM:
             raise ErroProvedor()
         return texto
 
+    def conversar(self, mensagens: list[dict[str, Any]], ferramentas: list[dict[str, Any]], timeout_s: float) -> RespostaConversa:
+        """Chamada com ferramentas (formato OpenAI). `drop_params` NAO se aplica: sem `tools` o laco nao funciona, e o erro vira `provedor_erro`."""
+        litellm = _configurar_litellm()
+        parametros = {k: v for k, v in self._parametros().items() if k != "drop_params"}
+        try:
+            resp = litellm.completion(
+                model=f"{self.provedor}/{self.modelo}", messages=mensagens, tools=ferramentas, tool_choice="auto",
+                api_key=self._chave, timeout=timeout_s, num_retries=0, temperature=0.2, drop_params=False, **parametros,
+            )
+            msg = resp.choices[0].message
+            chamadas = tuple(
+                ChamadaFerramenta(str(getattr(t, "id", "") or f"chamada_{i}"), str(t.function.name), _argumentos(t.function.arguments))
+                for i, t in enumerate(getattr(msg, "tool_calls", None) or [])
+            )
+            texto = msg.content
+        except Exception as e:  # noqa: BLE001  (so a CLASSE conta; a mensagem pode ter dado de saude)
+            if isinstance(e, TimeoutError) or "Timeout" in e.__class__.__name__:
+                raise TempoLimite() from None
+            if "RateLimit" in e.__class__.__name__ or getattr(e, "status_code", None) == 429:
+                raise LimiteDoProvedor() from None
+            raise ErroProvedor() from None
+        if chamadas:
+            return RespostaConversa(chamadas=chamadas)
+        if not isinstance(texto, str) or not texto.strip():
+            raise ErroProvedor()
+        return RespostaConversa(texto=texto)
+
+
+def _argumentos(bruto: Any) -> dict[str, Any] | None:
+    try:
+        valor = json.loads(bruto) if isinstance(bruto, str) and bruto.strip() else ({} if bruto in (None, "") else bruto)
+    except ValueError:
+        return None
+    return valor if isinstance(valor, dict) else None
+
 
 class Redator:
     """Uma instancia por execucao do worker: conta as chamadas e traduz tudo em `ResultadoLLM`."""
@@ -205,6 +283,35 @@ class Redator:
         if not isinstance(texto, str) or not texto.strip():
             return self._res(motivo=MOTIVO_ERRO)
         return self._res(texto=limpar_texto(texto))
+
+    def conversar(self, mensagens: list[dict[str, Any]], ferramentas: list[dict[str, Any]],
+                           timeout_s: float | None = None) -> ResultadoConversa:
+        """Uma volta do chat. Mesmas regras de `redigir`: nunca levanta, devolve um motivo; sem nova tentativa; conta no limite da instancia."""
+        self.limite_do_provedor = False
+
+        def res(r: RespostaConversa | None = None, motivo: str | None = None) -> ResultadoConversa:
+            return ResultadoConversa(r, motivo, self.nome_provedor, self.modelo)
+
+        if self._provedor is None:
+            return res(motivo=MOTIVO_NAO_CONFIGURADO)
+        if self.chamadas >= self.limite_chamadas:
+            return res(motivo=MOTIVO_LIMITE)
+        if self.chamadas and self.intervalo_s:
+            self._dormir(self.intervalo_s)
+        self.chamadas += 1
+        try:
+            r = self._provedor.conversar(mensagens, ferramentas, self.timeout_s if timeout_s is None else timeout_s)
+        except TempoLimite:
+            return res(motivo=MOTIVO_TEMPO_LIMITE)
+        except LimiteDoProvedor:
+            self.limite_do_provedor = True
+            return res(motivo=MOTIVO_LIMITE)
+        except Exception:  # noqa: BLE001  (nunca repete nem registra a excecao)
+            return res(motivo=MOTIVO_ERRO)
+        if not isinstance(r, RespostaConversa) or not (r.chamadas or (isinstance(r.texto, str) and r.texto.strip())):
+            return res(motivo=MOTIVO_ERRO)
+        return res(r if r.chamadas else RespostaConversa(texto=limpar_texto(r.texto)))
+
 
 
 def limpar_texto(texto: str) -> str:

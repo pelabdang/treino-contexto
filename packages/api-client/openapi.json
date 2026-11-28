@@ -1347,6 +1347,74 @@
         "title": "ComparacaoOut",
         "type": "object"
       },
+      "ConversaOut": {
+        "properties": {
+          "atualizada_em": {
+            "format": "date-time",
+            "title": "Atualizada Em",
+            "type": "string"
+          },
+          "criada_em": {
+            "format": "date-time",
+            "title": "Criada Em",
+            "type": "string"
+          },
+          "id": {
+            "title": "Id",
+            "type": "integer"
+          },
+          "mensagens": {
+            "items": {
+              "$ref": "#/components/schemas/MensagemOut"
+            },
+            "title": "Mensagens",
+            "type": "array"
+          },
+          "titulo": {
+            "title": "Titulo",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "titulo",
+          "criada_em",
+          "atualizada_em",
+          "mensagens"
+        ],
+        "title": "ConversaOut",
+        "type": "object"
+      },
+      "ConversaResumoOut": {
+        "properties": {
+          "atualizada_em": {
+            "format": "date-time",
+            "title": "Atualizada Em",
+            "type": "string"
+          },
+          "criada_em": {
+            "format": "date-time",
+            "title": "Criada Em",
+            "type": "string"
+          },
+          "id": {
+            "title": "Id",
+            "type": "integer"
+          },
+          "titulo": {
+            "title": "Titulo",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "titulo",
+          "criada_em",
+          "atualizada_em"
+        ],
+        "title": "ConversaResumoOut",
+        "type": "object"
+      },
       "CorrecaoIn": {
         "properties": {
           "transicao": {
@@ -2638,6 +2706,50 @@
         "title": "LinhaBaseOut",
         "type": "object"
       },
+      "LinkOut": {
+        "properties": {
+          "atividade_id": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Atividade Id"
+          },
+          "rotulo": {
+            "title": "Rotulo",
+            "type": "string"
+          },
+          "serie_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Serie Id"
+          },
+          "tipo": {
+            "enum": [
+              "treino",
+              "evolucao"
+            ],
+            "title": "Tipo",
+            "type": "string"
+          }
+        },
+        "required": [
+          "tipo",
+          "rotulo"
+        ],
+        "title": "LinkOut",
+        "type": "object"
+      },
       "ListaAtividadesItemOut": {
         "properties": {
           "atividade_id": {
@@ -2796,6 +2908,27 @@
         "title": "ListaAtividadesItemOut",
         "type": "object"
       },
+      "ListaConversasOut": {
+        "properties": {
+          "atleta_id": {
+            "title": "Atleta Id",
+            "type": "integer"
+          },
+          "conversas": {
+            "items": {
+              "$ref": "#/components/schemas/ConversaResumoOut"
+            },
+            "title": "Conversas",
+            "type": "array"
+          }
+        },
+        "required": [
+          "atleta_id",
+          "conversas"
+        ],
+        "title": "ListaConversasOut",
+        "type": "object"
+      },
       "ListaOut": {
         "properties": {
           "atleta_id": {
@@ -2886,6 +3019,71 @@
           "rotulo"
         ],
         "title": "MarcaPace",
+        "type": "object"
+      },
+      "MensagemOut": {
+        "properties": {
+          "criada_em": {
+            "format": "date-time",
+            "title": "Criada Em",
+            "type": "string"
+          },
+          "estado": {
+            "enum": [
+              "respondida",
+              "recusada",
+              "reprovada",
+              "erro"
+            ],
+            "title": "Estado",
+            "type": "string"
+          },
+          "id": {
+            "title": "Id",
+            "type": "integer"
+          },
+          "links": {
+            "items": {
+              "$ref": "#/components/schemas/LinkOut"
+            },
+            "title": "Links",
+            "type": "array"
+          },
+          "motivo": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Motivo"
+          },
+          "ordem": {
+            "title": "Ordem",
+            "type": "integer"
+          },
+          "pergunta": {
+            "title": "Pergunta",
+            "type": "string"
+          },
+          "texto": {
+            "title": "Texto",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "ordem",
+          "pergunta",
+          "estado",
+          "motivo",
+          "texto",
+          "links",
+          "criada_em"
+        ],
+        "title": "MensagemOut",
         "type": "object"
       },
       "MetricaBaseOut": {
@@ -3333,6 +3531,20 @@
           "pendentes"
         ],
         "title": "PendentesOut",
+        "type": "object"
+      },
+      "PerguntaIn": {
+        "properties": {
+          "pergunta": {
+            "maxLength": 1000,
+            "title": "Pergunta",
+            "type": "string"
+          }
+        },
+        "required": [
+          "pergunta"
+        ],
+        "title": "PerguntaIn",
         "type": "object"
       },
       "Periodo": {
@@ -5370,6 +5582,349 @@
         "summary": "Listar Checkins Pendentes",
         "tags": [
           "check-in"
+        ]
+      }
+    },
+    "/atletas/{atleta_id}/conversas": {
+      "get": {
+        "description": "As conversas do atleta, da mais recente para a mais antiga (so as dele).",
+        "operationId": "listarConversas",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "atleta_id",
+            "required": true,
+            "schema": {
+              "title": "Atleta Id",
+              "type": "integer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "limite",
+            "required": false,
+            "schema": {
+              "default": 50,
+              "maximum": 100,
+              "minimum": 1,
+              "title": "Limite",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ListaConversasOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Erro"
+                }
+              }
+            },
+            "description": "Atleta, conversa ou mensagem de outro (o mesmo 404 de inexistente)"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Listar Conversas",
+        "tags": [
+          "chat"
+        ]
+      },
+      "post": {
+        "description": "Abre uma conversa com a primeira pergunta e a responde (sincrono, sem streaming). O titulo e a pergunta cortada, sem passar pelo provedor.",
+        "operationId": "criarConversa",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "atleta_id",
+            "required": true,
+            "schema": {
+              "title": "Atleta Id",
+              "type": "integer"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PerguntaIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ConversaOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Erro"
+                }
+              }
+            },
+            "description": "Atleta, conversa ou mensagem de outro (o mesmo 404 de inexistente)"
+          },
+          "422": {
+            "description": "Pergunta vazia ou grande demais. Nunca repete o que foi enviado: so `loc`, `msg` e `type`"
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Muitas"
+                }
+              }
+            },
+            "description": "20 perguntas por hora por atleta; `espere_s` e `Retry-After` em segundos"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Criar Conversa",
+        "tags": [
+          "chat"
+        ]
+      }
+    },
+    "/atletas/{atleta_id}/conversas/{conversa_id}": {
+      "delete": {
+        "description": "Apaga a conversa e as mensagens dela (a pedido do atleta).",
+        "operationId": "apagarConversa",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "atleta_id",
+            "required": true,
+            "schema": {
+              "title": "Atleta Id",
+              "type": "integer"
+            }
+          },
+          {
+            "in": "path",
+            "name": "conversa_id",
+            "required": true,
+            "schema": {
+              "title": "Conversa Id",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Erro"
+                }
+              }
+            },
+            "description": "Atleta, conversa ou mensagem de outro (o mesmo 404 de inexistente)"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Apagar Conversa",
+        "tags": [
+          "chat"
+        ]
+      },
+      "get": {
+        "operationId": "buscarConversa",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "atleta_id",
+            "required": true,
+            "schema": {
+              "title": "Atleta Id",
+              "type": "integer"
+            }
+          },
+          {
+            "in": "path",
+            "name": "conversa_id",
+            "required": true,
+            "schema": {
+              "title": "Conversa Id",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ConversaOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Erro"
+                }
+              }
+            },
+            "description": "Atleta, conversa ou mensagem de outro (o mesmo 404 de inexistente)"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Buscar Conversa",
+        "tags": [
+          "chat"
+        ]
+      }
+    },
+    "/atletas/{atleta_id}/conversas/{conversa_id}/mensagens": {
+      "post": {
+        "description": "Continua uma conversa: a pergunta e a resposta de uma vez (sincrono).",
+        "operationId": "enviarMensagem",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "atleta_id",
+            "required": true,
+            "schema": {
+              "title": "Atleta Id",
+              "type": "integer"
+            }
+          },
+          {
+            "in": "path",
+            "name": "conversa_id",
+            "required": true,
+            "schema": {
+              "title": "Conversa Id",
+              "type": "integer"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PerguntaIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MensagemOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Erro"
+                }
+              }
+            },
+            "description": "Atleta, conversa ou mensagem de outro (o mesmo 404 de inexistente)"
+          },
+          "422": {
+            "description": "Pergunta vazia ou grande demais. Nunca repete o que foi enviado: so `loc`, `msg` e `type`"
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Muitas"
+                }
+              }
+            },
+            "description": "20 perguntas por hora por atleta; `espere_s` e `Retry-After` em segundos"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Enviar Mensagem",
+        "tags": [
+          "chat"
         ]
       }
     },
