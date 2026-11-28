@@ -106,6 +106,33 @@ export function EsqueletoEvolucao() {
   );
 }
 
+/** Esqueleto de "Seus números": dois cartões pequenos lado a lado e um largo. Só decorativo. */
+export function EsqueletoCartoes() {
+  const { styles, opacidade, barra } = useBase();
+  return (
+    <Animated.View
+      testID="esqueleto-cartoes"
+      accessibilityElementsHidden
+      importantForAccessibility="no-hide-descendants"
+      style={{ opacity: opacidade }}
+    >
+      <View style={{ flexDirection: "row", gap: 12 }}>
+        {[0, 1].map((i) => (
+          <View key={i} style={[styles.cartao, { flex: 1 }]}>
+            {barra("60%", 14)}
+            {barra("50%", 32)}
+            {barra("80%", 16)}
+          </View>
+        ))}
+      </View>
+      <View style={styles.cartao}>
+        {barra("40%", 14)}
+        {barra("100%", 44)}
+      </View>
+    </Animated.View>
+  );
+}
+
 /** Esqueleto da semana-padrão: cartão da data, cartão de "quem definiu" e dois dias. Só decorativo. */
 export function EsqueletoSemanaPadrao() {
   const { styles, opacidade, barra } = useBase();

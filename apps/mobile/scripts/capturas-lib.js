@@ -29,6 +29,9 @@ const ACESSOS = {
   // Evolução v1: 2 sem séries, 29 derruba o catálogo, 31 pace aprendendo (sem faixa), 32 a série responde 500.
   atleta31: "token-sintetico-atleta-31",
   atleta32: "token-sintetico-atleta-32",
+  // Início v4: 33 só o cartão da melhor marca, 34 a busca dos cartões responde 500 (a seção some em silêncio).
+  atleta33: "token-sintetico-atleta-33",
+  atleta34: "token-sintetico-atleta-34",
 };
 const ENTRAR_ANA = [["campo-email", "atleta1@exemplo.com"], ["campo-senha", SENHA_SINTETICA]];
 const TROCAR_OK = [["campo-senha-atual", SENHA_SINTETICA], ["campo-senha-nova", "outra-senha-sintetica"], ["campo-senha-repetida", "outra-senha-sintetica"]];
@@ -86,6 +89,10 @@ const ROTAS = [
   { nome: "trocar-senha-salva", caminho: "/trocar-senha", simular: "troca-ok", preencher: TROCAR_OK, clicar: ["botao-salvar"] },
   // Navegação por abas (UX, auditoria da Lia): barra na base (390) e menu lateral (1280). Início e Evolução mostram os tiros de 1 km.
   { nome: "inicio-v3", caminho: "/" },
+  { nome: "inicio-v4-numeros", caminho: "/" }, // a seção "Seus números" com os cinco cartões
+  { nome: "inicio-v4-um-cartao", caminho: "/", acesso: "atleta33" },
+  { nome: "inicio-v4-sem-cartoes", caminho: "/", acesso: "atleta2" }, // atleta 2: sem treinos nem cartões
+  { nome: "inicio-v4-erro-cartoes", caminho: "/", acesso: "atleta34" }, // a seção some em silêncio
   { nome: "inicio-v3-aprendendo", caminho: "/", acesso: "atleta21" },
   { nome: "inicio-v3-erro-quinzena", caminho: "/", acesso: "atleta22" },
   { nome: "inicio-v3-vazio", caminho: "/", acesso: "atleta2" },

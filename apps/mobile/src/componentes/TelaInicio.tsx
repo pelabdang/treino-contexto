@@ -2,7 +2,16 @@
 // faixa de outro treino sem check-in, quinzena e treinos recentes. Cada cartão busca e falha sozinho ("Tentar de novo").
 // Só mostra texto pronto da API; nada de saúde vai para log.
 import { MaterialIcons } from "@expo/vector-icons";
-import { buscarAtividade, buscarCarga, type Atividade, type OpcoesCliente, type Resultado, type SerieCarga } from "@treino/api-client";
+import {
+  buscarAtividade,
+  buscarCarga,
+  buscarCartoesInicio,
+  type Atividade,
+  type CartoesInicio,
+  type OpcoesCliente,
+  type Resultado,
+  type SerieCarga,
+} from "@treino/api-client";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { Pressable, ScrollView, StyleSheet, Text, useWindowDimensions, View } from "react-native";
 
@@ -14,9 +23,10 @@ import { CartaoQuinzena } from "./CartaoQuinzena";
 import { CartaoTreino } from "./CartaoTreino";
 import { CartaoUltimoTreino } from "./CartaoUltimoTreino";
 import { diaCurto, hojePorExtenso } from "./datasInicio";
-import { EsqueletoPendentes } from "./Esqueleto";
+import { EsqueletoCartoes, EsqueletoPendentes } from "./Esqueleto";
 import { LogoPulso } from "./LogoPulso";
 import { MODALIDADES } from "./modalidades";
+import { SecaoNumeros, type DestinoCartao } from "./SecaoNumeros";
 import { borda, espaco, fonte, larguraConteudoMax, raio, tamanho, useMargemTela, useTema, type Tema } from "../tema";
 
 type Props = {
@@ -27,6 +37,8 @@ type Props = {
   aoAbrirTreino: (atividadeId: number) => void;
   aoResponderCheckin: (atividadeId: number) => void;
   aoVerTodos: () => void;
+  /** Toque num cartão de "Seus números": a Evolução (com a série), a semana-padrão ou um treino. Sem ele, a seção não aparece. */
+  aoAbrirDestino?: (destino: DestinoCartao) => void;
   /** Muda quando a aba volta ao foco: tudo é buscado de novo. */
   atualizar?: number;
   fetchFn?: typeof fetch;
@@ -66,7 +78,7 @@ function useBusca<T>(buscar: () => Promise<Resultado<T>>, entidade: string, refr
 
 const LARGURA_DUAS_COLUNAS = 900;
 
-export function TelaInicio({ apiUrl, atletaId, nome, aoAbrirTreino, aoResponderCheckin, aoVerTodos, atualizar = 0, fetchFn, agora = () => new Date() }: Props) {
+export function TelaInicio({ apiUrl, atletaId, nome, aoAbrirTreino, aoResponderCheckin, aoVerTodos, aoAbrirDestino, atualizar = 0, fetchFn, agora = () => new Date() }: Props) {
   const tema = useTema();
   const margem = useMargemTela();
   const larga = useWindowDimensions().width >= LARGURA_DUAS_COLUNAS;
@@ -76,6 +88,10 @@ export function TelaInicio({ apiUrl, atletaId, nome, aoAbrirTreino, aoResponderC
   const [lista, recarregarLista] = useBusca(() => buscarTreinos(atletaId, { limite: 5 }, opcoes), `lista-${atletaId}-${opcoes.baseUrl}`, atualizar);
   const [pendentes] = useBusca(() => buscarCheckinsPendentes(atletaId, 7, opcoes), `pendentes-${atletaId}-${opcoes.baseUrl}`, atualizar);
   const [quinzena, recarregarQuinzena] = useBusca<SerieCarga>(() => buscarCarga(atletaId, { ultimos: 14 }, opcoes), `quinzena-${atletaId}-${opcoes.baseUrl}`, atualizar);
+
+  // Extras: se a busca falha, a seção some em silêncio (o erro do último treino e da quinzena continuam visíveis).
+  const [numeros] = useBusca<CartoesInicio>(() => buscarCartoesInicio(atletaId, opcoes), `numeros-${atletaId}-${opcoes.baseUrl}`, atualizar);
+  const cartoes = aoAbrirDestino && numeros.tipo === "ok" && Array.isArray(numeros.dados.cartoes) ? numeros.dados.cartoes : [];
 
   const itens = lista.tipo === "ok" ? (lista.dados.itens ?? []) : [];
   const ultimo = itens[0] ?? null;
@@ -113,6 +129,16 @@ export function TelaInicio({ apiUrl, atletaId, nome, aoAbrirTreino, aoResponderC
   );
 
   const semTreinos = lista.tipo === "ok" && itens.length === 0;
+
+  // "Seus números": no celular entre a quinzena e os recentes; no computador na coluna do último treino.
+  const numerosNaTela = aoAbrirDestino && numeros.tipo === "carregando" ? (
+    <View testID="carregando-numeros">
+      <Text style={styles.apenasLeitor}>Carregando seus números</Text>
+      <EsqueletoCartoes />
+    </View>
+  ) : cartoes.length > 0 && aoAbrirDestino ? (
+    <SecaoNumeros cartoes={cartoes} aoAbrir={aoAbrirDestino} />
+  ) : null;
 
   const colunaUltimo = (
     <View style={[styles.coluna, larga && styles.colunaLarga]}>
@@ -156,6 +182,7 @@ export function TelaInicio({ apiUrl, atletaId, nome, aoAbrirTreino, aoResponderC
           </Pressable>
         </View>
       )}
+      {larga && numerosNaTela}
     </View>
   );
 
@@ -164,6 +191,7 @@ export function TelaInicio({ apiUrl, atletaId, nome, aoAbrirTreino, aoResponderC
       {quinzena.tipo === "carregando" && carregando}
       {quinzena.tipo === "erro" && erro(quinzena.rede, recarregarQuinzena, "erro-quinzena")}
       {quinzena.tipo === "ok" && <CartaoQuinzena serie={quinzena.dados} />}
+      {!larga && numerosNaTela}
       {itens.length > 1 && (
         <View testID="recentes" style={styles.recentes}>
           <Text accessibilityRole="header" style={styles.secao}>
@@ -212,6 +240,7 @@ function criarEstilos({ cor }: Tema, margem: number) {
     coluna: { gap: espaco[3], width: "100%" },
     colunaLarga: { flex: 1, width: "auto" },
     texto: { ...fonte.corpo, color: cor["texto-2"] },
+    apenasLeitor: { position: "absolute", width: 1, height: 1, opacity: 0 },
     secao: { ...fonte["titulo-secao"], color: cor.texto },
     recentes: { gap: espaco[1] },
     vazio: { alignItems: "center", gap: espaco[3], paddingVertical: espaco[6] },

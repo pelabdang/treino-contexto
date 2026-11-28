@@ -42,6 +42,8 @@ type Props = {
   aoAbrirCheckinsPendentes?: () => void;
   /** Abre a lista de consentimentos (#503). Sem ele, não busca nem mostra o aviso de pedido de professor. */
   aoAbrirConsentimento?: () => void;
+  /** Série pedida de fora (cartão do início): vence a última escolhida e a padrão. Mudar com a tela aberta troca a série. */
+  serieInicial?: string;
   /** Esconde "Enviar arquivo FIT" (agora na aba Conta). No estado vazio o botão volta, porque o texto o cita. */
   ocultarEnviarFit?: boolean;
   /** Muda quando a tela volta ao foco: busca o total de pendentes de novo. */
@@ -70,6 +72,7 @@ export function TelaEvolucao({
   aoAbrirSemanaPadrao,
   aoAbrirCheckinsPendentes,
   aoAbrirConsentimento,
+  serieInicial,
   ocultarEnviarFit = false,
   atualizar = 0,
   fetchFn,
@@ -100,6 +103,8 @@ export function TelaEvolucao({
       setCatalogo({ tipo: "ok", dados: r.dados });
       setEscolhidaId((atual) => {
         if (atual && r.dados.series.some((s) => s.id === atual)) return atual;
+        const pedida = r.dados.series.find((s) => s.id === serieInicial);
+        if (pedida) return pedida.id;
         const lembrada = r.dados.series.find((s) => s.id === guardada && s.disponivel);
         return lembrada?.id ?? r.dados.serie_padrao ?? r.dados.series.find((s) => s.disponivel)?.id ?? r.dados.series[0]?.id ?? null;
       });
@@ -107,10 +112,22 @@ export function TelaEvolucao({
     return () => {
       ativo = false;
     };
+  // `serieInicial` fica de fora de propósito: trocá-la com a tela aberta não busca o catálogo de novo (ver `pedidaAplicada`).
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [apiUrl, atletaId, fetchFn, tentativa]);
 
   // 2) A série escolhida, no período escolhido.
   const catalogoOk = catalogo.tipo === "ok" ? catalogo.dados : null;
+  // Série pedida de fora (cartão do início) com a tela já aberta: troca de série uma vez por pedido, sem guardar como escolha do atleta.
+  const [pedidaAplicada, setPedidaAplicada] = useState<string | undefined>(undefined);
+  if (catalogoOk && serieInicial && serieInicial !== pedidaAplicada) {
+    setPedidaAplicada(serieInicial);
+    if (serieInicial !== escolhidaId && catalogoOk.series.some((x) => x.id === serieInicial)) {
+      setSerie({ tipo: "carregando" });
+      setEscolhidaId(serieInicial);
+      setSelecionado(null);
+    }
+  }
   const entrada = catalogoOk?.series.find((x) => x.id === escolhidaId);
   const buscaSerie = entrada?.disponivel ? escolhidaId : null;
   useEffect(() => {

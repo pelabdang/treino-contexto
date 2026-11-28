@@ -115,8 +115,8 @@ def test_volume_das_4_semanas(client, session, atleta):
     _volume_8_semanas(session, atleta)
     c = _por_id(_cartoes(client, atleta))["volume_4_semanas"]
     assert (c["formato"], c["rotulo"], c["valor"], c["apoio"]) == ("largo", "Volume das 4 semanas", "10 km por semana", "2 km a mais que nas 4 anteriores")
-    assert [(b["data_texto"], b["valor_texto"], b["destaque"]) for b in c["barras"]] == [
-        (f"{SEG - timedelta(days=7 * k):%d/%m}", "10", k == 1) for k in (4, 3, 2, 1)]
+    assert [(b["data_texto"], b["valor_texto"], b["destaque"], b["altura_pct"]) for b in c["barras"]] == [
+        (f"{SEG - timedelta(days=7 * k):%d/%m}", "10", k == 1, 100) for k in (4, 3, 2, 1)]  # as 4 iguais: todas 100
     assert c["texto"] == ("Volume de corrida nas últimas 4 semanas: 10 km por semana (mediana), 2 km a mais (25%) que nas 4 semanas anteriores "
                           "(8 km por semana).")
     assert c["destino"] == {"tela": "evolucao", "serie_id": "corrida.volume_km"}
@@ -230,3 +230,20 @@ def test_nome_da_marca_generico():
     assert [n(c) for c in ("Best 1km Run", "Best 1mile Run", "Best 3km Run", "Best 400m Pool Swim", "Best 40km Cycle", "Best Half Marathon",
                            "Best Marathon")] == ["1 km", "1 milha", "3 km", "400 m", "40 km", "meia maratona", "maratona"]
     assert [n(c) for c in ("Farthest Run", "Max Avg Power (20 min)", "Most Steps in a Day", "Best Tipo Novo", "Longest Pool Swim")] == [None] * 5
+
+
+def test_altura_das_barras_relativa_a_maior(client, session, atleta):
+    # R (4 semanas completas, da mais antiga à mais recente): 10, 5, 0, 3 km; A: 8 km nas 4 anteriores. Alturas: 100, 50, 0, 30 (3/10).
+    for k, km in ((4, 10), (3, 5), (1, 3)):
+        _ativ(session, atleta, HOJE.weekday() + 7 * k, tipo=None, dist=km * 1000.0)
+    for k in range(5, 9):
+        _ativ(session, atleta, HOJE.weekday() + 7 * k, tipo=None, dist=8000.0)
+    c = _por_id(_cartoes(client, atleta))["volume_4_semanas"]
+    assert [(b["valor_texto"], b["altura_pct"]) for b in c["barras"]] == [("10", 100), ("5", 50), ("0", 0), ("3", 30)]
+
+
+def test_altura_arredonda_meio_para_cima_e_zero_sem_volume():
+    from app.servicos.inicio_cartoes import altura_pct
+
+    assert [altura_pct(v, 8) for v in (1, 3, 8, 0)] == [13, 38, 100, 0]  # 12,5 -> 13; 37,5 -> 38
+    assert altura_pct(0, 0) == 0
