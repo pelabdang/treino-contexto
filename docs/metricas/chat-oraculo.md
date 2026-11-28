@@ -14,14 +14,14 @@ conta, relógio ou treino de ninguém**. Os arquivos estão em `services/api/tes
 `services/api/tests/explicacao/test_fixtures_chat.py`.
 
 ## Casos
-31 perguntas, com os atletas fictícios `atleta_a` (histórico de 14 semanas, clima e check-ins completos) e `atleta_b` (natação e ciclismo, pouco histórico, treinos indoor).
+32 perguntas, com os atletas fictícios `atleta_a` (histórico de 14 semanas, clima e check-ins completos) e `atleta_b` (natação e ciclismo, pouco histórico, treinos indoor).
 
 | Grupo | Ids | O que cobre |
 |---|---|---|
 | Evolução | E01 a E05 | comparar pace e FC leves, volume, tiros, e a série da natação sem dados suficientes (a resposta diz o que falta, sem "não sei") |
 | Treino específico | T01 a T04 | último treino, o mais longo, o intervalado e a natação mais longa |
 | Comparação | C01 a C03 | volume entre períodos, rua e casa no ciclismo, e `direcao = parecido` |
-| Check-ins | K01 a K03 | esforço da semana, pior sensação, treino com dor (só a frase neutra) |
+| Check-ins | K01 a K04 | esforço da semana, pior sensação com a observação livre, treino com dor (só a frase neutra) e "o que eu escrevi" (ADR 0017, item 6) |
 | Carga e forma | F01 a F04 | CTL, ATL e TSB do dia, carga semanal, dois dias comparados e histórico curto |
 | Clima | L01 a L03 | calor no treino, treinos leves quentes e treino indoor sem clima |
 | Recuperação | R01 | sono e FC de repouso, com VFC sem dado |

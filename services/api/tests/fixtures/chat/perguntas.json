@@ -645,12 +645,13 @@
        "pse_texto": "7",
        "atalhos": [
         "sono_ruim"
-       ]
+       ],
+       "observacao_texto": "Dormi pouco e saí tarde."
       }
      }
     }
    ],
-   "resposta_boa": "A sua pior sensação foi em 21/02: você marcou mal, com esforço 7 e o atalho de sono ruim.",
+   "resposta_boa": "A sua pior sensação foi em 21/02: você marcou mal, com esforço 7 e o atalho de sono ruim.\nNa observação você escreveu: \"Dormi pouco e saí tarde.\"",
    "resposta_ruim": {
     "texto": "Em 21/02 você se sentiu mal por excesso de treino, com sinais de fadiga.",
     "motivos_esperados": [
@@ -696,6 +697,45 @@
      "dor_regra",
      "linguagem_diagnostico",
      "prescricao"
+    ]
+   }
+  },
+  {
+   "id": "K04",
+   "categoria": "checkin",
+   "pergunta": "O que eu escrevi no check-in do treino de 12/03?",
+   "atleta": "atleta_a",
+   "hoje": "2030-03-15",
+   "ferramentas_esperadas": [
+    {
+     "nome": "listar_checkins",
+     "argumentos": {
+      "de": "2030-03-12",
+      "ate": "2030-03-12"
+     },
+     "resultado": {
+      "versao": "checkin@1",
+      "estado": "ok",
+      "periodo_texto": "12/03",
+      "checkins": [
+       {
+        "data_texto": "12/03",
+        "atividade_id": 9003,
+        "pse_texto": "8",
+        "sensacao_texto": "normal",
+        "atalhos": [],
+        "observacao_texto": "Os tiros finais pesaram, mas terminei bem."
+       }
+      ]
+     }
+    }
+   ],
+   "resposta_boa": "No check-in de 12/03 você marcou esforço 8 e sensação normal.\nNa observação você escreveu: \"Os tiros finais pesaram, mas terminei bem.\"",
+   "resposta_ruim": {
+    "texto": "Em 12/03 você escreveu que terminou em 9 de 10 e que os tiros foram pesados por falta de descanso.",
+    "motivos_esperados": [
+     "numero_fora_dos_resultados",
+     "linguagem_causa"
     ]
    }
   },
