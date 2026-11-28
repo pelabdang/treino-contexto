@@ -4,7 +4,7 @@ import { AccessibilityInfo, Animated, Easing, StyleSheet, View } from "react-nat
 import { borda, espaco, movimento, raio, useTema, type Tema } from "../tema";
 
 /** Segue o "reduzir movimento" do sistema; sem a resposta ainda, assume que há movimento. */
-function useReduzirMovimento(): boolean {
+export function useReduzirMovimento(): boolean {
   const [reduzir, setReduzir] = useState(false);
   useEffect(() => {
     let ativo = true;
@@ -231,5 +231,18 @@ function criarEstilos({ cor }: Tema) {
       backgroundColor: cor.superficie,
     },
     barra: { borderRadius: raio.pequeno, backgroundColor: cor["superficie-2"] },
+    semCartao: { gap: espaco[2] },
   });
+}
+
+/** Três linhas de esqueleto dentro do cartão "pensando" do chat. Só decorativo (o texto da espera fica fora). */
+export function EsqueletoResposta() {
+  const { styles, opacidade, barra } = useBase();
+  return (
+    <Animated.View testID="esqueleto-resposta" accessibilityElementsHidden importantForAccessibility="no-hide-descendants" style={[{ opacity: opacidade }, styles.semCartao]}>
+      {barra("100%", 14, "a")}
+      {barra("92%", 14, "b")}
+      {barra("60%", 14, "c")}
+    </Animated.View>
+  );
 }

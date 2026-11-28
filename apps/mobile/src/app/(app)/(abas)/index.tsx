@@ -1,6 +1,7 @@
 import { router } from "expo-router";
 
 import { TelaInicio } from "../../../componentes/TelaInicio";
+import { ENTRADA_CHAT_NO_INICIO } from "../../../chat/textos";
 import { useContadorDeFoco } from "../../../navegacao/useContadorDeFoco";
 import { useAtleta, useSessao } from "../../../sessao/SessaoProvider";
 
@@ -19,6 +20,7 @@ export default function Inicio() {
       aoAbrirTreino={(id) => router.push(`/treino/${id}`)}
       aoResponderCheckin={(id) => router.push(`/checkin/${id}`)}
       aoVerTodos={() => router.navigate("/treinos")}
+      aoAbrirChat={ENTRADA_CHAT_NO_INICIO ? () => router.push("/chat") : undefined}
       aoAbrirDestino={(d) => {
         // `destino` da API: a Evolução (já com a série), a semana-padrão ou um treino.
         if (d.tela === "treino" && d.atividade_id != null) router.push(`/treino/${d.atividade_id}`);

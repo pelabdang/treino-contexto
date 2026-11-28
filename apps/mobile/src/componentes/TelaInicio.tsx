@@ -23,6 +23,7 @@ import { CartaoQuinzena } from "./CartaoQuinzena";
 import { CartaoTreino } from "./CartaoTreino";
 import { CartaoUltimoTreino } from "./CartaoUltimoTreino";
 import { diaCurto, hojePorExtenso } from "./datasInicio";
+import { EntradaChat } from "./EntradaChat";
 import { EsqueletoCartoes, EsqueletoPendentes } from "./Esqueleto";
 import { LogoPulso } from "./LogoPulso";
 import { MODALIDADES } from "./modalidades";
@@ -39,6 +40,8 @@ type Props = {
   aoVerTodos: () => void;
   /** Toque num cartão de "Seus números": a Evolução (com a série), a semana-padrão ou um treino. Sem ele, a seção não aparece. */
   aoAbrirDestino?: (destino: DestinoCartao) => void;
+  /** Entrada do chat "Pergunte ao seu treino" (#600). Sem ela, o bloco não aparece. */
+  aoAbrirChat?: () => void;
   /** Muda quando a aba volta ao foco: tudo é buscado de novo. */
   atualizar?: number;
   fetchFn?: typeof fetch;
@@ -78,7 +81,7 @@ function useBusca<T>(buscar: () => Promise<Resultado<T>>, entidade: string, refr
 
 const LARGURA_DUAS_COLUNAS = 900;
 
-export function TelaInicio({ apiUrl, atletaId, nome, aoAbrirTreino, aoResponderCheckin, aoVerTodos, aoAbrirDestino, atualizar = 0, fetchFn, agora = () => new Date() }: Props) {
+export function TelaInicio({ apiUrl, atletaId, nome, aoAbrirTreino, aoResponderCheckin, aoVerTodos, aoAbrirDestino, aoAbrirChat, atualizar = 0, fetchFn, agora = () => new Date() }: Props) {
   const tema = useTema();
   const margem = useMargemTela();
   const larga = useWindowDimensions().width >= LARGURA_DUAS_COLUNAS;
@@ -221,6 +224,7 @@ export function TelaInicio({ apiUrl, atletaId, nome, aoAbrirTreino, aoResponderC
           </Text>
         </View>
       </View>
+      {aoAbrirChat && <EntradaChat aoAbrir={aoAbrirChat} />}
       <View style={[styles.colunas, larga && styles.colunasLarga]}>
         {colunaUltimo}
         {colunaOutros}
