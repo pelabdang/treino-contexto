@@ -50,6 +50,8 @@ type Props = {
   aoAbrirConversas: () => void;
   aoAbrirTreino: (atividadeId: number) => void;
   aoAbrirEvolucao: (serieId: string) => void;
+  /** Espera longa: volta ao Início; a API grava a resposta mesmo assim e ela aparece na conversa depois. */
+  aoEsperarNoInicio?: () => void;
   agora?: () => Date;
 };
 
@@ -65,7 +67,7 @@ function erroLocal(chave: string, pergunta: string): Item {
   return { chave, pergunta, msg, local: true };
 }
 
-export function TelaChat({ apiUrl, atletaId, fetchFn, conversaId, perguntaInicial, aoVoltar, aoAbrirConversas, aoAbrirTreino, aoAbrirEvolucao, agora = () => new Date() }: Props) {
+export function TelaChat({ apiUrl, atletaId, fetchFn, conversaId, perguntaInicial, aoVoltar, aoAbrirConversas, aoAbrirTreino, aoAbrirEvolucao, aoEsperarNoInicio, agora = () => new Date() }: Props) {
   const tema = useTema();
   const margem = useMargemTela();
   const styles = useMemo(() => criarEstilos(tema, margem), [tema, margem]);
@@ -250,7 +252,7 @@ export function TelaChat({ apiUrl, atletaId, fetchFn, conversaId, perguntaInicia
                 <Text style={styles.hora}>{quando ? `Você · ${horaCurta(quando)}` : "Você"}</Text>
               </View>
               {item.msg === null ? (
-                <EsperaChat />
+                <EsperaChat aoEsperarNoInicio={aoEsperarNoInicio} />
               ) : (
                 <CartaoResposta msg={item.msg} aoTentar={() => void enviar(item.pergunta, item.local ? item.chave : undefined)} aoAbrirTreino={aoAbrirTreino} aoAbrirEvolucao={aoAbrirEvolucao} desligado={pensando || limite} styles={styles} tema={tema} />
               )}
@@ -337,7 +339,7 @@ function CartaoResposta({ msg, aoTentar, aoAbrirTreino, aoAbrirEvolucao, desliga
       </Text>
       {msg.links.map((l, i) => (
         <Pressable key={`${l.tipo}-${l.atividade_id ?? l.serie_id ?? i}-${i}`} testID={`chat-link-${i}`} accessibilityRole="button" onPress={() => abrir(l)} style={comFoco(styles.botaoContorno, styles.foco)}>
-          <Text style={styles.botaoContornoTexto}>{l.rotulo}</Text>
+          <Text style={styles.botaoContornoTexto}>{l.data_texto ? `${l.rotulo} · ${l.data_texto}` : l.rotulo}</Text>
           <MaterialIcons name="chevron-right" size={tamanho.iconeMedio} color={tema.cor.link} accessible={false} />
         </Pressable>
       ))}

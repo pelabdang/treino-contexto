@@ -541,12 +541,12 @@ const SP = new Intl.DateTimeFormat("sv-SE", { timeZone: "America/Sao_Paulo", yea
 const emSaoPaulo = (d) => `${SP.format(d).replace(" ", "T")}-03:00`;
 const ha = (minutos) => emSaoPaulo(new Date(Date.now() - minutos * 60000));
 const RESPOSTAS_CHAT = {
-  "como foi minha semana?": { texto: "Nesta semana você correu 3 vezes, 28,4 km no total. O treino mais longo foi de 12,1 km, no domingo. O pace dos treinos leves ficou perto do seu normal.", links: [{ tipo: "evolucao", rotulo: "Abrir na Evolução", serie_id: "corrida.volume_km" }, { tipo: "treino", rotulo: "Abrir treino", atividade_id: 107 }] },
+  "como foi minha semana?": { texto: "Nesta semana você correu 3 vezes, 28,4 km no total. O treino mais longo foi de 12,1 km, no domingo. O pace dos treinos leves ficou perto do seu normal.", links: [{ tipo: "evolucao", rotulo: "Abrir na Evolução", serie_id: "corrida.volume_km" }, { tipo: "treino", rotulo: "Abrir treino", atividade_id: 107, data_texto: "qui 20/03" }] },
   "meu pace nos treinos leves melhorou?": { texto: "Sim. Nas últimas 12 semanas o seu pace nos treinos leves foi de 5:52 para 5:41 por km, e a FC média ficou parecida.", links: [{ tipo: "evolucao", rotulo: "Abrir na Evolução", serie_id: "corrida.pace.leve" }] },
   "quanto corri neste mês?": { texto: "Neste mês você correu 96,3 km em 9 treinos.", links: [{ tipo: "evolucao", rotulo: "Abrir na Evolução", serie_id: "corrida.volume_km" }] },
   "como estão minha carga e minha forma?": { texto: "Sua carga dos últimos 7 dias está um pouco acima da média das últimas semanas. A sua forma está em 4, um valor de quem está descansado o bastante.", links: [{ tipo: "evolucao", rotulo: "Abrir na Evolução", serie_id: "geral.ctl" }] },
-  "o que escrevi no check-in de ontem?": { texto: "No check-in de ontem você marcou esforço 6 de 10 e escreveu: pernas pesadas no começo, melhorou depois do quarto quilômetro.", links: [{ tipo: "treino", rotulo: "Abrir treino", atividade_id: 107 }] },
-  "como foi meu último treino?": { texto: "O seu último treino foi uma rodagem de 10,2 km em 58:41, pace médio de 5:45 por km, dentro do seu normal.", links: [{ tipo: "treino", rotulo: "Abrir treino", atividade_id: 107 }] },
+  "o que escrevi no check-in de ontem?": { texto: "No check-in de ontem você marcou esforço 6 de 10 e escreveu: pernas pesadas no começo, melhorou depois do quarto quilômetro.", links: [{ tipo: "treino", rotulo: "Abrir treino", atividade_id: 107, data_texto: "qui 20/03" }] },
+  "como foi meu último treino?": { texto: "O seu último treino foi uma rodagem de 10,2 km em 58:41, pace médio de 5:45 por km, dentro do seu normal.", links: [{ tipo: "treino", rotulo: "Abrir treino", atividade_id: 107, data_texto: "qui 20/03" }] },
 };
 const TEXTO_RECUSA_TEMA = "Eu respondo perguntas sobre os seus treinos. Pergunte, por exemplo, sobre o seu pace, a sua carga ou como foi a sua semana.";
 const TEXTO_RECUSA_MUDANCA = "Mudar o treino é com o seu professor. Posso mostrar o que os seus treinos dizem, se isso ajudar na conversa com ele.";

@@ -25,7 +25,7 @@ export const conversa = (extra: Partial<ConversaChat> = {}): ConversaChat => ({
 export const comLinks = mensagem({
   links: [
     { tipo: "evolucao", rotulo: "Abrir na Evolução", serie_id: "corrida.volume_km" },
-    { tipo: "treino", rotulo: "Abrir treino", atividade_id: 107 },
+    { tipo: "treino", rotulo: "Abrir treino", atividade_id: 107, data_texto: "qui 20/03" },
   ],
 });
 export const recusaTema = mensagem({ estado: "recusada", motivo: "fora_do_tema", texto: "Eu respondo perguntas sobre os seus treinos. Pergunte, por exemplo, sobre o seu pace, a sua carga ou como foi a sua semana." });

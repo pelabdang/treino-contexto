@@ -122,6 +122,7 @@ describe("tela do chat: perguntar e responder", () => {
     await fireEvent.press(screen.getByTestId("chat-enviar"));
     await screen.findByTestId("chat-resposta");
     expect(screen.getByText("Abrir na Evolução")).toBeTruthy();
+    expect(screen.getByText("Abrir treino · qui 20/03")).toBeTruthy();
     await fireEvent.press(screen.getByTestId("chat-link-0"));
     expect(p.aoAbrirEvolucao).toHaveBeenCalledWith("corrida.volume_km");
     await fireEvent.press(screen.getByTestId("chat-link-1"));
@@ -243,7 +244,8 @@ describe("tela do chat: a espera", () => {
     jest.useFakeTimers();
     try {
       const a = api({ responder: () => new Promise<Response>(() => {}) });
-      await render(tela(a.fetchFn));
+      const inicio = jest.fn();
+      await render(tela(a.fetchFn, { aoEsperarNoInicio: inicio }));
       await digitar("Oi");
       await act(async () => {
         await fireEvent.press(screen.getByTestId("chat-enviar"));
@@ -260,6 +262,8 @@ describe("tela do chat: a espera", () => {
       });
       expect(screen.getByText("Está demorando mais que o normal. A resposta pode levar até 45 segundos.")).toBeTruthy();
       expect(screen.queryByText(/%/)).toBeNull();
+      await fireEvent.press(screen.getByTestId("chat-esperar-no-inicio"));
+      expect(inicio).toHaveBeenCalled();
     } finally {
       jest.useRealTimers();
     }
