@@ -20,6 +20,8 @@ type Props = {
 export const TEXTO_COPIAR_ERRO = "Não deu para copiar.";
 export const TEXTO_AVALIAR_ERRO = "Não deu para registrar. Tente de novo.";
 const COPIADO_POR_MS = 2000;
+/** Contorno de 1,5 dos botões da linha (spec): o atleta vê que são botões. O marcado usa `borda.foco` (2). */
+const CONTORNO = 1.5;
 
 export function AcoesResposta({ texto, avaliacaoInicial, aoAvaliar }: Props) {
   const tema = useTema();
@@ -104,11 +106,11 @@ function criarEstilos({ cor }: Tema) {
   return StyleSheet.create({
     bloco: { gap: espaco[1], paddingTop: espaco[2], borderTopWidth: borda.fina, borderTopColor: cor.borda },
     linha: { flexDirection: "row", alignItems: "center", justifyContent: "space-between" },
-    copiar: { minHeight: tamanho.alvoMinimo, minWidth: 120, flexDirection: "row", alignItems: "center", justifyContent: "center", gap: espaco[2], paddingHorizontal: espaco[3], borderRadius: raio.botao },
-    copiado: { backgroundColor: cor["marca-suave"] },
+    copiar: { minHeight: tamanho.alvoMinimo, minWidth: 120, flexDirection: "row", alignItems: "center", justifyContent: "center", gap: espaco[2], paddingHorizontal: espaco[3], borderRadius: raio.botao, borderWidth: CONTORNO, borderColor: cor["borda-forte"] },
+    copiado: { backgroundColor: cor["marca-suave"], borderColor: cor.link },
     copiarTexto: { ...fonte.botao, color: cor.link },
     polegares: { flexDirection: "row", gap: espaco[1] },
-    polegar: { width: tamanho.alvoMinimo, height: tamanho.alvoMinimo, alignItems: "center", justifyContent: "center", borderRadius: raio.botao, borderWidth: borda.fina, borderColor: "transparent" },
+    polegar: { width: tamanho.alvoMinimo, height: tamanho.alvoMinimo, alignItems: "center", justifyContent: "center", borderRadius: raio.botao, borderWidth: CONTORNO, borderColor: cor["borda-forte"] },
     polegarMarcado: { borderWidth: borda.foco, borderColor: cor.link, backgroundColor: cor["marca-suave"] },
     apoioLeitor: { position: "absolute", width: 1, height: 1, opacity: 0 },
     aviso: { ...fonte.legenda, color: cor.erro },

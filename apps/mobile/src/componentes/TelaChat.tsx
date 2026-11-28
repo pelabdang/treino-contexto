@@ -85,6 +85,7 @@ export function TelaChat({ apiUrl, atletaId, fetchFn, conversaId, perguntaInicia
   const [texto, setTexto] = useState("");
   const [aviso, setAviso] = useState<Aviso>(null);
   const [semTreinos, setSemTreinos] = useState(false);
+  const [campoFocado, setCampoFocado] = useState(false);
   const idAtual = useRef<number | null>(conversaId ?? null);
   const emCurso = useRef(false);
   const sequencia = useRef(0);
@@ -299,6 +300,8 @@ export function TelaChat({ apiUrl, atletaId, fetchFn, conversaId, perguntaInicia
             value={texto}
             onChangeText={setTexto}
             onKeyPress={aoTeclar}
+            onFocus={() => setCampoFocado(true)}
+            onBlur={() => setCampoFocado(false)}
             multiline
             autoFocus={focoInicial}
             maxLength={MAXIMO_PERGUNTA}
@@ -306,7 +309,7 @@ export function TelaChat({ apiUrl, atletaId, fetchFn, conversaId, perguntaInicia
             caretHidden={pensando || limite}
             placeholder={limite ? PLACEHOLDER_ESPERA : PLACEHOLDER}
             placeholderTextColor={tema.cor["texto-2"]}
-            style={[styles.campo, (pensando || limite) && styles.campoDesligado]}
+            style={[styles.campo, campoFocado && !(pensando || limite) && styles.campoFocado, (pensando || limite) && styles.campoDesligado]}
           />
           <Pressable
             testID="chat-enviar"
@@ -349,8 +352,8 @@ function CartaoResposta({ msg, aoAvaliar, aoTentar, aoAbrirTreino, aoAbrirEvoluc
     return (
       <View testID="chat-erro" style={[styles.resposta, styles.erro]}>
         <Text accessibilityRole="alert" style={styles.respostaTexto}>{msg.texto}</Text>
-        <Pressable testID="chat-tentar-de-novo" accessibilityRole="button" disabled={desligado} onPress={aoTentar} style={comFoco([styles.botaoContorno, desligado && styles.enviarDesligado], styles.foco)}>
-          <Text style={styles.botaoContornoTexto}>Tentar de novo</Text>
+        <Pressable testID="chat-tentar-de-novo" accessibilityRole="button" disabled={desligado} onPress={aoTentar} style={comFoco([styles.botaoPrimario, desligado && styles.enviarDesligado], styles.foco)}>
+          <Text style={styles.botaoPrimarioTexto}>Tentar de novo</Text>
         </Pressable>
       </View>
     );
@@ -400,6 +403,8 @@ function criarEstilos({ cor }: Tema, margem: number) {
     erro: { borderColor: cor.erro, backgroundColor: cor["erro-suave"] },
     respostaTexto: { ...fonte.corpo, color: cor.texto },
     botaoContorno: { minHeight: tamanho.alvoMinimo, flexDirection: "row", alignItems: "center", justifyContent: "space-between", gap: espaco[2], paddingHorizontal: espaco[3], borderRadius: raio.botao, borderWidth: borda.fina, borderColor: cor["borda-forte"] },
+    botaoPrimario: { minHeight: tamanho.botaoAltura, alignItems: "center", justifyContent: "center", paddingHorizontal: espaco[4], borderRadius: raio.botao, backgroundColor: cor.botao },
+    botaoPrimarioTexto: { ...fonte.botao, color: cor["sobre-botao"] },
     botaoContornoTexto: { ...fonte.botao, color: cor.link },
     compositor: { gap: espaco[2], padding: margem, paddingTop: espaco[3], borderTopWidth: borda.fina, borderTopColor: cor.borda, backgroundColor: cor.fundo },
     limite: { gap: espaco[1], padding: espaco[3], borderRadius: raio.bloco, borderWidth: borda.fina, borderColor: cor.alerta, backgroundColor: cor["alerta-suave"] },
@@ -407,6 +412,7 @@ function criarEstilos({ cor }: Tema, margem: number) {
     limiteTexto: { ...fonte.corpo, color: cor.texto },
     entrada: { flexDirection: "row", alignItems: "flex-end", gap: espaco[2] },
     campo: { flex: 1, minHeight: 52, maxHeight: 120, paddingHorizontal: espaco[3], paddingVertical: espaco[3], borderRadius: raio.botao, borderWidth: borda.fina, borderColor: cor["borda-forte"], backgroundColor: cor.superficie, color: cor.texto, ...fonte.corpo },
+    campoFocado: { outlineWidth: borda.foco, outlineStyle: "solid", outlineColor: cor.foco, outlineOffset: 2 },
     campoDesligado: { backgroundColor: cor["superficie-2"], borderColor: cor.borda, outlineWidth: 0 },
     enviar: { width: tamanho.alvoMinimo, height: 52, justifyContent: "center", alignItems: "center", borderRadius: raio.botao, backgroundColor: cor.botao },
     enviarDesligado: { backgroundColor: cor["superficie-2"], opacity: 0.8 },
