@@ -108,7 +108,8 @@ export function TelaInicio({ apiUrl, atletaId, nome, aoAbrirTreino, aoResponderC
   const itens = lista.tipo === "ok" ? (lista.dados.itens ?? []) : [];
   const ultimo = itens[0] ?? null;
   const pendentesLista = pendentes.tipo === "ok" ? (pendentes.dados.pendentes ?? []) : [];
-  const pendente = pendentesLista[0] ?? null;
+  // Sem nenhum treino na lista não há o que responder: o cartão não aparece, mesmo que os pendentes digam o contrário.
+  const pendente = lista.tipo === "ok" && itens.length === 0 ? null : (pendentesLista[0] ?? null);
   // Sem a resposta dos pendentes ainda (ou com erro), nenhum dos dois estados de check-in aparece: não se afirma o que não se sabe.
   const checkinsConhecidos = pendentes.tipo === "ok";
   const emDia = checkinsConhecidos && !pendente;

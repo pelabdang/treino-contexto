@@ -82,6 +82,15 @@ describe("início v5: com check-in pendente", () => {
   });
 });
 
+describe("início v5: atleta sem treinos", () => {
+  it("não mostra cartão de check-in nem '+ N treinos', mesmo que os pendentes venham", async () => {
+    await render(tela(servidor({ lista: lista([]), pendentes: comPendentes(pend(7), pend(8)) })));
+    await screen.findByTestId("estado-vazio");
+    expect(screen.queryByTestId("checkin-grande")).toBeNull();
+    expect(screen.queryByText(/sem check-in/)).toBeNull();
+  });
+});
+
 describe("início v5: sem pendência (check-ins em dia)", () => {
   const emDia = (extra = {}) => tela(servidor({ cartoes: cartoesApi, lista: lista([item(1), item(2)]) }), { aoAbrirDestino: jest.fn(), ...chat(), ...extra });
 

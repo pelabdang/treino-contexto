@@ -392,7 +392,8 @@ const comCheckin = (a, atleta) => {
   };
 };
 const pendentesDe = (atleta) => {
-  const ids = atleta === 7 ? [] : pendentesBase.filter((id) => !checkins.has(chaveCheckin(atleta, id)));
+  // O 7 está em dia; o 2 não tem treino nenhum, logo não tem pendência.
+  const ids = atleta === 7 || atleta === 2 ? [] : pendentesBase.filter((id) => !checkins.has(chaveCheckin(atleta, id)));
   const lista = ids.map((id) => {
     const t = infoTreino(id);
     const nome = { corrida: "Corrida", ciclismo: "Ciclismo", natacao: "Natação" }[t.modalidade];
