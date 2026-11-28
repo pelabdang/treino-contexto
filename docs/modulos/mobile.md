@@ -161,7 +161,8 @@ Spec em [[design/telas/checkin]]; contrato na [[decisoes/0012-check-in-pos-trein
 Spec final: [[design/telas/inicio-v5-direcoes]] (a mistura). Ordem: saudação; cartão grande de check-in (`CartaoCheckinGrande`, só com pendência); "Esta semana" (`BlocoSemana`, do cartão `esta_semana`: linha com pendência, herói sem); chat médio (`ChatNoInicio`: caixa, ↑, 3 perguntas prontas, "Conversas ›"); sem pendência, "Hoje" (cartão `hoje_na_semana`) e último treino em par e "✓ Check-ins em dia" com "Ver feedback ›"; abaixo da dobra, quinzena, "Seus números" (sem `esta_semana` e `hoje_na_semana`, que subiram) e treinos recentes.
 - Sem a resposta dos pendentes (ou com erro) não aparece nem o cartão nem "Check-ins em dia". Layout de uma coluna só (até 720); a v4 em duas colunas saiu.
 - Do Início ao chat: `/chat?foco=1` (teclado) e `/chat?pronta=<índice>` (índice em `PERGUNTAS_PRONTAS`; o texto da pergunta nunca vai para a URL).
-- **Ainda fora, por falta de dado na API:** os 7 dias da semana (✓ por modalidade, anel de hoje), a frase "Como foi a natação de ontem?" (o cartão usa "Como foi o treino de natação?"), "3 treinos · 2 h 37 min" separado da "semana passada" e a linha "Seu professor" e o convite (Meta 15; constante `PROFESSOR_NO_INICIO` desligada).
+- **Campos do #632 ligados (#639):** os 7 dias de `esta_semana.dias[]` (✓ na cor da modalidade, anel de hoje, ponto em vazio, apagado em futuro, rótulo falado da API), `apoio_curto` (linha com pendência) e `comparacao_texto` (herói) e a pergunta do check-in vinda de `PendenteOut.pergunta_texto`.
+- **Ainda fora:** a linha "Seu professor" e o convite (Meta 15; constante `PROFESSOR_NO_INICIO` desligada).
 
 ## Chat "Pergunte ao seu treino" (#600, Meta 14)
 Spec: [[design/telas/chat]]. Contrato: adendo 16 da [[decisoes/0004-contrato-tela-evolucao]]; decisão: [[decisoes/0017-chat-do-atleta]]. Sem aba nova: telas empilhadas no grupo `(app)`, sem a barra de abas.

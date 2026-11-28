@@ -1,4 +1,5 @@
 import { StyleSheet } from "react-native";
+import { coresClaro } from "../src/tema/tokens";
 import { fireEvent, render, screen, waitFor, within } from "@testing-library/react-native";
 
 import { cartoes as cartoesApi } from "../__fixtures__/cartoes";
@@ -44,7 +45,7 @@ function servidor(r: Rotas = {}) {
 const urls = (f: jest.Mock) => f.mock.calls.map((c) => String(c[0]).replace("http://api.teste", ""));
 
 
-const pend = (id: number, modalidade = "natacao") => ({ atividade_id: id, data_local: "2025-03-20", hora_local: "07:00", duracao: "0:45:12", modalidade, titulo: `Treino ${id}` });
+const pend = (id: number, modalidade = "natacao") => ({ atividade_id: id, data_local: "2025-03-20", hora_local: "07:00", duracao: "0:45:12", modalidade, titulo: `Treino ${id}`, pergunta_texto: modalidade === "natacao" ? "Como foi a natação de ontem?" : "Como foi o treino de terça?" });
 const comPendentes = (...p: ReturnType<typeof pend>[]) => ({ dias: 7, pendentes: p, total: p.length });
 const props = () => ({ aoAbrirTreino: jest.fn(), aoResponderCheckin: jest.fn(), aoVerTodos: jest.fn() });
 const chat = () => ({ aoAbrirChat: jest.fn(), aoPerguntar: jest.fn(), aoAbrirConversas: jest.fn() });
@@ -56,7 +57,7 @@ describe("início v5: com check-in pendente", () => {
     const f = servidor({ pendentes: comPendentes(pend(7), pend(8, "ciclismo"), pend(9, "corrida")), cartoes: cartoesApi });
     await render(tela(f, { ...p, aoVerPendentes: jest.fn(), aoAbrirDestino: jest.fn() }));
     const cartao = await screen.findByTestId("checkin-grande");
-    expect(within(cartao).getByText("Como foi o treino de natação?")).toBeTruthy();
+    expect(within(cartao).getByText("Como foi a natação de ontem?")).toBeTruthy();
     expect(within(cartao).getByText("Natação · qui 20/03 · 07:00 · 0:45:12")).toBeTruthy();
     expect(within(cartao).getByText("3 perguntas, uns 30 segundos. Você recebe o feedback deste treino.")).toBeTruthy();
     expect(within(cartao).getByText("+ 2 treinos sem check-in ›")).toBeTruthy();
@@ -71,11 +72,17 @@ describe("início v5: com check-in pendente", () => {
     expect(aoVerPendentes).toHaveBeenCalled();
   });
 
+  it("a pergunta do cartão é a da API (pergunta_texto), sem montar frase no app", async () => {
+    await render(tela(servidor({ pendentes: comPendentes({ ...pend(7), pergunta_texto: "Como foi a corrida de terça?" }) })));
+    const cartao = await screen.findByTestId("checkin-grande");
+    expect(within(cartao).getByText("Como foi a corrida de terça?")).toBeTruthy();
+  });
+
   it("'Esta semana' encolhe para uma linha, e 'hoje e último treino' e 'Check-ins em dia' não aparecem", async () => {
     await render(tela(servidor({ pendentes: comPendentes(pend(7)), cartoes: cartoesApi }), { aoAbrirDestino: jest.fn() }));
     await screen.findByTestId("checkin-grande");
     expect(await screen.findByTestId("semana-linha")).toBeTruthy();
-    expect(screen.getByText("3 treinos · 2 h 37 min · semana passada: 4")).toBeTruthy();
+    expect(screen.getByText("3 treinos · 2 h 37 min")).toBeTruthy();
     expect(screen.queryByTestId("semana-valor")).toBeNull();
     expect(screen.queryByTestId("hoje-e-ultimo")).toBeNull();
     expect(screen.queryByTestId("checkins-em-dia")).toBeNull();
@@ -88,6 +95,50 @@ describe("início v5: atleta sem treinos", () => {
     await screen.findByTestId("estado-vazio");
     expect(screen.queryByTestId("checkin-grande")).toBeNull();
     expect(screen.queryByText(/sem check-in/)).toBeNull();
+  });
+});
+
+describe("início v5: os 7 dias da semana (dias[] da API)", () => {
+  const semana = (extra = {}) => tela(servidor({ cartoes: cartoesApi }), { aoAbrirDestino: jest.fn(), ...extra });
+
+  it("desenha os 7 dias na ordem da API, com o rótulo falado de cada um", async () => {
+    await render(semana());
+    const dias = await screen.findByTestId("semana-dias");
+    expect(within(dias).getAllByTestId(/^dia-[^-]+$/).map((d) => d.props.testID)).toEqual(["dia-seg", "dia-ter", "dia-qua", "dia-qui", "dia-sex", "dia-sáb", "dia-dom"]);
+    expect(within(dias).getByTestId("dia-qui").props.accessibilityLabel).toBe("Quinta, natação");
+    expect(within(dias).getByTestId("dia-sex").props.accessibilityLabel).toBe("Sexta, hoje, sem treino ainda");
+  });
+
+  it("✓ nos dias feitos, na cor da modalidade (corrida, ciclismo, natação); hoje, vazio e futuro sem ✓", async () => {
+    await render(semana());
+    const dias = await screen.findByTestId("semana-dias");
+    const cor = (id: string) => StyleSheet.flatten(within(dias).getByTestId(id).props.style).color;
+    expect(cor("dia-ter-feito")).toBe(coresClaro.corrida);
+    expect(cor("dia-qua-feito")).toBe(coresClaro.ciclismo);
+    expect(cor("dia-qui-feito")).toBe(coresClaro.natacao);
+    expect(within(dias).queryByTestId("dia-seg-feito")).toBeNull();
+    expect(within(dias).queryByTestId("dia-sex-feito")).toBeNull();
+    expect(within(dias).getByTestId("dia-seg-vazio")).toBeTruthy();
+    expect(within(dias).getByTestId("dia-sex-hoje")).toBeTruthy();
+    expect(within(dias).getByTestId("dia-sáb-futuro")).toBeTruthy();
+  });
+
+  it("os dias aparecem com pendência (linha) e sem pendência (herói)", async () => {
+    await render(tela(servidor({ pendentes: comPendentes(pend(7)), cartoes: cartoesApi }), { aoAbrirDestino: jest.fn() }));
+    expect(await screen.findByTestId("semana-dias")).toBeTruthy();
+    expect(screen.getByTestId("semana-linha")).toBeTruthy();
+  });
+
+  it("sem dias[] (API antiga): o bloco segue sem a fileira", async () => {
+    const semDias = { ...cartoesApi, cartoes: cartoesApi.cartoes.map((c) => ({ ...c, dias: [] })) };
+    await render(tela(servidor({ cartoes: semDias }), { aoAbrirDestino: jest.fn() }));
+    await screen.findByTestId("bloco-semana");
+    expect(screen.queryByTestId("semana-dias")).toBeNull();
+  });
+
+  it("o herói mostra apoio_curto e comparacao_texto da API", async () => {
+    await render(semana());
+    expect(await screen.findByText("2 h 37 min · semana passada: 4")).toBeTruthy();
   });
 });
 

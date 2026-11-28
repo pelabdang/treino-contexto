@@ -65,7 +65,7 @@ export const pendentes: CheckinsPendentes = {
   dias: 7,
   total: 2,
   pendentes: [
-    { atividade_id: 101, modalidade: "corrida", data_local: "2025-03-18", hora_local: "06:30", duracao: "0:52:05", titulo: "Corrida, 52 min" },
-    { atividade_id: 106, modalidade: "natacao", data_local: "2025-03-17", hora_local: "07:00", duracao: "0:45:00", titulo: "Natação, 45 min" },
+    { atividade_id: 101, modalidade: "corrida", data_local: "2025-03-18", hora_local: "06:30", duracao: "0:52:05", titulo: "Corrida, 52 min", pergunta_texto: "Como foi a corrida de terça?" },
+    { atividade_id: 106, modalidade: "natacao", data_local: "2025-03-17", hora_local: "07:00", duracao: "0:45:00", titulo: "Natação, 45 min", pergunta_texto: "Como foi a natação de ontem?" },
   ],
 };
