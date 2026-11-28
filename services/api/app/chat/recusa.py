@@ -8,7 +8,12 @@ from sqlalchemy.orm import Session
 
 from app.chat.registro import Consulta, registrar
 
+from app.explicacao.checagens_chat import TEXTOS_FIXOS
+
 MOTIVOS_RECUSA = ("fora_do_tema", "pedido_de_mudanca")
+# `pedido_de_mudanca`: com professor vinculado, o texto fixo inteiro (a fonte e `checagens_chat.TEXTOS_FIXOS`); sem professor, so a primeira frase.
+RECUSA_MUDANCA_COM_PROFESSOR = TEXTOS_FIXOS["pedido_de_mudanca"]
+RECUSA_MUDANCA_SEM_PROFESSOR = "Mudar o treino é com o seu professor."
 
 
 @registrar(
