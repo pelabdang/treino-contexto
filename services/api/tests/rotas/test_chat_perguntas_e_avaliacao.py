@@ -1,7 +1,7 @@
 """Perguntas prontas escolhidas pela API e 👍/👎 na resposta (adendo 17 da ADR 0004). Sessao de verdade, tudo sintetico."""
 
 import json
-from datetime import datetime, timedelta, timezone
+from datetime import date, datetime, timedelta, timezone
 
 import pytest
 from app.chat import perguntas_prontas as pp
@@ -28,7 +28,7 @@ def _ativ(session, atleta_id, dias, modalidade="corrida", tipo="leve", n=[0]):
 def _textos(client, atleta_id, quem="ana"):
     r = client.get(f"/atletas/{atleta_id}/chat/perguntas-prontas", headers=_h(client, quem))
     assert r.status_code == 200
-    return [p["texto"] for p in r.json()["perguntas"]]
+    return r.json()["perguntas"]
 
 
 @pytest.fixture
@@ -40,15 +40,30 @@ def novo(session):
     return a.id
 
 
-def test_catalogo_so_tem_frases_que_cabem_numa_ferramenta():
-    ids = [p.id for p in pp.CATALOGO]
-    assert len(set(ids)) == len(ids) and len({p.texto for p in pp.CATALOGO}) == len(ids)
-    for p in pp.CATALOGO:
-        assert p.ferramentas and set(p.ferramentas) <= set(REGISTRO), p.id
-        assert p.texto.endswith("?") and len(p.texto) <= 60 and "\n" not in p.texto
+def _fixa_datas(args, hoje):
+    sub = {"INICIO_DO_ANO": f"{hoje.year}-01-01", "HOJE": hoje.isoformat(), "ONTEM": (hoje - timedelta(days=1)).isoformat()}
+    return {k: sub.get(v, v) if isinstance(v, str) else v for k, v in args.items()}
 
 
-def test_atleta_sem_dado_nao_recebe_pergunta(client, session, mundo):  # noqa: F811
+def test_catalogo_so_tem_frases_que_cabem_numa_ferramenta_com_argumentos_validos():
+    from app.chat.esquema import validar
+    hoje = hoje_local()
+    ids = [p.id for p in pp.CATALOGO + pp.APOIO]
+    assert len(set(ids)) == len(ids)
+    assert len({p.texto for p in pp.CATALOGO}) == len(pp.CATALOGO)
+    for p in pp.CATALOGO + pp.APOIO:
+        assert p.dica and set(p.ferramentas) <= set(REGISTRO), p.id
+        assert p.texto.endswith("?") and len(p.texto) <= 70 and "\n" not in p.texto
+        for ferramenta, args in p.dica:  # a dica de argumentos e valida no esquema da ferramenta (datas do dia no lugar dos marcadores)
+            validar(REGISTRO[ferramenta].esquema, _fixa_datas(args, hoje))
+
+
+def test_dica_do_treino_mais_longo_do_ano_usa_de_e_ate_e_nao_ultimo_ano():
+    [(_, args)] = [p for p in pp.CATALOGO if p.id == "mais_longo"][0].dica
+    assert args["de"] == "INICIO_DO_ANO" and args["ate"] == "HOJE" and "periodo" not in args
+
+
+def test_atleta_sem_dado_recebe_as_de_apoio_nunca_lista_vazia(client, session, mundo):  # noqa: F811
     from app.servicos import conta as svc
     a = Atleta(nome="Cris Teste")
     session.add(a)
@@ -56,38 +71,99 @@ def test_atleta_sem_dado_nao_recebe_pergunta(client, session, mundo):  # noqa: F
     svc.criar_conta(session, "cris@exemplo.com", "senha-de-teste-123", atleta_id=a.id)
     session.commit()
     r = client.get(f"/atletas/{a.id}/chat/perguntas-prontas", headers=_h(client, "cris"))
-    assert r.status_code == 200 and r.json() == {"versao": "perguntas_prontas@1", "atleta_id": a.id, "perguntas": []}
+    assert r.status_code == 200 and r.json()["perguntas"] == [p.texto for p in pp.APOIO[:3]]
+    assert r.json()["versao"] == "perguntas_prontas@2" and r.json()["atleta_id"] == a.id
 
 
-def test_so_sugere_o_que_o_atleta_tem_e_na_ordem_do_catalogo(client, session, mundo):  # noqa: F811
-    ana = mundo["ana"]  # ja tem 1 corrida leve ha 2 dias
-    assert _textos(client, ana) == ["Como foi o meu último treino?", "Qual foi o meu treino mais longo este ano?"]
-    for d in (3, 5, 9, 10):  # corridas leves e dois intervalados
-        _ativ(session, ana, d)
-    _ativ(session, ana, 12, tipo="intervalado")
-    _ativ(session, ana, 14, tipo="intervalado")
-    session.commit()
+def test_perguntas_sao_strings_de_3_a_6_na_ordem_estavel(client, session, mundo):  # noqa: F811
+    ana = mundo["ana"]  # uma corrida leve ha 2 dias
     t = _textos(client, ana)
-    assert t[:4] == ["Como foi o meu último treino?", "Como foi esta semana comparada com a passada?", "Meu pace nos treinos leves melhorou no último mês?",
-                     "Meus tiros estão ficando mais rápidos?"]
-    assert "natação" not in " ".join(t) and "ciclismo" not in " ".join(t) and "sono" not in " ".join(t)  # sem treino dessas modalidades nem noites
+    assert t[:2] == ["Como foi o meu último treino?", "Qual foi o meu treino de corrida mais longo este ano?"]
+    assert 3 <= len(t) <= 6 and all(isinstance(x, str) for x in t) and len(set(t)) == len(t)  # completa com as de apoio, sem repetir frase
+    for d in range(1, 60, 2):  # dados de sobra para mais de 6 regras valerem
+        _ativ(session, ana, d)
+        _ativ(session, ana, d, "natacao", None)
+        _ativ(session, ana, d, "corrida", "intervalado")
+        _ativ(session, ana, d, "ciclismo", None)
+    session.commit()
+    primeira = _textos(client, ana)
+    assert len(primeira) == 6 and all(_textos(client, ana) == primeira for _ in range(5))  # sem aleatorio
 
 
-def test_natacao_e_ciclismo_so_com_treino_nas_ultimas_8_semanas(client, session, mundo):  # noqa: F811
+# --- regras de contagem, uma a uma (puras, sem rota) ---------------------------------------------------------------------------------
+
+HOJE = date(2030, 3, 15)
+
+
+def _ctx(treinos=(), checkins=(), maus=0, carga=0, noites=0):
+    return pp.Contexto(HOJE, [(HOJE - timedelta(days=d), m, t) for d, m, t in treinos], list(checkins), maus, carga, noites)
+
+
+def _vale(id_, ctx):
+    return [p for p in pp.CATALOGO if p.id == id_][0].vale(ctx)
+
+
+def test_regra_sete_dias_precisa_de_corrida_nos_7_ate_ontem_e_nos_7_anteriores():
+    assert _vale("sete_dias", _ctx([(1, "corrida", "leve"), (8, "corrida", "leve")]))
+    assert not _vale("sete_dias", _ctx([(0, "corrida", "leve"), (8, "corrida", "leve")]))   # hoje nao conta: o rolante termina ontem
+    assert not _vale("sete_dias", _ctx([(1, "corrida", "leve"), (15, "corrida", "leve")]))  # falta o periodo anterior
+    assert not _vale("sete_dias", _ctx([(1, "natacao", None), (8, "natacao", None)]))        # so corrida (volume de corrida)
+
+
+def test_regra_pace_leve_3_nos_28_ate_ontem_e_3_nos_28_anteriores():
+    atual = [(d, "corrida", "leve") for d in (1, 10, 28)]
+    anterior = [(d, "corrida", "leve") for d in (29, 40, 56)]
+    assert _vale("pace_leve", _ctx(atual + anterior))
+    assert not _vale("pace_leve", _ctx(atual + anterior[:2]))
+    assert not _vale("pace_leve", _ctx(atual[:2] + anterior))
+    assert not _vale("pace_leve", _ctx([(0, "corrida", "leve")] + atual[1:] + anterior))  # hoje fora da janela
+    assert not _vale("pace_leve", _ctx([(d, "corrida", "longo") for d in (1, 10, 28, 29, 40, 56)]))
+
+
+def test_regra_tiros_2_sessoes_em_cada_janela_de_28_dias():
+    sessoes = [(d, "corrida", "intervalado") for d in (3, 20, 30, 50)]
+    assert _vale("tiros", _ctx(sessoes))
+    assert not _vale("tiros", _ctx(sessoes[:3]))  # so 1 na janela anterior
+    assert not _vale("tiros", _ctx([(3, "corrida", "intervalado"), (4, "corrida", "intervalado")]))  # nenhuma na anterior
+
+
+def test_regra_natacao_3_treinos_nas_12_semanas():
+    assert _vale("natacao", _ctx([(1, "natacao", None), (40, "natacao", None), (83, "natacao", None)]))
+    assert not _vale("natacao", _ctx([(1, "natacao", None), (40, "natacao", None), (85, "natacao", None)]))  # o terceiro passou das 12 semanas
+    assert not _vale("natacao", _ctx([(1, "natacao", None), (2, "natacao", None)]))
+
+
+def test_regra_treinos_mal_precisa_de_checkin_mal_nas_12_semanas():
+    assert _vale("treinos_mal", _ctx(maus=1)) and not _vale("treinos_mal", _ctx(maus=0))
+
+
+def test_regras_de_forma_sono_checkin_de_ontem_e_ciclismo():
+    assert _vale("forma_hoje", _ctx(carga=1)) and not _vale("forma_hoje", _ctx())
+    assert _vale("sono", _ctx(noites=1)) and not _vale("sono", _ctx())
+    assert _vale("checkin_ontem", _ctx(checkins=[HOJE - timedelta(days=1)])) and not _vale("checkin_ontem", _ctx(checkins=[HOJE]))
+    assert _vale("ciclismo", _ctx([(10, "ciclismo", None)])) and not _vale("ciclismo", _ctx([(60, "ciclismo", None)]))
+
+
+def test_maus_checkins_vem_do_banco(client, session, mundo):  # noqa: F811
+    ana = mundo["ana"]
+    a = _ativ(session, ana, 5)
+    session.add(CheckinTreino(atividade_id=a.id, pse=8, sensacao=2, nada_a_relatar=True, versao="checkin@1", registrado_em=AGORA, atualizado_em=AGORA))
+    session.commit()
+    assert "Em quais treinos eu me senti mal?" in _textos(client, ana)
+    session.query(CheckinTreino).update({"sensacao": 4})
+    session.commit()
+    assert "Em quais treinos eu me senti mal?" not in _textos(client, ana)
+
+
+def test_natacao_e_ciclismo_so_com_treino_nas_janelas(client, session, mundo):  # noqa: F811
     ana = mundo["ana"]
     for d in (1, 8, 15):
         _ativ(session, ana, d, "natacao", None)
     _ativ(session, ana, 30, "ciclismo", None)
-    _ativ(session, ana, 90, "ciclismo", None)  # fora da janela
+    _ativ(session, ana, 100, "ciclismo", None)  # fora da janela
     session.commit()
     t = _textos(client, ana)
     assert "Como está o meu ritmo na natação?" in t and "Como foi o meu último treino de ciclismo?" in t
-    session.query(Atividade).filter(Atividade.modalidade == "ciclismo").delete()
-    session.commit()
-    assert "Como foi o meu último treino de ciclismo?" not in _textos(client, ana)
-    session.query(Atividade).filter(Atividade.atleta_id == ana, Atividade.modalidade == "natacao", Atividade.inicio < AGORA - timedelta(days=10)).delete()
-    session.commit()
-    assert "Como está o meu ritmo na natação?" not in _textos(client, ana)  # sobraram 1 treino de natação: menos de 3
 
 
 def test_sono_checkin_de_ontem_e_forma_dependem_do_dado(client, session, mundo):  # noqa: F811
@@ -101,18 +177,6 @@ def test_sono_checkin_de_ontem_e_forma_dependem_do_dado(client, session, mundo):
     session.commit()
     t = _textos(client, ana)
     assert "Como foi o check-in de ontem?" in t and "Como está a minha forma hoje?" in t and "Como foi o meu sono na última noite?" in t
-    assert len(t) <= 6 and t == [p.texto for p in pp.CATALOGO if p.texto in t]  # ordem do catalogo
-
-
-def test_no_maximo_6_ordem_estavel_e_sem_aleatorio(client, session, mundo):  # noqa: F811
-    ana = mundo["ana"]
-    for d in (1, 2, 3, 4, 5, 6, 7):
-        _ativ(session, ana, d)
-        _ativ(session, ana, d, "natacao", None)
-        _ativ(session, ana, d, "corrida", "intervalado")
-    session.commit()
-    primeira = _textos(client, ana)
-    assert len(primeira) == 6 and all(_textos(client, ana) == primeira for _ in range(5))
 
 
 def test_so_o_dono_ve_as_perguntas_prontas(client, mundo):  # noqa: F811

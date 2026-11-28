@@ -302,19 +302,14 @@ def avaliar_mensagem(atleta_id: int, conversa_id: int, mensagem_id: int, corpo: 
 router_chat = APIRouter(prefix="/atletas/{atleta_id}/chat", tags=["chat"], route_class=RotaChat)
 
 
-class PerguntaProntaOut(BaseModel):
-    id: str  # estavel (para o app guardar o que o atleta usou)
-    texto: str  # a frase fixa; o app a envia como pergunta comum
-
-
 class PerguntasProntasOut(BaseModel):
     versao: str
     atleta_id: int
-    perguntas: list[PerguntaProntaOut]  # ate 6, em ordem estavel
+    perguntas: list[str]  # de 3 a 6 frases fixas, em ordem estavel; o Inicio mostra as 3 primeiras; o app envia a frase como pergunta comum
 
 
 @router_chat.get("/perguntas-prontas", response_model=PerguntasProntasOut, operation_id="listarPerguntasProntas", responses=_404)
 def perguntas_prontas(atleta_id: int, session: Session = Depends(get_session)):
-    """Ate 6 perguntas prontas escolhidas pelo que o atleta tem (modalidades das ultimas 8 semanas, tiros, noites, check-ins). Textos fixos."""
+    """De 3 a 6 perguntas prontas escolhidas pelo que o atleta tem (modalidades, tiros, noites, check-ins). Textos fixos; sem dado, as de apoio."""
     return PerguntasProntasOut(versao=pp.VERSAO, atleta_id=atleta_id,
-                               perguntas=[PerguntaProntaOut(id=p.id, texto=p.texto) for p in pp.perguntas_prontas(session, atleta_id, hoje_local())])
+                               perguntas=[p.texto for p in pp.perguntas_prontas(session, atleta_id, hoje_local())])

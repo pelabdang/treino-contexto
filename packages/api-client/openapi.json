@@ -3580,24 +3580,6 @@
         "title": "PerguntaIn",
         "type": "object"
       },
-      "PerguntaProntaOut": {
-        "properties": {
-          "id": {
-            "title": "Id",
-            "type": "string"
-          },
-          "texto": {
-            "title": "Texto",
-            "type": "string"
-          }
-        },
-        "required": [
-          "id",
-          "texto"
-        ],
-        "title": "PerguntaProntaOut",
-        "type": "object"
-      },
       "PerguntasProntasOut": {
         "properties": {
           "atleta_id": {
@@ -3606,7 +3588,7 @@
           },
           "perguntas": {
             "items": {
-              "$ref": "#/components/schemas/PerguntaProntaOut"
+              "type": "string"
             },
             "title": "Perguntas",
             "type": "array"
@@ -5640,7 +5622,7 @@
     },
     "/atletas/{atleta_id}/chat/perguntas-prontas": {
       "get": {
-        "description": "Ate 6 perguntas prontas escolhidas pelo que o atleta tem (modalidades das ultimas 8 semanas, tiros, noites, check-ins). Textos fixos.",
+        "description": "De 3 a 6 perguntas prontas escolhidas pelo que o atleta tem (modalidades, tiros, noites, check-ins). Textos fixos; sem dado, as de apoio.",
         "operationId": "listarPerguntasProntas",
         "parameters": [
           {
