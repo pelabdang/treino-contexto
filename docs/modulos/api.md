@@ -2,8 +2,8 @@
 tipo: modulo
 status: em-uso
 dono: theo
-atualizado: 2026-11-27
-links: [[metricas/frase-forma]], [[decisoes/0015-caixa-do-dia-do-professor]], [[decisoes/0013-feedback-automatico]], [[decisoes/0012-check-in-pos-treino]], [[decisoes/0011-linha-de-base-e-semana-padrao]], [[metricas/serie-carga]], [[decisoes/0010-carga-de-treino]], [[decisoes/0001-modelo-de-dados-minimo]], [[decisoes/0003-fuso-da-atividade]], [[decisoes/0004-contrato-tela-evolucao]], [[metricas/tiros-1km]], [[modulos/grafico-tiros]], [[modulos/banco]], [[modulos/worker]], [[modulos/infra]], [[modulos/api-client]], [[decisoes/0006-upload-de-fit]], [[produto/meta-2-como-rodar]], [[decisoes/0007-clima-da-atividade]], [[modulos/clima]], [[produto/meta-4-como-rodar]], [[decisoes/0008-deteccao-de-esforcos]], [[metricas/esforcos]], [[decisoes/0009-treino-de-transicao]]
+atualizado: 2026-11-28
+links: [[decisoes/0017-chat-do-atleta]], [[metricas/frase-forma]], [[decisoes/0015-caixa-do-dia-do-professor]], [[decisoes/0013-feedback-automatico]], [[decisoes/0012-check-in-pos-treino]], [[decisoes/0011-linha-de-base-e-semana-padrao]], [[metricas/serie-carga]], [[decisoes/0010-carga-de-treino]], [[decisoes/0001-modelo-de-dados-minimo]], [[decisoes/0003-fuso-da-atividade]], [[decisoes/0004-contrato-tela-evolucao]], [[metricas/tiros-1km]], [[modulos/grafico-tiros]], [[modulos/banco]], [[modulos/worker]], [[modulos/infra]], [[modulos/api-client]], [[decisoes/0006-upload-de-fit]], [[produto/meta-2-como-rodar]], [[decisoes/0007-clima-da-atividade]], [[modulos/clima]], [[produto/meta-4-como-rodar]], [[decisoes/0008-deteccao-de-esforcos]], [[metricas/esforcos]], [[decisoes/0009-treino-de-transicao]]
 ---
 # Módulo: api
 
@@ -39,6 +39,7 @@ Futuramente recebe a importação Garmin e serve métricas ao [[modulos/mobile]]
 - `services/api/app/servicos/esforcos_leitura.py`: lê os blocos gravados para a resposta da atividade (#167).
 - `services/api/app/servicos/evolucao_tiros.py`: liga as métricas ao banco (ver abaixo).
 - `services/api/app/explicacao/`: pacote reservado.
+- `services/api/app/chat/` (#593, [[decisoes/0017-chat-do-atleta]], itens 1 e 2): ferramentas de consulta do chat. `registro.py` (registro, `Consulta`, `Quem` e executor), `esquema.py` (validador de argumentos, `additionalProperties: false`), `periodo.py` (lista fechada de períodos) e `ferramentas_atividades.py` (`listar_atividades`, `ver_atividade`, `listar_checkins`). Só leem. O `atleta_id` vem da sessão, nunca do argumento; id de outro atleta e id inexistente dão o mesmo `nao_encontrada`. Nada de argumento ou resultado vai a log. Testes: `tests/chat/`. Ainda sem rota: o laço e as rotas vêm nas #596 e #598.
 
 ## CORS
 O app web roda em outra porta (`http://localhost:8081`), então a API libera as origens de `CORS_ORIGENS` (lista
