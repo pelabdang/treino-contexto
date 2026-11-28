@@ -2,7 +2,7 @@
 tipo: glossario
 status: em-uso
 dono: nina
-atualizado: 2026-11-16
+atualizado: 2026-11-28
 ---
 # Glossário
 
@@ -71,7 +71,9 @@ atualizado: 2026-11-16
 - **`recuperacao_dia` (Meta 10; implementada na #372)**: a tabela (migração `0014`) com uma linha por atleta, origem e noite: duração do sono, VFC noturna e FC de repouso. Sem linha, a noite é "sem dado". Preenchida pelo `worker.buscar_recuperacao` e apagada pelo `worker.apagar_recuperacao`, que imprimem só contagens. Ver [[decisoes/0014-recuperacao-diaria]], [[modulos/banco]] e [[modulos/worker]].
 - **`recuperacao@1` (Meta 10; implementada como função pura na #373; usada no pacote `fatos_treino@2` pelo adaptador do banco na #374)**: a função pura que compara cada medida da noite com o normal do atleta (mediana e MAD das últimas 28 noites, mínimo de 14) e devolve o estado. Calculada na leitura, como a linha de base. Ver [[metricas/recuperacao]], [[metricas/recuperacao-oraculo]] e [[decisoes/0014-recuperacao-diaria]].
 - **Linguagem proibida**: lista de palavras e expressões que o feedback não pode usar (diagnóstico, culpa, promessa, causa afirmada, conselho, quem fala, elogio sem fato, número por extenso). Ver [[metricas/checagens-feedback]].
-- **Provedor de LLM**: serviço externo que redige o feedback (padrão: Groq, plano gratuito). Só entra pela camada de LLM, trocável pelo `.env` (`LLM_PROVIDER`, `LLM_MODEL` e a chave). Com o provedor de verdade, o pacote de fatos (dado de saúde) sai da máquina. Ver [[modulos/camada-llm]].
+- **Provedor de LLM**: serviço externo que redige o feedback (padrão: Groq, plano gratuito). Só entra pela camada de LLM, trocável pelo `.env` (`LLM_PROVIDER`, `LLM_MODEL` e a chave). Com o provedor de verdade, o pacote de fatos do feedback (dado de saúde) sai da máquina. No chat do atleta saem também a pergunta, os resultados das ferramentas e a observação livre do check-in (a observação nunca entra no feedback); ver [[decisoes/0017-chat-do-atleta]]. Ver [[modulos/camada-llm]].
+- **Chat do atleta**: "Pergunte ao seu treino" (Meta 14). O modelo só escolhe quais **ferramentas de consulta** chamar e redige; os números vêm do código e as checagens conferem o texto. Ver [[decisoes/0017-chat-do-atleta]].
+- **Ferramenta de consulta**: função do código que só lê dados do atleta da sessão e devolve resultado com texto pronto (`listar_atividades`, `ver_atividade`, `ler_serie`...). O `atleta_id` nunca é argumento do modelo. Ver [[decisoes/0017-chat-do-atleta]].
 - **Provedor falso**: provedor dos testes e do guia (`LLM_PROVIDER=falso`): sem rede e sem chave, devolve um texto fixo. O texto vai com `origem = teste` e o cartão mostra o selo "Texto de teste". Ver [[produto/meta-9-como-rodar]].
 - **Estados do feedback**: `pronto` (com texto), `sem_checkin`, `pendente` (tem check-in, o worker ainda não gerou), `desatualizado` (o check-in foi editado, ou a noite anterior ou o clima chegaram ou mudaram depois do texto; o texto antigo não é devolvido) e `indisponivel` (texto reprovado, provedor fora, sem provedor ou limite de chamadas). Atividade que não pede check-in vem com `feedback` nulo. Ver [[modulos/api]].
 - **`origem` (do feedback)**: `automatico` ou `teste`; é só o que a API diz sobre quem escreveu o texto (nunca o provedor, o modelo nem as versões).
