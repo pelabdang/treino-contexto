@@ -129,6 +129,14 @@ def test_recusa_e_texto_fixo(caso):
     assert "fora_do_escopo_respondido" in caso["resposta_ruim"]["motivos_esperados"]
 
 
+def test_series_das_fixtures_existem_no_catalogo():
+    """`serie_id` de `ler_serie` e `comparar_periodos` é do catálogo real da Evolução (`evolucao_series.POR_ID`), não inventado."""
+    from app.servicos.evolucao_series import POR_ID
+
+    usados = {f["argumentos"]["serie_id"] for c in CASOS for f in c["ferramentas_esperadas"] if f["nome"] in ("ler_serie", "comparar_periodos")}
+    assert usados and usados <= set(POR_ID), usados - set(POR_ID)
+
+
 def test_pergunta_de_treino_nao_e_recusada():
     for c in CASOS:
         if c["categoria"] in CATEGORIAS_TREINO:

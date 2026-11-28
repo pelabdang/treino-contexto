@@ -2,7 +2,7 @@
 tipo: metrica
 status: rascunho
 dono: caio
-atualizado: 2026-11-27
+atualizado: 2026-11-28
 links: [[metricas/frase-forma]], [[metricas/serie-carga]], [[metricas/tiros-1km]], [[metricas/linha-base]], [[metricas/esforcos]], [[metricas/recuperacao]], [[metricas/carga-treino]], [[design/telas/evolucao-tiros]], [[design/telas/inicio-atleta-v3]], [[modulos/grafico-tiros]], [[glossario]]
 ---
 # Evolução: catálogo de séries, "frase da evolução" e cartões do início (proposta)
@@ -44,6 +44,8 @@ Vale para as séries "por treino" (pace, FC, eficiência, melhor esforço). Tudo
 ## Catálogo de séries
 
 A coluna "precisa para existir" diz o que a fonte tem de entregar para a série ter pontos (nada aqui descreve um atleta). Existe na API: **sim** / **parcial** (dado e conta existem, falta a rota) / **não** (falta métrica).
+**Ids que existem no código (28/11, `evolucao_series.POR_ID`):** `corrida.tiros`, `corrida.pace.<tipo>`, `corrida.fc.<tipo>`, `corrida.volume_km`, `corrida.volume_h`, `natacao.ritmo`, `natacao.fc`, `natacao.volume_m`, `ciclismo.velocidade.<rua|casa>`, `ciclismo.fc.<rua|casa>`, `ciclismo.volume_km` e `geral.ctl`. Os outros ids das tabelas abaixo (marcados "previsto") ainda **não existem** no catálogo; a lista do código é a que vale (o chat só aceita estes, [[decisoes/0017-chat-do-atleta]]).
+
 Janela do gráfico (decidida): abre em 12 semanas, com 6 meses e 1 ano como opção do atleta; a frase não muda com ela.
 
 ### Corrida
@@ -57,7 +59,7 @@ Janela do gráfico (decidida): abre em 12 semanas, com 6 meses e 1 ano como opç
 | `corrida.recordes` | linha do tempo dos recordes (1 km, 1 milha, 5 km, 10 km, meia, maior distância) | `recorde_pessoal` (Garmin) | marcas pessoais do export Garmin importado | **parcial** (tabela gravada, sem rota) | sem limiar |
 | `corrida.limiar` | limiar de FC e de velocidade estimados pelo relógio, no tempo | `limiar_atleta` (Garmin) | limiares do export Garmin importado | **parcial** (sem rota) | sem limiar |
 | `corrida.volume` | km e horas por semana | soma de `atividade` | qualquer corrida (distância e duração) | **não** | 10% |
-| `corrida.carga` | carga por semana e CTL ao longo do tempo | `carga@2` e `serie_carga@2` | treino com carga calculada (FC e limiar, ou pace e limiar) | **sim** (`/carga`, só 14 dias na tela) | 5% (CTL) |
+| `corrida.carga` (previsto; hoje só `geral.ctl`) | carga por semana e CTL ao longo do tempo | `carga@2` e `serie_carga@2` | treino com carga calculada (FC e limiar, ou pace e limiar) | **sim** (`/carga`, só 14 dias na tela) | 5% (CTL) |
 
 ### Natação
 | id | o que o gráfico mostra | origem | precisa para existir | na API | piso |
@@ -79,7 +81,7 @@ Sem braçadas, SWOLF ou estilo: o modelo de dados não os guarda.
 | `ciclismo.eficiencia` | metros por batimento no ar livre | velocidade e FC médias | pedal ao ar livre com distância, duração e FC | **não** | 3% |
 | `ciclismo.esforcos` | melhor velocidade do esforço de 1 a 60 min | `bloco_atividade` (`t1` a `t60`) | pedal com esforços detectados (`esforcos@1`) | **parcial** | 3% |
 | `ciclismo.volume` | km e horas por semana | soma | qualquer pedal | **não** | 10% |
-| `ciclismo.carga` | carga por semana e CTL | `carga@2` | pedal com carga calculada | **sim**, via `/carga` | 5% |
+| `ciclismo.carga` (previsto; hoje só `geral.ctl`) | carga por semana e CTL | `carga@2` | pedal com carga calculada | **sim**, via `/carga` | 5% |
 | `ciclismo.recordes` | melhor 40 km, maior distância, potência média de 20 min | `recorde_pessoal` | marcas pessoais do export Garmin importado | **parcial** | sem limiar |
 Limitações: **sem potência, cadência nem altimetria** no modelo de dados (só o recorde de 20 min vem do Garmin): não há potência normalizada nem
 eficiência por watt. A rua (ar livre) e a casa (virtual e rolo) têm física diferente: **duas séries separadas** (decisão do Angelo, 27/11).
@@ -87,12 +89,12 @@ eficiência por watt. A rua (ar livre) e a casa (virtual e rolo) têm física di
 ### Transversais (todas as modalidades)
 | id | o que o gráfico mostra | origem | precisa para existir | na API | limiar |
 |---|---|---|---|---|---|
-| `geral.volume_semana` | horas por semana, empilhadas por modalidade | soma de `atividade` (sem pai multiesporte e sem troca, como a carga) | qualquer treino (sem pai multiesporte nem troca) | **não** | 10% |
-| `geral.mistura` | quantos treinos de cada tipo por mês (leve, longo, intervalado...) | `tipo_treino` | treinos com tipo | **parcial** | sem limiar |
-| `geral.carga` | CTL, ATL e TSB em 6 meses ou 1 ano | `serie_carga@2` | treinos com carga calculada; natação não tem carga | **sim** | 5% / 10% |
-| `geral.recuperacao.<medida>` | sono, VFC e FC de repouso por noite, com a faixa do normal | `recuperacao_dia` ([[metricas/recuperacao]]) | dados de saúde importados (sono, VFC, FC de repouso); depende de o relógio medir | **parcial** (`noites_do_atleta`, sem rota) | `z` 2,0 |
-| `geral.calor` | pace e FC dos treinos leves, com os dias quentes **marcados** | `clima_atividade` (temperatura e sensação) | treino ao ar livre com clima consultado | **parcial** | ver abaixo |
-| `geral.carga_garmin` | carga aguda e crônica do relógio | `carga_garmin_dia` | carga do relógio importada do export Garmin | **parcial** | **não recomendada** (duas curvas de carga confundem; serve só à [[metricas/conferencia-carga]]) |
+| `geral.volume_semana` (previsto) | horas por semana, empilhadas por modalidade | soma de `atividade` (sem pai multiesporte e sem troca, como a carga) | qualquer treino (sem pai multiesporte nem troca) | **não** | 10% |
+| `geral.mistura` (previsto) | quantos treinos de cada tipo por mês (leve, longo, intervalado...) | `tipo_treino` | treinos com tipo | **parcial** | sem limiar |
+| `geral.carga` (previsto; no código é `geral.ctl`, só o CTL) | CTL, ATL e TSB em 6 meses ou 1 ano | `serie_carga@2` | treinos com carga calculada; natação não tem carga | **sim** | 5% / 10% |
+| `geral.recuperacao.<medida>` (previsto) | sono, VFC e FC de repouso por noite, com a faixa do normal | `recuperacao_dia` ([[metricas/recuperacao]]) | dados de saúde importados (sono, VFC, FC de repouso); depende de o relógio medir | **parcial** (`noites_do_atleta`, sem rota) | `z` 2,0 |
+| `geral.calor` (previsto, sem id no código) | pace e FC dos treinos leves, com os dias quentes **marcados** | `clima_atividade` (temperatura e sensação) | treino ao ar livre com clima consultado | **parcial** | ver abaixo |
+| `geral.carga_garmin` (previsto) | carga aguda e crônica do relógio | `carga_garmin_dia` | carga do relógio importada do export Garmin | **parcial** | **não recomendada** (duas curvas de carga confundem; serve só à [[metricas/conferencia-carga]]) |
 
 **O que fica de fora, e por quê:** pace **ajustado** por subida (não há altimetria gravada: precisaria reler os FIT, e não está no modelo,
 mudança que só o Theo aprova, ADR); pace ajustado por **calor** (os modelos publicados usam WBGT, que o clima não entrega; por isso só

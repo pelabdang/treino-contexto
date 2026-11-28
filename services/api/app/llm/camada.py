@@ -110,11 +110,13 @@ class ProvedorFalso:
         # `conversar`: lista de respostas na ordem das chamadas. Cada item e um `RespostaConversa`, um `str` (texto final) ou uma
         # excecao do provedor (`ErroProvedor`, `TempoLimite`, `LimiteDoProvedor`), que e levantada. Roteiro esgotado = erro.
         self.roteiro = list(roteiro) if roteiro is not None else None
+        self.ferramentas_recebidas: list[list[dict[str, Any]]] = []  # os esquemas de cada chamada
         self.recebidas: list[list[dict[str, Any]]] = []  # as mensagens de cada chamada, para os testes conferirem o que iria ao provedor
 
     def conversar(self, mensagens: list[dict[str, Any]], ferramentas: list[dict[str, Any]], timeout_s: float) -> RespostaConversa:
         self.chamadas += 1
         self.recebidas.append(json.loads(json.dumps(mensagens)))
+        self.ferramentas_recebidas.append(ferramentas)
         if not self.roteiro:
             raise ErroProvedor()
         item = self.roteiro.pop(0)

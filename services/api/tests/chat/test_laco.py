@@ -195,3 +195,22 @@ def test_prompt_manda_citar_datas_e_numeros_como_nos_resultados():
     assert prompt.VERSAO == "prompt_chat@2"
     texto = prompt.sistema(date(2030, 3, 15))
     assert "EXATAMENTE como estao nos resultados" in texto and "data_texto" in texto
+
+
+def test_o_laco_enxerga_as_ferramentas_de_metricas_do_atleta_de_ponta_a_ponta(session):
+    """O provedor recebe os esquemas de TODAS as ferramentas do papel e o laco executa `ler_serie` de verdade (registro real, banco de teste)."""
+    from app.chat.registro import REGISTRO, executar
+    from app.db.models import Atleta
+    atleta = Atleta(nome="Atleta Teste")
+    session.add(atleta)
+    session.commit()
+    consulta = Consulta(Quem("atleta", 1), atleta.id, date(2030, 3, 15))
+    chamada = RespostaConversa(chamadas=(ChamadaFerramenta("c1", "ler_serie", {"serie_id": "corrida.pace.leve", "periodo": "ultimas_12_semanas"}),))
+    redator, prov = _redator([chamada, "Não há dados dessa série ainda."])
+    r = laco.responder(redator, lambda n, a: executar(session, consulta, n, a), consulta, "Como está o meu pace leve?")
+    oferecidas = {f["function"]["name"] for f in prov.ferramentas_recebidas[0]}
+    assert {"listar_atividades", "ver_atividade", "listar_checkins", "ler_serie", "comparar_periodos", "ler_carga_forma", "ler_linha_base",
+            "ler_recuperacao", "recusar"} <= oferecidas == set(REGISTRO)
+    [feita] = r.chamadas_ferramenta
+    assert feita["nome"] == "ler_serie" and feita["resultado"].get("estado") != "erro", feita["resultado"]
+    assert r.estado in ("respondida", "reprovada")  # chegou ate as checagens com o resultado real da ferramenta
