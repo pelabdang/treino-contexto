@@ -21,6 +21,7 @@ from sqlalchemy.orm import Session
 import app.chat  # noqa: F401  (registra as ferramentas)
 from app.autenticacao import ContaAtual, conta_liberada
 from app.chat import laco, prompt
+from app.chat.recusa import RECUSA_MUDANCA_COM_PROFESSOR, RECUSA_MUDANCA_SEM_PROFESSOR
 from app.chat.registro import Consulta, Quem, executar
 from app.db.models import CHAT_PERGUNTA_MAX, CHAT_TITULO_MAX, Conversa, Mensagem, VinculoProfessorAtleta
 from app.db.session import get_session
@@ -185,8 +186,8 @@ def _responder_e_gravar(session: Session, redator: Redator, conta: ContaAtual, a
     historico = _historico(session, conversa.id) if conversa.id is not None else []
     consulta = Consulta(Quem("atleta", conta.conta_id), atleta_id, hoje_local())
     r = laco.responder(redator, lambda nome, args: executar(session, consulta, nome, args), consulta, pergunta, historico)
-    if r.estado == "recusada" and r.motivo == "pedido_de_mudanca" and not _tem_professor(session, atleta_id):
-        r.resposta = r.resposta.split(". ")[0] + "."  # sem professor vinculado: so a primeira frase (ADR 0017, item 4; a API decide)
+    if r.estado == "recusada" and r.motivo == "pedido_de_mudanca":
+        r.resposta = RECUSA_MUDANCA_COM_PROFESSOR if _tem_professor(session, atleta_id) else RECUSA_MUDANCA_SEM_PROFESSOR  # a API decide (ADR 0017, item 4)
     ordem = 1 if conversa.id is None else (session.scalar(select(func.max(Mensagem.ordem)).where(Mensagem.conversa_id == conversa.id)) or 0) + 1
     motivo = r.motivo if r.estado != "respondida" else None
     if r.estado in ("reprovada", "erro", "recusada") and not motivo:

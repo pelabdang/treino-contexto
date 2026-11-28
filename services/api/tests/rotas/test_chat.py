@@ -198,8 +198,10 @@ def test_pedido_de_mudanca_sem_professor_so_a_primeira_frase_e_com_professor_as_
     com = client.post(f"/atletas/{mundo['ana']}/conversas", json={"pergunta": "Monte meu treino?"}, headers=_h(client, "ana")).json()["mensagens"][0]
     prov["falso"].roteiro = list(pedido)
     sem = client.post(f"/atletas/{mundo['bia']}/conversas", json={"pergunta": "Monte meu treino?"}, headers=_h(client, "bia")).json()["mensagens"][0]
-    assert com["texto"].endswith("na conversa com ele.") and "Posso mostrar" in com["texto"]  # a Ana tem professor vinculado
-    assert sem["texto"] == "Mudar o treino é com o seu professor." and sem["estado"] == "recusada"  # a Bia nao tem
+    from app.chat.recusa import RECUSA_MUDANCA_COM_PROFESSOR, RECUSA_MUDANCA_SEM_PROFESSOR
+    assert com["texto"] == RECUSA_MUDANCA_COM_PROFESSOR  # a Ana tem professor vinculado
+    assert sem["texto"] == RECUSA_MUDANCA_SEM_PROFESSOR and sem["estado"] == "recusada"  # a Bia nao tem
+    assert RECUSA_MUDANCA_COM_PROFESSOR.startswith(RECUSA_MUDANCA_SEM_PROFESSOR) and RECUSA_MUDANCA_COM_PROFESSOR != RECUSA_MUDANCA_SEM_PROFESSOR
 
 
 def test_link_do_treino_traz_a_data_como_veio_da_ferramenta(client, mundo, prov):
