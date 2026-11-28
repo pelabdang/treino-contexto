@@ -9,8 +9,12 @@ from pathlib import Path
 
 DOCS = Path(__file__).resolve().parents[3] / "docs"
 # montado em partes para este arquivo não casar com ele mesmo
-PADROES = re.compile("|".join(["/" + "Users/", "/private" + "/tmp", "/" + "home/", "claude" + "-501"]))
-EXTENSOES = {".md", ".json", ".svg", ".txt", ".canvas", ".yml", ".yaml", ".py"}
+# inclui a forma que o Graphify usa nos ids dos nós do graph.canvas (caminho com "/" trocado por "_")
+PADROES = re.compile(
+    "|".join(["/" + "Users/", "/private" + "/tmp", "/" + "home/", "claude" + "-501", "claude" + "_501", "_private" + "_tmp_", "users" + "_[a-z0-9]+_documents"]),
+    re.IGNORECASE,
+)
+EXTENSOES = {".md", ".json", ".svg", ".txt", ".canvas", ".yml", ".yaml", ".py"}  # .canvas e .json inclusos de propósito
 
 
 def test_docs_sem_caminho_local():

@@ -2866,7 +2866,7 @@
       "color": "6"
     },
     {
-      "id": "n_users_angelopelisson_documents_projects_treino_contexto_docs_design_contraste_rationale_1",
+      "id": "n_docs_design_contraste_rationale_1",
       "type": "file",
       "file": "Contraste WCAG 2.x dos pares de cor do guia visual (issue 192).  L\u00ea as cores da.md",
       "x": 2080,
@@ -2875,7 +2875,7 @@
       "height": 60
     },
     {
-      "id": "n_users_angelopelisson_documents_projects_treino_contexto_docs_design_contraste_rationale_82",
+      "id": "n_docs_design_contraste_rationale_82",
       "type": "file",
       "file": "Lumin\u00e2ncia relativa sRGB (WCAG 2.2)..md",
       "x": 2280,
@@ -2884,7 +2884,7 @@
       "height": 60
     },
     {
-      "id": "n_users_angelopelisson_documents_projects_treino_contexto_docs_design_contraste_calcular",
+      "id": "n_docs_design_contraste_calcular",
       "type": "file",
       "file": "calcular().md",
       "x": 2480,
@@ -2893,7 +2893,7 @@
       "height": 60
     },
     {
-      "id": "n_users_angelopelisson_documents_projects_treino_contexto_docs_design_contraste_py",
+      "id": "n_docs_design_contraste_py",
       "type": "file",
       "file": "contraste.py.md",
       "x": 2680,
@@ -2902,7 +2902,7 @@
       "height": 60
     },
     {
-      "id": "n_users_angelopelisson_documents_projects_treino_contexto_docs_design_contraste_documento_atualizado",
+      "id": "n_docs_design_contraste_documento_atualizado",
       "type": "file",
       "file": "documento_atualizado().md",
       "x": 2080,
@@ -2911,7 +2911,7 @@
       "height": 60
     },
     {
-      "id": "n_users_angelopelisson_documents_projects_treino_contexto_docs_design_contraste_ler_cores",
+      "id": "n_docs_design_contraste_ler_cores",
       "type": "file",
       "file": "ler_cores().md",
       "x": 2280,
@@ -2920,7 +2920,7 @@
       "height": 60
     },
     {
-      "id": "n_users_angelopelisson_documents_projects_treino_contexto_docs_design_contraste_luminancia",
+      "id": "n_docs_design_contraste_luminancia",
       "type": "file",
       "file": "luminancia().md",
       "x": 2480,
@@ -2929,7 +2929,7 @@
       "height": 60
     },
     {
-      "id": "n_users_angelopelisson_documents_projects_treino_contexto_docs_design_contraste_main",
+      "id": "n_docs_design_contraste_main",
       "type": "file",
       "file": "main().md",
       "x": 2680,
@@ -2938,7 +2938,7 @@
       "height": 60
     },
     {
-      "id": "n_users_angelopelisson_documents_projects_treino_contexto_docs_design_contraste_num",
+      "id": "n_docs_design_contraste_num",
       "type": "file",
       "file": "num().md",
       "x": 2080,
@@ -2947,7 +2947,7 @@
       "height": 60
     },
     {
-      "id": "n_users_angelopelisson_documents_projects_treino_contexto_docs_design_contraste_razao",
+      "id": "n_docs_design_contraste_razao",
       "type": "file",
       "file": "razao().md",
       "x": 2280,
@@ -2956,7 +2956,7 @@
       "height": 60
     },
     {
-      "id": "n_users_angelopelisson_documents_projects_treino_contexto_docs_design_contraste_tabela",
+      "id": "n_docs_design_contraste_tabela",
       "type": "file",
       "file": "tabela().md",
       "x": 2480,
