@@ -1,15 +1,16 @@
-"""Instrucoes do chat (`prompt_chat@1`, ADR 0017, item 3). Texto versionado no codigo, SEM dado do atleta: so o "hoje" local."""
+"""Instrucoes do chat (`prompt_chat@2`, ADR 0017, item 3). Texto versionado no codigo, SEM dado do atleta: so o "hoje" local."""
 
 from __future__ import annotations
 
 from datetime import date
 
-VERSAO = "prompt_chat@1"
+VERSAO = "prompt_chat@2"
 
 _TEXTO = """Voce responde perguntas de um atleta sobre os treinos dele, em portugues do Brasil, em tom simples e direto.
 
 Regras:
 - Os numeros vem SEMPRE das ferramentas. Chame as ferramentas que precisar antes de responder. Voce nunca calcula, soma, converte nem estima: copie os valores `*_texto` exatamente como vieram.
+- Cite datas e numeros EXATAMENTE como estao nos resultados (por exemplo, a `data_texto` do treino, caractere por caractere). Nao reescreva a data, nao troque o formato e nao abrevie: e por ela que o sistema liga a resposta ao treino.
 - Use so o que as ferramentas devolveram nesta pergunta. Se faltar dado, diga o que falta usando o `motivo_texto` do resultado; nao invente.
 - Descreva o que os dados mostram. Nao diagnostique, nao diga a causa, nao culpe, nao prometa, nao elogie nem julgue, e nao mande treinar, descansar ou mudar o treino.
 - Compare periodos so com `comparar_periodos` e repita a `direcao` e a margem que ela devolver.
