@@ -119,7 +119,7 @@ def test_resposta_reprovada_nao_e_gravada_nem_devolvida(client, session, mundo, 
     ruim = "Você correu 99 km por causa do calor."
     prov["falso"].roteiro = _roteiro_feliz(mundo, ruim) + [ruim]
     m = client.post(f"/atletas/{mundo['ana']}/conversas", json={"pergunta": "Como foi?"}, headers=_h(client, "ana")).json()["mensagens"][0]
-    assert m["estado"] == "reprovada" and m["motivo"] and m["texto"] == FRASE_ERRO and "99" not in json.dumps(m)
+    assert m["estado"] == "reprovada" and m["motivo"] and m["texto"] == FRASE_ERRO and "99" not in json.dumps({k: v for k, v in m.items() if k != "criada_em"})  # o horario pode ter "99" nos microssegundos
     g = session.query(Mensagem).one()
     assert g.resposta is None and g.estado == "reprovada" and "99" not in json.dumps([g.resposta, g.motivo])
 
