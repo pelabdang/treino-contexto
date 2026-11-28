@@ -2,7 +2,7 @@
 tipo: roteiro
 status: em-uso
 dono: paulo
-atualizado: 2026-11-17
+atualizado: 2026-11-28
 links: [[produto/plano-mvp-execucao]], [[produto/metas/meta-12-treino-inteiro]], [[produto/meta-12-como-rodar]], [[design/telas/treino]], [[produto/metas/meta-11-caixa-do-dia]], [[produto/meta-11-como-rodar]], [[decisoes/0015-caixa-do-dia-do-professor]], [[metricas/atencao]], [[design/telas/caixa-do-dia]], [[design/telas/conferencia-369]], [[produto/metas/meta-10-recuperacao]], [[produto/meta-10-como-rodar]], [[decisoes/0014-recuperacao-diaria]], [[metricas/recuperacao]], [[diario/2026-11-12]], [[diario/2026-11-13]], [[diario/2026-11-16]], [[produto/metas/meta-9-feedback-automatico]], [[produto/meta-9-como-rodar]], [[decisoes/0013-feedback-automatico]], [[diario/2026-11-11]], [[decisoes/0001-modelo-de-dados-minimo]], [[decisoes/0005-serie-de-tiros-o-que-entra]], [[produto/metas/meta-1-tiros-1km]], [[produto/metas/meta-2-evolucao-tiros-app]], [[produto/metas/meta-3-upload-fit]], [[decisoes/0004-contrato-tela-evolucao]], [[decisoes/0006-upload-de-fit]], [[decisoes/0003-fuso-da-atividade]], [[diario/2026-11-03]], [[00-inicio]], [[produto/metas/meta-4-clima-atividade]], [[decisoes/0007-clima-da-atividade]], [[produto/meta-4-como-rodar]], [[metricas/tiros-1km]], [[decisoes/0008-deteccao-de-esforcos]], [[diario/2026-11-04]], [[produto/metas/meta-5-deteccao-esforcos]], [[produto/meta-5-como-rodar]], [[decisoes/0009-treino-de-transicao]], [[metricas/esforcos]], [[metricas/transicao]], [[modulos/ingestao-garmin]], [[diario/2026-11-06]], [[produto/metas/meta-6-carga-treino]], [[produto/meta-6-como-rodar]], [[decisoes/0010-carga-de-treino]], [[metricas/carga-treino]], [[metricas/serie-carga]], [[metricas/conferencia-carga]], [[diario/2026-11-07]], [[diario/2026-11-08]], [[diario/2026-11-09]], [[produto/metas/meta-7-linha-de-base-semana-padrao]], [[produto/meta-7-como-rodar]], [[decisoes/0011-linha-de-base-e-semana-padrao]], [[metricas/linha-base]], [[metricas/tipo-treino]], [[design/tokens]], [[produto/metas/meta-8-check-in]], [[produto/meta-8-como-rodar]], [[decisoes/0012-check-in-pos-treino]], [[metricas/carga-pse]], [[design/telas/checkin]], [[diario/2026-11-10]]
 ---
 # Roteiro de metas
@@ -25,8 +25,14 @@ Ao fechar uma meta, o Paulo registra o resultado em `docs/produto/metas/` e revi
 | 10 | Sono, VFC e FC de repouso no contexto do treino | feita (fixtures, sem rede; conferência visual no Chrome em 390 px sem bloqueantes; celular de verdade não verificado; [[produto/metas/meta-10-recuperacao]]) |
 | 11 | Caixa do dia do professor (piloto local, sem login, atletas sintéticos) | feita (fixtures, sem rede; design-ok da Lia na tela rodando; celular, leitor de tela, login e aluno real não verificados; [[produto/metas/meta-11-caixa-do-dia]]) |
 | 12 | O treino inteiro na tela do atleta (linha de base, carga, esforços) | feita (fixtures, sem rede; tela viva contra a API e design-ok da Lia; celular, leitor de tela, login e aluno real não verificados; [[produto/metas/meta-12-treino-inteiro]]) |
-| **13** | **Login e deploy do piloto** | **em curso** ("ok para as nove" em 17/11, a pergunta 6 em aberto; issues #496 a #510 e #472) |
-| 14 | Agente do atleta (primeiras perguntas) | depois da Meta 13 (decisão 6 da Meta 12; era a Meta 12) |
+| 13 | Login e deploy do piloto | **pausada** (login, consentimento e backup local no `main`; deploy parado desde 18/11 e, por decisão do Angelo em 28/11, nada vai para servidor por enquanto; #504 a #509 abertas) |
+| **14** | **Chat do atleta: perguntas sobre os próprios treinos, com ferramentas de consulta** | **em curso** (decisões do Angelo de 28/11; issues #590 a #607) |
+| 15 | Conexões professor e atleta por convite e Início v5 | esboço (depois da Meta 14) |
+| 16 | Área do professor: ficha do aluno, caixa do dia v3 e chat do professor | esboço (depois da Meta 15) |
+
+Entre a Meta 13 e a Meta 14 (18 a 28/11, sem número): identidade e UX v3 (início, treino, selos do normal), Evolução v1 (catálogo,
+série, gráfico com a faixa do normal), Início v4 com "Seus números", clima em inteiro e "Verificar de novo" no feedback pendente. Pendências
+na #586 e na #521.
 
 Numeração: em 03/11 a linha de base virou meta própria e as metas seguintes andaram um número. Em 04/11 (decisão do
 Angelo) a detecção de esforços entrou como Meta 5, antes da carga, e as seguintes andaram mais um número: carga = 6,
@@ -975,7 +981,11 @@ Revisadas ao fim de cada meta com o que se aprendeu. Ordem tirada da "Fundação
   feedback), então quem sobe a versão procura também ali; texto pronto da API precisa de revisão de português como a tela tem revisão
   visual; perguntas do meio da meta seguem "a confirmar" com a recomendação valendo e não param o time.
 
-### Meta 13: login e deploy do piloto (em curso)
+### Meta 13: login e deploy do piloto (pausada)
+> **Pausada.** Em 18/11 o Angelo pôs a UX antes do deploy; em 28/11 decidiu que **nada vai para servidor por enquanto** (sem gasto) e que
+> o app segue local. A meta fica pausada inteira, inclusive a preparação local do servidor. No `main`: ADR 0016, contas e sessão, controle de
+> acesso, consentimento, telas de entrar, sair e consentimento, backup e exclusão locais. Abertas: #497 (ADR em `proposta`), #504 a #509.
+
 > **Aberta em 17/11.** Proposta do Paulo na #470; o Angelo respondeu **"ok para as nove"** em 17/11, todas com a recomendação, menos a
 > pergunta 6 (conta do provedor na pessoa física ou no CNPJ), que não tinha recomendação e **segue em aberto** (o Theo está perguntando).
 > Issues #497 a #509 (P1 a P13), paralela #510 (pergunta C da Meta 12), #472 como entrada do provedor; roteiro na #496. Diferente das
@@ -1048,10 +1058,90 @@ Revisadas ao fim de cada meta com o que se aprendeu. Ordem tirada da "Fundação
   transacional (decisão 4), portanto sem "esqueci a senha" por e-mail; link mágico e login social; API oficial da Garmin (depende do
   CNPJ); painel da coordenação; agente (Meta 14).
 
-### Meta 14: agente do atleta, primeiras perguntas (depois da Meta 13; decisão 6 do Angelo em 17/11; era a Meta 12)
-- **Objetivo:** atalhos para as perguntas mais comuns ("minha evolução nos tiros de 1 km"), respondidos por consultas estruturadas.
-- **Quem:** caio-ciencia, duda-dados, rafa-app.
-- **Fora:** pergunta livre sem catálogo.
+### Meta 14: chat do atleta, perguntas sobre os próprios treinos (em curso)
+> **Aberta em 28/11.** Proposta do Paulo ao Theo; o Angelo respondeu às 8 perguntas em 28/11 (abaixo). Issues #590 a #607 (P1 a P17;
+> a P15, #605, foi fechada como duplicada da #589, que a Lia já tinha aberto). Substitui a antiga "Meta 14: agente do atleta, primeiras
+> perguntas": os atalhos viram perguntas prontas no mesmo chat, e o chat não fica preso ao catálogo.
+
+- **Decisões do Angelo (28/11):**
+  1. ordem: Meta 14 (chat), Meta 15 (conexões e Início v5), Meta 16 (professor); o desenho do professor e do Início começa já;
+  2. **provedor Groq, inclusive com o dado real dele**: o Angelo disse que o dado dele não é tão sensível e **aceita o risco**. Fecha a
+     pendência 2 de "PRECISA DO ANGELO" (termos do provedor sobre treinar modelos) **para o uso com o dado dele**; aluno real segue
+     dependendo da consulta de LGPD;
+  3. **sem "ainda não sei"**: o chat responde qualquer pergunta que faça sentido sobre os treinos do atleta e recusa com educação só o que
+     não é sobre treino. A IA chama **ferramentas de consulta** (atividades, check-ins, séries, carga); **os números vêm do código** e as
+     checagens do feedback continuam valendo;
+  4. as conversas ficam guardadas;
+  5. conexão por **código de convite** gerado pelo professor; o aceite do atleta vale também como consentimento;
+  6. um papel por conta (ADR 0016);
+  7. o professor vê **tudo, menos a Evolução e as conversas do atleta com o chat**, e terá o próprio chat sobre cada aluno (Meta 16):
+     **a ferramenta do chat respeita quem pergunta** desde a Meta 14. Contexto, nas palavras do Angelo: o professor passa o treino em
+     outra plataforma e aqui só fazemos o check-in; por isso, sem restrições ao professor. O termo de consentimento muda (Meta 15, com a Nina);
+  8. o Início já melhorou e ele quer mais opções: a Lia traz as direções (#589, PR #601).
+- **Objetivo:** o atleta pergunta, em texto livre ou por um atalho, qualquer coisa sobre os próprios treinos e recebe uma resposta com
+  números do código, links para o treino e a Evolução, ou uma recusa educada quando a pergunta não é sobre treino. É a seção 4.5 do
+  [[produto/plano-mvp-execucao]], com ferramentas no lugar do catálogo fixo.
+- **Entrega visível:** a tela do chat no app (web), com atalhos e a lista de conversas; as rotas do chat no OpenAPI; o guia
+  `meta-14-como-rodar`.
+- **Critério de pronto:**
+  - ADR 0017 aceita pelo Theo antes da migração: ferramentas, escopo por sessão, laço e limites, checagens, o que vai ao provedor,
+    modelo de dados das conversas;
+  - toda ferramenta recebe o atleta da **sessão**, nunca de argumento do modelo; teste de que pedir dado de outro atleta não devolve nada;
+  - `checagens_chat@1`: todo número do texto está nos resultados das ferramentas daquela pergunta; linguagem proibida; texto reprovado
+    nunca chega ao app; teste sobre as respostas boas e ruins das fixtures;
+  - pedido de mudar o treino é encaminhado ao professor, e pergunta fora do tema recebe a recusa fixa;
+  - LLM só pela camada trocável; testes e CI com provedor falso, sem rede; nada da pergunta, dos resultados ou da resposta em log;
+  - conversas no banco, apagadas com a conta;
+  - tela com design-ok da Lia; QA num clone limpo seguindo só o guia, com o provedor falso e uma rodada com o Groq só com fixtures.
+- **Issues e ordem** (cada uma até 1 dia; abertas em 28/11; o critério curto de cada uma está na própria issue):
+
+  | Proposta | Issue | Título | Dono | Depende de | Situação |
+  |---|---|---|---|---|---|
+  | P1 | #590 | Roteiro da meta e decisões do Angelo de 28/11 | paulo-planejador | nenhuma | este PR |
+  | P2 | #591 | ADR 0017: chat do atleta com ferramentas de consulta | caio-ciencia com duda-dados (aprovação do Theo) | nenhuma | aberta |
+  | P3 | #592 | Fixtures sintéticas do chat (perguntas, ferramentas esperadas, respostas boas e ruins) | caio-ciencia | #591 | aberta |
+  | P4 | #593 | Ferramentas: atividades e check-ins (registro e escopo por sessão) | duda-dados | #591 | aberta |
+  | P5 | #594 | Ferramentas: séries da Evolução, carga, forma e linha de base | caio-ciencia | #591, #593 | aberta |
+  | P6 | #595 | `checagens_chat@1` | caio-ciencia | #591, #592 | aberta |
+  | P7 | #596 | Laço com chamada de ferramentas pela camada trocável e provedor falso | duda-dados | #593, #595 | aberta |
+  | P8 | #597 | Conversas no banco (migração) e apagadas com a conta | duda-dados | #591 | aberta |
+  | P9 | #598 | Rotas do chat, adendo da ADR 0004, cliente regerado | duda-dados | #596, #597 | aberta |
+  | P10 | #599 | Desenho da tela do chat | lia-design | #591 (adianta) | aberta |
+  | P11 | #600 | Tela do chat no app | rafa-app (revisão da Lia) | #598, #599 | aberta |
+  | P12 | #602 | Documentação, `meta-14-como-rodar`, diário | nina-docs | #598, #600 | aberta |
+  | P13 | #603 | QA de ponta a ponta | bia-qa | #602 | aberta |
+  | P14 | #604 | Resultado da meta e roteiro | paulo-planejador | #603 | aberta |
+  | P15 | #589 | Direções do Início v5 (paralela; a #605 foi fechada como duplicada) | lia-design | nenhuma | em revisão (PR #601) |
+  | P16 | #606 | Desenho da área do professor e das conexões por convite (paralela) | lia-design | nenhuma | aberta |
+  | P17 | #607 | ADR 0018: conexões por código de convite (paralela, só documento) | duda-dados (aprovação do Theo) | depois da #597 | aberta |
+
+  **Ordem:** na largada, #591 (Caio com a Duda), #599 e #606 (Lia, adiantam com a ADR em revisão) e a #589 em revisão. Depois da ADR:
+  #592 e #593 em paralelo, então #594, #595 e #597; #596 junta as ferramentas e as checagens; #598 depois da #596 e da #597; o Rafa entra
+  na #600 com a spec e as rotas. **Caminho crítico:** #591 → #593 → #596 → #598 → #600 → #602 → #603 → #604. A Duda tem #593, #596,
+  #597, #598 e #607: a #607 só começa depois da #597, e o Caio ficou com a #594 para dividir a carga.
+- **Paralelas (fora do critério):** #589 (Início v5, direções), #606 (desenho do professor e das conexões), #607 (ADR 0018), #586 e #521
+  (ajustes de app, se o Rafa tiver folga antes da #600).
+- **Quem:** caio-ciencia (ADR, fixtures, ferramentas de métricas, checagens), duda-dados (ADR, ferramentas, laço, banco, rotas; ADR 0018),
+  lia-design (tela do chat; Início v5; professor), rafa-app, nina-docs, bia-qa, Theo (ADR 0017, migração, adendo da ADR 0004), Angelo
+  (rodada local com o dado dele, se quiser, sem nada no repositório).
+- **Fora:** o chat do professor (Meta 16; a ferramenta já respeita quem pergunta); gráfico dentro da resposta (a v1 leva para a
+  Evolução; a spec da Lia pode propor); resumos semanal, quinzenal e mensal; a IA mudar o plano ou prescrever treino; conversa sobre temas
+  fora de treino; servidor e deploy (Meta 13 pausada).
+
+### Meta 15: conexões professor e atleta por convite e Início v5 (esboço, depois da Meta 14)
+- **Objetivo:** o professor gera um código de convite no app; o atleta digita e aceita, o que cria o vínculo e o consentimento de uma
+  vez (decisão 5); os dois veem e desfazem as conexões; o Início v5 na direção escolhida pelo Angelo (#589).
+- **Entra:** a ADR 0018 (#607) aceita; o novo escopo do professor (decisão 7: tudo menos a Evolução e o chat do atleta) no filtro
+  `atletas_do_professor`; **o termo de consentimento novo, com a Nina** (muda com a decisão 7); a #521.
+- **Quem:** duda-dados, rafa-app, lia-design, nina-docs, bia-qa. Testada com um professor sintético (um papel por conta, decisão 6).
+- **Fora:** e-mail de convite; aluno real (consulta de LGPD).
+
+### Meta 16: área do professor (esboço, depois da Meta 15)
+- **Objetivo:** lista de alunos, ficha do aluno (treinos, check-ins, feedback, carga, recuperação, clima, semana-padrão), caixa do dia na
+  v3 e o **chat do professor** sobre cada aluno, com as ferramentas da Meta 14 no escopo do professor (vínculo e consentimento; sem a
+  Evolução e sem as conversas do atleta).
+- **Quem:** lia-design (#606), rafa-app, duda-dados, caio-ciencia, bia-qa.
+- **Fora:** rascunho de devolutiva e quem gera o feedback, até a pergunta aberta abaixo ("PRECISA DO ANGELO") ter resposta.
 
 ### Candidatas sem número
 - **Tela dos esforços e dos treinos de transição no app** (rafa-app, com a Lia): na Meta 12 (#467). A Meta 5 entregou só a API. A tela de
@@ -1295,15 +1385,21 @@ stack Expo). A chave do provedor de LLM foi entregue e está no `.env` (fora do 
 Pendentes com o Angelo (o time segue em volta delas):
 1. **Celular de verdade** (Expo Go, iOS ou Android): na QA da Meta 13 (#508, decisão 8), cerca de 15 minutos com o Expo Go apontando
    para o piloto, dado sintético, quando a QA chegar.
-2. **Antes de gerar o feedback dos treinos reais dele:** ler os termos do provedor sobre o uso dos dados para treinar modelos (item 10
-   de "A confirmar" da ADR 0013). Segue não conferido por nós.
-3. **Meta 13, pergunta 6 (em aberto):** a conta do provedor na pessoa física ou no CNPJ. Sem recomendação do time; o código não muda.
+2. ~~Antes de gerar o feedback dos treinos reais dele: ler os termos do provedor sobre o uso dos dados para treinar modelos.~~
+   **Fechada em 28/11 para o uso com o dado dele** (decisão 2 da Meta 14): o Angelo aceita o risco e usa o Groq com o dado dele no
+   feedback e no chat. Para aluno real, segue valendo a consulta de LGPD (item 6).
+3. **Meta 13 (pausada em 28/11), pergunta 6 (em aberto):** a conta do provedor na pessoa física ou no CNPJ. Sem recomendação do time; o código não muda.
    O time segue com P1 a P7 e a preparação local da P8 e da P9.
-4. **Meta 13, criar a conta na DigitalOcean e definir o teto mensal:** depois da #472 (região e preço). Só você cria a conta e cadastra
+4. **Meta 13 (pausada em 28/11: nada vai para servidor por enquanto), criar a conta na DigitalOcean e definir o teto mensal:** depois da #472 (região e preço). Só você cria a conta e cadastra
    o pagamento; é o que libera a subida da P8 (#504). Sem a conta, a meta fecha com "login local", sem o endereço.
 5. **Feedback dos treinos reais com a `linha_base@3`:** refazer localmente quando você quiser (nada no repositório).
 6. **Antes do primeiro aluno real:** termo de consentimento (o do app fica provisório e marcado até lá), contrato com a assessoria,
    consulta de LGPD e CNPJ (decisões 3, 4 e 7 da Meta 11; decisão 5 da Meta 13); login e deploy na Meta 13.
+7. **Pergunta aberta (28/11): "o professor é quem vai gerar o feedback".** Hoje o feedback do treino é gerado pela IA e vai direto ao
+   atleta (Meta 9, ADR 0013). O time **não decidiu nada**: o feedback automático segue como está. Falta saber se o professor passa a
+   escrever ou aprovar o feedback, se a IA vira só o rascunho dele ou se os dois convivem. Entra no desenho da Meta 16.
+8. **Pergunta aberta (Meta 14): a observação livre do check-in no chat.** Desde a Meta 9 ela nunca vai ao provedor. Padrão da ADR 0017
+   (#591) até a resposta: **continua fora**, e o chat responde sem ela.
 
 Em aberto:
 1. **Próximas metas, sem pressa:** CNPJ e pedido da API da Garmin; pedido da API do TrainingPeaks com a assessoria;
