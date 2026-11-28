@@ -3,7 +3,7 @@
 from datetime import date, datetime, timedelta, timezone
 
 import pytest
-from app.db.models import Atividade
+from app.db.models import Atividade, Atleta
 from app.servicos.checkin import pergunta_do_checkin
 
 from tests.rotas.test_inicio_cartoes import DIAS, HOJE, SEG, _ativ, _cartoes, _por_id, atleta, client  # noqa: F401
@@ -13,71 +13,70 @@ def _semana(client, atleta):
     return _por_id(_cartoes(client, atleta))["esta_semana"]
 
 
-def test_dias_sao_7_de_segunda_a_domingo_com_estado_e_texto_pronto(client, session, atleta):
-    hoje = HOJE.weekday()  # 0 = segunda
-    _ativ(session, atleta, 0, modalidade="corrida")
-    if hoje >= 2:  # um dia passado com corrida e natacao e outro sem treino
-        _ativ(session, atleta, hoje, modalidade="corrida", dur=1800.0)
-        _ativ(session, atleta, hoje, modalidade="natacao", dur=1800.0)
+SEG_FIXA = date(2030, 3, 11)  # segunda-feira; o "hoje" e injetado (`agora`), entao os testes rodam igual em qualquer dia da semana
+
+
+def _ativ_fixa(session, atleta, dia, hora, modalidade):
+    a = Atividade(atleta_id=atleta.id, fonte="t", fonte_id=f"f{dia}{hora}{modalidade}", modalidade=modalidade, fuso_min=0, duracao_s=1800.0, distancia_m=5000.0,
+                  inicio=datetime(2030, 3, dia, hora, 0, tzinfo=timezone.utc))
+    session.add(a)
+    session.flush()
+
+
+def _dias_de(session, atleta, hoje_dia):
+    """Segunda: corrida e natacao; terca: corrida e ciclismo; e, quando `hoje` nao e segunda nem terca, natacao hoje. `hoje` = 2030-03-`hoje_dia`, 15h UTC."""
+    from app.servicos import inicio_cartoes as ic
+    _ativ_fixa(session, atleta, 11, 8, "corrida")
+    _ativ_fixa(session, atleta, 11, 18, "natacao")
+    if hoje_dia >= 12:
+        _ativ_fixa(session, atleta, 12, 8, "corrida")
+        _ativ_fixa(session, atleta, 12, 18, "ciclismo")
+    if hoje_dia == 13:
+        _ativ_fixa(session, atleta, 13, 8, "natacao")
     session.commit()
-    c = _semana(client, atleta)
-    dias = c["dias"]
-    assert [d["rotulo"] for d in dias] == ["seg", "ter", "qua", "qui", "sex", "sáb", "dom"]
-    assert all(set(d) == {"rotulo", "estado", "modalidades", "rotulo_acessivel"} for d in dias)
-    for i, d in enumerate(dias):
-        assert d["rotulo_acessivel"].startswith(DIAS[i] + ", ")
-        if i == hoje:
-            assert d["estado"] == "hoje" and d["modalidades"] == ["corrida"] if hoje != 0 else True
-        elif i > hoje:
-            assert d["estado"] == "futuro" and d["modalidades"] == [] and d["rotulo_acessivel"].endswith("ainda por vir")
-    assert dias[hoje]["estado"] == "hoje"
-    if hoje >= 2:
-        assert dias[0]["estado"] == "feito" and dias[0]["modalidades"] == ["corrida", "natacao"]
-        assert dias[0]["rotulo_acessivel"] == "segunda, corrida e natação feitas"
-        assert dias[1]["estado"] == "vazio" and dias[1]["rotulo_acessivel"] == "terça, sem treino"
-    assert dias[hoje]["rotulo_acessivel"] == f"{DIAS[hoje]}, hoje, corrida feita" if hoje == 0 else dias[hoje]["rotulo_acessivel"].startswith(f"{DIAS[hoje]}, hoje")
+    agora = datetime(2030, 3, hoje_dia, 23, 0, tzinfo=timezone.utc)
+    esta = [c for c in ic.cartoes(session, atleta.id, agora).cartoes if c.id == "esta_semana"][0]
+    return esta.dias
 
 
-def test_estados_feito_hoje_vazio_e_futuro_sem_o_app_comparar_datas(client, session, atleta):
-    hoje = HOJE.weekday()
-    if hoje < 2 or hoje == 6:
-        pytest.skip("precisa de um dia passado sem treino e de um dia futuro na semana")
+@pytest.mark.parametrize("hoje_dia,estados", [
+    (11, ["hoje", "futuro", "futuro", "futuro", "futuro", "futuro", "futuro"]),   # segunda
+    (13, ["feito", "feito", "hoje", "futuro", "futuro", "futuro", "futuro"]),     # quarta, com treino hoje
+    (16, ["feito", "feito", "vazio", "vazio", "vazio", "hoje", "futuro"]),        # sabado, sem treino hoje
+    (17, ["feito", "feito", "vazio", "vazio", "vazio", "vazio", "hoje"]),         # domingo: sem dia futuro
+])
+def test_dias_cobrem_feito_hoje_vazio_e_futuro_em_qualquer_dia_da_semana(session, atleta, hoje_dia, estados):
+    dias = _dias_de(session, atleta, hoje_dia)
+    assert [d.rotulo for d in dias] == ["seg", "ter", "qua", "qui", "sex", "sáb", "dom"]
+    assert [d.estado for d in dias] == estados
+    assert all(d.modalidades == [] for d in dias if d.estado in ("vazio", "futuro"))
+
+
+def test_textos_dos_dias_concordam_no_genero_e_no_numero_e_dizem_hoje_e_por_vir(session, atleta):
+    d = _dias_de(session, atleta, 16)  # sabado
+    assert d[0].modalidades == ["corrida", "natacao"] and d[0].rotulo_acessivel == "segunda, corrida e natação feitas"
+    assert d[1].modalidades == ["corrida", "ciclismo"] and d[1].rotulo_acessivel == "terça, corrida e ciclismo feitos"  # misto: masculino
+    assert d[2].rotulo_acessivel == "quarta, sem treino" and d[4].rotulo_acessivel == "sexta, sem treino"
+    assert d[5].rotulo_acessivel == "sábado, hoje, sem treino ainda"
+    assert d[6].rotulo_acessivel == "domingo, ainda por vir"
+
+
+def test_hoje_com_treino_continua_hoje_com_as_modalidades(session, atleta):
+    d = _dias_de(session, atleta, 13)
+    assert d[2].estado == "hoje" and d[2].modalidades == ["natacao"] and d[2].rotulo_acessivel == "quarta, hoje, natação feita"
+    outra = Atleta(nome="Outra Ficticia")
+    session.add(outra)
+    session.commit()
+    d0 = _dias_de(session, outra, 11)[0]
+    assert d0.estado == "hoje" and d0.rotulo_acessivel == "segunda, hoje, corrida e natação feitas"
+
+
+def test_a_rota_traz_os_7_dias_com_os_mesmos_campos(client, session, atleta):
     _ativ(session, atleta, 0)
-    _ativ(session, atleta, hoje)  # segunda
-    session.commit()
-    estados = [d["estado"] for d in _semana(client, atleta)["dias"]]
-    esperado = ["feito"] + ["vazio"] * (hoje - 1) + ["hoje"] + ["futuro"] * (6 - hoje)
-    assert estados == esperado and set(estados) <= {"feito", "hoje", "vazio", "futuro"}
-
-
-def test_dia_futuro_e_vazio_sao_diferentes_e_hoje_com_treino_continua_hoje(client, session, atleta):
-    _ativ(session, atleta, 0, modalidade="natacao")
     session.commit()
     dias = _semana(client, atleta)["dias"]
-    hoje = HOJE.weekday()
-    assert dias[hoje]["estado"] == "hoje" and dias[hoje]["modalidades"] == ["natacao"]
-    assert all(d["estado"] == "futuro" for d in dias[hoje + 1:]) and all(d["estado"] == "vazio" for d in dias[:hoje])
-
-
-def test_texto_dos_dias_concorda_no_genero_e_no_numero(client, session, atleta):
-    if HOJE.weekday() < 3:
-        pytest.skip("precisa de pelo menos 3 dias na semana")
-    _ativ(session, atleta, HOJE.weekday(), modalidade="ciclismo", tipo=None)      # segunda: ciclismo (masculino)
-    _ativ(session, atleta, HOJE.weekday() - 1, modalidade="corrida")                 # terca: corrida
-    _ativ(session, atleta, HOJE.weekday() - 1, modalidade="ciclismo", tipo=None)     # terca: corrida e ciclismo (misto: masculino)
-    session.commit()
-    d = _semana(client, atleta)["dias"]
-    assert d[0]["rotulo_acessivel"] == "segunda, ciclismo feito"
-    assert d[1]["rotulo_acessivel"] == "terça, corrida e ciclismo feitos"
-
-
-def test_hoje_sem_treino_ainda(client, session, atleta):
-    if HOJE.weekday() == 0:
-        pytest.skip("segunda: o cartao so existe com treino na semana")
-    _ativ(session, atleta, 1, modalidade="corrida")
-    session.commit()
-    d = _semana(client, atleta)["dias"][HOJE.weekday()]
-    assert d["estado"] == "hoje" and d["modalidades"] == [] and d["rotulo_acessivel"] == f"{DIAS[HOJE.weekday()]}, hoje, sem treino ainda"
+    assert len(dias) == 7 and all(set(d) == {"rotulo", "estado", "modalidades", "rotulo_acessivel"} for d in dias)
+    assert dias[HOJE.weekday()]["estado"] == "hoje" and all(d["estado"] in ("feito", "hoje", "vazio", "futuro") for d in dias)
 
 
 def test_apoio_curto_e_comparacao_separados_e_apoio_antigo_mantido(client, session, atleta):
@@ -121,8 +120,11 @@ def _ativ_em(modalidade, dias_atras):
     ("corrida", 0, "Como foi a corrida de hoje?"),
     ("corrida", 3, "Como foi a corrida de terça?"),       # 12/03/2030 foi terca
     ("ciclismo", 2, "Como foi o ciclismo de quarta?"),
+    ("corrida", 4, "Como foi a corrida de segunda?"),     # 11/03/2030
+    ("corrida", 5, "Como foi a corrida de domingo?"),
     ("corrida", 6, "Como foi a corrida de sábado?"),
-    ("corrida", 7, "Como foi a corrida do dia 08/03?"),   # a semana ja se repetiu: o dia da semana ficaria ambiguo
+    ("corrida", 7, "Como foi a corrida do dia 08/03?"),
+    ("natacao", 14, "Como foi a natação do dia 01/03?"),   # a semana ja se repetiu: o dia da semana ficaria ambiguo
     ("outra", 1, "Como foi o treino de ontem?"),
 ])
 def test_pergunta_do_checkin_com_data_relativa(modalidade, dias_atras, esperado):
