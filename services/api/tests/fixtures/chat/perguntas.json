@@ -571,6 +571,52 @@
    }
   },
   {
+   "id": "C04",
+   "categoria": "comparacao",
+   "pergunta": "Como foi esta semana comparada com a passada?",
+   "atleta": "atleta_a",
+   "hoje": "2030-03-15",
+   "ferramentas_esperadas": [
+    {
+     "nome": "comparar_periodos",
+     "argumentos": {
+      "serie_id": "corrida.pace.leve",
+      "periodo_a": "esta_semana",
+      "periodo_b": "semana_passada"
+     },
+     "resultado": {
+      "versao": "frase_evolucao@1",
+      "estado": "ok",
+      "serie_id": "corrida.pace.leve",
+      "periodo_a_texto": "esta semana (11/03 a 15/03)",
+      "periodo_b_texto": "semana passada, primeiros 5 dias (04/03 a 08/03)",
+      "corte_texto": "O outro período foi cortado nos primeiros 5 dias, para ter o mesmo tamanho do que está em curso.",
+      "medida_texto": "mediana dos treinos",
+      "a": {
+       "n": 3,
+       "valor_texto": "5:44/km"
+      },
+      "b": {
+       "n": 3,
+       "valor_texto": "6:00/km"
+      },
+      "direcao": "menor",
+      "margem_texto": "11 s/km",
+      "diferenca_texto": "16 s/km",
+      "diferenca_pct_texto": "4%"
+     }
+    }
+   ],
+   "resposta_boa": "Nos treinos leves de esta semana (11/03 a 15/03) o pace mediano foi 5:44/km, em 3 treinos.\nNa semana passada, nos primeiros 5 dias (04/03 a 08/03), foi 6:00/km, também em 3 treinos.\nSão 16 s/km mais rápido (4%), acima da margem de 11 s/km.",
+   "resposta_ruim": {
+    "texto": "Esta semana você correu muito melhor que na passada, 10% mais rápido.",
+    "motivos_esperados": [
+     "numero_fora_dos_resultados",
+     "linguagem_julgamento"
+    ]
+   }
+  },
+  {
    "id": "K01",
    "categoria": "checkin",
    "pergunta": "Qual foi o meu esforço nos treinos desta semana?",

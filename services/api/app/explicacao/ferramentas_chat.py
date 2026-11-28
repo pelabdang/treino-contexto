@@ -12,6 +12,8 @@ docs/metricas/evolucao-series.md), `serie_carga@2` e `frase_forma@1` (docs/metri
 from __future__ import annotations
 
 import dataclasses
+import math
+import statistics
 from datetime import date, datetime, timedelta
 from typing import Any
 
@@ -25,7 +27,7 @@ from app.servicos import frase_evolucao as fe
 from app.servicos import frase_forma as ff
 from app.servicos.carga_leitura import hoje_do_atleta, serie_do_atleta
 from app.servicos.carga_textos import aprendendo_texto, numero_texto, tsb_texto
-from app.servicos.evolucao_series import POR_ID
+from app.servicos.evolucao_series import POR_ID, carregar
 from app.servicos.fuso import data_local
 from app.servicos.linha_base_leitura import linha_base_da_atividade
 
@@ -121,28 +123,165 @@ def serie_evolucao(session: Session, atleta_id: int, serie_id: str, periodo: str
 
 
 # ---------------------------------------------------------------- comparar_periodos
-def comparar_periodos(session: Session, atleta_id: int, serie_id: str, periodo_a: str = PAR_DA_COMPARACAO[0], periodo_b: str = PAR_DA_COMPARACAO[1],
+ROLANTES = {"ultimos_7_dias": 7, "ultimos_14_dias": 14, "ultimos_28_dias": 28, "ultimas_12_semanas": 84}  # terminam ONTEM (hoje ainda não acabou)
+FIXOS = ("esta_semana", "semana_passada", "semana_retrasada", "este_mes", "mes_passado")
+PERIODOS_COMPARAVEIS = tuple(ROLANTES) + tuple(f"{n}_anteriores" for n in ROLANTES) + FIXOS  # e o mês de calendário "AAAA-MM"
+MINIMO_TREINOS = fe.MINIMO_PADRAO
+MINIMO_TIROS = 2
+
+
+@dataclasses.dataclass(frozen=True)
+class Janela:
+    ini: date
+    fim: date
+    tipo: str  # rolante | semana | mes
+    parcial: bool  # a semana ou o mês em curso (vai até hoje)
+    texto: str
+
+    @property
+    def dias(self) -> int:
+        return (self.fim - self.ini).days + 1
+
+
+def _mes(ano: int, mes: int) -> tuple[date, date]:
+    ini = date(ano, mes, 1)
+    return ini, (date(ano + (mes == 12), mes % 12 + 1, 1) - timedelta(days=1))
+
+
+def _janela_de_comparacao(nome: str, hoje: date) -> Janela | None:
+    """Resolve o nome do período em datas locais. Os rolantes terminam ontem (como a `frase_evolucao@1`); a semana e o mês em curso vão até hoje."""
+    ontem = hoje - timedelta(days=1)
+    base = nome.removesuffix("_anteriores")
+    if base in ROLANTES:
+        n = ROLANTES[base]
+        fim = ontem - timedelta(days=n if nome != base else 0)
+        ini = fim - timedelta(days=n - 1)
+        rotulo = {"ultimos_7_dias": "últimos 7 dias", "ultimos_14_dias": "últimos 14 dias", "ultimos_28_dias": "últimos 28 dias",
+                  "ultimas_12_semanas": "últimas 12 semanas"}[base] if nome == base else {
+            "ultimos_7_dias": "7 dias anteriores", "ultimos_14_dias": "14 dias anteriores", "ultimos_28_dias": "28 dias anteriores",
+            "ultimas_12_semanas": "12 semanas anteriores"}[base]
+        return Janela(ini, fim, "rolante", False, f"{rotulo} ({ini:%d/%m} a {fim:%d/%m})")
+    segunda = hoje - timedelta(days=hoje.weekday())
+    if nome == "esta_semana":
+        return Janela(segunda, hoje, "semana", True, f"esta semana ({segunda:%d/%m} a {hoje:%d/%m})")
+    if nome in ("semana_passada", "semana_retrasada"):
+        ini = segunda - timedelta(days=7 if nome == "semana_passada" else 14)
+        fim = ini + timedelta(days=6)
+        return Janela(ini, fim, "semana", False, f"{'semana passada' if nome == 'semana_passada' else 'semana retrasada'} ({ini:%d/%m} a {fim:%d/%m})")
+    if nome == "este_mes":
+        ini = hoje.replace(day=1)
+        return Janela(ini, hoje, "mes", True, f"este mês ({ini:%d/%m} a {hoje:%d/%m})")
+    if nome == "mes_passado":
+        ini, fim = _mes(hoje.year - (hoje.month == 1), 12 if hoje.month == 1 else hoje.month - 1)
+        return Janela(ini, fim, "mes", False, f"mês passado ({ini:%d/%m} a {fim:%d/%m})")
+    try:  # mês de calendário "AAAA-MM"
+        ano, mes = int(nome[:4]), int(nome[5:7])
+        if len(nome) != 7 or nome[4] != "-" or not 1 <= mes <= 12:
+            return None
+        ini, fim = _mes(ano, mes)
+    except ValueError:
+        return None
+    if ini > hoje:
+        return None
+    parcial = fim > hoje
+    fim = min(fim, hoje)
+    return Janela(ini, fim, "mes", parcial, f"mês {ini:%m/%Y} ({ini:%d/%m} a {fim:%d/%m})")
+
+
+def _estatistica(s, pontos, j: Janela) -> tuple[float | None, int, str, bool]:
+    """(valor, n, medida, aprendendo) da série na janela. treino e tiros: mediana dos treinos; volume: média por semana (total / (dias / 7));
+    condicionamento: o valor do último dia da janela."""
+    vistos = [p for p in pontos if j.ini <= p.dia <= j.fim and p.valor is not None and math.isfinite(p.valor)]
+    if s.tipo == "ctl":
+        if not vistos:
+            return None, 0, "valor no último dia do período", False
+        ultimo = max(vistos, key=lambda p: p.dia)
+        return ultimo.valor, 1, "valor no último dia do período", ultimo.aprendendo
+    if s.tipo == "volume":
+        return (sum(p.valor for p in vistos) / (j.dias / 7) if vistos else None), len(vistos), "média por semana", False
+    return (statistics.median(p.valor for p in vistos) if vistos else None), len(vistos), "mediana dos treinos", False
+
+
+def _limite(s, base: float) -> tuple[float, int]:
+    """(limite de "parecido", casas do valor mostrado), os mesmos da `frase_evolucao@1`."""
+    if s.frase in fe.MEDIDAS:
+        m = fe.MEDIDAS[s.frase]
+        return max(m.piso_abs, m.piso_rel * abs(base)), m.casas
+    if s.frase in fe.VOLUMES:
+        return fe.VOLUME_PISO_REL * abs(base), fe.VOLUMES[s.frase][2]
+    return max(fe.CTL_PISO_ABS, fe.CTL_PISO_REL * abs(base)), 0
+
+
+def _pct(d: float, base: float) -> str | None:
+    return f"{fe._num(fe.arredonda(100 * abs(d) / abs(base)), 0)}%" if base else None
+
+
+def comparar_periodos(session: Session, atleta_id: int, serie_id: str, periodo_a: str = "ultimos_28_dias", periodo_b: str = "ultimos_28_dias_anteriores",
                       agora: datetime | None = None) -> dict[str, Any]:
-    """`comparar_periodos`: a mediana dos últimos 28 dias contra a dos 28 anteriores, por código (`frase_evolucao@1`), com a direção (`maior`, `menor`,
-    `parecido`) e a margem da série. **Na v1 só esse par**: outro par devolve `comparacao_nao_suportada` (a ADR 0017 deixa os demais para depois)."""
+    """`comparar_periodos`: dois períodos de mesmo tamanho (semana, 14 dias, 28 dias, 12 semanas, semana ou mês de calendário), por código.
+
+    Regras da `frase_evolucao@1` sobre os valores mostrados: mediana dos treinos (pace, FC...), limite de "parecido" por série, `direcao` do valor de `a` contra
+    `b`, diferença absoluta e em %, mínimo de 3 treinos por período (2 nos tiros). Abaixo do mínimo o resultado é `parcial`: traz valores e `n`, **sem `direcao`**.
+    Para 28 contra 28 o resultado **é** o da `frase_evolucao@1`. A semana ou o mês em curso corta o outro período nos mesmos primeiros dias."""
     if (e := _serie_ou_erro(serie_id)) is not None:
         return e
-    if (periodo_a, periodo_b) != PAR_DA_COMPARACAO:
-        return erro("comparacao_nao_suportada", pares_validos=[list(PAR_DA_COMPARACAO)])
     s = POR_ID[serie_id]
-    frase = ev.serie(session, atleta_id, serie_id, "12s", agora).frase
-    base = {"versao": fe.VERSAO, "serie_id": serie_id, "periodo_a_texto": "últimos 28 dias", "periodo_b_texto": "28 dias anteriores"}
-    if frase.tipo not in ("comparada", "so_valor") or frase.valor_atual is None:
-        return {**base, "estado": "sem_dados" if frase.tipo in ("sem_treino", "sem_dado") else "parcial", "motivo_texto": frase.texto,
-                "a": {"n": frase.n_atual}, "b": {"n": frase.n_anterior}}
-    if frase.valor_anterior is None:  # condicionamento "aprendendo": só o valor
-        return {**base, "estado": "parcial", "motivo_texto": frase.texto, "a": {"n": frase.n_atual, "valor_texto": _com_unidade(s.frase, frase.valor_atual)},
-                "b": {"n": frase.n_anterior}}
-    out = {**base, "estado": "ok", "a": {"n": frase.n_atual, "valor_texto": _com_unidade(s.frase, frase.valor_atual)},
-           "b": {"n": frase.n_anterior, "valor_texto": _com_unidade(s.frase, frase.valor_anterior)}, "direcao": frase.mudanca, "frase_texto": frase.texto}
-    if frase.mudanca != "parecido":
-        out["diferenca_texto"] = fe._dif(s.frase, abs(frase.valor_atual - frase.valor_anterior), frase.valor_anterior) if s.frase in (*fe.MEDIDAS, *fe.VOLUMES) else None
-    out["margem_texto"] = _margem(s.frase, frase.valor_anterior)
+    m = carregar(session, atleta_id, agora, (s,))
+    ja, jb = _janela_de_comparacao(periodo_a, m.hoje), _janela_de_comparacao(periodo_b, m.hoje)
+    if ja is None or jb is None:
+        return erro("argumento_invalido", campo="periodo_a" if ja is None else "periodo_b", periodos_validos=[*PERIODOS_COMPARAVEIS, "AAAA-MM"])
+    corte = None
+    for curta, longa in ((ja, jb), (jb, ja)):  # a semana ou o mês em curso: o outro vira os mesmos primeiros dias
+        if curta.parcial and curta.tipo == longa.tipo and longa.dias > curta.dias:
+            cortada = dataclasses.replace(longa, fim=longa.ini + timedelta(days=curta.dias - 1))
+            cortada = dataclasses.replace(cortada, texto=f"{longa.texto.split(' (')[0]}, primeiros {curta.dias} dias ({cortada.ini:%d/%m} a {cortada.fim:%d/%m})")
+            ja, jb = (ja, cortada) if longa is jb else (cortada, jb)
+            corte = f"O outro período foi cortado nos primeiros {curta.dias} dias, para ter o mesmo tamanho do que está em curso."
+            break
+    if ja.dias != jb.dias and not (ja.tipo == jb.tipo == "mes"):
+        return erro("comparacao_nao_suportada", motivo="tamanhos_diferentes", texto="Só dá para comparar períodos do mesmo tamanho.")
+    if not (ja.fim < jb.ini or jb.fim < ja.ini):
+        return erro("comparacao_nao_suportada", motivo="periodos_sobrepostos", texto="Os dois períodos se sobrepõem.")
+    base: dict[str, Any] = {"versao": fe.VERSAO, "serie_id": serie_id, "periodo_a_texto": ja.texto, "periodo_b_texto": jb.texto}
+    if corte:
+        base["corte_texto"] = corte
+    if (periodo_a, periodo_b) == PAR_DA_COMPARACAO:
+        frase = ev.serie(session, atleta_id, serie_id, "12s", agora).frase  # o resultado da frase da Evolução, não uma segunda conta
+        if frase.tipo not in ("comparada", "so_valor") or frase.valor_atual is None:
+            return {**base, "estado": "sem_dados" if frase.tipo in ("sem_treino", "sem_dado") else "parcial", "motivo_texto": frase.texto,
+                    "a": {"n": frase.n_atual}, "b": {"n": frase.n_anterior}}
+        va, vb, n_a, n_b = frase.valor_atual, frase.valor_anterior, frase.n_atual, frase.n_anterior
+        medida = "média por semana (mediana das semanas)" if s.tipo == "volume" else "valor no último dia do período" if s.tipo == "ctl" else "mediana dos treinos"
+        if vb is None:  # condicionamento "aprendendo": só o valor
+            return {**base, "estado": "parcial", "motivo_texto": frase.texto, "medida_texto": medida,
+                    "a": {"n": n_a, "valor_texto": _com_unidade(s.frase, va)}, "b": {"n": n_b}}
+        direcao = frase.mudanca
+    else:
+        pontos = m.pontos_por_serie[s.id]
+        va, n_a, medida, apr_a = _estatistica(s, pontos, ja)
+        vb, n_b, _, apr_b = _estatistica(s, pontos, jb)
+        minimo = MINIMO_TIROS if s.tipo == "tiros" else 1 if s.tipo in ("volume", "ctl") else MINIMO_TREINOS
+        if n_a == 0 and n_b == 0:
+            return {**base, "estado": "sem_dados", "motivo_texto": "Sem treinos dessa série nos dois períodos.", "a": {"n": 0}, "b": {"n": 0}}
+        lado = lambda v, n: {"n": n, **({} if v is None else {"valor_texto": _com_unidade(s.frase, v)})}  # noqa: E731
+        if n_a < minimo or n_b < minimo or apr_a or apr_b:
+            aviso = ("O condicionamento ainda está aprendendo em um dos períodos." if apr_a or apr_b else
+                     f"Poucos treinos para comparar: {n_a} no primeiro período, {n_b} no segundo (o mínimo é {minimo}).")
+            return {**base, "estado": "parcial", "motivo_texto": aviso, "medida_texto": medida, "a": lado(va, n_a), "b": lado(vb, n_b)}
+        limite, casas = _limite(s, vb)
+        ma, mb = fe.arredonda(va, casas), fe.arredonda(vb, casas)  # as regras decidem sobre os valores mostrados
+        d = fe.arredonda(ma - mb, casas)
+        direcao = "parecido" if abs(d) < limite - 1e-9 or d == 0 else "maior" if d > 0 else "menor"
+        va, vb = ma, mb
+    out: dict[str, Any] = {**base, "estado": "ok", "medida_texto": medida, "a": {"n": n_a, "valor_texto": _com_unidade(s.frase, va)},
+                           "b": {"n": n_b, "valor_texto": _com_unidade(s.frase, vb)}, "direcao": direcao, "margem_texto": _margem(s.frase, vb)}
+    if direcao != "parecido":
+        d = va - vb
+        if s.frase in (*fe.MEDIDAS, *fe.VOLUMES):
+            out["diferenca_texto"] = fe._dif(s.frase, abs(d), vb)
+        else:
+            out["diferenca_texto"] = fe._num(abs(d), 0)
+        out["diferenca_pct_texto"] = _pct(d, vb)
     return out
 
 
