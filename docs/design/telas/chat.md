@@ -173,8 +173,8 @@ Decisões do Angelo: **copiar a resposta e 👍/👎 na primeira versão**; **pe
 - **Nada só por cor:** o marcado se vê pelo contorno mais grosso e pelo fundo, e o leitor de tela ouve "marcado".
 - **Rótulos para leitor de tela:** "Copiar resposta" (botão); depois de copiar, anuncia "Resposta copiada" (região polida); "Gostei da resposta" e "Não gostei da resposta", como botões de **alternância** com estado marcado ou não marcado. A linha é um grupo "Ações da resposta". Ordem de foco: texto, links, Copiar, Gostei, Não gostei.
 - **Teclado (web):** as três ações recebem foco com o anel de `cor.foco`; Enter e Espaço acionam.
-- **Gravação:** o app **guarda a avaliação na API** (a conversa é guardada; ver a rota abaixo) e a mostra de volta ao reabrir. Enquanto grava, o botão já aparece marcado (otimista); se falhar, volta ao estado anterior e mostra "Não deu para registrar. Tente de novo."
-- **Rota que falta (pedido à Duda):** algo como `PUT /atletas/{id}/conversas/{conversa_id}/mensagens/{mensagem_id}/avaliacao` com `{valor: "util" | "nao_util" | null}` (`null` desmarca) e o campo `avaliacao` em `MensagemOut`. O app não calcula nada. Sem a rota, a 1ª versão guarda só no aparelho (`avaliacao` local) e a Duda soma a rota depois; o Theo decide.
+- **Gravação:** o app **guarda a avaliação na API** (ver a rota abaixo) e a mostra de volta ao reabrir. Enquanto grava, o botão já aparece marcado (otimista); se falhar, volta ao estado anterior e mostra "Não deu para registrar. Tente de novo."
+- **Rota (da Duda):** `PUT /atletas/{id}/conversas/{cid}/mensagens/{mid}/avaliacao` com corpo `{valor: 1 | -1 | null}` (1 = 👍, -1 = 👎, `null` desmarca) e o campo `avaliacao` em `MensagemOut` (1, -1 ou `null`). O app só envia e mostra; **não há guarda no aparelho**.
 - **Privacidade:** a avaliação não leva o texto da resposta nem da pergunta; é só o valor, ligado à mensagem. O professor não vê (as conversas não são dele).
 
 ### Perguntas prontas vindas da API
