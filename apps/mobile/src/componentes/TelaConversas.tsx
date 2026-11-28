@@ -103,7 +103,7 @@ export function TelaConversas({ apiUrl, atletaId, fetchFn, aoVoltar, aoAbrirConv
                 </Pressable>
               </View>
               {menu === c.id && (
-                <Pressable testID={`apagar-${c.id}`} accessibilityRole="button" onPress={() => setApagando(c)} style={comFoco(styles.menuApagar, styles.foco)}>
+                <Pressable testID={`apagar-${c.id}`} accessibilityRole="button" onPress={() => { setMenu(null); setApagando(c); }} style={comFoco(styles.menuApagar, styles.foco)}>
                   <MaterialIcons name="delete-outline" size={tamanho.iconeMedio} color={tema.cor.erro} accessible={false} />
                   <Text style={styles.apagarTexto}>Apagar conversa</Text>
                 </Pressable>

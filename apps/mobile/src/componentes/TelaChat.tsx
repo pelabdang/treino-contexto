@@ -52,7 +52,7 @@ type Props = {
   aoAbrirEvolucao: (serieId: string) => void;
   /** Espera longa: volta ao Início; a API grava a resposta mesmo assim e ela aparece na conversa depois. */
   aoEsperarNoInicio?: () => void;
-  /** A conversa nova foi criada: a rota troca o endereço para `/chat/<id>` (recarregar a página não perde o fio). */
+  /** A conversa nova foi criada: a rota troca o endereço para `/chat/<id>` sem remontar a tela. */
   aoCriada?: (id: number) => void;
   agora?: () => Date;
 };
@@ -169,6 +169,11 @@ export function TelaChat({ apiUrl, atletaId, fetchFn, conversaId, perguntaInicia
     if (perguntaInicial && conversaId == null) void enviar(perguntaInicial);
   }, [perguntaInicial, conversaId, enviar]);
 
+  const limiteAtivo = aviso?.tipo === "limite";
+  useEffect(() => {
+    if (limiteAtivo) campo.current?.blur(); // campo desligado não fica com o foco
+  }, [limiteAtivo]);
+
   const pensando = itens.some((i) => i.msg === null);
   const limite = aviso?.tipo === "limite";
   const podeEnviar = texto.trim().length > 0 && !pensando && !limite;
@@ -252,7 +257,7 @@ export function TelaChat({ apiUrl, atletaId, fetchFn, conversaId, perguntaInicia
               {marcador !== "" && <Text style={styles.dia}>{marcador}</Text>}
               <View accessible accessibilityLabel={`Você${quando ? `, ${horaCurta(quando)}` : ""}: ${item.pergunta}`} style={styles.pergunta}>
                 <Text style={styles.perguntaTexto}>{item.pergunta}</Text>
-                <Text style={styles.hora}>{quando ? `Você · ${horaCurta(quando)}` : "Você"}</Text>
+                {quando !== "" && <Text style={styles.hora}>{`Você · ${horaCurta(quando)}`}</Text>}
               </View>
               {item.msg === null ? (
                 <EsperaChat aoEsperarNoInicio={aoEsperarNoInicio} />
@@ -284,6 +289,7 @@ export function TelaChat({ apiUrl, atletaId, fetchFn, conversaId, perguntaInicia
             multiline
             maxLength={MAXIMO_PERGUNTA}
             editable={!pensando && !limite}
+            caretHidden={pensando || limite}
             placeholder={limite ? PLACEHOLDER_ESPERA : PLACEHOLDER}
             placeholderTextColor={tema.cor["texto-2"]}
             style={[styles.campo, (pensando || limite) && styles.campoDesligado]}
@@ -295,7 +301,7 @@ export function TelaChat({ apiUrl, atletaId, fetchFn, conversaId, perguntaInicia
             accessibilityState={{ disabled: !podeEnviar }}
             disabled={!podeEnviar}
             onPress={() => void enviar(texto)}
-            style={comFoco([styles.enviar, !podeEnviar && styles.enviarDesligado], styles.foco)}
+            style={comFoco([styles.enviar, !podeEnviar && styles.enviarDesligado], podeEnviar ? styles.foco : {})}
           >
             <MaterialIcons name="arrow-upward" size={tamanho.iconeGrande} color={podeEnviar ? tema.cor["sobre-botao"] : tema.cor["texto-desligado"]} accessible={false} />
           </Pressable>
@@ -385,7 +391,7 @@ function criarEstilos({ cor }: Tema, margem: number) {
     limiteTexto: { ...fonte.corpo, color: cor.texto },
     entrada: { flexDirection: "row", alignItems: "flex-end", gap: espaco[2] },
     campo: { flex: 1, minHeight: 52, maxHeight: 120, paddingHorizontal: espaco[3], paddingVertical: espaco[3], borderRadius: raio.botao, borderWidth: borda.fina, borderColor: cor["borda-forte"], backgroundColor: cor.superficie, color: cor.texto, ...fonte.corpo },
-    campoDesligado: { backgroundColor: cor["superficie-2"], borderColor: cor.borda },
+    campoDesligado: { backgroundColor: cor["superficie-2"], borderColor: cor.borda, outlineWidth: 0 },
     enviar: { width: tamanho.alvoMinimo, height: 52, justifyContent: "center", alignItems: "center", borderRadius: raio.botao, backgroundColor: cor.botao },
     enviarDesligado: { backgroundColor: cor["superficie-2"], opacity: 0.8 },
     contador: { ...fonte.legenda, color: cor["texto-2"], textAlign: "right" },

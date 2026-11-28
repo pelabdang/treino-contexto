@@ -194,7 +194,7 @@ async function principal() {
       });
     }
     for (const tecla of rota.teclar ?? []) await pagina.keyboard.press(tecla);
-    await pagina.waitForTimeout(rota.esperarMs ?? 300); // `esperarMs`: o chat troca o endereço depois da 1ª resposta e a tela nova leva um instante
+    await pagina.waitForTimeout(300);
     if (tamanho.alto) {
       // O conteúdo rola dentro de um elemento da tela, não na página: mede o maior scrollHeight e redimensiona a janela.
       const medida = await pagina.evaluate(() => Math.max(...[...document.querySelectorAll("*")].map((e) => e.scrollHeight)));

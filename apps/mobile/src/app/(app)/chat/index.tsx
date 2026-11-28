@@ -1,5 +1,6 @@
 import { router, useLocalSearchParams } from "expo-router";
 
+import { trocarEnderecoDaConversa } from "../../../chat/endereco";
 import { TelaChat } from "../../../componentes/TelaChat";
 import { useAtleta } from "../../../sessao/SessaoProvider";
 
@@ -14,7 +15,7 @@ export default function ChatNovo() {
       fetchFn={fetchFn}
       perguntaInicial={typeof pergunta === "string" && pergunta ? pergunta : undefined}
       aoVoltar={() => (router.canGoBack() ? router.back() : router.replace("/"))}
-      aoCriada={(id) => router.replace(`/chat/${id}`)}
+      aoCriada={trocarEnderecoDaConversa}
       aoEsperarNoInicio={() => router.replace("/")}
       aoAbrirConversas={() => router.push("/chat/conversas")}
       aoAbrirTreino={(id) => router.push(`/treino/${id}`)}
