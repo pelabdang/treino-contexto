@@ -100,8 +100,18 @@ function serieFalsa(id, periodo, atleta) {
 
 // Início v4 (#583): cartões de "Seus números" no formato da API (texto pronto, só os que têm dado). Atleta 2 não tem nenhum,
 // 33 só o da melhor marca, 34 a busca responde 500.
+// Os 7 dias de "Esta semana" (#632): rótulo, estado, modalidades e rótulo falado prontos, como a API manda. Hoje é sexta (21/03); sáb e dom ainda não chegaram.
+const DIAS_DA_SEMANA = [
+  { rotulo: "seg", estado: "vazio", modalidades: [], rotulo_acessivel: "Segunda, sem treino" },
+  { rotulo: "ter", estado: "feito", modalidades: ["corrida"], rotulo_acessivel: "Terça, corrida" },
+  { rotulo: "qua", estado: "feito", modalidades: ["ciclismo"], rotulo_acessivel: "Quarta, ciclismo" },
+  { rotulo: "qui", estado: "feito", modalidades: ["natacao"], rotulo_acessivel: "Quinta, natação" },
+  { rotulo: "sex", estado: "hoje", modalidades: [], rotulo_acessivel: "Sexta, hoje, sem treino ainda" },
+  { rotulo: "sáb", estado: "futuro", modalidades: [], rotulo_acessivel: "Sábado, ainda não chegou" },
+  { rotulo: "dom", estado: "futuro", modalidades: [], rotulo_acessivel: "Domingo, ainda não chegou" },
+];
 const CARTOES = [
-  { id: "esta_semana", formato: "pequeno", rotulo: "Esta semana", valor: "3 treinos", apoio: "2 h 37 min · semana passada: 4", texto: null, barras: [], destino: { tela: "evolucao", serie_id: "corrida.volume_km", atividade_id: null }, rotulo_acessivel: "Esta semana, 3 treinos, 2 horas e 37 minutos, semana passada 4 treinos. Abre a evolução do volume." },
+  { id: "esta_semana", formato: "pequeno", rotulo: "Esta semana", valor: "3 treinos", apoio: "2 h 37 min · semana passada: 4", apoio_curto: "2 h 37 min", comparacao_texto: "semana passada: 4", texto: null, barras: [], dias: DIAS_DA_SEMANA, destino: { tela: "evolucao", serie_id: "corrida.volume_km", atividade_id: null }, rotulo_acessivel: "Esta semana, 3 treinos, 2 horas e 37 minutos, semana passada 4 treinos. Abre a evolução do volume." },
   { id: "hoje_na_semana", formato: "pequeno", rotulo: "Hoje, sexta", valor: "Corrida leve", apoio: "da sua rotina", texto: null, barras: [], destino: { tela: "semana_padrao", serie_id: null, atividade_id: null }, rotulo_acessivel: "Hoje, sexta, corrida leve, da sua rotina. Abre a semana-padrão." },
   { id: "volume_4_semanas", formato: "largo", rotulo: "Volume das 4 semanas", valor: "30 km por semana", apoio: null, texto: "10 km a menos que nas 4 semanas anteriores.", barras: [{ data_texto: "03/02", valor_texto: "40 km", altura_pct: 100, destaque: false }, { data_texto: "10/02", valor_texto: "35 km", altura_pct: 88, destaque: false }, { data_texto: "17/02", valor_texto: "30 km", altura_pct: 75, destaque: false }, { data_texto: "24/02", valor_texto: "25 km", altura_pct: 63, destaque: true }], destino: { tela: "evolucao", serie_id: "corrida.volume_km", atividade_id: null }, rotulo_acessivel: "Volume das 4 semanas, 30 km por semana, 10 km a menos que nas 4 semanas anteriores. Abre a evolução do volume." },
   { id: "em_movimento", formato: "largo", rotulo: "Em movimento", valor: "Pace dos seus treinos leves", apoio: null, texto: "Pace dos seus treinos leves nas últimas 4 semanas: 5:42/km (mediana de 3 treinos), 12 s/km mais rápido que nas 4 anteriores (5:54/km).", barras: [], destino: { tela: "evolucao", serie_id: "corrida.pace.leve", atividade_id: null }, rotulo_acessivel: "Em movimento, pace dos seus treinos leves. Abre a evolução." },
@@ -397,7 +407,7 @@ const pendentesDe = (atleta) => {
   const lista = ids.map((id) => {
     const t = infoTreino(id);
     const nome = { corrida: "Corrida", ciclismo: "Ciclismo", natacao: "Natação" }[t.modalidade];
-    return { atividade_id: id, modalidade: t.modalidade, data_local: t.data_local, hora_local: t.hora_local, duracao: t.duracao, titulo: `${nome}, ${Math.round(t.duracao_s / 60)} min` };
+    return { atividade_id: id, modalidade: t.modalidade, data_local: t.data_local, hora_local: t.hora_local, duracao: t.duracao, titulo: `${nome}, ${Math.round(t.duracao_s / 60)} min`, pergunta_texto: `Como foi ${t.modalidade === "natacao" ? "a natação" : t.modalidade === "ciclismo" ? "o ciclismo" : "a corrida"} de ${t.data_local === "2025-03-20" ? "ontem" : "terça"}?` };
   });
   return { dias: 7, total: lista.length, pendentes: lista };
 };

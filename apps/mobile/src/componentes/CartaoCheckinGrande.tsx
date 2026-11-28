@@ -1,5 +1,5 @@
-// Cartão grande de check-in do Início v5 (spec inicio-v5-direcoes, item 2): aparece só quando há treino sem check-in. O texto da pergunta é fixo
-// daqui ("Como foi o treino de natação?"); a data, a hora e a duração vêm prontas da API.
+// Cartão grande de check-in do Início v5 (spec inicio-v5-direcoes, item 2): aparece só quando há treino sem check-in. A pergunta (`pergunta_texto`, com "ontem" ou o dia da
+// semana), a data, a hora e a duração vêm prontas da API; sem `pergunta_texto` cai num texto fixo.
 import { MaterialIcons } from "@expo/vector-icons";
 import type { components } from "@treino/api-client";
 import { useMemo } from "react";
@@ -32,7 +32,7 @@ export function CartaoCheckinGrande({ treino, outros, aoResponder, aoVerOutros }
         <Text style={styles.treino}>{`${nome} · ${diaCurto(treino.data_local)} · ${treino.hora_local} · ${treino.duracao}`}</Text>
       </View>
       <Text accessibilityRole="header" style={styles.pergunta}>
-        {mod ? `Como foi o treino de ${mod.nome.toLowerCase()}?` : "Como foi o treino?"}
+        {treino.pergunta_texto || (mod ? `Como foi o treino de ${mod.nome.toLowerCase()}?` : "Como foi o treino?")}
       </Text>
       <Text style={styles.apoio}>3 perguntas, uns 30 segundos. Você recebe o feedback deste treino.</Text>
       <Pressable testID="responder-checkin" accessibilityRole="button" onPress={aoResponder} style={comFoco(styles.botao, styles.foco)}>
