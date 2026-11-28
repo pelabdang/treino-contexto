@@ -1,6 +1,7 @@
 import { StyleSheet } from "react-native";
 import { fireEvent, render, screen, waitFor, within } from "@testing-library/react-native";
 
+import { limparPerguntasProntas } from "../src/chat/prontas";
 import { cartoes as cartoesApi } from "../__fixtures__/cartoes";
 import { TelaInicio } from "../src/componentes/TelaInicio";
 import type { ItemTreino } from "../src/treinos/api";
@@ -184,6 +185,44 @@ describe("início v5: o chat", () => {
     await screen.findByTestId("estado-vazio");
     expect(screen.getByTestId("inicio-caixa")).toBeTruthy();
     expect(screen.queryByTestId("inicio-prontas")).toBeNull();
+  });
+});
+
+describe("início v5: perguntas prontas da API", () => {
+  beforeEach(() => limparPerguntasProntas());
+  const comProntas = (perguntas: string[] | "erro" | "pendurada") => {
+    const base = servidor();
+    return jest.fn(async (input: RequestInfo | URL) => {
+      if (String(input).includes("/chat/perguntas-prontas")) {
+        if (perguntas === "pendurada") return new Promise<Response>(() => {});
+        return perguntas === "erro" ? resposta(500, {}) : resposta(200, { atleta_id: 1, versao: "v1", perguntas });
+      }
+      return (base as unknown as (i: RequestInfo | URL) => Promise<Response>)(input);
+    }) as unknown as typeof fetch;
+  };
+
+  it("mostra as 3 primeiras da API", async () => {
+    await render(tela(comProntas(["A?", "B?", "C?", "D?", "E?"]), chat()));
+    const bloco = await screen.findByTestId("chat-no-inicio");
+    await within(bloco).findByText("A?");
+    expect(within(bloco).getAllByTestId(/^inicio-pronta-/)).toHaveLength(3);
+    expect(within(bloco).queryByText("D?")).toBeNull();
+  });
+
+  it("carregando: 3 esqueletos e o texto para o leitor de tela; a caixa já funciona", async () => {
+    const c = chat();
+    await render(tela(comProntas("pendurada"), c));
+    const bloco = await screen.findByTestId("chat-no-inicio");
+    expect(within(bloco).getByText("Carregando perguntas sugeridas")).toBeTruthy();
+    expect(within(bloco).queryByTestId("inicio-pronta-0")).toBeNull();
+    await fireEvent.press(within(bloco).getByTestId("inicio-caixa"));
+    expect(c.aoAbrirChat).toHaveBeenCalled();
+  });
+
+  it("erro na rota: as fixas, sem aviso", async () => {
+    await render(tela(comProntas("erro"), chat()));
+    expect(await screen.findByText("Como foi minha semana?")).toBeTruthy();
+    expect(screen.queryByText(/perguntas sugeridas/)).toBeNull();
   });
 });
 

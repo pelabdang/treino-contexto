@@ -1,7 +1,7 @@
 import { router, useLocalSearchParams } from "expo-router";
 
 import { trocarEnderecoDaConversa } from "../../../chat/endereco";
-import { PERGUNTAS_PRONTAS } from "../../../chat/textos";
+import { usePerguntasProntas } from "../../../chat/prontas";
 import { TelaChat } from "../../../componentes/TelaChat";
 import { useAtleta } from "../../../sessao/SessaoProvider";
 
@@ -9,13 +9,14 @@ import { useAtleta } from "../../../sessao/SessaoProvider";
 export default function ChatNovo() {
   const { pronta, foco } = useLocalSearchParams<{ pronta?: string; foco?: string }>();
   const { apiUrl, atletaId, fetchFn } = useAtleta();
+  const { perguntas } = usePerguntasProntas(apiUrl, atletaId, fetchFn); // o mesmo cache do Início: o índice aponta para a mesma lista
   const indice = typeof pronta === "string" && pronta !== "" ? Number(pronta) : -1;
   return (
     <TelaChat
       apiUrl={apiUrl}
       atletaId={atletaId}
       fetchFn={fetchFn}
-      perguntaInicial={PERGUNTAS_PRONTAS[indice]}
+      perguntaInicial={perguntas?.[indice]}
       focoInicial={foco === "1"}
       aoCriada={trocarEnderecoDaConversa}
       aoEsperarNoInicio={() => router.replace("/")}

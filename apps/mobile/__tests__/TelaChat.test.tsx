@@ -2,11 +2,15 @@ import { StyleSheet } from "react-native";
 import { act, fireEvent, render, screen, waitFor, within } from "@testing-library/react-native";
 
 import { TelaChat } from "../src/componentes/TelaChat";
-import { AVISO_IA, PERGUNTAS_PRONTAS, TEXTO_ERRO_FIXO } from "../src/chat/textos";
+import { AVISO_IA, TEXTO_ERRO_FIXO } from "../src/chat/textos";
+import { limparPerguntasProntas } from "../src/chat/prontas";
 import { comLinks, conversa, falha, mensagem, recusaMudanca, recusaTema, reprovada } from "../__fixtures__/chat";
 
 jest.mock("@expo/vector-icons", () => require("../__fixtures__/iconesFalsos"));
 jest.setTimeout(20000);
+jest.mock("expo-clipboard", () => ({ setStringAsync: jest.fn(async () => true) }));
+beforeEach(() => limparPerguntasProntas());
+const daApi = ["Como foi minha natação de quinta?", "Meu melhor 5 km?", "Quanto nadei em março?", "Qual foi meu treino mais longo?", "Como está meu pace?", "O que o check-in de ontem diz?"];
 
 const resposta = (status: number, corpo?: unknown) => ({ ok: status >= 200 && status < 300, status, json: async () => corpo }) as Response;
 const treinos = { atleta_id: 1, limite: 1, itens: [{ atividade_id: 107 }], proximo: null };
@@ -14,11 +18,12 @@ const limite429 = { detail: "Você fez 20 perguntas na última hora.", espere_te
 
 type Chamada = { metodo: string; url: string; corpo?: { pergunta: string } };
 /** API falsa do teste: `responder` decide a resposta de cada POST; o resto é fixo. */
-function api(opcoes: { responder?: (c: Chamada) => Promise<Response> | Response; semTreinos?: boolean; conversa?: unknown; conversaStatus?: number } = {}) {
+function api(opcoes: { responder?: (c: Chamada) => Promise<Response> | Response; semTreinos?: boolean; conversa?: unknown; conversaStatus?: number; prontas?: () => Promise<Response> | Response } = {}) {
   const chamadas: Chamada[] = [];
   const fetchFn = jest.fn(async (url: string, init?: RequestInit) => {
     const c: Chamada = { metodo: init?.method ?? "GET", url, corpo: init?.body ? JSON.parse(String(init.body)) : undefined };
     chamadas.push(c);
+    if (url.includes("/chat/perguntas-prontas")) return opcoes.prontas ? opcoes.prontas() : resposta(200, { atleta_id: 1, versao: "v1", perguntas: daApi });
     if (url.includes("/atividades")) return resposta(200, opcoes.semTreinos ? { ...treinos, itens: [] } : treinos);
     if (c.metodo === "GET") return resposta(opcoes.conversaStatus ?? 200, opcoes.conversa ?? conversa());
     return (opcoes.responder ?? (() => resposta(c.url.endsWith("/conversas") ? 201 : 200, c.url.endsWith("/conversas") ? conversa() : mensagem())))(c);
@@ -36,10 +41,32 @@ describe("tela do chat: começo", () => {
     await render(tela(a.fetchFn));
     expect(await screen.findByText("O que você quer saber sobre os seus treinos?")).toBeTruthy();
     expect(screen.getAllByTestId(/^pergunta-pronta-/)).toHaveLength(6);
-    PERGUNTAS_PRONTAS.forEach((q) => expect(screen.getByText(q)).toBeTruthy());
+    daApi.forEach((q) => expect(screen.getByText(q)).toBeTruthy());
     expect(screen.getByText("Pergunte ao seu treino")).toBeTruthy();
     expect(screen.getByText("Conversas ›")).toBeTruthy();
     expect(screen.getByTestId("chat-aviso-ia").props.children).toBe(AVISO_IA);
+  });
+
+  it("as perguntas prontas vêm da API; enquanto carregam, 6 esqueletos e o campo já funciona", async () => {
+    const a = api({ prontas: () => new Promise<Response>(() => {}) });
+    await render(tela(a.fetchFn));
+    expect(await screen.findByTestId("chat-prontas-carregando")).toBeTruthy();
+    expect(screen.getByText("Carregando perguntas sugeridas")).toBeTruthy();
+    expect(screen.getByTestId("chat-campo").props.editable).toBe(true);
+    expect(screen.queryByTestId("pergunta-pronta-0")).toBeNull();
+    limparPerguntasProntas();
+    const b = api();
+    await render(tela(b.fetchFn));
+    expect(await screen.findByText("Como foi minha natação de quinta?")).toBeTruthy();
+    expect(screen.getAllByTestId(/^pergunta-pronta-/)).toHaveLength(6);
+  });
+
+  it("tocar numa pergunta da API envia o texto dela", async () => {
+    const a = api();
+    await render(tela(a.fetchFn));
+    await fireEvent.press(await screen.findByText("Meu melhor 5 km?"));
+    await screen.findByTestId("chat-resposta");
+    expect(a.posts()[0].corpo).toEqual({ pergunta: "Meu melhor 5 km?" });
   });
 
   it("atleta sem treinos: sem perguntas prontas, com a frase e o campo ainda ligado", async () => {
@@ -83,7 +110,7 @@ describe("tela do chat: perguntar e responder", () => {
     await fireEvent.press(await screen.findByTestId("pergunta-pronta-0"));
     await screen.findByTestId("chat-resposta");
     expect(a.posts()).toHaveLength(1);
-    expect(a.posts()[0]).toMatchObject({ url: "http://api.teste/atletas/1/conversas", corpo: { pergunta: PERGUNTAS_PRONTAS[0] } });
+    expect(a.posts()[0]).toMatchObject({ url: "http://api.teste/atletas/1/conversas", corpo: { pergunta: daApi[0] } });
     expect(screen.queryByTestId("chat-comeco")).toBeNull();
     expect(screen.getByText("Nesta semana você correu 3 vezes, 28,4 km no total.")).toBeTruthy();
   });
@@ -137,6 +164,38 @@ describe("tela do chat: perguntar e responder", () => {
     await fireEvent.press(screen.getByTestId("chat-link-1"));
     expect(p.aoAbrirTreino).toHaveBeenCalledWith(107);
     expect(screen.getByText(/Resposta de IA com números do seu histórico/)).toBeTruthy();
+  });
+
+  it("a pergunta pronta do Início espera a lista chegar e é enviada uma vez só", async () => {
+    const a = api();
+    const { rerender } = await render(tela(a.fetchFn, { perguntaInicial: undefined }));
+    await rerender(tela(a.fetchFn, { perguntaInicial: "Meu melhor 5 km?" }));
+    await screen.findByTestId("chat-resposta");
+    await rerender(tela(a.fetchFn, { perguntaInicial: "Meu melhor 5 km?" }));
+    expect(a.posts()).toHaveLength(1);
+  });
+
+  it("respondida tem Copiar e 👍/👎; recusa, erro e reprovada não têm; 👍 grava na API só o valor", async () => {
+    const a = api({ responder: (c) => resposta(c.url.endsWith("/conversas") ? 201 : 200, c.url.endsWith("/conversas") ? conversa() : mensagem()) });
+    const puts: string[] = [];
+    const f = jest.fn(async (url: string, init?: RequestInit) => {
+      if (init?.method === "PUT") { puts.push(`${url} ${init.body}`); return resposta(200, mensagem({ avaliacao: 1 })); }
+      return (a.fetchFn as unknown as (u: string, i?: RequestInit) => Promise<Response>)(url, init);
+    }) as unknown as typeof fetch;
+    await render(tela(f));
+    await digitar("Oi");
+    await fireEvent.press(screen.getByTestId("chat-enviar"));
+    await screen.findByTestId("chat-acoes");
+    await fireEvent.press(screen.getByTestId("chat-gostei"));
+    expect(puts).toEqual(['http://api.teste/atletas/1/conversas/7/mensagens/1/avaliacao {"valor":1}']);
+    for (const m of [recusaTema, falha, reprovada]) {
+      const { unmount } = await render(tela(api({ responder: () => resposta(201, conversa({ mensagens: [m] })) }).fetchFn));
+      await digitar("x");
+      await fireEvent.press(screen.getByTestId("chat-enviar"));
+      await screen.findAllByTestId(m.estado === "recusada" ? "chat-recusa" : "chat-erro");
+      expect(screen.queryByTestId("chat-acoes")).toBeNull();
+      await unmount();
+    }
   });
 
   it("a pergunta pronta vinda do Início já é enviada ao abrir (uma vez só)", async () => {

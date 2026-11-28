@@ -3,13 +3,15 @@ import { Platform } from "react-native";
 
 import { ComSessao } from "../__fixtures__/sessaoFalsa";
 import { conversa } from "../__fixtures__/chat";
+import { limparPerguntasProntas } from "../src/chat/prontas";
 import { trocarEnderecoDaConversa } from "../src/chat/endereco";
 
 jest.mock("@expo/vector-icons", () => require("../__fixtures__/iconesFalsos"));
 const mockReplace = jest.fn();
+let mockParams: Record<string, string> = {};
 jest.mock("expo-router", () => ({
   useFocusEffect: (cb: () => void) => require("react").useEffect(cb, [cb]),
-  useLocalSearchParams: () => ({}),
+  useLocalSearchParams: () => mockParams,
   router: { canGoBack: () => false, back: jest.fn(), replace: (...a: unknown[]) => mockReplace(...a), push: jest.fn() },
 }));
 import ChatNovo from "../src/app/(app)/chat/index";
@@ -59,6 +61,27 @@ describe("endereço da conversa (#623, bloqueio da Lia)", () => {
       expect(screen.getByTestId("chat-campo")).toBeTruthy();
     } finally {
       globalThis.fetch = original;
+    }
+  });
+
+  it("?pronta=<índice> aponta para a mesma lista que o Início mostrou (a da API, não as fixas)", async () => {
+    limparPerguntasProntas();
+    mockParams = { pronta: "1" };
+    const lista = ["Primeira da API?", "Segunda da API?", "Terceira da API?"];
+    const corpos: string[] = [];
+    const original = globalThis.fetch;
+    globalThis.fetch = (async (url: string, init?: RequestInit) => {
+      if (url.includes("/chat/perguntas-prontas")) return resposta(200, { atleta_id: 1, versao: "v1", perguntas: lista });
+      if (init?.method === "POST") { corpos.push(String(init.body)); return resposta(201, conversa()); }
+      return resposta(200, { atleta_id: 1, limite: 1, itens: [{ atividade_id: 1 }], proximo: null });
+    }) as unknown as typeof fetch;
+    try {
+      await render(<ComSessao><ChatNovo /></ComSessao>);
+      await screen.findByTestId("chat-resposta");
+      expect(corpos).toEqual([JSON.stringify({ pergunta: "Segunda da API?" })]);
+    } finally {
+      globalThis.fetch = original;
+      mockParams = {};
     }
   });
 });

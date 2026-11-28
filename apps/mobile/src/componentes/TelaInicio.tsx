@@ -14,6 +14,7 @@ import {
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 
+import { usePerguntasProntas } from "../chat/prontas";
 import { PROFESSOR_NO_INICIO } from "../chat/textos";
 import { buscarCheckinsPendentes } from "../checkin/api";
 import { comFoco } from "../tema/foco";
@@ -93,6 +94,7 @@ export function TelaInicio({ apiUrl, atletaId, nome, aoAbrirTreino, aoResponderC
   const margem = useMargemTela();
   const styles = useMemo(() => criarEstilos(tema, margem), [tema, margem]);
   const opcoes: OpcoesCliente = useMemo(() => ({ baseUrl: apiUrl, fetch: fetchFn }), [apiUrl, fetchFn]);
+  const { perguntas } = usePerguntasProntas(apiUrl, atletaId, fetchFn);
 
   const [lista, recarregarLista] = useBusca(() => buscarTreinos(atletaId, { limite: 5 }, opcoes), `lista-${atletaId}-${opcoes.baseUrl}`, atualizar);
   const [pendentes] = useBusca(() => buscarCheckinsPendentes(atletaId, 7, opcoes), `pendentes-${atletaId}-${opcoes.baseUrl}`, atualizar);
@@ -165,7 +167,7 @@ export function TelaInicio({ apiUrl, atletaId, nome, aoAbrirTreino, aoResponderC
         {semana && aoAbrirDestino && <BlocoSemana cartao={semana} heroi={emDia} aoAbrir={aoAbrirDestino} />}
 
         {aoAbrirChat && aoPerguntar && aoAbrirConversas && (
-          <ChatNoInicio aoAbrirChat={aoAbrirChat} aoPerguntar={aoPerguntar} aoAbrirConversas={aoAbrirConversas} semProntas={semTreinos} />
+          <ChatNoInicio perguntas={perguntas} aoAbrirChat={aoAbrirChat} aoPerguntar={aoPerguntar} aoAbrirConversas={aoAbrirConversas} semProntas={semTreinos} />
         )}
 
         {semTreinos && (
