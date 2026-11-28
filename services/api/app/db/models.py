@@ -702,6 +702,10 @@ class Mensagem(Base):
         CheckConstraint("(estado = 'respondida') = (resposta IS NOT NULL AND motivo IS NULL)", name="resposta_e_estado"),
         CheckConstraint("estado <> 'recusada' OR resposta IS NOT NULL", name="recusada_com_texto"),
         CheckConstraint("estado NOT IN ('reprovada', 'erro') OR (resposta IS NULL AND motivo IS NOT NULL)", name="sem_texto_reprovado"),
+        # 👍/👎 do atleta (adendo 17 da ADR 0004): so o valor e quando; nunca texto livre; so em `respondida`
+        CheckConstraint("avaliacao IS NULL OR avaliacao IN (-1, 1)", name="avaliacao"),
+        CheckConstraint("(avaliacao IS NULL) = (avaliada_em IS NULL)", name="avaliacao_e_data"),
+        CheckConstraint("avaliacao IS NULL OR estado = 'respondida'", name="avaliacao_so_respondida"),
     )
 
     id: Mapped[int] = mapped_column(primary_key=True)
@@ -717,5 +721,7 @@ class Mensagem(Base):
     provedor: Mapped[str | None] = mapped_column(String(40))
     modelo: Mapped[str | None] = mapped_column(String(80))
     criada_em: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+    avaliacao: Mapped[int | None] = mapped_column(Integer)  # 1 (👍), -1 (👎) ou NULL; nunca vai ao provedor
+    avaliada_em: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
 
     conversa: Mapped[Conversa] = relationship(back_populates="mensagens")

@@ -23,6 +23,7 @@ def criar_app(cors_origens: str | None = None) -> FastAPI:
     app.include_router(transicao.router, dependencies=[Depends(atleta_da_sessao)])
     app.include_router(carga.router, dependencies=[Depends(atleta_da_sessao)])
     app.include_router(chat.router, dependencies=[Depends(atleta_da_sessao)])
+    app.include_router(chat.router_chat, dependencies=[Depends(atleta_da_sessao)])
     app.include_router(checkin.router, dependencies=[Depends(atleta_da_sessao)])
     app.include_router(checkin.router_pendentes, dependencies=[Depends(atleta_da_sessao)])
     app.include_router(semana_padrao.router, dependencies=[Depends(atleta_da_sessao)])
