@@ -1,4 +1,4 @@
-"""Ferramentas do chat sobre as métricas (#594, ADR 0017, item 1): `ler_serie`, `comparar_periodos`, `ler_carga_forma`, `ler_linha_base`.
+"""Ferramentas do chat sobre as métricas (#594, ADR 0017, item 1): `ler_serie`, `comparar_periodos`, `ler_carga_forma`, `ler_linha_base`, `ler_recuperacao`.
 
 Só registram, no registro da #593, as funções puras de `app.explicacao.ferramentas_chat` (nenhuma métrica nova). O `atleta_id` vem da `Consulta`,
 nunca dos argumentos; o "hoje" da `Consulta` vira o relógio das funções. A Evolução (`ler_serie` e `comparar_periodos`) é só do atleta: o professor
@@ -76,3 +76,14 @@ def ler_carga_forma(session: Session, c: Consulta, a: dict[str, Any]) -> dict[st
 )
 def ler_linha_base(session: Session, c: Consulta, a: dict[str, Any]) -> dict[str, Any]:
     return fc.linha_base(session, c.atleta_id, a["modalidade"], a["tipo_treino"])
+
+
+@registrar(
+    "ler_recuperacao",
+    "Lê o sono, a VFC e a FC de repouso de cada noite de um período (padrão: últimos 7 dias) contra o normal do atleta, em texto pronto: abaixo e acima são só "
+    "direção, nunca bom ou ruim. Só do atleta.",
+    {"periodo": _PERIODO, "de": _DE, "ate": _ATE},
+    ("atleta",),
+)
+def ler_recuperacao(session: Session, c: Consulta, a: dict[str, Any]) -> dict[str, Any]:
+    return fc.recuperacao_noites(session, c.atleta_id, a.get("periodo"), a.get("de"), a.get("ate"), _agora(c))

@@ -12,7 +12,7 @@ from app.db.models import Atividade, Atleta, CargaAtividade
 
 HOJE = date(2030, 3, 15)
 AGORA = datetime(2030, 3, 15, 12, 0, tzinfo=timezone.utc)
-NOVAS = {"ler_serie", "comparar_periodos", "ler_carga_forma", "ler_linha_base"}
+NOVAS = {"ler_serie", "comparar_periodos", "ler_carga_forma", "ler_linha_base", "ler_recuperacao"}
 
 
 def _consulta(atleta_id, papel="atleta"):
@@ -40,6 +40,7 @@ CHAMADAS = {
     "comparar_periodos": {"serie_id": "corrida.pace.leve"},
     "ler_carga_forma": {},
     "ler_linha_base": {"modalidade": "corrida", "tipo_treino": "leve"},
+    "ler_recuperacao": {},
 }
 
 
@@ -65,11 +66,11 @@ def test_o_dono_ve_os_numeros_e_o_outro_atleta_nada(session, mundo):
         assert executar(session, _consulta(a.id), nome, {**args, "atleta_id": b.id}) == {"estado": "erro", "codigo": "argumento_invalido", "argumento": "atleta_id"}
 
 
-def test_o_professor_nao_recebe_a_evolucao(session, mundo):
+def test_o_professor_nao_recebe_a_evolucao_nem_a_recuperacao(session, mundo):
     _, b = mundo
     nomes = {e["function"]["name"] for e in esquemas_para("professor")}
-    assert {"ler_carga_forma", "ler_linha_base"} <= nomes and not {"ler_serie", "comparar_periodos"} & nomes
-    for nome in ("ler_serie", "comparar_periodos"):
+    assert {"ler_carga_forma", "ler_linha_base"} <= nomes and not {"ler_serie", "comparar_periodos", "ler_recuperacao"} & nomes
+    for nome in ("ler_serie", "comparar_periodos", "ler_recuperacao"):
         assert executar(session, _consulta(b.id, "professor"), nome, CHAMADAS[nome]) == {"estado": "erro", "codigo": "ferramenta_nao_permitida"}
     assert executar(session, _consulta(b.id, "professor"), "ler_linha_base", CHAMADAS["ler_linha_base"])["estado"] == "parcial"
 
@@ -82,6 +83,8 @@ def test_o_professor_nao_recebe_a_evolucao(session, mundo):
     ("ler_carga_forma", {"data": "15/03"}, "data"),
     ("ler_linha_base", {"modalidade": "corrida"}, "tipo_treino"),
     ("ler_linha_base", {"modalidade": "futebol", "tipo_treino": "leve"}, "modalidade"),
+    ("ler_recuperacao", {"periodo": "ontem"}, "periodo"),
+    ("ler_recuperacao", {"de": "01/03"}, "de"),
 ])
 def test_argumentos_invalidos_voltam_como_erro_sem_rodar(session, mundo, nome, args, campo):
     assert executar(session, _consulta(mundo[1].id), nome, args) == {"estado": "erro", "codigo": "argumento_invalido", "argumento": campo}
@@ -90,3 +93,24 @@ def test_argumentos_invalidos_voltam_como_erro_sem_rodar(session, mundo, nome, a
 def test_comparar_semana_pelo_registro(session, mundo):
     r = executar(session, _consulta(mundo[1].id), "comparar_periodos", {"serie_id": "corrida.pace.leve", "periodo_a": "2030-02", "periodo_b": "2030-01"})
     assert r["estado"] in ("ok", "parcial") and r["periodo_a_texto"].startswith("mês 02/2030")
+
+
+def test_recuperacao_pelo_registro_so_do_dono(session, mundo):
+    from app.servicos.recuperacao_banco import gravar_noite
+
+    a, b = mundo
+    gravar_noite(session, b.id, date(2030, 3, 14), 25200, 48.0, 52, "rec@1", AGORA)
+    session.commit()
+    r = executar(session, _consulta(b.id), "ler_recuperacao", {})
+    assert r["estado"] == "ok" and r["noites"][0]["data_texto"] == "qui 14/03" and r["noites"][0]["medidas"][0]["valor_texto"] == "7 h"
+    r = executar(session, _consulta(a.id), "ler_recuperacao", {})
+    assert r["estado"] == "sem_dados" and "noites" not in r  # a sessão do A nunca vê a noite do B
+
+
+def test_os_resultados_trazem_o_serie_id_que_a_rota_usa_para_o_link_da_evolucao(session, mundo):
+    """A rota do chat (#618) monta o "Abrir na Evolução" a partir do `serie_id` que aparece em qualquer nível do resultado: as duas ferramentas da Evolução o devolvem, em `ok` e em `sem_dados`."""
+    _, b = mundo
+    for nome in ("ler_serie", "comparar_periodos"):
+        for serie in ("corrida.pace.leve", "natacao.ritmo"):  # a segunda não tem treino: sem_dados
+            r = executar(session, _consulta(b.id), nome, {"serie_id": serie})
+            assert r.get("serie_id") == serie, (nome, serie, r["estado"])

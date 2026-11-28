@@ -232,3 +232,62 @@ def test_so_le_o_atleta_da_chamada(session, atleta):
     assert fc.serie_evolucao(session, atleta.id, "corrida.pace.leve", agora=AGORA)["estado"] == "sem_dados"
     assert fc.carga_e_forma(session, atleta.id, agora=AGORA)["estado"] == "sem_dados"
     assert fc.linha_base(session, atleta.id, "corrida", "leve")["estado"] == "sem_dados"
+
+
+# ---------------------------------------------------------------- ler_recuperacao
+def _noites(session, x, ate_dia=14, sono=None):
+    """Noites 28/02 a `ate_dia`/03 de 2030 com sono de 27000 s (7 h 30 min); `sono` troca o valor de noites pontuais (dia -> segundos)."""
+    from datetime import date
+
+    from app.servicos.recuperacao_banco import gravar_noite
+
+    dia = date(2030, 2, 28)
+    while dia <= date(2030, 3, ate_dia):
+        valor = (sono or {}).get(dia.day if dia.month == 3 else None, 27000)
+        gravar_noite(session, x.id, dia, valor, None, None, "rec@1", AGORA)
+        dia += timedelta(days=1)
+    session.commit()
+
+
+def test_recuperacao_noites_a_mao(session, atleta):
+    # 28/02 a 14/03 (15 noites) com sono de 27000 s, menos 13/03 (21600 s = 6 h) e 14/03 (23400 s = 6 h 30 min); a de 14/03 também tem FC de repouso de 52 bpm.
+    # Noite de 14/03: janela 14/02 a 13/03 = 14 noites de sono (13 de 27000 e a de 13/03, 21600): mediana 27000, MAD 0, desvio = max(0; 5% x 27000 = 1350) = 1350 s.
+    # z = (23400 - 27000) / 1350 = -2,667 <= -2: "abaixo"; a diferença é 7 h 30 min - 6 h 30 min = 1 h. FC de repouso: 0 noites na janela: "aprendendo", n = 0. VFC: sem valor.
+    # Noite de 13/03: janela 13/02 a 12/03 = 13 noites de sono (28/02 a 12/03) < 14: "aprendendo", n = 13.
+    from datetime import date
+
+    from app.servicos.recuperacao_banco import gravar_noite
+
+    _noites(session, atleta, sono={13: 21600, 14: 23400})
+    gravar_noite(session, atleta.id, date(2030, 3, 14), 23400, None, 52, "rec@1", AGORA)
+    session.commit()
+    r = fc.recuperacao_noites(session, atleta.id, agora=AGORA)
+    assert r["estado"] == "ok" and r["versao"] == "recuperacao@1" and r["periodo_texto"] == "últimos 7 dias"
+    n14, n13 = r["noites"][0], r["noites"][1]
+    assert n14["data_texto"] == "qui 14/03" and n13["data_texto"] == "qua 13/03" and len(r["noites"]) == 6  # 09/03 a 14/03, da mais nova para a mais antiga
+    sono, vfc, fcr = n14["medidas"]
+    assert (sono["estado"], sono["valor_texto"], sono["normal_texto"], sono["diferenca_texto"], sono["n"]) == ("abaixo", "6 h 30 min", "7 h 30 min", "1 h abaixo", 14)
+    assert sono["texto"] == "Sono: 6 h 30 min, 1 h abaixo da mediana de 7 h 30 min."
+    assert (vfc["estado"], vfc["valor_texto"], vfc["texto"]) == ("sem_dado", None, "Sem VFC nessa noite.")
+    assert (fcr["estado"], fcr["valor_texto"], fcr["n"]) == ("aprendendo", "52 bpm", 0)
+    assert fcr["texto"] == "FC de repouso: 52 bpm; 0 de 14 noites para estimar o seu normal."
+    assert (n13["medidas"][0]["estado"], n13["medidas"][0]["n"], n13["medidas"][0]["valor_texto"]) == ("aprendendo", 13, "6 h")
+    assert not {"z", "mad", "valor", "mediana"} & set(sono)  # nada de MAD, z nem número cru: só o texto pronto
+
+
+def test_recuperacao_dentro_do_normal(session, atleta):
+    # Janela da noite de 14/03 (14/02 a 13/03): 14 noites de 27000 s; noite de 25200 s (7 h): z = (25200 - 27000) / 1350 = -1,333 > -2: "dentro".
+    _noites(session, atleta, sono={14: 25200})
+    sono = fc.recuperacao_noites(session, atleta.id, agora=AGORA)["noites"][0]["medidas"][0]
+    assert (sono["estado"], sono["valor_texto"], sono["normal_texto"], sono["diferenca_texto"]) == ("dentro", "7 h", "7 h 30 min", None)
+    assert sono["texto"] == "Sono: 7 h, dentro do seu normal (mediana de 7 h 30 min)."
+
+
+def test_recuperacao_sem_noites_ou_periodo_invalido(session, atleta):
+    r = fc.recuperacao_noites(session, atleta.id, agora=AGORA)
+    assert r["estado"] == "sem_dados" and "importados" in r["motivo_texto"] and "noites" not in r
+    _noites(session, atleta)
+    assert fc.recuperacao_noites(session, atleta.id, "ultimos_7_dias", de="2030-03-01", agora=AGORA)["estado"] == "ok"  # `de` ganha: o recorte é pelas datas
+    assert fc.recuperacao_noites(session, atleta.id, de="2030-02-01", ate="2030-02-10", agora=AGORA)["estado"] == "sem_dados"
+    assert fc.recuperacao_noites(session, atleta.id, "ontem", agora=AGORA)["codigo"] == "argumento_invalido"
+    assert len(fc.recuperacao_noites(session, atleta.id, "ultimo_ano", agora=AGORA)["noites"]) == 14  # no máximo as 14 mais recentes
