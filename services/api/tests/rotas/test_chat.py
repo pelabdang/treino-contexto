@@ -174,7 +174,8 @@ def test_limite_de_20_perguntas_por_hora_com_espere_s(client, session, mundo, pr
     r = client.post(f"/atletas/{mundo['ana']}/conversas/{cid}/mensagens", json={"pergunta": "mais uma?"}, headers=h)
     assert r.status_code == 429 and 1 <= r.json()["espere_s"] <= 1830 and r.headers["retry-after"] == str(r.json()["espere_s"])
     assert r.json()["detail"] == "Você fez 20 perguntas na última hora."
-    assert r.json()["espere_texto"] == "Você pode perguntar de novo em 30 min."  # a mais antiga foi ha 30 min: libera em ~30 min
+    from app.rotas.chat import espere_texto
+    assert r.json()["espere_texto"] == espere_texto(r.json()["espere_s"])  # nao depende do relogio: so confere que o texto vem do `espere_s`
     assert prov["falso"].chamadas == antes  # nem chegou ao provedor
     assert client.post(f"/atletas/{mundo['bia']}/conversas", json={"pergunta": "oi?"}, headers=_h(client, "bia")).status_code != 429  # o limite e por atleta
 
@@ -186,7 +187,7 @@ def test_nada_da_pergunta_vai_para_log(client, mundo, prov, caplog):
     assert MARCA not in caplog.text
 
 
-@pytest.mark.parametrize("espere_s,texto", [(1, "1 min"), (60, "1 min"), (61, "2 min"), (720, "12 min"), (721, "13 min"), (3600, "60 min")])
+@pytest.mark.parametrize("espere_s,texto", [(1, "1 min"), (59, "1 min"), (60, "1 min"), (61, "2 min"), (720, "12 min"), (721, "13 min"), (1799, "30 min"), (1800, "30 min"), (3600, "60 min")])
 def test_espere_texto_em_minutos_para_cima(espere_s, texto):
     from app.rotas.chat import espere_texto
     assert espere_texto(espere_s) == f"Você pode perguntar de novo em {texto}."
