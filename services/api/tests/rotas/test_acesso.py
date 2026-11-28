@@ -66,7 +66,7 @@ def _rotas(app):
 
 
 def _url(caminho, **ids):
-    return caminho.format(**{"atleta_id": 1, "professor_id": 1, "atividade_id": 1, "serie_id": "corrida.pace.leve", **ids})
+    return caminho.format(**{"atleta_id": 1, "professor_id": 1, "atividade_id": 1, "conversa_id": 1, "serie_id": "corrida.pace.leve", **ids})
 
 
 # ---------- o teste que percorre as rotas: rota nova sem protecao quebra aqui ----------
