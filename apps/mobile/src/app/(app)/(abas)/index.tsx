@@ -5,7 +5,7 @@ import { ENTRADA_CHAT_NO_INICIO } from "../../../chat/textos";
 import { useContadorDeFoco } from "../../../navegacao/useContadorDeFoco";
 import { useAtleta, useSessao } from "../../../sessao/SessaoProvider";
 
-// Início v3: último treino, quinzena e treinos recentes (spec inicio-atleta-v3).
+// Início v5 (spec inicio-v5-direcoes): check-in, esta semana, chat, hoje e último treino.
 export default function Inicio() {
   const atualizar = useContadorDeFoco();
   const { apiUrl, atletaId, fetchFn } = useAtleta();
@@ -20,7 +20,10 @@ export default function Inicio() {
       aoAbrirTreino={(id) => router.push(`/treino/${id}`)}
       aoResponderCheckin={(id) => router.push(`/checkin/${id}`)}
       aoVerTodos={() => router.navigate("/treinos")}
-      aoAbrirChat={ENTRADA_CHAT_NO_INICIO ? () => router.push("/chat") : undefined}
+      aoVerPendentes={() => router.navigate("/treinos?filtro=sem-checkin")}
+      aoAbrirChat={ENTRADA_CHAT_NO_INICIO ? () => router.push({ pathname: "/chat", params: { foco: "1" } }) : undefined}
+      aoPerguntar={(i) => router.push({ pathname: "/chat", params: { pronta: String(i) } })}
+      aoAbrirConversas={() => router.push("/chat/conversas")}
       aoAbrirDestino={(d) => {
         // `destino` da API: a Evolução (já com a série), a semana-padrão ou um treino.
         if (d.tela === "treino" && d.atividade_id != null) router.push(`/treino/${d.atividade_id}`);

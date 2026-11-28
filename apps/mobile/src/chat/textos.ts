@@ -1,8 +1,15 @@
 // Textos e listas fixas do chat "Pergunte ao seu treino" (spec docs/design/telas/chat.md). Tudo o que ainda pode mudar
 // por decisão do Angelo mora aqui, em um lugar só. As respostas, recusas e erros vêm prontos da API.
 
-/** Decisão do Angelo pendente: a entrada pelo Início, como tela empilhada e sem aba nova. Desligar tira o ponto de entrada. */
+/** Decisão do Angelo pendente: a entrada pelo Início, como tela empilhada e sem aba nova. Desligar tira o bloco do chat do Início. */
 export const ENTRADA_CHAT_NO_INICIO = true;
+
+/** Quantas perguntas prontas o Início mostra (as primeiras de `PERGUNTAS_PRONTAS`; a terceira aparece cortada, para mostrar que há mais). */
+export const PERGUNTAS_PRONTAS_NO_INICIO = 3;
+export const EXEMPLO_DA_CAIXA = "Ex.: como foi minha semana?";
+
+/** Início v5, bloco "Seu professor" (conexão e convite são da Meta 15; a API ainda não manda o dado). Ligar só quando vier. */
+export const PROFESSOR_NO_INICIO = false;
 
 /** Decisão do Angelo pendente: "Copiar resposta" e 👍/👎 ficam de fora da primeira versão. Ligar não faz nada ainda (sem tela). */
 export const COPIAR_E_AVALIAR = false;

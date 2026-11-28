@@ -35,7 +35,7 @@ describe("rota Início: destino dos cartões de 'Seus números'", () => {
       if (u.includes("/inicio/cartoes")) return resposta(cartoes);
       if (u.includes("/checkins/pendentes")) return resposta({ dias: 7, pendentes: [], total: 0 });
       if (u.includes("/carga")) return resposta({ atleta_id: 1, aviso: null, dias: [], frase_forma: null, periodo: null, totais: {}, versao: "serie_carga@2", versao_carga: "carga@2" });
-      if (u.includes("/atividades?")) return resposta({ atleta_id: 1, limite: 5, itens: [], proximo: null });
+      if (u.includes("/atividades?")) return resposta({ atleta_id: 1, limite: 5, itens: [{ atividade_id: 1, inicio: "2025-03-18T09:30:00Z", data_local: "2025-03-18", hora_local: "06:30", modalidade: "corrida", subtipo: "rua", tipo_treino: "leve", duracao_s: 3125, duracao: "0:52:05", distancia_m: 10000, distancia: "10,00 km", destaque: null, checkin_estado: "feito", feedback_estado: "pronto", normal_estado: "dentro" }], proximo: null });
       return resposta({});
     }) as unknown as typeof fetch;
   });
@@ -48,10 +48,32 @@ describe("rota Início: destino dos cartões de 'Seus números'", () => {
 
   it("semana-padrão e treino: abrem a tela deles", async () => {
     await render(<ComSessao><Inicio /></ComSessao>);
-    await fireEvent.press(await screen.findByTestId("cartao-hoje_na_semana"));
+    await fireEvent.press(await screen.findByTestId("bloco-hoje"));
     expect(mockRouter.push).toHaveBeenLastCalledWith("/semana-padrao");
     await fireEvent.press(screen.getByTestId("cartao-melhor_marca"));
     expect(mockRouter.push).toHaveBeenLastCalledWith("/treino/77");
+  });
+});
+
+describe("rota Início: o chat", () => {
+  beforeEach(() => {
+    globalThis.fetch = jest.fn(async (url: unknown) => {
+      const u = String(url);
+      if (u.includes("/checkins/pendentes")) return resposta({ dias: 7, pendentes: [], total: 0 });
+      if (u.includes("/carga")) return resposta({ atleta_id: 1, aviso: null, dias: [], frase_forma: null, periodo: null, totais: {}, versao: "serie_carga@2", versao_carga: "carga@2" });
+      if (u.includes("/inicio/cartoes")) return resposta({ atleta_id: 1, data: "2025-03-21", cartoes: [] });
+      return resposta({ atleta_id: 1, limite: 5, itens: [{ atividade_id: 1, inicio: "2025-03-18T09:30:00Z", data_local: "2025-03-18", hora_local: "06:30", modalidade: "corrida", subtipo: "rua", tipo_treino: "leve", duracao_s: 3125, duracao: "0:52:05", distancia_m: 10000, distancia: "10,00 km", destaque: null, checkin_estado: "feito", feedback_estado: "pronto", normal_estado: "dentro" }], proximo: null });
+    }) as unknown as typeof fetch;
+  });
+
+  it("caixa e ↑ abrem /chat com o teclado; a pergunta pronta vai por índice, nunca pelo texto; 'Conversas ›' abre a lista", async () => {
+    await render(<ComSessao><Inicio /></ComSessao>);
+    await fireEvent.press(await screen.findByTestId("inicio-caixa"));
+    expect(mockRouter.push).toHaveBeenLastCalledWith({ pathname: "/chat", params: { foco: "1" } });
+    await fireEvent.press(screen.getByTestId("inicio-pronta-2"));
+    expect(mockRouter.push).toHaveBeenLastCalledWith({ pathname: "/chat", params: { pronta: "2" } });
+    await fireEvent.press(screen.getByTestId("inicio-conversas"));
+    expect(mockRouter.push).toHaveBeenLastCalledWith("/chat/conversas");
   });
 });
 

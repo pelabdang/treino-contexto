@@ -54,6 +54,8 @@ type Props = {
   aoEsperarNoInicio?: () => void;
   /** A conversa nova foi criada: a rota troca o endereço para `/chat/<id>` sem remontar a tela. */
   aoCriada?: (id: number) => void;
+  /** Abre com o teclado (toque na caixa do Início). */
+  focoInicial?: boolean;
   agora?: () => Date;
 };
 
@@ -69,7 +71,7 @@ function erroLocal(chave: string, pergunta: string): Item {
   return { chave, pergunta, msg, local: true };
 }
 
-export function TelaChat({ apiUrl, atletaId, fetchFn, conversaId, perguntaInicial, aoVoltar, aoAbrirConversas, aoAbrirTreino, aoAbrirEvolucao, aoEsperarNoInicio, aoCriada, agora = () => new Date() }: Props) {
+export function TelaChat({ apiUrl, atletaId, fetchFn, conversaId, perguntaInicial, aoVoltar, aoAbrirConversas, aoAbrirTreino, aoAbrirEvolucao, aoEsperarNoInicio, aoCriada, focoInicial, agora = () => new Date() }: Props) {
   const tema = useTema();
   const margem = useMargemTela();
   const styles = useMemo(() => criarEstilos(tema, margem), [tema, margem]);
@@ -287,6 +289,7 @@ export function TelaChat({ apiUrl, atletaId, fetchFn, conversaId, perguntaInicia
             onChangeText={setTexto}
             onKeyPress={aoTeclar}
             multiline
+            autoFocus={focoInicial}
             maxLength={MAXIMO_PERGUNTA}
             editable={!pensando && !limite}
             caretHidden={pensando || limite}

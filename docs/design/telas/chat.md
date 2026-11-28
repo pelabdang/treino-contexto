@@ -68,7 +68,7 @@ continuam 4 (Início, Treinos, Evolução, Conta) e **somem na tela do chat**, p
 
 ## Começo e perguntas prontas
 - Título em Barlow Condensed "O que você quer saber sobre os seus treinos?" e a frase "Escreva a sua pergunta ou toque em uma destas."
-- **6 perguntas prontas, fixas no app** (rótulo fixo; o texto é enviado como pergunta comum, sem cálculo): "Como foi minha semana?", "Meu pace nos treinos leves melhorou?",
+- **6 perguntas prontas, fixas no app (plano B; a lista principal passou a vir da API, ver o adendo)** (rótulo fixo; o texto é enviado como pergunta comum, sem cálculo): "Como foi minha semana?", "Meu pace nos treinos leves melhorou?",
   "Quanto corri neste mês?", "Como estão minha carga e minha forma?", "O que escrevi no check-in de ontem?", "Como foi meu último treino?".
   Cada linha: altura 48, contorno `cor.borda-forte`, "›". O Início v5 mostra as 3 primeiras. **Não há rota de perguntas prontas** no adendo 16, por isso a lista é do app (ver "Decisões").
 - Some assim que a conversa tem a primeira pergunta. Atleta **sem treinos**: as perguntas prontas somem e a tela diz "Você ainda não tem treinos aqui. Importe o primeiro para perguntar." (o campo continua).
@@ -152,8 +152,42 @@ pode ir ao serviço de IA quando o atleta pergunta sobre ele (decisão do Angelo
 
 ## Decisões que precisam do Angelo ou do Theo
 1. **Sem aba nova para o chat** (entrada pelo Início e tela empilhada). Alternativa: aba "Perguntar" no lugar de outra. Recomendo sem aba.
-2. **Perguntas prontas fixas no app** (6 frases acima), porque não há rota para elas. Alternativa: a API manda a lista (permite variar com o dado do atleta, mas exige rota e a regra de quando aparece). Recomendo fixas no piloto.
+2. ~~Perguntas prontas fixas no app~~ **Decidido (Angelo, 28/11): vêm da API**, escolhidas conforme os treinos do atleta (rota da Duda). As 6 fixas ficam como plano B (ver o adendo).
 3. **Texto "Abrir treino"** (do contrato) no lugar de "Ver treino" (do pedido). Recomendo seguir o contrato.
 4. ~~Sair da tela enquanto pensa~~ A Duda espera que a resposta seja gravada mesmo assim e confirmará com um teste (Theo, 28/11). Mantido "Voltar ao Início e esperar lá"; se o teste falhar, o botão sai.
 5. ~~Limite em minutos~~ **Decidido (Theo, 28/11): a API manda `espere_texto` pronto.**
-6. **Primeira versão sem "Copiar resposta" e sem avaliar a resposta (👍/👎).** Dá para somar depois; sem pedido ainda.
+6. ~~Primeira versão sem copiar e sem 👍/👎~~ **Decidido (Angelo, 28/11): copiar e 👍/👎 entram já na primeira versão** (ver o adendo).
+
+## Adendo (28/11): copiar, 👍/👎 e perguntas prontas da API
+Decisões do Angelo: **copiar a resposta e 👍/👎 na primeira versão**; **perguntas prontas vindas da API**, conforme os treinos do atleta. O aviso fixo e a entrada pelo Início seguem como estão.
+
+### Copiar e 👍/👎 em cada resposta
+![[design/telas/chat/chat-resposta-acoes-claro.svg]]
+![[design/telas/chat/chat-resposta-acoes-escuro.svg]]
+(1ª resposta: copiada e com 👍 marcado. 2ª: sem nada marcado.)
+
+- **Onde:** numa linha **dentro do cartão da resposta**, por último (depois do texto e dos links), separada por um fio de `cor.borda`. À esquerda o botão **"Copiar"** (ícone e texto, 120 por 44); à direita **👍** e **👎** (44 por 44 cada, 4 de espaço).
+- **Só no estado `respondida`.** Recusa, reprovada, erro, limite, "pensando" e a mensagem do atleta **não** têm a linha (não há o que copiar nem avaliar; a recusa é texto fixo).
+- **Copiar** põe na área de transferência **só o `texto`** da resposta, sem links, hora nem rótulo. Depois do toque, o botão vira **"✓ Copiado"** (fundo `cor.marca-suave`) por **2 s** e volta a "Copiar". Se a cópia falhar (permissão do navegador): aviso curto "Não deu para copiar." sob o botão, e o botão fica "Copiar".
+- **👍/👎 marcados:** o escolhido ganha contorno de 2, fundo `cor.marca-suave` e cor `cor.link`; o outro fica como estava. **Um só vale por resposta:** tocar no outro **troca** a escolha. **Tocar no marcado desmarca** (volta a nenhum). Sem janela de pergunta e sem texto livre.
+- **Nada só por cor:** o marcado se vê pelo contorno mais grosso e pelo fundo, e o leitor de tela ouve "marcado".
+- **Rótulos para leitor de tela:** "Copiar resposta" (botão); depois de copiar, anuncia "Resposta copiada" (região polida); "Gostei da resposta" e "Não gostei da resposta", como botões de **alternância** com estado marcado ou não marcado. A linha é um grupo "Ações da resposta". Ordem de foco: texto, links, Copiar, Gostei, Não gostei.
+- **Teclado (web):** as três ações recebem foco com o anel de `cor.foco`; Enter e Espaço acionam.
+- **Gravação:** o app **guarda a avaliação na API** (ver a rota abaixo) e a mostra de volta ao reabrir. Enquanto grava, o botão já aparece marcado (otimista); se falhar, volta ao estado anterior e mostra "Não deu para registrar. Tente de novo."
+- **Rota (da Duda):** `PUT /atletas/{id}/conversas/{cid}/mensagens/{mid}/avaliacao` com corpo `{valor: 1 | -1 | null}` (1 = 👍, -1 = 👎, `null` desmarca) e o campo `avaliacao` em `MensagemOut` (1, -1 ou `null`). O app só envia e mostra; **não há guarda no aparelho**.
+- **Privacidade:** a avaliação não leva o texto da resposta nem da pergunta; é só o valor, ligado à mensagem. O professor não vê (as conversas não são dele).
+
+### Perguntas prontas vindas da API
+![[design/telas/chat/chat-comecar-carregando-claro.svg]]
+![[design/telas/chat/chat-comecar-carregando-escuro.svg]]
+- **Quem manda:** a API, **já escolhidas e redigidas** conforme os treinos do atleta (rota da Duda). O app mostra o texto como veio, sem montar frase nem contar treino. No máximo **6** (o app ignora o que passar); no Início, as **3 primeiras**.
+- **Carregando:** o começo da conversa mostra **6 esqueletos** do mesmo tamanho das linhas (48), com o título e a frase já escritos; o campo de texto **não espera** e já funciona. O bloco do Início mostra 3 esqueletos de pergunta (mesmo tamanho). Leitor de tela: "Carregando perguntas sugeridas".
+- **Plano B (a rota falha, demora ou devolve lista vazia):** depois de **4 s** sem resposta, ou em qualquer erro, ou com lista vazia, o app usa as **6 perguntas fixas** desta nota ("Como foi minha semana?" e as outras 5), **sem aviso e sem botão de tentar de novo**: o atleta nunca vê erro por causa disso. Se a lista da API chegar depois do plano B, **não troca** (evita a lista mudar sob o dedo).
+- **Atleta sem treinos:** vale o que já está: as perguntas somem e aparece "Você ainda não tem treinos aqui. Importe o primeiro para perguntar." (a rota pode devolver lista vazia; o app **não** cai no plano B nesse caso, porque `sem treinos` vem do Início, não da rota).
+- **Cache:** guarda a lista da sessão e a reusa ao reabrir o chat (nova busca ao abrir o app), para não piscar esqueleto toda vez.
+- **Campos novos (para a Duda):** a rota devolve `perguntas[]` de texto (até 6). Sem ids, sem cálculo no app.
+
+### O que muda nas decisões acima
+- **Decisão 2:** perguntas prontas da API, plano B fixo.
+- **Decisão 6:** copiar e 👍/👎 entram na 1ª versão.
+- Ajustes não bloqueantes da revisão visual do #623 seguem na issue #624.
