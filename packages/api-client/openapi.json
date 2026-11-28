@@ -1666,7 +1666,8 @@
             "enum": [
               "feito",
               "hoje",
-              "vazio"
+              "vazio",
+              "futuro"
             ],
             "title": "Estado",
             "type": "string"

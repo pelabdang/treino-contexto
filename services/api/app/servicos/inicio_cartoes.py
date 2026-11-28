@@ -59,7 +59,7 @@ class Destino:
 @dataclass(frozen=True)
 class DiaDaSemana:
     rotulo: str  # "seg"
-    estado: Literal["feito", "hoje", "vazio"]  # `hoje` e o dia de hoje (com ou sem treino); `feito`: dia passado com treino; `vazio`: o resto
+    estado: Literal["feito", "hoje", "vazio", "futuro"]  # `hoje`: o dia de hoje (com ou sem treino); `feito`: passado com treino; `vazio`: passado sem treino; `futuro`: ainda nao chegou
     modalidades: list[str]  # as modalidades do dia, sem repetir, na ordem do dia ("corrida", "natacao")
     rotulo_acessivel: str  # "segunda, corrida e natação feitas"
 
@@ -115,7 +115,7 @@ def _dias_da_semana(atual, seg: date, hoje: date) -> list[DiaDaSemana]:
         elif mods:
             estado, resto = "feito", feito
         else:
-            estado, resto = "vazio", "sem treino" if dia < hoje else "ainda por vir"
+            estado, resto = ("vazio", "sem treino") if dia < hoje else ("futuro", "ainda por vir")
         dias.append(DiaDaSemana(DIAS_CURTOS[i], estado, mods, f"{DIAS[i]}, {resto}"))
     return dias
 

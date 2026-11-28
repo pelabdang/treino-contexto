@@ -29,13 +29,34 @@ def test_dias_sao_7_de_segunda_a_domingo_com_estado_e_texto_pronto(client, sessi
         if i == hoje:
             assert d["estado"] == "hoje" and d["modalidades"] == ["corrida"] if hoje != 0 else True
         elif i > hoje:
-            assert d["estado"] == "vazio" and d["rotulo_acessivel"].endswith("ainda por vir")
+            assert d["estado"] == "futuro" and d["modalidades"] == [] and d["rotulo_acessivel"].endswith("ainda por vir")
     assert dias[hoje]["estado"] == "hoje"
     if hoje >= 2:
         assert dias[0]["estado"] == "feito" and dias[0]["modalidades"] == ["corrida", "natacao"]
         assert dias[0]["rotulo_acessivel"] == "segunda, corrida e natação feitas"
         assert dias[1]["estado"] == "vazio" and dias[1]["rotulo_acessivel"] == "terça, sem treino"
     assert dias[hoje]["rotulo_acessivel"] == f"{DIAS[hoje]}, hoje, corrida feita" if hoje == 0 else dias[hoje]["rotulo_acessivel"].startswith(f"{DIAS[hoje]}, hoje")
+
+
+def test_estados_feito_hoje_vazio_e_futuro_sem_o_app_comparar_datas(client, session, atleta):
+    hoje = HOJE.weekday()
+    if hoje < 2 or hoje == 6:
+        pytest.skip("precisa de um dia passado sem treino e de um dia futuro na semana")
+    _ativ(session, atleta, 0)
+    _ativ(session, atleta, hoje)  # segunda
+    session.commit()
+    estados = [d["estado"] for d in _semana(client, atleta)["dias"]]
+    esperado = ["feito"] + ["vazio"] * (hoje - 1) + ["hoje"] + ["futuro"] * (6 - hoje)
+    assert estados == esperado and set(estados) <= {"feito", "hoje", "vazio", "futuro"}
+
+
+def test_dia_futuro_e_vazio_sao_diferentes_e_hoje_com_treino_continua_hoje(client, session, atleta):
+    _ativ(session, atleta, 0, modalidade="natacao")
+    session.commit()
+    dias = _semana(client, atleta)["dias"]
+    hoje = HOJE.weekday()
+    assert dias[hoje]["estado"] == "hoje" and dias[hoje]["modalidades"] == ["natacao"]
+    assert all(d["estado"] == "futuro" for d in dias[hoje + 1:]) and all(d["estado"] == "vazio" for d in dias[:hoje])
 
 
 def test_texto_dos_dias_concorda_no_genero_e_no_numero(client, session, atleta):

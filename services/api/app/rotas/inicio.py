@@ -30,7 +30,7 @@ class DestinoOut(BaseModel):
 
 class DiaOut(BaseModel):
     rotulo: str  # "seg"
-    estado: Literal["feito", "hoje", "vazio"]
+    estado: Literal["feito", "hoje", "vazio", "futuro"]  # `futuro`: o dia ainda nao chegou (o app nao compara datas)
     modalidades: list[str]  # "corrida", "natacao", "ciclismo", "outra" (sem repetir)
     rotulo_acessivel: str  # "segunda, corrida e natação feitas"
 
