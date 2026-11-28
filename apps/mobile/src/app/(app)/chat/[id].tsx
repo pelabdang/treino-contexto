@@ -15,7 +15,7 @@ export default function ChatConversa() {
       atletaId={atletaId}
       fetchFn={fetchFn}
       conversaId={conversaId}
-      aoVoltar={() => (router.canGoBack() ? router.back() : router.replace("/chat/conversas"))}
+      aoVoltar={() => (router.canGoBack() ? router.back() : router.replace("/"))}
       aoEsperarNoInicio={() => router.replace("/")}
       aoAbrirConversas={() => router.push("/chat/conversas")}
       aoAbrirTreino={(treino) => router.push(`/treino/${treino}`)}
