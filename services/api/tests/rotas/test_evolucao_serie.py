@@ -144,6 +144,19 @@ def test_esteira_fora_do_pace(client, session, atleta):
     assert len(_get(client, atleta, "corrida.fc.leve")["pontos"]) == 8
 
 
+@pytest.mark.parametrize("serie, subtipo, sujeito", [
+    ("ciclismo.velocidade.rua", None, "Velocidade dos seus pedais na rua"),
+    ("ciclismo.fc.rua", None, "Frequência cardíaca dos seus pedais na rua"),
+    ("ciclismo.velocidade.casa", "virtual", "Velocidade dos seus pedais em casa"),
+    ("ciclismo.fc.casa", "esteira", "Frequência cardíaca dos seus pedais em casa"),
+])
+def test_ciclismo_rua_e_casa_tem_frase(client, session, atleta, serie, subtipo, sujeito):
+    for d in (2, 10, 20, 30, 40, 50):
+        _ativ(session, atleta, d, modalidade="ciclismo", tipo=None, subtipo=subtipo, dist=30000.0, dur=3600.0)
+    j = _get(client, atleta, serie)
+    assert len(j["pontos"]) == 6 and j["frase"]["texto"].startswith(sujeito)
+
+
 def test_volume_por_semana_e_frase_a_mao(client, session, atleta):
     seg = HOJE - timedelta(days=HOJE.weekday())
     for k in range(1, 5):  # 4 semanas completas (R), 10 km cada
