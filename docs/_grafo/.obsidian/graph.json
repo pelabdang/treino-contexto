@@ -1,143 +1,255 @@
 {
   "colorGroups": [
     {
-      "query": "tag:#community/Contrato_da_tela_e_m\u00e9tricas",
+      "query": "tag:#community/App,_telas_e_design",
       "color": {
         "a": 1,
         "rgb": 5142951
       }
     },
     {
-      "query": "tag:#community/Modelo_de_dados_e_ADRs_iniciais",
+      "query": "tag:#community/Mapa,_metas_e_templates",
       "color": {
         "a": 1,
         "rgb": 15896107
       }
     },
     {
-      "query": "tag:#community/Mapa,_upload_de_FIT_e_ADRs",
+      "query": "tag:#community/Worker,_carga_e_Meta_12",
       "color": {
         "a": 1,
         "rgb": 14767961
       }
     },
     {
-      "query": "tag:#community/Check-in_e_feedback_autom\u00e1tico",
+      "query": "tag:#community/Banco_e_guias_das_metas_7_a_8",
       "color": {
         "a": 1,
         "rgb": 7780274
       }
     },
     {
-      "query": "tag:#community/Arquitetura_e_plano_do_MVP",
+      "query": "tag:#community/Roadmap_e_esfor\u00e7os",
       "color": {
         "a": 1,
         "rgb": 5873999
       }
     },
     {
-      "query": "tag:#community/Caixa_do_dia_e_produto",
+      "query": "tag:#community/Ingest\u00e3o_Garmin_e_Meta_1",
       "color": {
         "a": 1,
         "rgb": 15583560
       }
     },
     {
-      "query": "tag:#community/Guias_das_metas_e_caixa_do_dia",
+      "query": "tag:#community/Contrato_da_tela_e_api-client",
       "color": {
         "a": 1,
         "rgb": 11565729
       }
     },
     {
-      "query": "tag:#community/Pessoas,_parceiros_e_decis\u00f5es",
+      "query": "tag:#community/Guias_das_metas_2_a_4",
       "color": {
         "a": 1,
         "rgb": 16752039
       }
     },
     {
-      "query": "tag:#community/Agente_do_atleta",
+      "query": "tag:#community/Linha_de_base_e_fuso",
       "color": {
         "a": 1,
         "rgb": 10253663
       }
     },
     {
-      "query": "tag:#community/Cronograma_e_valida\u00e7\u00e3o",
+      "query": "tag:#community/Mapa_e_di\u00e1rios_de_novembro",
       "color": {
         "a": 1,
         "rgb": 12234924
       }
     },
     {
-      "query": "tag:#community/Time_e_pap\u00e9is",
+      "query": "tag:#community/Di\u00e1rios_de_18_e_27/11_e_clima",
       "color": {
         "a": 1,
         "rgb": 5142951
+      }
+    },
+    {
+      "query": "tag:#community/Roadmap,_aten\u00e7\u00e3o_e_di\u00e1rio_17/11",
+      "color": {
+        "a": 1,
+        "rgb": 15896107
+      }
+    },
+    {
+      "query": "tag:#community/Evolu\u00e7\u00e3o_e_ferramentas_do_chat",
+      "color": {
+        "a": 1,
+        "rgb": 14767961
+      }
+    },
+    {
+      "query": "tag:#community/API_e_vers\u00f5es_de_m\u00e9tricas",
+      "color": {
+        "a": 1,
+        "rgb": 7780274
+      }
+    },
+    {
+      "query": "tag:#community/Di\u00e1rio_de_28/11_e_chat",
+      "color": {
+        "a": 1,
+        "rgb": 5873999
+      }
+    },
+    {
+      "query": "tag:#community/Fatos_do_treino_e_feedback",
+      "color": {
+        "a": 1,
+        "rgb": 15583560
+      }
+    },
+    {
+      "query": "tag:#community/Carga_de_treino_e_confer\u00eancia",
+      "color": {
+        "a": 1,
+        "rgb": 11565729
+      }
+    },
+    {
+      "query": "tag:#community/Modelo_de_dados_e_tabelas",
+      "color": {
+        "a": 1,
+        "rgb": 16752039
+      }
+    },
+    {
+      "query": "tag:#community/Recupera\u00e7\u00e3o_e_Meta_10",
+      "color": {
+        "a": 1,
+        "rgb": 10253663
+      }
+    },
+    {
+      "query": "tag:#community/M\u00f3dulo_clima",
+      "color": {
+        "a": 1,
+        "rgb": 12234924
+      }
+    },
+    {
+      "query": "tag:#community/Gloss\u00e1rio_e_ADRs_12_e_13",
+      "color": {
+        "a": 1,
+        "rgb": 5142951
+      }
+    },
+    {
+      "query": "tag:#community/Infra_e_pap\u00e9is",
+      "color": {
+        "a": 1,
+        "rgb": 15896107
+      }
+    },
+    {
+      "query": "tag:#community/Camada_de_LLM",
+      "color": {
+        "a": 1,
+        "rgb": 14767961
       }
     },
     {
       "query": "tag:#community/Script_de_contraste",
       "color": {
         "a": 1,
-        "rgb": 15896107
-      }
-    },
-    {
-      "query": "tag:#community/Camadas_de_m\u00e9tricas",
-      "color": {
-        "a": 1,
-        "rgb": 14767961
-      }
-    },
-    {
-      "query": "tag:#community/Descoberta_e_conhecimento",
-      "color": {
-        "a": 1,
         "rgb": 7780274
       }
     },
     {
-      "query": "tag:#community/Funda\u00e7\u00e3o_de_dados_e_fontes",
+      "query": "tag:#community/Meta_11:_caixa_do_dia",
       "color": {
         "a": 1,
         "rgb": 5873999
       }
     },
     {
-      "query": "tag:#community/Templates_de_regra_e_texto",
+      "query": "tag:#community/Di\u00e1rio_de_10/11_e_decis\u00f5es",
       "color": {
         "a": 1,
         "rgb": 15583560
       }
     },
     {
-      "query": "tag:#community/Template_de_decis\u00e3o",
+      "query": "tag:#community/Fatos_do_treino_e_vers\u00f5es",
       "color": {
         "a": 1,
         "rgb": 11565729
       }
     },
     {
-      "query": "tag:#community/Template_de_di\u00e1rio",
+      "query": "tag:#community/Deploy_da_Meta_13_e_plano_do_MVP",
       "color": {
         "a": 1,
         "rgb": 16752039
       }
     },
     {
-      "query": "tag:#community/Template_de_meta",
+      "query": "tag:#community/Gr\u00e1fico_dos_tiros",
       "color": {
         "a": 1,
         "rgb": 10253663
       }
     },
     {
-      "query": "tag:#community/Template_de_m\u00f3dulo",
+      "query": "tag:#community/Pap\u00e9is_e_pontas_29",
       "color": {
         "a": 1,
         "rgb": 12234924
+      }
+    },
+    {
+      "query": "tag:#community/Pap\u00e9is_e_pontas_30",
+      "color": {
+        "a": 1,
+        "rgb": 5142951
+      }
+    },
+    {
+      "query": "tag:#community/Pap\u00e9is_e_pontas_31",
+      "color": {
+        "a": 1,
+        "rgb": 15896107
+      }
+    },
+    {
+      "query": "tag:#community/Pap\u00e9is_e_pontas_32",
+      "color": {
+        "a": 1,
+        "rgb": 14767961
+      }
+    },
+    {
+      "query": "tag:#community/Pap\u00e9is_e_pontas_33",
+      "color": {
+        "a": 1,
+        "rgb": 7780274
+      }
+    },
+    {
+      "query": "tag:#community/Pap\u00e9is_e_pontas_34",
+      "color": {
+        "a": 1,
+        "rgb": 5873999
+      }
+    },
+    {
+      "query": "tag:#community/Pap\u00e9is_e_pontas_35",
+      "color": {
+        "a": 1,
+        "rgb": 15583560
       }
     }
   ]

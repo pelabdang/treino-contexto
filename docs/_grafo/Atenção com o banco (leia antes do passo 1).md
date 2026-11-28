@@ -1,0 +1,16 @@
+---
+source_file: "docs/produto/meta-2-como-rodar.md"
+type: "document"
+community: "Guias das metas 2 a 4"
+tags:
+  - graphify/document
+  - graphify/EXTRACTED
+  - community/Guias_das_metas_2_a_4
+---
+
+# Atenção com o banco (leia antes do passo 1)
+
+## Connections
+- [[produtometa-2-como-rodar]] - `contains` [EXTRACTED]
+
+#graphify/document #graphify/EXTRACTED #community/Guias_das_metas_2_a_4

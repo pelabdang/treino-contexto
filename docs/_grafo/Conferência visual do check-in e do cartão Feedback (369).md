@@ -1,20 +1,25 @@
 ---
 source_file: "docs/design/telas/conferencia-369.md"
 type: "document"
-community: "Contrato da tela e métricas"
+community: "App, telas e design"
 tags:
   - graphify/document
   - graphify/EXTRACTED
-  - community/Contrato_da_tela_e_mtricas
+  - community/App_telas_e_design
 ---
 
-# Conferência visual do check-in e do cartão Feedback (#369)
+# Conferência visual do check-in e do cartão "Feedback" (#369)
 
 ## Connections
-- [[Design guia visual do app]] - `references` [EXTRACTED]
-- [[Meta 9 como rodar]] - `references` [EXTRACTED]
-- [[Tela cartão Feedback na tela de um treino]] - `references` [EXTRACTED]
-- [[Tela check-in pós-treino e lista de pendentes]] - `references` [EXTRACTED]
-- [[Tela um treino, com o clima]] - `references` [EXTRACTED]
+- [[Meta 10 sono, VFC e FC de repouso no contexto do treino]] - `links_to` [EXTRACTED]
+- [[designguia-visual]] - `references` [EXTRACTED]
+- [[designtelascheckin]] - `references` [EXTRACTED]
+- [[designtelasfeedback]] - `references` [EXTRACTED]
+- [[designtelastreino]] - `references` [EXTRACTED]
+- [[glossario]] - `references` [EXTRACTED]
+- [[modulosmobile]] - `references` [EXTRACTED]
+- [[produtometa-10-como-rodar]] - `references` [EXTRACTED]
+- [[produtometa-9-como-rodar]] - `references` [EXTRACTED]
+- [[produtoroadmap]] - `links_to` [EXTRACTED]
 
-#graphify/document #graphify/EXTRACTED #community/Contrato_da_tela_e_mtricas
+#graphify/document #graphify/EXTRACTED #community/App_telas_e_design

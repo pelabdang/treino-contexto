@@ -1,40 +1,38 @@
 ---
 source_file: "docs/decisoes/0007-clima-da-atividade.md"
 type: "document"
-community: "Mapa, upload de FIT e ADRs"
+community: "Contrato da tela e api-client"
 tags:
   - graphify/document
   - graphify/EXTRACTED
-  - community/Mapa_upload_de_FIT_e_ADRs
+  - community/Contrato_da_tela_e_api-client
 ---
 
 # ADR: 0007 Clima da atividade (Meta 4)
 
 ## Connections
-- [[ADR 0001 Modelo de dados mínimo e estrutura do monorepo]] - `references` [EXTRACTED]
-- [[ADR 0003 Fuso da atividade e data local da sessão]] - `references` [EXTRACTED]
-- [[ADR 0004 Contrato da tela de evolução dos tiros (Meta 2)]] - `references` [EXTRACTED]
-- [[ADR 0006 Upload de arquivo FIT (Meta 3)]] - `references` [EXTRACTED]
-- [[ADR 0009 Treino de transição (rótulo sugerido e corrigível)]] - `references` [EXTRACTED]
-- [[ADR 0013 Feedback automático por treino (pacote de fatos, guarda, camada de LLM, checagen]] - `references` [EXTRACTED]
-- [[Clima da atividade fixtures e oráculo]] - `references` [EXTRACTED]
-- [[Clima do treino]] - `implements` [EXTRACTED]
-- [[Diário 2026-11-03 Ciclos das Metas 2, 3 e 4]] - `references` [EXTRACTED]
-- [[Diário 2026-11-04 Decisões do Angelo e detecção de esforços]] - `references` [EXTRACTED]
-- [[Glossário]] - `references` [EXTRACTED]
-- [[Ingestão Garmin]] - `references` [EXTRACTED]
-- [[Meta 4 clima da atividade]] - `references` [EXTRACTED]
-- [[Módulo API]] - `references` [EXTRACTED]
-- [[Módulo banco]] - `references` [EXTRACTED]
-- [[Módulo worker]] - `references` [EXTRACTED]
-- [[Open-Meteo]] - `references` [EXTRACTED]
-- [[Plano de execução do MVP]] - `references` [EXTRACTED]
-- [[Roadmap]] - `references` [EXTRACTED]
-- [[Tela um treino, com o clima]] - `references` [EXTRACTED]
-- [[Treino Contexto mapa do projeto]] - `references` [EXTRACTED]
-- [[clima]] - `implements` [EXTRACTED]
-- [[clima da atividade]] - `references` [EXTRACTED]
-- [[meta 4 como rodar]] - `references` [EXTRACTED]
-- [[tabela clima_atividade]] - `references` [EXTRACTED]
+- [[ADR 0001 Modelo de dados mínimo e estrutura do monorepo]] - `links_to` [EXTRACTED]
+- [[ADR 0003 Fuso da atividade e data local da sessão]] - `links_to` [EXTRACTED]
+- [[ADR 0004 Contrato da tela de evolução dos tiros (Meta 2)]] - `links_to` [EXTRACTED]
+- [[ADR 0006 Upload de arquivo FIT (Meta 3)]] - `links_to` [EXTRACTED]
+- [[ADR 0009 Treino de transição (rótulo sugerido e corrigível)]] - `links_to` [EXTRACTED]
+- [[ADR 0013 Feedback automático por treino (pacote de fatos, guarda, camada de LLM, checagens)]] - `links_to` [EXTRACTED]
+- [[Cartão Clima números inteiros e texto do treino antigo]] - `refines` [EXTRACTED]
+- [[Cliente Open-Meteo (clima)]] - `defines` [EXTRACTED]
+- [[Diário 2026-11-03]] - `references` [EXTRACTED]
+- [[Diário 2026-11-04]] - `references` [EXTRACTED]
+- [[Theo (papel)]] - `owned_by` [EXTRACTED]
+- [[designtelastreino]] - `references` [EXTRACTED]
+- [[modulosapi]] - `references` [EXTRACTED]
+- [[modulosapi-client]] - `references` [EXTRACTED]
+- [[modulosbanco]] - `references` [EXTRACTED]
+- [[modulosclima]] - `references` [EXTRACTED]
+- [[modulosingestao-garmin]] - `references` [EXTRACTED]
+- [[modulosmobile]] - `references` [EXTRACTED]
+- [[modulosworker]] - `references` [EXTRACTED]
+- [[produtometa-4-como-rodar]] - `references` [EXTRACTED]
+- [[produtometasmeta-4-clima-atividade]] - `links_to` [EXTRACTED]
+- [[produtoplano-mvp-execucao]] - `links_to` [EXTRACTED]
+- [[produtoroadmap]] - `links_to` [EXTRACTED]
 
-#graphify/document #graphify/EXTRACTED #community/Mapa_upload_de_FIT_e_ADRs
+#graphify/document #graphify/EXTRACTED #community/Contrato_da_tela_e_api-client

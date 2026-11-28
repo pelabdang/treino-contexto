@@ -1,19 +1,16 @@
 ---
-source_file: "docs/produto/plano-mvp-execucao.md"
+source_file: "docs/decisoes/0011-linha-de-base-e-semana-padrao.md"
 type: "document"
-community: "Caixa do dia e produto"
-location: "§3.1, §3.2"
+community: "Linha de base e fuso"
 tags:
   - graphify/document
   - graphify/EXTRACTED
-  - community/Caixa_do_dia_e_produto
+  - community/Linha_de_base_e_fuso
 ---
 
 # Semana-padrão
 
 ## Connections
-- [[Classificação do tipo de treino pelo professor]] - `implements` [EXTRACTED]
-- [[Modelo de dados (núcleo)]] - `references` [EXTRACTED]
-- [[TrainingPeaks]] - `semantically_similar_to` [INFERRED]
+- [[ADR 0011 Linha de base pessoal, semana-padrão e tipo de treino]] - `defines` [EXTRACTED]
 
-#graphify/document #graphify/EXTRACTED #community/Caixa_do_dia_e_produto
+#graphify/document #graphify/EXTRACTED #community/Linha_de_base_e_fuso

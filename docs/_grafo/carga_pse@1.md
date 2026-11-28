@@ -1,17 +1,19 @@
 ---
-source_file: "docs/decisoes/0012-check-in-pos-treino.md"
-type: "concept"
-community: "Contrato da tela e métricas"
+source_file: "docs/metricas/carga-pse.md"
+type: "document"
+community: "Roadmap, atenção e diário 17/11"
 tags:
-  - graphify/concept
+  - graphify/document
   - graphify/INFERRED
-  - community/Contrato_da_tela_e_mtricas
+  - community/Roadmap_ateno_e_dirio_17/11
 ---
 
 # carga_pse@1
 
 ## Connections
-- [[ADR 0012 Check-in pós-treino (PSE, sensação, observação) e `carga_pse@1`]] - `references` [EXTRACTED]
-- [[carga de treino (rTSS, hrTSS)]] - `conceptually_related_to` [INFERRED]
+- [[PSE (CR-10)]] - `uses` [INFERRED]
+- [[UA (unidade arbitraria)]] - `uses` [INFERRED]
+- [[metricascarga-pse_1]] - `defines` [EXTRACTED]
+- [[metricascarga-pse-oraculo_1]] - `verified_by` [EXTRACTED]
 
-#graphify/concept #graphify/INFERRED #community/Contrato_da_tela_e_mtricas
+#graphify/document #graphify/INFERRED #community/Roadmap_ateno_e_dirio_17/11

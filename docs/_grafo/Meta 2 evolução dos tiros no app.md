@@ -1,20 +1,17 @@
 ---
-source_file: "docs/produto/metas/meta-2-evolucao-tiros-app.md"
+source_file: "docs/decisoes/0004-contrato-tela-evolucao.md"
 type: "document"
-community: "Mapa, upload de FIT e ADRs"
+community: "Mapa, metas e templates"
 tags:
   - graphify/document
   - graphify/EXTRACTED
-  - community/Mapa_upload_de_FIT_e_ADRs
+  - community/Mapa_metas_e_templates
 ---
 
-# Meta 2: evolução dos tiros no app
+# Meta 2 evolução dos tiros no app
 
 ## Connections
-- [[ADR 0004 Contrato da tela de evolução dos tiros (Meta 2)]] - `references` [EXTRACTED]
-- [[Meta 1 tiros de 1 km]] - `references` [EXTRACTED]
-- [[Meta 3 upload de arquivo FIT]] - `references` [EXTRACTED]
-- [[Roadmap]] - `references` [EXTRACTED]
-- [[Treino Contexto mapa do projeto]] - `references` [EXTRACTED]
+- [[ADR 0004 Contrato da tela de evolução dos tiros (Meta 2)]] - `decided_for` [EXTRACTED]
+- [[Meta 2]] - `same_as` [INFERRED]
 
-#graphify/document #graphify/EXTRACTED #community/Mapa_upload_de_FIT_e_ADRs
+#graphify/document #graphify/EXTRACTED #community/Mapa_metas_e_templates

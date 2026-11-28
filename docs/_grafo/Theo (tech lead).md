@@ -1,17 +1,16 @@
 ---
-source_file: "docs/time.md"
-type: "concept"
-community: "Time e papéis"
+source_file: "docs/decisoes/0001-modelo-de-dados-minimo.md"
+type: "document"
+community: "Modelo de dados e tabelas"
 tags:
-  - graphify/concept
+  - graphify/document
   - graphify/EXTRACTED
-  - community/Time_e_papis
+  - community/Modelo_de_dados_e_tabelas
 ---
 
 # Theo (tech lead)
 
 ## Connections
-- [[Regras do time merge só do Theo, docs-ok da Nina, design-ok da Lia]] - `rationale_for` [EXTRACTED]
-- [[Time e papéis]] - `references` [EXTRACTED]
+- [[ADR 0001 Modelo de dados mínimo e estrutura do monorepo]] - `mentions` [EXTRACTED]
 
-#graphify/concept #graphify/EXTRACTED #community/Time_e_papis
+#graphify/document #graphify/EXTRACTED #community/Modelo_de_dados_e_tabelas

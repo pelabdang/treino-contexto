@@ -1,16 +1,16 @@
 ---
 source_file: "docs/_templates/entrevista.md"
 type: "document"
-community: "Templates de regra e texto"
+community: "Mapa, metas e templates"
 tags:
   - graphify/document
   - graphify/EXTRACTED
-  - community/Templates_de_regra_e_texto
+  - community/Mapa_metas_e_templates
 ---
 
-# Template: entrevista
+# Template entrevista
 
 ## Connections
-- [[Template regra]] - `references` [EXTRACTED]
+- [[Modelos de nota (_templates)]] - `contains` [EXTRACTED]
 
-#graphify/document #graphify/EXTRACTED #community/Templates_de_regra_e_texto
+#graphify/document #graphify/EXTRACTED #community/Mapa_metas_e_templates
