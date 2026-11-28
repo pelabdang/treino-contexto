@@ -36,5 +36,4 @@ ferramenta, dado ausente afirmado, dor além da frase neutra, e pergunta recusá
 Regra própria do projeto: decisões do Angelo de 10/11 e 28/11 e as listas da [[metricas/checagens-feedback]]. `fixtures_chat@1`.
 
 ## Limitações e quando não usar
-O teste de hoje confere o contrato das fixtures e a regra dos números. A conferência de **todos** os motivos de cada resposta ruim contra a `checagens_chat@1` entra
-com a #595. Os resultados das ferramentas são o formato proposto na ADR; a #593 e a #594 podem ajustar nomes de campo e este oráculo acompanha.
+O teste do contrato confere as fixtures e a regra dos números; o `test_checagens_chat.py` roda cada boa e cada ruim contra a [[metricas/checagens-chat]] e exige os motivos declarados, sem sobra nem falta. Os resultados das ferramentas são o formato proposto na ADR; a #593 e a #594 podem ajustar nomes de campo e este oráculo acompanha.
