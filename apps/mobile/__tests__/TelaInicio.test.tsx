@@ -109,10 +109,10 @@ describe("início v5: os 7 dias da semana (dias[] da API)", () => {
     expect(within(dias).getByTestId("dia-sex").props.accessibilityLabel).toBe("Sexta, hoje, sem treino ainda");
   });
 
-  it("✓ nos dias feitos, na cor da modalidade (corrida, ciclismo, natação); hoje, vazio e futuro sem ✓", async () => {
+  it("✓ nos dias feitos, na cor da modalidade (corrida, ciclismo, natação); hoje, vazio e futuro sem ✓ (círculo cinza)", async () => {
     await render(semana());
     const dias = await screen.findByTestId("semana-dias");
-    const cor = (id: string) => StyleSheet.flatten(within(dias).getByTestId(id).props.style).color;
+    const cor = (id: string) => StyleSheet.flatten(within(dias).getByTestId(id).props.style).backgroundColor;
     expect(cor("dia-ter-feito")).toBe(coresClaro.corrida);
     expect(cor("dia-qua-feito")).toBe(coresClaro.ciclismo);
     expect(cor("dia-qui-feito")).toBe(coresClaro.natacao);
@@ -121,6 +121,11 @@ describe("início v5: os 7 dias da semana (dias[] da API)", () => {
     expect(within(dias).getByTestId("dia-seg-vazio")).toBeTruthy();
     expect(within(dias).getByTestId("dia-sex-hoje")).toBeTruthy();
     expect(within(dias).getByTestId("dia-sáb-futuro")).toBeTruthy();
+    expect(StyleSheet.flatten(within(dias).getByTestId("dia-seg-vazio").props.style)).toMatchObject({ width: 26, height: 26, backgroundColor: coresClaro.borda });
+    expect(StyleSheet.flatten(within(dias).getByTestId("dia-ter-feito").props.style)).toMatchObject({ width: 26, height: 26 });
+    // os rótulos dos 7 dias são todos da mesma cor (texto-2), inclusive os futuros
+    const rotulo = (r: string) => StyleSheet.flatten(within(within(dias).getByTestId(`dia-${r}`)).getByText(r).props.style).color;
+    expect(new Set(["seg", "ter", "qua", "qui", "sex", "sáb", "dom"].map(rotulo))).toEqual(new Set([coresClaro["texto-2"]]));
   });
 
   it("os dias aparecem com pendência (linha) e sem pendência (herói)", async () => {

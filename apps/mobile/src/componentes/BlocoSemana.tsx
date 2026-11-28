@@ -50,17 +50,19 @@ type Estilos = ReturnType<typeof criarEstilos>;
 
 function DiaDaSemana({ dia, styles, tema }: { dia: Dia; styles: Estilos; tema: Tema }) {
   const mod = MODALIDADES[dia.modalidades[0] ?? ""];
-  const cor = mod ? tema.cor[mod.cor] : tema.cor["texto-2"];
-  const feito = dia.estado === "feito";
   const hoje = dia.estado === "hoje";
+  // Dia com treino (feito, ou hoje com treino): círculo cheio na cor da modalidade e ✓ branco (no escuro, a cor do fundo, para contrastar com a cor clara).
+  const comTreino = dia.estado === "feito" || (hoje && dia.modalidades.length > 0);
   return (
     <View testID={`dia-${dia.rotulo}`} accessible accessibilityLabel={dia.rotulo_acessivel} style={styles.dia}>
-      <Text style={[styles.diaRotulo, dia.estado === "futuro" && styles.futuro]}>{dia.rotulo}</Text>
-      <View style={[styles.marca, hoje && { borderColor: tema.cor.texto, borderWidth: borda.foco }]}>
-        {feito || (hoje && dia.modalidades.length > 0) ? (
-          <Text testID={`dia-${dia.rotulo}-feito`} style={[styles.visto, { color: cor }]}>✓</Text>
+      <Text style={styles.diaRotulo}>{dia.rotulo}</Text>
+      <View style={[styles.marca, hoje && { borderColor: tema.cor.texto }]}>
+        {comTreino ? (
+          <View testID={`dia-${dia.rotulo}-feito`} style={[styles.circulo, { backgroundColor: mod ? tema.cor[mod.cor] : tema.cor["texto-2"] }]}>
+            <Text style={[styles.visto, { color: tema.escuro ? tema.cor.fundo : "#FFFFFF" }]}>✓</Text>
+          </View>
         ) : (
-          <View testID={`dia-${dia.rotulo}-${dia.estado}`} style={[styles.ponto, dia.estado === "futuro" && styles.futuro]} />
+          <View testID={`dia-${dia.rotulo}-${dia.estado}`} style={[styles.circulo, styles.circuloCinza, dia.estado === "futuro" && styles.futuro]} />
         )}
       </View>
     </View>
@@ -78,11 +80,12 @@ function criarEstilos({ cor }: Tema) {
     linha: { ...fonte["corpo-forte"], color: cor.texto },
     dias: { flexDirection: "row", justifyContent: "space-between" },
     dia: { alignItems: "center", gap: espaco[1], minWidth: 36 },
-    diaRotulo: { ...fonte.legenda, color: cor["texto-2"] },
+    diaRotulo: { ...fonte.legenda, color: cor["texto-2"] }, // todos iguais em texto-2 (contraste 4,5:1), inclusive os futuros
     marca: { width: 32, height: 32, borderRadius: raio.pilula, alignItems: "center", justifyContent: "center", borderWidth: borda.foco, borderColor: "transparent" },
-    visto: { ...fonte["corpo-forte"] },
-    ponto: { width: 8, height: 8, borderRadius: raio.pilula, backgroundColor: cor["borda-forte"] },
-    futuro: { opacity: 0.45 },
+    circulo: { width: 26, height: 26, borderRadius: raio.pilula, alignItems: "center", justifyContent: "center" },
+    circuloCinza: { backgroundColor: cor.borda },
+    visto: { ...fonte["corpo-forte"], lineHeight: 20 },
+    futuro: { opacity: 0.5 },
     foco: { outlineWidth: borda.foco, outlineStyle: "solid", outlineColor: cor.foco, outlineOffset: 2 },
   });
 }
