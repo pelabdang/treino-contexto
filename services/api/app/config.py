@@ -22,6 +22,7 @@ class Settings(BaseSettings):
     llm_provider: str = "groq"
     llm_model: str = ""
     llm_timeout_s: float = 20.0  # por chamada, sem nova tentativa dentro da chamada
+    llm_timeout_pergunta_s: float = 45.0  # chat: total por pergunta, somando as voltas do laco (ADR 0017, item 3)
     llm_limite_chamadas: int = 20  # por execucao do worker
     llm_max_tokens: int = 1200  # teto de saida por chamada (#395); 0 ou negativo = nao manda (padrao do provedor)
     llm_reasoning_effort: str = "low"  # esforco de raciocinio (#395); vazio = nao manda. Modelo que nao aceita: descartado

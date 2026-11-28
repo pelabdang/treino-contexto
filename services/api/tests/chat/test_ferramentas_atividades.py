@@ -137,6 +137,7 @@ def _chamadas_de_escopo(b1):
         "listar_atividades": [{}, {"periodo": "ultimo_ano"}],
         "ver_atividade": [{"atividade_id": b1.id}],
         "listar_checkins": [{}, {"periodo": "ultimo_ano"}],
+        "recusar": [{"motivo": "fora_do_tema"}],  # nao le dado do atleta
     }
 
 
@@ -167,7 +168,7 @@ def test_esquemas_nao_tem_campo_de_atleta_e_recusam_extra():
 
 def test_esquemas_enviados_ao_provedor_so_do_papel():
     nomes = {e["function"]["name"] for e in esquemas_para("atleta")}
-    assert {"listar_atividades", "ver_atividade", "listar_checkins"} <= nomes
+    assert {"listar_atividades", "ver_atividade", "listar_checkins", "recusar"} <= nomes
     assert esquemas_para("outro_papel") == []
 
 
