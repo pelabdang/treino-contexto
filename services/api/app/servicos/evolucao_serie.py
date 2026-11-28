@@ -146,7 +146,7 @@ def sujeito(s: SerieDef) -> str | None:
     sufixo = s.id.split(".")[-1]
     if s.modalidade == "corrida":
         return f"{nome} dos seus treinos {dict(leve='leves', moderado='moderados', longo='longos')[sufixo]}"
-    return f"{nome} dos seus pedais {dict(ar_livre='ao ar livre', virtual='virtuais', rolo='no rolo')[sufixo]}"
+    return f"{nome} dos seus pedais {dict(rua='na rua', casa='em casa')[sufixo]}"
 
 
 def _rotulo_ponto(s: SerieDef, dia: date, data_t: str, valor: float | None, texto: str | None, fora: bool | None, unidade: str) -> str:
